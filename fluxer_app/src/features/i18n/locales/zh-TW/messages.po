@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx:88
+msgid ", "
+msgstr ", "
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:52
 msgid "... turn dense mode on. Nice!"
@@ -22,7 +27,7 @@ msgstr "…開啟緊湊模式。讚喔！"
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:363
-#: src/features/channel/components/UserMessage.tsx:76
+#: src/features/channel/components/UserMessage.tsx:78
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "（已編輯）"
@@ -42,7 +47,7 @@ msgid "(you)"
 msgstr "（您）"
 
 #. Replaces the text of a copy of a published announcement after the original was deleted in the announcement channel. Keep the square brackets.
-#: src/features/channel/components/UserMessage.tsx:66
+#: src/features/channel/components/UserMessage.tsx:68
 msgid "[Original message deleted]"
 msgstr "[原始訊息已刪除]"
 
@@ -50,6 +55,21 @@ msgstr "[原始訊息已刪除]"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:167
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# 位成員} other {# 位成員}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx:191
+msgid "{0}d left"
+msgstr "{0}d left"
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx:190
+msgid "{0}h left"
+msgstr "{0}h left"
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx:189
+msgid "{0}m left"
+msgstr "{0}m left"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx:19
@@ -1137,6 +1157,11 @@ msgstr "{count, plural, one {# 個社群使用了不同的設定} other {# 個�
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# 個連線} other {# 個連線}}"
 
+#. Generic description for a duration option that is measured in days.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:73
+msgid "{count, plural, one {# day} other {# days}}"
+msgstr "{count, plural, one {# day} other {# days}}"
+
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
 msgid "{count, plural, one {# file} other {# files}}"
@@ -1147,6 +1172,11 @@ msgstr "{count, plural, one {# 個檔案} other {# 個檔案}}"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# 份禮物} other {# 份禮物}}"
+
+#. Generic description for a duration option that is measured in hours.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:77
+msgid "{count, plural, one {# hour} other {# hours}}"
+msgstr "{count, plural, one {# hour} other {# hours}}"
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
@@ -1223,6 +1253,16 @@ msgstr "{count, plural, one {有 # 個建議} other {有 # 個建議}}"
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# 個影片} other {# 個影片}}"
+
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx:76
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr "{count, plural, one {# vote} other {# votes}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:69
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr "{count, plural, one {# week} other {# weeks}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1679,7 +1719,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {位成員} other {位成員}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:806
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:810
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, one {# 則提及} other {# 則提及}}"
 
@@ -2379,6 +2419,10 @@ msgstr "<0/>發起了一通持續{durationText}的通話。"
 msgid "<0/> started a call."
 msgstr "<0/>已開始通話。"
 
+#: src/features/channel/components/PollClosedMessage.tsx:67
+msgid "<0/>'s poll <1/> has closed."
+msgstr "<0/>'s poll <1/> has closed."
+
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:130
 msgid "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
 msgstr "<0>{targetUserTag}</0> 目前正被禁言。您可以調整禁言時間或解除禁言。"
@@ -2397,6 +2441,11 @@ msgstr "<0>轉傳自</0>{sourceInfo}"
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:63
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>、<1>Amara</1> 和 <2>Mateo</2> 正在輸入訊息…"
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx:64
+msgid "<1m left"
+msgstr "<1m left"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:169
@@ -2765,6 +2814,11 @@ msgstr "有新的桌面版本可用。請下載安裝程式並執行，以更新
 msgid "a poll"
 msgstr "投票"
 
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:25
+msgid "A possible answer"
+msgstr "A possible answer"
+
 #. Plutonium page perk card title about profile customization.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:92
 msgid "A profile that stands out"
@@ -3051,7 +3105,7 @@ msgstr "啟用中"
 
 #. Short status label for the account currently signed in.
 #: src/features/auth/components/accounts/AccountRow.tsx:79
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:890
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:894
 msgid "Active account"
 msgstr "使用中的帳號"
 
@@ -3090,7 +3144,7 @@ msgstr "按月訂閱中（已排定取消）"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:754
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:758
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:39
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:47
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -3247,7 +3301,7 @@ msgstr "新增 YouTube Data API 金鑰以豐富 YouTube 連結。"
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:894
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:898
 msgid "Add account"
 msgstr "新增帳號"
 
@@ -3292,6 +3346,11 @@ msgstr "新增其他伺服器"
 msgid "Add another reaction"
 msgstr "新增其他反應"
 
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:40
+msgid "Add answer"
+msgstr "Add answer"
+
 #. Setup wizard body for Bluesky integration credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1105
 msgid "Add Bluesky OAuth client metadata and a signing key."
@@ -3303,7 +3362,7 @@ msgid "Add bot to a destination"
 msgstr "將機器人新增至目的地"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:524
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:528
 msgid "Add channel"
 msgstr "新增頻道"
 
@@ -3416,13 +3475,13 @@ msgstr "新增通行金鑰"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:536
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:540
 #: src/features/input/state/input_keybind/shared.ts:21
 msgid "Add reaction"
 msgstr "新增反應"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:439
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:447
 msgid "Add reactions"
 msgstr "新增反應"
 
@@ -3619,7 +3678,7 @@ msgid "Added to favorite GIFs"
 msgstr "已加入我的最愛 GIF"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:629
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:633
 msgid "Added to favorites"
 msgstr "已加入我的最愛"
 
@@ -3937,7 +3996,7 @@ msgstr "允許所有能檢視您完整個人檔案的人查看您的當地時間
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:87
 msgid "Allow AV1 for screen sharing"
-msgstr "允許 AV1 用於螢幕分享"
+msgstr "Allow AV1 for screen sharing"
 
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
@@ -4020,6 +4079,11 @@ msgstr "允許提及此身分組"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "允許麥克風"
+
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:48
+msgid "Allow multiple answers"
+msgstr "Allow multiple answers"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -4115,7 +4179,7 @@ msgid "Allows members to create posts in this channel."
 msgstr "允許成員在此頻道建立貼文。"
 
 #. Description of the Manage threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:538
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:546
 msgid "Allows members to rename, close, lock and delete threads, and to view private threads."
 msgstr "允許成員重新命名、關閉、鎖定和刪除討論串，以及檢視私人討論串。"
 
@@ -4130,17 +4194,17 @@ msgid "Allows members to send messages in posts."
 msgstr "允許成員在貼文中傳送訊息。"
 
 #. Description of the Send messages in threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:550
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:558
 msgid "Allows members to send messages in threads."
 msgstr "允許成員在討論串中傳送訊息。"
 
 #. Description of the Create public threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:542
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:550
 msgid "Allows members to start threads that everyone in the channel can see."
 msgstr "允許成員發起所有頻道成員都能看到的討論串。"
 
 #. Description of the Create private threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:546
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:554
 msgid "Allows members to start threads that only invited members and moderators can see."
 msgstr "允許成員建立只有受邀成員和管理員才能看到的討論串。"
 
@@ -4170,7 +4234,7 @@ msgid "Already set to cancel"
 msgstr "已排定取消"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:98
+#: src/features/messaging/commands/MessageCommands.tsx:99
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同時將此訊息檢舉給 {productName} 安全團隊"
 
@@ -4560,6 +4624,11 @@ msgstr "公告"
 msgid "Annual"
 msgstr "每年"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:52
+msgid "Anonymous voting"
+msgstr "Anonymous voting"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "另一個核取方塊"
@@ -4572,6 +4641,11 @@ msgstr "另一個圓形核取方塊"
 #: src/features/input/state/input_keybind/shared.ts:221
 msgid "Answer the incoming call"
 msgstr "接聽來電"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:36
+msgid "Answers"
+msgstr "Answers"
 
 #: src/features/user/components/modals/tabs/keybinds_tab/shared.ts:10
 msgid "Any key"
@@ -4677,7 +4751,7 @@ msgid "App zoom"
 msgstr "App 縮放"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:786
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:790
 msgid "App zoom level"
 msgstr "應用程式縮放等級"
 
@@ -5067,7 +5141,7 @@ msgid "Attachment upload unavailable"
 msgstr "無法上傳附件"
 
 #. Notification body shown when a message has no text but includes an attachment. filename is the file name.
-#: src/features/notification/utils/MessageNotificationPreview.ts:24
+#: src/features/notification/utils/MessageNotificationPreview.ts:25
 msgid "Attachment: {filename}"
 msgstr "附件：{filename}"
 
@@ -5244,7 +5318,7 @@ msgid "Authenticator app"
 msgstr "驗證器應用程式"
 
 #. Generic field label for the one-time code produced by an authenticator app.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:818
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:822
 msgid "Authenticator code"
 msgstr "驗證器代碼"
 
@@ -5408,7 +5482,7 @@ msgstr "自動"
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:122
 msgid "Automatic ({codec})"
-msgstr "自動 ({codec})"
+msgstr "Automatic ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -5589,7 +5663,7 @@ msgstr "離開"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:826
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:830
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:393
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:265
@@ -5727,7 +5801,7 @@ msgid "Backspace"
 msgstr "倒退鍵"
 
 #. Generic field label for one of the one-use codes saved when two-factor authentication was set up.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:822
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:826
 msgid "Backup code"
 msgstr "備用碼"
 
@@ -6130,7 +6204,7 @@ msgstr "已達書籤上限"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:540
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:544
 #: src/features/input/state/input_keybind/shared.ts:282
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -6550,7 +6624,7 @@ msgid "Bypass mention suppression"
 msgstr "略過提及抑制"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:443
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:451
 msgid "Bypass slowmode"
 msgstr "略過慢速模式"
 
@@ -6610,7 +6684,7 @@ msgstr "通話"
 #. Name of the macOS Camera permission. Use the name macOS shows under System Settings, Privacy & Security in this language.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:730
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
@@ -6671,7 +6745,7 @@ msgstr "相機關閉"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:734
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:738
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "相機開啟"
@@ -7060,7 +7134,7 @@ msgid "Change emoji"
 msgstr "變更表情符號"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:552
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:556
 msgid "Change friend nickname"
 msgstr "更改好友的暱稱"
 
@@ -7094,7 +7168,7 @@ msgid "Change in system settings"
 msgstr "在系統設定中變更"
 
 #. Generic action label that returns the user to instance selection.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:838
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:842
 msgid "Change instance"
 msgstr "更改伺服器"
 
@@ -7114,7 +7188,7 @@ msgid "Change my group nickname"
 msgstr "變更我的群組暱稱"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:484
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:488
 msgid "Change nickname"
 msgstr "更改暱稱"
 
@@ -7488,7 +7562,7 @@ msgid "Channel actions"
 msgstr "頻道操作"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:798
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:802
 msgid "Channel added to favorites"
 msgstr "已將頻道加到我的最愛"
 
@@ -7509,14 +7583,14 @@ msgid "Channel created"
 msgstr "頻道已建立"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:560
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:564
 msgid "Channel debug"
 msgstr "頻道偵錯"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:18
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:770
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:774
 msgid "Channel deleted"
 msgstr "頻道已刪除"
 
@@ -7610,7 +7684,7 @@ msgid "Channel record"
 msgstr "頻道紀錄"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:794
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:798
 msgid "Channel removed from favorites"
 msgstr "已將頻道從我的最愛移除"
 
@@ -8336,7 +8410,7 @@ msgstr "清除附件模擬資料"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:139
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:144
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "清除指令"
@@ -8350,7 +8424,7 @@ msgid "Clear custom status"
 msgstr "清除自訂狀態"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:81
+#: src/features/channel/components/MessageActionUtils.tsx:82
 msgid "Clear every reaction from this message?"
 msgstr "要清除此訊息的所有反應嗎？"
 
@@ -8388,7 +8462,7 @@ msgid "Clear quick CSS?"
 msgstr "要清除快速 CSS 嗎？"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:528
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:532
 #: src/features/theme_studio/sections/TokensSection.tsx:205
 msgid "Clear search"
 msgstr "清除搜尋"
@@ -8720,7 +8794,7 @@ msgid "Coal theme"
 msgstr "煤炭主題"
 
 #. Generic field label for a short verification or backup code the user types in.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:850
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:854
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:38
 msgid "Code"
@@ -8976,7 +9050,7 @@ msgstr "你可以加入的社群"
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
 #: src/features/channel/components/ChannelUserTag.tsx:27
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:874
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:878
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:223
 msgid "Community"
 msgstr "社群"
@@ -9013,7 +9087,7 @@ msgid "Community debug"
 msgstr "社群偵錯"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:774
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:778
 msgid "Community default"
 msgstr "社群預設"
 
@@ -9382,7 +9456,7 @@ msgstr "確認新群組"
 #. Generic field label for retyping the password the user is choosing.
 #. Label for the new password confirmation field on the account recovery page.
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:40
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:858
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:862
 msgid "Confirm new password"
 msgstr "確認新密碼"
 
@@ -9438,7 +9512,7 @@ msgstr "請連接麥克風後再試一次。"
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:459
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:60
 msgid "Connect to voice"
 msgstr "連線語音"
@@ -9672,7 +9746,7 @@ msgstr "按一下左鍵（在按鈕上）或按一下右鍵（在其他元素上
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:36
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:722
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:413
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
@@ -9897,7 +9971,7 @@ msgid "Copy code"
 msgstr "複製代碼"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:738
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:742
 msgid "Copy community ID"
 msgstr "複製社群 ID"
 
@@ -10014,7 +10088,7 @@ msgstr "複製設定行（hyprland.lua）"
 
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:750
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:754
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
@@ -10042,20 +10116,20 @@ msgid "Copy media to clipboard"
 msgstr "複製媒體到剪貼簿"
 
 #. Message context menu item that copies the message text content to the clipboard.
-#: src/features/channel/components/MessageActionMenu.tsx:99
+#: src/features/channel/components/MessageActionMenu.tsx:100
 msgid "Copy message"
 msgstr "複製訊息"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:742
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:746
 #: src/features/input/state/input_keybind/shared.ts:294
 msgid "Copy message ID"
 msgstr "複製訊息 ID"
 
 #. Generic action label that copies a permalink to the selected message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:532
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:536
 #: src/features/input/state/input_keybind/shared.ts:290
 msgid "Copy message link"
 msgstr "複製訊息連結"
@@ -10139,7 +10213,7 @@ msgid "Copy user ID"
 msgstr "複製使用者 ID"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:746
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:750
 msgid "Copy username"
 msgstr "複製使用者名稱"
 
@@ -10550,7 +10624,7 @@ msgid "Couldn't process image"
 msgstr "無法處理圖片"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:130
+#: src/features/messaging/commands/MessageCommands.tsx:131
 msgid "Couldn't publish this message"
 msgstr "無法發布此訊息"
 
@@ -10640,7 +10714,7 @@ msgid "Couldn't ring this person"
 msgstr "無法撥打給此人"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:54
+#: src/features/messaging/hooks/useTextareaSubmit.ts:55
 msgid "Couldn't run that command: {detail}"
 msgstr "無法執行該指令：{detail}"
 
@@ -10675,7 +10749,7 @@ msgid "Couldn't send invite"
 msgstr "無法傳送邀請"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:714
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:718
 msgid "Couldn't send invite. Try again."
 msgstr "無法傳送邀請。請再試一次。"
 
@@ -10897,6 +10971,11 @@ msgstr "建立新套件"
 msgid "Create a new recovery kit?"
 msgstr "要建立新的復原套件嗎？"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:24
+msgid "Create a poll"
+msgstr "Create a poll"
+
 #. Status shown in the setup wizard while the administrator has no recovery kit.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:149
 msgid "Create a recovery kit to continue."
@@ -10954,7 +11033,7 @@ msgid "Create category"
 msgstr "建立類別"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:488
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:492
 msgid "Create channel"
 msgstr "建立頻道"
 
@@ -11027,18 +11106,28 @@ msgstr "建立新連結"
 msgid "Create or join a community"
 msgstr "建立或加入社群"
 
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:33
+msgid "Create poll"
+msgstr "Create poll"
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:427
+msgid "Create polls"
+msgstr "Create polls"
+
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "建立貼文"
 
 #. Permission name. Lets members start invite-only threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:530
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:538
 msgid "Create private threads"
 msgstr "建立私人討論串"
 
 #. Permission name. Lets members start threads everyone in the channel can see.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:526
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Create public threads"
 msgstr "建立公開討論串"
 
@@ -11503,7 +11592,7 @@ msgid "Custom warning text"
 msgstr "自訂警告文字"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:778
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:782
 msgid "Custom…"
 msgstr "自訂…"
 
@@ -11515,7 +11604,7 @@ msgid "Customer portal"
 msgstr "客戶入口網站"
 
 #. Plus menu submenu label for visibility toggles on textarea adornment buttons.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:41
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:49
 msgid "Customize"
 msgstr "自訂"
 
@@ -11748,7 +11837,7 @@ msgid "Deafen device"
 msgstr "將裝置設為耳機靜音"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:484
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:492
 msgid "Deafen members"
 msgstr "將成員耳機靜音"
 
@@ -11812,7 +11901,7 @@ msgstr "偵錯成員"
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
 #: src/features/channel/components/MessageActionBar.tsx:82
-#: src/features/channel/components/MessageActionMenu.tsx:111
+#: src/features/channel/components/MessageActionMenu.tsx:116
 msgid "Debug message"
 msgstr "偵錯訊息"
 
@@ -11824,7 +11913,7 @@ msgstr "偵錯執行緒"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:158
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:556
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:560
 msgid "Debug user"
 msgstr "偵錯使用者"
 
@@ -11993,7 +12082,7 @@ msgstr "德拉瓦州"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:94
+#: src/features/messaging/commands/MessageCommands.tsx:95
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
@@ -12063,6 +12152,11 @@ msgstr "刪除動作。"
 msgid "Delete all messages"
 msgstr "刪除所有訊息"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:33
+msgid "Delete answer"
+msgstr "Delete answer"
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:52
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:732
@@ -12070,7 +12164,7 @@ msgid "Delete application"
 msgstr "刪除應用程式"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:758
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:762
 msgid "Delete attachment"
 msgstr "刪除附件"
 
@@ -12101,7 +12195,9 @@ msgid "Delete community"
 msgstr "刪除社群"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:41
 msgid "Delete emoji"
 msgstr "刪除表情符號"
 
@@ -12241,12 +12337,12 @@ msgid "Delete this invite? Can't be undone."
 msgstr "要刪除此邀請嗎？此動作無法復原。"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:90
+#: src/features/messaging/commands/MessageCommands.tsx:91
 msgid "Delete this message? Can't be undone."
 msgstr "要刪除這則訊息嗎？此動作無法復原。"
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:103
+#: src/features/messaging/commands/MessageCommands.tsx:104
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "刪除此訊息？無法復原。此訊息也會從所有追蹤此頻道的社群中移除。"
 
@@ -12381,7 +12477,7 @@ msgstr "描述您的社群主題"
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:422
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:512
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:516
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "說明"
@@ -12695,7 +12791,7 @@ msgstr "直接輸入"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:10
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:580
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 msgid "Direct message"
 msgstr "私訊"
@@ -12988,7 +13084,7 @@ msgid "Disconnected"
 msgstr "已中斷連線"
 
 #. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:697
 msgid "Discoverable community"
 msgstr "可被探索的社群"
 
@@ -13117,7 +13213,7 @@ msgstr "顯示名稱"
 
 #. Optional display-name field label in account registration forms.
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx:88
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:866
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:870
 msgid "Display name (optional)"
 msgstr "顯示名稱（選填）"
 
@@ -13146,7 +13242,7 @@ msgstr "私訊"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:83
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
 msgid "DM closed"
 msgstr "私訊已關閉"
 
@@ -13271,7 +13367,7 @@ msgstr "不允許被加入群組私訊"
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:782
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:786
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "網域"
@@ -13343,7 +13439,7 @@ msgstr "捐款支持"
 #. Report flow: footer button on the last screen. Closes the report window.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:447
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:830
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/input/components/KeybindRecorder.tsx:510
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:38
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:45
@@ -13623,6 +13719,11 @@ msgstr "複製頻道"
 msgid "Duplicate role"
 msgstr "複製身分組"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:44
+msgid "Duration"
+msgstr "Duration"
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:75
 msgid "Duration:"
@@ -13779,7 +13880,7 @@ msgstr "編輯全域設定，例如名稱、說明和圖示。"
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:480
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:484
 msgid "Edit group"
 msgstr "編輯群組"
 
@@ -13810,7 +13911,7 @@ msgstr "編輯媒體"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:718
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:722
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "編輯訊息"
@@ -13846,7 +13947,7 @@ msgid "Edit profile local time"
 msgstr "編輯個人檔案當地時間"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:109
+#: src/features/messaging/commands/MessageCommands.tsx:110
 msgid "Edit published message?"
 msgstr "編輯已發布的訊息？"
 
@@ -14096,12 +14197,12 @@ msgid "Embeds"
 msgstr "嵌入內容"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:93
+#: src/features/channel/components/MessageActionUtils.tsx:94
 msgid "Embeds suppressed"
 msgstr "已隱藏嵌入內容"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:89
+#: src/features/channel/components/MessageActionUtils.tsx:90
 msgid "Embeds unsuppressed"
 msgstr "已取消隱藏嵌入內容"
 
@@ -14375,7 +14476,7 @@ msgstr "開啟行動裝置推播通知"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:790
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:794
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "開啟通知"
@@ -14538,6 +14639,13 @@ msgstr "結束寬限期"
 #: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "要現在結束寬限期嗎？"
+
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx:104
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:480
+msgid "End poll now"
+msgstr "End poll now"
 
 #. Voice control menu action to stop sharing the screen.
 #: src/features/voice/components/VoiceControlBar.tsx:108
@@ -15244,7 +15352,7 @@ msgid "Expression autocomplete"
 msgstr "表情符號自動完成"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:762
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:766
 msgid "Expression picker categories"
 msgstr "表情符號選取器類別"
 
@@ -15517,12 +15625,12 @@ msgid "Failed to send code. Try again."
 msgstr "傳送驗證碼失敗。請再試一次。"
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:84
+#: src/features/channel/components/UserMessage.tsx:86
 msgid "Failed to send message."
 msgstr "訊息傳送失敗。"
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:80
+#: src/features/channel/components/UserMessage.tsx:82
 msgid "Failed to send message. Hold for options."
 msgstr "訊息傳送失敗。長按可顯示選項。"
 
@@ -16321,7 +16429,7 @@ msgstr "論壇"
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
 #: src/features/channel/components/MessageActionBar.tsx:96
-#: src/features/channel/components/MessageActionMenu.tsx:91
+#: src/features/channel/components/MessageActionMenu.tsx:92
 msgid "Forward"
 msgstr "轉傳"
 
@@ -16347,7 +16455,7 @@ msgid "Forwarded"
 msgstr "已轉傳"
 
 #. Notification body shown when a forwarded message has no other previewable content.
-#: src/features/notification/utils/MessageNotificationPreview.ts:28
+#: src/features/notification/utils/MessageNotificationPreview.ts:29
 msgid "Forwarded a message"
 msgstr "已轉傳訊息"
 
@@ -16788,7 +16896,7 @@ msgid "Germany"
 msgstr "德國"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:802
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:806
 msgid "Get {premiumProductName}"
 msgstr "取得 {premiumProductName}"
 
@@ -17157,6 +17265,11 @@ msgstr "返回 {PRODUCT_NAME} App。它會自行完成登入。"
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "回到 {PRODUCT_NAME} app。你可以關閉這個分頁。"
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx:35
+msgid "Go back to vote"
+msgstr "Go back to vote"
+
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Go to {communityName}"
@@ -17368,7 +17481,7 @@ msgstr "群組私訊"
 #. Generic label for a group direct message conversation.
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotInviteDestinations.ts:31
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:308
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:878
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:882
 msgid "Group DM"
 msgstr "群組私訊"
 
@@ -17459,7 +17572,7 @@ msgstr "分組"
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "H.265 (requires opt-in)"
-msgstr "H.265（需要選擇加入）"
+msgstr "H.265 (requires opt-in)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -17746,7 +17859,7 @@ msgid "Hide expiration footnotes"
 msgstr "隱藏到期註腳"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:710
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:714
 msgid "Hide favorites"
 msgstr "隱藏我的最愛"
 
@@ -18150,7 +18263,7 @@ msgstr "個人身分"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:653
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:657
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "閒置中"
@@ -18543,7 +18656,7 @@ msgstr "閒置逾時"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:500
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:504
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:19
 msgid "Inbox"
 msgstr "收件匣"
@@ -18596,7 +18709,7 @@ msgstr "請提供社群 ID。"
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:516
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:520
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:172
 msgid "Incoming call"
@@ -18856,7 +18969,7 @@ msgid "Instance unavailable"
 msgstr "連線失敗"
 
 #. Generic field label for the address of a self-hosted instance.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:842
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:846
 msgid "Instance URL"
 msgstr "伺服器網址"
 
@@ -18975,7 +19088,7 @@ msgstr "redirect_uri 無效"
 
 #. Callback page title shown when an external flow returns an unrecognized status.
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:56
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:886
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:890
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:78
 msgid "Invalid status"
 msgstr "狀態無效"
@@ -19183,7 +19296,7 @@ msgstr "邀請人："
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:698
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:702
 msgid "Invites"
 msgstr "邀請"
 
@@ -19298,6 +19411,11 @@ msgstr "表情符號可能已被刪除。名稱已還原為先前的名稱。"
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "這個社群可能已退出探索，或關閉了新成員加入。重新整理頁面後就不會再看到它。"
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx:27
+msgid "It's a draw"
+msgstr "It's a draw"
+
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
@@ -19372,7 +19490,7 @@ msgid "Join call"
 msgstr "加入通話"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
 msgid "Join community"
 msgstr "加入社群"
 
@@ -19469,7 +19587,7 @@ msgid "Joined {productName}"
 msgstr "已加入 {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:508
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:512
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "跳轉"
@@ -19515,7 +19633,7 @@ msgid "Jump to message"
 msgstr "跳到訊息"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:61
+#: src/features/channel/components/UserMessage.tsx:63
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "跳到{displayName}在{formattedDate}傳送的訊息"
 
@@ -19756,7 +19874,7 @@ msgid "Kick a member from this community."
 msgstr "將成員從此社群踢出。"
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:685
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
 msgid "Kick member"
 msgstr "踢出成員"
 
@@ -19933,7 +20051,7 @@ msgid "Leave call"
 msgstr "離開通話"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:681
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:685
 msgid "Leave community"
 msgstr "離開社群"
 
@@ -20744,7 +20862,7 @@ msgid "Manage blocked users"
 msgstr "管理已封鎖的使用者"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:496
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:504
 msgid "Manage channel"
 msgstr "管理頻道"
 
@@ -20792,7 +20910,7 @@ msgid "Manage payment methods"
 msgstr "管理付款方式"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:500
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:508
 msgid "Manage permissions"
 msgstr "管理權限"
 
@@ -20819,7 +20937,7 @@ msgid "Manage subscription"
 msgstr "管理訂閱"
 
 #. Permission name. Lets members rename, close, lock and delete threads and see private threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:522
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:530
 msgid "Manage threads"
 msgstr "管理討論串"
 
@@ -20892,7 +21010,7 @@ msgstr "標示為劇透"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:677
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:681
 #: src/features/input/state/input_keybind/shared.ts:41
 msgid "Mark as unread"
 msgstr "標示為未讀"
@@ -21097,6 +21215,11 @@ msgstr "成人媒體"
 msgid "Max number of uses"
 msgstr "使用次數上限"
 
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:8
+msgid "Max poll vote count reached"
+msgstr "Max poll vote count reached"
+
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:57
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "大小上限：{BACKGROUND_MEDIA_MAX_SIZE_LABEL}。"
@@ -21133,7 +21256,7 @@ msgstr "為闔家適宜的空間提供最高等級的保護"
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
-msgstr "可能會導致觀眾出現相容性問題。我們正在努力改善此情況。"
+msgstr "May cause compatibility issues for viewers. We’re working on improving this."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:35
@@ -21356,7 +21479,7 @@ msgstr "成員"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:622
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:504
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:508
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "成員"
@@ -21460,7 +21583,7 @@ msgstr "要提及此身分組嗎？"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:657
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:661
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Mentions"
 msgstr "提及"
@@ -21588,7 +21711,7 @@ msgstr "訊息包含附加媒體"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #: src/features/channel/components/MessageActionBar.tsx:78
-#: src/features/channel/components/MessageActionMenu.tsx:74
+#: src/features/channel/components/MessageActionMenu.tsx:75
 msgid "Message debug"
 msgstr "訊息偵錯"
 
@@ -21720,7 +21843,7 @@ msgid "Message previews in the DM list"
 msgstr "私訊列表中的訊息預覽"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:122
+#: src/features/messaging/commands/MessageCommands.tsx:123
 msgid "Message published"
 msgstr "訊息已發布"
 
@@ -22172,7 +22295,7 @@ msgid "Monthly gift"
 msgstr "每月禮物"
 
 #. Generic label for a button that reveals additional actions.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:834
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:838
 msgid "More"
 msgstr "更多"
 
@@ -22317,7 +22440,7 @@ msgid "Move item up"
 msgstr "將項目上移"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:488
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:496
 msgid "Move members"
 msgstr "移動成員"
 
@@ -22479,7 +22602,7 @@ msgid "Mute calls"
 msgstr "將通話靜音"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:589
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:593
 msgid "Mute category"
 msgstr "將類別設為靜音"
 
@@ -22494,7 +22617,7 @@ msgid "Mute communities"
 msgstr "將所有社群設為靜音"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:564
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:568
 msgid "Mute community"
 msgstr "將社群設為靜音"
 
@@ -22526,12 +22649,12 @@ msgid "Mute entrance sound"
 msgstr "將進場音效設為靜音"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:702
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:706
 msgid "Mute favorites"
 msgstr "將最愛設為靜音"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:480
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:488
 msgid "Mute members"
 msgstr "將成員靜音"
 
@@ -22931,7 +23054,7 @@ msgid "Nevada"
 msgstr "內華達州"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:661
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:665
 msgid "Never"
 msgstr "永不"
 
@@ -23059,7 +23182,7 @@ msgstr "新的麥克風"
 #. Generic field label for the password the user is choosing.
 #. Label for the new password field on the account recovery page.
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:36
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:854
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:858
 msgid "New password"
 msgstr "新密碼"
 
@@ -23140,7 +23263,7 @@ msgstr "最新優先"
 #. Button that moves to the next setup wizard step.
 #. Generic primary or pagination action label that advances to the next step, page, or item.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:105
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:726
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:730
 msgid "Next"
 msgstr "下一步"
 
@@ -23817,6 +23940,11 @@ msgstr "還沒有人做出這個反應。"
 msgid "Nobody matches that search."
 msgstr "沒有符合搜尋條件的成員。"
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx:23
+msgid "Nobody voted!"
+msgstr "Nobody voted!"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:114
 msgid "Noise"
@@ -24166,12 +24294,12 @@ msgid "Off"
 msgstr "關閉"
 
 #. Accessible label for identifying the official Fluxer instance.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:846
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:850
 msgid "Official instance"
 msgstr "官方伺服器"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:649
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:653
 msgid "Offline"
 msgstr "離線"
 
@@ -24425,7 +24553,7 @@ msgstr "僅限選取的社群"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "只有 Visionary 會員才能加入此社群。您的權限可能已在開啟此畫面後變更。"
 
-#: src/features/channel/components/UserMessage.tsx:460
+#: src/features/channel/components/UserMessage.tsx:473
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "只有您能看見此訊息。<0>關閉</0>"
 
@@ -25387,7 +25515,7 @@ msgstr "免密碼"
 #. Validation error shown when a password and its confirmation field differ.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:53
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:862
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:866
 msgid "Passwords do not match"
 msgstr "密碼不相符"
 
@@ -25844,7 +25972,7 @@ msgstr "子母畫面"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:73
+#: src/features/channel/components/MessageActionUtils.tsx:74
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "釘選"
@@ -25862,8 +25990,8 @@ msgstr "釘選群組私訊"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:65
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:548
+#: src/features/channel/components/MessageActionUtils.tsx:66
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:552
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Pin message"
 msgstr "釘選訊息"
@@ -25894,7 +26022,7 @@ msgid "Pin post"
 msgstr "釘選貼文"
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:69
+#: src/features/channel/components/MessageActionUtils.tsx:70
 msgid "Pin this message to the channel for everyone to see."
 msgstr "將此訊息釘選到頻道，讓所有人都能看到。"
 
@@ -25933,7 +26061,7 @@ msgid "Pinned"
 msgstr "已釘選"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:665
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:669
 msgid "Pinned DM"
 msgstr "已釘選私訊"
 
@@ -26092,6 +26220,21 @@ msgstr "波蘭"
 #: src/features/user/utils/LocaleUtils.ts:104
 msgid "Polish"
 msgstr "波蘭文"
+
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx:68
+msgid "Poll closed"
+msgstr "Poll closed"
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx:72
+msgid "Poll not sent"
+msgstr "Poll not sent"
+
+#. Notification body shown when a poll is sent. question is the question asked on the poll.
+#: src/features/notification/utils/MessageNotificationPreview.ts:43
+msgid "Poll: {question}"
+msgstr "Poll: {question}"
 
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #. Button label on the popped-out overlay that closes the popout window and restores the view in the app.
@@ -26528,7 +26671,7 @@ msgid "Prioritize speakers"
 msgstr "優先顯示發言者"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:476
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:484
 msgid "Priority speaker"
 msgstr "優先發言者"
 
@@ -26547,7 +26690,7 @@ msgid "Privacy policy"
 msgstr "隱私權政策"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:673
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:677
 msgid "Privacy settings"
 msgstr "隱私設定"
 
@@ -26794,7 +26937,7 @@ msgstr "公開註冊已關閉。"
 #. Tooltip on the publish button in the inline message hover action bar. Publishing sends an announcement channel message to every channel that follows it.
 #: src/features/channel/components/CrosspostPublishNudge.tsx:22
 #: src/features/channel/components/MessageActionBar.tsx:86
-#: src/features/channel/components/MessageActionMenu.tsx:86
+#: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/messaging/components/modals/MessageCrosspostConfirmModal.tsx:20
 msgid "Publish"
 msgstr "發布"
@@ -27038,6 +27181,11 @@ msgstr "必須先在 Hyprland 設定檔中綁定，「按住說話」才能在 {
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "必須先在 Hyprland 設定檔中綁定，「按住說話」才能在 {productName} 以外使用。請新增適用於您 Hyprland 版本的設定行，並將 KEY 替換為您想要的按鍵。"
 
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:28
+msgid "Question"
+msgstr "Question"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:52
@@ -27167,7 +27315,7 @@ msgstr "新增「{emojiShortcode}」反應"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:669
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:13
 msgid "Reactions"
@@ -27196,7 +27344,7 @@ msgid "Read message aloud"
 msgstr "朗讀訊息"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:427
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:435
 msgid "Read message history"
 msgstr "讀取訊息歷史記錄"
 
@@ -27753,7 +27901,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "要將 {userName} 從您的好友中移除嗎？"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:85
+#: src/features/channel/components/MessageActionUtils.tsx:86
 msgid "Remove all"
 msgstr "全部移除"
 
@@ -27764,8 +27912,8 @@ msgstr "要從此訊息中移除所有 {emojiNameWithColons} 表情符號反應�
 
 #. Destructive message context menu item for moderators that clears every reaction on a message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionMenu.tsx:82
-#: src/features/channel/components/MessageActionUtils.tsx:77
+#: src/features/channel/components/MessageActionMenu.tsx:83
+#: src/features/channel/components/MessageActionUtils.tsx:78
 msgid "Remove all reactions"
 msgstr "移除所有反應"
 
@@ -27795,7 +27943,7 @@ msgid "Remove banner"
 msgstr "移除橫幅"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:492
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:496
 msgid "Remove bookmark"
 msgstr "移除書籤"
 
@@ -27954,6 +28102,11 @@ msgstr "解除禁言"
 msgid "Remove translator"
 msgstr "移除翻譯工具"
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx:39
+msgid "Remove vote"
+msgstr "Remove vote"
+
 #. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:31
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -27980,7 +28133,7 @@ msgid "Removed from favorite GIFs"
 msgstr "已從我的最愛 GIF 移除"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:625
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:629
 msgid "Removed from favorites"
 msgstr "已從我的最愛移除"
 
@@ -28241,6 +28394,11 @@ msgstr "更換背景"
 msgid "Replace background?"
 msgstr "要更換背景嗎？"
 
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:37
+msgid "Replace emoji"
+msgstr "Replace emoji"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:164
 msgid "Replace with a GIF"
@@ -28253,7 +28411,7 @@ msgstr "回覆"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:621
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:625
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "回覆"
@@ -28347,7 +28505,7 @@ msgid "Report issue"
 msgstr "回報問題"
 
 #. Generic action label that opens the report flow targeting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:544
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:548
 msgid "Report message"
 msgstr "檢舉訊息"
 
@@ -28958,7 +29116,7 @@ msgstr "以圖搜圖"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:617
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:621
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "以圖搜圖"
@@ -29337,8 +29495,8 @@ msgstr "飽和度"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29349,7 +29507,7 @@ msgstr "飽和度"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:118
+#: src/features/messaging/commands/MessageCommands.tsx:119
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -29523,7 +29681,7 @@ msgstr "權限"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:613
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:617
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "螢幕閱讀器"
@@ -30229,6 +30387,11 @@ msgstr "查看此頻道的成員列表。"
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "查看此頻道。拒絕給予 {everyoneMention} 會讓頻道變成私人頻道。"
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:431
+msgid "See votes on anonymous polls"
+msgstr "See votes on anonymous polls"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
@@ -30312,6 +30475,11 @@ msgstr "請選擇一個帳號以繼續，或新增其他帳號。"
 msgid "Select an option from the radio group"
 msgstr "從選項中擇一"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:29
+msgid "Select emoji"
+msgstr "Select emoji"
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -30330,6 +30498,16 @@ msgstr "選取 GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "選擇介面語言"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx:27
+msgid "Select one answer"
+msgstr "Select one answer"
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx:31
+msgid "Select one or multiple answers"
+msgstr "Select one or multiple answers"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -30381,6 +30559,11 @@ msgstr "可選取文字"
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "已選取"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:84
+msgid "Selected answer"
+msgstr "Selected answer"
 
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx:15
@@ -30543,10 +30726,8 @@ msgid "Send GIF {title}"
 msgstr "傳送 GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:33
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:41
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:31
 msgid "Send gift"
 msgstr "傳送禮物"
@@ -30584,7 +30765,7 @@ msgid "Send messages in this channel."
 msgstr "在此頻道中傳送訊息。"
 
 #. Permission name. Lets members send messages in threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:542
 msgid "Send messages in threads"
 msgstr "在討論串中傳送訊息"
 
@@ -30635,7 +30816,7 @@ msgstr "傳送驗證碼"
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:37
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:45
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
 #: src/features/input/state/input_keybind/shared.ts:302
 msgid "Send voice message"
@@ -30685,7 +30866,7 @@ msgid "Sensitive media"
 msgstr "敏感媒體"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:810
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:814
 msgid "Sent"
 msgstr "已傳送"
 
@@ -30940,7 +31121,7 @@ msgid "Set up later"
 msgstr "稍後設定"
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:492
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:500
 msgid "Set voice region"
 msgstr "設定語音區域"
 
@@ -31370,7 +31551,7 @@ msgstr "顯示嵌入內容和網站連結預覽"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:57
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:65
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
 msgstr "顯示表情符號按鈕"
@@ -31409,7 +31590,7 @@ msgstr "顯示 GIF 指示器"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:45
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:53
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "顯示 GIF 按鈕"
@@ -31473,7 +31654,7 @@ msgstr "顯示操作說明"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:49
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show media button"
 msgstr "顯示媒體按鈕"
@@ -31600,6 +31781,11 @@ msgstr "在語音選單中顯示個別裝置的參與者音量滑桿"
 msgid "Show quick reactions"
 msgstr "顯示快速反應"
 
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx:47
+msgid "Show results"
+msgstr "Show results"
+
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Show rich previews for YouTube links."
@@ -31614,7 +31800,7 @@ msgstr "在表情符號自動完成中顯示已儲存的媒體"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:61
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:69
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show send button"
 msgstr "顯示傳送按鈕"
@@ -31626,7 +31812,7 @@ msgstr "點擊後顯示劇透內容"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:53
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show stickers button"
 msgstr "顯示貼圖按鈕"
@@ -31811,7 +31997,7 @@ msgstr "使用您機構的單一登入服務供應商登入。"
 #. Short label in the settings dialog logout modal. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/LogoutModal.tsx:13
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:200
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:609
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:613
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "登出"
@@ -32420,7 +32606,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "準備貼圖時發生錯誤。請嘗試其他檔案，或稍後再試一次。"
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:134
+#: src/features/messaging/commands/MessageCommands.tsx:135
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "發布時發生了問題。請稍後再試。"
 
@@ -32550,7 +32736,7 @@ msgstr "音量"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:814
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:818
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "音效"
@@ -32648,7 +32834,7 @@ msgid "Spanish (Spain)"
 msgstr "西班牙文（西班牙）"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:463
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:471
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "發言"
@@ -32659,7 +32845,7 @@ msgid "Speak all messages out loud"
 msgstr "朗讀所有訊息"
 
 #. Message context menu item that reads the message aloud via text-to-speech.
-#: src/features/channel/components/MessageActionMenu.tsx:107
+#: src/features/channel/components/MessageActionMenu.tsx:112
 msgid "Speak message"
 msgstr "朗讀訊息"
 
@@ -32955,7 +33141,7 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "訊息輸入欄位中新增附件時，立即開始上傳"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:605
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:609
 msgid "Start video call"
 msgstr "發起視訊通話"
 
@@ -33156,7 +33342,7 @@ msgid "Sticker updated"
 msgstr "貼圖已更新"
 
 #. Notification body shown when a message has no text but includes one sticker. stickerName is the sticker name.
-#: src/features/notification/utils/MessageNotificationPreview.ts:32
+#: src/features/notification/utils/MessageNotificationPreview.ts:33
 msgid "Sticker: {stickerName}"
 msgstr "貼圖：{stickerName}"
 
@@ -33197,7 +33383,7 @@ msgid "Stickers will never animate"
 msgstr "貼圖一律不會播放動畫"
 
 #. Notification body shown when a message has no text but includes multiple stickers. stickerNames is a localized list of sticker names.
-#: src/features/notification/utils/MessageNotificationPreview.ts:37
+#: src/features/notification/utils/MessageNotificationPreview.ts:38
 msgid "Stickers: {stickerNames}"
 msgstr "貼圖：{stickerNames}"
 
@@ -33262,7 +33448,7 @@ msgstr "要停止與所有好友分享語音活動嗎？"
 
 #. Message context menu item that stops the text-to-speech playback in progress.
 #. Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.
-#: src/features/channel/components/MessageActionMenu.tsx:103
+#: src/features/channel/components/MessageActionMenu.tsx:108
 #: src/features/platform/utils/DesktopLocaleBridge.ts:93
 msgid "Stop speaking"
 msgstr "停止朗讀"
@@ -33396,7 +33582,7 @@ msgid "Stream settings"
 msgstr "直播設定"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:468
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:476
 msgid "Stream video"
 msgstr "視訊直播"
 
@@ -33473,6 +33659,11 @@ msgstr "樣式"
 #: src/features/ui/action_menu/ContextMenu.tsx:27
 msgid "Submenu"
 msgstr "子選單"
+
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:57
+msgid "Submit"
+msgstr "Submit"
 
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 msgid "Submit application"
@@ -33570,7 +33761,7 @@ msgid "Suppress all role mentions"
 msgstr "隱藏所有身分組提及"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:601
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:605
 msgid "Suppress embeds"
 msgstr "隱藏嵌入內容"
 
@@ -34586,6 +34777,11 @@ msgstr "提供的 redirect_uri 未在此應用程式中註冊。"
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "提供的 redirect_uri 必須使用 HTTP 或 HTTPS。"
 
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:32
+msgid "The question you want to ask"
+msgstr "The question you want to ask"
+
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:95
 msgid "The report form changed. Please start again."
@@ -34663,7 +34859,7 @@ msgstr "Webhook 是由 {user} 建立的"
 
 #. Generic label for the app theme selector.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:882
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:886
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:38
 msgid "Theme"
 msgstr "主題"
@@ -35429,7 +35625,7 @@ msgid "This message can only be forwarded to age-restricted channels"
 msgstr "此訊息只能轉發至設有年齡限制的頻道"
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:126
+#: src/features/messaging/commands/MessageCommands.tsx:127
 msgid "This message has already been published"
 msgstr "此訊息已發佈過"
 
@@ -35477,6 +35673,16 @@ msgstr "此方案無法使用。請聯絡客服。"
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
 msgid "This plan isn't available. Contact the administrators of this instance."
 msgstr "此方案無法使用。請聯絡此實例的管理員。"
+
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx:55
+msgid "This poll is anonymous, but you can see votes."
+msgstr "This poll is anonymous, but you can see votes."
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx:51
+msgid "This poll is anonymous."
+msgstr "This poll is anonymous."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35526,7 +35732,7 @@ msgstr "此重設連結已過期或已被使用。請向管理員索取新的連
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:176
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
-msgstr "此重設連結已過期。重設連結有效時間為 1 小時。請重新申請一個。"
+msgstr "This reset link has expired. Reset links last 1 hour. Please request a new one."
 
 #. Label in the accessibility tab. Preserve {linkPreviewExampleUrl}; it is inserted by code.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
@@ -35645,13 +35851,18 @@ msgid "This voice channel is no longer available."
 msgstr "此語音頻道已無法使用。"
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:88
+#: src/features/channel/components/UserMessage.tsx:90
 msgid "This was a {silentMention} message."
 msgstr "這是一則{silentMention}訊息。"
 
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx:52
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "這會關閉目前的彈出視窗，並停止螢幕分享子母畫面彈出視窗自動開啟。您可以在 {audioVideoSettingsPath} 中重新啟用它們。"
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx:24
+msgid "This will close the poll now and show the results."
+msgstr "This will close the poll now and show the results."
 
 #: src/features/messaging/commands/FavoritesCommands.tsx:30
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -35826,7 +36037,7 @@ msgid "Time out {tag}"
 msgstr "將 {tag} 暫時禁言"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:447
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:455
 msgid "Time out members"
 msgstr "將成員暫時禁言"
 
@@ -36178,7 +36389,7 @@ msgstr "已將擁有權轉移給 {0}"
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:597
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:601
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "翻譯"
@@ -36470,7 +36681,7 @@ msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "關閉此來源的音訊分享，或稍後再試。"
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:520
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:524
 msgid "Turn off camera"
 msgstr "關閉相機"
 
@@ -36846,7 +37057,7 @@ msgid "Unblock user"
 msgstr "解除封鎖"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:645
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:649
 msgid "Uncategorized"
 msgstr "未分類"
 
@@ -36994,7 +37205,7 @@ msgstr "Unicode 表情符號"
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:766
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
 #: src/features/updater/commands/UpdaterModalCommands.tsx:128
@@ -37070,7 +37281,7 @@ msgid "Unknown message type"
 msgstr "不明訊息類型"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:511
+#: src/features/permissions/utils/PermissionUtils.ts:513
 msgid "Unknown permission"
 msgstr "不明權限"
 
@@ -37235,7 +37446,7 @@ msgid "Unmute all devices"
 msgstr "解除所有裝置靜音"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:593
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:597
 msgid "Unmute category"
 msgstr "解除類別靜音"
 
@@ -37250,7 +37461,7 @@ msgid "Unmute communities"
 msgstr "解除所有社群靜音"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:568
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 msgid "Unmute community"
 msgstr "解除社群靜音"
 
@@ -37270,7 +37481,7 @@ msgid "Unmute DMs"
 msgstr "解除所有私訊靜音"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:706
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:710
 msgid "Unmute favorites"
 msgstr "解除最愛靜音"
 
@@ -37323,7 +37534,7 @@ msgid "Unordered"
 msgstr "項目符號清單"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:61
+#: src/features/channel/components/MessageActionUtils.tsx:62
 msgid "Unpin"
 msgstr "取消釘選"
 
@@ -37353,12 +37564,12 @@ msgid "Unpin post"
 msgstr "取消釘選貼文"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:57
+#: src/features/channel/components/MessageActionUtils.tsx:58
 msgid "Unpin this message?"
 msgstr "要取消釘選這則訊息嗎？"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:641
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:645
 msgid "Unpinned DM"
 msgstr "已取消釘選私訊"
 
@@ -37500,7 +37711,7 @@ msgid "Unsupported sticker file"
 msgstr "不支援的貼圖檔案"
 
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionMenu.tsx:95
+#: src/features/channel/components/MessageActionMenu.tsx:96
 msgid "Unsuppress embeds"
 msgstr "取消隱藏嵌入內容"
 
@@ -37728,9 +37939,7 @@ msgstr "直接上傳到「{displayName}」"
 msgid "Upload emoji"
 msgstr "上傳表情符號"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:13
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:25
 msgid "Upload file"
 msgstr "上傳檔案"
@@ -37787,10 +37996,8 @@ msgstr "上傳貼圖"
 msgid "Upload to {displayName}"
 msgstr "上傳到「{displayName}」"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:17
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:29
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:37
 msgid "Upload your message as a file"
 msgstr "將訊息上傳為檔案"
 
@@ -38052,12 +38259,12 @@ msgid "Use emoji from other communities."
 msgstr "使用其他社群的表情符號。"
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:431
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:439
 msgid "Use external emoji"
 msgstr "使用外部表情符號"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:435
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:443
 msgid "Use external stickers"
 msgstr "使用外部貼圖"
 
@@ -38178,7 +38385,7 @@ msgid "Use TLS"
 msgstr "使用 TLS"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:472
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:480
 msgid "Use voice activity"
 msgstr "使用語音活動"
 
@@ -38254,7 +38461,7 @@ msgid "User controls"
 msgstr "使用者控制項"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:585
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:589
 msgid "User debug"
 msgstr "使用者偵錯"
 
@@ -38332,7 +38539,7 @@ msgstr "使用者音量"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1124
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:581
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:585
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:227
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -38942,12 +39149,12 @@ msgid "View call controls"
 msgstr "檢視通話控制選項"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:451
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:459
 msgid "View channel"
 msgstr "檢視頻道"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:455
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:463
 msgid "View channel members"
 msgstr "檢視頻道成員"
 
@@ -39035,6 +39242,11 @@ msgstr "檢視權限"
 msgid "View plans"
 msgstr "查看方案"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx:31
+msgid "View poll"
+msgstr "View poll"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:367
 msgid "View profile"
@@ -39048,7 +39260,7 @@ msgid "View profile for {displayName}"
 msgstr "查看 {displayName} 的個人檔案"
 
 #. Message context menu item that opens the reactions list sheet for the message.
-#: src/features/channel/components/MessageActionMenu.tsx:78
+#: src/features/channel/components/MessageActionMenu.tsx:79
 msgid "View reactions"
 msgstr "查看反應"
 
@@ -39439,6 +39651,11 @@ msgctxt "keyboard-key-name"
 msgid "Volume up"
 msgstr "提高音量"
 
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx:43
+msgid "Vote"
+msgstr "Vote"
+
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
@@ -39502,7 +39719,7 @@ msgid "Watch"
 msgstr "觀看"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:496
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:500
 msgid "Watch stream"
 msgstr "觀看直播"
 
@@ -39928,7 +40145,7 @@ msgid "West Virginia"
 msgstr "西維吉尼亞州"
 
 #. Display-name field placeholder in account registration forms.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:870
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:874
 msgid "What should people call you?"
 msgstr "大家該怎麼稱呼您？"
 
@@ -40166,6 +40383,11 @@ msgstr "視窗在螢幕頂部或底部被裁切，以及停靠的開發人員工
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:18
 msgid "Windows default"
 msgstr "Windows 預設值"
+
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:80
+msgid "Winning answer"
+msgstr "Winning answer"
 
 #. Switch description in the leave-community confirmation modal. Warns that deleting the caller's community messages is destructive.
 #. Switch description in the leave-group confirmation modal. Warns that deleting the caller's group messages is destructive.
@@ -40494,6 +40716,11 @@ msgstr "您無法將自己新增為朋友"
 msgid "You can't change your nickname here"
 msgstr "您無法在這裡變更暱稱"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:29
+msgid "You can't create polls in this channel."
+msgstr "You can't create polls in this channel."
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:18
 msgid "You can't delete this"
@@ -40730,6 +40957,11 @@ msgstr "您沒有權限加入此語音頻道"
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "您沒有重新命名此表情符號的權限。名稱已還原為先前的名稱。"
 
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:61
+msgid "You forgot to enter a question."
+msgstr "You forgot to enter a question."
+
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
@@ -40898,6 +41130,11 @@ msgstr "您必須先驗證電子郵件地址，才能傳送好友邀請。"
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "您需要先驗證電子郵件地址，才能開始傳送私訊。"
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx:60
+msgid "You need to verify your email address to vote on a poll."
+msgstr "You need to verify your email address to vote on a poll."
+
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
@@ -40916,6 +41153,11 @@ msgstr "您或您要新增的對象已達群組私訊數量上限。請先離開
 #: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:20
 msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
 msgstr "您或您正在訊息的對象已選擇封鎖私訊中的敏感媒體。你們都可以前往 {sensitiveContentSettingsPath} 進行更改。"
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:65
+msgid "You should enter at least one answer."
+msgstr "You should enter at least one answer."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:66
@@ -41210,6 +41452,11 @@ msgstr "您已達到表情符號數量上限。請刪除一些現有的表情符
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "您已達到貼圖數量上限。請刪除一些現有貼圖以騰出空間。"
 
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:12
+msgid "You've reached the maximum number of votes per answer."
+msgstr "You've reached the maximum number of votes per answer."
+
 #. Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:109
 msgid "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background."
@@ -41336,7 +41583,7 @@ msgid "Your browser requires user interaction before audio can be played. Click 
 msgstr "您的瀏覽器需要使用者互動才能播放音訊。請點擊下方按鈕以啟用語音聊天。"
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:113
+#: src/features/messaging/commands/MessageCommands.tsx:114
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "你的變更會傳送給所有追蹤此頻道的社群，這可能需要一分鐘。每則已發布的訊息可快速編輯 3 次，之後每 20 分鐘可編輯 1 次。"
 
@@ -41509,27 +41756,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "您的上次購買已超出退款期限。如需處理帳務問題，請聯絡客服。"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:83
+#: src/features/messaging/state/MessageQueue.tsx:84
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "您的訊息無法送達，因為它已被我們的安全系統標記。如果您認為這是錯誤，請聯絡客服。"
 
 #. Message send error on a self-hosted instance when the safety system blocks the message.
-#: src/features/messaging/state/MessageQueue.tsx:88
+#: src/features/messaging/state/MessageQueue.tsx:89
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "您的訊息無法送達，因為它已被我們的安全系統標記。如果您認為這是錯誤，請聯絡此實例的管理員。"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:70
+#: src/features/messaging/state/MessageQueue.tsx:71
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "您的訊息無法送達。這通常是因為您與收件者沒有共同社群，或是收件者只接受好友的私訊。您可能也需要調整您在 {directMessagePrivacySettingsPath} 的私訊隱私設定。"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:75
+#: src/features/messaging/state/MessageQueue.tsx:76
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "您的訊息無法送達。您需要先認領帳號才能傳送私訊。"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:79
+#: src/features/messaging/state/MessageQueue.tsx:80
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "您的訊息無法送達。您需要先認領帳號才能傳送訊息。"
 
@@ -41768,7 +42015,7 @@ msgstr "縮放"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:637
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:641
 #: src/features/input/state/input_keybind/shared.ts:270
 #: src/features/platform/utils/DesktopLocaleBridge.ts:113
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -41779,7 +42026,7 @@ msgstr "放大"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:633
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:637
 #: src/features/input/state/input_keybind/shared.ts:274
 #: src/features/platform/utils/DesktopLocaleBridge.ts:117
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

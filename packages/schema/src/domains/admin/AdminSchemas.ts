@@ -64,6 +64,7 @@ import {EmailBlocklistEntryType} from '@fluxer/schema/src/primitives/UserValidat
 import {WebhookTypeSchema} from '@fluxer/schema/src/primitives/WebhookValidators';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
+import {MessagePollResponse} from '../message/PollSchemas';
 
 const ReportStatusSchema = withOpenApiType(
 	createInt32EnumType(
@@ -1392,6 +1393,7 @@ export const AdminMessageSchema = z.object({
 	content: createStringType(0, 4000),
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
+	poll: MessagePollResponse.optional(),
 });
 export const LookupMessageResponse = z.object({
 	messages: z.array(AdminMessageSchema).max(100),

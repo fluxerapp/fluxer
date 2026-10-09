@@ -267,6 +267,7 @@ export class AdminMessageService {
 			author_avatar: message.author.avatar,
 			content: message.content ?? '',
 			timestamp: message.timestamp,
+			poll: message.poll,
 			attachments:
 				message.attachments?.map((attachment) => ({
 					id: attachment.id,

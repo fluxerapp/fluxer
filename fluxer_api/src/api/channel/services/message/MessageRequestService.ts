@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createMessageID, type ChannelID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
@@ -22,6 +22,7 @@ import type {
 	MessageChannelMentionResponse,
 	MessageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 
 function mentionsThreadChannel(mentions: ReadonlyArray<MessageChannelMentionResponse> | null | undefined): boolean {
 	return mentions?.some((mention) => THREAD_FEATURE_CHANNEL_TYPES.has(mention.type)) ?? false;
@@ -37,6 +38,7 @@ function carriesMaskableThreadData(response: MessageResponse): boolean {
 export class MessageRequestService {
 	constructor(
 		private readonly channelService: ChannelService,
+		private readonly channelRepository: ChannelRepository,
 		private readonly responseDataService: MessageResponseDataService,
 		private readonly crosspostSourceService: CrosspostSourceService,
 	) {}
@@ -73,6 +75,16 @@ export class MessageRequestService {
 		if (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, responses)) {
 			responses = await this.responseDataService.listMessages({...request, threadsMask: true});
 		}
+		await Promise.all(
+			responses.map((message) =>
+				this.fillMessagePollAnswerAuthorInfo(
+					params.channelId,
+					createMessageID(BigInt(message.id)),
+					params.userId,
+					message,
+				),
+			),
+		);
 		return retrieval.threadResponses.shape({
 			viewer: params.viewer,
 			userId: params.userId,
@@ -107,16 +119,29 @@ export class MessageRequestService {
 		}>;
 		requestCache: RequestCache;
 	}): Promise<BulkMessageFetchResponse> {
-		const channels = await mapWithConcurrency(params.requests, 4, async (request) => ({
-			channel_id: request.channelId.toString(),
-			messages: await this.listMessages({
+		const channels = await mapWithConcurrency(params.requests, 4, async (request) => {
+			const messages = await this.listMessages({
 				userId: params.userId,
 				viewer: params.viewer,
 				channelId: request.channelId,
 				query: request.query,
 				requestCache: params.requestCache,
-			}),
-		}));
+			});
+			await Promise.all(
+				messages.map((message) =>
+					this.fillMessagePollAnswerAuthorInfo(
+						request.channelId,
+						createMessageID(BigInt(message.id)),
+						params.userId,
+						message,
+					),
+				),
+			);
+			return {
+				channel_id: request.channelId.toString(),
+				messages,
+			};
+		});
 		return {channels};
 	}
 
@@ -154,6 +179,8 @@ export class MessageRequestService {
 		}
 		if (response === null) {
 			throw new UnknownMessageError();
+		} else {
+			await this.fillMessagePollAnswerAuthorInfo(params.channelId, params.messageId, params.userId, response);
 		}
 		const [shaped] = await retrieval.threadResponses.shape({
 			viewer: params.viewer,
@@ -212,6 +239,7 @@ export class MessageRequestService {
 			nonce: params.data.nonce,
 			tts: params.data.tts ?? false,
 		});
+		await this.fillMessagePollAnswerAuthorInfo(params.channelId, message.id, params.user.id, response);
 		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
 		return shaped ?? response;
 	}
@@ -316,5 +344,18 @@ export class MessageRequestService {
 		});
 		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
 		return shaped ?? response;
+	}
+
+	private async fillMessagePollAnswerAuthorInfo(
+		channelId: ChannelID,
+		messageId: MessageID,
+		userId: UserID,
+		message: MessageResponse,
+	) {
+		if (!message.poll?.results?.answer_counts) return;
+		const answers = await this.channelRepository.messageInteractions.getVoteAnswers(channelId, messageId, userId);
+		for (const answerCount of message.poll.results.answer_counts) {
+			if (answers.find((answer) => answer.id === answerCount.id)) answerCount.me_voted = true;
+		}
 	}
 }

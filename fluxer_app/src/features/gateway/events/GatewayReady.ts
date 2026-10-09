@@ -57,6 +57,7 @@ import type {
 	User as WireUser,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {runInAction} from 'mobx';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 
 const logger = new Logger('READY Handler');
 
@@ -168,6 +169,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	NavigationSideEffects.handleGatewayReady();
 	AuthSession.handleGatewayReady(data.auth_session_id_hash ?? null);
 	MessageReactions.handleGatewayReady();
+	PollVotes.handleGatewayReady();
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});
 	Permission.handleGatewayReady();

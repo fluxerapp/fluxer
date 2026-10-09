@@ -103,6 +103,8 @@ is_channel_scoped_event(message_reaction_add) -> true;
 is_channel_scoped_event(message_reaction_remove) -> true;
 is_channel_scoped_event(message_reaction_remove_all) -> true;
 is_channel_scoped_event(message_reaction_remove_emoji) -> true;
+is_channel_scoped_event(message_poll_vote_add) -> true;
+is_channel_scoped_event(message_poll_vote_remove) -> true;
 is_channel_scoped_event(typing_start) -> true;
 is_channel_scoped_event(channel_pins_update) -> true;
 is_channel_scoped_event(webhooks_update) -> true;
@@ -183,6 +185,8 @@ is_message_access_filtered_event(message_reaction_add) -> true;
 is_message_access_filtered_event(message_reaction_remove) -> true;
 is_message_access_filtered_event(message_reaction_remove_all) -> true;
 is_message_access_filtered_event(message_reaction_remove_emoji) -> true;
+is_message_access_filtered_event(message_poll_vote_add) -> true;
+is_message_access_filtered_event(message_poll_vote_remove) -> true;
 is_message_access_filtered_event(_) -> false.
 
 -spec extract_message_id(event_data()) -> binary().
@@ -234,6 +238,8 @@ is_message_access_filtered_event_test() ->
     ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove)),
     ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove_all)),
     ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove_emoji)),
+    ?assertEqual(true, is_message_access_filtered_event(message_poll_vote_add)),
+    ?assertEqual(true, is_message_access_filtered_event(message_poll_vote_remove)),
     ?assertEqual(false, is_message_access_filtered_event(message_create)),
     ?assertEqual(false, is_message_access_filtered_event(message_delete_bulk)),
     ?assertEqual(false, is_message_access_filtered_event(typing_start)),

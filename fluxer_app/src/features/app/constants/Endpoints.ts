@@ -70,6 +70,9 @@ export const Endpoints = {
 	CHANNEL_MESSAGE_ATTACHMENT: (channelId: string, messageId: string, attachmentId: string) =>
 		`/channels/${channelId}/messages/${messageId}/attachments/${attachmentId}`,
 	CHANNEL_MESSAGE_ACK: (channelId: string, messageId: string) => `/channels/${channelId}/messages/${messageId}/ack`,
+	CHANNEL_POLL_ANSWERS: (channelId: string, messageId: string, userId: string) => `/channels/${channelId}/polls/${messageId}/answers/${userId}`,
+	CHANNEL_POLL_ANSWER_VOTERS: (channelId: string, messageId: string, answerId: number) => `/channels/${channelId}/polls/${messageId}/answers/${answerId}`,
+	CHANNEL_POLL_EXPIRE: (channelId: string, messageId: string) => `/channels/${channelId}/polls/${messageId}/expire`,
 	CHANNEL_MESSAGE_CROSSPOST: (channelId: string, messageId: string) =>
 		`/channels/${channelId}/messages/${messageId}/crosspost`,
 	CHANNEL_MESSAGE_CROSSPOST_SOURCE: (channelId: string, messageId: string) =>

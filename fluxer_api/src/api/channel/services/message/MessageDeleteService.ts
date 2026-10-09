@@ -13,6 +13,7 @@ import {
 } from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import type {MessagePollService} from '@app/api/channel/services/message/MessagePollService';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -44,6 +45,7 @@ interface MessageDeleteServiceDeps {
 	channelAuthService: MessageChannelAuthService;
 	dispatchService: MessageDispatchService;
 	searchService: MessageSearchService;
+	pollService: MessagePollService;
 	gatewayService: IGatewayService;
 	guildAuditLogService: GuildAuditLogService;
 	crosspostPropagation: CrosspostPropagation;
@@ -130,6 +132,7 @@ export class MessageDeleteService {
 				.commit();
 		}
 		await this.deps.searchService.deleteMessageIndex(messageId);
+		await this.deps.pollService.removeAllVotes(channelId, messageId);
 	}
 
 	async deleteWebhookMessage({

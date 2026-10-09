@@ -266,7 +266,7 @@ export class EmbedService {
 			nsfw = true;
 		}
 		return new Embed({
-			type: 'rich',
+			type: embed.type ?? 'rich',
 			title: embed.title ?? null,
 			description: embed.description ?? null,
 			url: canonicalUrl(embed.url),

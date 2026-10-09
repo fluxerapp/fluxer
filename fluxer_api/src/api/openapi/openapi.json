@@ -5143,6 +5143,237 @@
 				]
 			}
 		},
+		"/channels/{channel_id}/polls/{message_id}/answers/@me": {
+			"put": {
+				"operationId": "vote",
+				"summary": "Vote on the poll",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Vote on the poll.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PollVoteRequestSchema"}}}
+				}
+			}
+		},
+		"/channels/{channel_id}/polls/{message_id}/answers/{answer_id}": {
+			"get": {
+				"operationId": "get_answer_voters",
+				"summary": "Get answer voters",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PollAnswerVotersResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Get a list of users that voted for this specific answer.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					},
+					{
+						"name": "answer_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the answer.", "$ref": "#/components/schemas/Int64Type"},
+						"description": "The ID of the answer."
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Maximum number of users to return (1-100)",
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 100
+						},
+						"description": "Maximum number of users to return (1-100)"
+					},
+					{
+						"name": "after",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Get users after this user ID", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "Get users after this user ID"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/polls/{message_id}/expire": {
+			"post": {
+				"operationId": "end_poll",
+				"summary": "End poll immediately",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "End the poll immediately. You cannot end polls from other users.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				]
+			}
+		},
 		"/channels/{channel_id}/post-data": {
 			"post": {
 				"operationId": "get_channel_post_data",
@@ -23354,6 +23585,10 @@
 							{"type": "null"}
 						]
 					},
+					"poll": {
+						"description": "The poll attached to the message",
+						"anyOf": [{"$ref": "#/components/schemas/MessagePollResponse"}, {"type": "null"}]
+					},
 					"attachments": {
 						"description": "The files attached to the message",
 						"anyOf": [
@@ -23520,6 +23755,10 @@
 											{"type": "array", "items": {"$ref": "#/components/schemas/MessageEmbedResponse"}},
 											{"type": "null"}
 										]
+									},
+									"poll": {
+										"description": "The poll attached to the message",
+										"anyOf": [{"$ref": "#/components/schemas/MessagePollResponse"}, {"type": "null"}]
 									},
 									"attachments": {
 										"description": "The files attached to the message",
@@ -31283,6 +31522,32 @@
 				"additionalProperties": false,
 				"x-fluxer-experiment": "channel_threads"
 			},
+			"Int64Type": {
+				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}],
+				"format": "int64"
+			},
+			"PollAnswerVotersResponse": {
+				"type": "object",
+				"properties": {
+					"users": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/UserPartialResponse"},
+						"description": "Users who reacted with the requested answer"
+					},
+					"has_more": {"type": "boolean", "description": "Whether more reaction users can be fetched"},
+					"next_after": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "Cursor for the next page, or null when there are no more users"
+					}
+				},
+				"required": ["users", "has_more", "next_after"],
+				"additionalProperties": false
+			},
+			"PollVoteRequestSchema": {
+				"type": "object",
+				"properties": {"answerIds": {"type": "array", "items": {"type": "string"}}},
+				"required": ["answerIds"]
+			},
 			"PermissionOverwriteCreateRequest": {
 				"type": "object",
 				"properties": {
@@ -31672,6 +31937,7 @@
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
+					"poll": {"anyOf": [{"$ref": "#/components/schemas/MessagePollRequest"}, {"type": "null"}]},
 					"attachments": {
 						"type": "array",
 						"items": {
@@ -34971,9 +35237,96 @@
 				},
 				"required": ["id", "filename", "content_type", "upload_filename", "file_size"]
 			},
+			"MessagePollRequest": {
+				"type": "object",
+				"properties": {
+					"question": {
+						"description": "The question of the poll",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"emoji": {
+										"description": "The emoji of the poll media",
+										"anyOf": [
+											{
+												"type": "object",
+												"properties": {
+													"id": {"description": "The ID of the emoji", "type": ["string", "null"]},
+													"name": {"description": "The name of the emoji", "type": ["string", "null"]}
+												}
+											},
+											{"type": "null"}
+										]
+									},
+									"text": {"description": "The text of the poll media", "type": ["string", "null"]}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"answers": {
+						"description": "The possible answers of the poll",
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"answer_id": {
+											"description": "The ID of the poll answer (starts at 1)",
+											"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+										},
+										"poll_media": {
+											"description": "The poll media of the answer (contains the text and emoji)",
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"emoji": {
+															"description": "The emoji of the poll media",
+															"anyOf": [
+																{
+																	"type": "object",
+																	"properties": {
+																		"id": {"description": "The ID of the emoji", "type": ["string", "null"]},
+																		"name": {"description": "The name of the emoji", "type": ["string", "null"]}
+																	}
+																},
+																{"type": "null"}
+															]
+														},
+														"text": {"description": "The text of the poll media", "type": ["string", "null"]}
+													}
+												},
+												{"type": "null"}
+											]
+										}
+									}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"duration": {
+						"description": "Duration of the poll in hours",
+						"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+					},
+					"anonymous_voting": {
+						"description": "Whether the votes are anonymous on this poll",
+						"type": ["boolean", "null"]
+					},
+					"allow_multiselect": {"description": "Whether the poll allows multiple answers", "type": ["boolean", "null"]},
+					"layout_type": {
+						"description": "The layout type of the poll",
+						"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+					}
+				}
+			},
 			"RichEmbedRequest": {
 				"type": "object",
 				"properties": {
+					"type": {"description": "Type of the embed", "type": "string"},
 					"url": {"description": "URL of the embed", "type": ["string", "null"]},
 					"title": {"description": "Title of the embed (0-256 characters)", "type": ["string", "null"]},
 					"color": {
@@ -35186,6 +35539,10 @@
 									{"type": "array", "items": {"$ref": "#/components/schemas/MessageEmbedResponse"}},
 									{"type": "null"}
 								]
+							},
+							"poll": {
+								"description": "The poll attached to the message",
+								"anyOf": [{"$ref": "#/components/schemas/MessagePollResponse"}, {"type": "null"}]
 							},
 							"attachments": {
 								"description": "The files attached to the message",
@@ -35426,6 +35783,151 @@
 				"required": ["id", "filename", "size", "flags"],
 				"additionalProperties": false
 			},
+			"MessagePollResponse": {
+				"type": "object",
+				"properties": {
+					"question": {
+						"description": "The question of the poll",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"emoji": {
+										"description": "The emoji of the poll media",
+										"anyOf": [
+											{
+												"type": "object",
+												"properties": {
+													"id": {"description": "The ID of the emoji", "type": ["string", "null"]},
+													"name": {"description": "The name of the emoji", "type": ["string", "null"]}
+												},
+												"additionalProperties": false
+											},
+											{"type": "null"}
+										]
+									},
+									"text": {"description": "The text of the poll media", "type": ["string", "null"]}
+								},
+								"additionalProperties": false
+							},
+							{"type": "null"}
+						]
+					},
+					"answers": {
+						"description": "The possible answers of the poll",
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"answer_id": {
+											"description": "The ID of the poll answer (starts at 1)",
+											"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+										},
+										"poll_media": {
+											"description": "The poll media of the answer (contains the text and emoji)",
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"emoji": {
+															"description": "The emoji of the poll media",
+															"anyOf": [
+																{
+																	"type": "object",
+																	"properties": {
+																		"id": {"description": "The ID of the emoji", "type": ["string", "null"]},
+																		"name": {"description": "The name of the emoji", "type": ["string", "null"]}
+																	},
+																	"additionalProperties": false
+																},
+																{"type": "null"}
+															]
+														},
+														"text": {"description": "The text of the poll media", "type": ["string", "null"]}
+													},
+													"additionalProperties": false
+												},
+												{"type": "null"}
+											]
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"expiry": {
+						"description": "Expiration date of the poll as an ISO date",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"anonymous_voting": {
+						"description": "Whether the votes are anonymous on this poll",
+						"type": ["boolean", "null"]
+					},
+					"allow_multiselect": {"description": "Whether the poll allows multiple answers", "type": ["boolean", "null"]},
+					"layout_type": {
+						"description": "The layout type of the poll",
+						"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+					},
+					"results": {
+						"description": "The results of the poll",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"answer_counts": {
+										"description": "The answer counts of the poll results",
+										"anyOf": [
+											{
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"id": {
+															"description": "The ID of the poll answer",
+															"anyOf": [
+																{"type": "integer", "minimum": -2147483648, "maximum": 2147483647},
+																{"type": "null"}
+															]
+														},
+														"count": {
+															"description": "The number of votes on this answer",
+															"anyOf": [
+																{"type": "integer", "minimum": -2147483648, "maximum": 2147483647},
+																{"type": "null"}
+															]
+														},
+														"me_voted": {
+															"description": "Whether the requesting user voted on this answer",
+															"type": ["boolean", "null"]
+														}
+													},
+													"additionalProperties": false
+												}
+											},
+											{"type": "null"}
+										]
+									},
+									"is_finalized": {"description": "Whether the poll results are finalized", "type": ["boolean", "null"]}
+								},
+								"additionalProperties": false
+							},
+							{"type": "null"}
+						]
+					}
+				},
+				"additionalProperties": false
+			},
 			"MessageEmbedResponse": {
 				"type": "object",
 				"properties": {
@@ -35523,10 +36025,11 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 18, 19, 21],
+				"enum": [0, 46, 1, 2, 3, 4, 5, 6, 7, 12, 18, 19, 21],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
+					"POLL_RESULT",
 					"RECIPIENT_ADD",
 					"RECIPIENT_REMOVE",
 					"CALL",
@@ -35541,6 +36044,7 @@
 				],
 				"x-enumDescriptions": [
 					"A regular message",
+					"A system message indicating a poll has closed",
 					"A system message indicating a user was added to the conversation",
 					"A system message indicating a user was removed from the conversation",
 					"A message representing a call",
@@ -35941,6 +36445,7 @@
 					},
 					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
 					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
+					{"name": "SEND_POLLS", "value": "562949953421312", "description": "Allows sending polls"},
 					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
 					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
 					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
@@ -35948,6 +36453,11 @@
 						"name": "VIEW_CHANNEL_MEMBERS",
 						"value": "18014398509481984",
 						"description": "Allows viewing the member list in a channel"
+					},
+					{
+						"name": "SEE_VOTES_ON_ANONYMOUS_POLLS",
+						"value": "36028797018963968",
+						"description": "Allows seeing votes on anonymous polls"
 					}
 				]
 			},
@@ -36011,6 +36521,7 @@
 								"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 								"description": "Array of embed objects to include in the message"
 							},
+							"poll": {"anyOf": [{"$ref": "#/components/schemas/MessagePollRequest"}, {"type": "null"}]},
 							"attachments": {
 								"type": "array",
 								"items": {
@@ -36084,6 +36595,7 @@
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
+					"poll": {"anyOf": [{"$ref": "#/components/schemas/MessagePollRequest"}, {"type": "null"}]},
 					"attachments": {
 						"type": "array",
 						"items": {
@@ -38608,6 +39120,10 @@
 										{"type": "null"}
 									]
 								},
+								"poll": {
+									"description": "The poll attached to the message",
+									"anyOf": [{"$ref": "#/components/schemas/MessagePollResponse"}, {"type": "null"}]
+								},
 								"attachments": {
 									"description": "The files attached to the message",
 									"anyOf": [
@@ -39569,10 +40085,6 @@
 				"type": "string"
 			},
 			"HexString16Type": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
-			"Int64Type": {
-				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}],
-				"format": "int64"
-			},
 			"APIErrorCode": {
 				"type": "string",
 				"enum": [
@@ -39603,18 +40115,24 @@
 					"CANNOT_EDIT_OTHER_USER_MESSAGE",
 					"CANNOT_EXECUTE_ON_DM",
 					"CANNOT_BLOCK_SYSTEM_USER",
+					"CANNOT_FORWARD_POLL",
+					"CANNOT_MODIFY_POLL",
 					"CANNOT_MODIFY_SYSTEM_WEBHOOK",
 					"CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY",
 					"CANNOT_REPORT_GUILD",
 					"CANNOT_REPORT_OWN_GUILD",
 					"CANNOT_REPORT_OWN_MESSAGE",
 					"CANNOT_REPORT_YOURSELF",
+					"CANNOT_SELECT_MULTIPLE_ANSWERS",
 					"CANNOT_SEND_EMPTY_MESSAGE",
 					"CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER",
 					"CANNOT_SEND_FRIEND_REQUEST_TO_SELF",
 					"CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL",
 					"CANNOT_SEND_MESSAGES_TO_USER",
+					"CANNOT_SEND_POLL_IN_PERSONAL_NOTES",
 					"CANNOT_TRANSFER_OWNERSHIP_TO_BOT",
+					"CANNOT_VOTE_ON_FINALIZED_POLL_ERROR",
+					"CANNOT_VOTE_ON_NON_POLL_ERROR",
 					"CANNOT_SHRINK_RESERVED_SLOTS",
 					"CAPTCHA_REQUIRED",
 					"CHANNEL_ALREADY_FOLLOWED",
@@ -39653,6 +40171,7 @@
 					"MESSAGE_CROSSPOST_RATE_LIMITED",
 					"MESSAGE_NOT_CROSSPOSTABLE",
 					"MFA_EMAIL_VERIFICATION_REQUIRED",
+					"POLL_VOTE_EMAIL_VERIFICATION_REQUIRED",
 					"PROFILE_EMAIL_VERIFICATION_REQUIRED",
 					"PUBLISHED_MESSAGE_EDIT_RATE_LIMITED",
 					"PURCHASE_EMAIL_VERIFICATION_REQUIRED",
@@ -39738,6 +40257,7 @@
 					"MAX_INVITES",
 					"MAX_REACTIONS",
 					"MAX_STICKERS",
+					"MAX_POLL_VOTES",
 					"MAX_THREAD_MEMBERS",
 					"MAX_WEBHOOKS_PER_CHANNEL",
 					"MAX_WEBHOOKS_PER_GUILD",
@@ -39840,6 +40360,7 @@
 					"UNKNOWN_INVITE",
 					"UNKNOWN_MEMBER",
 					"UNKNOWN_MESSAGE",
+					"UNKNOWN_POLL_ANSWER",
 					"UNKNOWN_ORIGIN_HANDOFF",
 					"UNKNOWN_PASSKEY_BRIDGE",
 					"UNKNOWN_PASSKEY_MIGRATION",
@@ -39900,18 +40421,24 @@
 					"You can't edit another user's message.",
 					"This action can't be performed in a DM.",
 					"You can't block the system user.",
+					"You can't forward a message containing a poll.",
+					"You can't edit a message containing a poll.",
 					"You can't edit system messages.",
 					"You can't redeem {premium_tier_name} with Visionary.",
 					"You can't report this community.",
 					"You can't report your own community.",
 					"You can't report your own message.",
 					"You can't report yourself.",
+					"You can't select multiple answers on this poll.",
 					"You can't send an empty message.",
 					"You can't send a friend request to a blocked user.",
 					"You can't send a friend request to yourself.",
 					"You can't send messages in a non-text channel.",
 					"You can't send messages to this user.",
+					"You can't send a poll in your personal notes.",
 					"Community ownership can't be transferred to a bot.",
+					"You cannot vote on a poll that has already ended.",
+					"You cannot vote on a message that doesn't contain a poll.",
 					"You can't shrink reserved slots.",
 					"Verification required. Try again.",
 					"This channel already receives updates from that announcement channel.",
@@ -39949,6 +40476,7 @@
 					"This message has already been published.",
 					"This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
 					"This message cannot be published.",
+					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
@@ -40035,6 +40563,7 @@
 					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
 					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
 					"You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}.",
+					"You've reached the maximum of {count, plural, one {# vote} other {# votes}} per answer.",
 					"This thread has reached its member limit of {count}.",
 					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
 					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
@@ -40137,6 +40666,7 @@
 					"Invite wasn't found or is no longer valid.",
 					"Member wasn't found in this community.",
 					"Message wasn't found.",
+					"Poll answer wasn't found.",
 					"This sign-in transfer has expired or was already used.",
 					"This passkey request has expired. Try again.",
 					"There is no passkey to update right now.",

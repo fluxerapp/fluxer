@@ -21,12 +21,14 @@ export const SystemMessage = observer(
 		iconClassname,
 		message,
 		messageContent,
+		additionalContent,
 	}: {
 		icon: Icon;
 		iconWeight: 'bold' | 'fill';
 		iconClassname?: string;
 		message: Message;
 		messageContent: React.ReactNode;
+		additionalContent?: React.ReactNode;
 	}) => {
 		const {i18n} = useLingui();
 		const messageDisplayCompact = UserSettings.getMessageDisplayCompact();
@@ -105,9 +107,18 @@ export const SystemMessage = observer(
 						{formattedDate}
 					</TimestampWithTooltip>
 				</div>
-				{showReactions && (
-					<div className={styles.container} data-flx="channel.system-message.container--2">
-						<MessageReactions message={message} data-flx="channel.system-message.message-reactions--2" />
+				{(showReactions || additionalContent) && (
+					<div
+						className={styles.container}
+						style={{
+							rowGap: 0,
+						}}
+						data-flx="channel.system-message.container--2"
+					>
+						{additionalContent}
+						{showReactions && (
+							<MessageReactions message={message} data-flx="channel.system-message.message-reactions--2" />
+						)}
 					</div>
 				)}
 			</>

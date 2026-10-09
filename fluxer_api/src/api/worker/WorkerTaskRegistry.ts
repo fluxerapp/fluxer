@@ -20,6 +20,7 @@ import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
 import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
 import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
 import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
+import finalizePolls from '@app/api/worker/tasks/FinalizePolls';
 import flushUserActivityBuffer from '@app/api/worker/tasks/FlushUserActivityBuffer';
 import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
 import handleMentions from '@app/api/worker/tasks/HandleMentions';
@@ -92,6 +93,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	expireReportSnapshots,
 	expireStaleJobs,
 	extractEmbeds,
+	finalizePolls,
 	handleMentions,
 	handleMentionChunk,
 	harvestGuildData,

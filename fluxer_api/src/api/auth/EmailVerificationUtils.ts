@@ -8,6 +8,7 @@ import {
 	GuildCreationEmailVerificationRequiredError,
 	GuildEmailVerificationRequiredError,
 	MfaEmailVerificationRequiredError,
+	PollVoteVerificationRequiredError,
 	ProfileEmailVerificationRequiredError,
 	ReactionEmailVerificationRequiredError,
 	ReportEmailVerificationRequiredError,
@@ -21,6 +22,7 @@ export type EmailVerificationRequiredReason =
 	| 'mfa'
 	| 'profile'
 	| 'reaction'
+	| 'vote'
 	| 'report';
 
 const ErrorByReason = {
@@ -31,6 +33,7 @@ const ErrorByReason = {
 	mfa: MfaEmailVerificationRequiredError,
 	profile: ProfileEmailVerificationRequiredError,
 	reaction: ReactionEmailVerificationRequiredError,
+	vote: PollVoteVerificationRequiredError,
 	report: ReportEmailVerificationRequiredError,
 } satisfies Record<EmailVerificationRequiredReason, new () => EmailVerificationRequiredError>;
 

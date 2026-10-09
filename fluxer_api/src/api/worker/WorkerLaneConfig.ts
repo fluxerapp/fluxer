@@ -44,6 +44,7 @@ const LANE_CONFIG = {
 			'bulkDeleteUserMessagesScoped',
 			'deleteUserMessagesInGuildByTime',
 			'messageShred',
+			'finalizePolls',
 			'harvestGuildData',
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',

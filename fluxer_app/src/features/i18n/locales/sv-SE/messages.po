@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx:88
+msgid ", "
+msgstr ", "
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:52
 msgid "... turn dense mode on. Nice!"
@@ -22,7 +27,7 @@ msgstr "... aktivera kompakt läge. Snyggt!"
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:363
-#: src/features/channel/components/UserMessage.tsx:76
+#: src/features/channel/components/UserMessage.tsx:78
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(redigerat)"
@@ -42,7 +47,7 @@ msgid "(you)"
 msgstr "(du)"
 
 #. Replaces the text of a copy of a published announcement after the original was deleted in the announcement channel. Keep the square brackets.
-#: src/features/channel/components/UserMessage.tsx:66
+#: src/features/channel/components/UserMessage.tsx:68
 msgid "[Original message deleted]"
 msgstr "[Ursprungligt meddelande borttaget]"
 
@@ -50,6 +55,21 @@ msgstr "[Ursprungligt meddelande borttaget]"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:167
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# medlem} other {# medlemmar}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx:191
+msgid "{0}d left"
+msgstr "{0}d left"
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx:190
+msgid "{0}h left"
+msgstr "{0}h left"
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx:189
+msgid "{0}m left"
+msgstr "{0}m left"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx:19
@@ -1137,6 +1157,11 @@ msgstr "{count, plural, one {# community använder en annan inställning} other 
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# anslutning} other {# anslutningar}}"
 
+#. Generic description for a duration option that is measured in days.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:73
+msgid "{count, plural, one {# day} other {# days}}"
+msgstr "{count, plural, one {# day} other {# days}}"
+
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
 msgid "{count, plural, one {# file} other {# files}}"
@@ -1147,6 +1172,11 @@ msgstr "{count, plural, one {# fil} other {# filer}}"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# present} other {# presenter}}"
+
+#. Generic description for a duration option that is measured in hours.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:77
+msgid "{count, plural, one {# hour} other {# hours}}"
+msgstr "{count, plural, one {# hour} other {# hours}}"
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
@@ -1223,6 +1253,16 @@ msgstr "{count, plural, one {# förslag tillgängligt} other {# förslag tillgä
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# video} other {# videor}}"
+
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx:76
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr "{count, plural, one {# vote} other {# votes}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:69
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr "{count, plural, one {# week} other {# weeks}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1679,7 +1719,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {medlem} other {medlemmar}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:806
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:810
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, one {# omnämnande} other {# omnämnanden}}"
 
@@ -2379,6 +2419,10 @@ msgstr "<0/> startade ett samtal som varade {durationText}."
 msgid "<0/> started a call."
 msgstr "<0/> startade ett samtal."
 
+#: src/features/channel/components/PollClosedMessage.tsx:67
+msgid "<0/>'s poll <1/> has closed."
+msgstr "<0/>'s poll <1/> has closed."
+
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:130
 msgid "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
 msgstr "<0>{targetUserTag}</0> har en timeout. Du kan ändra timeoutens längd eller ta bort den."
@@ -2397,6 +2441,11 @@ msgstr "<0>Vidarebefordrat från</0>{sourceInfo}"
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:63
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>, <1>Amara</1> och <2>Mateo</2> skriver..."
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx:64
+msgid "<1m left"
+msgstr "<1m left"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:169
@@ -2765,6 +2814,11 @@ msgstr "En ny version av datorappen är tillgänglig. Ladda ner installationspro
 msgid "a poll"
 msgstr "en omröstning"
 
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:25
+msgid "A possible answer"
+msgstr "A possible answer"
+
 #. Plutonium page perk card title about profile customization.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:92
 msgid "A profile that stands out"
@@ -3051,7 +3105,7 @@ msgstr "Aktiv"
 
 #. Short status label for the account currently signed in.
 #: src/features/auth/components/accounts/AccountRow.tsx:79
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:890
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:894
 msgid "Active account"
 msgstr "Aktivt konto"
 
@@ -3090,7 +3144,7 @@ msgstr "Aktiv månadsabonnent (uppsägning planerad)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:754
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:758
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:39
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:47
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -3247,7 +3301,7 @@ msgstr "Lägg till en YouTube Data API-nyckel för att visa utökade förhandsvi
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:894
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:898
 msgid "Add account"
 msgstr "Lägg till konto"
 
@@ -3292,6 +3346,11 @@ msgstr "Lägg till en annan instans"
 msgid "Add another reaction"
 msgstr "Lägg till en till reaktion"
 
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:40
+msgid "Add answer"
+msgstr "Add answer"
+
 #. Setup wizard body for Bluesky integration credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1105
 msgid "Add Bluesky OAuth client metadata and a signing key."
@@ -3303,7 +3362,7 @@ msgid "Add bot to a destination"
 msgstr "Lägg till bot i en destination"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:524
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:528
 msgid "Add channel"
 msgstr "Lägg till kanal"
 
@@ -3416,13 +3475,13 @@ msgstr "Lägg till lösennyckel"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:536
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:540
 #: src/features/input/state/input_keybind/shared.ts:21
 msgid "Add reaction"
 msgstr "Lägg till reaktion"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:439
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:447
 msgid "Add reactions"
 msgstr "Lägg till reaktioner"
 
@@ -3619,7 +3678,7 @@ msgid "Added to favorite GIFs"
 msgstr "Tillagd i favorit-GIF:ar"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:629
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:633
 msgid "Added to favorites"
 msgstr "Tillagd i favoriter"
 
@@ -3996,7 +4055,7 @@ msgstr "Tillåt för alla communities"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:91
 msgid "Allow H.265 (HEVC) for screen sharing"
-msgstr "Tillåt H.265 (HEVC) för skärmdelning"
+msgstr "Allow H.265 (HEVC) for screen sharing"
 
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
@@ -4020,6 +4079,11 @@ msgstr "Tillåt omnämnanden för den här rollen"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "Tillåt mikrofon"
+
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:48
+msgid "Allow multiple answers"
+msgstr "Allow multiple answers"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -4115,7 +4179,7 @@ msgid "Allows members to create posts in this channel."
 msgstr "Tillåter medlemmar att skapa inlägg i den här kanalen."
 
 #. Description of the Manage threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:538
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:546
 msgid "Allows members to rename, close, lock and delete threads, and to view private threads."
 msgstr "Tillåter medlemmar att byta namn på, stänga, låsa och ta bort trådar, samt att se privata trådar."
 
@@ -4130,17 +4194,17 @@ msgid "Allows members to send messages in posts."
 msgstr "Tillåter medlemmar att skicka meddelanden i inlägg."
 
 #. Description of the Send messages in threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:550
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:558
 msgid "Allows members to send messages in threads."
 msgstr "Tillåter medlemmar att skicka meddelanden i trådar."
 
 #. Description of the Create public threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:542
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:550
 msgid "Allows members to start threads that everyone in the channel can see."
 msgstr "Tillåter medlemmar att starta trådar som alla i kanalen kan se."
 
 #. Description of the Create private threads permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:546
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:554
 msgid "Allows members to start threads that only invited members and moderators can see."
 msgstr "Tillåter medlemmar att starta trådar som endast inbjudna medlemmar och moderatorer kan se."
 
@@ -4170,7 +4234,7 @@ msgid "Already set to cancel"
 msgstr "Redan inställd för uppsägning"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:98
+#: src/features/messaging/commands/MessageCommands.tsx:99
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Anmäl även det här meddelandet till säkerhetsteamet på {productName}"
 
@@ -4560,6 +4624,11 @@ msgstr "Meddelanden"
 msgid "Annual"
 msgstr "Årlig"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:52
+msgid "Anonymous voting"
+msgstr "Anonymous voting"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "Ännu en kryssruta"
@@ -4572,6 +4641,11 @@ msgstr "Ytterligare en rund kryssruta"
 #: src/features/input/state/input_keybind/shared.ts:221
 msgid "Answer the incoming call"
 msgstr "Svara på det inkommande samtalet"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:36
+msgid "Answers"
+msgstr "Answers"
 
 #: src/features/user/components/modals/tabs/keybinds_tab/shared.ts:10
 msgid "Any key"
@@ -4677,7 +4751,7 @@ msgid "App zoom"
 msgstr "Appzoom"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:786
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:790
 msgid "App zoom level"
 msgstr "Appens zoomnivå"
 
@@ -5067,7 +5141,7 @@ msgid "Attachment upload unavailable"
 msgstr "Det går inte att ladda upp bilagan"
 
 #. Notification body shown when a message has no text but includes an attachment. filename is the file name.
-#: src/features/notification/utils/MessageNotificationPreview.ts:24
+#: src/features/notification/utils/MessageNotificationPreview.ts:25
 msgid "Attachment: {filename}"
 msgstr "Bilaga: {filename}"
 
@@ -5244,7 +5318,7 @@ msgid "Authenticator app"
 msgstr "Autentiseringsapp"
 
 #. Generic field label for the one-time code produced by an authenticator app.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:818
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:822
 msgid "Authenticator code"
 msgstr "Autentiseringskod"
 
@@ -5408,7 +5482,7 @@ msgstr "Automatisk"
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:122
 msgid "Automatic ({codec})"
-msgstr "Automatisk ({codec})"
+msgstr "Automatic ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -5589,7 +5663,7 @@ msgstr "Borta"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:826
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:830
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:393
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:265
@@ -5727,7 +5801,7 @@ msgid "Backspace"
 msgstr "Backsteg"
 
 #. Generic field label for one of the one-use codes saved when two-factor authentication was set up.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:822
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:826
 msgid "Backup code"
 msgstr "Reservkod"
 
@@ -6130,7 +6204,7 @@ msgstr "Bokmärkesgränsen har nåtts"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:540
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:544
 #: src/features/input/state/input_keybind/shared.ts:282
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -6550,7 +6624,7 @@ msgid "Bypass mention suppression"
 msgstr "Kringgå tystade omnämnanden"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:443
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:451
 msgid "Bypass slowmode"
 msgstr "Kringgå långsamt läge"
 
@@ -6610,7 +6684,7 @@ msgstr "Samtal"
 #. Name of the macOS Camera permission. Use the name macOS shows under System Settings, Privacy & Security in this language.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:730
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
@@ -6671,7 +6745,7 @@ msgstr "Kameran avstängd"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:734
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:738
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Kameran på"
@@ -7060,7 +7134,7 @@ msgid "Change emoji"
 msgstr "Ändra emoji"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:552
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:556
 msgid "Change friend nickname"
 msgstr "Ändra väns smeknamn"
 
@@ -7094,7 +7168,7 @@ msgid "Change in system settings"
 msgstr "Ändra i systeminställningar"
 
 #. Generic action label that returns the user to instance selection.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:838
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:842
 msgid "Change instance"
 msgstr "Byt instans"
 
@@ -7114,7 +7188,7 @@ msgid "Change my group nickname"
 msgstr "Ändra mitt gruppsmeknamn"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:484
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:488
 msgid "Change nickname"
 msgstr "Ändra smeknamn"
 
@@ -7488,7 +7562,7 @@ msgid "Channel actions"
 msgstr "Kanalåtgärder"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:798
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:802
 msgid "Channel added to favorites"
 msgstr "Kanalen har lagts till i favoriter"
 
@@ -7509,14 +7583,14 @@ msgid "Channel created"
 msgstr "Kanal skapad"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:560
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:564
 msgid "Channel debug"
 msgstr "Kanal-felsökning"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:18
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:770
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:774
 msgid "Channel deleted"
 msgstr "Kanalen raderad"
 
@@ -7610,7 +7684,7 @@ msgid "Channel record"
 msgstr "Kanalpost"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:794
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:798
 msgid "Channel removed from favorites"
 msgstr "Kanal borttagen från favoriter"
 
@@ -8336,7 +8410,7 @@ msgstr "Rensa simulerade bilagor"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:139
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:144
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Rensa kommando"
@@ -8350,7 +8424,7 @@ msgid "Clear custom status"
 msgstr "Rensa anpassad status"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:81
+#: src/features/channel/components/MessageActionUtils.tsx:82
 msgid "Clear every reaction from this message?"
 msgstr "Rensa alla reaktioner från det här meddelandet?"
 
@@ -8388,7 +8462,7 @@ msgid "Clear quick CSS?"
 msgstr "Rensa snabb-CSS?"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:528
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:532
 #: src/features/theme_studio/sections/TokensSection.tsx:205
 msgid "Clear search"
 msgstr "Rensa sökning"
@@ -8720,7 +8794,7 @@ msgid "Coal theme"
 msgstr "Koltema"
 
 #. Generic field label for a short verification or backup code the user types in.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:850
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:854
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:38
 msgid "Code"
@@ -8976,7 +9050,7 @@ msgstr "Communities du kan gå med i"
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
 #: src/features/channel/components/ChannelUserTag.tsx:27
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:874
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:878
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:223
 msgid "Community"
 msgstr "Community"
@@ -9013,7 +9087,7 @@ msgid "Community debug"
 msgstr "Felsök community"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:774
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:778
 msgid "Community default"
 msgstr "Communityns standardinställning"
 
@@ -9382,7 +9456,7 @@ msgstr "Bekräfta ny grupp"
 #. Generic field label for retyping the password the user is choosing.
 #. Label for the new password confirmation field on the account recovery page.
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:40
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:858
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:862
 msgid "Confirm new password"
 msgstr "Bekräfta nytt lösenord"
 
@@ -9438,7 +9512,7 @@ msgstr "Anslut en mikrofon och försök igen."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:459
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:60
 msgid "Connect to voice"
 msgstr "Anslut till röstkanal"
@@ -9672,7 +9746,7 @@ msgstr "Snabbmenyer kan öppnas med vänsterklick (på knappar) eller högerklic
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:36
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:722
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:413
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
@@ -9897,7 +9971,7 @@ msgid "Copy code"
 msgstr "Kopiera kod"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:738
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:742
 msgid "Copy community ID"
 msgstr "Kopiera community-ID"
 
@@ -10014,7 +10088,7 @@ msgstr "Kopiera rader för hyprland.lua"
 
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:750
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:754
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
@@ -10042,20 +10116,20 @@ msgid "Copy media to clipboard"
 msgstr "Kopiera medieobjekt till urklipp"
 
 #. Message context menu item that copies the message text content to the clipboard.
-#: src/features/channel/components/MessageActionMenu.tsx:99
+#: src/features/channel/components/MessageActionMenu.tsx:100
 msgid "Copy message"
 msgstr "Kopiera meddelande"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:742
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:746
 #: src/features/input/state/input_keybind/shared.ts:294
 msgid "Copy message ID"
 msgstr "Kopiera meddelande-ID"
 
 #. Generic action label that copies a permalink to the selected message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:532
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:536
 #: src/features/input/state/input_keybind/shared.ts:290
 msgid "Copy message link"
 msgstr "Kopiera meddelandelänk"
@@ -10139,7 +10213,7 @@ msgid "Copy user ID"
 msgstr "Kopiera användar-ID"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:746
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:750
 msgid "Copy username"
 msgstr "Kopiera användarnamn"
 
@@ -10550,7 +10624,7 @@ msgid "Couldn't process image"
 msgstr "Kunde inte bearbeta bilden"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:130
+#: src/features/messaging/commands/MessageCommands.tsx:131
 msgid "Couldn't publish this message"
 msgstr "Kunde inte publicera detta meddelande"
 
@@ -10640,7 +10714,7 @@ msgid "Couldn't ring this person"
 msgstr "Kunde inte ringa den här personen"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:54
+#: src/features/messaging/hooks/useTextareaSubmit.ts:55
 msgid "Couldn't run that command: {detail}"
 msgstr "Kunde inte köra kommandot: {detail}"
 
@@ -10675,7 +10749,7 @@ msgid "Couldn't send invite"
 msgstr "Kunde inte skicka inbjudan"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:714
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:718
 msgid "Couldn't send invite. Try again."
 msgstr "Kunde inte skicka inbjudan. Försök igen."
 
@@ -10897,6 +10971,11 @@ msgstr "Skapa ett nytt kit"
 msgid "Create a new recovery kit?"
 msgstr "Skapa ett nytt återställningskit?"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:24
+msgid "Create a poll"
+msgstr "Create a poll"
+
 #. Status shown in the setup wizard while the administrator has no recovery kit.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:149
 msgid "Create a recovery kit to continue."
@@ -10954,7 +11033,7 @@ msgid "Create category"
 msgstr "Skapa kategori"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:488
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:492
 msgid "Create channel"
 msgstr "Skapa kanal"
 
@@ -11027,18 +11106,28 @@ msgstr "Skapa ny länk"
 msgid "Create or join a community"
 msgstr "Skapa eller gå med i en community"
 
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:33
+msgid "Create poll"
+msgstr "Create poll"
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:427
+msgid "Create polls"
+msgstr "Create polls"
+
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "Skapa inlägg"
 
 #. Permission name. Lets members start invite-only threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:530
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:538
 msgid "Create private threads"
 msgstr "Skapa privata trådar"
 
 #. Permission name. Lets members start threads everyone in the channel can see.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:526
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Create public threads"
 msgstr "Skapa publika trådar"
 
@@ -11503,7 +11592,7 @@ msgid "Custom warning text"
 msgstr "Anpassad varningstext"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:778
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:782
 msgid "Custom…"
 msgstr "Anpassad…"
 
@@ -11515,7 +11604,7 @@ msgid "Customer portal"
 msgstr "Kundportal"
 
 #. Plus menu submenu label for visibility toggles on textarea adornment buttons.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:41
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:49
 msgid "Customize"
 msgstr "Anpassa"
 
@@ -11748,7 +11837,7 @@ msgid "Deafen device"
 msgstr "Stäng av ljudet på enheten"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:484
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:492
 msgid "Deafen members"
 msgstr "Stäng av medlemmars ljud"
 
@@ -11812,7 +11901,7 @@ msgstr "Felsök medlem"
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
 #: src/features/channel/components/MessageActionBar.tsx:82
-#: src/features/channel/components/MessageActionMenu.tsx:111
+#: src/features/channel/components/MessageActionMenu.tsx:116
 msgid "Debug message"
 msgstr "Felsök meddelande"
 
@@ -11824,7 +11913,7 @@ msgstr "Felsök tråd"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:158
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:556
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:560
 msgid "Debug user"
 msgstr "Felsök användare"
 
@@ -11993,7 +12082,7 @@ msgstr "Delaware"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:94
+#: src/features/messaging/commands/MessageCommands.tsx:95
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
@@ -12063,6 +12152,11 @@ msgstr "Borttagningsåtgärd."
 msgid "Delete all messages"
 msgstr "Radera alla meddelanden"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:33
+msgid "Delete answer"
+msgstr "Delete answer"
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:52
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:732
@@ -12070,7 +12164,7 @@ msgid "Delete application"
 msgstr "Ta bort applikation"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:758
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:762
 msgid "Delete attachment"
 msgstr "Ta bort bilaga"
 
@@ -12101,7 +12195,9 @@ msgid "Delete community"
 msgstr "Ta bort community"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:41
 msgid "Delete emoji"
 msgstr "Ta bort emoji"
 
@@ -12241,12 +12337,12 @@ msgid "Delete this invite? Can't be undone."
 msgstr "Ta bort den här inbjudan? Det går inte att ångra."
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:90
+#: src/features/messaging/commands/MessageCommands.tsx:91
 msgid "Delete this message? Can't be undone."
 msgstr "Ta bort det här meddelandet? Det går inte att ångra."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:103
+#: src/features/messaging/commands/MessageCommands.tsx:104
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Ta bort det här meddelandet? Kan inte ångras. Meddelandet tas också bort från alla communities som följer den här kanalen."
 
@@ -12381,7 +12477,7 @@ msgstr "Beskriv vad din community handlar om"
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:422
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:512
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:516
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "Beskrivning"
@@ -12695,7 +12791,7 @@ msgstr "Direktinmatning"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:10
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:580
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 msgid "Direct message"
 msgstr "Direktmeddelande"
@@ -12988,7 +13084,7 @@ msgid "Disconnected"
 msgstr "Frånkopplad"
 
 #. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:697
 msgid "Discoverable community"
 msgstr "Upptäckbar community"
 
@@ -13117,7 +13213,7 @@ msgstr "Visningsnamn"
 
 #. Optional display-name field label in account registration forms.
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx:88
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:866
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:870
 msgid "Display name (optional)"
 msgstr "Visningsnamn (valfritt)"
 
@@ -13146,7 +13242,7 @@ msgstr "DM"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:83
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
 msgid "DM closed"
 msgstr "DM-konversationen stängd"
 
@@ -13271,7 +13367,7 @@ msgstr "Tillåter inte att läggas till i grupp-DM"
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:782
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:786
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Domän"
@@ -13343,7 +13439,7 @@ msgstr "Donera istället"
 #. Report flow: footer button on the last screen. Closes the report window.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:447
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:830
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/input/components/KeybindRecorder.tsx:510
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:38
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:45
@@ -13623,6 +13719,11 @@ msgstr "Duplicera kanal"
 msgid "Duplicate role"
 msgstr "Duplicera roll"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:44
+msgid "Duration"
+msgstr "Duration"
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:75
 msgid "Duration:"
@@ -13779,7 +13880,7 @@ msgstr "Redigera globala inställningar som namn, beskrivning och ikon."
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:480
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:484
 msgid "Edit group"
 msgstr "Redigera grupp"
 
@@ -13810,7 +13911,7 @@ msgstr "Redigera medieobjekt"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:718
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:722
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Redigera meddelande"
@@ -13846,7 +13947,7 @@ msgid "Edit profile local time"
 msgstr "Redigera lokal tid för profil"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:109
+#: src/features/messaging/commands/MessageCommands.tsx:110
 msgid "Edit published message?"
 msgstr "Redigera publicerat meddelande?"
 
@@ -14096,12 +14197,12 @@ msgid "Embeds"
 msgstr "Inbäddningar"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:93
+#: src/features/channel/components/MessageActionUtils.tsx:94
 msgid "Embeds suppressed"
 msgstr "Inbäddningar dolda"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:89
+#: src/features/channel/components/MessageActionUtils.tsx:90
 msgid "Embeds unsuppressed"
 msgstr "Inbäddningar visas"
 
@@ -14375,7 +14476,7 @@ msgstr "Aktivera pushaviseringar på mobilen"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:790
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:794
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Aktivera aviseringar"
@@ -14538,6 +14639,13 @@ msgstr "Avsluta respitperiod"
 #: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "Avsluta respitperioden nu?"
+
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx:104
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:480
+msgid "End poll now"
+msgstr "End poll now"
 
 #. Voice control menu action to stop sharing the screen.
 #: src/features/voice/components/VoiceControlBar.tsx:108
@@ -15244,7 +15352,7 @@ msgid "Expression autocomplete"
 msgstr "Automatisk komplettering av uttryck"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:762
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:766
 msgid "Expression picker categories"
 msgstr "Kategorier för uttrycksväljaren"
 
@@ -15517,12 +15625,12 @@ msgid "Failed to send code. Try again."
 msgstr "Det gick inte att skicka koden. Försök igen."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:84
+#: src/features/channel/components/UserMessage.tsx:86
 msgid "Failed to send message."
 msgstr "Kunde inte skicka meddelandet."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:80
+#: src/features/channel/components/UserMessage.tsx:82
 msgid "Failed to send message. Hold for options."
 msgstr "Kunde inte skicka meddelande. Håll ned för alternativ."
 
@@ -16321,7 +16429,7 @@ msgstr "Forum"
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
 #: src/features/channel/components/MessageActionBar.tsx:96
-#: src/features/channel/components/MessageActionMenu.tsx:91
+#: src/features/channel/components/MessageActionMenu.tsx:92
 msgid "Forward"
 msgstr "Vidarebefordra"
 
@@ -16347,7 +16455,7 @@ msgid "Forwarded"
 msgstr "Vidarebefordrat"
 
 #. Notification body shown when a forwarded message has no other previewable content.
-#: src/features/notification/utils/MessageNotificationPreview.ts:28
+#: src/features/notification/utils/MessageNotificationPreview.ts:29
 msgid "Forwarded a message"
 msgstr "Vidarebefordrade ett meddelande"
 
@@ -16788,7 +16896,7 @@ msgid "Germany"
 msgstr "Tyskland"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:802
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:806
 msgid "Get {premiumProductName}"
 msgstr "Skaffa {premiumProductName}"
 
@@ -17157,6 +17265,11 @@ msgstr "Gå tillbaka till {PRODUCT_NAME}-appen. Den loggar in sig själv strax."
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Gå tillbaka till {PRODUCT_NAME}-appen. Du kan stänga den här fliken."
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx:35
+msgid "Go back to vote"
+msgstr "Go back to vote"
+
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Go to {communityName}"
@@ -17368,7 +17481,7 @@ msgstr "Grupp-DM-konversation"
 #. Generic label for a group direct message conversation.
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotInviteDestinations.ts:31
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:308
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:878
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:882
 msgid "Group DM"
 msgstr "Grupp-DM"
 
@@ -17459,7 +17572,7 @@ msgstr "Gruppering"
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "H.265 (requires opt-in)"
-msgstr "H.265 (kräver aktivering)"
+msgstr "H.265 (requires opt-in)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -17746,7 +17859,7 @@ msgid "Hide expiration footnotes"
 msgstr "Dölj fotnoter om utgångstid"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:710
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:714
 msgid "Hide favorites"
 msgstr "Dölj favoriter"
 
@@ -18150,7 +18263,7 @@ msgstr "Identitet"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:653
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:657
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "Inaktiv"
@@ -18543,7 +18656,7 @@ msgstr "Tidsgräns för inaktivitet"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:500
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:504
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:19
 msgid "Inbox"
 msgstr "Inkorg"
@@ -18596,7 +18709,7 @@ msgstr "Ange community-ID:t."
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:516
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:520
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:172
 msgid "Incoming call"
@@ -18856,7 +18969,7 @@ msgid "Instance unavailable"
 msgstr "Instansen är otillgänglig"
 
 #. Generic field label for the address of a self-hosted instance.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:842
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:846
 msgid "Instance URL"
 msgstr "Instans-URL"
 
@@ -18975,7 +19088,7 @@ msgstr "Ogiltig redirect_uri"
 
 #. Callback page title shown when an external flow returns an unrecognized status.
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:56
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:886
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:890
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:78
 msgid "Invalid status"
 msgstr "Ogiltig status"
@@ -19183,7 +19296,7 @@ msgstr "Inbjudare:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:698
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:702
 msgid "Invites"
 msgstr "Inbjudningar"
 
@@ -19298,6 +19411,11 @@ msgstr "Den kan ha raderats. Namnet återställdes till vad det var tidigare."
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Communityn kan ha lämnat Upptäck eller slutat ta emot nya medlemmar. Uppdatera sidan så visas den inte längre."
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx:27
+msgid "It's a draw"
+msgstr "It's a draw"
+
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
@@ -19372,7 +19490,7 @@ msgid "Join call"
 msgstr "Gå med i samtalet"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
 msgid "Join community"
 msgstr "Gå med i communityn"
 
@@ -19469,7 +19587,7 @@ msgid "Joined {productName}"
 msgstr "Gick med i {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:508
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:512
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "Hoppa till"
@@ -19515,7 +19633,7 @@ msgid "Jump to message"
 msgstr "Gå till meddelande"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:61
+#: src/features/channel/components/UserMessage.tsx:63
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Hoppa till meddelande från {displayName}, skickat {formattedDate}"
 
@@ -19756,7 +19874,7 @@ msgid "Kick a member from this community."
 msgstr "Sparka ut en medlem ur den här communityn."
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:685
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
 msgid "Kick member"
 msgstr "Sparka ut medlem"
 
@@ -19933,7 +20051,7 @@ msgid "Leave call"
 msgstr "Lämna samtal"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:681
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:685
 msgid "Leave community"
 msgstr "Lämna community"
 
@@ -20744,7 +20862,7 @@ msgid "Manage blocked users"
 msgstr "Hantera blockerade användare"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:496
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:504
 msgid "Manage channel"
 msgstr "Hantera kanal"
 
@@ -20792,7 +20910,7 @@ msgid "Manage payment methods"
 msgstr "Hantera betalningsmetoder"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:500
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:508
 msgid "Manage permissions"
 msgstr "Hantera behörigheter"
 
@@ -20819,7 +20937,7 @@ msgid "Manage subscription"
 msgstr "Hantera abonnemang"
 
 #. Permission name. Lets members rename, close, lock and delete threads and see private threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:522
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:530
 msgid "Manage threads"
 msgstr "Hantera trådar"
 
@@ -20892,7 +21010,7 @@ msgstr "Markera som spoiler"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:677
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:681
 #: src/features/input/state/input_keybind/shared.ts:41
 msgid "Mark as unread"
 msgstr "Markera som oläst"
@@ -21097,6 +21215,11 @@ msgstr "Medier med vuxet innehåll"
 msgid "Max number of uses"
 msgstr "Max antal användningar"
 
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:8
+msgid "Max poll vote count reached"
+msgstr "Max poll vote count reached"
+
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:57
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Maxstorlek: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
@@ -21133,7 +21256,7 @@ msgstr "Maximalt skydd för familjevänliga utrymmen"
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
-msgstr "Kan orsaka kompatibilitetsproblem för tittare. Vi arbetar på att förbättra detta."
+msgstr "May cause compatibility issues for viewers. We’re working on improving this."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:35
@@ -21356,7 +21479,7 @@ msgstr "medlemmar"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:622
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:504
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:508
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "Medlemmar"
@@ -21460,7 +21583,7 @@ msgstr "Nämn den här rollen?"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:657
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:661
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Mentions"
 msgstr "Omnämnanden"
@@ -21588,7 +21711,7 @@ msgstr "Meddelandet innehåller bifogade medier"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #: src/features/channel/components/MessageActionBar.tsx:78
-#: src/features/channel/components/MessageActionMenu.tsx:74
+#: src/features/channel/components/MessageActionMenu.tsx:75
 msgid "Message debug"
 msgstr "Meddelandefelsökning"
 
@@ -21720,7 +21843,7 @@ msgid "Message previews in the DM list"
 msgstr "Meddelandeförhandsvisningar i DM-listan"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:122
+#: src/features/messaging/commands/MessageCommands.tsx:123
 msgid "Message published"
 msgstr "Meddelande publicerat"
 
@@ -22172,7 +22295,7 @@ msgid "Monthly gift"
 msgstr "Present för en månad"
 
 #. Generic label for a button that reveals additional actions.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:834
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:838
 msgid "More"
 msgstr "Mer"
 
@@ -22317,7 +22440,7 @@ msgid "Move item up"
 msgstr "Flytta objekt uppåt"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:488
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:496
 msgid "Move members"
 msgstr "Flytta medlemmar"
 
@@ -22479,7 +22602,7 @@ msgid "Mute calls"
 msgstr "Tysta samtal"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:589
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:593
 msgid "Mute category"
 msgstr "Tysta kategori"
 
@@ -22494,7 +22617,7 @@ msgid "Mute communities"
 msgstr "Tysta communities"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:564
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:568
 msgid "Mute community"
 msgstr "Tysta community"
 
@@ -22526,12 +22649,12 @@ msgid "Mute entrance sound"
 msgstr "Stäng av anslutningsljudet"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:702
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:706
 msgid "Mute favorites"
 msgstr "Tysta favoriter"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:480
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:488
 msgid "Mute members"
 msgstr "Tysta medlemmar"
 
@@ -22931,7 +23054,7 @@ msgid "Nevada"
 msgstr "Nevada"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:661
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:665
 msgid "Never"
 msgstr "Aldrig"
 
@@ -23059,7 +23182,7 @@ msgstr "Ny mikrofon"
 #. Generic field label for the password the user is choosing.
 #. Label for the new password field on the account recovery page.
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:36
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:854
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:858
 msgid "New password"
 msgstr "Nytt lösenord"
 
@@ -23140,7 +23263,7 @@ msgstr "Nyast först"
 #. Button that moves to the next setup wizard step.
 #. Generic primary or pagination action label that advances to the next step, page, or item.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:105
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:726
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:730
 msgid "Next"
 msgstr "Nästa"
 
@@ -23817,6 +23940,11 @@ msgstr "Ingen har reagerat med detta än."
 msgid "Nobody matches that search."
 msgstr "Ingen matchar sökningen."
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx:23
+msgid "Nobody voted!"
+msgstr "Nobody voted!"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:114
 msgid "Noise"
@@ -24166,12 +24294,12 @@ msgid "Off"
 msgstr "Av"
 
 #. Accessible label for identifying the official Fluxer instance.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:846
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:850
 msgid "Official instance"
 msgstr "Officiell instans"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:649
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:653
 msgid "Offline"
 msgstr "Offline"
 
@@ -24425,7 +24553,7 @@ msgstr "Endast de valda"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Endast Visionary-medlemmar kan gå med i den här communityn. Din åtkomst kan ha ändrats sedan den här skärmen öppnades."
 
-#: src/features/channel/components/UserMessage.tsx:460
+#: src/features/channel/components/UserMessage.tsx:473
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Bara du kan se det här meddelandet. <0>Stäng</0>"
 
@@ -25387,7 +25515,7 @@ msgstr "Lösenordsfri"
 #. Validation error shown when a password and its confirmation field differ.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:53
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:44
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:862
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:866
 msgid "Passwords do not match"
 msgstr "Lösenorden matchar inte"
 
@@ -25844,7 +25972,7 @@ msgstr "Bild i bild"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:73
+#: src/features/channel/components/MessageActionUtils.tsx:74
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "Fäst"
@@ -25862,8 +25990,8 @@ msgstr "Fäst grupp-DM"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:65
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:548
+#: src/features/channel/components/MessageActionUtils.tsx:66
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:552
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Pin message"
 msgstr "Fäst meddelande"
@@ -25894,7 +26022,7 @@ msgid "Pin post"
 msgstr "Fäst inlägg"
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:69
+#: src/features/channel/components/MessageActionUtils.tsx:70
 msgid "Pin this message to the channel for everyone to see."
 msgstr "Fäst det här meddelandet i kanalen så att alla kan se det."
 
@@ -25933,7 +26061,7 @@ msgid "Pinned"
 msgstr "Fäst"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:665
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:669
 msgid "Pinned DM"
 msgstr "Fäst DM"
 
@@ -26092,6 +26220,21 @@ msgstr "Polen"
 #: src/features/user/utils/LocaleUtils.ts:104
 msgid "Polish"
 msgstr "Polska"
+
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx:68
+msgid "Poll closed"
+msgstr "Poll closed"
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx:72
+msgid "Poll not sent"
+msgstr "Poll not sent"
+
+#. Notification body shown when a poll is sent. question is the question asked on the poll.
+#: src/features/notification/utils/MessageNotificationPreview.ts:43
+msgid "Poll: {question}"
+msgstr "Poll: {question}"
 
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #. Button label on the popped-out overlay that closes the popout window and restores the view in the app.
@@ -26528,7 +26671,7 @@ msgid "Prioritize speakers"
 msgstr "Prioritera talare"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:476
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:484
 msgid "Priority speaker"
 msgstr "Prioriterad talare"
 
@@ -26547,7 +26690,7 @@ msgid "Privacy policy"
 msgstr "Integritetspolicy"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:673
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:677
 msgid "Privacy settings"
 msgstr "Sekretessinställningar"
 
@@ -26794,7 +26937,7 @@ msgstr "Offentlig registrering är stängd."
 #. Tooltip on the publish button in the inline message hover action bar. Publishing sends an announcement channel message to every channel that follows it.
 #: src/features/channel/components/CrosspostPublishNudge.tsx:22
 #: src/features/channel/components/MessageActionBar.tsx:86
-#: src/features/channel/components/MessageActionMenu.tsx:86
+#: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/messaging/components/modals/MessageCrosspostConfirmModal.tsx:20
 msgid "Publish"
 msgstr "Publicera"
@@ -27038,6 +27181,11 @@ msgstr "Tryck för att prata fungerar utanför {productName} först när du har 
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Tryck för att prata fungerar utanför {productName} först när du har bundit det i din Hyprland-konfiguration. Lägg till raden för din Hyprland-version och ersätt KEY med den tangent du vill använda."
 
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:28
+msgid "Question"
+msgstr "Question"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:52
@@ -27167,7 +27315,7 @@ msgstr "Reagera med {emojiShortcode}"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:669
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:13
 msgid "Reactions"
@@ -27196,7 +27344,7 @@ msgid "Read message aloud"
 msgstr "Läs upp meddelandet"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:427
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:435
 msgid "Read message history"
 msgstr "Läs meddelandehistorik"
 
@@ -27753,7 +27901,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "Ta bort {userName} från dina vänner?"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:85
+#: src/features/channel/components/MessageActionUtils.tsx:86
 msgid "Remove all"
 msgstr "Ta bort alla"
 
@@ -27764,8 +27912,8 @@ msgstr "Ta bort alla {emojiNameWithColons}-reaktioner från det här meddelandet
 
 #. Destructive message context menu item for moderators that clears every reaction on a message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionMenu.tsx:82
-#: src/features/channel/components/MessageActionUtils.tsx:77
+#: src/features/channel/components/MessageActionMenu.tsx:83
+#: src/features/channel/components/MessageActionUtils.tsx:78
 msgid "Remove all reactions"
 msgstr "Ta bort alla reaktioner"
 
@@ -27795,7 +27943,7 @@ msgid "Remove banner"
 msgstr "Ta bort banner"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:492
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:496
 msgid "Remove bookmark"
 msgstr "Ta bort bokmärke"
 
@@ -27954,6 +28102,11 @@ msgstr "Ta bort timeout"
 msgid "Remove translator"
 msgstr "Ta bort översättare"
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx:39
+msgid "Remove vote"
+msgstr "Remove vote"
+
 #. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:31
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -27980,7 +28133,7 @@ msgid "Removed from favorite GIFs"
 msgstr "Borttagen från favorit-GIF:ar"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:625
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:629
 msgid "Removed from favorites"
 msgstr "Borttagen från favoriter"
 
@@ -28241,6 +28394,11 @@ msgstr "Ersätt bakgrund"
 msgid "Replace background?"
 msgstr "Byta bakgrund?"
 
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:37
+msgid "Replace emoji"
+msgstr "Replace emoji"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:164
 msgid "Replace with a GIF"
@@ -28253,7 +28411,7 @@ msgstr "Svar"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:621
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:625
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "Svara"
@@ -28347,7 +28505,7 @@ msgid "Report issue"
 msgstr "Rapportera problem"
 
 #. Generic action label that opens the report flow targeting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:544
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:548
 msgid "Report message"
 msgstr "Anmäl meddelande"
 
@@ -28958,7 +29116,7 @@ msgstr "Omvänd bildsökning"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:617
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:621
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Omvänd bildsökning"
@@ -29337,8 +29495,8 @@ msgstr "Mättnad"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29349,7 +29507,7 @@ msgstr "Mättnad"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:118
+#: src/features/messaging/commands/MessageCommands.tsx:119
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -29523,7 +29681,7 @@ msgstr "Behörighetsomfång"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:613
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:617
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "Skärmläsare"
@@ -30229,6 +30387,11 @@ msgstr "Se medlemslistan för den här kanalen."
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "Se den här kanalen. Att neka den för {everyoneMention} gör kanalen privat."
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:431
+msgid "See votes on anonymous polls"
+msgstr "See votes on anonymous polls"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
@@ -30312,6 +30475,11 @@ msgstr "Välj ett konto för att fortsätta, eller lägg till ett annat."
 msgid "Select an option from the radio group"
 msgstr "Välj ett alternativ i gruppen med alternativknappar"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:29
+msgid "Select emoji"
+msgstr "Select emoji"
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -30330,6 +30498,16 @@ msgstr "Välj GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "Välj språk för gränssnittet"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx:27
+msgid "Select one answer"
+msgstr "Select one answer"
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx:31
+msgid "Select one or multiple answers"
+msgstr "Select one or multiple answers"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -30381,6 +30559,11 @@ msgstr "Markerbar text"
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "vald"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:84
+msgid "Selected answer"
+msgstr "Selected answer"
 
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx:15
@@ -30543,10 +30726,8 @@ msgid "Send GIF {title}"
 msgstr "Skicka GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:33
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:41
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:31
 msgid "Send gift"
 msgstr "Skicka present"
@@ -30584,7 +30765,7 @@ msgid "Send messages in this channel."
 msgstr "Skicka meddelanden i den här kanalen."
 
 #. Permission name. Lets members send messages in threads.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:542
 msgid "Send messages in threads"
 msgstr "Skicka meddelanden i trådar"
 
@@ -30635,7 +30816,7 @@ msgstr "Skicka verifieringskod"
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:37
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:45
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
 #: src/features/input/state/input_keybind/shared.ts:302
 msgid "Send voice message"
@@ -30685,7 +30866,7 @@ msgid "Sensitive media"
 msgstr "Medier med känsligt innehåll"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:810
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:814
 msgid "Sent"
 msgstr "Skickat"
 
@@ -30940,7 +31121,7 @@ msgid "Set up later"
 msgstr "Konfigurera senare"
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:492
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:500
 msgid "Set voice region"
 msgstr "Ange röstregion"
 
@@ -31370,7 +31551,7 @@ msgstr "Visa inbäddningar och förhandsgranska webblänkar"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:57
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:65
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
 msgstr "Visa emoji-knapp"
@@ -31409,7 +31590,7 @@ msgstr "Visa GIF-indikator"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:45
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:53
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "Visa GIF-knapp"
@@ -31473,7 +31654,7 @@ msgstr "Visa mig hur"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:49
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show media button"
 msgstr "Visa medieknapp"
@@ -31600,6 +31781,11 @@ msgstr "Visa volymreglage för deltagare per enhet i röstmenyer"
 msgid "Show quick reactions"
 msgstr "Visa snabbreaktioner"
 
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx:47
+msgid "Show results"
+msgstr "Show results"
+
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Show rich previews for YouTube links."
@@ -31614,7 +31800,7 @@ msgstr "Visa sparade medier i automatisk komplettering av uttryck"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:61
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:69
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show send button"
 msgstr "Visa skicka-knapp"
@@ -31626,7 +31812,7 @@ msgstr "Visa spoilerinnehåll vid klick"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:53
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show stickers button"
 msgstr "Visa klistermärkesknapp"
@@ -31811,7 +31997,7 @@ msgstr "Logga in med din organisations SSO-leverantör."
 #. Short label in the settings dialog logout modal. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/LogoutModal.tsx:13
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:200
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:609
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:613
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "Logga ut"
@@ -32420,7 +32606,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "Något gick fel när klistermärket skulle förberedas. Prova en annan fil eller försök igen om en stund."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:134
+#: src/features/messaging/commands/MessageCommands.tsx:135
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "Något gick fel när meddelandet publicerades. Försök igen om en stund."
 
@@ -32550,7 +32736,7 @@ msgstr "Ljudvolym"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:814
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:818
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Ljud"
@@ -32648,7 +32834,7 @@ msgid "Spanish (Spain)"
 msgstr "Spanska (Spanien)"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:463
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:471
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Tala"
@@ -32659,7 +32845,7 @@ msgid "Speak all messages out loud"
 msgstr "Läs upp alla meddelanden"
 
 #. Message context menu item that reads the message aloud via text-to-speech.
-#: src/features/channel/components/MessageActionMenu.tsx:107
+#: src/features/channel/components/MessageActionMenu.tsx:112
 msgid "Speak message"
 msgstr "Läs upp meddelande"
 
@@ -32955,7 +33141,7 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "Börja ladda upp bilagor så snart de läggs till i meddelandefältet"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:605
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:609
 msgid "Start video call"
 msgstr "Starta videosamtal"
 
@@ -33156,7 +33342,7 @@ msgid "Sticker updated"
 msgstr "Klistermärke uppdaterat"
 
 #. Notification body shown when a message has no text but includes one sticker. stickerName is the sticker name.
-#: src/features/notification/utils/MessageNotificationPreview.ts:32
+#: src/features/notification/utils/MessageNotificationPreview.ts:33
 msgid "Sticker: {stickerName}"
 msgstr "Klistermärke: {stickerName}"
 
@@ -33197,7 +33383,7 @@ msgid "Stickers will never animate"
 msgstr "Klistermärken kommer aldrig att animeras"
 
 #. Notification body shown when a message has no text but includes multiple stickers. stickerNames is a localized list of sticker names.
-#: src/features/notification/utils/MessageNotificationPreview.ts:37
+#: src/features/notification/utils/MessageNotificationPreview.ts:38
 msgid "Stickers: {stickerNames}"
 msgstr "Klistermärken: {stickerNames}"
 
@@ -33262,7 +33448,7 @@ msgstr "Sluta dela röstaktivitet med alla vänner?"
 
 #. Message context menu item that stops the text-to-speech playback in progress.
 #. Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.
-#: src/features/channel/components/MessageActionMenu.tsx:103
+#: src/features/channel/components/MessageActionMenu.tsx:108
 #: src/features/platform/utils/DesktopLocaleBridge.ts:93
 msgid "Stop speaking"
 msgstr "Stoppa uppläsning"
@@ -33396,7 +33582,7 @@ msgid "Stream settings"
 msgstr "Sändningsinställningar"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:468
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:476
 msgid "Stream video"
 msgstr "Sänd video"
 
@@ -33473,6 +33659,11 @@ msgstr "Stil"
 #: src/features/ui/action_menu/ContextMenu.tsx:27
 msgid "Submenu"
 msgstr "Undermeny"
+
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:57
+msgid "Submit"
+msgstr "Submit"
 
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 msgid "Submit application"
@@ -33570,7 +33761,7 @@ msgid "Suppress all role mentions"
 msgstr "Ignorera alla rollomnämnanden"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:601
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:605
 msgid "Suppress embeds"
 msgstr "Dölj inbäddningar"
 
@@ -34586,6 +34777,11 @@ msgstr "Den angivna redirect_uri är inte registrerad för den här appen."
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Den angivna redirect_uri måste använda HTTP eller HTTPS."
 
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:32
+msgid "The question you want to ask"
+msgstr "The question you want to ask"
+
 #. Report flow: toast shown when the report questions changed while the reporter was answering them.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:95
 msgid "The report form changed. Please start again."
@@ -34663,7 +34859,7 @@ msgstr "Webhooken skapades av {user}"
 
 #. Generic label for the app theme selector.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:882
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:886
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:38
 msgid "Theme"
 msgstr "Tema"
@@ -35429,7 +35625,7 @@ msgid "This message can only be forwarded to age-restricted channels"
 msgstr "Det här meddelandet kan bara skickas till kanaler med åldersgräns"
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:126
+#: src/features/messaging/commands/MessageCommands.tsx:127
 msgid "This message has already been published"
 msgstr "Det här meddelandet har redan publicerats"
 
@@ -35477,6 +35673,16 @@ msgstr "Den här planen är inte tillgänglig. Kontakta supporten."
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
 msgid "This plan isn't available. Contact the administrators of this instance."
 msgstr "Den här planen är inte tillgänglig. Kontakta administratörerna för den här instansen."
+
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx:55
+msgid "This poll is anonymous, but you can see votes."
+msgstr "This poll is anonymous, but you can see votes."
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx:51
+msgid "This poll is anonymous."
+msgstr "This poll is anonymous."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35526,7 +35732,7 @@ msgstr "Den här återställningslänken har gått ut eller har redan använts. 
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:176
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
-msgstr "Den här återställningslänken har gått ut. Återställningslänkar är giltiga i 1 timme. Vänligen begär en ny."
+msgstr "This reset link has expired. Reset links last 1 hour. Please request a new one."
 
 #. Label in the accessibility tab. Preserve {linkPreviewExampleUrl}; it is inserted by code.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
@@ -35645,13 +35851,18 @@ msgid "This voice channel is no longer available."
 msgstr "Röstkanalen är inte längre tillgänglig."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:88
+#: src/features/channel/components/UserMessage.tsx:90
 msgid "This was a {silentMention} message."
 msgstr "Det här var ett {silentMention}-meddelande."
 
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx:52
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "Detta stänger det aktuella fristående fönstret och hindrar bild-i-bild-fönster för skärmdelning från att öppnas automatiskt. Du kan aktivera dem igen i {audioVideoSettingsPath}."
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx:24
+msgid "This will close the poll now and show the results."
+msgstr "This will close the poll now and show the results."
 
 #: src/features/messaging/commands/FavoritesCommands.tsx:30
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -35826,7 +36037,7 @@ msgid "Time out {tag}"
 msgstr "Ge {tag} en timeout"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:447
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:455
 msgid "Time out members"
 msgstr "Ge medlemmar timeout"
 
@@ -36178,7 +36389,7 @@ msgstr "Överlät ägarskapet till {0}"
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:597
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:601
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Översätt"
@@ -36470,7 +36681,7 @@ msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Stäng av ljuddelning för den här källan eller försök igen om en stund."
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:520
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:524
 msgid "Turn off camera"
 msgstr "Stäng av kameran"
 
@@ -36846,7 +37057,7 @@ msgid "Unblock user"
 msgstr "Avblockera användare"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:645
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:649
 msgid "Uncategorized"
 msgstr "Okategoriserade"
 
@@ -36994,7 +37205,7 @@ msgstr "Unicode-emojier"
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:766
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
 #: src/features/updater/commands/UpdaterModalCommands.tsx:128
@@ -37070,7 +37281,7 @@ msgid "Unknown message type"
 msgstr "Okänd meddelandetyp"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:511
+#: src/features/permissions/utils/PermissionUtils.ts:513
 msgid "Unknown permission"
 msgstr "Okänd behörighet"
 
@@ -37235,7 +37446,7 @@ msgid "Unmute all devices"
 msgstr "Slå på mikrofonen på alla enheter"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:593
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:597
 msgid "Unmute category"
 msgstr "Sluta tysta kategorin"
 
@@ -37250,7 +37461,7 @@ msgid "Unmute communities"
 msgstr "Sluta tysta communities"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:568
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 msgid "Unmute community"
 msgstr "Sluta tysta communityn"
 
@@ -37270,7 +37481,7 @@ msgid "Unmute DMs"
 msgstr "Sluta tysta DM-konversationer"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:706
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:710
 msgid "Unmute favorites"
 msgstr "Sluta tysta favoriter"
 
@@ -37323,7 +37534,7 @@ msgid "Unordered"
 msgstr "Oordnad"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:61
+#: src/features/channel/components/MessageActionUtils.tsx:62
 msgid "Unpin"
 msgstr "Lossa"
 
@@ -37353,12 +37564,12 @@ msgid "Unpin post"
 msgstr "Avpinna inlägg"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:57
+#: src/features/channel/components/MessageActionUtils.tsx:58
 msgid "Unpin this message?"
 msgstr "Vill du ta bort fästningen för det här meddelandet?"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:641
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:645
 msgid "Unpinned DM"
 msgstr "DM-konversationen lossad"
 
@@ -37500,7 +37711,7 @@ msgid "Unsupported sticker file"
 msgstr "Klistermärkesfilen stöds inte"
 
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionMenu.tsx:95
+#: src/features/channel/components/MessageActionMenu.tsx:96
 msgid "Unsuppress embeds"
 msgstr "Visa inbäddningar"
 
@@ -37728,9 +37939,7 @@ msgstr "Ladda upp direkt till {displayName}"
 msgid "Upload emoji"
 msgstr "Ladda upp emoji"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:13
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:25
 msgid "Upload file"
 msgstr "Ladda upp fil"
@@ -37787,10 +37996,8 @@ msgstr "Ladda upp klistermärke"
 msgid "Upload to {displayName}"
 msgstr "Ladda upp till {displayName}"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:17
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:29
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:37
 msgid "Upload your message as a file"
 msgstr "Ladda upp ditt meddelande som en fil"
 
@@ -38052,12 +38259,12 @@ msgid "Use emoji from other communities."
 msgstr "Använd emojier från andra communities."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:431
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:439
 msgid "Use external emoji"
 msgstr "Använd externa emojier"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:435
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:443
 msgid "Use external stickers"
 msgstr "Använd externa klistermärken"
 
@@ -38178,7 +38385,7 @@ msgid "Use TLS"
 msgstr "Använd TLS"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:472
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:480
 msgid "Use voice activity"
 msgstr "Använd röstaktivering"
 
@@ -38254,7 +38461,7 @@ msgid "User controls"
 msgstr "Användarkontroller"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:585
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:589
 msgid "User debug"
 msgstr "Användarfelsökning"
 
@@ -38332,7 +38539,7 @@ msgstr "Användarvolym"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1124
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:581
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:585
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:227
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -38942,12 +39149,12 @@ msgid "View call controls"
 msgstr "Visa samtalskontroller"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:451
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:459
 msgid "View channel"
 msgstr "Visa kanal"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:455
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:463
 msgid "View channel members"
 msgstr "Visa kanalmedlemmar"
 
@@ -39035,6 +39242,11 @@ msgstr "Visa behörigheter"
 msgid "View plans"
 msgstr "Visa abonnemang"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx:31
+msgid "View poll"
+msgstr "View poll"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:367
 msgid "View profile"
@@ -39048,7 +39260,7 @@ msgid "View profile for {displayName}"
 msgstr "Visa profil för {displayName}"
 
 #. Message context menu item that opens the reactions list sheet for the message.
-#: src/features/channel/components/MessageActionMenu.tsx:78
+#: src/features/channel/components/MessageActionMenu.tsx:79
 msgid "View reactions"
 msgstr "Visa reaktioner"
 
@@ -39439,6 +39651,11 @@ msgctxt "keyboard-key-name"
 msgid "Volume up"
 msgstr "Höj volymen"
 
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx:43
+msgid "Vote"
+msgstr "Vote"
+
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
@@ -39502,7 +39719,7 @@ msgid "Watch"
 msgstr "Titta"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:496
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:500
 msgid "Watch stream"
 msgstr "Titta på sändning"
 
@@ -39928,7 +40145,7 @@ msgid "West Virginia"
 msgstr "West Virginia"
 
 #. Display-name field placeholder in account registration forms.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:870
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:874
 msgid "What should people call you?"
 msgstr "Vad ska folk kalla dig?"
 
@@ -40166,6 +40383,11 @@ msgstr "Fönster som delvis ligger utanför skärmens över- eller nederkant sam
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:18
 msgid "Windows default"
 msgstr "Standard för Windows"
+
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:80
+msgid "Winning answer"
+msgstr "Winning answer"
 
 #. Switch description in the leave-community confirmation modal. Warns that deleting the caller's community messages is destructive.
 #. Switch description in the leave-group confirmation modal. Warns that deleting the caller's group messages is destructive.
@@ -40494,6 +40716,11 @@ msgstr "Du kan inte bli vän med dig själv"
 msgid "You can't change your nickname here"
 msgstr "Du kan inte ändra ditt smeknamn här"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:29
+msgid "You can't create polls in this channel."
+msgstr "You can't create polls in this channel."
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:18
 msgid "You can't delete this"
@@ -40730,6 +40957,11 @@ msgstr "Du har inte behörighet att gå med i den här röstkanalen"
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "Du har inte behörighet att byta namn på den här emojin. Namnet återställdes till det tidigare."
 
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:61
+msgid "You forgot to enter a question."
+msgstr "You forgot to enter a question."
+
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
@@ -40898,6 +41130,11 @@ msgstr "Du måste verifiera din e-postadress innan du kan skicka vänförfrågni
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Du måste verifiera din e-postadress innan du kan starta en DM-konversation."
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx:60
+msgid "You need to verify your email address to vote on a poll."
+msgstr "You need to verify your email address to vote on a poll."
+
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
@@ -40916,6 +41153,11 @@ msgstr "Du eller någon du lägger till har redan det maximala antalet grupp-DM 
 #: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:20
 msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
 msgstr "Du eller personen du chattar med har valt att blockera känsligt medieinnehåll i direktmeddelanden. Ni kan båda ändra detta i {sensitiveContentSettingsPath}."
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:65
+msgid "You should enter at least one answer."
+msgstr "You should enter at least one answer."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:66
@@ -41210,6 +41452,11 @@ msgstr "Du har nått det maximala antalet emojier. Ta bort några befintliga emo
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "Du har nått det maximala antalet klistermärken. Ta bort några befintliga klistermärken för att göra plats."
 
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:12
+msgid "You've reached the maximum number of votes per answer."
+msgstr "You've reached the maximum number of votes per answer."
+
 #. Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:109
 msgid "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background."
@@ -41336,7 +41583,7 @@ msgid "Your browser requires user interaction before audio can be played. Click 
 msgstr "Din webbläsare kräver användarinteraktion innan ljud kan spelas upp. Klicka på knappen nedan för att aktivera röstchatt."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:113
+#: src/features/messaging/commands/MessageCommands.tsx:114
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "Dina ändringar når alla communities som följer den här kanalen, vilket kan ta en minut. Varje publicerat meddelande tillåter 3 snabba redigeringar, sedan 1 var 20:e minut."
 
@@ -41509,27 +41756,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Ditt senaste köp ligger utanför återbetalningsperioden. Kontakta supporten vid faktureringsproblem."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:83
+#: src/features/messaging/state/MessageQueue.tsx:84
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Ditt meddelande kunde inte levereras eftersom det flaggades av våra säkerhetssystem. Om du tror att detta är ett misstag, kontakta supporten."
 
 #. Message send error on a self-hosted instance when the safety system blocks the message.
-#: src/features/messaging/state/MessageQueue.tsx:88
+#: src/features/messaging/state/MessageQueue.tsx:89
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Ditt meddelande kunde inte levereras eftersom det flaggades av våra säkerhetssystem. Om du tror att detta är ett misstag, kontakta administratörerna för den här instansen."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:70
+#: src/features/messaging/state/MessageQueue.tsx:71
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Ditt meddelande kunde inte levereras. Det beror oftast på att du inte delar en community med mottagaren eller att mottagaren bara accepterar direktmeddelanden från vänner. Du kan också behöva justera dina egna inställningar för direktmeddelanden i {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:75
+#: src/features/messaging/state/MessageQueue.tsx:76
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Ditt meddelande kunde inte levereras. Du måste säkra ditt konto för att skicka direktmeddelanden."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:79
+#: src/features/messaging/state/MessageQueue.tsx:80
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Ditt meddelande kunde inte levereras. Du måste säkra ditt konto för att skicka meddelanden."
 
@@ -41768,7 +42015,7 @@ msgstr "Zooma"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:637
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:641
 #: src/features/input/state/input_keybind/shared.ts:270
 #: src/features/platform/utils/DesktopLocaleBridge.ts:113
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -41779,7 +42026,7 @@ msgstr "Zooma in"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:633
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:637
 #: src/features/input/state/input_keybind/shared.ts:274
 #: src/features/platform/utils/DesktopLocaleBridge.ts:117
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

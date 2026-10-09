@@ -99,6 +99,7 @@ fn sample_message(index: u64) -> ApiMessageResponse {
             },
             children: None,
         }],
+        poll: None,
         attachments: vec![ApiMessageAttachmentResponse {
             id: (80_000 + index).to_string(),
             filename: "image.png".to_owned(),

@@ -41,7 +41,7 @@ export class MessageInteractionService {
 	private pinAuthService: MessagePinAuthService;
 	private readStateService: MessageReadStateService;
 	private pinService: MessagePinService;
-	private reactionService: MessageReactionService;
+	readonly reactionService: MessageReactionService;
 
 	constructor(
 		private channelRepository: IChannelRepository,

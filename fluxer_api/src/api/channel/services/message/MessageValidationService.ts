@@ -28,16 +28,22 @@ import {
 	MAX_EMBEDS_PER_MESSAGE,
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
 	MAX_MESSAGE_LENGTH_PREMIUM,
+	MAX_POLL_ANSWER_LENGTH,
+	MAX_POLL_ANSWERS,
+	MAX_POLL_DURATION_HOURS,
+	MAX_POLL_QUESTION_LENGTH,
 	MAX_VOICE_MESSAGE_DURATION,
 } from '@fluxer/constants/src/LimitConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
+import {CannotEditPollError} from '@fluxer/errors/src/domains/channel/CannotEditPollError';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
 import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {MessagePollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export class MessageValidationService {
@@ -64,6 +70,7 @@ export class MessageValidationService {
 		const isUpdate = options?.isUpdate ?? false;
 		const hasContent = data.content != null && hasVisibleContent(data.content);
 		const hasEmbeds = Boolean(data.embeds && data.embeds.length > 0);
+		const hasPoll = Boolean('poll' in data && data.poll);
 		const hasAttachments = Boolean(data.attachments && data.attachments.length > 0);
 		const hasFavoriteMeme = Boolean('favorite_meme_id' in data && data.favorite_meme_id != null);
 		const hasStickers = Boolean('sticker_ids' in data && data.sticker_ids != null && data.sticker_ids.length > 0);
@@ -75,16 +82,26 @@ export class MessageValidationService {
 				data,
 				hasContent,
 				hasEmbeds,
+				hasPoll,
 				hasStickers,
 				hasFavoriteMeme,
 				user,
 				guildFeatures,
 			);
 		}
-		if (!hasContent && !hasEmbeds && !hasAttachments && !hasFavoriteMeme && !hasStickers && (!isUpdate || !hasFlags)) {
+		if (
+			!hasContent &&
+			!hasEmbeds &&
+			!hasAttachments &&
+			!hasFavoriteMeme &&
+			!hasStickers &&
+			(!isUpdate || !hasFlags) &&
+			!hasPoll
+		) {
 			throw new CannotSendEmptyMessageError();
 		}
 		this.validateContentLength(data.content, user, guildFeatures, options?.messageAuthorType);
+		if ('poll' in data && data.poll) this.validatePollContentLength(data.poll, user, guildFeatures);
 		const modCtx = {
 			userId: user ? user.id : null,
 			guildId: null,
@@ -93,6 +110,13 @@ export class MessageValidationService {
 			surface: 'message_content' as const,
 		};
 		contentModerationService.scanText(data.content, modCtx);
+		if ('poll' in data && data.poll) {
+			contentModerationService.scanText(data.poll.question?.text ?? null, modCtx);
+			if (data.poll.answers) {
+				for (const answer of data.poll.answers)
+					contentModerationService.scanText(answer.poll_media?.text ?? null, modCtx);
+			}
+		}
 		if (data.embeds) {
 			for (const embed of data.embeds) {
 				if (embed.url) contentModerationService.scanUrl(embed.url, modCtx);
@@ -161,10 +185,74 @@ export class MessageValidationService {
 		}
 	}
 
+	validatePollContentLength(
+		poll: MessagePollRequest,
+		user: User | null,
+		guildFeatures?: Iterable<string> | null,
+	): void {
+		const ctx = createLimitMatchContext({user, guildFeatures});
+		const evaluationContext = guildFeatures ? 'guild' : 'user';
+		const configSnapshot = this.limitConfigService.getConfigSnapshot();
+
+		const maxQuestionLength = Math.floor(
+			resolveLimitSafe(configSnapshot, ctx, 'max_poll_question_length', MAX_POLL_QUESTION_LENGTH, evaluationContext),
+		);
+		const maxPollAnswers = Math.floor(
+			resolveLimitSafe(configSnapshot, ctx, 'max_poll_answers', MAX_POLL_ANSWERS, evaluationContext),
+		);
+		const maxPollAnswerLength = Math.floor(
+			resolveLimitSafe(configSnapshot, ctx, 'max_poll_answer_length', MAX_POLL_ANSWER_LENGTH, evaluationContext),
+		);
+		const maxPollDurationHours = Math.floor(
+			resolveLimitSafe(configSnapshot, ctx, 'max_poll_duration_hours', MAX_POLL_DURATION_HOURS, evaluationContext),
+		);
+
+		const questionLength = poll.question?.text?.length ?? 0;
+		if (questionLength === 0) throw new CannotSendEmptyMessageError();
+		if (questionLength > maxQuestionLength) {
+			throw InputValidationError.fromCode('poll.question.text', ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH, {
+				maxLength: maxQuestionLength,
+			});
+		}
+
+		const answers = poll.answers ?? [];
+		if (answers.length === 0) throw new CannotSendEmptyMessageError();
+		if (answers.length > maxPollAnswers) {
+			throw InputValidationError.fromCode('poll.answers', ValidationErrorCodes.TOO_MANY_POLL_ANSWERS, {
+				maxPollAnswers,
+			});
+		}
+
+		for (let i = 0; i < answers.length; i++) {
+			const answerTextLength = answers[i].poll_media?.text?.length ?? 0;
+			if (answerTextLength === 0) throw new CannotSendEmptyMessageError();
+			if (answerTextLength > maxPollAnswerLength) {
+				throw InputValidationError.fromCode(
+					`poll.answers[${i}].poll_media.text`,
+					ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH,
+					{
+						maxLength: maxPollAnswerLength,
+					},
+				);
+			}
+		}
+
+		const duration = poll.duration ?? 0;
+		if (duration < 1) throw InputValidationError.fromCode(`poll.duration`, ValidationErrorCodes.POLL_DURATION_TOO_LOW);
+		if (duration > maxPollDurationHours) {
+			throw InputValidationError.fromCode(`poll.duration`, ValidationErrorCodes.POLL_DURATION_TOO_HIGH, {
+				maxPollDurationHours,
+			});
+		}
+	}
+
 	validateMessageEditable(message: Message): void {
 		const editableTypes: ReadonlySet<Message['type']> = new Set([MessageTypes.DEFAULT, MessageTypes.REPLY]);
 		if (!editableTypes.has(message.type)) {
 			throw new CannotEditSystemMessageError();
+		}
+		if (message.poll) {
+			throw new CannotEditPollError();
 		}
 	}
 
@@ -264,6 +352,7 @@ export class MessageValidationService {
 		data: MessageRequest,
 		hasContent: boolean,
 		hasEmbeds: boolean,
+		hasPoll: boolean,
 		hasStickers: boolean,
 		hasFavoriteMeme: boolean,
 		user: User | null,
@@ -274,6 +363,9 @@ export class MessageValidationService {
 		}
 		if (hasEmbeds) {
 			throw InputValidationError.fromCode('embeds', ValidationErrorCodes.VOICE_MESSAGES_CANNOT_HAVE_EMBEDS);
+		}
+		if (hasPoll) {
+			throw InputValidationError.fromCode('poll', ValidationErrorCodes.VOICE_MESSAGES_CANNOT_HAVE_A_POLL);
 		}
 		if (hasFavoriteMeme) {
 			throw InputValidationError.fromCode(
