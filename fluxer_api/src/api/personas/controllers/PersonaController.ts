@@ -12,7 +12,9 @@ import { Validator } from "@app/api/Validator";
 import { HttpStatus } from "@fluxer/constants/src/HttpConstants.js";
 import { AVATAR_MAX_SIZE } from "@fluxer/constants/src/LimitConstants.js";
 import { RelationshipTypes } from "@fluxer/constants/src/UserConstants.js";
+import { createJsonErrorResponse } from "@fluxer/errors/src/error_handling/ErrorResponse.js";
 import { PersonaIdParam, UserPersonaIdParam } from "@fluxer/schema/src/domains/common/CommonParamSchemas.js";
+import { ErrorResponse } from "@fluxer/schema/src/domains/common/ErrorSchemas.js";
 import { OwnPersonaResponse, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
 import { stream } from "hono/streaming";
 import { encodeBase64Url } from "hono/utils/encode";
@@ -65,14 +67,15 @@ export function PersonaController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const {user_id, persona_id} = ctx.req.valid('param');
-			//const requestCache = ctx.get('requestCache');
-			// TODO: if the
 			const userService = ctx.get('userService');
 			if (userId.toString() !== user_id.toString() && user_id !== "@me") {
 				// pretend that the persona doesn't exist to people who the persona owner has blocked
 				const relationship = await userService.relationshipService.getRelationship({userId, targetId: createUserID(user_id), type: RelationshipTypes.BLOCKED});
 				if (relationship) return ctx.notFound();
 			}
+			const targetId = user_id !== "@me" ? createUserID(user_id) : undefined;
+			const targetUser = targetId && await userService.accountService.lookupService.findUnique(targetId)
+			targetId && user_id.valueOf() !== userId.valueOf() && targetUser && await userService.accountService.lookupService.validateProfileAccess(userId, targetId, targetUser);
 			const personaService = ctx.get('personaService');
 			const uid = user_id === "@me" ? userId : user_id;
 			const response = await personaService.getPersona(createUserID(uid), createPersonaID(persona_id));

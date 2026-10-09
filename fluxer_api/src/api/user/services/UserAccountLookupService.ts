@@ -179,7 +179,7 @@ export class UserAccountLookupService {
 		return user2GuildIds.filter((id) => set.has(id.toString()));
 	}
 
-	private async validateProfileAccess(userId: UserID, targetId: UserID, targetUser: User): Promise<void> {
+	async validateProfileAccess(userId: UserID, targetId: UserID, targetUser: User): Promise<void> {
 		if (targetUser.isBot) {
 			return;
 		}
