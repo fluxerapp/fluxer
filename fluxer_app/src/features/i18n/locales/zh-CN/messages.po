@@ -15,7 +15,7 @@ msgstr "…开启紧凑模式。赞！"
 msgid "(edited)"
 msgstr "（已编辑）"
 
-#: src/features/app/components/pages/YouPage.tsx:194
+#: src/features/app/components/pages/YouPage.tsx:206
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:907
 msgid "(only visible to you)"
 msgstr "（仅自己可见）"
@@ -1111,7 +1111,7 @@ msgstr "{count, plural, one {# 个频道关注此频道} other {# 个频道关�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, other {# 个社区}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, other {# 个社区因时空穿梭器故障暂时不可用。}}"
 
@@ -2809,7 +2809,7 @@ msgstr "关于 {appName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:171
+#: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
 #: src/features/user/components/popouts/UserProfileShared.tsx:42
@@ -3933,7 +3933,7 @@ msgid "Allow bot direct messages"
 msgstr "允许机器人私信"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "允许机器人给你发私信吗？"
 
@@ -3951,16 +3951,16 @@ msgstr "允许在文字频道名称中使用大写字母和空格。关闭后，
 msgid "Allow direct messages"
 msgstr "允许私信"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
 msgid "Allow direct messages from community bots"
 msgstr "允许社区机器人发送私信"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Allow direct messages from community members"
 msgstr "允许社区成员发送私信"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "允许社区成员发送私信？"
 
@@ -3975,7 +3975,7 @@ msgid "Allow flexible text channel names"
 msgstr "允许灵活的文字频道名称"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "允许所有社区"
 
@@ -4698,8 +4698,8 @@ msgstr "已撤销应用访问权限"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "应用详情"
 
@@ -5618,7 +5618,7 @@ msgstr "返回列表"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "返回权限覆盖"
@@ -5995,7 +5995,7 @@ msgid "Block bot direct messages"
 msgstr "屏蔽机器人私信"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "要屏蔽机器人发来的私信吗？"
 
@@ -6010,12 +6010,12 @@ msgid "Block direct messages"
 msgstr "屏蔽私信"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "要屏蔽社区成员的私信吗？"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "在所有社区中屏蔽"
 
@@ -8070,6 +8070,11 @@ msgstr "选择 {PRODUCT_NAME} 反向图片搜索的发送目标。我们会记�
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "选择要发布消息的目的地。你随时可以在社区设置 → Webhooks 中取消关注。"
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "选择是否允许与您在同一社区中的用户在您未成为好友的情况下直接给您发送消息。"
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8103,11 +8108,6 @@ msgstr "选择谁可以在你的个人资料中看到此连接。"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "选择谁可以查看你的个人资料详情"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "选择谁可以向你发送私信。"
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -9062,7 +9062,7 @@ msgid "Community message notifications"
 msgstr "社区消息通知"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "社区 MFA 要求提示栏"
 
@@ -11258,12 +11258,12 @@ msgid "Current uses:"
 msgstr "当前使用次数："
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "当前已忽略"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "当前显示"
 
@@ -11777,7 +11777,7 @@ msgstr "DEB 软件包"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "调试"
@@ -12713,7 +12713,7 @@ msgstr "私信预览"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
 msgid "Direct messages"
 msgstr "私信"
 
@@ -13205,22 +13205,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "什么都不做，我不想加入"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "要同时允许现有社区中的机器人向你发送私信吗？"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "要同时允许现有社区成员向你发送私信吗？"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "要同时屏蔽现有社区中机器人的私信吗？"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "要同时屏蔽现有社区成员的私信吗？"
 
@@ -13265,7 +13265,7 @@ msgid "Domain"
 msgstr "域名"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "域名迁移提示栏"
 
@@ -13821,7 +13821,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "编辑此频道中身份组和成员的权限覆盖。"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
-#: src/features/app/components/pages/YouPage.tsx:162
+#: src/features/app/components/pages/YouPage.tsx:174
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
 #: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
@@ -14955,7 +14955,7 @@ msgstr "关注此频道的每个社群都会收到一份副本。如果您稍后
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
 msgid "Everyone"
 msgstr "所有人"
 
@@ -16174,12 +16174,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "为保障你的账号安全，请先验证身份。"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "强制禁用"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "强制启用"
 
@@ -16436,7 +16436,7 @@ msgid "Friend request sent"
 msgstr "已发送好友请求"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "好友请求"
@@ -19219,7 +19219,7 @@ msgid "Invites disabled"
 msgstr "邀请已禁用"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "邀请已禁用提示栏"
 
@@ -22525,7 +22525,7 @@ msgstr "静音成员"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "麦克风静音"
@@ -23651,7 +23651,7 @@ msgid "No server is selected for this request."
 msgstr "未为此请求选择服务器。"
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "未找到设置"
 
@@ -23971,7 +23971,7 @@ msgstr "不是真或假"
 #. Markdown alert label for a note callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:191
+#: src/features/app/components/pages/YouPage.tsx:203
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
@@ -24555,7 +24555,7 @@ msgid "Open audio link"
 msgstr "打开音频链接"
 
 #. Short label in the you page.
-#: src/features/app/components/pages/YouPage.tsx:28
+#: src/features/app/components/pages/YouPage.tsx:33
 msgid "Open avatar"
 msgstr "打开头像"
 
@@ -24925,7 +24925,7 @@ msgid "Open thread again"
 msgstr "重新打开频道"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "打开 {displayName} 的用户菜单"
 
@@ -25941,7 +25941,7 @@ msgstr "已置顶群聊"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "已置顶消息"
@@ -25952,7 +25952,7 @@ msgid "Pinned messages show up here."
 msgstr "已置顶消息会显示在此处。"
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "已置顶消息，未读已置顶消息"
 
@@ -26529,7 +26529,7 @@ msgstr "优先发言者"
 msgid "Privacy"
 msgstr "隐私"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "隐私政策"
@@ -26538,11 +26538,6 @@ msgstr "隐私政策"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "隐私设置"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "隐私设置提醒"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1162
@@ -26936,7 +26931,7 @@ msgid "Push to talk (priority)"
 msgstr "按住说话（优先）"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "按住说话已开启。按住 {pushToTalkHint} 讲话。"
 
@@ -28991,13 +28986,18 @@ msgstr "查看并确认"
 msgid "Review apps that can access your account."
 msgstr "查看可以访问你账号的应用。"
 
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
+msgid "Review needed"
+msgstr "需要审核"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "查看购买记录和退款选项"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "查看隐私设置"
 
@@ -29024,6 +29024,11 @@ msgstr "请检查这些文件，然后尝试使用更小或更简单的图片。
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "继续前请查看此应用请求的权限。"
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "查看谁可以给你发消息"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29325,8 +29330,8 @@ msgstr "饱和度"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29945,7 +29950,7 @@ msgstr "搜索帖子"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "搜索结果"
@@ -32045,7 +32050,7 @@ msgstr "不发送系统退群通知，也不会有人收到提醒。"
 msgid "Skip this now and configure it from the admin panel."
 msgstr "现在跳过，稍后从管理面板配置。"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "跳过此步骤"
 
@@ -34126,7 +34131,7 @@ msgstr "田纳西州"
 msgid "Terms acceptance nagbar"
 msgstr "条款接受提示栏"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "服务条款"
@@ -37264,7 +37269,7 @@ msgstr "取消收藏夹静音"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "取消麦克风静音"
@@ -37573,7 +37578,7 @@ msgid "Update passkey"
 msgstr "更新通行密钥"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "更新服务工作线程"
 
@@ -38134,7 +38139,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "使用操作系统内置的拼写检查器。"
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "使用向上和向下箭头键在项目之间移动，使用空格键或回车键打开项目。如果某个标签页包含多个部分，向右箭头键可展开它，向左箭头键可折叠它。"
 
@@ -38237,7 +38242,7 @@ msgid "User avatars"
 msgstr "用户头像"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "用户控制项"
 
@@ -38305,6 +38310,11 @@ msgstr "用户记录"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "用户设置"
+
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "User settings, privacy review needed"
+msgstr "用户设置，需要进行隐私设置\"}"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38422,27 +38432,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "在 {requestedLabel} 准备就绪之前使用 {effectiveLabel}。"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "正在使用实际账号状态"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "正在使用实际礼物库存状态"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "正在使用实际会员状态"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "正在使用实际状态"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "正在使用实际验证状态"
 
@@ -39359,7 +39369,7 @@ msgid "Voice region"
 msgstr "语音地区"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "语音会话恢复提示栏"
 
@@ -39945,8 +39955,8 @@ msgstr "在忙些什么？"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "新功能"
@@ -40381,7 +40391,7 @@ msgstr "上传前可添加评论。按住 Shift 键可直接上传。"
 msgid "You can add friends with their username."
 msgstr "你可以通过用户名添加好友。"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "你也可以右键点击社区名称，选择隐私设置，为每个社区单独更改此设置。"
 

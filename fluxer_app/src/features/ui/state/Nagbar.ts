@@ -40,7 +40,6 @@ interface NagbarSettings {
 	forceGuildMembershipCta: boolean;
 	forceVisionaryMfa: boolean;
 	forceTermsAcceptance: boolean;
-	forcePrivacySetup: boolean;
 	forceCorruptedInstallation: boolean;
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
@@ -63,7 +62,6 @@ interface NagbarSettings {
 	forceHideGuildMembershipCta: boolean;
 	forceHideVisionaryMfa: boolean;
 	forceHideTermsAcceptance: boolean;
-	forceHidePrivacySetup: boolean;
 	forceHideCorruptedInstallation: boolean;
 	forceHideScheduledMaintenance: boolean;
 	forceHideVoiceSessionRestore: boolean;
@@ -118,7 +116,6 @@ export class Nagbar implements NagbarSettings {
 	forceGuildMembershipCta = false;
 	forceVisionaryMfa = false;
 	forceTermsAcceptance = false;
-	forcePrivacySetup = false;
 	forceCorruptedInstallation = false;
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
@@ -142,7 +139,6 @@ export class Nagbar implements NagbarSettings {
 	forceHideGuildMembershipCta = false;
 	forceHideVisionaryMfa = false;
 	forceHideTermsAcceptance = false;
-	forceHidePrivacySetup = false;
 	forceHideCorruptedInstallation = false;
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
@@ -320,7 +316,6 @@ export class Nagbar implements NagbarSettings {
 		this.forceGuildMembershipCta = false;
 		this.forceVisionaryMfa = false;
 		this.forceTermsAcceptance = false;
-		this.forcePrivacySetup = false;
 		this.forceCorruptedInstallation = false;
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
@@ -344,7 +339,6 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideGuildMembershipCta = false;
 		this.forceHideVisionaryMfa = false;
 		this.forceHideTermsAcceptance = false;
-		this.forceHidePrivacySetup = false;
 		this.forceHideCorruptedInstallation = false;
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;

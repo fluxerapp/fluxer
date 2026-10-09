@@ -15,7 +15,7 @@ msgstr "... uključite zbijeni način rada. Super!"
 msgid "(edited)"
 msgstr "(uređeno)"
 
-#: src/features/app/components/pages/YouPage.tsx:194
+#: src/features/app/components/pages/YouPage.tsx:206
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:907
 msgid "(only visible to you)"
 msgstr "(vidljivo samo vama)"
@@ -1111,7 +1111,7 @@ msgstr "{count, plural, one {# kanal ga prati} other {# kanala ga prati}} ovu po
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# zajednica pronađena} few {# zajednice pronađene} other {# zajednica pronađeno}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# zajednica privremeno nije dostupna zbog kvara na protočnom kondenzatoru.} few {# zajednice privremeno nisu dostupne zbog kvara na protočnom kondenzatoru.} other {# zajednica privremeno nije dostupno zbog kvara na protočnom kondenzatoru.}}"
 
@@ -2809,7 +2809,7 @@ msgstr "O aplikaciji {appName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:171
+#: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
 #: src/features/user/components/popouts/UserProfileShared.tsx:42
@@ -3933,7 +3933,7 @@ msgid "Allow bot direct messages"
 msgstr "Dopusti izravne poruke botova"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "Dopustiti botovima da vam šalju izravne poruke?"
 
@@ -3951,16 +3951,16 @@ msgstr "Dopusti velika slova i razmake u nazivima tekstualnih kanala. Isključen
 msgid "Allow direct messages"
 msgstr "Dopusti izravne poruke"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
 msgid "Allow direct messages from community bots"
 msgstr "Dopusti izravne poruke od botova zajednice"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Allow direct messages from community members"
 msgstr "Dopusti izravne poruke od članova zajednice"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "Dopustiti izravne poruke od članova zajednice?"
 
@@ -3975,7 +3975,7 @@ msgid "Allow flexible text channel names"
 msgstr "Dopusti fleksibilne nazive tekstualnih kanala"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "Dopusti za sve zajednice"
 
@@ -4698,8 +4698,8 @@ msgstr "Pristup aplikacije opozvan"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "Pojedinosti o aplikaciji"
 
@@ -5618,7 +5618,7 @@ msgstr "Natrag na popis"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "Natrag na nadjačavanja"
@@ -5995,7 +5995,7 @@ msgid "Block bot direct messages"
 msgstr "Blokiraj izravne poruke botova"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "Blokirati botove da vam šalju izravne poruke?"
 
@@ -6010,12 +6010,12 @@ msgid "Block direct messages"
 msgstr "Blokiraj izravne poruke"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "Blokirati izravne poruke članova zajednice?"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "Blokiraj za sve zajednice"
 
@@ -8070,6 +8070,11 @@ msgstr "Odaberite kamo {PRODUCT_NAME} treba slati slike za obrnuto pretraživanj
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "Odaberite kamo će se objavljivati njegove poruke. U bilo kojem trenutku možete prestati pratiti u postavkama zajednice → Webhooks."
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "Odaberite hoće li vam ljudi koji dijele zajednicu s vama moći slati izravne poruke bez prethodnog prijateljstva."
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8103,11 +8108,6 @@ msgstr "Odaberite tko može vidjeti ovu vezu na vašem profilu."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Odaberite tko može vidjeti detalje vašeg profila"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "Odaberite tko vam može slati izravne poruke."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -9062,7 +9062,7 @@ msgid "Community message notifications"
 msgstr "Obavijesti o porukama u zajednici"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "Traka za obveznu MFA u zajednici"
 
@@ -11258,12 +11258,12 @@ msgid "Current uses:"
 msgstr "Trenutni broj korištenja:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "Trenutačno odbačeno"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "Trenutačno prikazano"
 
@@ -11777,7 +11777,7 @@ msgstr "DEB paket"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "Otklanjanje pogrešaka"
@@ -12713,7 +12713,7 @@ msgstr "Pretpregledi izravnih poruka"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
 msgid "Direct messages"
 msgstr "Izravne poruke"
 
@@ -13205,22 +13205,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "Ne radi ništa, ne želim se pridružiti"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "Želite li dopustiti i botovima iz postojećih zajednica da vam šalju izravne poruke?"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "Želite li dopustiti i izravne poruke od članova postojećih zajednica?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "Želite li blokirati i izravne poruke botova u svojim postojećim zajednicama?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "Želite li blokirati i izravne poruke od članova postojećih zajednica?"
 
@@ -13265,7 +13265,7 @@ msgid "Domain"
 msgstr "Domena"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "Traka s obavijestima o premještanju domene"
 
@@ -13821,7 +13821,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Uredite nadjačavanja za uloge i članove u ovom kanalu."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
-#: src/features/app/components/pages/YouPage.tsx:162
+#: src/features/app/components/pages/YouPage.tsx:174
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
 #: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
@@ -14955,7 +14955,7 @@ msgstr "Svaka zajednica koja prati ovaj kanal dobit će kopiju. Ako je kasnije u
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
 msgid "Everyone"
 msgstr "Svi"
 
@@ -16174,12 +16174,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Radi vaše sigurnosti, potvrdite svoj identitet za nastavak."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "Prisilno onemogućeno"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "Prisilno omogućeno"
 
@@ -16436,7 +16436,7 @@ msgid "Friend request sent"
 msgstr "Zahtjev za prijateljstvo poslan"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "Zahtjevi za prijateljstvo"
@@ -19219,7 +19219,7 @@ msgid "Invites disabled"
 msgstr "Pozivnice onemogućene"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "Traka s obavijestima o onemogućenim pozivnicama"
 
@@ -22525,7 +22525,7 @@ msgstr "Utišaj članove"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "Isključi mikrofon"
@@ -23651,7 +23651,7 @@ msgid "No server is selected for this request."
 msgstr "Nijedan poslužitelj nije odabran za ovaj zahtjev."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "Nema pronađenih postavki"
 
@@ -23971,7 +23971,7 @@ msgstr "Nije točno ili netočno"
 #. Markdown alert label for a note callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:191
+#: src/features/app/components/pages/YouPage.tsx:203
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
@@ -24555,7 +24555,7 @@ msgid "Open audio link"
 msgstr "Otvori audiopoveznicu"
 
 #. Short label in the you page.
-#: src/features/app/components/pages/YouPage.tsx:28
+#: src/features/app/components/pages/YouPage.tsx:33
 msgid "Open avatar"
 msgstr "Otvori avatar"
 
@@ -24925,7 +24925,7 @@ msgid "Open thread again"
 msgstr "Ponovno otvori nit"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "Otvori korisnički izbornik za {displayName}"
 
@@ -25941,7 +25941,7 @@ msgstr "Prikvačena grupna izravna poruka"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "Prikvačene poruke"
@@ -25952,7 +25952,7 @@ msgid "Pinned messages show up here."
 msgstr "Prikvačene poruke prikazuju se ovdje."
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "Prikvačene poruke, nepročitane prikvačene poruke"
 
@@ -26529,7 +26529,7 @@ msgstr "Prioritetni govornik"
 msgid "Privacy"
 msgstr "Privatnost"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "Pravila privatnosti"
@@ -26537,11 +26537,6 @@ msgstr "Pravila privatnosti"
 #. Generic section heading / button label for the privacy settings area.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
-msgstr "Postavke privatnosti"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
 msgstr "Postavke privatnosti"
 
 #. Label for Bluesky OAuth privacy URL input.
@@ -26936,7 +26931,7 @@ msgid "Push to talk (priority)"
 msgstr "Pritisni za govor (prioritetno)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Uključena je opcija pritisni za govor. Držite {pushToTalkHint} da biste govorili."
 
@@ -28991,13 +28986,18 @@ msgstr "Pregledajte i potvrdite"
 msgid "Review apps that can access your account."
 msgstr "Pregledajte aplikacije koje mogu pristupiti vašem računu."
 
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
+msgid "Review needed"
+msgstr "Potrebna je revizija"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "Pregledajte prošle kupnje i opcije povrata novca"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "Pregledaj postavke privatnosti"
 
@@ -29024,6 +29024,11 @@ msgstr "Pregledajte ove datoteke i pokušajte ponovno s manjim ili jednostavniji
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Pregledajte što ova aplikacija traži prije nego što nastavite."
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "Pregledajte tko vam može poslati poruku"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29325,8 +29330,8 @@ msgstr "Zasićenost"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29945,7 +29950,7 @@ msgstr "Pretraži objave"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "Rezultati pretraživanja"
@@ -32045,7 +32050,7 @@ msgstr "Preskoči sistemsku poruku o napuštanju grupe. Nitko neće dobiti obavi
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Preskoči ovo sada i konfiguriraj iz administratorske ploče."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "Preskoči ovaj korak"
 
@@ -34126,7 +34131,7 @@ msgstr "Tennessee"
 msgid "Terms acceptance nagbar"
 msgstr "Traka za prihvaćanje uvjeta"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "Uvjeti pružanja usluge"
@@ -37264,7 +37269,7 @@ msgstr "Uključi obavijesti za favorite"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "Uključi mikrofon"
@@ -37573,7 +37578,7 @@ msgid "Update passkey"
 msgstr "Ažuriraj pristupni ključ"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "Ažuriraj service worker"
 
@@ -38134,7 +38139,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "Koristite provjeru pravopisa ugrađenu u vaš operativni sustav."
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "Tipkama sa strelicama gore i dolje krećite se između stavki, a razmaknicom ili tipkom Enter otvorite stavku. Ako kartica ima odjeljke, strelica desno je proširuje, a strelica lijevo sažima."
 
@@ -38237,7 +38242,7 @@ msgid "User avatars"
 msgstr "Avatari korisnika"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "Korisničke kontrole"
 
@@ -38305,6 +38310,11 @@ msgstr "Korisnički zapis"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "Korisničke postavke"
+
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "User settings, privacy review needed"
+msgstr "Korisničke postavke, potreban pregled privatnosti"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38422,27 +38432,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Koristim {effectiveLabel} dok {requestedLabel} ne bude spreman."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "Koristi se stvarno stanje računa"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "Koristi se stvarno stanje inventara poklona"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "Koristi se stvarno premium stanje"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "Koristi se stvarno stanje"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "Koristi se stvarno stanje provjere"
 
@@ -39359,7 +39369,7 @@ msgid "Voice region"
 msgstr "Glasovna regija"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "Traka s obavijestima o vraćanju glasovne sesije"
 
@@ -39945,8 +39955,8 @@ msgstr "Što se događa?"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "Novosti"
@@ -40381,7 +40391,7 @@ msgstr "Možete dodati komentare prije prijenosa. Držite Shift za izravan prije
 msgid "You can add friends with their username."
 msgstr "Prijatelje možete dodati pomoću njihovog korisničkog imena."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "Ovu postavku možete promijeniti i za svaku zajednicu zasebno tako da desnom tipkom miša kliknete naziv zajednice i odaberete postavke privatnosti."
 

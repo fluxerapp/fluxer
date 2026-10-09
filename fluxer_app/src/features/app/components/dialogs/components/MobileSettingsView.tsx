@@ -21,6 +21,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
+import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
@@ -31,6 +32,7 @@ import type {SettingsTab} from '@app/features/user/components/settings_utils/Set
 import {
 	getCategoryLabel,
 	getUserSettingsTabLabel,
+	PRIVACY_REVIEW_NEEDED_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/SettingsConstants';
 import {isSettingsItemNew} from '@app/features/user/components/settings_utils/SettingsMetadata';
 import {
@@ -44,6 +46,7 @@ import {buildUserSettingsDeepLink} from '@app/features/user/components/settings_
 import type {MobileNavigationState} from '@app/features/user/hooks/useMobileNavigation';
 import {useSettingsContentKey} from '@app/features/user/hooks/useSettingsContentKey';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -137,9 +140,10 @@ interface PressableSettingsItemProps {
 	tab: SettingsTab;
 	onSelect: () => void;
 	badge?: React.ReactNode;
+	attention?: string;
 }
 
-const PressableSettingsItem: React.FC<PressableSettingsItemProps> = observer(({tab, onSelect, badge}) => {
+const PressableSettingsItem: React.FC<PressableSettingsItemProps> = observer(({tab, onSelect, badge, attention}) => {
 	const {isPressed, pressableProps} = usePressable();
 	const {handleLongPressCopy, consumeSuppressedClick} = useSettingsPageDeepLinkLongPress(tab.type);
 	const handleClick = useCallback(
@@ -187,6 +191,9 @@ const PressableSettingsItem: React.FC<PressableSettingsItemProps> = observer(({t
 					{badge}
 				</div>
 			</div>
+			{attention && (
+				<NotificationDot label={attention} data-flx="app.mobile-settings-view.pressable-settings-item.attention-dot" />
+			)}
 			<ArrowLeftIcon
 				className={styles.settingsItemArrow}
 				data-flx="app.mobile-settings-view.pressable-settings-item.settings-item-arrow"
@@ -362,6 +369,7 @@ const MobileSettingsList = observer(
 		const {i18n} = useLingui();
 		const currentUser = Users.currentUser;
 		const shouldShowWhatsNew = hasWhatsNewEntries();
+		const privacySetupPending = UserSettings.isPrivacySetupPending();
 		const advancedSettingsHasNew = useMemo(
 			() =>
 				getAdvancedSettingItems().some((item) => isSettingsItemNew(item, Date.now(), currentUser?.createdAt ?? null)),
@@ -432,6 +440,11 @@ const MobileSettingsList = observer(
 											tab={tab}
 											onSelect={() => onTabSelect(tab.type, tab.label)}
 											badge={badge}
+											attention={
+												tab.type === 'privacy_safety' && privacySetupPending
+													? i18n._(PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
+													: undefined
+											}
 											data-flx="app.mobile-settings-view.mobile-settings-list.pressable-settings-item.tab-select"
 										/>
 										{(!isLastTab || isLastCategory) && (

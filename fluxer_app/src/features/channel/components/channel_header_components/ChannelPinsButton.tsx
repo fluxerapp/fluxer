@@ -6,6 +6,7 @@ import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header
 import {ChannelPinsPopout} from '@app/features/channel/components/popouts/ChannelPinsPopout';
 import type {Channel} from '@app/features/channel/models/Channel';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -43,9 +44,8 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 		}
 	}, [isMobile]);
 	const indicator = hasUnreadPins ? (
-		<div
+		<NotificationDot
 			className={styles.unreadPinIndicator}
-			aria-hidden="true"
 			data-flx="channel.channel-header-components.channel-pins-button.unread-pin-indicator"
 		/>
 	) : null;

@@ -15,7 +15,7 @@ msgstr "... den Kompaktmodus aktivieren. Super!"
 msgid "(edited)"
 msgstr "(bearbeitet)"
 
-#: src/features/app/components/pages/YouPage.tsx:194
+#: src/features/app/components/pages/YouPage.tsx:206
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:907
 msgid "(only visible to you)"
 msgstr "(nur für dich sichtbar)"
@@ -1111,7 +1111,7 @@ msgstr "{count, plural, one {# Kanal folgt} other {# Kanäle folgen}} diesem Kan
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# Community gefunden} other {# Communitys gefunden}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# Community ist aufgrund einer Fehlfunktion des Fluxkompensators vorübergehend nicht verfügbar.} other {# Communitys sind aufgrund einer Fehlfunktion des Fluxkompensators vorübergehend nicht verfügbar.}}"
 
@@ -2809,7 +2809,7 @@ msgstr "Über {appName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:171
+#: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
 #: src/features/user/components/popouts/UserProfileShared.tsx:42
@@ -3933,7 +3933,7 @@ msgid "Allow bot direct messages"
 msgstr "Direktnachrichten von Bots zulassen"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "Sollen Bots dir Direktnachrichten senden dürfen?"
 
@@ -3951,16 +3951,16 @@ msgstr "Großbuchstaben und Leerzeichen in Textkanalnamen zulassen. Wenn diese O
 msgid "Allow direct messages"
 msgstr "Direktnachrichten erlauben"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
 msgid "Allow direct messages from community bots"
 msgstr "Direktnachrichten von Community-Bots zulassen"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Allow direct messages from community members"
 msgstr "Direktnachrichten von Community-Mitgliedern zulassen"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "Direktnachrichten von Community-Mitgliedern zulassen?"
 
@@ -3975,7 +3975,7 @@ msgid "Allow flexible text channel names"
 msgstr "Flexible Textkanalnamen erlauben"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "Für alle Communitys zulassen"
 
@@ -4698,8 +4698,8 @@ msgstr "Anwendungszugriff widerrufen"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "Anwendungsdetails"
 
@@ -5618,7 +5618,7 @@ msgstr "Zurück zur Liste"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "Zurück zu den Überschreibungen"
@@ -5995,7 +5995,7 @@ msgid "Block bot direct messages"
 msgstr "Direktnachrichten von Bots blockieren"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "Bots am Senden von Direktnachrichten hindern?"
 
@@ -6010,12 +6010,12 @@ msgid "Block direct messages"
 msgstr "Direktnachrichten blockieren"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "Direktnachrichten von Community-Mitgliedern blockieren?"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "Für alle Communitys blockieren"
 
@@ -8070,6 +8070,11 @@ msgstr "Wähle, wohin {PRODUCT_NAME} Bilder für die Bilderrückwärtssuche send
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "Wähle aus, wo die veröffentlichten Nachrichten erscheinen sollen. Du kannst jederzeit unter Community-Einstellungen → Webhooks entfolgen."
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "Lege fest, ob Personen, die eine Community mit dir teilen, dir Direktnachrichten senden können, ohne vorher Freunde zu sein."
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8103,11 +8108,6 @@ msgstr "Wähle aus, wer diese Verbindung in deinem Profil sehen kann."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Wähle aus, wer deine Profildetails sehen kann"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "Wähle aus, wer dir Direktnachrichten senden kann."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -9062,7 +9062,7 @@ msgid "Community message notifications"
 msgstr "Benachrichtigungen für Community-Nachrichten"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "Hinweisleiste zur MFA-Pflicht in der Community"
 
@@ -11258,12 +11258,12 @@ msgid "Current uses:"
 msgstr "Aktuelle Nutzungen:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "Derzeit ausgeblendet"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "Wird gerade angezeigt"
 
@@ -11777,7 +11777,7 @@ msgstr "DEB-Paket"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "Debugging"
@@ -12713,7 +12713,7 @@ msgstr "Vorschau von Direktnachrichten"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
 msgid "Direct messages"
 msgstr "Direktnachrichten"
 
@@ -13205,22 +13205,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "Nichts tun, ich möchte nicht beitreten"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "Möchtest du auch Bots aus deinen bestehenden Communitys erlauben, dir Direktnachrichten zu senden?"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "Möchtest du auch Direktnachrichten von Mitgliedern deiner bestehenden Communitys zulassen?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "Möchtest du auch Direktnachrichten von Bots in deinen bestehenden Communitys blockieren?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "Möchtest du auch Direktnachrichten von Mitgliedern deiner bestehenden Communitys blockieren?"
 
@@ -13265,7 +13265,7 @@ msgid "Domain"
 msgstr "Domain"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "Hinweisleiste zum Domainumzug"
 
@@ -13821,7 +13821,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Berechtigungsüberschreibungen für Rollen und Mitglieder in diesem Kanal bearbeiten."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
-#: src/features/app/components/pages/YouPage.tsx:162
+#: src/features/app/components/pages/YouPage.tsx:174
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
 #: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
@@ -14955,7 +14955,7 @@ msgstr "Jede Community, die diesem Kanal folgt, erhält eine Kopie. Wenn du sie 
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
 msgid "Everyone"
 msgstr "Jeder"
 
@@ -16174,12 +16174,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Bestätige bitte zu deiner Sicherheit, dass du es bist, um fortzufahren."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "Erzwungen deaktiviert"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "Erzwungen aktiviert"
 
@@ -16436,7 +16436,7 @@ msgid "Friend request sent"
 msgstr "Freundschaftsanfrage gesendet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "Freundschaftsanfragen"
@@ -19219,7 +19219,7 @@ msgid "Invites disabled"
 msgstr "Einladungen deaktiviert"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "Hinweisleiste zu deaktivierten Einladungen"
 
@@ -22525,7 +22525,7 @@ msgstr "Mitglieder stummschalten"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "Mikrofon stummschalten"
@@ -23651,7 +23651,7 @@ msgid "No server is selected for this request."
 msgstr "Für diese Anfrage ist kein Server ausgewählt."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "Keine Einstellungen gefunden"
 
@@ -23971,7 +23971,7 @@ msgstr "Weder wahr noch falsch"
 #. Markdown alert label for a note callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:191
+#: src/features/app/components/pages/YouPage.tsx:203
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
@@ -24555,7 +24555,7 @@ msgid "Open audio link"
 msgstr "Audio-Link öffnen"
 
 #. Short label in the you page.
-#: src/features/app/components/pages/YouPage.tsx:28
+#: src/features/app/components/pages/YouPage.tsx:33
 msgid "Open avatar"
 msgstr "Avatar öffnen"
 
@@ -24925,7 +24925,7 @@ msgid "Open thread again"
 msgstr "Thread wieder öffnen"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "Benutzermenü für {displayName} öffnen"
 
@@ -25941,7 +25941,7 @@ msgstr "Angepinnte Gruppen-DM"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "Angepinnte Nachrichten"
@@ -25952,7 +25952,7 @@ msgid "Pinned messages show up here."
 msgstr "Angepinnte Nachrichten werden hier angezeigt."
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "Angepinnte Nachrichten, ungelesene angepinnte Nachrichten"
 
@@ -26529,7 +26529,7 @@ msgstr "Prioritätssprecher"
 msgid "Privacy"
 msgstr "Datenschutz"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "Datenschutzerklärung"
@@ -26538,11 +26538,6 @@ msgstr "Datenschutzerklärung"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "Datenschutzeinstellungen"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "Datenschutz-Einrichtung-Banner"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1162
@@ -26936,7 +26931,7 @@ msgid "Push to talk (priority)"
 msgstr "Push-to-Talk (Priorität)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-Talk ist aktiviert. Halte {pushToTalkHint} gedrückt, um zu sprechen."
 
@@ -28991,13 +28986,18 @@ msgstr "Überprüfen und bestätigen"
 msgid "Review apps that can access your account."
 msgstr "Überprüfe die Apps, die auf deinen Account zugreifen können."
 
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
+msgid "Review needed"
+msgstr "Überprüfung erforderlich"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "Vergangene Käufe und Erstattungsoptionen prüfen"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "Datenschutzeinstellungen überprüfen"
 
@@ -29024,6 +29024,11 @@ msgstr "Überprüfe diese Dateien und versuche es noch einmal mit kleineren oder
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Prüfe, welche Berechtigungen diese App anfordert, bevor du fortfährst."
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "Überprüfe, wer dir Nachrichten senden kann"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29325,8 +29330,8 @@ msgstr "Sättigung"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29945,7 +29950,7 @@ msgstr "Beiträge durchsuchen"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "Suchergebnisse"
@@ -32045,7 +32050,7 @@ msgstr "Systembenachrichtigung beim Verlassen überspringen – niemand wird ben
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Überspringe dies jetzt und konfiguriere es später im Admin-Panel."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "Diesen Schritt überspringen"
 
@@ -34126,7 +34131,7 @@ msgstr "Tennessee"
 msgid "Terms acceptance nagbar"
 msgstr "AGB-Hinweisbanner"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "Nutzungsbedingungen"
@@ -37264,7 +37269,7 @@ msgstr "Stummschaltung der Favoriten aufheben"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "Stummschaltung des Mikrofons aufheben"
@@ -37573,7 +37578,7 @@ msgid "Update passkey"
 msgstr "Passkey aktualisieren"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "Service Worker aktualisieren"
 
@@ -38134,7 +38139,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "Die in deinem Betriebssystem integrierte Rechtschreibprüfung verwenden."
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "Verwende die Pfeiltasten nach oben und unten, um zwischen Elementen zu wechseln, und die Leertaste oder Eingabetaste, um eines zu öffnen. Wenn ein Tab Abschnitte hat, klappt ihn die rechte Pfeiltaste auf und die linke Pfeiltaste zu."
 
@@ -38237,7 +38242,7 @@ msgid "User avatars"
 msgstr "Benutzer-Avatare"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "Benutzersteuerung"
 
@@ -38305,6 +38310,11 @@ msgstr "Benutzerdatensatz"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "Benutzereinstellungen"
+
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "User settings, privacy review needed"
+msgstr "Benutzereinstellungen, Datenschutzprüfung erforderlich"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38422,27 +38432,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Verwende {effectiveLabel}, bis {requestedLabel} bereit ist."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "Verwendet den tatsächlichen Accountstatus"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "Verwendet den tatsächlichen Status des Geschenkinventars"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "Verwendet den tatsächlichen Premium-Status"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "Verwendet den tatsächlichen Status"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "Verwendet den tatsächlichen Verifizierungsstatus"
 
@@ -39359,7 +39369,7 @@ msgid "Voice region"
 msgstr "Sprachregion"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "Hinweisleiste zur Wiederherstellung der Sprachsitzung"
 
@@ -39945,8 +39955,8 @@ msgstr "Was gibt's Neues?"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "Neuigkeiten"
@@ -40381,7 +40391,7 @@ msgstr "Du kannst vor dem Hochladen Kommentare hinzufügen. Halte die Umschaltta
 msgid "You can add friends with their username."
 msgstr "Du kannst Freunde über ihren Benutzernamen hinzufügen."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "Du kannst diese Einstellung auch pro Community ändern, indem du mit der rechten Maustaste auf den Community-Namen klickst und die Datenschutzeinstellungen auswählst."
 
