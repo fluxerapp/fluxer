@@ -30,9 +30,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import {hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {isStandalonePwa} from '@app/features/ui/utils/PwaUtils';
-import {PRIVACY_SETUP_VERSION} from '@app/features/user/constants/PrivacySetupConstants';
 import StatusPage from '@app/features/user/state/StatusPage';
-import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
 import {selectVoiceEngineV2AppConnectionWithFallback} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
@@ -287,13 +285,6 @@ export const useNagbarConditions = (): NagbarConditions => {
 			(!user.privacyAgreedAt || user.privacyAgreedAt.toISOString() < PRIVACY_POLICY_LAST_UPDATED);
 		return termsOutdated || privacyOutdated;
 	})();
-	const needsPrivacySetup = (() => {
-		if (nagbarState.forceHidePrivacySetup) return false;
-		if (nagbarState.forcePrivacySetup) return true;
-		if (!user || !UserSettings.isHydrated()) return false;
-		const privacySetupVersion = UserSettings.getPrivacySetupVersion();
-		return privacySetupVersion !== null && privacySetupVersion < PRIVACY_SETUP_VERSION;
-	})();
 	return {
 		canShowBuildEnvironment,
 		canShowConnection,
@@ -334,7 +325,6 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowVisionaryMfa,
 		canShowVoiceSessionRestore,
 		needsTermsAcceptance,
-		needsPrivacySetup,
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
 		canShowDomainMoved,
@@ -365,12 +355,6 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.TERMS_ACCEPTANCE,
 				priority: -5,
 				visible: conditions.needsTermsAcceptance,
-				dismissible: false,
-			},
-			{
-				type: NagbarType.PRIVACY_SETUP,
-				priority: -2.75,
-				visible: conditions.needsPrivacySetup,
 				dismissible: false,
 			},
 			{

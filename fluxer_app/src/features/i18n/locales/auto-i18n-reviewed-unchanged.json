@@ -2381,7 +2381,7 @@
         "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
       },
       {
-        "msgid": "Choose who can send you direct messages."
+        "msgid": "Choose whether people who share a community with you can send you direct messages without being friends first."
       },
       {
         "msgid": "Choose your defaults"
@@ -3719,9 +3719,6 @@
         "msgid": "Print"
       },
       {
-        "msgid": "Privacy setup nagbar"
-      },
-      {
         "msgid": "Private channel"
       },
       {
@@ -3965,10 +3962,16 @@
         "msgid": "Retry"
       },
       {
+        "msgid": "Review needed"
+      },
+      {
         "msgid": "Review privacy settings"
       },
       {
         "msgid": "Review the permissions {productName} uses for voice, video, screen sharing, and shortcuts."
+      },
+      {
+        "msgid": "Review who can message you"
       },
       {
         "msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
@@ -4746,6 +4749,9 @@
       },
       {
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+      },
+      {
+        "msgid": "User settings, privacy review needed"
       },
       {
         "msgid": "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."

@@ -316,6 +316,11 @@ export const USER_SETTINGS_LABEL_DESCRIPTOR = msg({
 	message: 'User settings',
 	comment: 'Root label for the current user settings modal and settings search paths.',
 });
+export const PRIVACY_REVIEW_NEEDED_DESCRIPTOR = msg({
+	message: 'Review needed',
+	comment:
+		'Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.',
+});
 
 export function getUserSettingsTabLabel(i18n: I18n, tabType: UserSettingsTabType): string {
 	const tab = ALL_TABS_DESCRIPTORS.find((candidate) => candidate.type === tabType);

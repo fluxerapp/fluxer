@@ -1123,7 +1123,7 @@ msgstr "{count, plural, one {# चैनल इसे फ़ॉलो करत�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# कम्युनिटी मिली} other {# कम्युनिटी मिलीं}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध है।} other {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध हैं।}}"
 
@@ -3945,7 +3945,7 @@ msgid "Allow bot direct messages"
 msgstr "बॉट से डायरेक्ट मैसेज की अनुमति दें"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "क्या बॉट आपको डायरेक्ट मैसेज भेज सकते हैं?"
 
@@ -3963,16 +3963,16 @@ msgstr "टेक्स्ट चैनल के नामों में ब�
 msgid "Allow direct messages"
 msgstr "डायरेक्ट मैसेज की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
 msgid "Allow direct messages from community bots"
 msgstr "कम्युनिटी बॉट से डायरेक्ट मैसेज की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Allow direct messages from community members"
 msgstr "कम्युनिटी सदस्यों से डायरेक्ट मैसेज की अनुमति दें"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "क्या आप कम्युनिटी सदस्यों से डायरेक्ट मैसेज की अनुमति देना चाहते हैं?"
 
@@ -3987,7 +3987,7 @@ msgid "Allow flexible text channel names"
 msgstr "टेक्स्ट चैनल के नामों को लचीला रखें"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "सभी कम्युनिटी के लिए अनुमति दें"
 
@@ -4710,8 +4710,8 @@ msgstr "ऐप्लिकेशन एक्सेस निरस्त कि
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "ऐप्लिकेशन विवरण"
 
@@ -5630,7 +5630,7 @@ msgstr "सूची पर वापस"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "ओवरराइड पर वापस जाएँ"
@@ -6007,7 +6007,7 @@ msgid "Block bot direct messages"
 msgstr "बॉट के डायरेक्ट मैसेज ब्लॉक करें"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "क्या आप बॉट से आने वाले डायरेक्ट मैसेज ब्लॉक करना चाहते हैं?"
 
@@ -6022,12 +6022,12 @@ msgid "Block direct messages"
 msgstr "डायरेक्ट मैसेज ब्लॉक करें"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "क्या आप कम्युनिटी सदस्यों से डायरेक्ट मैसेज ब्लॉक करना चाहते हैं?"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "सभी कम्युनिटी के लिए ब्लॉक करें"
 
@@ -8082,6 +8082,11 @@ msgstr "चुनें कि {PRODUCT_NAME} रिवर्स इमेज �
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "चुनें कि इसके प्रकाशित संदेश कहाँ जाने चाहिए। आप किसी भी समय समुदाय सेटिंग → वेबहुक में अनफ़ॉलो कर सकते हैं।"
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "यह चुनें कि क्या जिन लोगों का समुदाय आपके साथ साझा है, वे आपको दोस्त बनाए बिना सीधे संदेश भेज सकते हैं।"
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8115,11 +8120,6 @@ msgstr "चुनें कि आपकी प्रोफ़ाइल पर �
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "चुनें कि आपकी प्रोफ़ाइल का विवरण कौन देख सकता है"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "चुनें कि कौन आपको सीधे संदेश भेज सकता है।"
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -9074,7 +9074,7 @@ msgid "Community message notifications"
 msgstr "कम्युनिटी मैसेज की सूचनाएँ"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "कम्युनिटी MFA आवश्यकता नागबार"
 
@@ -11270,12 +11270,12 @@ msgid "Current uses:"
 msgstr "मौजूदा उपयोग:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "फ़िलहाल खारिज है"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "फ़िलहाल दिख रहा है"
 
@@ -11789,7 +11789,7 @@ msgstr "DEB पैकेज"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "डीबग"
@@ -12725,7 +12725,7 @@ msgstr "डायरेक्ट मैसेज के प्रीव्यू
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
 msgid "Direct messages"
 msgstr "डायरेक्ट मैसेज"
 
@@ -13217,22 +13217,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "कुछ न करें, मुझे शामिल नहीं होना"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "क्या आप अपनी मौजूदा कम्युनिटी के बॉट को भी आपको डायरेक्ट मैसेज भेजने की अनुमति देना चाहते हैं?"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "क्या आप अपनी मौजूदा कम्युनिटी के सदस्यों से डायरेक्ट मैसेज की अनुमति भी देना चाहते हैं?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "क्या आप अपनी मौजूदा कम्युनिटी के बॉट के डायरेक्ट मैसेज भी ब्लॉक करना चाहते हैं?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "क्या आप अपनी मौजूदा कम्युनिटी के सदस्यों के डायरेक्ट मैसेज भी ब्लॉक करना चाहते हैं?"
 
@@ -13277,7 +13277,7 @@ msgid "Domain"
 msgstr "डोमेन"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "डोमेन बदलाव नागबार"
 
@@ -14967,7 +14967,7 @@ msgstr "इस चैनल को फॉलो करने वाले हर
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
 msgid "Everyone"
 msgstr "हर कोई"
 
@@ -16186,12 +16186,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "आपकी सुरक्षा के लिए, आगे बढ़ने से पहले कृपया पुष्टि करें कि यह आप ही हैं।"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "ज़बरदस्ती अक्षम किया गया"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "ज़बरदस्ती चालू किया गया"
 
@@ -16448,7 +16448,7 @@ msgid "Friend request sent"
 msgstr "फ्रेंड रिक्वेस्ट भेजी गई"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "फ्रेंड रिक्वेस्ट"
@@ -19231,7 +19231,7 @@ msgid "Invites disabled"
 msgstr "इनवाइट बंद हैं"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "इनवाइट बंद नागबार"
 
@@ -22537,7 +22537,7 @@ msgstr "सदस्यों को म्यूट करें"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:65
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "माइक म्यूट करें"
@@ -23663,7 +23663,7 @@ msgid "No server is selected for this request."
 msgstr "इस अनुरोध के लिए कोई सर्वर नहीं चुना गया है."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "कोई सेटिंग्स नहीं मिलीं"
 
@@ -24937,7 +24937,7 @@ msgid "Open thread again"
 msgstr "थ्रेड फिर से खोलें"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:78
 msgid "Open user menu for {displayName}"
 msgstr "{displayName} के लिए यूज़र मेन्यू खोलें"
 
@@ -25953,7 +25953,7 @@ msgstr "पिन किया गया ग्रुप DM"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "पिन किए गए मैसेज"
@@ -25964,7 +25964,7 @@ msgid "Pinned messages show up here."
 msgstr "पिन किए गए मैसेज यहां दिखते हैं।"
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "पिन किए गए मैसेज, न पढ़े गए पिन किए गए मैसेज"
 
@@ -26541,7 +26541,7 @@ msgstr "प्राथमिकता वाला स्पीकर"
 msgid "Privacy"
 msgstr "गोपनीयता"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "गोपनीयता नीति"
@@ -26550,11 +26550,6 @@ msgstr "गोपनीयता नीति"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "गोपनीयता सेटिंग्स"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "गोपनीयता सेटअप सूचना पट्टी"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1162
@@ -26948,7 +26943,7 @@ msgid "Push to talk (priority)"
 msgstr "पुश टू टॉक (प्राथमिकता)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:56
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "पुश टू टॉक चालू है। बोलने के लिए {pushToTalkHint} दबाए रखें।"
 
@@ -29003,13 +28998,18 @@ msgstr "समीक्षा करें और पुष्टि करे�
 msgid "Review apps that can access your account."
 msgstr "उन ऐप्स की समीक्षा करें जिनके पास आपके अकाउंट का एक्सेस है।"
 
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "Review needed"
+msgstr "समीक्षा आवश्यक"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "पिछली खरीदारी और रिफ़ंड के विकल्प देखें"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "निजता सेटिंग की समीक्षा करें"
 
@@ -29036,6 +29036,11 @@ msgstr "इन फ़ाइलों की समीक्षा करें �
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "जारी रखने से पहले देखें कि यह ऐप क्या माँग रहा है।"
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "आपको कौन मैसेज कर सकता है, इसकी समीक्षा करें"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29337,8 +29342,8 @@ msgstr "सैचुरेशन"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29957,7 +29962,7 @@ msgstr "पोस्ट खोजें"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "खोज के नतीजे"
@@ -32057,7 +32062,7 @@ msgstr "छोड़ने का सिस्टम मैसेज नही�
 msgid "Skip this now and configure it from the admin panel."
 msgstr "इसे अभी छोड़ें और एडमिन पैनल से कॉन्फ़िगर करें।"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "यह चरण छोड़ें"
 
@@ -34138,7 +34143,7 @@ msgstr "टेनेसी"
 msgid "Terms acceptance nagbar"
 msgstr "नियम स्वीकार करने वाला नागबार"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "सेवा की शर्तें"
@@ -37276,7 +37281,7 @@ msgstr "पसंदीदा को अनम्यूट करें"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:61
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "माइक अनम्यूट करें"
@@ -37585,7 +37590,7 @@ msgid "Update passkey"
 msgstr "पासकी अपडेट करें"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "सर्विस वर्कर अपडेट करें"
 
@@ -38146,7 +38151,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "अपने ऑपरेटिंग सिस्टम में बने स्पेलचेकर का इस्तेमाल करें।"
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "आइटम के बीच जाने के लिए ऊपर और नीचे तीर कुंजियों का उपयोग करें और किसी एक को खोलने के लिए स्पेस या एंटर दबाएँ। जहाँ किसी टैब में अनुभाग होते हैं, वहाँ दायाँ तीर उसे बड़ा करता है और बायाँ तीर उसे छोटा करता है।"
 
@@ -38249,7 +38254,7 @@ msgid "User avatars"
 msgstr "यूज़र अवतार"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:69
 msgid "User controls"
 msgstr "यूज़र कंट्रोल"
 
@@ -38317,6 +38322,11 @@ msgstr "यूज़र रिकॉर्ड"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "यूज़र सेटिंग्स"
+
+#. Accessible label for the user settings button in the user area while the user has not yet reviewed who can message them.
+#: src/features/app/components/layout/UserArea.tsx:73
+msgid "User settings, privacy review needed"
+msgstr "उपयोगकर्ता सेटिंग्स, गोपनीयता समीक्षा आवश्यक"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38434,27 +38444,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "{effectiveLabel} तैयार होने तक {requestedLabel} का उपयोग किया जा रहा है।"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "वास्तविक अकाउंट स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "उपहार इन्वेंट्री की वास्तविक स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "वास्तविक प्रीमियम स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "वास्तविक स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "वास्तविक वेरिफ़िकेशन स्थिति का उपयोग किया जा रहा है"
 
@@ -39371,7 +39381,7 @@ msgid "Voice region"
 msgstr "वॉइस रीजन"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "वॉइस सेशन रीस्टोर नागबार"
 
@@ -39957,8 +39967,8 @@ msgstr "क्या चल रहा है?"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "नया क्या है"
@@ -40393,7 +40403,7 @@ msgstr "आप अपलोड करने से पहले टिप्प�
 msgid "You can add friends with their username."
 msgstr "आप यूज़रनेम से दोस्त जोड़ सकते हैं।"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "आप कम्युनिटी के नाम पर राइट-क्लिक करके और गोपनीयता सेटिंग्स चुनकर भी इस सेटिंग को हर कम्युनिटी के लिए बदल सकते हैं।"
 

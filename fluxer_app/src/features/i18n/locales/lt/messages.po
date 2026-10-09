@@ -1123,7 +1123,7 @@ msgstr "{count, plural, one {# kanalas jį seka} other {# kanalai jį seka}} š�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {Rasta # bendruomenė} few {Rastos # bendruomenės} other {Rasta # bendruomenių}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# bendruomenė laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.} few {# bendruomenės laikinai nepasiekiamos dėl srauto kondensatoriaus gedimo.} other {# bendruomenių laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.}}"
 
@@ -3945,7 +3945,7 @@ msgid "Allow bot direct messages"
 msgstr "Leisti botų tiesiogines žinutes"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "Leisti botams siųsti jums tiesiogines žinutes?"
 
@@ -3963,16 +3963,16 @@ msgstr "Teksto kanalų pavadinimuose leisti didžiąsias raides ir tarpus. Išju
 msgid "Allow direct messages"
 msgstr "Leisti tiesiogines žinutes"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
 msgid "Allow direct messages from community bots"
 msgstr "Leisti tiesiogines žinutes iš bendruomenės botų"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Allow direct messages from community members"
 msgstr "Leisti tiesiogines žinutes iš bendruomenės narių"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "Leisti tiesiogines žinutes iš bendruomenės narių?"
 
@@ -3987,7 +3987,7 @@ msgid "Allow flexible text channel names"
 msgstr "Leisti lanksčius teksto kanalo pavadinimus"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "Leisti visoms bendruomenėms"
 
@@ -4710,8 +4710,8 @@ msgstr "Programos prieiga atšaukta"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "Programos informacija"
 
@@ -5630,7 +5630,7 @@ msgstr "Grįžti į sąrašą"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "Grįžti prie perrašymų"
@@ -6007,7 +6007,7 @@ msgid "Block bot direct messages"
 msgstr "Blokuoti botų tiesiogines žinutes"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "Blokuoti botų siunčiamas tiesiogines žinutes?"
 
@@ -6022,12 +6022,12 @@ msgid "Block direct messages"
 msgstr "Blokuoti tiesiogines žinutes"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "Blokuoti bendruomenės narių tiesiogines žinutes?"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "Blokuoti visose bendruomenėse"
 
@@ -8082,6 +8082,11 @@ msgstr "Pasirinkite, kur {PRODUCT_NAME} turėtų siųsti vaizdus atvirkštinei v
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "Pasirinkite, kur bus skelbiami jos pranešimai. Bet kada galėsite nebesekti bendruomenės nustatymuose → „Webhooks“."
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "Pasirinkite, ar žmonės, kurie dalijasi bendruomene su jumis, gali siųsti jums tiesiogines žinutes, prieš tai nebūdami draugais."
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8115,11 +8120,6 @@ msgstr "Pasirinkite, kas gali matyti šį ryšį jūsų profilyje."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Pasirinkite, kas gali matyti jūsų profilio duomenis"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "Pasirinkite, kas gali siųsti jums tiesiogines žinutes."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -9074,7 +9074,7 @@ msgid "Community message notifications"
 msgstr "Bendruomenės žinučių pranešimai"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "Bendruomenės MFA reikalavimo pranešimų juosta"
 
@@ -11270,12 +11270,12 @@ msgid "Current uses:"
 msgstr "Panaudojimų:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "Šiuo metu atmesta"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "Šiuo metu rodoma"
 
@@ -11789,7 +11789,7 @@ msgstr "DEB paketas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "Derinimas"
@@ -12725,7 +12725,7 @@ msgstr "Tiesioginių žinučių peržiūros"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
 msgid "Direct messages"
 msgstr "Tiesioginės žinutės"
 
@@ -13217,22 +13217,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "Nieko nedaryti, nenoriu prisijungti"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "Ar taip pat norite leisti botams iš esamų bendruomenių siųsti jums tiesiogines žinutes?"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "Ar taip pat norite leisti tiesiogines žinutes iš esamų bendruomenių narių?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "Ar taip pat norite blokuoti tiesiogines žinutes iš botų esamose bendruomenėse?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "Ar taip pat norite blokuoti tiesiogines žinutes iš esamų bendruomenių narių?"
 
@@ -13277,7 +13277,7 @@ msgid "Domain"
 msgstr "Domenas"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "Domeno perkėlimo pranešimų juosta"
 
@@ -14967,7 +14967,7 @@ msgstr "Kiekviena šį kanalą stebinti bendruomenė gaus kopiją. Jei vėliau j
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
 msgid "Everyone"
 msgstr "Visi"
 
@@ -16186,12 +16186,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Siekdami užtikrinti jūsų saugumą, patvirtinkite, kad tai jūs."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "Priverstinai išjungta"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "Priverstinai įjungta"
 
@@ -16448,7 +16448,7 @@ msgid "Friend request sent"
 msgstr "Draugystės užklausa išsiųsta"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "Draugystės užklausos"
@@ -19232,7 +19232,7 @@ msgid "Invites disabled"
 msgstr "Kvietimai išjungti"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "Kvietimų išjungimo pranešimų juosta"
 
@@ -22538,7 +22538,7 @@ msgstr "Nutildyti narius"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:65
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "Nutildyti mikrofoną"
@@ -23664,7 +23664,7 @@ msgid "No server is selected for this request."
 msgstr "Šiai užklausai nepasirinktas joks serveris."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "Nustatymų nerasta"
 
@@ -24938,7 +24938,7 @@ msgid "Open thread again"
 msgstr "Atidaryti temą iš naujo"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:78
 msgid "Open user menu for {displayName}"
 msgstr "Atidaryti naudotojo „{displayName}“ meniu"
 
@@ -25954,7 +25954,7 @@ msgstr "Prisegtas grupės DM"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "Prisegtos žinutės"
@@ -25965,7 +25965,7 @@ msgid "Pinned messages show up here."
 msgstr "Prisegtos žinutės rodomos čia."
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "Prisegtos žinutės, neskaitytos prisegtos žinutės"
 
@@ -26542,7 +26542,7 @@ msgstr "Prioritetinis kalbėtojas"
 msgid "Privacy"
 msgstr "Privatumas"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "Privatumo politika"
@@ -26551,11 +26551,6 @@ msgstr "Privatumo politika"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "Privatumo nustatymai"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "Privatumo nustatymų pranešimas"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1162
@@ -26949,7 +26944,7 @@ msgid "Push to talk (priority)"
 msgstr "Kalbėti paspaudus (prioritetinis)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:56
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Įjungtas kalbėjimas paspaudus. Laikykite {pushToTalkHint}, kad kalbėtumėte."
 
@@ -29004,13 +28999,18 @@ msgstr "Peržiūrėti ir patvirtinti"
 msgid "Review apps that can access your account."
 msgstr "Peržiūrėkite programų, kurios gali pasiekti jūsų paskyrą, sąrašą."
 
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "Review needed"
+msgstr "Reikia peržiūrėti"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "Peržiūrėti ankstesnius pirkimus ir grąžinimo parinktis"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "Peržiūrėti privatumo nustatymus"
 
@@ -29037,6 +29037,11 @@ msgstr "Peržiūrėkite šiuos failus ir bandykite dar kartą su mažesniais ar 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Prieš tęsdami peržiūrėkite, ko prašo ši programa."
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "Peržiūrėkite, kas gali jums rašyti žinutes"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29338,8 +29343,8 @@ msgstr "Sodrumas"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29958,7 +29963,7 @@ msgstr "Ieškoti įrašų"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "Paieškos rezultatai"
@@ -32058,7 +32063,7 @@ msgstr "Praleisti sisteminę žinutę apie išėjimą. Niekas nebus informuotas.
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Praleisti dabar ir sukonfigūruoti administratoriaus skydelyje."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "Praleisti šį žingsnį"
 
@@ -34139,7 +34144,7 @@ msgstr "Tenesis"
 msgid "Terms acceptance nagbar"
 msgstr "Sąlygų priėmimo priminimas"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "Paslaugų teikimo sąlygos"
@@ -37277,7 +37282,7 @@ msgstr "Įjungti mėgstamiausių garsą"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:61
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "Įjungti mikrofoną"
@@ -37586,7 +37591,7 @@ msgid "Update passkey"
 msgstr "Atnaujinti prieigos raktą"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "Atnaujinti „service worker“"
 
@@ -38147,7 +38152,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "Naudoti operacinėje sistemoje integruotą rašybos tikrintuvą."
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "Naudokite rodykles Aukštyn ir Žemyn, kad judėtumėte tarp elementų, ir „Space“ arba „Enter“, kad atidarytumėte elementą. Kai skirtukas turi skirsnių, rodyklė Dešinėn jį išplečia, o rodyklė Kairėn – sutraukia."
 
@@ -38250,7 +38255,7 @@ msgid "User avatars"
 msgstr "Naudotojų avatarai"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:69
 msgid "User controls"
 msgstr "Naudotojo valdikliai"
 
@@ -38318,6 +38323,11 @@ msgstr "Naudotojo įrašas"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "Naudotojo nustatymai"
+
+#. Accessible label for the user settings button in the user area while the user has not yet reviewed who can message them.
+#: src/features/app/components/layout/UserArea.tsx:73
+msgid "User settings, privacy review needed"
+msgstr "Vartotojo nustatymai, reikia peržiūrėti privatumą"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38435,27 +38445,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Kol {requestedLabel} bus paruoštas, naudojamas {effectiveLabel}."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "Naudojama tikroji paskyros būsena"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "Naudojama tikroji dovanų atsargų būsena"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "Naudojama tikroji „Premium“ būsena"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "Naudojama tikroji būsena"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "Naudojama tikroji patvirtinimo būsena"
 
@@ -39372,7 +39382,7 @@ msgid "Voice region"
 msgstr "Balso regionas"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "Balso seanso atkūrimo pranešimų juosta"
 
@@ -39958,8 +39968,8 @@ msgstr "Kas naujo?"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "Kas naujo"
@@ -40394,7 +40404,7 @@ msgstr "Galite pridėti komentarų prieš įkeldami. Norėdami įkelti tiesiogia
 msgid "You can add friends with their username."
 msgstr "Galite pridėti draugų naudodami jų naudotojo vardą."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "Šį nustatymą galite pakeisti ir kiekvienai bendruomenei atskirai, dešiniuoju pelės mygtuku spustelėdami bendruomenės pavadinimą ir pasirinkdami privatumo nustatymus."
 

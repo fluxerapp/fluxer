@@ -406,9 +406,30 @@
 	border: 0;
 }
 
+.sidebarItemTrailing {
+	position: relative;
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	margin-inline-start: 0.25rem;
+	min-width: 1rem;
+	min-height: 1rem;
+}
+
+.sidebarItemAttentionDot {
+	position: absolute;
+}
+
+.sidebarItem[data-expandable='true'].sidebarItemSelected .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'][aria-expanded='true'] .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true']:hover .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'].sidebarItemFocused .sidebarItemAttentionDot {
+	visibility: hidden;
+}
+
 .sidebarItemChevron {
 	flex-shrink: 0;
-	margin-inline-start: 0.25rem;
 	color: var(--text-tertiary);
 	opacity: 0;
 	transform: rotate(0deg);

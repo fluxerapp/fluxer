@@ -17,7 +17,6 @@ import {PremiumExpiredNagbar} from '@app/features/app/components/layout/app_layo
 import {PremiumGracePeriodNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar';
 import {PremiumOnboardingNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar';
 import {PriceAnnouncementNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PriceAnnouncementNagbar';
-import {PrivacySetupNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar';
 import {ScheduledMaintenanceNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar';
 import {StreamerModeNagbar} from '@app/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar';
 import {TermsAcceptanceNagbar} from '@app/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar';
@@ -79,14 +78,6 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.terms-acceptance-nagbar"
-							/>
-						);
-					case NagbarType.PRIVACY_SETUP:
-						return (
-							<PrivacySetupNagbar
-								key={nagbar.type}
-								isMobile={mobileLayout.enabled}
-								data-flx="app.app-layout.nagbar-container.privacy-setup-nagbar"
 							/>
 						);
 					case NagbarType.SCHEDULED_MAINTENANCE:

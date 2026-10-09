@@ -20,6 +20,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence, {setLocalPresenceUserSettings} from '@app/features/presence/state/LocalPresence';
 import Theme from '@app/features/theme/state/Theme';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {PRIVACY_SETUP_VERSION} from '@app/features/user/constants/PrivacySetupConstants';
 import {
 	type CustomStatus,
 	normalizeCustomStatus,
@@ -496,8 +497,8 @@ class UserSettingsState {
 		return this.defaultShareVoiceActivity;
 	}
 
-	getPrivacySetupVersion(): number | null {
-		return this.privacySetupVersion;
+	isPrivacySetupPending(): boolean {
+		return this.hydrated && this.privacySetupVersion !== null && this.privacySetupVersion < PRIVACY_SETUP_VERSION;
 	}
 
 	getCustomStatus(): CustomStatus | null {

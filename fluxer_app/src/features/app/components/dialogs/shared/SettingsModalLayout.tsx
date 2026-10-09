@@ -4,6 +4,7 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/app/components/dialogs/shared/SettingsModalLayout.module.css';
 import {SETTINGS_SECTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {
@@ -292,6 +293,7 @@ export const SettingsModalSidebarItem: React.FC<SettingsModalSidebarItemProps> =
 		expandableId,
 		sectionsGroupId,
 		toggleOnSelectedClick = true,
+		attentionLabel,
 	}) => {
 		const {tabIndex, buttonRef} = useSettingsModalSidebarItemLogic({selected});
 		const focusContentAfterActivationRef = useRef(false);
@@ -354,14 +356,28 @@ export const SettingsModalSidebarItem: React.FC<SettingsModalSidebarItemProps> =
 				>
 					{label}
 				</span>
-				{expandable && (
-					<CaretRightIcon
-						className={styles.sidebarItemChevron}
-						size={remFromPx(16)}
-						weight="bold"
-						aria-hidden="true"
-						data-flx="app.settings-modal-layout.settings-modal-sidebar-item.sidebar-item-chevron"
-					/>
+				{(expandable || attentionLabel) && (
+					<span
+						className={styles.sidebarItemTrailing}
+						data-flx="app.settings-modal-layout.settings-modal-sidebar-item.sidebar-item-trailing"
+					>
+						{attentionLabel && (
+							<NotificationDot
+								className={styles.sidebarItemAttentionDot}
+								label={attentionLabel}
+								data-flx="app.settings-modal-layout.settings-modal-sidebar-item.attention-dot"
+							/>
+						)}
+						{expandable && (
+							<CaretRightIcon
+								className={styles.sidebarItemChevron}
+								size={remFromPx(16)}
+								weight="bold"
+								aria-hidden="true"
+								data-flx="app.settings-modal-layout.settings-modal-sidebar-item.sidebar-item-chevron"
+							/>
+						)}
+					</span>
 				)}
 			</>
 		);
