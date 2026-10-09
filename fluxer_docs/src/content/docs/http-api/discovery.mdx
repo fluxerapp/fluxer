@@ -378,7 +378,7 @@ A client that wants a translated label supplies its own translation keyed on `id
 
 Returns the [discovery channel preview object](#discovery-channel-preview-object) for a channel or message link that points into a discoverable guild, so a client can show the guild and channel before the account joins. The caller needs no permission and no membership.
 
-The route answers only when the guild holds an approved discovery application, the guild does not have the invites-disabled feature, the channel belongs to that guild, and the `@everyone` role can read the channel. Reading means `@everyone` holds both [VIEW_CHANNEL](/http-api/permissions/) and [READ_MESSAGE_HISTORY](/http-api/permissions/) after the channel's `@everyone` overwrite is applied. A guild whose `@everyone` role has [ADMINISTRATOR](/http-api/permissions/) passes regardless of overwrites. Role and member overwrites are not considered, and any channel type can pass.
+The route answers only when the guild holds an approved discovery application, the guild does not have the invites-disabled feature, the channel belongs to that guild, and the `@everyone` role can read the channel. Reading means `@everyone` holds both [VIEW_CHANNEL](/http-api/permissions/) and [READ_MESSAGE_HISTORY](/http-api/permissions/) after the channel's `@everyone` overwrite is applied. A guild whose `@everyone` role has [ADMINISTRATOR](/http-api/permissions/) passes regardless of overwrites. Role and member overwrites are not considered. A thread returns 400 `DISCOVERY_NOT_DISCOVERABLE`. A forum or media channel returns the same code to a caller without the [`channel_threads` client capability](/http-api/threads/#client-capability). Every other channel type can pass.
 
 :::note[Every refusal returns the same error]
 A guild that does not exist, a guild without an approved listing, a channel that does not exist, a channel in another guild, and a channel `@everyone` cannot read all return 400 `DISCOVERY_NOT_DISCOVERABLE`. The response does not reveal which condition failed.
@@ -399,6 +399,7 @@ A guild that does not exist, a guild without an approved listing, a channel that
 | 400 | [error response](/http-api/#error-response) | A path parameter is not a valid snowflake and the request returns `INVALID_FORM_BODY` |
 | 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
 | 400 | [error response](/http-api/#error-response) | The guild is not discoverable or `@everyone` cannot read the channel, and the request returns `DISCOVERY_NOT_DISCOVERABLE` |
+| 400 | [error response](/http-api/#error-response) | A thread, or a forum or media channel for a caller without the capability, returns `DISCOVERY_NOT_DISCOVERABLE` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot, presents a bearer credential, or holds a revoked account and the request returns `ACCESS_DENIED` |
 
 ### Side effects

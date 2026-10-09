@@ -6,9 +6,9 @@ description: Channel objects, settings, recipients, permission overwrites, slowm
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A channel is where a conversation happens, in text or in voice. A [guild](/http-api/guilds/) owns text, announcement, voice, category and link channels. Outside a guild, a channel is a direct message, a group direct message, or the personal notes channel.
+A channel is where a conversation happens, in text or in voice. A [guild](/http-api/guilds/) owns text, announcement, voice, category, link, forum and media channels, and the threads inside them. Outside a guild, a channel is a direct message, a group direct message, or the personal notes channel.
 
-[Messages](/http-api/messages/) defines message content, and [Guild channels](/http-api/guild-channels/) defines guild-scoped listing, creation and reordering. [Calls](/http-api/calls/) defines ringing, the region of a private call, and ending a call. [Streams](/http-api/streams/) defines the stream keys and previews of a Go Live screen share.
+[Messages](/http-api/messages/) defines message content, and [Guild channels](/http-api/guild-channels/) defines guild-scoped listing, creation and reordering. [Threads](/http-api/threads/) defines threads, and [Forums](/http-api/forums/) defines forum and media channels. [Calls](/http-api/calls/) defines ringing, the region of a private call, and ending a call. [Streams](/http-api/streams/) defines the stream keys and previews of a Go Live screen share.
 
 ## Channel object
 
@@ -22,26 +22,41 @@ A channel object always has its identity and type. Every other field is present 
 | type | integer | The [type of the channel](#channel-types) |
 | guild_id? | snowflake | The ID of the guild, present only for a guild channel |
 | name?<sup>1</sup> | string | The name of the channel, present for a guild channel and for a group direct message |
-| topic? | ?string | The topic of the channel, present only for a guild text, announcement, or voice channel |
+| topic? | ?string | The topic of the channel, or null when none is set, present only for a guild text, announcement, voice, forum, or media channel |
 | url? | ?string | The destination URL, present only for a guild link channel |
 | icon? | ?string | The icon hash, present only for a group direct message |
-| owner_id? | ?snowflake | The ID of the owner, present only for a group direct message |
-| position?<sup>2</sup> | integer | The sort position, present only for a guild channel |
-| parent_id? | ?snowflake | The ID of the parent category, null when the channel sits at the top level |
+| owner_id? | ?snowflake | The ID of the owner, or null when the channel stores none, present only for a group direct message and a thread |
+| position?<sup>2</sup> | integer | The sort position, present only for a guild channel other than a thread |
+| parent_id?<sup>13</sup> | ?snowflake | The ID of the parent category, null when the channel sits at the top level |
 | bitrate?<sup>3</sup> | ?integer | The voice bitrate in bits per second, present only for a guild voice channel |
 | user_limit?<sup>4</sup> | ?integer | The configured member occupancy limit, present only for a guild voice channel |
 | voice_connection_limit?<sup>5</sup> | ?integer | The number of simultaneous voice connections one user may hold, present only for a guild voice channel |
 | rtc_region?<sup>6</sup> | ?string | The ID of the selected RTC region, present only for a guild voice channel |
 | last_message_id? | ?snowflake | The ID of the most recent message, null when the channel has none |
 | last_pin_timestamp? | ?ISO8601 timestamp | The time a message was most recently pinned, or null when nothing has ever been pinned |
-| permission_overwrites?<sup>7</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The overwrites applied to this channel, present only for a guild channel |
+| permission_overwrites?<sup>7</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The overwrites applied to this channel, present only for a guild channel other than a thread |
 | recipients?<sup>8</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | The other recipients of a direct message or group direct message (max 49) |
-| nsfw?<sup>9</sup> | boolean | Whether the channel has its own age restriction, present only for a guild channel |
-| nsfw_override?<sup>9</sup> | ?boolean | Whether this channel overrides the inherited age restriction, or null when it inherits |
-| content_warning_level?<sup>10</sup> | integer | The [content warning level](#content-warning-levels) stored on this channel, present only for a guild channel |
-| content_warning_text?<sup>10</sup> | ?string | The content warning text stored on this channel, or null when the channel inherits |
-| rate_limit_per_user?<sup>11</sup> | integer | The slowmode interval in seconds, present only for a guild text, announcement, or voice channel |
+| nsfw?<sup>9</sup> | boolean | Whether the channel has its own age restriction, present only for a guild channel other than a thread |
+| nsfw_override?<sup>9</sup> | ?boolean | Whether this channel overrides the inherited age restriction, or null when it inherits, present only for a guild channel other than a thread |
+| content_warning_level?<sup>10</sup> | integer | The [content warning level](#content-warning-levels) stored on this channel, present only for a guild channel other than a thread |
+| content_warning_text?<sup>10</sup> | ?string | The content warning text stored on this channel, or null when the channel inherits, present only for a guild channel other than a thread |
+| rate_limit_per_user?<sup>11</sup> | integer | The slowmode interval in seconds, present only for a thread and a text, announcement, voice, forum, or media channel |
 | nicks?<sup>12</sup> | map[snowflake, string] | The group direct message nicknames keyed by the decimal user ID (each 1-32 characters) |
+| flags?<sup>14</sup> | integer | The [channel flags](/http-api/forums/#channel-flags), present only for a forum channel, a media channel, and a thread |
+| thread_metadata? | [thread metadata](/http-api/threads/#thread-metadata-object) object | The archive and lock state, present only for a thread |
+| message_count? | integer | The number of messages in the thread, present only for a thread |
+| total_message_sent? | integer | The number of messages ever sent in the thread, present only for a thread |
+| member_count? | integer | The number of thread members, capped at 50, present only for a thread |
+| applied_tags?<sup>15</sup> | array[snowflake] | The IDs of the [forum tags](/http-api/forums/#forum-tag-object) applied to a post (max 5) |
+| member_ids_preview?<sup>15</sup> | array[snowflake] | The IDs of the most recently joined members of a post, newest first (max 8) |
+| member?<sup>16</sup> | [thread member](/http-api/thread-members/#thread-member-object) object | The thread member object of the caller |
+| default_auto_archive_duration?<sup>17</sup> | ?integer | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), which Fluxer does not apply to a new thread, or null when none is set |
+| default_thread_rate_limit_per_user?<sup>17</sup> | integer | The slowmode interval in seconds new threads inherit |
+| available_tags? | array[[forum tag](/http-api/forums/#forum-tag-object) object] | The tags a post can apply (max 20), present only for a forum or media channel |
+| default_reaction_emoji? | ?[default reaction](/http-api/forums/#default-reaction-object) object | The reaction clients show on each post, or null when none is set, present only for a forum or media channel |
+| default_sort_order? | ?integer | The default [sort order](/http-api/forums/#forum-sort-orders) of posts, or null when none is set, present only for a forum or media channel |
+| default_forum_layout? | integer | The default [layout](/http-api/forums/#forum-layouts) of posts, present only for a forum channel |
+| default_tag_setting? | string | The default [tag matching](/http-api/forums/#forum-tag-settings) of a post search, present only for a forum or media channel |
 
 <sup>1</sup> Omitted when a group direct message stores no name, and never present on a direct message or on the personal notes channel
 
@@ -55,7 +70,7 @@ A channel object always has its identity and type. Every other field is present 
 
 <sup>6</sup> Null selects automatic routing. [List RTC regions](#list-rtc-regions) returns the available identifiers
 
-<sup>7</sup> Always present for a guild channel, and empty when the channel stores no overwrite
+<sup>7</sup> Always present for a guild channel other than a thread, and empty when the channel stores no overwrite
 
 <sup>8</sup> Excludes the authenticated user, omitted entirely when no other recipient remains, and never present on the personal notes channel
 
@@ -66,6 +81,18 @@ A channel object always has its identity and type. Every other field is present 
 <sup>11</sup> The interval is `0` when the channel configures no slowmode
 
 <sup>12</sup> Omitted when the group stores no nickname. Clearing a nickname removes its key from the map
+
+<sup>13</sup> On a thread, the ID of the text, announcement, forum, or media channel the thread belongs to
+
+<sup>14</sup> A forum or media channel that stores no flags reports `0`
+
+<sup>15</sup> Present only for a thread whose parent is a forum or media channel
+
+<sup>16</sup> Present only for a thread the caller is a member of, on the operations the [thread object](/http-api/threads/#thread-object) names
+
+<sup>17</sup> Always present for a forum or media channel, where an unset duration is null and an unset interval is `0`. Present for a guild text or announcement channel only when the channel stores a value
+
+A [thread object](/http-api/threads/#thread-object) is a channel object with the thread fields. [Forum channel fields](/http-api/forums/#forum-channel-fields) lists the fields of a forum or media channel.
 
 :::note[Omission and null are distinct]
 An absent field is one this channel type does not own. A field present with `null` is one the type owns and that has no value.
@@ -111,12 +138,23 @@ An age restriction and a content warning both resolve through this channel first
 | 3 | GROUP_DM | Group direct message channel |
 | 4 | GUILD_CATEGORY | Guild category, which owns no parent and no messages |
 | 5 | GUILD_ANNOUNCEMENT<sup>2</sup> | Guild text channel whose messages can be published to the channels that follow it |
+| 10 | ANNOUNCEMENT_THREAD<sup>3</sup> | A thread in an announcement channel, visible to everyone who can view the parent |
+| 11 | PUBLIC_THREAD<sup>3</sup> | A thread visible to everyone who can view the parent |
+| 12 | PRIVATE_THREAD<sup>3</sup> | A thread in a guild text channel visible to its members and to thread moderators |
+| 15 | GUILD_FORUM<sup>4</sup> | Guild channel that holds posts and no messages of its own |
+| 16 | GUILD_MEDIA<sup>4</sup> | Forum channel that can [hide media download options](/http-api/forums/#channel-flags) |
 | 998 | GUILD_LINK | Guild link channel, which has a destination URL and no messages |
 | 999 | DM_PERSONAL_NOTES<sup>1</sup> | Personal notes channel |
 
 <sup>1</sup> Its channel ID is exactly the owning user ID, and it has no recipient and no name. Fluxer creates it on first authenticated access
 
 <sup>2</sup> It has the fields and the slowmode of a guild text channel. [Announcement channels](/topics/announcement-channels/) describes publishing and following
+
+<sup>3</sup> [Thread types](/http-api/threads/#thread-types) describes each type
+
+<sup>4</sup> [Forums](/http-api/forums/) describes forum and media channels
+
+A thread, a forum channel, and a media channel are visible to a bot and to a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability). A route that resolves one by ID returns 404 `UNKNOWN_CHANNEL` to every other caller unless its own entry states another result. [Get channel](#get-channel) and [List guild channels](/http-api/guild-channels/#list-guild-channels) return `default_auto_archive_duration` and `default_thread_rate_limit_per_user` on a guild text or announcement channel to those two callers alone. `channels` on [Get guild](/http-api/guilds/#get-guild) has forum channels, media channels, and both fields for every caller.
 
 ## Permission overwrite object
 
@@ -178,6 +216,8 @@ The slowmode state combines the channel's configured interval with the authentic
 <sup>1</sup> Both report no delay in a private channel, for an interval of `0`, for a bot caller, and for a caller holding `BYPASS_SLOWMODE`
 
 <sup>2</sup> True only for a non-bot caller holding `BYPASS_SLOWMODE` in a guild channel with a non-zero interval, so a bot caller and a private channel both report `false` even though neither is delayed
+
+For a forum or media channel the state reports the delay before the user can create a post.
 
 ### Example
 
@@ -261,10 +301,11 @@ Returns the [channel object](#channel-object) visible to the authenticated user.
 ### Limitations
 
 - A guild channel requires [VIEW_CHANNEL](/http-api/permissions/), and a satisfied age verification when it resolves to an age restriction.
+- A thread requires `VIEW_CHANNEL` in its parent, and a private thread also requires membership or [thread moderator](/http-api/threads/#thread-moderators) status.
 - A private channel requires current recipient access.
 - The personal notes channel requires ownership.
 
-Fluxer enforces age verification only for a guild text, announcement, voice, or link channel. Fluxer never requires age verification for a guild category, even when the category has the override its children inherit.
+Fluxer enforces age verification only for a guild text, announcement, voice, link, forum, or media channel, and for a thread through its parent. Fluxer never requires age verification for a guild category, even when the category has the override its children inherit.
 
 ### Path parameters
 
@@ -278,6 +319,7 @@ Fluxer enforces age verification only for a guild text, announcement, voice, or 
 | --- | --- | --- |
 | 200 | [channel](#channel-object) object | Channel was returned |
 | 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` in the parent of a thread, or cannot view a private thread, each returning `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
@@ -308,6 +350,7 @@ Returns the authenticated user's [channel slowmode state object](#channel-slowmo
 | --- | --- | --- |
 | 200 | [channel slowmode state](#channel-slowmode-state-object) object | State was returned |
 | 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` in the parent of a thread, or cannot view a private thread, each returning `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
@@ -364,6 +407,8 @@ On a deployment that configures no voice topology, a missing channel, an invisib
 
 Modifies a guild channel or a group direct message and returns the updated [channel object](#channel-object). Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
 
+[Modify thread](/http-api/threads/#modify-thread) describes this route for a thread.
+
 ### Limitations
 
 - A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [MANAGE_CHANNELS](/http-api/permissions/) in that channel.
@@ -397,15 +442,14 @@ The submitted array becomes the complete overwrite collection of the channel.
 
 ### JSON body
 
-The stored channel type selects the body variant. A `type` field converts a guild text channel into an announcement channel or back, and a `type` equal to the stored type changes nothing. A direct message and the personal notes channel match no variant, and Fluxer rejects both with 400 `INVALID_FORM_BODY`.
+The stored channel type selects the body variant. A direct message and the personal notes channel match no variant, and Fluxer rejects both with 400 `INVALID_FORM_BODY`. A thread accepts every field of the [Modify thread body](/http-api/threads/#thread-body).
 
 #### Guild channel body
 
-Every field is optional, and an omitted field preserves its current value. The guild variants share one field set, and a field the stored type does not own is accepted and discarded.
+Every field is optional, and an omitted field preserves its current value. Every guild channel type other than a thread accepts the fields below, and a field the stored type does not own is accepted and discarded.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| type?<sup>14</sup> | integer | The [channel type](#channel-types) to convert to, either `0` or `5` |
 | name?<sup>1</sup> | ?string | The name of the channel (1-100 characters after normalisation) |
 | topic?<sup>2</sup> | ?string | The topic of the channel (1-1,024 characters), or null to clear it |
 | url?<sup>3</sup> | ?string | The destination of a guild link channel (1-2,048 characters, `http` or `https`), or null to clear it |
@@ -418,12 +462,12 @@ Every field is optional, and an omitted field preserves its current value. The g
 | nsfw?<sup>8</sup> | ?boolean | Whether the channel is age restricted, a legacy switch superseded by `nsfw_override` |
 | content_warning_level?<sup>9</sup> | integer | The [content warning level](#content-warning-levels) to store on this channel |
 | content_warning_text?<sup>10</sup> | ?string | The content warning text (max 200 characters) |
-| rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) for a guild text, announcement, or voice channel |
+| rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) |
 | rtc_region?<sup>12</sup> | ?string | The ID of the RTC region (1-64 characters) for a guild voice channel, where null selects automatic routing |
 
-<sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text or announcement channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
+<sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text, announcement, forum, or media channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
 
-<sup>2</sup> An explicit null clears the stored topic
+<sup>2</sup> An explicit null clears the stored topic. A forum or media channel accepts 1-4,096 characters
 
 <sup>3</sup> Applied only to a guild link channel. An explicit null clears the destination
 
@@ -441,15 +485,32 @@ Every field is optional, and an omitted field preserves its current value. The g
 
 <sup>10</sup> Trimmed. A value empty after trimming, or an explicit null, clears the stored text
 
-<sup>11</sup> Applied only to a guild text, announcement, or voice channel. An explicit null preserves the current interval
+<sup>11</sup> Applied only to a guild text, announcement, voice, forum, or media channel. An explicit null preserves the current interval
 
 <sup>12</sup> Applied only to a guild voice channel. Supplying the field at all, including as null, requires [UPDATE_RTC_REGION](/http-api/permissions/)
 
-<sup>13</sup> The stored value is capped at 96,000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap rather than rejected
+<sup>13</sup> The stored value is capped at 96,000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap
 
-<sup>14</sup> Absent, null, or equal to the stored type keeps the type. Any other conversion returns 400 `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
+A guild text or announcement channel also accepts `type`, which converts a text channel into an announcement channel or back.
 
-Converting a text channel into an announcement channel fails with 400 `CHANNEL_HAS_FOLLOWED_CHANNELS` while the text channel receives messages from any followed announcement channel. Delete its [channel follower webhooks](/http-api/webhooks/#webhook-types) first. Converting an announcement channel back into a text channel needs no preparation, and Fluxer removes every follow of it afterwards.
+| Field | Type | Description |
+| --- | --- | --- |
+| type?<sup>14</sup> | integer | The [channel type](#channel-types) to convert to, either `0` or `5` |
+
+<sup>14</sup> Absent, null, or equal to the stored type keeps the type. A value other than `0` or `5` returns 400 `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`. Every other stored type ignores `type`
+
+Converting a text channel into an announcement channel fails with 400 `CHANNEL_HAS_FOLLOWED_CHANNELS` while the text channel receives messages from any followed announcement channel. Delete its [channel follower webhooks](/http-api/webhooks/#webhook-types) first. The conversion also fails with 400 `CHANNEL_HAS_THREADS` while the text channel holds a private thread. A conversion changes the type of the public threads of the channel as [Thread types](/http-api/threads/#thread-types) describes. Converting an announcement channel back into a text channel needs no preparation, and Fluxer removes every follow of it afterwards.
+
+A guild text, announcement, forum, or media channel also accepts these fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| default_auto_archive_duration?<sup>15</sup> | ?integer | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), which Fluxer does not apply to a new thread, or null to clear it |
+| default_thread_rate_limit_per_user?<sup>15</sup> | ?integer | The slowmode interval in seconds new threads inherit (0-21,600), or null to clear it |
+
+<sup>15</sup> Fluxer discards both fields from a caller other than a bot or a user session that declares `channel_threads`
+
+A forum channel also accepts every field of the [forum field table](/http-api/forums/#creating-and-modifying-a-forum). A media channel accepts every field of the [forum field table](/http-api/forums/#creating-and-modifying-a-forum) except `default_forum_layout`.
 
 A `url` that is not an absolute `http` or `https` URL with a host returns 400 `INVALID_FORM_BODY` with the code `INVALID_URL_FORMAT` on the path `url`.
 
@@ -489,8 +550,9 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [channel](#channel-object) object | Channel was modified, or the submitted values already matched the stored state |
-| 400 | [error response](/http-api/#error-response) | The `type` conversion is not between `0` and `5`, returning `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED` |
+| 400 | [error response](/http-api/#error-response) | The `type` on a text or announcement channel is neither `0` nor `5`, returning `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED` |
 | 400 | [error response](/http-api/#error-response) | The text channel receives followed channels, returning `CHANNEL_HAS_FOLLOWED_CHANNELS` |
+| 400 | [error response](/http-api/#error-response) | The text channel holds a private thread, returning `CHANNEL_HAS_THREADS` |
 | 403 | [error response](/http-api/#error-response) | A required permission, ownership, or permission bit authority is absent and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | A concurrent change removed the caller from the group direct message and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
@@ -502,9 +564,9 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 
 ### Side effects
 
-A guild channel change emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to its guild. Replacing a category's permission overwrites also replaces them on each child whose overwrites still exactly match the category's previous values, with one Dispatch per changed child. A child whose overwrites had differed is left unchanged.
+A guild channel change emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to its guild. For a forum or media channel the event reaches only a session with [thread access](/gateway/threads/#session-flag). Replacing a category's permission overwrites also replaces them on each child whose overwrites still exactly match the category's previous values, with one Dispatch per changed child. A child whose overwrites had differed is left unchanged.
 
-Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel, so each user's next message is checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
+Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel. Each user's next message is then checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
 
 Converting an announcement channel into a text channel deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it. The deletion runs in the background after the response, emits [Webhooks Update](/gateway/events/#webhooks-update) for each target channel, and writes no audit log entry. Copies already delivered stay in the target channels, and later edits and deletions of the published messages still reach them.
 
@@ -522,6 +584,8 @@ A group direct message change emits [Channel Update](/gateway/events/#channel-up
 
 Deletes a guild channel, closes a direct message, or removes the caller from a group direct message. Returns 204 with an empty body. Emits a [Channel Delete](/gateway/events/#channel-delete) Gateway event.
 
+[Delete thread](/http-api/threads/#delete-thread) describes this route for a thread.
+
 ### Limitations
 
 - Deleting a guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [MANAGE_CHANNELS](/http-api/permissions/).
@@ -532,7 +596,7 @@ Deletes a guild channel, closes a direct message, or removes the caller from a g
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions). It also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. A caller who holds the permission without that authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/). The sudo requirement on `delete_messages` applies at every guild MFA level.
 
 :::danger[A guild channel deletion is immediate and permanent]
-Deleting a guild channel destroys the channel record, every message in it, every stored attachment of those messages, its invites, and its webhooks. There is no pending state, no grace period, and no restore.
+Deleting a guild channel destroys the channel record, every message in it, every stored attachment of those messages, its invites, its webhooks, and every thread in it. There is no pending state, no grace period, and no restore.
 :::
 
 ### Path parameters
@@ -595,7 +659,11 @@ An account that stores no password, no TOTP secret, and no registered WebAuthn c
 
 Deleting a guild category first clears the `parent_id` of every child channel and emits [Channel Update](/gateway/events/#channel-update) for each one. The category itself is then deleted like any other guild channel.
 
-Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Deleting an announcement channel also deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it and turns each copy of its published messages into a deleted-source placeholder, both in the background after the response. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. When the deleted channel is the guild's system, rules or AFK channel, Fluxer clears that guild setting and emits [Guild Update](/gateway/events/#guild-update).
+Deleting a guild channel permanently removes its messages, attachments, invites and webhooks.
+
+Deleting a guild text, announcement, forum, or media channel also deletes every thread in it with its messages, attachments, and memberships. The deletion runs in the background after the response. Fluxer emits no [Thread Delete](/gateway/threads/#thread-delete) for those threads and writes no audit log entry for them. A client removes every thread whose `parent_id` is the channel when it receives [Channel Delete](/gateway/events/#channel-delete).
+
+Deleting an announcement channel also deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it and turns each copy of its published messages into a deleted-source placeholder, both in the background after the response. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. When the deleted channel is the guild's system, rules or AFK channel, Fluxer clears that guild setting and emits [Guild Update](/gateway/events/#guild-update).
 
 Closing a direct message marks the channel closed for the caller alone and emits [Channel Delete](/gateway/events/#channel-delete) to that caller. The channel, its messages, and the other recipient's view are untouched.
 
@@ -713,7 +781,8 @@ The optional body has the same [sudo verification fields](#sudo-verification-fie
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Recipient was removed |
-| 400 | [error response](/http-api/#error-response) | Channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE`, or the target is not a recipient and the request returns `INVALID_FORM_BODY` with the code `USER_NOT_IN_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | The target is not a recipient and the request returns `INVALID_FORM_BODY` with the code `USER_NOT_IN_CHANNEL` |
 | 403 | [error response](/http-api/#error-response) | Caller is not a recipient and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The caller is not the owner while removing another recipient and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | Sudo verification is required and the request returns `SUDO_MODE_REQUIRED` |
@@ -740,6 +809,7 @@ Creates or replaces one permission overwrite on a guild channel and returns 204 
 ### Limitations
 
 - A caller without [ADMINISTRATOR](/http-api/permissions/) cannot allow a permission bit outside their own effective permissions in that channel, and cannot remove a denied bit outside them either.
+- A thread has no permission overwrites, as [Thread permissions](/http-api/threads/#thread-permissions) describes.
 
 The operation does not require `VIEW_CHANNEL` and never returns `TWO_FACTOR_REQUIRED` or `NSFW_CONTENT_AGE_RESTRICTED`.
 
@@ -781,6 +851,7 @@ A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_O
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Overwrite was created or replaced |
+| 400 | [error response](/http-api/#error-response) | Channel is a thread and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | `MANAGE_ROLES` in the channel or permission bit authority is absent, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or is not a guild channel, each returning `UNKNOWN_CHANNEL` |
 
@@ -803,6 +874,7 @@ Deletes one permission overwrite from a guild channel and returns 204 with an em
 ### Limitations
 
 - A caller without [ADMINISTRATOR](/http-api/permissions/) must already hold every permission bit the removed overwrite denied.
+- A thread has no permission overwrites, as [Thread permissions](/http-api/threads/#thread-permissions) describes.
 
 The operation is idempotent, does not require `VIEW_CHANNEL`, and never returns `TWO_FACTOR_REQUIRED` or `NSFW_CONTENT_AGE_RESTRICTED`.
 
@@ -820,6 +892,7 @@ The operation is idempotent, does not require `VIEW_CHANNEL`, and never returns 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Overwrite was deleted, or no overwrite existed for the identifier |
+| 400 | [error response](/http-api/#error-response) | Channel is a thread and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | `MANAGE_ROLES` in the channel or permission bit authority is absent, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or is not a guild channel, each returning `UNKNOWN_CHANNEL` |
 

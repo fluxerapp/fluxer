@@ -151,11 +151,13 @@ The second ban replaces the previous ban's details. Re-issuing can turn a perman
 
 ### Side effects
 
-The operation records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry with the [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields). It emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Ban Add](/gateway/events/#guild-ban-add), subject to [event filtering](/gateway/event-filtering/). A positive deletion interval permanently deletes the target's guild messages within that interval.
+The operation records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry with the [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields). It emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Ban Add](/gateway/events/#guild-ban-add), subject to [event filtering](/gateway/event-filtering/). A positive deletion interval permanently deletes the target's messages within that interval in every channel and thread of the guild.
 
 A current member is removed. The guild receives [Guild Member Remove](/gateway/events/#guild-member-remove) and the banned account receives [Guild Delete](/gateway/events/#guild-delete). No `MEMBER_KICK` audit entry is recorded.
 
 A ban does not preserve an active communication timeout for a later rejoin, and [Remove guild member](/http-api/guild-members/#remove-guild-member) does. The banned account loses its guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set. Its read states and guild settings stay in place.
+
+Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states.
 
 From that point Fluxer refuses a join attempt by the banned account. The address and email matches described under the [guild ban object](#guild-ban-object) apply as well.
 

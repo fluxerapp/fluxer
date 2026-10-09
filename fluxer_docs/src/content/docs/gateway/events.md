@@ -28,13 +28,13 @@ A Dispatch reports a change or command result through the [Gateway](/gateway/ove
 
 ## Dispatch delivery
 
-[Event filtering](/gateway/event-filtering/) defines delivery by guild availability, channel visibility, permissions, and session settings. Account-scoped Dispatches go through only the session-level filters, which are the shard filter and the `ignored_events` list.
+[Event filtering](/gateway/event-filtering/) defines delivery by guild availability, channel visibility, permissions, and session settings. Account-scoped Dispatches go through the session-level filters alone. Those are the [thread access](/gateway/threads/#session-flag) filter, the shard filter, and the `ignored_events` list.
 
 Most guild-scoped Dispatches have a `guild_id` string. [Guild Create](#guild-create) and [Guild Sync](#guild-sync) identify the guild as `id`, and so does every [Guild Delete](#guild-delete) other than the one the guild itself dispatches when the guild is deleted. [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have no top-level `guild_id`, and each entry in their `counts` array has its own.
 
 The originating session is excluded from a Dispatch only for [Message Reaction Add](#message-reaction-add) and [Message Reaction Remove](#message-reaction-remove) in a guild channel, and only when the request supplied a `session_id`. That field is removed from the payload. The same field on a direct message or group direct message reaction is forwarded to every recipient unchanged and excludes nobody. The actor that issues any other mutation receives the resulting Dispatch like every other eligible session.
 
-A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it is [Guild Sync](#guild-sync), [Guild Member List Update](#guild-member-list-update), or [Guild Members Chunk](#guild-members-chunk). Those are delivered live and never retained. A single oversized Dispatch is delivered but not retained, as [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) describes. [Ready](#ready) and the guild burst that follows it for a bot session are also sent outside the replay buffer. The initial [Call Create](#call-create) events are retained like any other Dispatch and are replayed on Resume.
+A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it is [Guild Sync](#guild-sync), [Guild Member List Update](#guild-member-list-update), [Guild Members Chunk](#guild-members-chunk), [Thread List Sync](/gateway/threads/#thread-list-sync), or [Thread Member List Update](/gateway/threads/#thread-member-list-update). Those are delivered live and never retained. A single oversized Dispatch is delivered but not retained, as [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) describes. [Ready](#ready) and the guild burst that follows it for a bot session are also sent outside the replay buffer. The initial [Call Create](#call-create) events are retained like any other Dispatch and are replayed on Resume.
 
 ## Dispatch events
 
@@ -80,6 +80,14 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Webhooks Update](#webhooks-update) | The webhook set of a viewable guild channel changes | Channel visibility |
 | [Invite Create](#invite-create) | An invite is created | Invite audience |
 | [Invite Delete](#invite-delete) | An invite is deleted | Invite audience |
+| [Thread Create](/gateway/threads/#thread-create) | A thread is created or the session joins one | Thread visibility |
+| [Thread Update](/gateway/threads/#thread-update) | A visible thread changes | Thread visibility |
+| [Thread Delete](/gateway/threads/#thread-delete) | A thread is deleted | Thread visibility |
+| [Thread List Sync](/gateway/threads/#thread-list-sync) | The session's active thread set is replaced | Guild connection |
+| [Thread Member Update](/gateway/threads/#thread-member-update) | The session's own thread membership changes | Current user |
+| [Thread Members Update](/gateway/threads/#thread-members-update) | Users join or leave a thread | Thread visibility |
+| [Thread Member List Update](/gateway/threads/#thread-member-list-update) | A subscribed thread member list resyncs | Member list subscription |
+| [Forum Unreads](/gateway/threads/#forum-unreads) | Unread counts for forum posts are returned | Command response |
 | [Guild Member Add](#guild-member-add) | A user becomes a member of a connected guild | Guild connection |
 | [Guild Member Update](#guild-member-update) | A member's guild state or public user representation changes | Guild connection |
 | [Guild Member Remove](#guild-member-remove) | A user stops being a member of a connected guild | Guild connection |
@@ -130,9 +138,9 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 | presences<sup>3</sup> | array[[presence object](#presence-object)] | Visible presences at connection time |
 | users<sup>4</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | Users referenced by the payload |
 | sessions | array[[session presence object](#session-presence-object)] | The account's other live sessions |
-| read_states | array[[read state](/http-api/read-states/#read-state-object) object] | Per-channel read state |
+| read_states<sup>5</sup> | array[[read state](/http-api/read-states/#read-state-object) object] | Per-channel read state |
 | user_settings | ?[user settings](/http-api/users/#user-settings-object) object | Account-wide settings |
-| user_guild_settings | array[[user guild settings](/http-api/users/settings/#user-guild-settings-object) object] | Per-guild notification settings |
+| user_guild_settings<sup>5</sup> | array[[user guild settings](/http-api/users/settings/#user-guild-settings-object) object] | Per-guild notification settings |
 | notes | map[snowflake, string] | Private notes keyed by user ID |
 | pinned_dms | array[snowflake] | Pinned private channel IDs |
 | favorite_memes | array[[meme](/http-api/memes/#meme-object) object] | Saved memes |
@@ -153,6 +161,8 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 <sup>3</sup> A bot session always receives an empty array here
 
 <sup>4</sup> Collected from the account's relationships, the recipients of its private channels, and the members in `guilds`, deduplicated by account ID. A bot session always receives an empty array here
+
+<sup>5</sup> A session without [thread access](/gateway/threads/#session-flag) receives no read state that has `flags`, no channel override of a forum or media channel, and no `flags` on an override
 
 Ready is sent outside the replay buffer, so a [Resume](/gateway/commands/#resume) never replays it.
 
@@ -180,12 +190,17 @@ The same structure appears in Ready, [Guild Create](#guild-create), and [Guild S
 | joined_at | ?ISO8601 timestamp | When the account joined the guild, null when the account is not a member |
 | unavailable? | boolean | Whether the guild is unavailable |
 | unavailable_hidden? | boolean | Whether an unavailable guild is hidden from the client |
+| threads?<sup>4</sup> | array[[thread](/http-api/threads/#thread-object) object] | The active threads the session receives, as [Guild threads](/gateway/threads/#guild-threads) describes |
 
 <sup>1</sup> The session's own member object plus the member object of every participant named by `voice_states`, and nothing else. A client that needs the rest of the roster asks for it with [Request Guild Members](/gateway/commands/#request-guild-members) or subscribes to a member list through [Lazy Request](/gateway/commands/#lazy-request)
 
 <sup>2</sup> Counts the members that hold a live Gateway session and publish a status other than `offline` or `invisible`. Every recipient receives the same guild-wide figure. [Guild Counts Update](#guild-counts-update) reports a per-viewer count
 
 <sup>3</sup> Guild presences arrive as separate [Presence Update](#presence-update) and [Presence Update Bulk](#presence-update-bulk) Dispatches
+
+<sup>4</sup> Present only for a bot session and for a user session that set [`CHANNEL_THREADS`](/gateway/threads/#session-flag)
+
+A user session without `CHANNEL_THREADS` receives reduced `roles` and `channels`, as [Session flag](/gateway/threads/#session-flag) describes.
 
 An unavailable guild is reduced to `id` and `unavailable: true`, plus `unavailable_hidden: true` when the guild is hidden. It has none of the other fields. Every entry in a bot session's [Ready](#ready) `guilds` array has this form, with `id` and `unavailable: true` alone.
 
@@ -277,7 +292,7 @@ Fluxer republishes the account's presence on every settings update, whether or n
 
 ### <span id="user-guild-settings-update"></span>USER_GUILD_SETTINGS_UPDATE
 
-One guild's notification settings changed. The payload is that guild's complete user guild settings object.
+One guild's notification settings changed. The payload is that guild's complete user guild settings object. A session without [thread access](/gateway/threads/#session-flag) receives it without the channel overrides of forum and media channels and without `flags` on an override.
 
 ### <span id="user-note-update"></span>USER_NOTE_UPDATE
 
@@ -342,6 +357,8 @@ A relationship ended.
 
 The current user saved a message. The payload is the complete [message object](/http-api/messages/#message-object) as that user sees it.
 
+A session without [thread access](/gateway/threads/#session-flag) receives no Saved Message Create for a message in a thread.
+
 ### <span id="saved-message-delete"></span>SAVED_MESSAGE_DELETE
 
 The current user unsaved a message.
@@ -380,7 +397,7 @@ The current user deleted a meme.
 
 A guild became available to the session. The payload is a [guild ready object](#guild-ready-object).
 
-`roles`, `channels`, `emojis`, `stickers`, and `voice_states` are always complete. A client that stores any of them for the guild replaces its stored list with the new array. `members` is a partial list. A client adds or updates those members and keeps every other member it already stores.
+`roles`, `channels`, `emojis`, `stickers`, and `voice_states` are always complete. A client that stores any of them for the guild replaces its stored list with the new array. `members` is a partial list. A client adds or updates those members and keeps every other member it already stores. `threads` is the complete set [Guild threads](/gateway/threads/#guild-threads) describes, and a client replaces its stored threads for the guild with it.
 
 Every session receives Guild Create when a guild becomes available after Ready, for example after joining one or after an unavailable guild recovers. A bot session also receives one for each available guild in the burst that follows Ready.
 
@@ -475,9 +492,11 @@ A client that stores the guild's stickers replaces them with this array. Fluxer 
 
 A channel became visible to the session, whether newly created or newly permitted. The payload is the complete [channel object](/http-api/channels/#channel-object), with `guild_id` present for a guild channel.
 
+A session with thread access that gains view access to a channel with active threads then receives [Thread List Sync](/gateway/threads/#thread-list-sync) for that channel.
+
 ### <span id="channel-update"></span>CHANNEL_UPDATE
 
-A visible channel changed. The payload is the complete [channel object](/http-api/channels/#channel-object). Converting a text channel into an announcement channel, or back, emits it with the new `type`.
+A visible channel changed. The payload is the complete [channel object](/http-api/channels/#channel-object). Converting a text channel into an announcement channel, or back, emits it with the new `type`. That conversion also emits [Thread Update](/gateway/threads/#thread-update) for each active public thread of the channel, as [Thread types](/http-api/threads/#thread-types) describes.
 
 ### <span id="channel-update-bulk"></span>CHANNEL_UPDATE_BULK
 
@@ -495,6 +514,8 @@ Each recipient sees only channels they can view. An empty result produces no Dis
 A channel left the session's visibility, whether deleted or newly hidden. The payload is the complete [channel object](/http-api/channels/#channel-object) as it was before the change.
 
 Recipients are the sessions that could see the channel before it was deleted.
+
+Deleting a channel deletes its threads, and Fluxer emits no [Thread Delete](/gateway/threads/#thread-delete) for them. A client removes every thread whose `parent_id` is the channel.
 
 ### <span id="channel-recipient-add"></span>CHANNEL_RECIPIENT_ADD
 
@@ -570,6 +591,8 @@ A user stopped being a member of a guild the session is connected to.
 
 In a guild with more than 250 members, a [passive](/gateway/event-filtering/#active-and-passive-guilds) session receives this event only when the subject is its own user.
 
+Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states.
+
 ### <span id="guild-members-chunk"></span>GUILD_MEMBERS_CHUNK
 
 Answers [Request Guild Members](/gateway/commands/#request-guild-members) for the requesting session.
@@ -641,7 +664,7 @@ An update that changes nothing records no entry, as the [audit actions](/http-ap
 
 The `ip` change key is stripped from `changes`, so an entry whose only change was `ip` has no `changes` at all. A client MUST treat an absent `options` or `changes` as an empty set.
 
-Recipients are every session in the guild that holds `VIEW_AUDIT_LOG`, including the acting session.
+Recipients are every session in the guild that holds `VIEW_AUDIT_LOG`, including the acting session. A session without [thread access](/gateway/threads/#session-flag) receives no `THREAD_CREATE`, `THREAD_UPDATE`, or `THREAD_DELETE` entry and no entry about a message in a thread.
 
 ### <span id="guild-ban-add"></span>GUILD_BAN_ADD
 
@@ -729,6 +752,8 @@ A passive session in a guild with more than 250 members receives missed changes 
 
 `channels` contains only the channels whose `last_message_id` changed since the previous update for that session, and only channels that session can view. `voice_states` contains only the voice states whose `version` advanced.
 
+For a session with [thread access](/gateway/threads/#session-flag), `channels` also contains the active threads its user joined.
+
 ## Messages and reactions
 
 ### <span id="message-create"></span>MESSAGE_CREATE
@@ -747,7 +772,9 @@ A visible message was created. The payload is the complete [message object](/htt
 
 Each copy of a [published message](/http-api/messages/#crosspost-message) arrives in its following channel as Message Create, with the `IS_CROSSPOST` flag, and so does the `CHANNEL_FOLLOW_ADD` system message of a new follow. A copy mentions nobody.
 
-Message Create alone overrides both the passive filter and the `ignored_events` list, and the two use different tests. A direct mention, a mention of one of the user's roles, an everyone mention, or a here mention overrides the passive filter. A direct, everyone, or here mention alone overrides the `ignored_events` list.
+Message Create alone overrides both the passive filter and the `ignored_events` list, and the two use different tests. A direct mention, a mention of one of the user's roles, an everyone mention, or a here mention overrides the passive filter. A message the session's user wrote overrides the passive filter too. A direct, everyone, or here mention alone overrides the `ignored_events` list.
+
+A Message Create in a thread also needs one of the conditions in [Dispatch events](/gateway/threads/#dispatch-events). [Thread messages](/http-api/threads/#thread-messages) lists the members a message adds to the thread.
 
 ### <span id="message-update"></span>MESSAGE_UPDATE
 
@@ -755,7 +782,11 @@ A visible message changed. The payload is the complete current [message object](
 
 Recipients must hold `READ_MESSAGE_HISTORY` on the channel, or the message must be newer than the guild's message history cutoff.
 
+In a guild with more than 250 members, a [passive](/gateway/event-filtering/#active-and-passive-guilds) session receives this event only for a direct mention of its user, a mention of one of its roles, an everyone mention, or a here mention.
+
 [Publishing](/http-api/messages/#crosspost-message) a message emits it in the announcement channel with the `CROSSPOSTED` flag set. An edit of a published message emits it for each copy once Fluxer has copied the change, and deleting the published message emits it for each copy with the `SOURCE_MESSAGE_DELETED` flag and the content removed.
+
+[Start thread from message](/http-api/threads/#start-thread-from-message) emits it for the source message with `HAS_THREAD` and `thread`, and [Delete thread](/http-api/threads/#delete-thread) emits it with `HAS_THREAD` cleared. A session without [thread access](/gateway/threads/#session-flag) receives neither.
 
 ### <span id="message-delete"></span>MESSAGE_DELETE
 
@@ -795,6 +826,11 @@ The current user's read state advanced for a channel, usually because another of
 | mention_count | integer | Remaining mention count for the channel |
 | manual? | boolean | Whether the acknowledgement was explicit |
 | version? | string | Read state version as a decimal string |
+| flags?<sup>1</sup> | integer | The [read state flags](/http-api/read-states/#read-state-flags) |
+
+<sup>1</sup> Present only on the entry of a thread, a forum channel, or a media channel
+
+A session without [thread access](/gateway/threads/#session-flag) receives no Message ACK for an entry that has `flags`.
 
 ### <span id="message-reaction-add"></span>MESSAGE_REACTION_ADD
 
@@ -896,7 +932,7 @@ A visible user began typing in a channel.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member? | [guild member](/http-api/guild-members/#guild-member-object) object | The typing user's guild member object, present in a guild channel |
 
-The `typing` override set through [Lazy Request](/gateway/commands/#lazy-request) decides delivery in a guild. With no override, a session receives the event when it is [active](/gateway/event-filtering/#active-and-passive-guilds) in the guild or when the guild has 250 members or fewer, so a passive session in a small guild still receives it. A guild that sets the `TYPING_EVENTS` bit in its [disabled operations](/http-api/guilds/#disabled-guild-operations) produces the event for nobody.
+The `typing` override set through [Lazy Request](/gateway/commands/#lazy-request) decides delivery in a guild. With no override, a session receives the event when it is [active](/gateway/event-filtering/#active-and-passive-guilds) in the guild or when the guild has 250 members or fewer, so a passive session in a small guild still receives it. A guild that sets the `TYPING_EVENTS` bit in its [disabled operations](/http-api/guilds/#disabled-guild-operations) produces the event for nobody. Typing in a thread also needs one of the conditions in [Dispatch events](/gateway/threads/#dispatch-events).
 
 ### <span id="channel-pins-update"></span>CHANNEL_PINS_UPDATE
 
@@ -910,12 +946,14 @@ A channel's most recent pin time changed.
 
 ### <span id="channel-pins-ack"></span>CHANNEL_PINS_ACK
 
-The current user acknowledged a channel's pins. Every session of the account receives it, including the one that issued the acknowledgement.
+The current user acknowledged a channel's pins. Every session of the account receives it, including the one that issued the acknowledgement, except as stated below.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | Channel whose pins were acknowledged |
 | timestamp | ISO8601 timestamp | Time the acknowledgement recorded for the channel |
+
+A session without [thread access](/gateway/threads/#session-flag) receives no Channel Pins ACK for a thread.
 
 ## Voice and calls
 

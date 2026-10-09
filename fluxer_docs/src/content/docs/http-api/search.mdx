@@ -6,7 +6,7 @@ description: Global message search, its scope resolution, filter vocabulary, and
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Message search matches indexed messages against a text query and a filter set. One request covers a single channel, one guild, the caller's private channels, or several of those at once. The [Guild member search resource](/http-api/guild-member-search/) defines guild member search, and the [Discovery resource](/http-api/discovery/) defines discoverable guild search.
+Message search matches indexed messages against a text query and a filter set. One request covers a single channel, one guild, the caller's private channels, or several of those at once. The [Guild member search resource](/http-api/guild-member-search/) defines guild member search, and the [Discovery resource](/http-api/discovery/) defines discoverable guild search. [Search threads](/http-api/threads/#search-threads) defines searching the threads of one channel by name and tag.
 
 Fluxer resolves the requested scope to the set of channels the caller may search, then runs the query over that set. A private channel search covers the authenticated account alone, and the set holds a guild channel only while the caller can read its history.
 
@@ -26,14 +26,18 @@ The body a completed search returns, holding one page of matching messages.
 | hits_per_page | integer | The page size that was applied, echoed from the request |
 | page | integer | The page number that was applied, echoed from the request |
 | cursor?<sup>4</sup> | array[string] | The opaque cursor the backend produced, which no backend accepts back |
+| threads?<sup>5</sup> | array[[thread](/http-api/threads/#thread-object) object] | The threads that contain a returned message |
+| members?<sup>5</sup> | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each of those threads the caller joined |
 
 <sup>1</sup> Each entry is an ordinary message object with the `referenced_message` field removed, so a reply is returned without its resolved parent even though the reply's own `message_reference` is preserved
 
-<sup>2</sup> Contains one entry for each distinct channel represented in `messages`, and never contains a channel with no returned message
+<sup>2</sup> Contains one entry for each distinct channel represented in `messages` that is not a thread, and never contains a channel with no returned message. A single channel context that names a thread returns that thread here as a channel object
 
 <sup>3</sup> Counted over the whole resolved scope. In a single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/), `total` is the number of messages in `messages`
 
 <sup>4</sup> Present only when the backend produced a cursor. A single channel context, a Meilisearch instance, and a page Fluxer rebuilt after it found deleted messages in the backend results each return none
+
+<sup>5</sup> Present only when a returned message is in a thread and the request is not a single channel context
 
 [Search messages](#search-messages) never honours a supplied cursor, so page through a result set with `page` alone.
 
@@ -166,6 +170,7 @@ Searches indexed messages in the resolved scope. Returns a [message search resul
 - A bot is restricted to the `current` scope.
 - The caller must be a recipient of every private channel that contributes to the search.
 - A guild scope includes a guild channel only when the caller holds both [VIEW_CHANNEL](/http-api/permissions/) and [READ_MESSAGE_HISTORY](/http-api/permissions/) in it.
+- A guild scope includes threads only for a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability).
 - A single channel context requires guild membership and [VIEW_CHANNEL](/http-api/permissions/) alone. Without `READ_MESSAGE_HISTORY` the guild's message history cutoff applies to each returned message.
 - An age-restricted guild or single channel context requires an account old enough for age-restricted content, and otherwise returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
 - An instance with no search backend configured returns 403 `FEATURE_TEMPORARILY_DISABLED`.
@@ -258,7 +263,11 @@ The backends read `min_id` and `max_id` differently. An Elasticsearch instance c
 
 The `current` scope requires one of `context_guild_id` and `context_channel_id`. Supplying neither returns 400 with the field code [CONTEXT_CHANNEL_OR_GUILD_ID_REQUIRED](/http-api/errors/) on the path `context`.
 
-Fluxer resolves a supplied `context_guild_id` before anything else. A guild that cannot be resolved returns 404 `UNKNOWN_GUILD`, and a guild the caller is not a member of returns 403 `MISSING_PERMISSIONS`. A guild context searches that guild, restricted to `channel_ids` when supplied and to every channel of the guild otherwise, and every channel in the resulting set must belong to that guild. A channel the caller cannot both view and read history in is dropped when the set came from the guild, and rejected with 403 `MISSING_PERMISSIONS` when the caller named it in `channel_ids`. An age-gated channel that `include_nsfw` does not admit is removed from the set before the permission check runs, so it never causes that refusal.
+Fluxer resolves a supplied `context_guild_id` before anything else. A guild that cannot be resolved returns 404 `UNKNOWN_GUILD`, and a guild the caller is not a member of returns 403 `MISSING_PERMISSIONS`. A guild context searches that guild, restricted to `channel_ids` when supplied and to every channel of the guild otherwise, and every channel in the resulting set must belong to that guild. A channel the caller cannot both view and read history in is dropped when the set came from the guild, and rejected with 403 `MISSING_PERMISSIONS` when the caller named it in `channel_ids`. An age-gated channel that `include_nsfw` does not admit is removed from the set before the permission check runs, so it never causes that refusal. A named thread whose parent was removed that way returns 403 `MISSING_PERMISSIONS` when another named channel remains and the search returns no [search indexing](#search-indexing-object) object. With no other channel left, the search returns an empty page.
+
+For a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability), a guild scope that `channel_ids` does not narrow also includes the threads of each text, announcement, forum, and media channel it includes. A public or announcement thread is included for every such caller. A private thread is included for its members and for [thread moderators](/http-api/threads/#thread-moderators). Fluxer includes at most 5,000 threads, highest ID first. Any other caller searches no thread.
+
+`channel_ids` can name a thread. In a guild context, naming a forum or media channel searches its posts, and naming a text or announcement channel searches that channel without its threads. In a guild context, a caller other than a bot or a user session that declares `channel_threads` who names a thread, a forum channel, or a media channel receives 400 with the field code `ALL_CHANNELS_MUST_BELONG_TO_GUILD`. A forum or media channel never returns the search indexing object in a guild scope. A named thread returns it when its parent text or announcement channel has never been indexed or its index is stale.
 
 A guild whose NSFW level is age restricted refuses a caller who is not old enough with 403 `NSFW_CONTENT_AGE_RESTRICTED`. An old-enough caller searches every channel of such a guild, including its age-gated channels, whether or not `include_nsfw` is set.
 

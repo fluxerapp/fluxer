@@ -4,7 +4,7 @@ title: Event filtering
 description: Event visibility, guild subscriptions, ignored events, and sharding.
 ---
 
-A client controls [Dispatch](/gateway/events/) traffic with [Lazy Request](/gateway/commands/#lazy-request) subscriptions and the [Identify](/gateway/commands/#identify) `ignored_events` list. Guild availability, permissions and sharding also restrict delivery.
+A client controls [Dispatch](/gateway/events/) traffic with [Lazy Request](/gateway/commands/#lazy-request) subscriptions, the [Identify](/gateway/commands/#identify) `ignored_events` list, and the Identify `CHANNEL_THREADS` [session flag](/gateway/threads/#session-flag). Guild availability, permissions and sharding also restrict delivery.
 
 Fluxer has no `intents` field, no intent close code, and no privileged-intent approval. A client ported from a protocol that uses intents replaces its intent mask with those mechanisms.
 
@@ -17,11 +17,13 @@ Fluxer evaluates a guild-scoped Dispatch against these gates in order.
 | 1 | Guild availability | Whether the guild dispatches anything except [Guild Update](/gateway/events/#guild-update) |
 | 2 | Permission and visibility | Which sessions may see the event at all |
 | 3 | Guild subscription state | Whether a passive session in a guild with more than 250 members still receives it, as [Active and passive guilds](#active-and-passive-guilds) lists |
-| 4 | Session-level filters | Whether the shard filter, and then the `ignored_events` list, drops it inside the session after the guild has already chosen the recipients |
+| 4 | Session-level filters | Whether the thread access filter, the shard filter, or the `ignored_events` list drops it inside the session after the guild has already chosen the recipients |
 
 A guild with the `UNAVAILABLE_FOR_EVERYONE` or `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` feature fails gate 1. `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` decides what a session receives when it connects. A staff session receives the guild's full state, and every other session receives an `unavailable` stub. Gate 1 has no staff exemption, so a staff session also receives nothing but Guild Update while the feature is set.
 
 An account-scoped Dispatch skips gates 1 through 3 and is subject only to gate 4. Direct message traffic, relationship changes, and account record changes arrive that way.
+
+A session without [thread access](/gateway/threads/#session-flag) receives none of the events on [Gateway threads](/gateway/threads/#dispatch-events).
 
 ## Permission and visibility
 
@@ -32,14 +34,19 @@ The guild resolves each event to one of these recipient sets.
 | Channel-scoped | [Channel Create](/gateway/events/#channel-create), [Channel Update](/gateway/events/#channel-update), [Channel Delete](/gateway/events/#channel-delete)<sup>1</sup>, [Message Create](/gateway/events/#message-create), [Message Delete Bulk](/gateway/events/#message-delete-bulk), [Typing Start](/gateway/events/#typing-start), [Channel Pins Update](/gateway/events/#channel-pins-update), [Webhooks Update](/gateway/events/#webhooks-update) | Sessions that can view the channel |
 | Message-access filtered | [Message Update](/gateway/events/#message-update), [Message Delete](/gateway/events/#message-delete), [Message Reaction Add](/gateway/events/#message-reaction-add), [Message Reaction Remove](/gateway/events/#message-reaction-remove), [Message Reaction Remove All](/gateway/events/#message-reaction-remove-all), [Message Reaction Remove Emoji](/gateway/events/#message-reaction-remove-emoji) | Sessions that can view the channel and can access that message |
 | Invite | [Invite Create](/gateway/events/#invite-create), [Invite Delete](/gateway/events/#invite-delete) | Sessions holding `MANAGE_CHANNELS` on the invite's channel |
-| Audit log | [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) | Sessions holding `VIEW_AUDIT_LOG` in the guild |
+| Audit log | [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) | Sessions holding `VIEW_AUDIT_LOG` in the guild<sup>2</sup> |
+| Thread | The events on [Gateway threads](/gateway/threads/#dispatch-events) | The recipients each event states there |
 | Guild-wide | Everything else | Every session connected to the guild |
 
 <sup>1</sup> Channel Delete is filtered against the guild state as it was before the deletion, so the session that could see the channel is the session that learns it is gone
 
+<sup>2</sup> A session without [thread access](/gateway/threads/#session-flag) receives no `THREAD_CREATE`, `THREAD_UPDATE`, or `THREAD_DELETE` entry and no entry about a message in a thread
+
+An event in the first two rows whose channel is a thread reaches the sessions [Events in a thread](#events-in-a-thread) describes. Thread visibility and message access follow [Thread permissions](/http-api/threads/#thread-permissions).
+
 Every one of those sets excludes a session that has not yet received the guild's initial state.
 
-Channel visibility is `VIEW_CHANNEL` on the channel, plus extensions. A category is visible when at least one of its children is visible. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
+Channel visibility is `VIEW_CHANNEL` on the channel, plus extensions. A category is visible when at least one of its children is visible. For a session without [thread access](/gateway/threads/#session-flag), a forum or media channel does not count as a visible child. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
 
 Message access is `READ_MESSAGE_HISTORY` on the channel. Without that permission a session still receives events for messages newer than the guild's [message history cutoff](/http-api/guilds/#guild-object). A guild that sets no cutoff offers no such fallback, so a session without `READ_MESSAGE_HISTORY` receives none of the message-access filtered events there.
 
@@ -53,7 +60,7 @@ Message access is `READ_MESSAGE_HISTORY` on the channel. Without that permission
 
 ## Active and passive guilds
 
-A user session is passive in every guild until [Lazy Request](/gateway/commands/#lazy-request) marks that guild `active: true`. A bot session is never passive. A guild with 250 members or fewer is active for every session, so the rule below applies only to a passive user session in a guild with more than 250 members.
+A user session is passive in every guild until [Lazy Request](/gateway/commands/#lazy-request) marks that guild `active: true`. The guild named in the [Identify](/gateway/commands/#identify) `initial_guild_id` is active from the start. A bot session is never passive. A guild with 250 members or fewer is active for every session. The rule below applies only to a passive user session in a guild with more than 250 members. Thread message delivery is the exception, as [Events in a thread](#events-in-a-thread) describes.
 
 Such a session receives exactly this set:
 
@@ -63,12 +70,15 @@ Such a session receives exactly this set:
 - [Channel Create](/gateway/events/#channel-create), [Channel Update](/gateway/events/#channel-update), [Channel Update Bulk](/gateway/events/#channel-update-bulk), and [Channel Delete](/gateway/events/#channel-delete)
 - [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create)
 - [Passive Updates](/gateway/events/#passive-updates)
-- [Message Create](/gateway/events/#message-create) when the message mentions the session's user
+- [Message Create](/gateway/events/#message-create) when the message mentions the session's user or that user wrote it
+- [Message Update](/gateway/events/#message-update) when the message has a mention that overrides the passive filter for [Message Create](/gateway/events/#message-create)
 - [Guild Member Update](/gateway/events/#guild-member-update) and [Guild Member Remove](/gateway/events/#guild-member-remove) when the subject is the session's own user
+- The thread events [Gateway threads](/gateway/threads/#dispatch-events) states for a passive session
 
 Every other Dispatch the guild produces is suppressed:
 
-- [Message Update](/gateway/events/#message-update), [Message Delete](/gateway/events/#message-delete), and [Message Delete Bulk](/gateway/events/#message-delete-bulk)
+- [Message Update](/gateway/events/#message-update) for a message that does not mention the session's user
+- [Message Delete](/gateway/events/#message-delete) and [Message Delete Bulk](/gateway/events/#message-delete-bulk)
 - Every reaction event
 - [Invite Create](/gateway/events/#invite-create) and [Invite Delete](/gateway/events/#invite-delete)
 - [Channel Pins Update](/gateway/events/#channel-pins-update)
@@ -90,9 +100,13 @@ Every 30 seconds a passive session receives [Passive Updates](/gateway/events/#p
 
 The override applies to every session, including a bot session. The only way for a bot to stop Typing Start in one guild and keep it in other guilds is to set `typing` to false for that guild.
 
+### Events in a thread
+
+A message, reaction, typing, or pin event in a thread follows the rules on this page and also needs one of the conditions in [Gateway threads](/gateway/threads/#dispatch-events). A session meets the [`threads`](/gateway/threads/#lazy-request-thread-options) condition only while the guild is active for it, through [Lazy Request](/gateway/commands/#lazy-request) `active` or the [Identify](/gateway/commands/#identify) `initial_guild_id`. A guild with 250 members or fewer gives no exception to that condition.
+
 ### Member lists
 
-[Guild Member List Update](/gateway/events/#guild-member-list-update) has its own subscription. A session receives it only for a channel it named in `member_list_channels`, and only while it can view that channel and holds `VIEW_CHANNEL_MEMBERS` on it. One session holds at most one member list subscription per guild.
+[Guild Member List Update](/gateway/events/#guild-member-list-update) has its own subscription. A session receives it only for a channel it named in `member_list_channels`, and only while it can view that channel and holds `VIEW_CHANNEL_MEMBERS` on it. One session holds at most one member list subscription per guild. [Thread Member List Update](/gateway/threads/#thread-member-list-update) has a separate subscription, as [Lazy Request thread options](/gateway/threads/#lazy-request-thread-options) describes.
 
 ## Presence subscriptions
 

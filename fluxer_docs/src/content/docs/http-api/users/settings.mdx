@@ -46,7 +46,7 @@ Gateway presence also uses offline, which describes an account with no active se
 
 ## Guild mute configuration object
 
-Mute expiry for a guild, a private channel group, or a channel override.
+Mute expiry for a guild, a private channel group, a channel override, or a [thread member](/http-api/thread-members/#thread-member-object).
 
 ### Structure
 
@@ -85,10 +85,13 @@ Notification settings stored for one channel.
 | muted | boolean | Whether channel notifications are muted |
 | mute_config | ?[guild mute configuration](#guild-mute-configuration-object) object | The mute configuration of the channel, or null when none is stored |
 | unread_badges<sup>1</sup> <sup>2</sup> | ?integer | [Notification level](#notification-levels) for unread badges, or null to inherit |
+| flags?<sup>3</sup> | integer | The [new post notification](/http-api/forums/#new-post-notifications) flags, `NEW_FORUM_THREADS_OFF` (`1 << 13`) and `NEW_FORUM_THREADS_ON` (`1 << 14`) |
 
 <sup>1</sup> The value controls client display and does not affect notification delivery
 
 <sup>2</sup> Every response has the member, with null meaning no level is set
+
+<sup>3</sup> Present only in the settings of a guild, when the stored value is non-zero and the caller is a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability)
 
 ## Channel notification override input object
 
@@ -103,6 +106,11 @@ The input form of the [channel notification override object](#channel-notificati
 | muted | boolean | Whether channel notifications are muted |
 | mute_config? | ?[guild mute configuration input](#guild-mute-configuration-input-object) object | The mute configuration of the channel, or null to clear it |
 | unread_badges? | ?integer | [Notification level](#notification-levels) for unread badges, or null to inherit |
+| flags?<sup>1</sup> | integer | The [new post notification](/http-api/forums/#new-post-notifications) flags |
+
+<sup>1</sup> Fluxer discards every bit other than `NEW_FORUM_THREADS_OFF` and `NEW_FORUM_THREADS_ON`
+
+Fluxer ignores `flags` in the private channel settings and from a caller other than a user session that declares `channel_threads`. An omitted or ignored `flags` keeps the stored value.
 
 ## User guild settings object
 
@@ -120,7 +128,7 @@ Notification settings for one guild, or for every private channel when `guild_id
 | suppress_everyone | boolean | Whether `@everyone` mentions are suppressed |
 | suppress_roles | boolean | Whether role mentions are suppressed |
 | hide_muted_channels<sup>3</sup> | boolean | Whether muted channels are hidden |
-| channel_overrides<sup>2</sup> | ?map[snowflake, [channel notification override](#channel-notification-override-object) object] | The per-channel overrides, or null when none are set |
+| channel_overrides<sup>2</sup> <sup>6</sup> | ?map[snowflake, [channel notification override](#channel-notification-override-object) object] | The per-channel overrides, or null when none are set |
 | unread_badges<sup>3</sup> <sup>5</sup> | ?integer | The default [notification level](#notification-levels) for unread badges, or null to follow `message_notifications` |
 | version<sup>4</sup> | integer | The monotonic revision of this settings object |
 
@@ -133,6 +141,8 @@ Notification settings for one guild, or for every private channel when `guild_id
 <sup>4</sup> The value increases on every stored write, including one that changes no other member, so a client can discard a stale [User Guild Settings Update](/gateway/events/#user-guild-settings-update)
 
 <sup>5</sup> Every response has the member, with null meaning no level is set
+
+<sup>6</sup> A user session that does not declare `channel_threads` receives no override for a forum or media channel
 
 ### Example
 
@@ -170,13 +180,15 @@ Both notification settings operations accept exactly these fields. Every field i
 | channel_overrides?<sup>1</sup> | ?map[snowflake, [channel notification override input](#channel-notification-override-input-object) object] | The complete per-channel override map, or null to clear it |
 | unread_badges? | ?integer | The default [notification level](#notification-levels) for unread badges, or null to follow `message_notifications` |
 
-<sup>1</sup> The supplied map becomes the complete override set, and an empty map clears every override
+<sup>1</sup> The supplied map becomes the complete override set, and an empty map clears every override. A write from a user session that does not declare `channel_threads` keeps the stored overrides of forum and media channels
 
 :::note[Which of these fields the server reads]
-Fluxer reads `suppress_everyone` and `suppress_roles` when it counts the mentions in a guild message. Push notification delivery reads `muted`, `mute_config`, `mobile_push`, `message_notifications`, `suppress_everyone`, and `suppress_roles`, and the `muted` and `message_notifications` members of a channel override. Every other field is stored and returned unchanged.
+Fluxer reads `suppress_everyone` and `suppress_roles` when it counts the mentions in a guild message. Push notification delivery reads `muted`, `mute_config`, `mobile_push`, `message_notifications`, `suppress_everyone`, and `suppress_roles`, and the `muted`, `mute_config`, `message_notifications`, and `flags` members of a channel override. Every other field is stored and returned unchanged.
 :::
 
-A direct mention of the account always counts. An `@everyone` or `@here` mention counts only while `suppress_everyone` is false, and a role mention only while `suppress_roles` is false. A mention that counts increments `mention_count` on the channel's [read state](/http-api/read-states/#read-state-object) and adds an entry to the [recent mention history](/http-api/users/content/#list-recent-mentions). A guild message whose every mention is suppressed records nothing.
+For a message in a thread, push delivery reads the override of the parent channel and the `muted` and `mute_config` of the override of the parent category. It reads no override keyed by a thread ID. [Thread member flags](/http-api/thread-members/#thread-member-flags) and the thread mute set by [Modify thread member settings](/http-api/thread-members/#modify-thread-member-settings) apply to a member. A user who has not joined the thread is notified only for a direct mention or a role mention.
+
+A direct mention of the account always counts. An `@everyone` or `@here` mention counts only while `suppress_everyone` is false, and a role mention only while `suppress_roles` is false. In a thread, an `@everyone` or `@here` mention counts only for a [thread member](/http-api/thread-members/). A mention that counts increments `mention_count` on the channel's [read state](/http-api/read-states/#read-state-object) and adds an entry to the [recent mention history](/http-api/users/content/#list-recent-mentions). A guild message whose every mention is suppressed records nothing.
 
 Neither field is read outside a guild. A direct message and a group DM collect only direct mentions, and every one of them counts whatever the private channel settings hold.
 

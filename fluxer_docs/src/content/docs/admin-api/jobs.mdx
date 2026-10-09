@@ -119,7 +119,7 @@ The queue drops a job 7 days after it was queued. A job still recorded as `queue
 | realtime | Mention processing |
 | unfurl | Link previews |
 | lifecycle | Account, guild, moderation, archive and bulk work |
-| batch | Scheduled maintenance and index work |
+| batch | Scheduled maintenance, index work and thread maintenance |
 | crosspost | [Announcement channel](/topics/announcement-channels/) delivery, copy updates, and follower cleanup |
 
 ## Background job task types
@@ -127,6 +127,8 @@ The queue drops a job 7 days after it was queued. A job still recorded as `queue
 Use the returned `task_type` value to filter [List jobs](#list-jobs).
 
 The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/). `removeChannelFollowers` runs on the `crosspost` lane after an announcement channel is deleted or converted into a text channel, and removes the channel follower webhooks that follow it.
+
+Thread work runs on the `batch` lane. `deleteChannelThreads` deletes the threads of a deleted parent channel, `removeThreadMembershipsForGuildMember` removes the thread memberships of a user who is no longer a guild member, and `syncThreadSearchDocument` and `backfillThreadSearch` keep the thread search index current. `archiveInactiveThreads` runs every minute with no job record and archives the threads whose auto archive time has passed. `repairThreadIndexes` rebuilds the thread list entries of the threads it names. `seedThreadPermissions` runs once for a guild. It clears the thread permission bits from every overwrite mask. It then adds `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS` to each overwrite mask that has `SEND_MESSAGES`, and to the everyone role when that role has `SEND_MESSAGES`.
 
 ## List jobs
 

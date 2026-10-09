@@ -583,6 +583,7 @@ A message a bot sent is reported as the bot account, like any other account. A m
 - A reporter who authored the message receives 400 `CANNOT_REPORT_OWN_MESSAGE`.
 - A channel that does not exist and a direct message the reporter is not a recipient of both return 404 `UNKNOWN_CHANNEL`.
 - A guild channel the reporter is not a member of returns 403 `ACCESS_DENIED`, and a member without [VIEW_CHANNEL](/http-api/permissions/) receives 403 `MISSING_PERMISSIONS`.
+- A thread the reporter cannot view returns 403 `MISSING_ACCESS`, as [Channel resolution](/http-api/messages/#channel-resolution) describes. A thread, a forum channel, or a media channel returns 404 `UNKNOWN_CHANNEL` to a user request without the [`channel_threads` client capability](/http-api/threads/#client-capability).
 - An age-restricted guild channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED` for an account that is not age verified.
 - A message not stored under `channel_id`, a message with neither an author account nor a webhook, and any message a reporter without [READ_MESSAGE_HISTORY](/http-api/permissions/) cannot reach all return 404 `UNKNOWN_MESSAGE`.
 - An author whose account no longer exists returns 404 `UNKNOWN_USER`.
@@ -619,6 +620,7 @@ A reporter without `READ_MESSAGE_HISTORY` can report a message sent at or after 
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
 | 403 | [error response](/http-api/#error-response) | The reporter lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The reporter cannot view the thread and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | The channel, the message, or the message author is not visible to the reporter |
 | 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |

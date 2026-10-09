@@ -26,6 +26,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 | 14 | Lazy Request | Client to server |
 | 15 | Request Guild Counts | Client to server |
 | 16 | Request Channel Member Counts | Client to server |
+| 28 | Request Forum Unreads | Client to server |
 
 <sup>1</sup> Fluxer never sends Opcode 9 with `d: true`, so an Invalid Session is never an instruction to resume
 
@@ -49,6 +50,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 | 14 | [Lazy Request object](/gateway/commands/#lazy-request) | The client replaces bounded guild subscriptions |
 | 15 | [Request Guild Counts object](/gateway/commands/#request-guild-counts) | The client requests current guild count records |
 | 16 | [Request Channel Member Counts object](/gateway/commands/#request-channel-member-counts) | The client requests channel count records |
+| 28 | [Request Forum Unreads object](/gateway/threads/#request-forum-unreads) | The client requests unread counts for posts in one forum or media channel |
 
 <sup>1</sup> [Resumed](/gateway/events/#resumed) has the session's current sequence without advancing it, and a replayed Dispatch keeps the sequence it was first sent with
 
@@ -62,7 +64,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 
 <sup>6</sup> After the frame, a socket whose session ended is unauthenticated. After a failed Resume, a socket that already held a session still holds it
 
-The registry is complete. Opcode 13 and every value above 16 are undefined.
+The registry is complete. Opcode 13, the values 17 through 27, and every value above 28 are undefined.
 
 Fluxer resolves an inbound payload in this order.
 
@@ -70,7 +72,9 @@ Fluxer resolves an inbound payload in this order.
 2. Heartbeat and Resume are handled whether or not a session is attached.
 3. Identify closes with `4005` when a session is already attached.
 4. Every remaining opcode closes with `4003` while no session is attached.
-5. With a session attached, Presence Update, Voice State Update, Request Guild Members, Lazy Request, Request Guild Counts, and Request Channel Member Counts are handled. Every other opcode, including a server opcode and an undefined value, closes with `4001`.
+5. With a session attached, Presence Update, Voice State Update, Request Guild Members, Lazy Request, Request Guild Counts, Request Channel Member Counts, and Request Forum Unreads are handled. Every other opcode, including a server opcode and an undefined value, closes with `4001`.
+
+Request Forum Unreads from a user session that did not set [`CHANNEL_THREADS`](/gateway/threads/#session-flag) also closes with `4001`.
 
 :::note[Unknown server opcodes are forward compatible]
 A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close or reconnect solely because the server used an opcode newer than this registry.
@@ -81,7 +85,7 @@ A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close o
 | Code | Name | Meaning |
 | --- | --- | --- |
 | 4000 | Unknown error | Drain, an unclassified session creation error, or a Resume whose retained session could not be reached |
-| 4001 | Unknown opcode | The opcode is undefined, is a server opcode, or the payload has no `d` |
+| 4001 | Unknown opcode | An undefined or server opcode, a payload with no `d`, or opcode 28 without thread access or with a non-object `d` |
 | 4002 | Decode error | The payload size, compression stream, encoding, or command fields are invalid |
 | 4003 | Not authenticated | An authenticated command arrived before Identify or Resume attached a session |
 | 4004 | Authentication failed | The token is invalid, or it does not own the retained session named by Resume |
@@ -154,7 +158,7 @@ The Gateway sends an exact reason string with every application close.
 | `Decode failed` | 4002 | The payload is not valid JSON, or decodes to something other than an object |
 | `Invalid payload` | 4002 | The decoded object has no `op` |
 | `Rate limited` | 4008 | The connection, source IP, or user client payload budget was exceeded |
-| `Unknown opcode` | 4001 | The opcode is undefined, is a server opcode, or the payload has no `d` |
+| `Unknown opcode` | 4001 | An undefined or server opcode, a payload with no `d`, or opcode 28 without [thread access](/gateway/threads/#session-flag) or with a non-object `d` |
 | `Not authenticated` | 4003 | An authenticated command arrived before a session was attached |
 | `Already authenticated` | 4005 | Identify arrived while a session was attached, or with no `d` |
 | `Invalid identify payload` | 4002 | Identify is missing `token` or `properties`, or a field has the wrong type |
@@ -181,7 +185,7 @@ The Gateway sends an exact reason string with every application close.
 Reason strings are stable wire values. A client branches on the code and MAY record the reason for diagnosis.
 
 :::note[Some refusals send nothing]
-A held or discarded Identify, an over-budget Presence Update, a dropped bounded request, and a rejected voice state update produce no close and no reason. [Client commands](/gateway/commands/) states which command behaves that way.
+A held or discarded Identify, an over-budget Presence Update, an over-budget [Request Forum Unreads](/gateway/threads/#request-forum-unreads), a dropped bounded request, and a rejected voice state update produce no close and no reason. [Client commands](/gateway/commands/) states which command behaves that way.
 :::
 
 ## Ordinary WebSocket closes

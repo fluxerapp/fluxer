@@ -86,7 +86,7 @@ A decoded payload that is not a JSON object closes with `4002` and reason `Decod
 
 A Dispatch is a server-to-client event payload. Every live Dispatch advances the session sequence by one. A session starts at sequence 0, so the [Ready](/gateway/events/#ready) sequence is 1.
 
-A replayed Dispatch keeps its original sequence, and a replayed run can have gaps, because Guild Sync, Guild Member List Update, and Guild Members Chunk are delivered live and never retained. [Resumed](/gateway/events/#resumed) has the current sequence and does not advance it. The next live Dispatch after Resumed has that sequence plus one. The sequence is local to one Gateway session and has no meaning across sessions or shards.
+A replayed Dispatch keeps its original sequence, and a replayed run can have gaps. [Dispatch delivery](/gateway/events/#dispatch-delivery) lists the events that are delivered live and never retained. [Resumed](/gateway/events/#resumed) has the current sequence and does not advance it. The next live Dispatch after Resumed has that sequence plus one. The sequence is local to one Gateway session and has no meaning across sessions or shards.
 
 ## Framing
 
@@ -257,7 +257,7 @@ Unlike Identify, Resume is accepted in every open state. A socket that already h
 When the resumed session was attached to a different socket, that socket receives Opcode 7 Reconnect and then closes with `4000`.
 
 :::caution[Retention covers reconnection recovery only]
-[Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) states the exact bounds, and Guild Sync, Guild Member List Update, and Guild Members Chunk are never retained.
+[Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) states the exact bounds, and [Dispatch delivery](/gateway/events/#dispatch-delivery) lists the events that are never retained.
 :::
 
 ## Reconnect
@@ -307,4 +307,4 @@ Fluxer has no large bot tier, no shard-count alignment requirement, and no Ident
 
 Dispatch ordering applies within one Gateway session. It creates no total order across shards, HTTP responses, or Media Proxy operations.
 
-[Guild Create](/gateway/events/#guild-create) and [Guild Sync](/gateway/events/#guild-sync) send the complete roles, channels, emojis, stickers, and voice states for the guild they name, and a client replaces its stored lists with them, as Guild Create describes. Every other Dispatch for that guild changes part of that stored state.
+[Guild Create](/gateway/events/#guild-create) and [Guild Sync](/gateway/events/#guild-sync) send the complete roles, channels, emojis, stickers, and voice states for the guild they name, and a client replaces its stored lists with them, as Guild Create describes. A client replaces its stored threads for the guild with `threads` the same way. Every other Dispatch for that guild changes part of that stored state.

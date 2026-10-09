@@ -129,7 +129,7 @@ The filter chooses which messages a harvest collects. Every non-message section 
 | include_dms? | boolean | Whether to include one-to-one direct messages the caller still has open (default true) |
 | include_dms_closed?<sup>2</sup> | boolean | Whether to include one-to-one direct messages the caller has closed (default true) |
 | include_group_dms? | boolean | Whether to include group DMs the caller is still a member of (default true) |
-| include_guilds? | boolean | Whether to include text channels in guilds the caller is a member of (default true) |
+| include_guilds? | boolean | Whether to include channels and threads in guilds the caller is a member of (default true) |
 | guild_filter_mode?<sup>3</sup> | string | How the guild list is read, either `exclude` or `include_only` (default `exclude`) |
 | excluded_guild_ids? | array[snowflake] | The guilds to leave out in `exclude` mode (max 500, default empty) |
 | included_guild_ids? | array[snowflake] | The only guilds to include in `include_only` mode (max 500, default empty) |
@@ -182,7 +182,7 @@ A harvest record is created with a new [snowflake](/snowflakes/), the request ti
 
 Fluxer prepares the archive in the background. It contains:
 
-- `user.json`, the account document, including connections with their identifiers, visibility settings and verification dates but no credentials
+- `user.json`, the account document, including connections with their identifiers, visibility settings and verification dates but no credentials. It lists the [thread memberships](/http-api/thread-members/#thread-member-object) of the account in its current guilds, with the thread, guild, and parent IDs, `join_timestamp`, `flags`, and `muted`
 - one `channels/{channel_id}/messages.json` file for each channel that contributed a message, with its messages ordered oldest first
 - `payments/payment_history.json`
 - `integrations/oauth.json`, the [applications](/http-api/applications/) the account owns, with no entry for an application it only authorised

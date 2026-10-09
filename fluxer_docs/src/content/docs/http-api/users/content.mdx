@@ -47,6 +47,8 @@ The entry stores no copy of the message. Fluxer resolves the message against cur
 
 <sup>1</sup> Reported when resolving the channel fails with `MISSING_PERMISSIONS`, `UNKNOWN_CHANNEL`, `UNKNOWN_GUILD`, `ACCESS_DENIED`, or `NSFW_CONTENT_AGE_RESTRICTED`. Also reported when the channel resolves and a stored message needs `READ_MESSAGE_HISTORY` the caller does not hold.
 
+An entry saved from a thread, a forum channel, or a media channel is omitted for a user session that does not declare the [`channel_threads` client capability](/http-api/threads/#client-capability). Fluxer reads up to three further batches of entries to replace it.
+
 ## Bulk message deletion scopes
 
 | Value | Description |
@@ -69,7 +71,9 @@ The entry stores no copy of the message. Fluxer resolves the message against cur
 
 Lists the caller's recent mention history. Returns an array of [message](/http-api/messages/#message-object) objects the caller can still read, in descending message ID order.
 
-Fluxer resolves each retained entry against current permissions. A message that has been deleted, or whose channel the caller can no longer reach, is omitted without being removed from history. The filters and `limit` apply before that resolution, so a full page can return fewer messages than `limit`.
+Fluxer resolves each retained entry against current permissions. A message that has been deleted, or whose channel the caller can no longer reach, other than a thread the caller cannot view, is omitted without being removed from history. The filters and `limit` apply before that resolution, so a full page can return fewer messages than `limit`.
+
+An entry in a thread, a forum channel, or a media channel is omitted for a user session that does not declare `channel_threads`. Fluxer reads up to three further batches of history to replace it.
 
 ### Query parameters
 
@@ -92,7 +96,7 @@ Fluxer resolves each retained entry against current permissions. A message that 
 <sup>5</sup> Every recorded entry has a guild, so setting this to false always returns an empty array
 
 :::note[Only guild channel mentions are recorded]
-A direct message never produces an entry. Fluxer records nothing for the message author, for a bot account, or for a member who cannot view the channel.
+A direct message never produces an entry. Fluxer records nothing for the message author, for a bot account, or for a member who cannot view the channel. In a thread, an `@everyone` or `@here` mention counts only for a [thread member](/http-api/thread-members/).
 :::
 
 The response has no cursor metadata, so `before` and `limit` are the only pagination controls.
@@ -100,15 +104,17 @@ The response has no cursor metadata, so `before` and `limit` are the only pagina
 Fluxer drops a direct mention at message creation when the mentioned account has blocked the author, so it never reaches the history. An `@everyone` or `@here` mention is not recorded while `suppress_everyone` is enabled for the guild, and a role mention is not recorded while `suppress_roles` is enabled. A message that also has a direct mention is still recorded. Changing those [guild notification settings](/http-api/users/settings/#user-guild-settings-object) later does not retroactively add or remove history.
 
 :::caution[One bad entry can fail the whole listing]
-Fluxer omits an entry whose channel the caller cannot reach. An entry that needs age verification, or one whose membership state does not resolve, returns 403 for the whole request. Narrow the window with `before` to page around it.
+Fluxer omits an entry whose channel the caller cannot reach. An entry in a thread the caller can no longer view returns 403 `MISSING_ACCESS` for the whole request. Narrow the window with `before` to page around it.
 :::
+
+Fluxer also omits an entry that needs age verification and one whose membership state does not resolve. [Thread permissions](/http-api/threads/#thread-permissions) states when a thread stops being viewable.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[message](/http-api/messages/#message-object) object] | Readable mentions were returned |
-| 403 | [error response](/http-api/#error-response) | A retained entry is in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel the account has not verified for, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | A retained entry is in a thread the caller cannot view and the request returns `MISSING_ACCESS` |
 
 ### Rate limit
 
@@ -178,7 +184,7 @@ A matching entry is deleted and [Recent Mention Delete](/gateway/events/#recent-
 
 Lists the caller's saved message collection. Returns an array of [saved message](#saved-message-object) objects in descending message ID order.
 
-The response is a bare array with no cursor metadata, so `before` and `limit` are the only pagination controls. An entry whose channel the caller can no longer reach, or whose message the caller can no longer read, comes back with status `missing_permissions` and a null message. An entry whose message no longer exists is deleted and omitted. The array can hold fewer entries than `limit`.
+The response is a bare array with no cursor metadata, so `before` and `limit` are the only pagination controls. An entry whose channel the caller can no longer reach, or whose message the caller can no longer read, comes back with status `missing_permissions` and a null message. An entry in a thread the caller can no longer view returns 403 `MISSING_ACCESS` for the whole request. An entry whose message no longer exists is deleted and omitted. The array can hold fewer entries than `limit`.
 
 ### Query parameters
 
@@ -202,7 +208,7 @@ A guild configuring [message_history_cutoff](/http-api/guilds/#guild-object) sti
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[saved message](#saved-message-object) object] | Saved entries were returned |
-| 403 | [error response](/http-api/#error-response) | A stored entry is in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | A stored entry is in a thread the caller cannot view and the request returns `MISSING_ACCESS` |
 
 ### Side effects
 
@@ -242,11 +248,12 @@ The check runs before Fluxer touches the channel or the message, so re-saving an
 | 204 | empty | Message is present in the saved collection |
 | 400 | [error response](/http-api/#error-response) | The collection is at its ceiling and the request returns `MAX_BOOKMARKS` |
 | 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL` or guild membership, returning `MISSING_PERMISSIONS`, the membership state cannot be resolved, returning `ACCESS_DENIED`, or the channel needs age verification, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` in the parent of a thread, or cannot view a private thread, each returning `MISSING_ACCESS` |
 | 404 | [error response](/http-api/#error-response) | The channel returns `UNKNOWN_CHANNEL`, its guild returns `UNKNOWN_GUILD`, the message returns `UNKNOWN_MESSAGE`, or the account returns `UNKNOWN_USER` |
 
 ### Side effects
 
-Saving an already stored message rewrites the entry. [Saved Message Create](/gateway/events/#saved-message-create) reaches the caller's own sessions on every accepted save, a repeat save included, with the complete message object as the caller can currently see it.
+Saving an already stored message rewrites the entry. [Saved Message Create](/gateway/events/#saved-message-create) reaches the caller's own sessions on every accepted save, a repeat save included, with the message object as the caller can currently see it. A save of a message in a thread reaches only the sessions with [thread access](/gateway/threads/#session-flag).
 
 ### Rate limit
 
@@ -302,7 +309,7 @@ The caller proves sudo mode either with the sudo fields below or with an existin
 | include_dms? | boolean | Whether one-to-one DMs the caller still has open are included (default true) |
 | include_dms_closed?<sup>1</sup> | boolean | Whether one-to-one DMs the caller has closed are included (default true) |
 | include_group_dms?<sup>2</sup> | boolean | Whether group DMs the caller is still a member of are included (default true) |
-| include_guilds?<sup>2</sup> | boolean | Whether channels in guilds the caller is still a member of are included (default true) |
+| include_guilds?<sup>2</sup> | boolean | Whether channels and threads in guilds the caller is still a member of are included (default true) |
 | guild_filter_mode?<sup>3</sup> | string | The [guild filter mode](#guild-filter-modes), default `exclude` |
 | excluded_guild_ids? | array[snowflake] | The guilds left untouched in `exclude` mode (max 500 IDs, default empty) |
 | included_guild_ids? | array[snowflake] | The only guilds targeted in `include_only` mode (max 500 IDs, default empty) |
@@ -343,7 +350,7 @@ Neither scope includes the caller's personal notes channel, so this operation ca
 
 An account holding a TOTP secret or a registered WebAuthn credential that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
 
-As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs. The deleted messages' attachments are permanently removed.
+As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs. The deleted messages' attachments are permanently removed. A message deleted in a thread lowers the `message_count` of that [thread](/http-api/threads/#thread-object), except for the first message of a forum or media post.
 
 On completion the system account sends the caller a direct message in the account locale reporting the total deleted message count and the number of channels touched. That message arrives through the ordinary [Message Create](/gateway/events/#message-create) Dispatch.
 

@@ -395,6 +395,8 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 
 <sup>2</sup> Sticker limits are enforced as one shared total against `max_guild_stickers`
 
+No key sets a thread or forum limit. [Thread lifecycle](/http-api/threads/#thread-lifecycle), [Thread members](/http-api/thread-members/), and [Forum channel fields](/http-api/forums/#forum-channel-fields) state those fixed bounds. `max_guild_channels` counts forum and media channels and counts no thread.
+
 Where a rule sets `max_guild_emojis`, `max_guild_stickers`, or one of the compatibility aliases, it republishes that key in its own `overrides` even when the value matches the default.
 
 ## Public application configuration object

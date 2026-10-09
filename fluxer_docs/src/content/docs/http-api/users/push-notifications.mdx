@@ -74,6 +74,8 @@ An `ios_apns` or `ios_apns_voip` registration with no `provider_environment` is 
 
 Register an `https` endpoint. A Web Push registration whose `token` is not a valid URL is refused at `token`, and one whose host is a private or reserved address is refused with `URL_NOT_PUBLICLY_ROUTABLE`.
 
+A registration receives a notification for a message in a thread, and for a [new post](/http-api/forums/#new-post-notifications), only when the registering request declares the [`channel_threads` client capability](/http-api/threads/#client-capability). Registering the same `platform`, `token`, `app_id`, and `provider_environment` again without the capability stops those notifications for the registration.
+
 ### Response
 
 | Status | Body | Condition |
@@ -121,7 +123,7 @@ The four values below identify the registration the same way [Register mobile pu
 
 ## Handling an incoming push
 
-Fluxer posts one encrypted record to the registered endpoint for each notification. The push service that owns the endpoint hands that record to the client.
+Fluxer posts one encrypted record to the registered endpoint for each notification. The push service that owns the endpoint hands that record to the client. [Register mobile push device](#register-mobile-push-device) states which registrations receive thread and new post notifications.
 
 | Header | Value |
 | --- | --- |

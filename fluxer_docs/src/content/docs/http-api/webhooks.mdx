@@ -20,6 +20,10 @@ Fluxer resolves the guild before every management operation. A guild that does n
 
 [List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The remaining management routes name only a webhook ID and are not gated.
 
+On a management operation, a caller other than a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability) sees no webhook of a forum or media channel. [List guild webhooks](#list-guild-webhooks) omits one, and [Get webhook](#get-webhook), [Update webhook](#update-webhook), and [Delete webhook](#delete-webhook) return 404 `UNKNOWN_WEBHOOK` for one. [List channel webhooks](#list-channel-webhooks) and [Create webhook](#create-webhook) on a forum or media channel return 404 `UNKNOWN_CHANNEL` to that caller. [Update webhook](#update-webhook) with a forum or media channel as `channel_id` returns the same.
+
+A token-authenticated operation returns a webhook of a forum or media channel to any holder of the token.
+
 Fluxer scans a submitted webhook `name` against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`. The same lists scan the resolved content, embed text, and embed link URLs of a created or edited message, and a match returns the same code. The `avatar` member is exempt from that scan, and Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
 
 ## Rate limit keying
@@ -40,7 +44,7 @@ A request that sends no `Origin`, or any other `Origin` value, passes the check.
 
 ## Webhook object
 
-A webhook belongs to exactly one guild and posts into exactly one guild text, voice, or announcement channel of that guild. Fluxer generates the execution token of an incoming webhook once at creation and never rotates it, so the pair of ID and token is a bearer credential for the lifetime of the webhook. A channel follower webhook has no usable token.
+A webhook belongs to exactly one guild and posts into exactly one guild text, voice, announcement, forum, or media channel of that guild. Only those channel types can hold a webhook. Fluxer generates the execution token of an incoming webhook once at creation and never rotates it. The pair of ID and token is a bearer credential for the lifetime of the webhook. A channel follower webhook has no usable token.
 
 ### Structure
 
@@ -142,7 +146,7 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 
 ## Webhook message body
 
-[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` passes schema validation and then returns 400 `CANNOT_SEND_EMPTY_MESSAGE`.
+[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` passes schema validation and then returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. A webhook of a forum or media channel that sends it without `thread_id` returns 400 `WEBHOOK_FORUM_TARGET_REQUIRED` first.
 
 ### Structure
 
@@ -160,6 +164,8 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 | nonce?<sup>7</sup> | string \| integer | Client-generated message identifier (1-32 characters). A non-negative safe integer becomes its decimal string |
 | username?<sup>8</sup> | ?string | Per-message webhook name override (1-80 characters), or null |
 | avatar_url?<sup>8</sup> | ?string | Absolute `http` or `https` per-message webhook avatar URL override of at most 2,048 characters, or null |
+| thread_name?<sup>9</sup> | string | The name of a new forum post (1-100 characters) |
+| applied_tags?<sup>9</sup> | array[snowflake] | The IDs of the tags a new forum post applies (max 5) |
 
 <sup>1</sup> Webhook message content is limited to the resolved [max_message_length](/http-api/instance/#limit-keys) value for the guild or 4000 characters, whichever is larger. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
 
@@ -173,9 +179,13 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 
 <sup>6</sup> The field takes no part in the non-empty message check, so a body supplying `tts` and nothing else returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. A webhook message is never marked text-to-speech
 
-<sup>7</sup> The nonce is remembered per webhook for five minutes and is echoed on the [Message Create](/gateway/events/#message-create) Dispatch. A repeated execution presenting it inside that window creates no second message and returns the first one, and a repeat after the webhook moved to another channel returns 404 `UNKNOWN_MESSAGE`
+<sup>7</sup> The nonce is remembered per webhook for five minutes and is echoed on the [Message Create](/gateway/events/#message-create) Dispatch. A repeated execution presenting it inside that window creates no second message and returns the first one, and a repeat that names another `thread_id`, that sends `thread_name` again, or that follows a move of the webhook to another channel returns 404 `UNKNOWN_MESSAGE`
 
 <sup>8</sup> Applies to the created message, and the stored webhook keeps its own name and avatar
+
+<sup>9</sup> Accepted only from a webhook whose channel is a forum or media channel, and any other channel returns 400 `WEBHOOK_THREAD_NAME_REQUIRES_FORUM`
+
+A forum or media channel webhook that sends `thread_id` ignores `applied_tags`. On a `thread_name` post, a moderated tag returns 403 `MISSING_PERMISSIONS`, and a tag the channel does not hold returns 404 `UNKNOWN_FORUM_TAG`. [Webhooks in forums](/http-api/forums/#webhooks-in-forums) describes posting into a forum or media channel.
 
 When `embeds` is absent, Fluxer rewrites the singular key `embed` to a one-element `embeds` array, and an `embed` of null becomes an empty array. When both are present, `embed` is dropped.
 
@@ -185,7 +195,7 @@ A multipart body accepts both [pre-uploaded attachments](/http-api/messages/#pre
 
 A webhook execution accepts the [message reference input](/http-api/messages/#message-reference-input-object) object. The constraints below are specific to webhooks.
 
-The `channel_id` field is required for a forward reference and must equal the webhook's own channel. A value naming any other channel returns 404 `UNKNOWN_MESSAGE`. A reply reference always resolves in the webhook's own channel and ignores this field.
+The `channel_id` field is required for a forward reference and must equal the webhook's own channel. A value naming any other channel returns 404 `UNKNOWN_MESSAGE`. A reply reference resolves in the webhook's own channel and ignores this field. With [`thread_id`](#execute-webhook), the reference resolves in that thread, and the `channel_id` of a forward reference must equal the thread ID.
 
 The referenced message must exist in the webhook's channel, and a missing message returns 404 `UNKNOWN_MESSAGE`. A reply reference also requires the referenced message to be an ordinary or reply message. Any other type returns 400 `INVALID_FORM_BODY` with the validation code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`.
 
@@ -775,13 +785,13 @@ A webhook is returned only when the caller also holds both `VIEW_CHANNEL` and `M
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/webhooks" bot />
 
-Returns an array of [webhook objects](#webhook-object) in a guild text, voice, or announcement channel. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel.
+Returns an array of [webhook objects](#webhook-object) in a guild text, voice, announcement, forum, or media channel. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the guild text, voice, or announcement channel whose webhooks are returned |
+| channel_id | snowflake | The ID of the guild text, voice, announcement, forum, or media channel whose webhooks are returned |
 
 ### Response
 
@@ -795,7 +805,7 @@ Returns an array of [webhook objects](#webhook-object) in a guild text, voice, o
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text, voice, or announcement channel, each returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or cannot hold a webhook, each returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
@@ -810,7 +820,7 @@ Returns an array of [webhook objects](#webhook-object) in a guild text, voice, o
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/webhooks" bot auditReason />
 
-Creates a webhook in a guild text, voice, or announcement channel and returns the new [webhook object](#webhook-object) with its execution token. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel. The operation accepts an audit reason.
+Creates a webhook in a guild text, voice, announcement, forum, or media channel and returns the new [webhook object](#webhook-object) with its execution token. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel. The operation accepts an audit reason.
 
 Creation emits a [Webhooks Update](/gateway/events/#webhooks-update).
 
@@ -820,7 +830,7 @@ The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the guild text, voice, or announcement channel the webhook is created in |
+| channel_id | snowflake | The ID of the guild text, voice, announcement, forum, or media channel the webhook is created in |
 
 ### JSON body
 
@@ -849,7 +859,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
 | 403 | [error response](/http-api/#error-response) | The name is blocked |
 | 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or cannot hold a webhook, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> An avatar failure names the `avatar` path with `BASE64_LENGTH_INVALID`, `INVALID_BASE64_FORMAT`, `IMAGE_SIZE_EXCEEDS_LIMIT`, or `INVALID_IMAGE_FORMAT`
@@ -935,7 +945,7 @@ Updates a webhook and returns the modified [webhook object](#webhook-object). Em
 | --- | --- | --- |
 | name? | string | Replacement webhook name (1-80 characters) |
 | avatar?<sup>1</sup> | ?base64 string | Base64-encoded replacement avatar, or null to remove the current avatar |
-| channel_id?<sup>2</sup> | snowflake | Destination guild text, voice, or announcement channel in the same guild |
+| channel_id?<sup>2</sup> | snowflake | Destination guild text, voice, announcement, forum, or media channel in the same guild |
 
 <sup>1</sup> An omitted avatar leaves the stored hash unchanged, and an explicit null clears it. The same encoding, size, and format rules as [create webhook](#create-webhook) apply. A channel follower webhook rejects the member, null included
 
@@ -959,7 +969,7 @@ The returned webhook object has the destination channel. Copies a channel follow
 | 403 | [error response](/http-api/#error-response) | The name is blocked |
 | 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The destination channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The destination channel is missing or cannot hold a webhook, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The destination channel belongs to another guild, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The webhook's guild does not resolve, returning `UNKNOWN_GUILD` |
 
@@ -1163,8 +1173,11 @@ The route refuses a call from a first-party web client. See [origin refusal](#or
 | Field | Type | Description |
 | --- | --- | --- |
 | wait?<sup>1</sup> | boolean | Whether to return the created message (default false) |
+| thread_id?<sup>2</sup> | snowflake | The ID of a thread of the webhook's channel to post into |
 
 <sup>1</sup> Only the exact trimmed values `true`, `True`, and `1` are treated as true, and every other value, including `TRUE` and `yes`, is treated as false
+
+<sup>2</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`. [Webhooks in forums](/http-api/forums/#webhooks-in-forums) describes posting into a forum or media channel
 
 ### JSON body
 
@@ -1201,11 +1214,21 @@ An attachment metadata entry whose `id` matches a supplied file index supplies t
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The resolved payload has no content, embed, or attachment |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The content exceeds the effective maximum length |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The embed or attachment count exceeds its effective ceiling |
+| 400 | [error response](/http-api/#error-response) | A forum or media channel execution has no `thread_id` or `thread_name`, returning `WEBHOOK_FORUM_TARGET_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | A forum or media channel execution has `thread_id` and `thread_name`, returning `WEBHOOK_FORUM_TARGET_CONFLICT` |
+| 400 | [error response](/http-api/#error-response) | `thread_name` or `applied_tags` targets any other channel, returning `WEBHOOK_THREAD_NAME_REQUIRES_FORUM` |
+| 400 | [error response](/http-api/#error-response) | A `thread_name` post names no tag under `REQUIRE_TAG`, returning `FORUM_TAG_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | A `thread_name` post names no tag, with `REQUIRE_TAG` and no unmoderated tag, returning `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names a locked thread, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | The guild has 1,000 active threads and `thread_name` creates a post, returning `MAX_ACTIVE_THREADS` |
+| 400 | [error response](/http-api/#error-response) | The guild has 1,000 active threads and `thread_id` names an archived thread, returning `MAX_ACTIVE_THREADS` |
 | 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The resolved content or embed text is blocked, returning `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | A `thread_name` post names a moderated tag in `applied_tags`, returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or cannot hold a webhook, or `thread_id` names no thread of it, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The referenced message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
+| 404 | [error response](/http-api/#error-response) | A `thread_name` post names a tag the channel does not hold in `applied_tags`, returning `UNKNOWN_FORUM_TAG` |
 
 <sup>1</sup> `CANNOT_SEND_EMPTY_MESSAGE` is returned as the 400 error code itself. Every other code below, including `CONTENT_EXCEEDS_MAX_LENGTH`, sits inside an `INVALID_FORM_BODY` body
 
@@ -1249,6 +1272,14 @@ The route refuses a call from a first-party web client. See [origin refusal](#or
 
 <sup>1</sup> The message is resolved within the webhook's current channel, so a message the webhook created before it was moved to another channel is no longer reachable through this route
 
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of the thread of the webhook's channel that holds the message |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`
+
 ### Response
 
 | Status | Body | Condition |
@@ -1280,6 +1311,14 @@ The route refuses a call from a first-party web client. See [origin refusal](#or
 | token | string | Webhook execution token (1-256 characters) |
 | message_id | snowflake | The ID of the message to update |
 
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of the thread of the webhook's channel that holds the message |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`
+
 ### JSON body
 
 The body is a [webhook message edit body](#webhook-message-edit-body).
@@ -1298,6 +1337,8 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 | 400 | [error response](/http-api/#error-response) | The content or embed count exceeds its effective ceiling |
 | 400 | [error response](/http-api/#error-response) | The target message is not an editable type |
 | 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names an archived thread, returning `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names a locked thread, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The replacement content or embed text is blocked, returning `CONTENT_BLOCKED` |
@@ -1338,6 +1379,14 @@ The route refuses a call from a first-party web client. See [origin refusal](#or
 | token | string | Webhook execution token (1-256 characters) |
 | message_id | snowflake | The ID of the message to delete |
 
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of the thread of the webhook's channel that holds the message |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`
+
 ### Response
 
 | Status | Body | Condition |
@@ -1373,6 +1422,14 @@ A rendered event emits a [Message Create](/gateway/events/#message-create).
 | webhook_id | snowflake | The ID of the webhook to execute |
 | token | string | Webhook execution token (1-256 characters) |
 
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of a thread of the webhook's channel to post into |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`. A webhook whose channel is a forum or media channel needs it, and returns 400 `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` without it
+
 ### Request headers
 
 | Field | Type | Description |
@@ -1399,9 +1456,12 @@ A callback that renders nothing, and one whose message creation fails, both leav
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Callback was accepted, was not renderable, or repeated a delivery within the deduplication window |
+| 400 | [error response](/http-api/#error-response) | The webhook's channel is a forum or media channel and `thread_id` is absent, returning `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names a locked thread, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | The guild has 1,000 active threads and `thread_id` names an archived thread, returning `MAX_ACTIVE_THREADS` |
 | 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or cannot hold a webhook, or `thread_id` names no thread of it, returning `UNKNOWN_CHANNEL` |
 
 ### Side effects
 
@@ -1428,6 +1488,14 @@ A successful callback emits a [Message Create](/gateway/events/#message-create).
 | webhook_id | snowflake | The ID of the webhook to execute |
 | token | string | Webhook execution token (1-256 characters) |
 
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of a thread of the webhook's channel to post into |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`. A webhook whose channel is a forum or media channel needs it, and returns 400 `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` without it
+
 ### JSON body
 
 The body is a [Slack callback](#slack-callback-object) object.
@@ -1441,9 +1509,12 @@ The body is a [Slack callback](#slack-callback-object) object.
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The conversion yields neither content nor an embed |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The resulting content exceeds the effective maximum length |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The converted embed count exceeds its effective ceiling |
+| 400 | [error response](/http-api/#error-response) | The webhook's channel is a forum or media channel and `thread_id` is absent, returning `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names a locked thread, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | The guild has 1,000 active threads and `thread_id` names an archived thread, returning `MAX_ACTIVE_THREADS` |
 | 403 | [error response](/http-api/#error-response) | Converted content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or cannot hold a webhook, or `thread_id` names no thread of it, returning `UNKNOWN_CHANNEL` |
 
 <sup>1</sup> The [error code](/http-api/errors/) is `CANNOT_SEND_EMPTY_MESSAGE` for a conversion that yields nothing, `CONTENT_EXCEEDS_MAX_LENGTH` for content that is too long, and `INVALID_FORM_BODY` with the validation code `TOO_MANY_EMBEDS` for the embed ceiling
 
@@ -1493,9 +1564,10 @@ A callback that renders nothing, and one whose message creation fails, both leav
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Callback was accepted, was not renderable, or repeated a callback within the deduplication window |
+| 400 | [error response](/http-api/#error-response) | The webhook's channel is a forum or media channel, returning `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` |
 | 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or cannot hold a webhook, returning `UNKNOWN_CHANNEL` |
 
 ### Side effects
 

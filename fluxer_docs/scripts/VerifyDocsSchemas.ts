@@ -22,37 +22,6 @@ import {
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
-const CHANNEL_THREADS_FIELDS_UNTIL_GA = new Set<string>([
-	'applied_tags',
-	'archived',
-	'auto_archive_duration',
-	'available_tags',
-	'channel_threads',
-	'default_auto_archive_duration',
-	'default_forum_layout',
-	'default_reaction_emoji',
-	'default_sort_order',
-	'default_tag_setting',
-	'default_thread_rate_limit_per_user',
-	'flags',
-	'invitable',
-	'locked',
-	'member',
-	'member_count',
-	'member_ids_preview',
-	'members',
-	'message_count',
-	'message_send_cooldown_ms',
-	'thread',
-	'thread_create_cooldown_ms',
-	'thread_id',
-	'thread_metadata',
-	'thread_name',
-	'threads',
-	'threads_active',
-	'total_message_sent',
-]);
-
 export interface Mismatch {
 	readonly page: string;
 	readonly operation: string;
@@ -72,7 +41,6 @@ export interface SchemaCounters {
 	unlinkedObjects: number;
 	typesCompared: number;
 	optionalityCompared: number;
-	withheldFields: number;
 }
 
 export interface SchemaVerification {
@@ -630,7 +598,6 @@ class Verifier {
 		unlinkedObjects: 0,
 		typesCompared: 0,
 		optionalityCompared: 0,
-		withheldFields: 0,
 	};
 	private readonly objects = new Map<string, ObjectBlock>();
 	private readonly compared = new Set<string>();
@@ -823,17 +790,6 @@ class Verifier {
 	}
 
 	private push(page: string, operation: string, kind: string, detail: string): void {
-		if (kind.endsWith('-missing')) {
-			const field =
-				detail
-					.replace(/ \(variant \d+\)$/u, '')
-					.split('.')
-					.pop() ?? detail;
-			if (CHANNEL_THREADS_FIELDS_UNTIL_GA.has(field)) {
-				this.counters.withheldFields += 1;
-				return;
-			}
-		}
 		this.mismatches.push({page, operation, kind, detail});
 	}
 
@@ -1012,12 +968,7 @@ class Verifier {
 	): void {
 		const resolved = resolveRef(spec, schema);
 		const allBranches = isUnion(resolved) ? [...(resolved?.oneOf ?? []), ...(resolved?.anyOf ?? [])] : [schema];
-		const branches = allBranches.filter(
-			(branch) =>
-				allBranches.length === 1 ||
-				![...collectPropertySchemas(spec, branch).keys()].some((field) => CHANNEL_THREADS_FIELDS_UNTIL_GA.has(field)),
-		);
-		this.counters.withheldFields += allBranches.length - branches.length;
+		const branches = allBranches;
 		if (branches.length > 1) this.counters.unionBodies += 1;
 		const branchProperties = branches.map((branch) => new Set(collectPropertySchemas(spec, branch).keys()));
 		const branchRequired = branches.map((branch) => collectRequired(spec, branch));
@@ -1339,7 +1290,6 @@ async function main(): Promise<void> {
 	);
 	console.log(`request and response field types compared: ${counters.typesCompared.toString()}`);
 	console.log(`request body optionality compared: ${counters.optionalityCompared.toString()}`);
-	console.log(`channel_threads fields withheld until GA: ${counters.withheldFields.toString()}`);
 	console.log(`optionality advisories: ${optionalityAdvisories.length.toString()}`);
 	for (const entry of optionalityAdvisories) {
 		console.log(`    ${entry}`);

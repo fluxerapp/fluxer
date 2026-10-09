@@ -6,7 +6,7 @@ description: Guild emoji objects, uploads, cloning, bulk creation, renaming, and
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An emoji is a custom image that one guild owns. Members use it in messages and reactions. Its ID is a [snowflake](/snowflakes/) that is unique across every guild. [List guild emojis](#list-guild-emojis) is the only guild-scoped read, and [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) resolves a single emoji without membership of its guild.
+An emoji is a custom image that one guild owns. Members use it in messages and reactions, and a forum channel can use it on a tag or as its default reaction. Its ID is a [snowflake](/snowflakes/) that is unique across every guild. [List guild emojis](#list-guild-emojis) is the only guild-scoped read, and [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) resolves a single emoji without membership of its guild.
 
 Every route names a guild in its path. When that guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features), Fluxer rejects the request with 403 `MISSING_ACCESS` before the operation runs. Fluxer does the same for a guild with [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) when the account has no instance staff flag.
 
@@ -376,7 +376,7 @@ A later purge of the source emoji does not affect an existing clone in another g
 
 ### Side effects
 
-Deletion frees one guild emoji slot, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the remaining collection and records an [`EMOJI_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Existing messages that reference the emoji are unchanged.
+Deletion frees one guild emoji slot, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the remaining collection and records an [`EMOJI_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Existing messages that reference the emoji are unchanged. A [forum tag](/http-api/forums/#forum-tag-object) or [default reaction](/http-api/forums/#default-reaction-object) that names the emoji keeps its `emoji_id`.
 
 ### Rate limit
 
