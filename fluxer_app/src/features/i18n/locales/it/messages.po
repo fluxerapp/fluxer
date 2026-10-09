@@ -27,7 +27,7 @@ msgstr "... attiva la modalità compatta. Ottimo!"
 msgid "(edited)"
 msgstr "(modificato)"
 
-#: src/features/app/components/pages/YouPage.tsx:194
+#: src/features/app/components/pages/YouPage.tsx:206
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:907
 msgid "(only visible to you)"
 msgstr "(visibile solo a te)"
@@ -2821,7 +2821,7 @@ msgstr "Informazioni su {appName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:171
+#: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
 #: src/features/user/components/popouts/UserProfileShared.tsx:42
@@ -13833,7 +13833,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Modifica le eccezioni ai permessi di ruoli e membri in questo canale."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
-#: src/features/app/components/pages/YouPage.tsx:162
+#: src/features/app/components/pages/YouPage.tsx:174
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
 #: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
@@ -23983,7 +23983,7 @@ msgstr "Non è né vero né falso"
 #. Markdown alert label for a note callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:191
+#: src/features/app/components/pages/YouPage.tsx:203
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
@@ -24567,7 +24567,7 @@ msgid "Open audio link"
 msgstr "Apri link audio"
 
 #. Short label in the you page.
-#: src/features/app/components/pages/YouPage.tsx:28
+#: src/features/app/components/pages/YouPage.tsx:33
 msgid "Open avatar"
 msgstr "Apri l'avatar"
 
