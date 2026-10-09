@@ -1111,14 +1111,14 @@ msgstr "{count, plural, one {# ช่องทางติดตาม} other {#
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {พบ # คอมมูนิตี้} other {พบ # คอมมูนิตี้}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# ชุมชนมีการตั้งค่าเฉพาะของตัวเอง} other {# ชุมชนมีการตั้งค่าเฉพาะของตัวเอง}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ} other {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# คอมมูนิตี้ใช้การตั้งค่าที่ต่างออกไป} other {# คอมมูนิตี้ใช้การตั้งค่าที่ต่างออกไป}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1183,6 +1183,11 @@ msgstr "{count, plural, one {อีก # คน} other {อีก # คน}}"
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# คนในสาย} other {# คนในสาย}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# คีย์พาส} other {# คีย์พาส}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2923,11 +2928,6 @@ msgstr "บัญชี"
 msgid "Account & premium overrides"
 msgstr "การตั้งค่าบัญชีและพรีเมียม"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "การเข้าถึงบัญชี"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3260,10 +3260,6 @@ msgstr "เพิ่มบัญชีเพื่อดำเนินการ
 msgid "Add an email and password to your account first."
 msgstr "เพิ่มอีเมลและรหัสผ่านลงในบัญชีของคุณก่อน"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "เพิ่มความปลอดภัยอีกขั้นให้กับบัญชีของคุณ"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3315,7 +3311,7 @@ msgstr "เพิ่มปุ่มลัดที่กำหนดเอง �
 msgid "Add domain connection"
 msgstr "เพิ่มการเชื่อมต่อโดเมน"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "เพิ่มอีเมล"
 
@@ -3397,7 +3393,7 @@ msgid "Add override"
 msgstr "เพิ่มการตั้งค่าเฉพาะ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "เพิ่มพาสคีย์"
@@ -3536,6 +3532,14 @@ msgstr "เพิ่มเครื่องมือค้นหาของค
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "เพิ่มบริการแปลภาษาของคุณเองด้วยรูปแบบ URL ที่กำหนดเอง ใช้ <0>{query}</0> แทนข้อความที่ต้องการแปล"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "เพิ่มเมื่อ {createdDate}, ใช้งานครั้งล่าสุดเมื่อ {lastUsedDate}"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "เพิ่มเมื่อ {createdDate} ไม่เคยถูกใช้งาน"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3615,14 +3619,6 @@ msgstr "เพิ่มในรายการโปรดแล้ว"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "เพิ่มไปยังสื่อที่บันทึกไว้แล้ว"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "เพิ่มเมื่อ: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "เพิ่มเมื่อ: {createdDate} • ใช้งานล่าสุด: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3951,11 +3947,11 @@ msgstr "อนุญาตให้ใช้ตัวพิมพ์ใหญ่
 msgid "Allow direct messages"
 msgstr "อนุญาตข้อความส่วนตัว"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "อนุญาตข้อความส่วนตัวจากบอทของคอมมูนิตี้"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "อนุญาตข้อความส่วนตัวจากสมาชิกคอมมูนิตี้"
 
@@ -4059,7 +4055,7 @@ msgstr "ได้รับอนุญาตให้ใช้ {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "อนุญาตให้สมาชิกทุกคนกล่าวถึงบทบาทนี้ได้"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "ผู้ที่โทรหาคุณได้"
 
@@ -4068,7 +4064,7 @@ msgstr "ผู้ที่โทรหาคุณได้"
 msgid "Allowed flexible text channel names"
 msgstr "อนุญาตให้ตั้งชื่อช่องข้อความได้หลากหลาย"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "ผู้ที่เชิญคุณได้"
 
@@ -4156,6 +4152,11 @@ msgstr "แลกไปแล้ว"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "ตั้งค่าให้ยกเลิกไว้แล้ว"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "เปลี่ยนชุมชนด้านล่างให้ตรงกันด้วย"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4611,9 +4612,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "ทุกคนสามารถขอบัญชีได้ แต่ผู้ดูแลระบบต้องอนุมัติ"
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "ทุกคนในชุมชนของฉัน"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "ทุกคนที่เจอคุณสามารถส่งคำขอได้ ปิดสิ่งนี้เพื่อเลือกกลุ่มด้านล่าง"
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4762,6 +4767,14 @@ msgstr "แอปพลิเคชันและบอท"
 msgid "Applies to"
 msgstr "ใช้กับ"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "มีผลกับบอทในชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไป คุณสามารถเปลี่ยนการตั้งค่าสำหรับแต่ละชุมชนได้เช่นกัน"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "มีผลกับชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไป คุณสามารถเปลี่ยนการตั้งค่าสำหรับแต่ละชุมชนได้เช่นกัน"
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4778,11 +4791,6 @@ msgstr "ใช้ธีม"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "ใช้กับทุกคอมมูนิตี้"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "นำไปใช้กับชุมชนเหล่านี้ด้วย"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4803,6 +4811,11 @@ msgstr "อนุมัติแล้ว"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "แอป"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "แอปและอุปกรณ์"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4857,7 +4870,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่ \"{categoryName}\"? ช่องที่อยู่ภายในจะถูกย้ายไปด้านบนสุดของรายการช่อง"
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบพาสคีย์ <0>{0}</0>"
 
@@ -4869,7 +4882,7 @@ msgstr "คุณแน่ใจหรือไม่ว่าต้องกา
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบคอมมูนิตี้นี้ การดำเนินการนี้ไม่สามารถยกเลิกได้ ทุกช่อง ข้อความ และการตั้งค่าจะถูกลบอย่างถาวร"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบพาสคีย์นี้"
 
@@ -4949,10 +4962,15 @@ msgid "Ask before starting calls"
 msgstr "ถามก่อนเริ่มโทร"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "ขอพาสคีย์ต่อจากรหัสผ่านของคุณเมื่อคุณลงชื่อเข้าใช้"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "ขอขั้นตอนที่สองหลังจากรหัสผ่านของคุณเมื่อคุณลงชื่อเข้าใช้"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5227,7 +5245,7 @@ msgstr "การยืนยันตัวตน"
 msgid "Authenticator"
 msgstr "แอปยืนยันตัวตน"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "แอปยืนยันตัวตน"
 
@@ -5302,7 +5320,7 @@ msgstr "แอปพลิเคชันที่ได้รับอนุญ
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5723,7 +5741,7 @@ msgstr "รหัสสำรอง"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5969,7 +5987,7 @@ msgid "Block"
 msgstr "บล็อก"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "บล็อก"
@@ -6086,7 +6104,7 @@ msgid "Blur"
 msgstr "เบลอ"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "เบลอ"
@@ -6592,6 +6610,10 @@ msgstr "ความเป็นส่วนตัวในการโทร"
 msgid "Calls"
 msgstr "การโทร"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "สายที่คุณอนุญาตยังคงโทรเข้ามาได้ แต่จะไม่มีเสียงเรียกเข้า"
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6702,6 +6724,11 @@ msgstr "กล้องและอุปกรณ์จับภาพเสม
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "ปิดกล้องเมื่อมีผู้เข้าร่วมเกิน {voiceChannelCameraUserLimit} คน"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "ส่งข้อความถึงคุณได้"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -7036,7 +7063,7 @@ msgid "Change chat embed background"
 msgstr "เปลี่ยนพื้นหลังการฝังแชท"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "เปลี่ยนอีเมล"
 
@@ -7129,7 +7156,7 @@ msgstr "เปลี่ยนเจ้าของ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8039,6 +8066,11 @@ msgstr "เลือกสิ่งที่ {clientLabel} ทำได้ใน
 msgid "Choose what friends see in their active now panel"
 msgstr "เลือกสิ่งที่เพื่อนเห็นในแผงกำลังใช้งานอยู่ตอนนี้"
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "เลือกสิ่งที่เกิดขึ้นกับรูปภาพและวิดีโอที่ถูกตั้งค่าว่าเป็นเนื้อหาละเอียดอ่อน Show จะแสดงตามปกติ, Blur จะซ่อนไว้จนกว่าคุณจะคลิก และ Block จะซ่อนไว้ทั้งหมด"
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "เลือกว่าสมาชิกต้องมีอะไรบ้างก่อนที่จะโพสต์หรือส่งข้อความส่วนตัวถึงสมาชิกในชุมชน สมาชิกที่มีบทบาทสามารถข้ามการตรวจสอบเหล่านี้ได้ สำหรับพื้นที่สาธารณะ เราแนะนำให้เปิดใช้งานการยืนยัน"
@@ -8100,6 +8132,10 @@ msgstr "เลือกเครื่องมือค้นหาที่จ
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "เลือกเครื่องมือแปลภาษาที่จะใช้เป็นค่าเริ่มต้นเมื่อแปลข้อความที่เลือก"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "เลือกได้ว่าใครสามารถเพิ่มคุณเข้ากลุ่มแชทได้โดยไม่ต้องขออนุญาตก่อน"
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "เลือกคนที่สามารถเห็นการเชื่อมต่อนี้ในโปรไฟล์ของคุณ"
@@ -8108,6 +8144,14 @@ msgstr "เลือกคนที่สามารถเห็นการเ
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "เลือกคนที่สามารถดูรายละเอียดโปรไฟล์ของคุณได้"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "เลือกผู้ที่สามารถส่งคำขอเป็นเพื่อนถึงคุณได้"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "เลือกผู้ที่สามารถเริ่มการโทรกับคุณได้"
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8177,7 +8221,7 @@ msgstr "ยืนยันบัญชีของคุณด้วยการ
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "ยืนยันบัญชีของคุณด้วยการเลือกชื่อผู้ใช้และรหัสผ่าน คุณจะใช้สิ่งเหล่านี้ในการลงชื่อเข้าใช้ ดังนั้นโปรดเลือกสิ่งที่จำได้ง่าย"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "ยืนยันบัญชีของคุณเพื่อเข้าถึงฟีเจอร์ความปลอดภัย เช่น การยืนยันตัวตนแบบสองชั้นและพาสคีย์"
 
@@ -8761,6 +8805,10 @@ msgstr "โคเดก"
 msgid "Codes"
 msgstr "รหัส"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "รหัสจากแอปยืนยันตัวตนของคุณคือขั้นตอนที่สองเมื่อคุณลงชื่อเข้าใช้"
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8957,6 +9005,21 @@ msgstr "คอมมูนิตี้ที่มีสมาชิกมาก
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "ชุมชนที่คุณเข้าร่วมได้"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "ชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไปจะใช้การตั้งค่านี้ และชุมชนด้านล่างจะเปลี่ยนไปให้ตรงกัน"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "ชุมชนที่คุณเข้าร่วมหลังจากนี้จะใช้การตั้งค่านี้"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "ชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไปจะใช้การตั้งค่านี้ ชุมชนปัจจุบันของคุณจะยังคงใช้การตั้งค่าเดิม"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -10365,7 +10428,7 @@ msgid "Couldn't delete application"
 msgstr "ไม่สามารถลบแอปพลิเคชันได้"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "ลบพาสคีย์ไม่ได้"
 
@@ -10760,7 +10823,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "ไม่สามารถอัปเดตการข้ามการระงับการกล่าวถึงได้"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "อัปเดตการยืนยันตัวตนแบบสองชั้นด้วยพาสคีย์ไม่ได้"
 
@@ -10876,7 +10939,7 @@ msgstr "สร้างกลุ่มใหม่กับ {userName}"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "สร้างชุดใหม่"
 
@@ -11033,8 +11096,8 @@ msgstr "สร้างกระทู้สาธารณะ"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "สร้างชุดกู้คืน"
@@ -11105,7 +11168,7 @@ msgid "Created"
 msgstr "สร้างเมื่อ"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "สร้างเมื่อ {0}"
 
@@ -11222,6 +11285,11 @@ msgstr "Ctrl"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:63
 msgid "Currency"
 msgstr "สกุลเงิน"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "ปัจจุบัน"
 
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
@@ -11984,7 +12052,7 @@ msgstr "เดลาแวร์"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12157,9 +12225,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "ลบข้อความของสมาชิกคนอื่นได้ การปักหมุดข้อความจะถูกควบคุมแยกต่างหาก"
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "ลบพาสคีย์"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "ลบข้อมูลยืนยันตัวตน {passkeyName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12628,7 +12701,7 @@ msgstr "อุปกรณ์:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12713,7 +12786,7 @@ msgstr "แสดงตัวอย่างข้อความส่วนต
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "ข้อความส่วนตัว"
 
@@ -12723,12 +12796,12 @@ msgid "Direct messages (open and closed)"
 msgstr "ข้อความส่วนตัว (ทั้งที่เปิดและปิด)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "ข้อความส่วนตัวจากเพื่อน"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "ข้อความส่วนตัวจากผู้อื่น"
 
@@ -12739,7 +12812,6 @@ msgstr "เปิดอัปโหลดโดยตรงอยู่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12812,6 +12884,11 @@ msgstr "ปิดการเร่งฮาร์ดแวร์หรือไ
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "ปิดการแจ้งเตือนบนมือถือ"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "ปิดใช้งานหรือลบบัญชีของคุณ"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13978,8 +14055,8 @@ msgstr "อีเมล"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "ที่อยู่อีเมล"
@@ -14215,7 +14292,6 @@ msgstr "รายการโปรดว่างเปล่า"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "เปิดใช้งาน"
 
@@ -14955,7 +15031,7 @@ msgstr "ทุกชุมชนที่ติดตามช่องนี้
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "ทุกคน"
 
@@ -16500,10 +16576,14 @@ msgstr "เพื่อนและกลุ่มที่คุณเลือ
 msgid "Friends and small communities only"
 msgstr "เฉพาะเพื่อนและคอมมูนิตี้ขนาดเล็ก"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "เพื่อนๆ สามารถส่งข้อความส่วนตัวถึงคุณได้เสมอ เลือกว่าจะให้คนที่อยู่ในชุมชนเดียวกันกับคุณส่งข้อความถึงคุณได้โดยไม่ต้องส่งคำขอเป็นเพื่อนก่อนหรือไม่"
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ การตั้งค่าเหล่านี้จะครอบคลุมถึงผู้คนและบอทที่คุณแชร์ชุมชนด้วยเท่านั้น"
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16512,7 +16592,9 @@ msgstr "เพื่อนของเพื่อน"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "เฉพาะเพื่อน"
@@ -16521,6 +16603,11 @@ msgstr "เฉพาะเพื่อน"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "ส่วนเพื่อน"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "เพื่อนๆ จะเห็นว่าคุณอยู่ในช่องเสียงใดในรายการ \"กำลังใช้งานอยู่\" ของพวกเขา คุณสามารถเปลี่ยนแปลงการตั้งค่านี้ได้ทุกๆ 24 ชั่วโมง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -17347,6 +17434,10 @@ msgstr "เพิ่มเข้าแชทกลุ่ม: เฉพาะเ�
 msgid "Group chat adds: nobody"
 msgstr "เพิ่มเข้าแชทกลุ่ม: ไม่มีใคร"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "กลุ่มแชท"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
 msgid "Group direct message"
@@ -17673,7 +17764,7 @@ msgstr "ซ่อนอยู่"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18182,7 +18273,7 @@ msgstr "หากคุณเชื่อว่าผิดกฎหมาย �
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "หากคุณปิดข้อความแจ้งนี้ คุณยังสามารถเปิดการแจ้งเตือนบนเดสก์ท็อปได้ในภายหลังที่ {notificationSettingsPath}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "หากคุณลืมรหัสผ่าน ชุดกู้คืนจะเป็นวิธีเดียวที่จะกลับเข้าสู่บัญชีของคุณได้"
 
@@ -19623,6 +19714,11 @@ msgstr "คงระดับฟรีและระดับพรีเมี
 msgid "Keep grace period"
 msgstr "คงช่วงผ่อนผัน"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "คงการตั้งค่าปัจจุบันของฉัน"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
@@ -19806,11 +19902,11 @@ msgid "Largest file you can upload"
 msgstr "ไฟล์ที่ใหญ่ที่สุดที่คุณสามารถอัปโหลดได้"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "แก้ไขล่าสุด: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "แก้ไขล่าสุด: ไม่เคย"
 
@@ -20112,7 +20208,7 @@ msgstr "ให้คนอื่นเห็นคุณผ่านวิดี
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "ให้การกดเพื่อพูดและปุ่มลัดทำงานในแอปอื่นได้"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "ช่วยให้คุณรีเซ็ตรหัสผ่านได้หากคุณลืม"
 
@@ -20705,8 +20801,8 @@ msgstr "ปรับแต่งอินสแตนซ์ของคุณ"
 msgid "Malta"
 msgstr "มอลตา"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "จัดการ"
 
@@ -20717,13 +20813,18 @@ msgid "Manage accounts"
 msgstr "จัดการบัญชี"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "จัดการแอปและอุปกรณ์ที่เข้าถึงบัญชีของคุณ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
+msgstr "จัดการแอปที่ได้รับอนุญาต"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
 msgstr "จัดการแอปที่ได้รับอนุญาต"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -20750,6 +20851,11 @@ msgstr "จัดการคอมมูนิตี้"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "จัดการฟีเจอร์ของคอมมูนิตี้"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "จัดการอุปกรณ์"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -21191,6 +21297,16 @@ msgstr "การแสดงผลสื่อ"
 msgid "Media filter"
 msgstr "ตัวกรองสื่อ"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "สื่อในช่องที่ไม่ได้ตั้งค่าเป็น 18+ ช่องที่ตั้งค่าเป็น 18+ จะแสดงเสมอ"
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "สื่อในแชทกลุ่มและข้อความส่วนตัวจากคนที่คุณไม่ได้เป็นเพื่อนด้วย"
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21242,6 +21358,11 @@ msgstr "ขนาดสื่อ"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "หยุดเล่น"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "สื่อที่เพื่อนของคุณส่งให้คุณในข้อความส่วนตัว"
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21797,7 +21918,7 @@ msgid "Messages failed to load"
 msgstr "โหลดข้อความไม่สำเร็จ"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "ข้อความในช่องคอมมูนิตี้"
 
@@ -23362,7 +23483,7 @@ msgstr "ไม่มีการอัปเดตเดสก์ท็อป"
 msgid "No displays found"
 msgstr "ไม่พบจอแสดงผล"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "ยังไม่ได้ตั้งค่าอีเมล"
 
@@ -23525,7 +23646,11 @@ msgstr "ไม่มีบริการเสริมใดพร้อมใ
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "ไม่สามารถใช้ส่วนใดของ {query} ได้ โปรดแก้ไขค่าที่ขีดเส้นใต้ หรือเพิ่มข้อความที่ต้องการค้นหา"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "ยังไม่มี Passkey เพิ่ม Passkey เพื่อลงชื่อเข้าใช้ด้วยลายนิ้วมือ ใบหน้า หรือคีย์ความปลอดภัย"
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "ไม่ได้ตั้งรหัสผ่าน"
 
@@ -23938,7 +24063,7 @@ msgstr "ไม่พบหน้า"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "ไม่ใช่ตอนนี้"
@@ -24014,6 +24139,11 @@ msgstr "ไม่มีรายการที่ขอคืนเงินไ
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "ไม่มีอะไรให้ค้นหา"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "จะไม่มีอะไรเปลี่ยนแปลง แค่เป็นการยืนยันการตั้งค่าของคุณ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24144,12 +24274,14 @@ msgstr "สิ่งของ"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "ปิด"
 
@@ -24207,9 +24339,11 @@ msgstr "เก่าสุดขึ้นก่อน"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "เปิด"
 
@@ -25339,7 +25473,7 @@ msgstr "อัปเดตพาสคีย์แล้ว"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25354,8 +25488,8 @@ msgstr "พาสคีย์ต้องใช้บันเดิล macOS �
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "รหัสผ่าน"
 
@@ -25580,8 +25714,18 @@ msgstr "เพนซิลเวเนีย"
 msgid "People"
 msgstr "ผู้คน"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "คนในชุมชนของคุณสามารถส่งข้อความถึงคุณได้โดยไม่ต้องเป็นเพื่อนกัน"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "คนในชุมชนของคุณจะต้องเป็นเพื่อนกับคุณก่อน จึงจะสามารถส่งข้อความถึงคุณได้"
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "ผู้คนต้องเป็นเพื่อนกับคุณก่อนจึงจะส่งข้อความถึงคุณได้ พวกเขายังคงสามารถส่งคำขอเป็นเพื่อนถึงคุณได้"
 
@@ -25596,9 +25740,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "ผู้คนลงชื่อเข้าใช้ด้วยที่อยู่อีเมลและรหัสผ่าน การรีเซ็ตรหัสผ่านและการยืนยันต้องมีการส่งอีเมล ซึ่งคุณสามารถตั้งค่าได้ในภายหลัง"
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "คนที่อยู่ในชุมชนเดียวกันกับคุณสามารถส่งข้อความถึงคุณได้โดยตรง"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "คนที่อยู่ในชุมชนเดียวกันกับคุณ"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "คนที่แชร์เพื่อนอย่างน้อยหนึ่งคนกับคุณ"
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25677,7 +25829,7 @@ msgstr "ลบทุกข้อความที่คุณส่งที่
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "ลบข้อความที่ตรงกับตัวกรองด้านล่างอย่างถาวร การดำเนินการนี้ไม่สามารถเลิกทำได้"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "ลบบัญชีและข้อมูลทั้งหมดที่เกี่ยวข้องอย่างถาวร การดำเนินการนี้ไม่สามารถเลิกทำได้"
 
@@ -27261,6 +27413,10 @@ msgstr "เหตุผล: {0}"
 msgid "Receipt"
 msgstr "ใบเสร็จ"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "รับสายแบบเงียบ"
+
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
 msgid "Receive notifications when someone mentions you"
@@ -27371,7 +27527,7 @@ msgid "Recovery key"
 msgstr "คีย์การกู้คืน"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "ชุดกู้คืน"
@@ -27558,10 +27714,6 @@ msgstr "ลงทะเบียน"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "ลงทะเบียนบัญชี"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "พาสคีย์ที่ลงทะเบียนแล้ว"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28149,7 +28301,7 @@ msgstr "การนำสิทธิ์ออกอาจจำกัดฟี
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "การยกเลิกการพักการใช้งานชั่วคราวจะทำให้ <0>{targetUserTag}</0> สามารถส่งข้อความ แสดงปฏิกิริยา และเข้าร่วมช่องเสียงได้อีกครั้ง"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "เปลี่ยนชื่อ"
 
@@ -28177,6 +28329,11 @@ msgstr "ฟอร์มเปลี่ยนชื่อช่อง"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "เปลี่ยนชื่ออิโมจิ"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "เปลี่ยนชื่อรหัสผ่าน {passkeyName}"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28388,7 +28545,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "กำหนดให้ใช้ 2FA สำหรับการดำเนินการดูแล"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "กำหนดให้ใช้พาสคีย์เป็นการยืนยันชั้นที่สอง"
@@ -28924,7 +29081,7 @@ msgstr "กลับสู่หน้าลงชื่อเข้าใช้
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "แสดง"
@@ -28982,7 +29139,7 @@ msgid "Review and confirm"
 msgstr "ตรวจสอบและยืนยัน"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "ตรวจสอบแอปที่สามารถเข้าถึงบัญชีของคุณได้"
 
@@ -29002,7 +29159,7 @@ msgid "Review privacy settings"
 msgstr "ตรวจสอบการตั้งค่าความเป็นส่วนตัว"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "ตรวจสอบอุปกรณ์ที่ลงชื่อเข้าใช้ และออกจากระบบสำหรับเซสชันที่คุณไม่รู้จัก"
 
@@ -29134,6 +29291,11 @@ msgstr "ไอคอนขวา"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "ปุ่มขวาของเมาส์"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "ตอนนี้"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29325,7 +29487,6 @@ msgstr "ความอิ่มตัวของสี"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29350,7 +29511,6 @@ msgstr "ความอิ่มตัวของสี"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "บันทึก"
@@ -29372,7 +29532,7 @@ msgid "Save 17%"
 msgstr "ประหยัด 17%"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "บันทึกชุดกู้คืน"
@@ -29397,7 +29557,9 @@ msgstr "บันทึกพื้นหลัง"
 msgid "Save banner"
 msgstr "บันทึกแบนเนอร์"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "บันทึกการเปลี่ยนแปลง"
 
@@ -30167,7 +30329,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "ความปลอดภัย"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "ฟีเจอร์ความปลอดภัย"
 
@@ -30793,7 +30955,7 @@ msgstr "ตั้งค่าปุ่มลัดปิดไมโครโฟ
 msgid "Set new password"
 msgstr "ตั้งรหัสผ่านใหม่"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "ตั้งรหัสผ่าน"
 
@@ -30913,6 +31075,7 @@ msgid "Set the voice region to automatic"
 msgstr "ตั้งค่าภูมิภาคเสียงเป็นอัตโนมัติ"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "ตั้งค่า"
@@ -30923,7 +31086,9 @@ msgid "Set up {productName}"
 msgstr "ตั้งค่า {productName}"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "ตั้งค่าแอปยืนยันตัวตน"
 
@@ -31215,7 +31380,7 @@ msgid "Shorten your about me and try again."
 msgstr "ย่อ \"เกี่ยวกับฉัน\" ของคุณแล้วลองอีกครั้ง"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "แสดง"
@@ -31873,6 +32038,11 @@ msgstr "ขั้นตอนการลงชื่อเข้าใช้"
 msgid "Sign-in method"
 msgstr "วิธีลงชื่อเข้าใช้"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "วิธีการลงชื่อเข้าใช้"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31950,10 +32120,6 @@ msgstr "โทรแบบไร้เสียง"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:98
 msgid "Silent calls"
 msgstr "สายเรียกเข้าแบบไม่มีเสียง"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "ปิดเสียงสายเรียกเข้าจากทุกคน"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
@@ -33273,7 +33439,7 @@ msgid "Stop trusting all links?"
 msgstr "เลิกเชื่อถือลิงก์ทั้งหมดหรือไม่"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "หยุดใช้พาสคีย์สำหรับการยืนยันตัวตนแบบสองชั้นหรือไม่"
 
@@ -34020,6 +34186,11 @@ msgstr "แท็กช่วยให้ผู้คนค้นหาโพส
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "แท็กต้องมีความยาว 2 ถึง {maxLength} ตัวอักษร และเป็นตัวอักษรหรือตัวเลขเท่านั้น"
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "ใช้เวลาสักครู่เพื่อตรวจสอบว่าใครสามารถส่งข้อความถึงคุณได้ จะไม่มีอะไรเปลี่ยนแปลงจนกว่าคุณจะเลือก"
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป เราจะใช้เครดิต {creditLabel} จากการชำระเงินรายเดือนปัจจุบันของคุณ ดังนั้นค่าบริการรายปีครั้งแรกของคุณจะอยู่ที่ <0>{firstRenewalPriceLabel}</0> การต่ออายุรายปีในอนาคตจะอยู่ที่ {renewalPrice}/ปี"
@@ -34101,7 +34272,7 @@ msgstr "เลเยอร์เชิงเวลา"
 msgid "Temporarily disable your account"
 msgstr "ปิดใช้งานบัญชีชั่วคราว"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "ปิดใช้งานบัญชีชั่วคราว คุณเปิดใช้งานอีกครั้งได้ภายหลังโดยลงชื่อเข้าใช้"
 
@@ -35329,11 +35500,11 @@ msgstr "นี่คือคำอธิบายตัวเลือกที
 msgid "This is the third option description"
 msgstr "นี่คือคำอธิบายตัวเลือกที่สาม"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "นี่คือพาสคีย์สุดท้ายของคุณ และพาสคีย์คือการยืนยันชั้นที่สองของคุณ การลบพาสคีย์นี้จะปิดการยืนยันตัวตนแบบสองชั้นของบัญชีคุณ และรหัสสำรองปัจจุบันของคุณจะใช้งานไม่ได้อีกต่อไป"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "นี่คือพาสคีย์สุดท้ายของคุณ เมื่อลบแล้ว คุณจะไม่สามารถใช้พาสคีย์เป็นการยืนยันชั้นที่สองได้"
 
@@ -36444,7 +36615,8 @@ msgstr "ตุรกี"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "ปิด"
 
@@ -36461,6 +36633,11 @@ msgstr "ปิดสิ่งที่คุณไม่สบายใจได
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "ปิดการแชร์เสียงสำหรับแหล่งที่มานี้ หรือลองอีกครั้งในอีกสักครู่"
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "ปิดแอปยืนยันตัวตน"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36493,7 +36670,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "ปิดความเป็นส่วนตัวในการสตรีมก่อนดูรายละเอียดการเข้าสู่ระบบหรือความปลอดภัยของบัญชี"
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "เปิดใช้งาน"
 
@@ -36630,10 +36807,6 @@ msgstr "ปิดการยืนยันตัวตนแบบสองช
 #. Toast shown after an authenticator app is added for two-factor authentication.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
-msgstr "เปิดใช้งานการยืนยันตัวตนแบบสองชั้นแล้ว"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
 msgstr "เปิดใช้งานการยืนยันตัวตนแบบสองชั้นแล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -37951,7 +38124,7 @@ msgstr "ใช้ค่าจริง"
 msgid "Use alternative method"
 msgstr "ใช้วิธีอื่น"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "ใช้แอปยืนยันตัวตนเพื่อสร้างรหัสสำหรับการยืนยันตัวตนแบบสองชั้น"
 
@@ -38088,12 +38261,12 @@ msgid "Use native title bar"
 msgstr "ใช้แถบชื่อเรื่องของระบบ"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "ใช้พาสคีย์สำหรับการยืนยันตัวตนแบบสองชั้นหรือไม่"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "ใช้พาสคีย์เพื่อลงชื่อเข้าใช้โดยไม่ต้องใช้รหัสผ่าน"
@@ -38618,12 +38791,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "ยืนยันอีเมลเพื่อส่งคำขอเป็นเพื่อน"
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "ยืนยันอีเมลของคุณก่อนเพิ่มพาสคีย์"
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "ยืนยันอีเมลของคุณก่อนเพิ่มแอปยืนยันตัวตน"
 
@@ -38910,7 +39083,7 @@ msgstr "ดูและจัดการผู้ใช้ที่ถูกแ
 msgid "View and manage every webhook configured across your community."
 msgstr "ดูและจัดการ webhook ทั้งหมดที่ตั้งค่าไว้ในคอมมูนิตี้ของคุณ"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "ดูและจัดการรหัสสำรองสำหรับกู้คืนบัญชีของคุณ"
 
@@ -38949,7 +39122,7 @@ msgstr "ดูช่อง"
 msgid "View channel members"
 msgstr "ดูสมาชิกช่อง"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "ดูรหัส"
 
@@ -39206,11 +39379,6 @@ msgstr "กำลังใช้เสียง"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "กิจกรรมเสียง"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "กิจกรรมเสียงในส่วนกำลังใช้งานอยู่"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -40052,10 +40220,6 @@ msgstr "ขณะที่เปิดใช้งานการกดเพื
 msgid "Who can add"
 msgstr "ใครเพิ่มฉันได้บ้าง"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "ใครเพิ่มคุณเข้ากลุ่มได้บ้าง"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40077,12 +40241,12 @@ msgid "Who can join"
 msgstr "ใครเข้าร่วมได้บ้าง"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "ใครสามารถส่งข้อความถึงคุณได้"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "ใครส่งข้อความถึงคุณได้บ้าง"
 
@@ -40404,7 +40568,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "คุณสามารถยกเลิกขั้นตอนการลบได้ภายใน 14 วัน"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "คุณสามารถเปลี่ยนแปลงการตั้งค่านี้ได้ตลอดเวลาในการตั้งค่าความเป็นส่วนตัวของคุณ รวมถึงสำหรับแต่ละชุมชน"
 
@@ -40677,7 +40841,7 @@ msgstr "คุณเปลี่ยนแท็กขณะใช้ {PREMIUM_PR
 msgid "You do not have access to the channel where this message was sent."
 msgstr "คุณไม่มีสิทธิ์เข้าถึงช่องที่มีการส่งข้อความนี้"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "คุณยังไม่มีชุดกู้คืน"
 
@@ -40931,7 +41095,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "คุณจะถูกนำไปยัง {redirectHostname} หลังจากให้สิทธิ์"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "เราจะไม่ขอพาสคีย์ต่อจากรหัสผ่านของคุณอีกต่อไป แอปยืนยันตัวตนของคุณจะยังคงเป็นการยืนยันชั้นที่สอง"
 
@@ -40955,7 +41119,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "คุณจะต้องลงชื่อเข้าใช้อีกครั้งบนอุปกรณ์ทั้งหมดที่ลงชื่อออกไปแล้ว"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "คุณจะต้องใช้พาสคีย์ของคุณหนึ่งรายการเพื่อลงชื่อเข้าใช้บนอุปกรณ์ใหม่ หากคุณทำพาสคีย์หายทั้งหมด คุณอาจสูญเสียการเข้าถึงบัญชีของคุณอย่างถาวร เราจะบันทึกรหัสสำรองไว้ให้คุณ เพื่อให้คุณยังมีทางเข้าใช้บัญชีได้"
 
@@ -41300,7 +41464,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "บัญชีของคุณต้องมีการยืนยันตัวตนแบบหลายปัจจัย แต่ยังไม่ได้ตั้งค่าวิธีการที่รองรับบนอุปกรณ์นี้ โปรดลงชื่อเข้าใช้บนอุปกรณ์ที่มีแอปยืนยันตัวตนหรือคีย์ความปลอดภัยของคุณ หรือติดต่อผู้ดูแลระบบของอินสแตนซ์นี้"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "บัญชีของคุณจะไม่ได้รับการปกป้องด้วยการยืนยันตัวตนแบบสองชั้นอีกต่อไปเมื่อคุณลงชื่อเข้าใช้ด้วยรหัสผ่าน และคุณจะสูญเสียสิทธิ์ระดับสูงในคอมมูนิตี้ที่กำหนดให้ใช้การยืนยันตัวตนแบบสองชั้นด้วย"
 

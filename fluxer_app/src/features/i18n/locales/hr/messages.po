@@ -1111,14 +1111,14 @@ msgstr "{count, plural, one {# kanal ga prati} other {# kanala ga prati}} ovu po
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# zajednica pronađena} few {# zajednice pronađene} other {# zajednica pronađeno}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# zajednica ima vlastitu postavku} other {# zajednica ima vlastite postavke}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# zajednica privremeno nije dostupna zbog kvara na protočnom kondenzatoru.} few {# zajednice privremeno nisu dostupne zbog kvara na protočnom kondenzatoru.} other {# zajednica privremeno nije dostupno zbog kvara na protočnom kondenzatoru.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# zajednica koristi drugačiju postavku} other {# zajednica koristi drugačiju postavku}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1183,6 +1183,11 @@ msgstr "{count, plural, one {# drugi} few {# druga} other {# drugih}}"
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# sudionik u pozivu} few {# sudionika u pozivu} other {# sudionika u pozivu}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# sigurnosni ključ} other {# sigurnosna ključa}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2923,11 +2928,6 @@ msgstr "Račun"
 msgid "Account & premium overrides"
 msgstr "Nadjačavanja računa i premium značajki"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "Pristup računu"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3260,10 +3260,6 @@ msgstr "Dodajte račun za nastavak."
 msgid "Add an email and password to your account first."
 msgstr "Prvo dodajte e-poštu i lozinku svom računu."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "Dodajte još jedan sloj sigurnosti svom računu"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3315,7 +3311,7 @@ msgstr "Dodajte prilagođene prečace, onemogućite ugrađene prečace i sinkron
 msgid "Add domain connection"
 msgstr "Dodaj vezu domene"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "Dodaj e-poštu"
 
@@ -3397,7 +3393,7 @@ msgid "Add override"
 msgstr "Dodaj nadjačavanje"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "Dodaj pristupni ključ"
@@ -3536,6 +3532,14 @@ msgstr "Dodajte vlastite tražilice s prilagođenim uzorkom URL-a. Koristite <0>
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Dodajte vlastite prevoditelje s prilagođenim uzorkom URL-a. Koristite <0>{query}</0> kao rezervirano mjesto za tekst koji želite prevesti."
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "Dodano {createdDate}, zadnji put korišteno {lastUsedDate}"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "Dodano {createdDate}, nikad korišteno"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3615,14 +3619,6 @@ msgstr "Dodano u favorite"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "Dodano u spremljene medije"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "Dodano: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "Dodano: {createdDate} • zadnje korišteno: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3951,11 +3947,11 @@ msgstr "Dopusti velika slova i razmake u nazivima tekstualnih kanala. Isključen
 msgid "Allow direct messages"
 msgstr "Dopusti izravne poruke"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "Dopusti izravne poruke od botova zajednice"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "Dopusti izravne poruke od članova zajednice"
 
@@ -4059,7 +4055,7 @@ msgstr "Dopušteno {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "Dopušteno je svim članovima spominjanje ove uloge"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "Dopušteni pozivatelji"
 
@@ -4068,7 +4064,7 @@ msgstr "Dopušteni pozivatelji"
 msgid "Allowed flexible text channel names"
 msgstr "Dopušteni fleksibilni nazivi tekstualnih kanala"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "Dopuštena pozivanja"
 
@@ -4156,6 +4152,11 @@ msgstr "Već iskorišteno"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "Već je postavljeno za otkazivanje"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "Promijeni i zajednice ispod kako bi odgovarale"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4611,9 +4612,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Svatko može zatražiti račun, ali administrator ga mora odobriti."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "Svatko u mojim zajednicama"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Svatko tko te pronađe može poslati zahtjev. Isključi ovo da bi odabrao grupe ispod."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4762,6 +4767,14 @@ msgstr "Aplikacije i botovi"
 msgid "Applies to"
 msgstr "Primjenjuje se na"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Primjenjuje se na botove u zajednicama koje se pridružite od sada. Možete ga promijeniti i za svaku zajednicu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Primjenjuje se na zajednice kojima se pridružite od sada. Također ga možete promijeniti za svaku zajednicu."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4778,11 +4791,6 @@ msgstr "Primijeni temu"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Primijeni na sve zajednice"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "Primijeni i na ove zajednice"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4803,6 +4811,11 @@ msgstr "Odobreno"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "Aplikacije"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "Aplikacije i uređaji"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4857,7 +4870,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "Jeste li sigurni da želite izbrisati kategoriju \"{categoryName}\"? Kanal unutar nje bit će premješten na vrh popisa kanala."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Jeste li sigurni da želite izbrisati pristupni ključ <0>{0}</0>?"
 
@@ -4869,7 +4882,7 @@ msgstr "Jeste li sigurni da želite izbrisati ovaj privitak? Ova se radnja ne mo
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Jeste li sigurni da želite izbrisati ovu zajednicu? Ova se radnja ne može poništiti. Svi kanali, poruke i postavke bit će trajno izbrisani."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Jeste li sigurni da želite izbrisati ovaj pristupni ključ?"
 
@@ -4949,10 +4962,15 @@ msgid "Ask before starting calls"
 msgstr "Pitaj prije pokretanja poziva"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Zatraži pristupni ključ nakon lozinke prilikom prijave"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "Zatraži drugi korak nakon lozinke prilikom prijave."
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5227,7 +5245,7 @@ msgstr "Autentifikacija"
 msgid "Authenticator"
 msgstr "Autentifikator"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "Aplikacija za autentifikaciju"
 
@@ -5302,7 +5320,7 @@ msgstr "Autorizirane aplikacije"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5723,7 +5741,7 @@ msgstr "Rezervni kod"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5969,7 +5987,7 @@ msgid "Block"
 msgstr "Blokiraj"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "Blokiraj"
@@ -6086,7 +6104,7 @@ msgid "Blur"
 msgstr "Zamućenje"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "Zamuti"
@@ -6592,6 +6610,10 @@ msgstr "Privatnost poziva"
 msgid "Calls"
 msgstr "Pozivi"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Pozivi koje dopustite i dalje prolaze, ali neće zvoniti."
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6702,6 +6724,11 @@ msgstr "Kamere i uređaji za virtualno snimanje odabiru se ovdje u aplikaciji {p
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kamere su isključene iznad {voiceChannelCameraUserLimit} sudionika"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Može vam poslati izravnu poruku"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -7036,7 +7063,7 @@ msgid "Change chat embed background"
 msgstr "Promijeni pozadinu ugrađenog chata"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "Promijeni e-poštu"
 
@@ -7129,7 +7156,7 @@ msgstr "Promijeni vlasnika"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8039,6 +8066,11 @@ msgstr "Odaberite što {clientLabel} može raditi u vašoj zajednici. Odznačite
 msgid "Choose what friends see in their active now panel"
 msgstr "Odaberite što prijatelji vide na ploči \"Aktivno sada\""
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "Odaberite što se događa s fotografijama i videozapisima označenima kao osjetljivi. Prikaži ih prikazuje uobičajeno, Zamuti ih skriva dok ne kliknete, a Blokiraj ih potpuno skriva."
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "Odaberite što članovi moraju imati prije nego što mogu objavljivati ili slati privatne poruke članovima zajednice. Članovi s ulogama mogu zaobići ove provjere. Za javne prostore preporučujemo omogućavanje provjere."
@@ -8100,6 +8132,10 @@ msgstr "Odaberite koja će se tražilica koristiti prema zadanim postavkama pril
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Odaberite koji će se prevoditelj koristiti prema zadanim postavkama prilikom prevođenja odabranog teksta."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Odaberite tko vas može dodati u grupni razgovor bez prethodnog pitanja."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "Odaberite tko može vidjeti ovu vezu na vašem profilu."
@@ -8108,6 +8144,14 @@ msgstr "Odaberite tko može vidjeti ovu vezu na vašem profilu."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Odaberite tko može vidjeti detalje vašeg profila"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "Odaberite tko vam može poslati zahtjev za prijateljstvo."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Odaberite tko vam može započeti poziv."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8177,7 +8221,7 @@ msgstr "Preuzmite svoj račun dodavanjem e-pošte i lozinke. Poslat ćemo vam ko
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "Zatražite svoj račun odabirom korisničkog imena i lozinke. Prijavljujete se s njima, stoga odaberite one kojih ćete se sjećati."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Preuzmite svoj račun za pristup sigurnosnim značajkama kao što su dvostruka provjera autentičnosti i pristupni ključevi."
 
@@ -8761,6 +8805,10 @@ msgstr "Kodek"
 msgid "Codes"
 msgstr "Kodovi"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "Kodovi iz vaše aplikacije za provjeru autentičnosti vaš su drugi korak pri prijavi."
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8957,6 +9005,21 @@ msgstr "Zajednice s više od 250 ljudi prisilno se prebacuju na postavku \"samo 
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "Zajednice kojima se možeš pridružiti"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Zajednice kojima se pridružite od sada će koristiti ovo, a zajednice ispod će se prilagoditi."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "Zajednice kojima se pridružite od sada će koristiti ovo."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "Zajednice kojima se pridružiš od sada će koristiti ovo. Tvoje postojeće zajednice zadržavaju svoje postavke."
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -10365,7 +10428,7 @@ msgid "Couldn't delete application"
 msgstr "Nije moguće izbrisati aplikaciju"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "Nije moguće izbrisati pristupni ključ"
 
@@ -10760,7 +10823,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "Nije moguće ažurirati zaobilaženje blokade spominjanja"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Nije moguće ažurirati dvostruku provjeru autentičnosti pristupnim ključem"
 
@@ -10876,7 +10939,7 @@ msgstr "Stvori novu grupu s korisnikom {userName}"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "Stvori novi komplet"
 
@@ -11033,8 +11096,8 @@ msgstr "Stvori javne niti"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "Stvori komplet za oporavak"
@@ -11105,7 +11168,7 @@ msgid "Created"
 msgstr "Stvoreno"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "Stvoreno {0}"
 
@@ -11222,6 +11285,11 @@ msgstr "Ctrl"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:63
 msgid "Currency"
 msgstr "Valuta"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "Trenutno"
 
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
@@ -11984,7 +12052,7 @@ msgstr "Delaware"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12157,9 +12225,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Brisanje poruka drugih članova. Prikvačivanje se kontrolira zasebno."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "Izbriši pristupni ključ"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "Izbriši pristupni ključ {passkeyName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12628,7 +12701,7 @@ msgstr "Uređaj:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12713,7 +12786,7 @@ msgstr "Pretpregledi izravnih poruka"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "Izravne poruke"
 
@@ -12723,12 +12796,12 @@ msgid "Direct messages (open and closed)"
 msgstr "Izravne poruke (otvorene i zatvorene)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "Izravne poruke od prijatelja"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "Izravne poruke od drugih"
 
@@ -12739,7 +12812,6 @@ msgstr "Izravan prijenos aktivan"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12812,6 +12884,11 @@ msgstr "Onemogućiti hardversko ubrzanje?"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "Isključi mobilne push obavijesti"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "Onemogući ili izbriši svoj račun"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13978,8 +14055,8 @@ msgstr "E-pošta"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "Adresa e-pošte"
@@ -14215,7 +14292,6 @@ msgstr "Prazni favoriti"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "Omogući"
 
@@ -14955,7 +15031,7 @@ msgstr "Svaka zajednica koja prati ovaj kanal dobit će kopiju. Ako je kasnije u
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Svi"
 
@@ -16500,10 +16576,14 @@ msgstr "Prijatelji i odabrane grupe mogu vas nazvati"
 msgid "Friends and small communities only"
 msgstr "Samo prijatelji i male zajednice"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "Prijatelji vam uvijek mogu poslati izravne poruke. Odaberite hoće li vam ljudi koji dijele zajednicu s vama moći poslati poruku bez prethodnog slanja zahtjeva za prijateljstvo."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "Prijatelji ti uvijek mogu poslati poruku."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Prijatelji ti uvijek mogu poslati poruku. Ove postavke pokrivaju ljude i botove s kojima dijeliš samo zajednicu."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16512,7 +16592,9 @@ msgstr "Prijatelji prijatelja"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Samo prijatelji"
@@ -16521,6 +16603,11 @@ msgstr "Samo prijatelji"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "Odjeljci prijatelja"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "Prijatelji vide u kojem ste glasovnom kanalu na njihovom popisu \"Aktivni sada\". Ovo možete promijeniti jednom svakih 24 sata."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -17347,6 +17434,10 @@ msgstr "Dodavanje u grupne razgovore: samo prijatelji"
 msgid "Group chat adds: nobody"
 msgstr "Dodavanje u grupne razgovore: nitko"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Grupni razgovori"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
 msgid "Group direct message"
@@ -17673,7 +17764,7 @@ msgstr "Skriveno"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18182,7 +18273,7 @@ msgstr "Ako smatrate da je to nezakonito, navedite koji zakon i zašto."
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "Ako ovo odbacite, obavijesti na radnoj površini uvijek možete omogućiti kasnije pod {notificationSettingsPath}."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "Ako zaboravite lozinku, komplet za oporavak jedini je način da se vratite na svoj račun."
 
@@ -19623,6 +19714,11 @@ msgstr "Zadržite besplatnu i premium razinu. Možete prilagoditi razine, prodav
 msgid "Keep grace period"
 msgstr "Zadrži poček"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "Zadrži moje trenutne postavke"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
@@ -19806,11 +19902,11 @@ msgid "Largest file you can upload"
 msgstr "Najveća datoteka koju možete prenijeti"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "Zadnja promjena: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "Zadnja promjena: nikad"
 
@@ -20112,7 +20208,7 @@ msgstr "Omogućuje drugima da vas vide na videu."
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "Omogućuje da potiskivanje za razgovor i prečaci rade u drugim aplikacijama."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "Omogućuje vam poništavanje lozinke ako je zaboravite."
 
@@ -20705,8 +20801,8 @@ msgstr "Prilagodite svoju instancu"
 msgid "Malta"
 msgstr "Malta"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "Upravljaj"
 
@@ -20717,7 +20813,7 @@ msgid "Manage accounts"
 msgstr "Upravljaj računima"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "Upravljajte aplikacijama i uređajima koji imaju pristup vašem računu"
 
@@ -20725,6 +20821,11 @@ msgstr "Upravljajte aplikacijama i uređajima koji imaju pristup vašem računu"
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
 msgstr "Upravljanje ovlaštenim aplikacijama"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
+msgstr "Upravljaj ovlaštenim aplikacijama"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:26
@@ -20750,6 +20851,11 @@ msgstr "Upravljanje zajednicom"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "Upravljaj značajkama zajednice"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "Upravljaj uređajima"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -21191,6 +21297,16 @@ msgstr "Prikaz medija"
 msgid "Media filter"
 msgstr "Filtar medija"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "Mediji u kanalima koji nisu označeni s 18+. Kanali označeni s 18+ uvijek ih prikazuju."
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "Mediji u grupnim razgovorima i u izravnim porukama od ljudi koji vam nisu prijatelji."
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21242,6 +21358,11 @@ msgstr "Veličina medija"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "Zaustavi reprodukciju"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "Mediji koje vam prijatelji šalju u izravnim porukama."
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21797,7 +21918,7 @@ msgid "Messages failed to load"
 msgstr "Učitavanje poruka nije uspjelo"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "Poruke u kanalima zajednice"
 
@@ -23362,7 +23483,7 @@ msgstr "Nema dostupnih ažuriranja za stolno računalo."
 msgid "No displays found"
 msgstr "Nema pronađenih zaslona"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "Adresa e-pošte nije postavljena"
 
@@ -23525,7 +23646,11 @@ msgstr "Na ovoj instanci nisu dostupne nikakve dodatne usluge. Možete preskoči
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "Nijedan dio upita {query} nije se mogao primijeniti. Ispravite podcrtanu vrijednost ili dodajte nešto za pretraživanje."
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "Još nema passkeyja. Dodajte jedan za prijavu otiskom prsta, licem ili sigurnosnim ključem."
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "Lozinka nije postavljena"
 
@@ -23938,7 +24063,7 @@ msgstr "Nije pronađeno"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "Ne sada"
@@ -24014,6 +24139,11 @@ msgstr "Nema ništa za povrat novca"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "Nema ništa za pretraživanje"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Ništa se neće promijeniti. Ovo samo potvrđuje vaše postavke."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24144,12 +24274,14 @@ msgstr "Predmeti"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "Isključeno"
 
@@ -24207,9 +24339,11 @@ msgstr "Prvo najstarije"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "Uključeno"
 
@@ -25339,7 +25473,7 @@ msgstr "Pristupni ključ ažuriran"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25354,8 +25488,8 @@ msgstr "Pristupni ključevi zahtijevaju potpisani macOS paket s valjanim identif
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "Lozinka"
 
@@ -25580,8 +25714,18 @@ msgstr "Pennsylvania"
 msgid "People"
 msgstr "Osobe"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "Ljudi u vašim zajednicama mogu vam slati poruke bez da su vam prijatelji."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "Ljudi u vašim zajednicama moraju vam biti prijatelji prije nego što vam mogu poslati poruku."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "Ljudi moraju biti tvoji prijatelji prije nego što ti mogu poslati poruku. I dalje ti mogu poslati zahtjev za prijateljstvo."
 
@@ -25596,9 +25740,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "Ljudi se prijavljuju pomoću adrese e-pošte i lozinke. Poništavanje lozinke i provjere zahtijevaju isporuku e-pošte, što možete postaviti kasnije."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "Ljudi koji dijele zajednicu s vama mogu vam izravno poslati poruku."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "Ljudi koji dijele zajednicu s vama."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "Ljudi koji imaju barem jednog zajedničkog prijatelja s vama."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25677,7 +25829,7 @@ msgstr "Trajno izbrišite svaku poruku koju ste ovdje poslali, u svim kanalima. 
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "Trajno izbrišite poruke koje odgovaraju filtrima u nastavku. Ovo se ne može poništiti."
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "Trajno izbrišite svoj račun i sve povezane podatke. Ova se radnja ne može poništiti."
 
@@ -27261,6 +27413,10 @@ msgstr "Razlog: {0}"
 msgid "Receipt"
 msgstr "Račun"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Primaj pozive nečujno"
+
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
 msgid "Receive notifications when someone mentions you"
@@ -27371,7 +27527,7 @@ msgid "Recovery key"
 msgstr "Kljuc za oporavak"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "Komplet za oporavak"
@@ -27558,10 +27714,6 @@ msgstr "Registracija"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "Registriraj račun"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "Registrirani pristupni ključevi"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28149,7 +28301,7 @@ msgstr "Uklanjanje dopuštenja može ograničiti značajke bota."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Uklanjanje vremenskog ograničenja omogućit će <0>{targetUserTag}</0> ponovno slanje poruka, reagiranje i pridruživanje glasovnim kanalima."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "Preimenuj"
 
@@ -28177,6 +28329,11 @@ msgstr "Obrazac za preimenovanje kanala"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "Preimenuj emoji"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "Preimenuj sigurnosni ključ {passkeyName}"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28388,7 +28545,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "Zahtijevaj 2FA za radnje moderiranja"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "Zahtijevaj pristupni ključ kao drugi faktor"
@@ -28924,7 +29081,7 @@ msgstr "Povratak na prijavu"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "Otkrij"
@@ -28982,7 +29139,7 @@ msgid "Review and confirm"
 msgstr "Pregledajte i potvrdite"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "Pregledajte aplikacije koje mogu pristupiti vašem računu."
 
@@ -29002,7 +29159,7 @@ msgid "Review privacy settings"
 msgstr "Pregledaj postavke privatnosti"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Pregledajte prijavljene uređaje i odjavite sesije koje ne prepoznajete."
 
@@ -29134,6 +29291,11 @@ msgstr "Desna ikona"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Desna tipka miša"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Trenutno"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29325,7 +29487,6 @@ msgstr "Zasićenost"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29350,7 +29511,6 @@ msgstr "Zasićenost"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Spremi"
@@ -29372,7 +29532,7 @@ msgid "Save 17%"
 msgstr "Uštedite 17 %"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "Spremi komplet za oporavak"
@@ -29397,7 +29557,9 @@ msgstr "Spremi pozadinu"
 msgid "Save banner"
 msgstr "Spremi naslovnu sliku"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "Spremi promjene"
 
@@ -30167,7 +30329,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Sigurnost"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "Sigurnosne značajke"
 
@@ -30793,7 +30955,7 @@ msgstr "Postavi prečac za isključivanje mikrofona"
 msgid "Set new password"
 msgstr "Postavi novu lozinku"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "Postavi lozinku"
 
@@ -30913,6 +31075,7 @@ msgid "Set the voice region to automatic"
 msgstr "Postavljena je glasovna regija na automatsku"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Postavi"
@@ -30923,7 +31086,9 @@ msgid "Set up {productName}"
 msgstr "Postavite {productName}"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "Postavite aplikaciju za autentifikaciju"
 
@@ -31215,7 +31380,7 @@ msgid "Shorten your about me and try again."
 msgstr "Skratite \"O meni\" i pokušajte ponovno."
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "Prikaži"
@@ -31873,6 +32038,11 @@ msgstr "Tijek prijave"
 msgid "Sign-in method"
 msgstr "Način prijave"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "Nač"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31950,10 +32120,6 @@ msgstr "Tihi poziv"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:98
 msgid "Silent calls"
 msgstr "Tihi pozivi"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "Tihi pozivi od svih"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
@@ -33273,7 +33439,7 @@ msgid "Stop trusting all links?"
 msgstr "Prestati vjerovati svim poveznicama?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Želite li prestati koristiti pristupne ključeve za dvostruku provjeru autentičnosti?"
 
@@ -34020,6 +34186,11 @@ msgstr "Oznake pomažu ljudima u pronalaženju postova. Možete dodati do {count
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Oznake moraju imati od 2 do {maxLength} alfanumeričkih znakova."
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Odvojite trenutak da provjerite tko vam može slati poruke. Ništa se neće promijeniti ako to ne odaberete."
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Stupa na snagu pri sljedećoj obnovi. Primijenit ćemo kredit od {creditLabel} iz vaše trenutačne mjesečne uplate, tako da će vaša prva godišnja naplata biti <0>{firstRenewalPriceLabel}</0>. Buduće godišnje obnove bit će {renewalPrice}/godišnje."
@@ -34101,7 +34272,7 @@ msgstr "Vremenski slojevi"
 msgid "Temporarily disable your account"
 msgstr "Privremeno deaktivirajte svoj račun"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "Privremeno deaktivirajte svoj račun. Možete ga kasnije ponovno aktivirati prijavom."
 
@@ -35329,11 +35500,11 @@ msgstr "Ovo je opis druge opcije"
 msgid "This is the third option description"
 msgstr "Ovo je opis treće opcije"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Ovo je vaš posljednji pristupni ključ, a pristupni ključevi su vaš drugi faktor. Njegovim brisanjem isključit ćete dvostruku provjeru autentičnosti za svoj račun, a vaši trenutni rezervni kodovi prestat će raditi."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Ovo je vaš posljednji pristupni ključ. Kada ga više ne bude, nećete moći koristiti pristupni ključ kao drugi faktor."
 
@@ -36444,7 +36615,8 @@ msgstr "Turski"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "Isključi"
 
@@ -36461,6 +36633,11 @@ msgstr "Isključite sve s čime vam nije ugodno. Neke značajke možda neće rad
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Isključite dijeljenje zvuka za ovaj izvor ili pokušajte ponovno za trenutak."
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "Isključi aplikaciju za provjeru autentičnosti"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36493,7 +36670,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "Isključite privatnost prijenosa prije pregledavanja pojedinosti za prijavu ili sigurnost računa."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "Uključi"
 
@@ -36631,10 +36808,6 @@ msgstr "Dvostruka provjera autentičnosti onemogućena"
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "Dvostruka provjera autentičnosti omogućena"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "Dvostruka provjera autentičnosti je omogućena"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37951,7 +38124,7 @@ msgstr "Koristi stvarnu vrijednost"
 msgid "Use alternative method"
 msgstr "Koristi drugu metodu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Upotrijebite aplikaciju za autentifikaciju koja generira kodove za dvostruku provjeru autentičnosti"
 
@@ -38088,12 +38261,12 @@ msgid "Use native title bar"
 msgstr "Koristi izvornu naslovnu traku"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Želite li koristiti pristupne ključeve za dvostruku provjeru autentičnosti?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "Upotrijebi pristupne ključeve za prijavu bez lozinke"
@@ -38618,12 +38791,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Potvrdite svoju adresu e-pošte kako biste slali zahtjeve za prijateljstvo."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "Potvrdite svoju e-poštu prije dodavanja pristupnog ključa."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "Potvrdite svoju e-poštu prije dodavanja aplikacije za provjeru autentičnosti."
 
@@ -38910,7 +39083,7 @@ msgstr "Pregledajte zabranjene korisnike i upravljajte njima."
 msgid "View and manage every webhook configured across your community."
 msgstr "Pregledajte sve webhookove konfigurirane u vašoj zajednici i upravljajte njima."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "Pregledajte svoje rezervne kodove za oporavak računa i upravljajte njima"
 
@@ -38949,7 +39122,7 @@ msgstr "Prikaz kanala"
 msgid "View channel members"
 msgstr "Prikaz članova kanala"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "Prikaži kodove"
 
@@ -39206,11 +39379,6 @@ msgstr "glasovna aktivnost"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "Glasovna aktivnost"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "Glasovna aktivnost u odjeljku „Aktivno sada”"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -40052,10 +40220,6 @@ msgstr "Dok je uključena značajka pritisni za govor, vaš prečac upravlja mik
 msgid "Who can add"
 msgstr "Tko me može dodati"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "Tko vas može dodati u grupne razgovore"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40077,12 +40241,12 @@ msgid "Who can join"
 msgstr "Tko se može pridružiti"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "Tko vam može slati poruke"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "Tko vam može poslati poruku?"
 
@@ -40404,7 +40568,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "Brisanje možete otkazati u roku od 14 dana"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "Ovo možete promijeniti u bilo kojem trenutku u postavkama privatnosti, uključujući i za svaku zajednicu."
 
@@ -40677,7 +40841,7 @@ msgstr "Promijenili ste svoju oznaku dok ste imali pretplatu na {PREMIUM_PRODUCT
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nemate pristup kanalu u kojem je poslana ova poruka."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "Još nemate komplet za oporavak"
 
@@ -40931,7 +41095,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Nakon autorizacije bit ćete preusmjereni na {redirectHostname}."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Nakon unosa lozinke više se od vas neće tražiti pristupni ključ. Vaša aplikacija za provjeru autentičnosti ostaje vaš drugi faktor."
 
@@ -40955,7 +41119,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Morat ćete se ponovno prijaviti na svim odjavljenim uređajima"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "Za prijavu na novom uređaju trebat će vam jedan od vaših pristupnih ključeva. Ako izgubite sve pristupne ključeve, možete trajno izgubiti pristup svom računu. Rezervni kodovi bit će spremljeni za vas kako biste se i dalje mogli prijaviti."
 
@@ -41300,7 +41464,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "Vaš račun zahtijeva višestruku provjeru autentičnosti, ali na ovom uređaju nisu postavljene podržane metode. Prijavite se na uređaju s aplikacijom za provjeru autentičnosti ili sigurnosnim ključem ili se obratite administratorima ove instance."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "Račun vam više neće biti zaštićen dvostrukom provjerom autentičnosti prilikom prijave lozinkom. Također ćete izgubiti povišena dopuštenja u zajednicama koje zahtijevaju dvostruku provjeru autentičnosti."
 

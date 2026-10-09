@@ -1111,14 +1111,14 @@ msgstr "Ez a csatorna követőinek száma: {count, plural, one {# csatorna köve
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# közösség található} other {# közösség található}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# közösségnek saját beállítása van} other {# közösségnek saját beállítása van}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# közösség átmenetileg nem elérhető egy „fluxuskondenzátor” meghibásodása miatt.} other {# közösség átmenetileg nem elérhető egy „fluxuskondenzátor” meghibásodása miatt.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# közösség eltérő beállítást használ} other {# közösség eltérő beállítást használ}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1183,6 +1183,11 @@ msgstr "{count, plural, one {# további} other {# további}}"
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# résztvevő a hívásban} other {# résztvevő a hívásban}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# kulcs} other {# kulcs}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2923,11 +2928,6 @@ msgstr "Fiók"
 msgid "Account & premium overrides"
 msgstr "Fiók- és prémiumfelülbírálások"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "Hozzáférés a fiókhoz"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3260,10 +3260,6 @@ msgstr "A folytatáshoz adj hozzá egy fiókot."
 msgid "Add an email and password to your account first."
 msgstr "Először adj meg egy e-mail-címet és jelszót a fiókodhoz."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "Tedd még biztonságosabbá a fiókodat"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3315,7 +3311,7 @@ msgstr "Egyéni billentyűparancsok hozzáadása, beépített billentyűparancso
 msgid "Add domain connection"
 msgstr "Domainkapcsolat hozzáadása"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "E-mail-cím hozzáadása"
 
@@ -3397,7 +3393,7 @@ msgid "Add override"
 msgstr "Egyéni jogosultságok hozzáadása"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "Jelszókulcs hozzáadása"
@@ -3536,6 +3532,14 @@ msgstr "Saját keresőmotorokat adhatsz hozzá egyéni URL-mintával. Használd 
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Saját fordítókat adhatsz hozzá egyéni URL-mintával. Használd a(z) <0>{query}</0> helyőrzőt a fordítandó szöveghez."
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "Hozzáadva: {createdDate}, utoljára használva: {lastUsedDate}"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "Hozzáadva {createdDate}, sosem használt"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3615,14 +3619,6 @@ msgstr "Hozzáadva a kedvencekhez"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "Hozzáadva a mentett médiához"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "Hozzáadva: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "Hozzáadva: {createdDate} • utoljára használva: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3951,11 +3947,11 @@ msgstr "A szöveges csatornanevek tartalmazhatnak nagybetűket és szóközöket
 msgid "Allow direct messages"
 msgstr "Közvetlen üzenetek engedélyezése"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "Közvetlen üzenetek engedélyezése közösségi botoktól"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "Közvetlen üzenetek engedélyezése a közösség tagjaitól"
 
@@ -4059,7 +4055,7 @@ msgstr "Engedélyezve: {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "Engedélyezte, hogy minden tag megemlítse ezt a szerepkört"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "Engedélyezett hívók"
 
@@ -4068,7 +4064,7 @@ msgstr "Engedélyezett hívók"
 msgid "Allowed flexible text channel names"
 msgstr "Engedélyezte a rugalmas szöveges csatornaneveket"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "Engedélyezett meghívások"
 
@@ -4156,6 +4152,11 @@ msgstr "Már beváltva"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "Már be van állítva a lemondás"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "A lenti közösségeket is igazítsd ehhez"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4611,9 +4612,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Bárki kérhet fiókot, de egy rendszergazdának jóvá kell hagynia."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "Bárki a közösségeimben"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Bárki, aki megtalál, kérhet. Kapcsold ki ezt, hogy kiválaszd az alábbi csoportokat."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4762,6 +4767,14 @@ msgstr "Alkalmazások és botok"
 msgid "Applies to"
 msgstr "Alkalmazás helye"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "A jövőben csatlakozott közösségek botjaira vonatkozik. Minden közösségre külön is módosíthatod."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "A jövőben csatlakozott közösségekre vonatkozik. Minden közösségre külön is módosíthatod."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4778,11 +4791,6 @@ msgstr "Téma alkalmazása"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Alkalmazás az összes közösségre"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "Alkalmazd ezekre a közösségekre is"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4803,6 +4811,11 @@ msgstr "Jóváhagyva"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "Alkalmazások"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "Alkalmazások és eszközök"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4857,7 +4870,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "Biztosan törölni szeretnéd a(z) „{categoryName}” kategóriát? A benne lévő csatorna a csatornalista tetejére kerül."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Biztosan törölni szeretnéd a(z) <0>{0}</0> jelszókulcsot?"
 
@@ -4869,7 +4882,7 @@ msgstr "Biztosan törölni szeretnéd ezt a mellékletet? Ez a művelet nem vonh
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Biztosan törölni szeretnéd ezt a közösséget? Ez a művelet nem vonható vissza. Minden csatorna, üzenet és beállítás véglegesen törlődik."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Biztosan törölni szeretnéd ezt a jelszókulcsot?"
 
@@ -4949,10 +4962,15 @@ msgid "Ask before starting calls"
 msgstr "Kérdezzen, mielőtt hívásokat indítana."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Bejelentkezéskor a jelszavad után jelszókulcsot is kérünk"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "Kérj egy második lépést a jelszavad után, amikor bejelentkezel."
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5227,7 +5245,7 @@ msgstr "Hitelesítés"
 msgid "Authenticator"
 msgstr "Hitelesítő"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "Hitelesítő alkalmazás"
 
@@ -5302,7 +5320,7 @@ msgstr "Engedélyezett alkalmazások"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5723,7 +5741,7 @@ msgstr "Biztonsági kód"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5969,7 +5987,7 @@ msgid "Block"
 msgstr "Letiltás"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "Letiltás"
@@ -6086,7 +6104,7 @@ msgid "Blur"
 msgstr "Elmosás"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "Elmosás"
@@ -6592,6 +6610,10 @@ msgstr "Hívás adatvédelme"
 msgid "Calls"
 msgstr "Hívások"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "A hívásaid továbbra is bejönnek, de nem csörögnek."
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6702,6 +6724,11 @@ msgstr "A kamerákat és a virtuális rögzítőeszközöket itt, a(z) {productN
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "{voiceChannelCameraUserLimit} résztvevő felett a kamerák ki vannak kapcsolva"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Üzenetet küldhet neked"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -7036,7 +7063,7 @@ msgid "Change chat embed background"
 msgstr "Csevegésbe ágyazott tartalom hátterének módosítása"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "E-mail-cím módosítása"
 
@@ -7129,7 +7156,7 @@ msgstr "Tulajdonos módosítása"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8039,6 +8066,11 @@ msgstr "Válaszd ki, mit tehet a(z) {clientLabel} a közösségedben. Töröld a
 msgid "Choose what friends see in their active now panel"
 msgstr "Válaszd ki, mit lássanak az ismerőseid a „Most aktívak” panelen"
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "Válaszd ki, mi történjen azokkal a képekkel és videókkal, amelyeket a rendszer érzékenynek jelölt. A Megjelenítés alapértelmezetten láthatóvá teszi őket, az Elmosás elrejti őket, amíg rá nem kattintasz, a Blokkolás pedig teljesen elrejti őket."
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "Válaszd ki, hogy a tagoknak mi legyen meg, mielőtt bejegyzést írhatnak vagy privát üzenetet küldhetnek a közösség tagjainak. A szerepkörrel rendelkező tagok átugorhatják ezeket az ellenőrzéseket. Nyilvános helyek esetén javasoljuk az ellenőrzés engedélyezését."
@@ -8100,6 +8132,10 @@ msgstr "Válaszd ki, melyik keresőmotort használja az alkalmazás alapértelme
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Válaszd ki, melyik fordító legyen az alapértelmezett a kijelölt szöveg fordításakor."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Válaszd ki, ki adhat hozzá előzetes kérdezősködés nélkül egy csoportos csevegéshez."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "Válaszd ki, ki láthatja ezt a kapcsolatot a profilodon."
@@ -8108,6 +8144,14 @@ msgstr "Válaszd ki, ki láthatja ezt a kapcsolatot a profilodon."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Válaszd ki, ki láthatja a profilod adatait"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "Válaszd ki, ki küldhet neked ismerősnek jelölést."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Válaszd ki, ki kezdeményezhet veled hívást."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8177,7 +8221,7 @@ msgstr "Fejezd be a fiókod regisztrációját egy e-mail-cím és jelszó megad
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "Foglald le a fiókodat egy felhasználónév és jelszó kiválasztásával. Ezekkel jelentkezel be, ezért olyanokat válassz, amiket meg fogsz jegyezni."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Fejezd be a fiókod regisztrációját, hogy hozzáférhess a biztonsági funkciókhoz, például a kétlépcsős azonosításhoz és a jelszókulcsokhoz."
 
@@ -8761,6 +8805,10 @@ msgstr "Kodek"
 msgid "Codes"
 msgstr "Kódok"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "Az autentikációs alkalmazásból származó kódok jelentik a második lépést a bejelentkezéskor."
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8957,6 +9005,21 @@ msgstr "A 250 főnél nagyobb közösségekben kötelező a „Csak említések�
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "Csatlakozható közösségek"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Az újonnan csatlakozott közösségeid ezt fogják használni, és az alábbi közösségek is ehhez igazodnak."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "A jövőben csatlakozó közösségek ezt fogják használni."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "A jövőben csatlakozó közösségek ezt fogják használni. A jelenlegi közösségeid megtartják a beállításaikat."
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -10365,7 +10428,7 @@ msgid "Couldn't delete application"
 msgstr "Nem sikerült törölni az alkalmazást"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "Nem sikerült törölni a jelszókulcsot"
 
@@ -10760,7 +10823,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "Nem sikerült frissíteni az említésletiltás felülbírálatát"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Nem sikerült frissíteni a jelszókulcsos kétlépcsős azonosítást"
 
@@ -10876,7 +10939,7 @@ msgstr "Új csoport létrehozása {userName} felhasználóval"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "Új készlet létrehozása"
 
@@ -11033,8 +11096,8 @@ msgstr "Nyilvános szálak létrehozása"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "Helyreállítási készlet létrehozása"
@@ -11105,7 +11168,7 @@ msgid "Created"
 msgstr "Létrehozva"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "Létrehozva: {0}"
 
@@ -11222,6 +11285,11 @@ msgstr "Ctrl"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:63
 msgid "Currency"
 msgstr "Pénznem"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "Jelenlegi"
 
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
@@ -11984,7 +12052,7 @@ msgstr "Delaware"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12157,9 +12225,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Más tagok üzeneteinek törlése. A rögzítés külön szabályozható."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "Jelszókulcs törlése"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "Jelszó eltávolítása: {passkeyName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12628,7 +12701,7 @@ msgstr "Eszköz:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12713,7 +12786,7 @@ msgstr "Közvetlen üzenetek előnézete"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "Közvetlen üzenetek"
 
@@ -12723,12 +12796,12 @@ msgid "Direct messages (open and closed)"
 msgstr "Közvetlen beszélgetések (megnyitottak és bezártak)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "Közvetlen üzenetek ismerősöktől"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "Közvetlen üzenetek másoktól"
 
@@ -12739,7 +12812,6 @@ msgstr "Közvetlen feltöltés aktív"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12812,6 +12884,11 @@ msgstr "Hardveres gyorsítás kikapcsolása?"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "Mobilértesítések kikapcsolása"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "Fiók letiltása vagy törlése"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13978,8 +14055,8 @@ msgstr "E-mail"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "E-mail-cím"
@@ -14215,7 +14292,6 @@ msgstr "Üres kedvencek"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "Engedélyezés"
 
@@ -14955,7 +15031,7 @@ msgstr "Minden követő közösség kap egy másolatot. Ha később szerkeszted 
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Mindenki"
 
@@ -16500,10 +16576,14 @@ msgstr "Az ismerőseid és a kiválasztott csoportok tagjai hívhatnak téged"
 msgid "Friends and small communities only"
 msgstr "Csak ismerősök és kis közösségek"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "A barátok mindig küldhetnek neked privát üzenetet. Válaszd ki, hogy azokkal, akikkel közös közösséged van, üzenhetsz-e anélkül, hogy előtte barátfelkérést küldenél."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "A barátaid mindig üzenhetnek neked."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "A barátok mindig üzenhetnek neked. Ezek a beállítások azokra az emberekre és botokra vonatkoznak, akikkel csak egy közösséget osztasz meg."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16512,7 +16592,9 @@ msgstr "Ismerősök ismerősei"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Csak ismerősök"
@@ -16521,6 +16603,11 @@ msgstr "Csak ismerősök"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "Ismerősök szakaszai"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "A barátok látják, hogy melyik hangcsatornában vagy az Aktív most listájukon. Ezt 24 óránként egyszer módosíthatod."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -17347,6 +17434,10 @@ msgstr "Csak az ismerőseid adhatnak hozzá csoportos beszélgetéshez"
 msgid "Group chat adds: nobody"
 msgstr "Senki nem adhat hozzá csoportos beszélgetéshez"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Csoportos csevegések"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
 msgid "Group direct message"
@@ -17673,7 +17764,7 @@ msgstr "Rejtett"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18182,7 +18273,7 @@ msgstr "Ha úgy gondolod, hogy illegális, írd meg, melyik törvényt sérti, �
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "Ha most elutasítod, később bármikor engedélyezheted az asztali értesítéseket itt: {notificationSettingsPath}."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "Ha elfelejted a jelszavadat, a visszaállító készlet az egyetlen módja, hogy visszajuss a fiókodba."
 
@@ -19623,6 +19714,11 @@ msgstr "Tartsd meg az ingyenes és a prémium szinteket. Testre szabhatod a szin
 msgid "Keep grace period"
 msgstr "Türelmi időszak megtartása"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "Megtartom az aktuális beállításaimat"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
@@ -19806,11 +19902,11 @@ msgid "Largest file you can upload"
 msgstr "Legnagyobb feltölthető fájl"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "Utoljára módosítva: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "Utoljára módosítva: soha"
 
@@ -20112,7 +20208,7 @@ msgstr "Lehetővé teszi, hogy lássanak videón."
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "Hogy a push-to-talk és a gyorsbillentyűk működjenek más alkalmazásokban."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "Lehetővé teszi a jelszavad visszaállítását, ha elfelejtenéd."
 
@@ -20705,8 +20801,8 @@ msgstr "Szabd a példányt a saját igényeidre"
 msgid "Malta"
 msgstr "Málta"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "Kezelés"
 
@@ -20717,13 +20813,18 @@ msgid "Manage accounts"
 msgstr "Fiókok kezelése"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "Alkalmazások és eszközök kezelése, amelyek hozzáférnek a fiókodhoz"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
+msgstr "Engedélyezett alkalmazások kezelése"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
 msgstr "Engedélyezett alkalmazások kezelése"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -20750,6 +20851,11 @@ msgstr "Közösség kezelése"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "Közösségi funkciók kezelése"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "Eszközök kezelése"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -21191,6 +21297,16 @@ msgstr "Média megjelenítése"
 msgid "Media filter"
 msgstr "Médiaszűrő"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "Média olyan csatornákban, amelyek nincsenek 18+-osként jelölve. A 18+-osként jelölt csatornák mindig megmutatják."
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "Média csoportos csevegésekben és olyan emberektől érkező közvetlen üzenetekben, akik nem ismerőseid."
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21242,6 +21358,11 @@ msgstr "Média mérete"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "Lejátszás leállítása"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "A barátaid által küldött média a privát üzeneteidben."
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21797,7 +21918,7 @@ msgid "Messages failed to load"
 msgstr "Az üzenetek betöltése sikertelen"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "Üzenetek közösségi csatornákon"
 
@@ -23362,7 +23483,7 @@ msgstr "Nem érhető el asztali frissítés."
 msgid "No displays found"
 msgstr "Nincs megjelenítő eszköz"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "Nincs beállítva e-mail-cím"
 
@@ -23525,7 +23646,11 @@ msgstr "Ebben a példányban nincsenek opcionális szolgáltatások. Kihagyhatod
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "A(z) {query} keresőkifejezés egyetlen részét sem sikerült alkalmazni. Javítsd az aláhúzott értéket, vagy add meg, mire szeretnél keresni."
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "Még nincsenek kulcsok. Adj hozzá egyet, hogy ujjlenyomattal, arccal vagy biztonsági kulccsal jelentkezhess be."
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "Nincs beállítva jelszó"
 
@@ -23938,7 +24063,7 @@ msgstr "Nem található"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "Most nem"
@@ -24014,6 +24139,11 @@ msgstr "Nincs visszatéríthető tétel"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "Nincs mit keresni"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Nem fog változni semmi. Ez csak megerősíti a beállításaidat."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24144,12 +24274,14 @@ msgstr "Tárgyak"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "Ki"
 
@@ -24207,9 +24339,11 @@ msgstr "Először a legrégebbiek"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "Be"
 
@@ -25339,7 +25473,7 @@ msgstr "Jelszókulcs frissítve"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25354,8 +25488,8 @@ msgstr "A jelszókulcsokhoz érvényes alkalmazásazonosítóval rendelkező, al
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "Jelszó"
 
@@ -25580,8 +25714,18 @@ msgstr "Pennsylvania"
 msgid "People"
 msgstr "Személyek"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "A közösséged tagjai üzenhetnek neked anélkül is, hogy ismerősök lennétek."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "A közösségeidben lévő embereknek először a barátaidnak kell lenniük, mielőtt üzenhetnének neked."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "Az embereknek előbb a barátaidnak kell lenniük, mielőtt üzenhetnek neked. Továbbra is küldhetnek neked ismerősfelkérést."
 
@@ -25596,9 +25740,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "Az emberek e-mail címmel és jelszóval jelentkeznek be. A jelszó-visszaállításhoz és az ellenőrzéshez e-mail kézbesítés szükséges, amit később beállíthatsz."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "A veled közös közösségekben lévők üzenhetnek neked."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "Azok az emberek, akikkel közös közösségben vagy."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "Olyan emberek, akiknek legalább egy közös ismerősük van veled."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25677,7 +25829,7 @@ msgstr "Véglegesen törli az itt küldött összes üzenetedet, minden csatorn�
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "Véglegesen törli az alábbi szűrőknek megfelelő üzeneteket. Ez a művelet nem vonható vissza."
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "Véglegesen törli a fiókodat és minden kapcsolódó adatot. Ez nem vonható vissza."
 
@@ -27261,6 +27413,10 @@ msgstr "Ok: {0}"
 msgid "Receipt"
 msgstr "Nyugta"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Hívások némán fogadása"
+
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
 msgid "Receive notifications when someone mentions you"
@@ -27371,7 +27527,7 @@ msgid "Recovery key"
 msgstr "Helyreállítási kulcs"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "Helyreállítási készlet"
@@ -27558,10 +27714,6 @@ msgstr "Regisztráció"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "Fiók regisztrálása"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "Regisztrált jelszókulcsok"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28149,7 +28301,7 @@ msgstr "A jogosultságok eltávolítása korlátozhatja a bot funkcióit."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Az ideiglenes korlátozás feloldásával <0>{targetUserTag}</0> ismét küldhet üzeneteket, reagálhat és csatlakozhat hangcsatornákhoz."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "Átnevezés"
 
@@ -28177,6 +28329,11 @@ msgstr "Csatorna átnevezése űrlap"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "Emoji átnevezése"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "Jelszó átnevezése: {passkeyName}"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28388,7 +28545,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "Kétlépcsős azonosítás megkövetelése a moderálási műveletekhez"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "Jelszókulcs megkövetelése második hitelesítési tényezőként"
@@ -28924,7 +29081,7 @@ msgstr "Vissza a bejelentkezéshez"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "Felfedés"
@@ -28982,7 +29139,7 @@ msgid "Review and confirm"
 msgstr "Áttekintés és megerősítés"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "Tekintsd át a fiókodhoz hozzáférő alkalmazásokat."
 
@@ -29002,7 +29159,7 @@ msgid "Review privacy settings"
 msgstr "Adatvédelmi beállítások áttekintése"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Tekintsd át a bejelentkezett eszközöket, és jelentkezz ki az ismeretlen munkamenetekből."
 
@@ -29134,6 +29291,11 @@ msgstr "Jobb oldali ikon"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Jobb egérgomb"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Jelenleg"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29325,7 +29487,6 @@ msgstr "Telítettség"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29350,7 +29511,6 @@ msgstr "Telítettség"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Mentés"
@@ -29372,7 +29532,7 @@ msgid "Save 17%"
 msgstr "17% megtakarítás"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "Helyezz el egy helyreállító készletet"
@@ -29397,7 +29557,9 @@ msgstr "Háttér mentése"
 msgid "Save banner"
 msgstr "Borítókép mentése"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "Változtatások mentése"
 
@@ -30167,7 +30329,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Biztonság"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "Biztonsági funkciók"
 
@@ -30793,7 +30955,7 @@ msgstr "Mikrofonnémítás billentyűparancsának beállítása"
 msgid "Set new password"
 msgstr "Új jelszó beállítása"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "Jelszó beállítása"
 
@@ -30913,6 +31075,7 @@ msgid "Set the voice region to automatic"
 msgstr "A hangcsatorna régiójának automatikusra állítása"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Beállítás"
@@ -30923,7 +31086,9 @@ msgid "Set up {productName}"
 msgstr "A(z) {productName} beállítása"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "Hitelesítő alkalmazás beállítása"
 
@@ -31215,7 +31380,7 @@ msgid "Shorten your about me and try again."
 msgstr "Rövidítsd le a bemutatkozásodat, és próbáld újra."
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "Megjelenítés"
@@ -31873,6 +32038,11 @@ msgstr "Bejelentkezési folyamat"
 msgid "Sign-in method"
 msgstr "Bejelentkezési mód"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "Bejelentkezési módok"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31950,10 +32120,6 @@ msgstr "Csengetés nélküli hívás"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:98
 msgid "Silent calls"
 msgstr "Csengetés nélküli hívások"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "Csengetés nélküli hívások mindenkitől"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
@@ -33273,7 +33439,7 @@ msgid "Stop trusting all links?"
 msgstr "Minden link megbízhatóságának megszüntetése?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Kikapcsolod a jelszókulcsos kétlépcsős azonosítást?"
 
@@ -34020,6 +34186,11 @@ msgstr "A címkék segítik a bejegyzések megtalálását. Legfeljebb {count} c
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "A címkéknek 2–{maxLength} karakter hosszúságúaknak és alfanumerikusaknak kell lenniük."
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Szánj egy percet annak ellenőrzésére, hogy ki üzenhet neked. Semmi sem változik, hacsak nem te magad döntesz így."
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "A következő megújításkor lép életbe. A jelenlegi havi befizetésedből {creditLabel} összeget jóváírunk, így az első éves díj <0>{firstRenewalPriceLabel}</0> lesz. A további éves megújítások díja {renewalPrice}/év."
@@ -34101,7 +34272,7 @@ msgstr "Időbeli rétegek"
 msgid "Temporarily disable your account"
 msgstr "Fiók ideiglenes letiltása"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "Ideiglenesen inaktiválhatod a fiókodat. Később újraaktiválhatod, ha bejelentkezel."
 
@@ -35329,11 +35500,11 @@ msgstr "Ez a második opció leírása"
 msgid "This is the third option description"
 msgstr "Ez a harmadik opció leírása"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Ez az utolsó jelszókulcsod, és a jelszókulcsok a második hitelesítési tényeződ. A törlésével kikapcsolod a fiókod kétlépcsős azonosítását, és a jelenlegi biztonsági kódjaid sem fognak többé működni."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Ez az utolsó jelszókulcsod. Ha törlöd, nem tudsz többé jelszókulcsot használni második hitelesítési tényezőként."
 
@@ -36444,7 +36615,8 @@ msgstr "Török"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "Kikapcsolás"
 
@@ -36461,6 +36633,11 @@ msgstr "Kapcsolj ki minden hozzáférést, amelyet nem szeretnél megadni. Egyes
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Kapcsold ki a hangmegosztást ennél a forrásnál, vagy próbáld újra egy kis idő múlva."
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "Hitelesítő alkalmazás kikapcsolása"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36493,7 +36670,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "A bejelentkezési és fiókbiztonsági adatok megtekintéséhez kapcsold ki a streamelési adatvédelmet."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "Bekapcsolás"
 
@@ -36631,10 +36808,6 @@ msgstr "Kétlépcsős azonosítás kikapcsolva"
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "Kétlépcsős azonosítás bekapcsolva"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "A kétlépcsős azonosítás engedélyezve van"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37951,7 +38124,7 @@ msgstr "Tényleges érték használata"
 msgid "Use alternative method"
 msgstr "Másik fizetési mód használata"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Használj hitelesítő alkalmazást a kétlépcsős azonosításhoz szükséges kódok generálásához"
 
@@ -38088,12 +38261,12 @@ msgid "Use native title bar"
 msgstr "Natív címsor használata"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Bekapcsolod a jelszókulcsos kétlépcsős azonosítást?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "Használj jelszókulcsokat a jelszó nélküli bejelentkezéshez"
@@ -38618,12 +38791,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Ismerősjelölések küldéséhez erősítsd meg az e-mail-címedet."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "Jelszókulcs hozzáadása előtt erősítsd meg az e-mail-címedet."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "Hitelesítő alkalmazás hozzáadása előtt erősítsd meg az e-mail-címedet."
 
@@ -38910,7 +39083,7 @@ msgstr "Kitiltott felhasználók megtekintése és kezelése."
 msgid "View and manage every webhook configured across your community."
 msgstr "A közösségedben beállított összes webhook megtekintése és kezelése."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "Fiók-helyreállító biztonsági kódok megtekintése és kezelése"
 
@@ -38949,7 +39122,7 @@ msgstr "Csatorna megtekintése"
 msgid "View channel members"
 msgstr "Csatornatagok megtekintése"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "Kódok megtekintése"
 
@@ -39206,11 +39379,6 @@ msgstr "hangtevékenység"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "Hangaktivitás"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "Hangtevékenység a Most aktívak részben"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -40052,10 +40220,6 @@ msgstr "Amíg az adásgomb be van kapcsolva, a billentyűparancs vezérli a mikr
 msgid "Who can add"
 msgstr "Ki adhat hozzá"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "Ki vehet fel csoportos beszélgetésekbe"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40077,12 +40241,12 @@ msgid "Who can join"
 msgstr "Ki csatlakozhat"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "Ki üzenhet neked"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "Ki üzenhet neked?"
 
@@ -40404,7 +40568,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "A törlési folyamatot 14 napon belül visszavonhatod"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "Ezt bármikor módosíthatod az adatvédelmi beállításaidban, közösségenként külön-külön is."
 
@@ -40677,7 +40841,7 @@ msgstr "A(z) {PREMIUM_PRODUCT_NAME} használata közben megváltoztattad a címk
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nincs hozzáférésed ahhoz a csatornához, ahová ezt az üzenetet küldték."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "Még nincs helyreállítási csomagod"
 
@@ -40931,7 +41095,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Az engedélyezés után átirányítjuk a következőre: {redirectHostname}."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Többé nem kérünk jelszókulcsot a jelszavad után. A hitelesítő alkalmazásod továbbra is a második hitelesítési tényeződ marad."
 
@@ -40955,7 +41119,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Újra be kell jelentkezned minden kijelentkezett eszközön"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "Új eszközön való bejelentkezéshez szükséged lesz az egyik jelszókulcsodra. Ha az összes jelszókulcsodat elveszíted, véglegesen kizárhatod magad a fiókodból. Biztonsági kódokat mentünk el neked, így akkor is be tudsz majd jutni."
 
@@ -41300,7 +41464,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "A fiókodhoz többlépcsős azonosítás szükséges, de ezen az eszközön nincs beállítva támogatott módszer. Jelentkezz be egy olyan eszközön, amelyen elérhető a hitelesítő alkalmazásod vagy a biztonsági kulcsod, vagy lépj kapcsolatba ennek a példánynak az adminisztrátoraival."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "A fiókodat már nem védi kétlépcsős azonosítás, amikor jelszóval jelentkezel be. Emellett elveszíted az emelt szintű jogosultságaidat azokban a közösségekben, amelyek kétlépcsős azonosítást követelnek meg."
 

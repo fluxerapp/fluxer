@@ -1111,14 +1111,14 @@ msgstr "{count, plural, one {# kanál ho sleduje} other {# kanálů ho sleduje}}
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {Nalezena # komunita} few {Nalezeny # komunity} many {Nalezeno # komunity} other {Nalezeno # komunit}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# komunita má vlastní nastavení} other {# komunity mají vlastní nastavení}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# komunita je dočasně nedostupná kvůli poruše fluxkondenzátoru.} few {# komunity jsou dočasně nedostupné kvůli poruše fluxkondenzátoru.} many {# komunity je dočasně nedostupných kvůli poruše fluxkondenzátoru.} other {# komunit je dočasně nedostupných kvůli poruše fluxkondenzátoru.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# komunita používá jiné nastavení} other {# komunit používá jiné nastavení}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1183,6 +1183,11 @@ msgstr "{count, plural, one {# další} few {# další} many {# dalšího} other
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# účastník hovoru} few {# účastníci hovoru} many {# účastníka hovoru} other {# účastníků hovoru}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# klíč} other {# klíče}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2923,11 +2928,6 @@ msgstr "Účet"
 msgid "Account & premium overrides"
 msgstr "Přepsání účtu a prémiových funkcí"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "Přístup k účtu"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3260,10 +3260,6 @@ msgstr "Pokračujte přidáním účtu."
 msgid "Add an email and password to your account first."
 msgstr "Nejprve si k účtu přidejte e-mail a heslo."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "Přidejte ke svému účtu další vrstvu zabezpečení"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3315,7 +3311,7 @@ msgstr "Přidat vlastní zkratky, vypnout vestavěné zkratky a synchronizovat p
 msgid "Add domain connection"
 msgstr "Přidat propojení domény"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "Přidat e-mail"
 
@@ -3397,7 +3393,7 @@ msgid "Add override"
 msgstr "Přidat vlastní oprávnění"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "Přidat přístupový klíč"
@@ -3536,6 +3532,14 @@ msgstr "Přidejte vlastní vyhledávače s vlastní šablonou URL. Použijte <0>
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Přidejte vlastní překladače s vlastní šablonou URL. Použijte <0>{query}</0> jako zástupný symbol pro text k překladu."
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "Přidáno {createdDate}, naposledy použito {lastUsedDate}"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "Přidáno {createdDate}, nikdy nepoužito"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3615,14 +3619,6 @@ msgstr "Přidáno k oblíbeným"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "Přidáno k uloženým médiím"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "Přidáno: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "Přidáno: {createdDate} • naposledy použito: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3951,11 +3947,11 @@ msgstr "Povolit velká písmena a mezery v názvech textových kanálů. Při vy
 msgid "Allow direct messages"
 msgstr "Povolit přímé zprávy"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "Povolit přímé zprávy od komunitních botů"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "Povolit přímé zprávy od členů komunity"
 
@@ -4059,7 +4055,7 @@ msgstr "Povolena oprávnění {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "Všem členům bylo povoleno zmiňovat tuto roli"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "Kdo vám může volat"
 
@@ -4068,7 +4064,7 @@ msgstr "Kdo vám může volat"
 msgid "Allowed flexible text channel names"
 msgstr "Povoleny flexibilní názvy textových kanálů"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "Kdo vás může přidávat do skupin"
 
@@ -4156,6 +4152,11 @@ msgstr "Již uplatněno"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "Zrušení je již naplánováno"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "Také změňte níže uvedené komunity, aby odpovídaly"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4611,9 +4612,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "O účet může požádat kdokoli, ale správce ho musí schválit."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "Kdokoliv z mých komunit"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Kdokoli vás najde, vám může poslat žádost. Vypněte tuto možnost a vyberte skupiny níže."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4762,6 +4767,14 @@ msgstr "Aplikace a boti"
 msgid "Applies to"
 msgstr "Platí pro"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Platí pro boty v komunitách, ke kterým se připojíte odteď. Můžete ji také změnit pro každou komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Platí pro komunity, ke kterým se připojíte odteď. Můžete ji také změnit pro každou komunitu."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4778,11 +4791,6 @@ msgstr "Použít motiv"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Použít pro všechny komunity"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "Použít i v těchto komunitách"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4803,6 +4811,11 @@ msgstr "Schváleno"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "Aplikace"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "Aplikace a zařízení"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4857,7 +4870,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "Opravdu chcete smazat kategorii „{categoryName}“? Kanál uvnitř se přesune na začátek seznamu kanálů."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Opravdu chcete smazat přístupový klíč <0>{0}</0>?"
 
@@ -4869,7 +4882,7 @@ msgstr "Opravdu chcete smazat tuto přílohu? Tuto akci nelze vrátit zpět a p�
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Opravdu chcete smazat tuto komunitu? Tuto akci nelze vrátit zpět. Všechny kanály, zprávy a nastavení budou trvale smazány."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Opravdu chcete smazat tento přístupový klíč?"
 
@@ -4949,10 +4962,15 @@ msgid "Ask before starting calls"
 msgstr "Zeptat se před zahájením hovorů"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Požádat o přístupový klíč po zadání hesla při přihlašování"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "Požádejte o druhý krok po zadání hesla při přihlašování."
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5227,7 +5245,7 @@ msgstr "Ověřování"
 msgid "Authenticator"
 msgstr "Ověřovací aplikace"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "Ověřovací aplikace"
 
@@ -5302,7 +5320,7 @@ msgstr "Autorizované aplikace"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5723,7 +5741,7 @@ msgstr "Záložní kód"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5969,7 +5987,7 @@ msgid "Block"
 msgstr "Blokovat"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "Blokovat"
@@ -6086,7 +6104,7 @@ msgid "Blur"
 msgstr "Rozostření"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "Rozostřit"
@@ -6592,6 +6610,10 @@ msgstr "Soukromí hovorů"
 msgid "Calls"
 msgstr "Hovory"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Hovory, které povolíš, stále přicházejí, ale nezvoní."
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6702,6 +6724,11 @@ msgstr "Kamery a virtuální záznamová zařízení se vybírají zde ve {produ
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kamery jsou vypnuté, pokud je účastníků více než {voiceChannelCameraUserLimit}"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Může vám poslat přímou zprávu"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -7036,7 +7063,7 @@ msgid "Change chat embed background"
 msgstr "Změnit pozadí vložené pozvánky v chatu"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "Změnit e-mail"
 
@@ -7129,7 +7156,7 @@ msgstr "Změnit vlastníka"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8039,6 +8066,11 @@ msgstr "Vyberte, co může {clientLabel} dělat ve vaší komunitě. Zrušte za�
 msgid "Choose what friends see in their active now panel"
 msgstr "Vyberte, co přátelé uvidí na panelu „Právě aktivní“"
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "Vyberte, co se stane s obrázky a videi označenými jako citlivé. Zobrazit je ukáže obvyklým způsobem, Rozmazat je skryje, dokud nekliknete, a Blokovat je skryje úplně."
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "Vyberte, co musí mít členové, než budou moci posílat příspěvky nebo soukromé zprávy členům komunity. Členové s rolemi mohou tyto kontroly přeskočit. Pro veřejné prostory doporučujeme povolit ověření."
@@ -8100,6 +8132,10 @@ msgstr "Vyberte, který vyhledávač se bude používat ve výchozím nastavení
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Vyberte, který překladač se má použít jako výchozí při překladu vybraného textu."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Vyberte, kdo vás může přidat do skupinového chatu bez předchozího dotazu."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "Vyberte, kdo uvidí toto propojení na vašem profilu."
@@ -8108,6 +8144,14 @@ msgstr "Vyberte, kdo uvidí toto propojení na vašem profilu."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Vyberte, kdo může vidět podrobnosti vašeho profilu"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "Vyberte, kdo vám může poslat žádost o přátelství."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Vyberte, kdo vám může začít lidi."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8177,7 +8221,7 @@ msgstr "Dokončete registraci účtu přidáním e-mailu a hesla. Před dokonče
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "Získejte svůj účet výběrem uživatelského jména a hesla. Přihlásíte se s nimi, takže si vyberte takové, na které si vzpomenete."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Dokončete registraci účtu, abyste mohli používat funkce zabezpečení, jako je dvoufaktorové ověřování a přístupové klíče."
 
@@ -8761,6 +8805,10 @@ msgstr "Kodek"
 msgid "Codes"
 msgstr "Kódy"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "Kódy z vaší aplikace pro ověřování jsou vaším druhým krokem při přihlašování."
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8957,6 +9005,21 @@ msgstr "Komunity s více než 250 lidmi jsou automaticky přepnuty na nastavení
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "Komunity, ke kterým se můžete připojit"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Komunity, ke kterým se odteď připojíte, budou používat toto nastavení a níže uvedené komunity se podle něj změní."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "Komunity, ke kterým se odteď připojíte, budou používat toto."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "Komunity, ke kterým se připojíte odteď, budou používat toto nastavení. Vaše stávající komunity si zachovají svá nastavení."
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -10365,7 +10428,7 @@ msgid "Couldn't delete application"
 msgstr "Aplikaci se nepodařilo smazat"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "Nepodařilo se smazat přístupový klíč"
 
@@ -10760,7 +10823,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "Nepodařilo se aktualizovat obcházení potlačení zmínek"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Nepodařilo se aktualizovat nastavení přístupových klíčů pro dvoufaktorové ověřování"
 
@@ -10876,7 +10939,7 @@ msgstr "Vytvořit novou skupinu s uživatelem {userName}"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "Vytvořit novou sadu"
 
@@ -11033,8 +11096,8 @@ msgstr "Vytvářet veřejná vlákna"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "Vytvořit záchrannou sadu"
@@ -11105,7 +11168,7 @@ msgid "Created"
 msgstr "Vytvořeno"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "Vytvořeno {0}"
 
@@ -11222,6 +11285,11 @@ msgstr "Ctrl"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:63
 msgid "Currency"
 msgstr "Měna"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "Aktuální"
 
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
@@ -11984,7 +12052,7 @@ msgstr "Delaware"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12157,9 +12225,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Mazat zprávy ostatních členů. Připínání se ovládá zvlášť."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "Smazat přístupový klíč"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "Smazat přístupový klíč {passkeyName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12628,7 +12701,7 @@ msgstr "Zařízení:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12713,7 +12786,7 @@ msgstr "Náhledy přímých zpráv"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "Přímé zprávy"
 
@@ -12723,12 +12796,12 @@ msgid "Direct messages (open and closed)"
 msgstr "Soukromé konverzace (otevřené i zavřené)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "Přímé zprávy od přátel"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "Přímé zprávy od ostatních"
 
@@ -12739,7 +12812,6 @@ msgstr "Přímé nahrávání aktivní"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12812,6 +12884,11 @@ msgstr "Vypnout hardwarovou akceleraci?"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "Vypnout push oznámení na mobilu"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "Zakázat nebo smazat účet"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13978,8 +14055,8 @@ msgstr "E-mail"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "E-mailová adresa"
@@ -14215,7 +14292,6 @@ msgstr "Oblíbené položky jsou prázdné"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "Zapnout"
 
@@ -14955,7 +15031,7 @@ msgstr "Každá komunita, která tento kanál sleduje, dostane kopii. Pokud ji p
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Všichni"
 
@@ -16500,10 +16576,14 @@ msgstr "Přátelé a vybrané skupiny uživatelů vám mohou volat"
 msgid "Friends and small communities only"
 msgstr "Pouze přátelé a malé komunity"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "Přátelé vám vždy mohou posílat přímé zprávy. Zvolte, zda vám lidé, se kterými sdílíte komunitu, mohou posílat zprávy, aniž by nejprve poslali žádost o přátelství."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "Přátelé vám mohou vždy posílat zprávy."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Přátelé vám mohou vždy poslat zprávu. Tato nastavení se týkají lidí a botů, se kterými sdílíte pouze komunitu."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16512,7 +16592,9 @@ msgstr "Přátelé přátel"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Jen přátelé"
@@ -16521,6 +16603,11 @@ msgstr "Jen přátelé"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "Sekce přátel"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "Přátelé uvidí, ve kterém hlasovém kanálu se nacházíte, ve svém seznamu Aktivní. Toto můžete změnit jednou za 24 hodin."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -17347,6 +17434,10 @@ msgstr "Přidávání do skupinových konverzací: pouze přátelé"
 msgid "Group chat adds: nobody"
 msgstr "Přidávání do skupinových konverzací: nikdo"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Skupinové chaty"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
 msgid "Group direct message"
@@ -17673,7 +17764,7 @@ msgstr "Skryté"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18182,7 +18273,7 @@ msgstr "Pokud se domníváte, že je to nelegální, uveďte, o jaký zákon se 
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "Pokud toto zavřete, oznámení na plochu můžete kdykoli povolit později v {notificationSettingsPath}."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "Pokud zapomenete heslo, záchranná sada je jediný způsob, jak se dostat zpět do svého účtu."
 
@@ -19623,6 +19714,11 @@ msgstr "Ponechte bezplatnou i prémiovou úroveň. Úrovně můžete přizpůsob
 msgid "Keep grace period"
 msgstr "Ponechat dodatečnou lhůtu"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "Ponechat moje aktuální nastavení"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
@@ -19806,11 +19902,11 @@ msgid "Largest file you can upload"
 msgstr "Největší soubor, který můžete nahrát"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "Naposledy změněno: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "Naposledy změněno: nikdy"
 
@@ -20112,7 +20208,7 @@ msgstr "Umožňuje ostatním vás vidět na videu."
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "Umožňuje fungování push-to-talk a klávesových zkratek v jiných aplikacích."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "Umožňuje resetovat heslo, pokud ho zapomenete."
 
@@ -20705,8 +20801,8 @@ msgstr "Přizpůsobte si instanci"
 msgid "Malta"
 msgstr "Malta"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "Spravovat"
 
@@ -20717,13 +20813,18 @@ msgid "Manage accounts"
 msgstr "Spravovat účty"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "Spravujte aplikace a zařízení, která mají přístup k vašemu účtu"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
+msgstr "Spravovat autorizované aplikace"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
 msgstr "Spravovat autorizované aplikace"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -20750,6 +20851,11 @@ msgstr "Spravovat komunitu"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "Spravovat funkce komunity"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "Spravovat zařízení"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -21191,6 +21297,16 @@ msgstr "Zobrazení médií"
 msgid "Media filter"
 msgstr "Filtr médií"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "Média v kanálech, které nejsou označené jako 18+. Kanály označené 18+ je vždy zobrazí."
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "Média ve skupinových chatech a v přímých zprávách od lidí, kteří nejsou vaši přátelé."
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21242,6 +21358,11 @@ msgstr "Velikost médií"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "Zastavit přehrávání"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "Média, která ti přátelé posílají v přímých zprávách."
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21797,7 +21918,7 @@ msgid "Messages failed to load"
 msgstr "Zprávy se nepodařilo načíst"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "Zprávy v komunitních kanálech"
 
@@ -23362,7 +23483,7 @@ msgstr "Není k dispozici žádná aktualizace desktopové aplikace."
 msgid "No displays found"
 msgstr "Nebyly nalezeny žádné obrazovky"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "E-mailová adresa nenastavena"
 
@@ -23525,7 +23646,11 @@ msgstr "Na této instanci nejsou k dispozici žádné volitelné služby. Tento 
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "Nic z {query} nešlo použít. Opravte podtrženou hodnotu nebo přidejte něco k vyhledání."
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "Zatím žádné klíče Passkey. Přidejte si jeden pro přihlášení pomocí otisku prstu, obličeje nebo bezpečnostního klíče."
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "Heslo nenastaveno"
 
@@ -23938,7 +24063,7 @@ msgstr "Stránka nenalezena"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "Teď ne"
@@ -24014,6 +24139,11 @@ msgstr "Žádné platby k vrácení"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "Není co hledat"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Nic se nezmění. Tímto pouze potvrdíte svá nastavení."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24144,12 +24274,14 @@ msgstr "Předměty"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "Vypnuto"
 
@@ -24207,9 +24339,11 @@ msgstr "Nejstarší napřed"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "Zapnuto"
 
@@ -25339,7 +25473,7 @@ msgstr "Přístupový klíč aktualizován"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25354,8 +25488,8 @@ msgstr "Přístupové klíče vyžadují podepsaný balíček macOS s platným i
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "Heslo"
 
@@ -25580,8 +25714,18 @@ msgstr "Pensylvánie"
 msgid "People"
 msgstr "Lidé"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "Lidé ve vašich komunitách vám můžou psát zprávy, aniž byste byli přátelé."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "Lidé ve vašich komunitách s vámi musí být přátelé, než vám budou moci poslat zprávu."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "Lidé musí být vaši přátelé, než vám budou moci poslat zprávu. Stále vám mohou poslat žádost o přátelství."
 
@@ -25596,9 +25740,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "Lidé se přihlašují pomocí e-mailové adresy a hesla. Resetování a ověření hesla vyžaduje doručení e-mailu, které můžete nastavit později."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "Lidé, kteří sdílejí komunitu, vám mohou posílat zprávy přímo."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "Lidé, kteří s vámi sdílejí komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "Lidé, kteří s vámi sdílejí alespoň jednoho přítele."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25677,7 +25829,7 @@ msgstr "Trvale smazat všechny zprávy, které jste zde odeslali, napříč vše
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "Trvale smazat zprávy, které odpovídají níže uvedeným filtrům. Tuto akci nelze vrátit zpět."
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "Trvale smazat váš účet a všechna související data. Tuto akci nelze vrátit zpět."
 
@@ -27261,6 +27413,10 @@ msgstr "Důvod: {0}"
 msgid "Receipt"
 msgstr "Potvrzení"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Přijímat hovory tiše"
+
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
 msgid "Receive notifications when someone mentions you"
@@ -27371,7 +27527,7 @@ msgid "Recovery key"
 msgstr "Obnovovací klíč"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "Záchranná sada"
@@ -27558,10 +27714,6 @@ msgstr "Registrovat se"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "Zaregistrovat účet"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "Registrované přístupové klíče"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28149,7 +28301,7 @@ msgstr "Odebrání oprávnění může omezit funkce bota."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Zrušení dočasného omezení umožní uživateli <0>{targetUserTag}</0> znovu posílat zprávy, reagovat a připojovat se k hlasovým kanálům."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "Přejmenovat"
 
@@ -28177,6 +28329,11 @@ msgstr "Formulář pro přejmenování kanálu"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "Přejmenovat emoji"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "Přejmenovat přístupový klíč {passkeyName}"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28388,7 +28545,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "Vyžadovat dvoufaktorové ověřování pro moderátorské zásahy"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "Vyžadovat přístupový klíč jako druhý faktor"
@@ -28924,7 +29081,7 @@ msgstr "Zpět na přihlášení"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "Zobrazit"
@@ -28982,7 +29139,7 @@ msgid "Review and confirm"
 msgstr "Zkontrolovat a potvrdit"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "Prohlédněte si aplikace, které mají přístup k vašemu účtu."
 
@@ -29002,7 +29159,7 @@ msgid "Review privacy settings"
 msgstr "Zkontrolovat nastavení soukromí"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Prohlédněte si přihlášená zařízení a odhlašte relace, které nepoznáváte."
 
@@ -29134,6 +29291,11 @@ msgstr "Pravá ikona"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Pravé tlačítko myši"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Právě teď"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29325,7 +29487,6 @@ msgstr "Sytost"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29350,7 +29511,6 @@ msgstr "Sytost"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Uložit"
@@ -29372,7 +29532,7 @@ msgid "Save 17%"
 msgstr "Ušetřete 17 %"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "Uložit obnovovací sadu"
@@ -29397,7 +29557,9 @@ msgstr "Uložit pozadí"
 msgid "Save banner"
 msgstr "Uložit banner"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "Uložit změny"
 
@@ -30167,7 +30329,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Zabezpečení"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "Funkce zabezpečení"
 
@@ -30793,7 +30955,7 @@ msgstr "Nastavit zkratku pro ztlumení mikrofonu"
 msgid "Set new password"
 msgstr "Nastavit nové heslo"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "Nastavit heslo"
 
@@ -30913,6 +31075,7 @@ msgid "Set the voice region to automatic"
 msgstr "Hlasový region nastaven na automatický"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Nastavit"
@@ -30923,7 +31086,9 @@ msgid "Set up {productName}"
 msgstr "Nastavit {productName}"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "Nastavit ověřovací aplikaci"
 
@@ -31215,7 +31380,7 @@ msgid "Shorten your about me and try again."
 msgstr "Zkraťte text \"O mně\" a zkuste to znovu."
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "Zobrazit"
@@ -31873,6 +32038,11 @@ msgstr "Průběh přihlášení"
 msgid "Sign-in method"
 msgstr "Metoda přihlášení"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "Metody přihlášení"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31950,10 +32120,6 @@ msgstr "Tichý hovor"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:98
 msgid "Silent calls"
 msgstr "Tiché hovory"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "Tiché hovory od všech"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
@@ -33273,7 +33439,7 @@ msgid "Stop trusting all links?"
 msgstr "Přestat důvěřovat všem odkazům?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Přestat používat přístupové klíče pro dvoufaktorové ověřování?"
 
@@ -34020,6 +34186,11 @@ msgstr "Štítky pomáhají lidem najít příspěvky. Můžete přidat až {cou
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Štítky musí mít 2 až {maxLength} znaků a musí být alfanumerické."
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Chvilku si zkontrolujte, kdo vám může psát zprávy. Nic se nezmění, pokud to sami nezvolíte."
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Změna začne platit při příštím obnovení. Z aktuální měsíční platby vám započteme kredit {creditLabel}, takže první roční platba bude <0>{firstRenewalPriceLabel}</0>. Při dalších obnoveních zaplatíte {renewalPrice}/rok."
@@ -34101,7 +34272,7 @@ msgstr "Časové vrstvy"
 msgid "Temporarily disable your account"
 msgstr "Dočasně deaktivovat účet"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "Dočasně deaktivovat účet. Později ho můžete znovu aktivovat přihlášením."
 
@@ -35329,11 +35500,11 @@ msgstr "Toto je popis druhé možnosti"
 msgid "This is the third option description"
 msgstr "Toto je popis třetí možnosti"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Toto je váš poslední přístupový klíč a přístupové klíče jsou vaším druhým faktorem. Jeho smazáním vypnete na svém účtu dvoufaktorové ověřování a vaše stávající záložní kódy přestanou fungovat."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Toto je váš poslední přístupový klíč. Jakmile o něj přijdete, nebudete moci používat přístupový klíč jako druhý faktor."
 
@@ -36444,7 +36615,8 @@ msgstr "Turečtina"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "Vypnout"
 
@@ -36461,6 +36633,11 @@ msgstr "Vypněte vše, s čím nesouhlasíte. Některé funkce pak nemusí fungo
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Vypněte sdílení zvuku pro tento zdroj nebo to zkuste za chvíli znovu."
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "Vypnout aplikaci pro ověřování"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36493,7 +36670,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "Před zobrazením přihlašovacích údajů nebo podrobností o zabezpečení účtu vypněte soukromí při streamování."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "Zapnout"
 
@@ -36631,10 +36808,6 @@ msgstr "Dvoufaktorové ověřování vypnuto"
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "Dvoufaktorové ověřování zapnuto"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "Dvoufaktorové ověřování je zapnuté"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37951,7 +38124,7 @@ msgstr "Použít skutečnou hodnotu"
 msgid "Use alternative method"
 msgstr "Použít jinou metodu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Používejte ověřovací aplikaci ke generování kódů pro dvoufaktorové ověřování"
 
@@ -38088,12 +38261,12 @@ msgid "Use native title bar"
 msgstr "Použít nativní záhlaví"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Použít přístupové klíče pro dvoufaktorové ověřování?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "Používejte přístupové klíče k přihlášení bez hesla"
@@ -38618,12 +38791,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Ověřte svou e-mailovou adresu, abyste mohli posílat žádosti o přátelství."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "Před přidáním přístupového klíče ověřte svůj e-mail."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "Před přidáním ověřovací aplikace si ověřte svůj e-mail."
 
@@ -38910,7 +39083,7 @@ msgstr "Zobrazit a spravovat zabanované uživatele."
 msgid "View and manage every webhook configured across your community."
 msgstr "Zobrazte a spravujte všechny webhooky nakonfigurované v rámci vaší komunity."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "Zobrazit a spravovat záložní kódy pro obnovení účtu"
 
@@ -38949,7 +39122,7 @@ msgstr "Zobrazit kanál"
 msgid "View channel members"
 msgstr "Zobrazit členy kanálu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "Zobrazit kódy"
 
@@ -39206,11 +39379,6 @@ msgstr "hlasová aktivita"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "Hlasová aktivita"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "Hlasová aktivita v sekci Právě aktivní"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -40052,10 +40220,6 @@ msgstr "Když je zapnutý režim Stisknutím mluvit, mikrofon ovládá klávesov
 msgid "Who can add"
 msgstr "Kdo může přidat"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "Kdo vás může přidat do skupinových chatů"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40077,12 +40241,12 @@ msgid "Who can join"
 msgstr "Kdo se může připojit"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "Kdo vám může psát"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "Kdo vám může psát?"
 
@@ -40404,7 +40568,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "Smazání účtu můžete zrušit do 14 dnů"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "Tuto možnost můžete kdykoli změnit v nastavení soukromí, a to i pro každou komunitu zvlášť."
 
@@ -40677,7 +40841,7 @@ msgstr "Změnili jste si uživatelskou značku, když jste měli {PREMIUM_PRODUC
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nemáte přístup ke kanálu, ve kterém byla tato zpráva odeslána."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "Ještě nemáte záchrannou sadu"
 
@@ -40931,7 +41095,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Po autorizaci budete přesměrováni na {redirectHostname}."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Už nebudete po zadání hesla vyzváni k použití přístupového klíče. Vaše ověřovací aplikace zůstane vaším druhým faktorem."
 
@@ -40955,7 +41119,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Budete se muset znovu přihlásit na všech odhlášených zařízeních"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "K přihlášení na novém zařízení budete potřebovat jeden ze svých přístupových klíčů. Pokud přijdete o všechny přístupové klíče, můžete nenávratně ztratit přístup ke svému účtu. Záložní kódy vám uložíme, abyste se do svého účtu stále mohli dostat."
 
@@ -41300,7 +41464,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "Váš účet vyžaduje vícefaktorové ověřování, ale na tomto zařízení nejsou nastavené žádné podporované metody. Přihlaste se na zařízení s ověřovací aplikací nebo bezpečnostním klíčem, případně kontaktujte správce této instance."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "Váš účet již nebude chráněn dvoufaktorovým ověřováním při přihlašování heslem. Také ztratíte zvýšená oprávnění v komunitách, které dvoufaktorové ověřování vyžadují."
 

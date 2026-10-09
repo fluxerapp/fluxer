@@ -19,6 +19,12 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
+import {
+	AccountSecurityCard,
+	AccountSecurityEmptyRow,
+	AccountSecurityRow,
+	AccountSecuritySwitchRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/SecurityTab.module.css';
 import type {User} from '@app/features/user/models/User';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
@@ -85,9 +91,54 @@ const COULD_NOT_UPDATE_PASSKEY_TWO_FACTOR_DESCRIPTOR = msg({
 	message: "Couldn't update passkey two-factor authentication",
 	comment: 'Title of the error modal shown when the passkey two-factor setting could not be saved.',
 });
-const ACCOUNT_ACCESS_DESCRIPTOR = msg({
-	message: 'Account access',
-	comment: 'Security settings section for third-party app access and signed-in devices.',
+const APPS_AND_DEVICES_DESCRIPTOR = msg({
+	message: 'Apps and devices',
+	comment: 'Security settings card title for third-party app access and signed-in devices.',
+});
+const TWO_FACTOR_CARD_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Ask for a second step after your password when you sign in.',
+	comment: 'Security settings: description under the two-factor authentication card title.',
+});
+const STATUS_ON_DESCRIPTOR = msg({
+	message: 'On',
+	comment:
+		'Security settings: status badge next to the two-factor authentication title when it is turned on. One word.',
+});
+const STATUS_OFF_DESCRIPTOR = msg({
+	message: 'Off',
+	comment:
+		'Security settings: status badge next to the two-factor authentication title when it is turned off. One word.',
+});
+const PASSKEY_COUNT_DESCRIPTOR = msg({
+	message: '{count, plural, one {# passkey} other {# passkeys}}',
+	comment: 'Security settings: badge next to the Passkeys title showing how many passkeys are registered.',
+});
+const TURN_OFF_AUTHENTICATOR_APP_DESCRIPTOR = msg({
+	message: 'Turn off authenticator app',
+	comment:
+		'Security settings: accessible name for the button that removes authenticator-app two-factor authentication.',
+});
+const SET_UP_AUTHENTICATOR_APP_DESCRIPTOR = msg({
+	message: 'Set up authenticator app',
+	comment: 'Security settings: accessible name for the button that starts authenticator-app setup.',
+});
+const RENAME_PASSKEY_NAMED_DESCRIPTOR = msg({
+	message: 'Rename passkey {passkeyName}',
+	comment:
+		'Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.',
+});
+const DELETE_PASSKEY_NAMED_DESCRIPTOR = msg({
+	message: 'Delete passkey {passkeyName}',
+	comment:
+		'Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.',
+});
+const MANAGE_AUTHORIZED_APPS_DESCRIPTOR = msg({
+	message: 'Manage authorized apps',
+	comment: 'Security settings: accessible name for the button that opens the authorized apps list.',
+});
+const MANAGE_DEVICES_DESCRIPTOR = msg({
+	message: 'Manage devices',
+	comment: 'Security settings: accessible name for the button that opens the signed-in devices list.',
 });
 const MANAGE_APPS_AND_DEVICES_WITH_ACCESS_TO_YOUR_DESCRIPTOR = msg({
 	message: 'Manage apps and devices with access to your account',
@@ -289,47 +340,36 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				</SettingsTabSection>
 			);
 		}
+		const totpDescription = hasTotpMfa ? (
+			<Trans>Codes from your authenticator app are your second step when you sign in.</Trans>
+		) : (
+			<Trans>Use an authenticator app to generate codes for two-factor authentication</Trans>
+		);
 		return (
 			<>
-				<SettingsTabSection
+				<AccountSecurityCard
 					title={i18n._(TWO_FACTOR_AUTHENTICATION_DESCRIPTOR)}
-					description={<Trans>Add an extra layer of security to your account</Trans>}
-					data-flx="user.account-security-tab.security-tab.security-tab-content.settings-tab-section--2"
+					description={i18n._(TWO_FACTOR_CARD_DESCRIPTION_DESCRIPTOR)}
+					status={
+						hasAnyMfa
+							? {label: i18n._(STATUS_ON_DESCRIPTOR), tone: 'success'}
+							: {label: i18n._(STATUS_OFF_DESCRIPTOR), tone: 'muted'}
+					}
+					data-flx="user.account-security-tab.security-tab.two-factor-card"
 				>
-					<div className={styles.row} data-flx="user.account-security-tab.security-tab.security-tab-content.row">
-						<div
-							className={styles.rowContent}
-							data-flx="user.account-security-tab.security-tab.security-tab-content.row-content"
-						>
-							<div
-								className={styles.label}
-								data-flx="user.account-security-tab.security-tab.security-tab-content.label"
-							>
-								<Trans>Authenticator app</Trans>
-							</div>
-							<div
-								className={styles.description}
-								data-flx="user.account-security-tab.security-tab.security-tab-content.description"
-							>
-								{hasTotpMfa ? (
-									<Trans>Two-factor authentication is enabled</Trans>
-								) : (
-									<Trans>Use an authenticator app to generate codes for two-factor authentication</Trans>
-								)}
-							</div>
-							{needsEmailVerification && !hasTotpMfa && (
-								<div
-									className={styles.warningText}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.warning-text"
-								>
-									{i18n._(VERIFY_EMAIL_BEFORE_AUTHENTICATOR_APP_DESCRIPTOR)}
-								</div>
-							)}
-						</div>
+					<AccountSecurityRow
+						label={<Trans>Authenticator app</Trans>}
+						description={totpDescription}
+						warning={
+							needsEmailVerification && !hasTotpMfa ? i18n._(VERIFY_EMAIL_BEFORE_AUTHENTICATOR_APP_DESCRIPTOR) : null
+						}
+						data-flx="user.account-security-tab.security-tab.authenticator-app-row"
+					>
 						{hasTotpMfa ? (
 							<Button
-								variant="danger"
+								variant="secondary"
 								small={true}
+								aria-label={i18n._(TURN_OFF_AUTHENTICATOR_APP_DESCRIPTOR)}
 								onClick={() =>
 									ModalCommands.push(
 										modal(() => (
@@ -339,12 +379,13 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 								}
 								data-flx="user.account-security-tab.security-tab.security-tab-content.button.push"
 							>
-								<Trans>Disable</Trans>
+								<Trans>Turn off</Trans>
 							</Button>
 						) : (
 							<Button
 								small={true}
 								disabled={!canAddSecurityCredential}
+								aria-label={i18n._(SET_UP_AUTHENTICATOR_APP_DESCRIPTOR)}
 								onClick={() =>
 									ModalCommands.push(
 										modal(() => (
@@ -357,93 +398,114 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 								}
 								data-flx="user.account-security-tab.security-tab.security-tab-content.button.push--2"
 							>
-								<Trans>Enable</Trans>
+								<Trans>Set up</Trans>
 							</Button>
 						)}
-					</div>
+					</AccountSecurityRow>
 					{hasAnyMfa && (
-						<div
-							className={styles.divider}
-							data-flx="user.account-security-tab.security-tab.security-tab-content.divider"
+						<AccountSecurityRow
+							label={<Trans>Backup codes</Trans>}
+							description={<Trans>View and manage your backup codes for account recovery</Trans>}
+							data-flx="user.account-security-tab.security-tab.backup-codes-row"
 						>
-							<div className={styles.row} data-flx="user.account-security-tab.security-tab.security-tab-content.row--2">
-								<div
-									className={styles.rowContent}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.row-content--2"
-								>
-									<div
-										className={styles.label}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.label--2"
-									>
-										<Trans>Backup codes</Trans>
-									</div>
-									<div
-										className={styles.description}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.description--2"
-									>
-										<Trans>View and manage your backup codes for account recovery</Trans>
-									</div>
-								</div>
-								<Button
-									variant="secondary"
-									small={true}
-									onClick={() =>
-										ModalCommands.push(
-											modal(() => (
-												<BackupCodesViewModal
-													user={user}
-													data-flx="user.account-security-tab.security-tab.security-tab-content.backup-codes-view-modal"
-												/>
-											)),
-										)
-									}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.button.push--3"
-								>
-									<Trans>View codes</Trans>
-								</Button>
-							</div>
-						</div>
+							<Button
+								variant="secondary"
+								small={true}
+								onClick={() =>
+									ModalCommands.push(
+										modal(() => (
+											<BackupCodesViewModal
+												user={user}
+												data-flx="user.account-security-tab.security-tab.security-tab-content.backup-codes-view-modal"
+											/>
+										)),
+									)
+								}
+								data-flx="user.account-security-tab.security-tab.security-tab-content.button.push--3"
+							>
+								<Trans>View codes</Trans>
+							</Button>
+						</AccountSecurityRow>
 					)}
-				</SettingsTabSection>
-				<SettingsTabSection
+				</AccountSecurityCard>
+				<AccountSecurityCard
 					title={<Trans>Passkeys</Trans>}
 					description={<Trans>Use passkeys to sign in without a password</Trans>}
-					data-flx="user.account-security-tab.security-tab.security-tab-content.settings-tab-section--3"
-				>
-					<div className={styles.row} data-flx="user.account-security-tab.security-tab.security-tab-content.row--3">
-						<div
-							className={styles.rowContent}
-							data-flx="user.account-security-tab.security-tab.security-tab-content.row-content--3"
-						>
-							<div
-								className={styles.label}
-								data-flx="user.account-security-tab.security-tab.security-tab-content.label--3"
-							>
-								<Trans>Registered passkeys</Trans>
-							</div>
-							{needsEmailVerification && (
-								<div
-									className={styles.warningText}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.warning-text--2"
-								>
-									{i18n._(VERIFY_EMAIL_BEFORE_PASSKEY_DESCRIPTOR)}
-								</div>
-							)}
-						</div>
+					status={
+						passkeys.length > 0
+							? {
+									label: i18n._(PASSKEY_COUNT_DESCRIPTOR, {count: passkeys.length}),
+									tone: 'neutral',
+								}
+							: undefined
+					}
+					action={
 						<Button
 							small={true}
+							variant={passkeys.length > 0 ? 'secondary' : 'primary'}
 							disabled={!canAddPasskey}
 							onClick={handleAddPasskey}
 							data-flx="user.account-security-tab.security-tab.security-tab-content.button.add-passkey"
 						>
 							<Trans>Add passkey</Trans>
 						</Button>
-					</div>
+					}
+					data-flx="user.account-security-tab.security-tab.passkeys-card"
+				>
+					{needsEmailVerification && (
+						<AccountSecurityEmptyRow data-flx="user.account-security-tab.security-tab.passkeys-verify-email">
+							{i18n._(VERIFY_EMAIL_BEFORE_PASSKEY_DESCRIPTOR)}
+						</AccountSecurityEmptyRow>
+					)}
+					{passkeys.length === 0 && !needsEmailVerification && (
+						<AccountSecurityEmptyRow data-flx="user.account-security-tab.security-tab.passkeys-empty">
+							<Trans>No passkeys yet. Add one to sign in with your fingerprint, face or a security key.</Trans>
+						</AccountSecurityEmptyRow>
+					)}
+					{passkeys.map((passkey) => {
+						const createdDate = DateUtils.getRelativeDateString(new Date(passkey.created_at), i18n);
+						const lastUsedDate = passkey.last_used_at
+							? DateUtils.getRelativeDateString(new Date(passkey.last_used_at), i18n)
+							: null;
+						const passkeyName = passkey.name;
+						return (
+							<AccountSecurityRow
+								key={passkey.id}
+								label={passkeyName}
+								description={
+									lastUsedDate ? (
+										<Trans>
+											Added {createdDate}, last used {lastUsedDate}
+										</Trans>
+									) : (
+										<Trans>Added {createdDate}, never used</Trans>
+									)
+								}
+								data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-item"
+							>
+								<Button
+									variant="secondary"
+									small={true}
+									aria-label={i18n._(RENAME_PASSKEY_NAMED_DESCRIPTOR, {passkeyName})}
+									onClick={() => handleRenamePasskey(passkey.id)}
+									data-flx="user.account-security-tab.security-tab.security-tab-content.button.rename-passkey"
+								>
+									<Trans>Rename</Trans>
+								</Button>
+								<Button
+									variant="ghost"
+									small={true}
+									aria-label={i18n._(DELETE_PASSKEY_NAMED_DESCRIPTOR, {passkeyName})}
+									onClick={() => handleDeletePasskey(passkey.id)}
+									data-flx="user.account-security-tab.security-tab.security-tab-content.button.delete-passkey"
+								>
+									<Trans>Delete</Trans>
+								</Button>
+							</AccountSecurityRow>
+						);
+					})}
 					{passkeys.length > 0 && (
-						<div
-							className={styles.divider}
-							data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-two-factor-divider"
-						>
+						<AccountSecuritySwitchRow data-flx="user.account-security-tab.security-tab.passkey-two-factor-row">
 							<Switch
 								label={<Trans>Require a passkey as your second factor</Trans>}
 								description={<Trans>Ask for a passkey after your password when you sign in</Trans>}
@@ -451,154 +513,51 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 								onChange={handleTogglePasskeyTwoFactor}
 								data-flx="user.account-security-tab.security-tab.security-tab-content.switch.passkey-two-factor"
 							/>
-						</div>
+						</AccountSecuritySwitchRow>
 					)}
-					{passkeys.length > 0 && (
-						<div
-							className={styles.divider}
-							data-flx="user.account-security-tab.security-tab.security-tab-content.divider--2"
-						>
-							<div
-								className={styles.passkeyList}
-								data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-list"
-							>
-								{passkeys.map((passkey) => {
-									const createdDate = DateUtils.getRelativeDateString(new Date(passkey.created_at), i18n);
-									const lastUsedDate = passkey.last_used_at
-										? DateUtils.getRelativeDateString(new Date(passkey.last_used_at), i18n)
-										: null;
-									return (
-										<div
-											key={passkey.id}
-											className={styles.passkeyItem}
-											data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-item"
-										>
-											<div
-												className={styles.passkeyInfo}
-												data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-info"
-											>
-												<div
-													className={styles.passkeyName}
-													data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-name"
-												>
-													{passkey.name}
-												</div>
-												<div
-													className={styles.passkeyDetails}
-													data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-details"
-												>
-													{lastUsedDate ? (
-														<Trans>
-															Added: {createdDate} • last used: {lastUsedDate}
-														</Trans>
-													) : (
-														<Trans>Added: {createdDate}</Trans>
-													)}
-												</div>
-											</div>
-											<div
-												className={styles.passkeyActions}
-												data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-actions"
-											>
-												<Button
-													variant="secondary"
-													small={true}
-													onClick={() => handleRenamePasskey(passkey.id)}
-													data-flx="user.account-security-tab.security-tab.security-tab-content.button.rename-passkey"
-												>
-													<Trans>Rename</Trans>
-												</Button>
-												<Button
-													variant="danger"
-													small={true}
-													onClick={() => handleDeletePasskey(passkey.id)}
-													data-flx="user.account-security-tab.security-tab.security-tab-content.button.delete-passkey"
-												>
-													<Trans>Delete</Trans>
-												</Button>
-											</div>
-										</div>
-									);
-								})}
-							</div>
-						</div>
-					)}
-				</SettingsTabSection>
+				</AccountSecurityCard>
 				{(onManageAuthorizedApps || onManageLinkedDevices) && (
-					<SettingsTabSection
-						title={i18n._(ACCOUNT_ACCESS_DESCRIPTOR)}
+					<AccountSecurityCard
+						title={i18n._(APPS_AND_DEVICES_DESCRIPTOR)}
 						description={i18n._(MANAGE_APPS_AND_DEVICES_WITH_ACCESS_TO_YOUR_DESCRIPTOR)}
 						data-flx="user.account-security-tab.security-tab.security-tab-content.account-access"
 					>
 						{onManageAuthorizedApps && (
-							<div
-								className={styles.row}
+							<AccountSecurityRow
+								label={i18n._(AUTHORIZED_APPS_DESCRIPTOR)}
+								description={i18n._(REVIEW_APPS_THAT_CAN_ACCESS_YOUR_ACCOUNT_DESCRIPTOR)}
 								data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.authorized-apps-row"
 							>
-								<div
-									className={styles.rowContent}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.authorized-apps-row-content"
-								>
-									<div
-										className={styles.label}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.authorized-apps-label"
-									>
-										{i18n._(AUTHORIZED_APPS_DESCRIPTOR)}
-									</div>
-									<div
-										className={styles.description}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.authorized-apps-description"
-									>
-										{i18n._(REVIEW_APPS_THAT_CAN_ACCESS_YOUR_ACCOUNT_DESCRIPTOR)}
-									</div>
-								</div>
 								<Button
+									variant="secondary"
 									small={true}
 									submitting={authorizedAppsSubmitting}
+									aria-label={i18n._(MANAGE_AUTHORIZED_APPS_DESCRIPTOR)}
 									onClick={onManageAuthorizedApps}
 									data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.button.manage-authorized-apps"
 								>
 									<Trans>Manage</Trans>
 								</Button>
-							</div>
+							</AccountSecurityRow>
 						)}
 						{onManageLinkedDevices && (
-							<div
-								className={styles.divider}
-								data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-divider"
+							<AccountSecurityRow
+								label={i18n._(LINKED_DEVICES_DESCRIPTOR)}
+								description={i18n._(REVIEW_SIGNED_IN_DEVICES_DESCRIPTOR)}
+								data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-row"
 							>
-								<div
-									className={styles.row}
-									data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-row"
+								<Button
+									variant="secondary"
+									small={true}
+									aria-label={i18n._(MANAGE_DEVICES_DESCRIPTOR)}
+									onClick={onManageLinkedDevices}
+									data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.button.manage-linked-devices"
 								>
-									<div
-										className={styles.rowContent}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-row-content"
-									>
-										<div
-											className={styles.label}
-											data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-label"
-										>
-											{i18n._(LINKED_DEVICES_DESCRIPTOR)}
-										</div>
-										<div
-											className={styles.description}
-											data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.devices-description"
-										>
-											{i18n._(REVIEW_SIGNED_IN_DEVICES_DESCRIPTOR)}
-										</div>
-									</div>
-									<Button
-										small={true}
-										onClick={onManageLinkedDevices}
-										data-flx="user.account-security-tab.security-tab.security-tab-content.account-access.button.manage-linked-devices"
-									>
-										<Trans>Manage</Trans>
-									</Button>
-								</div>
-							</div>
+									<Trans>Manage</Trans>
+								</Button>
+							</AccountSecurityRow>
 						)}
-					</SettingsTabSection>
+					</AccountSecurityCard>
 				)}
 			</>
 		);

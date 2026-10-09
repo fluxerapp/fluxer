@@ -1111,14 +1111,14 @@ msgstr "{count, plural, one {# चैनल इसे फ़ॉलो करत�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# कम्युनिटी मिली} other {# कम्युनिटी मिलीं}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# समुदाय की अपनी सेटिंग है} other {# समुदायों की अपनी सेटिंग है}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध है।} other {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध हैं।}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# समुदाय एक अलग सेटिंग का उपयोग करता है} other {# समुदाय एक अलग सेटिंग का उपयोग करते हैं}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1183,6 +1183,11 @@ msgstr "{count, plural, one {# अन्य} other {# अन्य}}"
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# प्रतिभागी कॉल में है} other {# प्रतिभागी कॉल में हैं}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# पासकी} other {# पासकी}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2923,11 +2928,6 @@ msgstr "अकाउंट"
 msgid "Account & premium overrides"
 msgstr "अकाउंट और प्रीमियम ओवरराइड"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "अकाउंट एक्सेस"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3260,10 +3260,6 @@ msgstr "जारी रखने के लिए कोई अकाउंट 
 msgid "Add an email and password to your account first."
 msgstr "पहले अपने अकाउंट में ईमेल और पासवर्ड जोड़ें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "अपने अकाउंट में सुरक्षा की एक और लेयर जोड़ें"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3315,7 +3311,7 @@ msgstr "कस्टम शॉर्टकट जोड़ें, बिल्�
 msgid "Add domain connection"
 msgstr "डोमेन कनेक्शन जोड़ें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "ईमेल जोड़ें"
 
@@ -3397,7 +3393,7 @@ msgid "Add override"
 msgstr "ओवरराइड जोड़ें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "पासकी जोड़ें"
@@ -3536,6 +3532,14 @@ msgstr "कस्टम यूआरएल पैटर्न के साथ �
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "कस्टम यूआरएल पैटर्न के साथ अपने खुद के अनुवादक जोड़ें। जिस टेक्स्ट का अनुवाद करना है, उसके लिए <0>{query}</0> को प्लेसहोल्डर के तौर पर इस्तेमाल करें।"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "{createdDate} को जोड़ा गया, {lastUsedDate} को अंतिम बार इस्तेमाल किया गया"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "{createdDate} को जोड़ा गया, कभी इस्तेमाल नहीं किया गया"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3615,14 +3619,6 @@ msgstr "पसंदीदा में जोड़ा गया"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "सेव किए गए मीडिया में जोड़ा गया"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "जोड़ा गया: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "जोड़ा गया: {createdDate} • आखिरी बार इस्तेमाल किया गया: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3951,11 +3947,11 @@ msgstr "टेक्स्ट चैनल के नामों में ब�
 msgid "Allow direct messages"
 msgstr "डायरेक्ट मैसेज की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "कम्युनिटी बॉट से डायरेक्ट मैसेज की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "कम्युनिटी सदस्यों से डायरेक्ट मैसेज की अनुमति दें"
 
@@ -4059,7 +4055,7 @@ msgstr "{permissions} की अनुमति दी गई"
 msgid "Allowed all members to mention this role"
 msgstr "सभी सदस्यों को इस रोल को मेंशन करने की अनुमति दी गई"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "अनुमत कॉलर"
 
@@ -4068,7 +4064,7 @@ msgstr "अनुमत कॉलर"
 msgid "Allowed flexible text channel names"
 msgstr "लचीले टेक्स्ट चैनल नामों की अनुमति दी"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "अनुमत इनवाइट"
 
@@ -4156,6 +4152,11 @@ msgstr "पहले ही रिडीम किया गया"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "पहले से रद्द करने के लिए सेट है"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "नीचे दिए गए समुदायों को भी बदलें"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4611,9 +4612,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "कोई भी अकाउंट के लिए अनुरोध कर सकता है, लेकिन एडमिनिस्ट्रेटर को उसे मंज़ूरी देनी होगी।"
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "मेरे समुदायों में कोई भी"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "जो कोई भी आपको ढूंढता है, वह अनुरोध भेज सकता है। नीचे दिए गए समूहों को चुनने के लिए इसे बंद कर दें।"
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4762,6 +4767,14 @@ msgstr "ऐप्लिकेशन और बॉट"
 msgid "Applies to"
 msgstr "इस पर लागू होता है"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "अब से आपके द्वारा शामिल किए जाने वाले समुदायों में बॉट्स पर लागू होता है। आप इसे प्रत्येक समुदाय के लिए भी बदल सकते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "अब से आपके द्वारा शामिल किए जाने वाले समुदायों पर लागू होता है। आप इसे प्रत्येक समुदाय के लिए भी बदल सकते हैं।"
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4778,11 +4791,6 @@ msgstr "थीम लागू करें"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "सभी कम्युनिटी पर लागू करें"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "इन समुदायों पर भी लागू करें"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4803,6 +4811,11 @@ msgstr "स्वीकृत"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "ऐप्स"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "ऐप और डिवाइस"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4857,7 +4870,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "क्या आप वाकई \"{categoryName}\" श्रेणी को मिटाना चाहते हैं? इसके अंदर का चैनल, चैनल सूची में सबसे ऊपर चला जाएगा।"
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "क्या आप वाकई पासकी <0>{0}</0> मिटाना चाहते हैं?"
 
@@ -4869,7 +4882,7 @@ msgstr "क्या आप वाकई इस अटैचमेंट को 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "क्या आप वाकई इस कम्युनिटी को मिटाना चाहते हैं? इस कार्रवाई को पहले जैसा नहीं किया जा सकता। सभी चैनल, मैसेज और सेटिंग्स हमेशा के लिए मिटा दिए जाएंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "क्या आप वाकई यह पासकी हटाना चाहते हैं?"
 
@@ -4949,10 +4962,15 @@ msgid "Ask before starting calls"
 msgstr "कॉल शुरू करने से पहले पूछें"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "साइन इन करते समय आपके पासवर्ड के बाद पासकी भी मांगी जाए"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "साइन इन करते समय अपने पासवर्ड के बाद दूसरा चरण माँगें।"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5227,7 +5245,7 @@ msgstr "प्रमाणीकरण"
 msgid "Authenticator"
 msgstr "ऑथेंटिकेटर"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "ऑथेंटिकेटर ऐप"
 
@@ -5302,7 +5320,7 @@ msgstr "अधिकृत ऐप्लिकेशन"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5723,7 +5741,7 @@ msgstr "बैकअप कोड"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5969,7 +5987,7 @@ msgid "Block"
 msgstr "ब्लॉक करें"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "ब्लॉक करें"
@@ -6086,7 +6104,7 @@ msgid "Blur"
 msgstr "धुंधला करें"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "धुंधला करें"
@@ -6592,6 +6610,10 @@ msgstr "कॉल गोपनीयता"
 msgid "Calls"
 msgstr "कॉल"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "आपके द्वारा अनुमति दी गई कॉलें अभी भी आती हैं, लेकिन वे बजेंगी नहीं।"
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6702,6 +6724,11 @@ msgstr "कैमरे और वर्चुअल कैप्चर डि�
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "{voiceChannelCameraUserLimit} से ज़्यादा प्रतिभागियों के होने पर कैमरे बंद रहते हैं"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "आपको संदेश भेज सकते हैं"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -7036,7 +7063,7 @@ msgid "Change chat embed background"
 msgstr "चैट एम्बेड बैकग्राउंड बदलें"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "ईमेल बदलें"
 
@@ -7129,7 +7156,7 @@ msgstr "मालिक बदलें"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8039,6 +8066,11 @@ msgstr "चुनें कि {clientLabel} आपकी कम्युनि�
 msgid "Choose what friends see in their active now panel"
 msgstr "चुनें कि दोस्त अपने अभी सक्रिय पैनल में क्या देखें"
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "चुनें कि संवेदनशील के रूप में फ़्लैग की गई छवियों और वीडियो के साथ क्या होता है। दिखाएँ उन्हें सामान्य रूप से प्रदर्शित करता है, धुंधला करें क्लिक करने तक उन्हें छिपा देता है, और ब्लॉक करें उन्हें पूरी तरह से छिपा देता है।"
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "सदस्य पोस्ट करने या समुदाय के सदस्यों को सीधे संदेश भेजने से पहले उनके पास क्या होना चाहिए, उसे चुनें। भूमिकाओं वाले सदस्य इन जांचों को बायपास कर सकते हैं। सार्वजनिक स्थानों के लिए, हम सत्यापन सक्षम करने की सलाह देते हैं।"
@@ -8100,6 +8132,10 @@ msgstr "चुने गए टेक्स्ट को सर्च करत�
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "चुने गए टेक्स्ट का अनुवाद करने के लिए डिफ़ॉल्ट रूप से किस अनुवादक का उपयोग किया जाता है, उसे चुनें।"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "चुनें कि कौन आपको पहले पूछे बिना ग्रुप चैट में जोड़ सकता है।"
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "चुनें कि आपकी प्रोफ़ाइल पर यह कनेक्शन कौन देख सकता है।"
@@ -8108,6 +8144,14 @@ msgstr "चुनें कि आपकी प्रोफ़ाइल पर �
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "चुनें कि आपकी प्रोफ़ाइल का विवरण कौन देख सकता है"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "चुनें कि कौन आपको फ्रेंड रिक्वेस्ट भेज सकता है।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "आपसे कौन कॉल शुरू कर सकता है, यह चुनें।"
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8177,7 +8221,7 @@ msgstr "ईमेल और पासवर्ड जोड़कर अपन�
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "अपना अकाउंट क्लेम करने के लिए एक यूज़रनेम और पासवर्ड चुनें। आप इनसे साइन इन करेंगे, इसलिए ऐसे चुनें जो आपको याद रहें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "दो-कारक प्रमाणीकरण और पासकी जैसे सुरक्षा फ़ीचर एक्सेस करने के लिए अपना अकाउंट क्लेम करें।"
 
@@ -8761,6 +8805,10 @@ msgstr "कोडेक"
 msgid "Codes"
 msgstr "कोड"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "आपके ऑथेंटिकेटर ऐप से कोड साइन इन करते समय आपका दूसरा कदम होते हैं।"
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8957,6 +9005,21 @@ msgstr "250 से ज़्यादा लोगों वाली कम्�
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "आप जिन समुदायों से जुड़ सकते हैं"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "अब से आप जिन समुदायों में शामिल होंगे, वे इसका उपयोग करेंगे, और नीचे दिए गए समुदाय भी उसी के अनुसार बदल जाएंगे।"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "आप जिन समुदायों में शामिल होंगे, वे अब इसका उपयोग करेंगे।"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "अब से आप जिन समुदायों में शामिल होंगे, वे इसका उपयोग करेंगे। आपके वर्तमान समुदायों की अपनी सेटिंग्स बनी रहेंगी।"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -10365,7 +10428,7 @@ msgid "Couldn't delete application"
 msgstr "ऐप्लिकेशन को हटाया नहीं जा सका"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "पासकी मिटाई नहीं जा सकी"
 
@@ -10760,7 +10823,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "मेंशन सप्रेशन बायपास अपडेट नहीं किया जा सका"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "पासकी दो-कारक प्रमाणीकरण अपडेट नहीं किया जा सका"
 
@@ -10876,7 +10939,7 @@ msgstr "{userName} के साथ एक नया ग्रुप बना�
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "नया किट बनाएँ"
 
@@ -11033,8 +11096,8 @@ msgstr "सार्वजनिक थ्रेड बनाएं"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "रिकवरी किट बनाएँ"
@@ -11105,7 +11168,7 @@ msgid "Created"
 msgstr "बनाया गया"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "{0} को बनाया गया"
 
@@ -11222,6 +11285,11 @@ msgstr "Ctrl"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:63
 msgid "Currency"
 msgstr "मुद्रा"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "वर्तमान"
 
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
@@ -11984,7 +12052,7 @@ msgstr "डेलावेयर"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12157,9 +12225,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "अन्य सदस्यों के मैसेज मिटाएँ। पिन करना अलग से नियंत्रित होता है।"
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "पासकी मिटाएँ"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "पासकी {passkeyName} हटाएं"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12628,7 +12701,7 @@ msgstr "डिवाइस:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12713,7 +12786,7 @@ msgstr "डायरेक्ट मैसेज के प्रीव्यू
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "डायरेक्ट मैसेज"
 
@@ -12723,12 +12796,12 @@ msgid "Direct messages (open and closed)"
 msgstr "डायरेक्ट मैसेज (खुले और बंद)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "दोस्तों के डायरेक्ट मैसेज"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "दूसरों के डायरेक्ट मैसेज"
 
@@ -12739,7 +12812,6 @@ msgstr "सीधा अपलोड चालू है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12812,6 +12884,11 @@ msgstr "हार्डवेयर एक्सीलरेशन बंद क
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "मोबाइल पुश नोटिफ़िकेशन बंद करें"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "अपना खाता अक्षम या हटाएँ"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13978,8 +14055,8 @@ msgstr "ईमेल"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "ईमेल पता"
@@ -14215,7 +14292,6 @@ msgstr "पसंदीदा खाली हैं"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "चालू करें"
 
@@ -14955,7 +15031,7 @@ msgstr "इस चैनल को फॉलो करने वाले हर
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "हर कोई"
 
@@ -16500,10 +16576,14 @@ msgstr "दोस्त और चुने हुए ग्रुप आपक�
 msgid "Friends and small communities only"
 msgstr "सिर्फ़ दोस्त और छोटी कम्युनिटी"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "आपके दोस्त आपको सीधे संदेश भेज सकते हैं। चुनें कि क्या आपके साथ कोई समुदाय साझा करने वाले लोग आपको पहले फ्रेंड रिक्वेस्ट भेजे बिना संदेश भेज सकते हैं।"
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "आपके दोस्त आपको हमेशा मैसेज कर सकते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "आपके दोस्त आपको हमेशा मैसेज कर सकते हैं। ये सेटिंग्स उन लोगों और बॉट्स के लिए हैं जिनके साथ आप केवल एक कम्युनिटी शेयर करते हैं।"
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16512,7 +16592,9 @@ msgstr "दोस्तों के दोस्त"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "सिर्फ़ दोस्त"
@@ -16521,6 +16603,11 @@ msgstr "सिर्फ़ दोस्त"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "दोस्तों के सेक्शन"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "आपके दोस्त आपको आपकी एक्टिव नाउ लिस्ट में देख पाएंगे कि आप किस वॉयस चैनल में हैं। आप इसे हर 24 घंटे में एक बार बदल सकते हैं।"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -17347,6 +17434,10 @@ msgstr "ग्रुप चैट में जोड़ना: सिर्फ�
 msgid "Group chat adds: nobody"
 msgstr "ग्रुप चैट में जोड़ना: कोई नहीं"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "ग्रुप चैट"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
 msgid "Group direct message"
@@ -17673,7 +17764,7 @@ msgstr "छिपा हुआ"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18182,7 +18273,7 @@ msgstr "अगर आपको लगता है कि यह अवैध �
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "अगर आप इसे खारिज करते हैं, तो आप बाद में {notificationSettingsPath} में डेस्कटॉप नोटिफ़िकेशन चालू कर सकते हैं।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "अगर आप अपना पासवर्ड भूल जाते हैं, तो रिकवरी किट आपके खाते में वापस आने का एकमात्र तरीका है।"
 
@@ -19623,6 +19714,11 @@ msgstr "मुफ़्त और प्रीमियम टियर रख�
 msgid "Keep grace period"
 msgstr "ग्रेस पीरियड रखें"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "अपनी वर्तमान सेटिंग रखें"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
@@ -19806,11 +19902,11 @@ msgid "Largest file you can upload"
 msgstr "अपलोड करने के लिए सबसे बड़ी फ़ाइल"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "पिछली बार बदला गया: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "पिछली बार बदला गया: कभी नहीं"
 
@@ -20112,7 +20208,7 @@ msgstr "लोगों को आपको वीडियो पर देख�
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "पुश-टू-टॉक और शॉर्टकट को अन्य ऐप्स में काम करने दें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "यह आपको अपना पासवर्ड भूल जाने पर रीसेट करने की सुविधा देता है।"
 
@@ -20705,8 +20801,8 @@ msgstr "इंस्टेंस को अपना बनाएं"
 msgid "Malta"
 msgstr "माल्टा"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "प्रबंधित करें"
 
@@ -20717,7 +20813,7 @@ msgid "Manage accounts"
 msgstr "अकाउंट प्रबंधित करें"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "अपने अकाउंट तक एक्सेस रखने वाले ऐप्स और डिवाइस प्रबंधित करें"
 
@@ -20725,6 +20821,11 @@ msgstr "अपने अकाउंट तक एक्सेस रखने �
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
 msgstr "अधिकृत ऐप्लिकेशन प्रबंधित करें"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
+msgstr "अनुमोदित ऐप्स प्रबंधित करें"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:26
@@ -20750,6 +20851,11 @@ msgstr "कम्युनिटी प्रबंधित करें"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "कम्युनिटी सुविधाएँ प्रबंधित करें"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "डिवाइस प्रबंधित करें"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -21191,6 +21297,16 @@ msgstr "मीडिया डिस्प्ले"
 msgid "Media filter"
 msgstr "मीडिया फ़िल्टर"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "18+ के रूप में चिह्नित नहीं किए गए चैनलों में मीडिया। 18+ के रूप में चिह्नित चैनल हमेशा इसे दिखाते हैं।"
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "समूह चैट में और उन लोगों से सीधे संदेशों में जो आपके मित्र नहीं हैं, मीडिया।"
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21242,6 +21358,11 @@ msgstr "मीडिया का आकार"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "प्लेबैक रोकें"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "आपके दोस्तों द्वारा आपको डायरेक्ट मैसेज में भेजा गया मीडिया।"
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21797,7 +21918,7 @@ msgid "Messages failed to load"
 msgstr "मैसेज लोड नहीं हो पाए"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "कम्युनिटी चैनलों में मैसेज"
 
@@ -23362,7 +23483,7 @@ msgstr "कोई डेस्कटॉप अपडेट उपलब्ध �
 msgid "No displays found"
 msgstr "कोई डिस्प्ले नहीं मिला"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "कोई ईमेल पता सेट नहीं है"
 
@@ -23525,7 +23646,11 @@ msgstr "इस इंस्टेंस पर कोई वैकल्पि�
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "{query} का कोई भी हिस्सा लागू नहीं किया जा सका। रेखांकित मान को ठीक करें या खोजने के लिए कुछ जोड़ें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "अभी तक कोई पासकी नहीं है। अपनी फ़िंगरप्रिंट, चेहरे या सुरक्षा कुंजी से साइन इन करने के लिए एक जोड़ें।"
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "कोई पासवर्ड सेट नहीं है"
 
@@ -23938,7 +24063,7 @@ msgstr "नहीं मिला"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "अभी नहीं"
@@ -24014,6 +24139,11 @@ msgstr "रिफ़ंड के लिए कुछ नहीं"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "खोजने के लिए कुछ नहीं है"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "कुछ नहीं बदलेगा। यह बस आपकी सेटिंग्स की पुष्टि करता है।"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24144,12 +24274,14 @@ msgstr "वस्तुएँ"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "बंद"
 
@@ -24207,9 +24339,11 @@ msgstr "सबसे पुराना पहले"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "चालू"
 
@@ -25339,7 +25473,7 @@ msgstr "पासकी अपडेट की गई"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25354,8 +25488,8 @@ msgstr "पासकी के लिए मान्य ऐप्लिके�
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "पासवर्ड"
 
@@ -25580,8 +25714,18 @@ msgstr "पेंसिल्वेनिया"
 msgid "People"
 msgstr "लोग"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "आपके समुदायों के लोग आपको दोस्त बनाए बिना संदेश भेज सकते हैं।"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "आपके समुदायों के लोग आपको संदेश भेजने से पहले आपके दोस्त होने चाहिए।"
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "लोग आपको संदेश भेजने से पहले आपके दोस्त होने चाहिए। वे अभी भी आपको फ्रेंड रिक्वेस्ट भेज सकते हैं।"
 
@@ -25596,9 +25740,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "लोग ईमेल पते और पासवर्ड से साइन इन करते हैं। पासवर्ड रीसेट और सत्यापन के लिए ईमेल डिलीवरी की आवश्यकता होती है, जिसे आप बाद में सेट कर सकते हैं।"
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "आपके समुदाय के लोग आपको सीधे संदेश भेज सकते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "जो लोग आपके साथ एक समुदाय साझा करते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "ऐसे लोग जिनके कम से कम एक दोस्त आपके साथ साझा हो।"
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25677,7 +25829,7 @@ msgstr "यहां हर चैनल में आपके भेजे ग
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "नीचे दिए गए फ़िल्टर से मेल खाने वाले मैसेज हमेशा के लिए मिटा दें। इसे पहले जैसा नहीं किया जा सकता।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "अपना अकाउंट और उससे जुड़ा सारा डेटा हमेशा के लिए मिटा दें। इस कार्रवाई को पहले जैसा नहीं किया जा सकता।"
 
@@ -27261,6 +27413,10 @@ msgstr "वजह: {0}"
 msgid "Receipt"
 msgstr "रसीद"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "कॉल चुपचाप प्राप्त करें"
+
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
 msgid "Receive notifications when someone mentions you"
@@ -27371,7 +27527,7 @@ msgid "Recovery key"
 msgstr "रिकवरी कुंजी"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "रिकवरी किट"
@@ -27558,10 +27714,6 @@ msgstr "रजिस्टर करें"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "खाता पंजीकृत करें"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "रजिस्टर्ड पासकी"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28149,7 +28301,7 @@ msgstr "अनुमतियाँ हटाने से बॉट की स�
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "टाइमआउट हटाने से <0>{targetUserTag}</0> को फिर से मैसेज भेजने, रिएक्ट करने और वॉइस चैनल में शामिल होने की अनुमति मिल जाएगी।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "नाम बदलें"
 
@@ -28177,6 +28329,11 @@ msgstr "चैनल का नाम बदलने का फ़ॉर्म"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "इमोजी का नाम बदलें"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "पासकी {passkeyName} का नाम बदलें"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28388,7 +28545,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "मॉडरेशन ऐक्शन के लिए 2FA ज़रूरी करें"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "अपने दूसरे कारक के रूप में पासकी ज़रूरी करें"
@@ -28924,7 +29081,7 @@ msgstr "साइन-इन पर वापस जाएँ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "दिखाएँ"
@@ -28982,7 +29139,7 @@ msgid "Review and confirm"
 msgstr "समीक्षा करें और पुष्टि करें"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "उन ऐप्स की समीक्षा करें जिनके पास आपके अकाउंट का एक्सेस है।"
 
@@ -29002,7 +29159,7 @@ msgid "Review privacy settings"
 msgstr "निजता सेटिंग की समीक्षा करें"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "साइन इन किए गए डिवाइस की समीक्षा करें और जिन सेशन को आप नहीं पहचानते, उनसे साइन आउट करें।"
 
@@ -29134,6 +29291,11 @@ msgstr "दायाँ आइकॉन"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "माउस का दायाँ बटन"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "अभी"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29325,7 +29487,6 @@ msgstr "सैचुरेशन"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29350,7 +29511,6 @@ msgstr "सैचुरेशन"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "सेव करें"
@@ -29372,7 +29532,7 @@ msgid "Save 17%"
 msgstr "17% बचाएँ"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "रिकवरी किट सहेजें"
@@ -29397,7 +29557,9 @@ msgstr "बैकग्राउंड सेव करें"
 msgid "Save banner"
 msgstr "बैनर सेव करें"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "बदलाव सेव करें"
 
@@ -30167,7 +30329,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "सुरक्षा"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "सुरक्षा सुविधाएं"
 
@@ -30793,7 +30955,7 @@ msgstr "म्यूट शॉर्टकट सेट करें"
 msgid "Set new password"
 msgstr "नया पासवर्ड सेट करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "पासवर्ड सेट करें"
 
@@ -30913,6 +31075,7 @@ msgid "Set the voice region to automatic"
 msgstr "वॉइस क्षेत्र ऑटोमैटिक पर सेट किया गया"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "सेट अप करें"
@@ -30923,7 +31086,9 @@ msgid "Set up {productName}"
 msgstr "{productName} सेट अप करें"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "ऑथेंटिकेटर ऐप सेट अप करें"
 
@@ -31215,7 +31380,7 @@ msgid "Shorten your about me and try again."
 msgstr "अपने “मेरे बारे में” को छोटा करें और फिर से कोशिश करें।"
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "दिखाएँ"
@@ -31873,6 +32038,11 @@ msgstr "साइन-इन फ़्लो"
 msgid "Sign-in method"
 msgstr "साइन-इन विधि"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "साइन-इन के तरीके"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31950,10 +32120,6 @@ msgstr "साइलेंट कॉल"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:98
 msgid "Silent calls"
 msgstr "साइलेंट कॉल"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "सभी से साइलेंट कॉल"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
@@ -33273,7 +33439,7 @@ msgid "Stop trusting all links?"
 msgstr "सभी लिंक पर भरोसा करना बंद करें?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग बंद करें?"
 
@@ -34020,6 +34186,11 @@ msgstr "टैग लोगों को पोस्ट खोजने मे�
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "टैग 2 से {maxLength} वर्ण के होने चाहिए और उनमें सिर्फ़ अक्षर और अंक हो सकते हैं।"
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "एक पल लें और जांचें कि आपको कौन संदेश भेज सकता है। जब तक आप चुनते नहीं हैं, तब तक कुछ भी नहीं बदलता है।"
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "यह आपके अगले रिन्यूअल पर लागू होगा। हम आपके मौजूदा मासिक भुगतान से {creditLabel} क्रेडिट लागू करेंगे, इसलिए आपका पहला वार्षिक शुल्क <0>{firstRenewalPriceLabel}</0> होगा। भविष्य के वार्षिक रिन्यूअल {renewalPrice}/वर्ष होंगे।"
@@ -34101,7 +34272,7 @@ msgstr "टेम्पोरल लेयर्स"
 msgid "Temporarily disable your account"
 msgstr "अपना अकाउंट अस्थायी रूप से बंद करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "अपना अकाउंट कुछ समय के लिए बंद करें। आप बाद में फिर से साइन इन करके इसे चालू कर सकते हैं।"
 
@@ -35329,11 +35500,11 @@ msgstr "यह दूसरा विकल्प विवरण है"
 msgid "This is the third option description"
 msgstr "यह तीसरा विकल्प विवरण है"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "यह आपकी आखिरी पासकी है और पासकी ही आपका दूसरा कारक है। इसे मिटाने से आपके अकाउंट का दो-कारक प्रमाणीकरण बंद हो जाएगा, और आपके मौजूदा बैकअप कोड काम करना बंद कर देंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "यह आपकी आखिरी पासकी है। इसके मिट जाने के बाद आप पासकी का उपयोग अपने दूसरे कारक के रूप में नहीं कर पाएँगे।"
 
@@ -36444,7 +36615,8 @@ msgstr "तुर्की"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "बंद करें"
 
@@ -36461,6 +36633,11 @@ msgstr "जो भी आपको ठीक न लगे, उसे बंद 
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "इस स्रोत के लिए ऑडियो शेयरिंग बंद करें या थोड़ी देर बाद फिर से प्रयास करें।"
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "ऑथेंटिकेटर ऐप बंद करें"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36493,7 +36670,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "लॉगिन या अकाउंट सुरक्षा विवरण देखने से पहले स्ट्रीमिंग गोपनीयता बंद करें।"
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "चालू करें"
 
@@ -36631,10 +36808,6 @@ msgstr "दो-कारक प्रमाणीकरण बंद किय�
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "दो-कारक प्रमाणीकरण चालू किया गया"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "दो-कारक प्रमाणीकरण चालू है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37951,7 +38124,7 @@ msgstr "वास्तविक मान का उपयोग करें"
 msgid "Use alternative method"
 msgstr "कोई और तरीका इस्तेमाल करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "दो-कारक प्रमाणीकरण के लिए कोड जनरेट करने के लिए एक ऑथेंटिकेटर ऐप का उपयोग करें"
 
@@ -38088,12 +38261,12 @@ msgid "Use native title bar"
 msgstr "नेटिव टाइटल बार का उपयोग करें"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग करें?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "पासवर्ड के बिना साइन इन करने के लिए पासकी का उपयोग करें"
@@ -38618,12 +38791,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "फ्रेंड रिक्वेस्ट भेजने के लिए अपना ईमेल पता वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "पासकी जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "ऑथेंटिकेटर ऐप जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
@@ -38910,7 +39083,7 @@ msgstr "बैन किए गए यूज़र देखें और प्
 msgid "View and manage every webhook configured across your community."
 msgstr "अपनी कम्युनिटी में कॉन्फ़िगर किए गए सभी वेबहुक देखें और प्रबंधित करें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "अकाउंट रिकवरी के लिए अपने बैकअप कोड देखें और प्रबंधित करें"
 
@@ -38949,7 +39122,7 @@ msgstr "चैनल देखें"
 msgid "View channel members"
 msgstr "चैनल के सदस्य देखें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "कोड देखें"
 
@@ -39206,11 +39379,6 @@ msgstr "वॉइस गतिविधि"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "वॉइस गतिविधि"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "'अभी सक्रिय' में वॉइस गतिविधि"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -40052,10 +40220,6 @@ msgstr "जब तक पुश-टू-टॉक चालू है, आपक�
 msgid "Who can add"
 msgstr "कौन जोड़ सकता है"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "आपको ग्रुप चैट में कौन जोड़ सकता है"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40077,12 +40241,12 @@ msgid "Who can join"
 msgstr "कौन शामिल हो सकता है"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "कौन आपको संदेश भेज सकता है"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "आपको कौन मैसेज कर सकता है?"
 
@@ -40404,7 +40568,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "आप 14 दिनों के अंदर डिलीट करने की प्रक्रिया को रद्द कर सकते हैं"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "आप इसे कभी भी अपनी गोपनीयता सेटिंग में बदल सकते हैं, जिसमें प्रत्येक समुदाय के लिए भी शामिल है।"
 
@@ -40677,7 +40841,7 @@ msgstr "आपने {PREMIUM_PRODUCT_NAME} पर रहते हुए अप
 msgid "You do not have access to the channel where this message was sent."
 msgstr "आपके पास उस चैनल का एक्सेस नहीं है जहाँ यह मैसेज भेजा गया था।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "आपके पास अभी तक कोई रिकवरी किट नहीं है"
 
@@ -40931,7 +41095,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "अनुमति देने के बाद आपको {redirectHostname} पर ले जाया जाएगा।"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "अब आपसे पासवर्ड के बाद पासकी नहीं मांगी जाएगी। आपका ऑथेंटिकेटर ऐप आपका दूसरा कारक बना रहेगा।"
 
@@ -40955,7 +41119,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "आपको सभी साइन-आउट किए गए डिवाइस पर फिर से साइन इन करना होगा"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "नए डिवाइस पर साइन इन करने के लिए आपको अपनी पासकी में से कोई एक चाहिए होगी। अगर आप अपनी सभी पासकी खो देते हैं, तो आप अपने अकाउंट से लॉक आउट हो सकते हैं। आपके बैकअप कोड सेव कर दिए जाएँगे, ताकि अंदर आने का एक रास्ता आपके पास बना रहे।"
 
@@ -41300,7 +41464,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "आपके अकाउंट के लिए मल्टी-फ़ैक्टर प्रमाणीकरण ज़रूरी है, लेकिन इस डिवाइस पर कोई भी समर्थित तरीका सेट अप नहीं है। अपने ऑथेंटिकेटर ऐप या सुरक्षा कुंजी वाले डिवाइस पर साइन इन करें या इस इंस्टेंस के एडमिनिस्ट्रेटर से संपर्क करें।"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "पासवर्ड से साइन इन करते समय आपके अकाउंट को दो-कारक प्रमाणीकरण की सुरक्षा नहीं मिलेगी। जिन कम्युनिटी में दो-कारक प्रमाणीकरण ज़रूरी है, उनमें आपकी बढ़ी हुई अनुमतियाँ भी चली जाएँगी।"
 
