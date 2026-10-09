@@ -1197,6 +1197,12 @@ msgstr "{count, plural, one {# ander} other {# anderen}}"
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# deelnemer aan gesprek} other {# deelnemers aan gesprek}}"
 
+# auto-i18n: reviewed unchanged
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# passkey} other {# passkeys}}"
+
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
@@ -2936,11 +2942,6 @@ msgstr "Account"
 msgid "Account & premium overrides"
 msgstr "Geforceerde account- en premiuminstellingen"
 
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "Accounttoegang"
-
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
 msgid "Account and security details are hidden"
@@ -3273,10 +3274,6 @@ msgstr "Voeg een account toe om verder te gaan."
 msgid "Add an email and password to your account first."
 msgstr "Voeg eerst een e-mailadres en wachtwoord toe aan je account."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "Voeg een extra beveiligingslaag toe aan je account"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3328,7 +3325,7 @@ msgstr "Aangepaste sneltoetsen toevoegen, ingebouwde sneltoetsen uitschakelen en
 msgid "Add domain connection"
 msgstr "Domeinverbinding toevoegen"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "E-mailadres toevoegen"
 
@@ -3410,7 +3407,7 @@ msgid "Add override"
 msgstr "Aangepaste toegangsrechten toevoegen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "Passkey toevoegen"
@@ -3549,6 +3546,14 @@ msgstr "Voeg je eigen zoekmachines toe met een aangepast URL-patroon. Gebruik <0
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Voeg je eigen vertalers toe met een aangepast URL-patroon. Gebruik <0>{query}</0> als tijdelijke aanduiding voor de te vertalen tekst."
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "Toegevoegd op {createdDate}, laatst gebruikt op {lastUsedDate}"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "Toegevoegd {createdDate}, nooit gebruikt"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3628,14 +3633,6 @@ msgstr "Toegevoegd aan favorieten"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:19
 msgid "Added to saved media"
 msgstr "Toegevoegd aan opgeslagen media"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "Toegevoegd: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "Toegevoegd: {createdDate} • voor het laatst gebruikt: {lastUsedDate}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -4817,6 +4814,11 @@ msgstr "Goedgekeurd"
 msgid "Apps"
 msgstr "Apps"
 
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "Apps en apparaten"
+
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
 msgid "Arabic"
@@ -4870,7 +4872,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "Weet je zeker dat je de categorie \"{categoryName}\" wilt verwijderen? Het kanaal erin wordt verplaatst naar de bovenkant van de kanalenlijst."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Weet je zeker dat je de passkey <0>{0}</0> wilt verwijderen?"
 
@@ -4882,7 +4884,7 @@ msgstr "Weet je zeker dat je deze bijlage wilt verwijderen? Deze actie kan niet 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Weet je zeker dat je deze community wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt. Alle kanalen, berichten en instellingen worden permanent verwijderd."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Weet je zeker dat je deze passkey wilt verwijderen?"
 
@@ -4962,10 +4964,15 @@ msgid "Ask before starting calls"
 msgstr "Vragen voordat je iemand belt"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Vraag om een passkey na je wachtwoord bij het inloggen"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "Vraag om een tweede stap na je wachtwoord wanneer je inlogt."
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5240,7 +5247,7 @@ msgstr "Authenticatie"
 msgid "Authenticator"
 msgstr "Authenticator"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "Authenticator-app"
 
@@ -5315,7 +5322,7 @@ msgstr "Geautoriseerde apps"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5736,7 +5743,7 @@ msgstr "Back-upcode"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -7049,7 +7056,7 @@ msgid "Change chat embed background"
 msgstr "Achtergrond voor chat-embed wijzigen"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "E-mailadres wijzigen"
 
@@ -7142,7 +7149,7 @@ msgstr "Eigenaar wijzigen"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -8195,7 +8202,7 @@ msgstr "Voltooi de registratie van je account door een e-mailadres en wachtwoord
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "Claim je account door een gebruikersnaam en wachtwoord te kiezen. Je meldt je hiermee aan, dus kies er een die je kunt onthouden."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Voltooi de registratie van je account om toegang te krijgen tot beveiligingsfuncties zoals tweestapsverificatie en passkeys."
 
@@ -8778,6 +8785,10 @@ msgstr "Codec"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:76
 msgid "Codes"
 msgstr "Codes"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "Codes uit je authenticatie-app zijn je tweede stap bij het inloggen."
 
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
@@ -10383,7 +10394,7 @@ msgid "Couldn't delete application"
 msgstr "Applicatie kon niet worden verwijderd"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "Passkey kon niet worden verwijderd"
 
@@ -10778,7 +10789,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "De instelling om onderdrukking van vermeldingen te omzeilen kon niet worden bijgewerkt"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Tweefactorauthenticatie met passkey kon niet worden bijgewerkt"
 
@@ -10894,7 +10905,7 @@ msgstr "Nieuwe groep maken met {userName}"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "Maak een nieuwe kit"
 
@@ -11051,8 +11062,8 @@ msgstr "Maak openbare threads"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "Maak herstelkit"
@@ -11123,7 +11134,7 @@ msgid "Created"
 msgstr "Aangemaakt"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "Gemaakt {0}"
 
@@ -12002,7 +12013,7 @@ msgstr "Delaware"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -12175,9 +12186,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Berichten van andere leden verwijderen. Vastzetten wordt afzonderlijk beheerd."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "Passkey verwijderen"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "Verwijder beveiligingssleutel {passkeyName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12646,7 +12662,7 @@ msgstr "Apparaat:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12757,7 +12773,6 @@ msgstr "Directe upload actief"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12830,6 +12845,11 @@ msgstr "Hardwareversnelling uitschakelen?"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "Mobiele pushmeldingen uitschakelen"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "Je account uitschakelen of verwijderen"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13996,8 +14016,8 @@ msgstr "E-mail"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "E-mailadres"
@@ -14233,7 +14253,6 @@ msgstr "Favorieten leeg"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "Inschakelen"
 
@@ -17696,7 +17715,7 @@ msgstr "Verborgen"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -18205,7 +18224,7 @@ msgstr "Als je denkt dat het illegaal is, geef dan aan welke wet en waarom."
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "Als je dit sluit, kun je desktopmeldingen later altijd weer inschakelen via {notificationSettingsPath}."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "Als je je wachtwoord vergeet, is een herstelkit de enige manier om weer toegang te krijgen tot je account."
 
@@ -19829,11 +19848,11 @@ msgid "Largest file you can upload"
 msgstr "Grootste bestand dat je kunt uploaden"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "Laatst gewijzigd: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "Laatst gewijzigd: nooit"
 
@@ -20135,7 +20154,7 @@ msgstr "Laat anderen je zien via video."
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "Laat push-to-talk en sneltoetsen werken in andere apps."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "Hiermee kun je je wachtwoord opnieuw instellen als je het vergeet."
 
@@ -20728,8 +20747,8 @@ msgstr "Maak de instantie helemaal van jou"
 msgid "Malta"
 msgstr "Malta"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "Beheren"
 
@@ -20740,7 +20759,7 @@ msgid "Manage accounts"
 msgstr "Accounts beheren"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "Beheer de apps en apparaten die toegang hebben tot je account."
 
@@ -20748,6 +20767,11 @@ msgstr "Beheer de apps en apparaten die toegang hebben tot je account."
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
 msgstr "Geautoriseerde apps beheren"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
+msgstr "Beheer geautoriseerde apps"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:26
@@ -20773,6 +20797,11 @@ msgstr "Community beheren"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "Communityfuncties beheren"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "Apparaten beheren"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -23400,7 +23429,7 @@ msgstr "Geen desktopupdate beschikbaar."
 msgid "No displays found"
 msgstr "Geen schermen gevonden"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "Geen e-mailadres ingesteld"
 
@@ -23563,7 +23592,11 @@ msgstr "Er zijn geen optionele diensten beschikbaar op deze instantie. Je kunt d
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "Niets van {query} kon worden toegepast. Corrigeer de onderstreepte waarde of voeg iets toe om te zoeken."
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "Nog geen passkeys. Voeg er een toe om in te loggen met je vingerafdruk, gezicht of een beveiligingssleutel."
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "Geen wachtwoord ingesteld"
 
@@ -23976,7 +24009,7 @@ msgstr "Niet gevonden"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "Niet nu"
@@ -24182,12 +24215,14 @@ msgstr "Objecten"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "Uit"
 
@@ -24245,9 +24280,11 @@ msgstr "Oudste eerst"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "Aan"
 
@@ -25377,7 +25414,7 @@ msgstr "Passkey bijgewerkt"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25392,8 +25429,8 @@ msgstr "Passkeys vereisen een ondertekende macOS-bundel met een geldige app-ID. 
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "Wachtwoord"
 
@@ -25715,7 +25752,7 @@ msgstr "Verwijder permanent elk bericht dat je hier hebt verzonden, in elk kanaa
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "Verwijder permanent de berichten die overeenkomen met de onderstaande filters. Dit kan niet ongedaan worden gemaakt."
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "Verwijder je account en alle bijbehorende gegevens permanent. Deze actie kan niet ongedaan worden gemaakt."
 
@@ -27409,7 +27446,7 @@ msgid "Recovery key"
 msgstr "Herstelcode"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "Herstelkit"
@@ -27596,10 +27633,6 @@ msgstr "Registreren"
 #: src/features/auth/flow/auth_login_core/AuthLoginMethodStep.tsx:31
 msgid "Register an account"
 msgstr "Registreer een account"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "Geregistreerde passkeys"
 
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
@@ -28187,7 +28220,7 @@ msgstr "Minder machtigingen geven kan de functies van de bot beperken."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Als je de time-out opheft, kan <0>{targetUserTag}</0> weer berichten versturen, reageren en deelnemen aan spraakkanalen."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "Naam wijzigen"
 
@@ -28215,6 +28248,11 @@ msgstr "Formulier om een kanaalnaam te wijzigen"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "Emoji hernoemen"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "Passkey hernoemen {passkeyName}"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28426,7 +28464,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "2FA vereisen voor moderatieacties"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "Een passkey als je tweede factor vereisen"
@@ -28962,7 +29000,7 @@ msgstr "Terug naar inloggen"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "Tonen"
@@ -29020,7 +29058,7 @@ msgid "Review and confirm"
 msgstr "Controleren en bevestigen"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "Bekijk apps die toegang hebben tot je account."
 
@@ -29040,7 +29078,7 @@ msgid "Review privacy settings"
 msgstr "Privacyinstellingen bekijken"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Bekijk ingelogde apparaten en meld sessies af die je niet herkent."
 
@@ -29410,7 +29448,7 @@ msgid "Save 17%"
 msgstr "Bespaar 17%"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "Bewaar een herstelkit"
@@ -30205,7 +30243,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Beveiliging"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "Beveiligingsfuncties"
 
@@ -30831,7 +30869,7 @@ msgstr "Sneltoets voor dempen instellen"
 msgid "Set new password"
 msgstr "Nieuw wachtwoord instellen"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "Wachtwoord instellen"
 
@@ -30951,6 +30989,7 @@ msgid "Set the voice region to automatic"
 msgstr "De spraakregio ingesteld op automatisch"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Instellen"
@@ -30961,7 +31000,9 @@ msgid "Set up {productName}"
 msgstr "Stel {productName} in"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "Authenticator-app instellen"
 
@@ -31910,6 +31951,11 @@ msgstr "Aanmeldingsproces"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Sign-in method"
 msgstr "Aanmeldmethode"
+
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "Inlogmethoden"
 
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
@@ -33311,7 +33357,7 @@ msgid "Stop trusting all links?"
 msgstr "Alle links niet meer vertrouwen?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Stoppen met passkeys voor tweefactorauthenticatie?"
 
@@ -34139,7 +34185,7 @@ msgstr "Temporele lagen"
 msgid "Temporarily disable your account"
 msgstr "Je account tijdelijk uitschakelen"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "Je account tijdelijk uitschakelen. Je kunt het later opnieuw activeren door weer in te loggen."
 
@@ -35367,11 +35413,11 @@ msgstr "Dit is de beschrijving van de tweede optie"
 msgid "This is the third option description"
 msgstr "Dit is de beschrijving van de derde optie"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Dit is je laatste passkey en passkeys zijn je tweede factor. Als je deze verwijdert, wordt tweefactorauthenticatie voor je account uitgeschakeld en werken je huidige back-upcodes niet meer."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Dit is je laatste passkey. Als deze weg is, kun je geen passkey meer gebruiken als je tweede factor."
 
@@ -36482,7 +36528,8 @@ msgstr "Turks"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "Uitschakelen"
 
@@ -36499,6 +36546,11 @@ msgstr "Schakel alles uit waar je je niet prettig bij voelt. Sommige functies we
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Schakel het delen van audio voor deze bron uit of probeer het zo meteen opnieuw."
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "Authenticator-app uitschakelen"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36531,7 +36583,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "Schakel streamingprivacy uit voordat je inlog- of accountbeveiligingsgegevens bekijkt."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "Inschakelen"
 
@@ -36669,10 +36721,6 @@ msgstr "Tweefactorauthenticatie uitgeschakeld"
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "Tweefactorauthenticatie ingeschakeld"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "Tweefactorauthenticatie is ingeschakeld"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37989,7 +38037,7 @@ msgstr "Werkelijke waarde gebruiken"
 msgid "Use alternative method"
 msgstr "Andere methode gebruiken"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Gebruik een authenticator-app om codes te genereren voor tweefactorauthenticatie"
 
@@ -38126,12 +38174,12 @@ msgid "Use native title bar"
 msgstr "Systeemeigen titelbalk gebruiken"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Passkeys gebruiken voor tweefactorauthenticatie?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "Gebruik passkeys om zonder wachtwoord in te loggen"
@@ -38656,12 +38704,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Verifieer je e-mailadres om vriendschapsverzoeken te versturen."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "Verifieer je e-mailadres voordat je een passkey toevoegt."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "Verifieer je e-mailadres voordat je een authenticator-app toevoegt."
 
@@ -38948,7 +38996,7 @@ msgstr "Verbannen gebruikers bekijken en beheren."
 msgid "View and manage every webhook configured across your community."
 msgstr "Bekijk en beheer elke webhook die is ingesteld voor je community."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "Bekijk en beheer je back-upcodes voor accountherstel"
 
@@ -38987,7 +39035,7 @@ msgstr "Kanaal bekijken"
 msgid "View channel members"
 msgstr "Kanaalleden bekijken"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "Codes bekijken"
 
@@ -40710,7 +40758,7 @@ msgstr "Je hebt je tag gewijzigd terwijl je {PREMIUM_PRODUCT_NAME} had. Deze wor
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Je hebt geen toegang tot het kanaal waar dit bericht is verzonden."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "Je hebt nog geen herstelkit"
 
@@ -40964,7 +41012,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Je wordt doorgestuurd naar {redirectHostname} na autorisatie."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Er wordt na je wachtwoord niet meer om een passkey gevraagd. Je authenticator-app blijft je tweede factor."
 
@@ -40988,7 +41036,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Je moet opnieuw inloggen op alle afgemelde apparaten"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "Je hebt een van je passkeys nodig om op een nieuw apparaat in te loggen. Als je al je passkeys kwijtraakt, kun je permanent de toegang tot je account verliezen. Er worden back-upcodes voor je opgeslagen, zodat je nog een manier hebt om binnen te komen."
 
@@ -41333,7 +41381,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "Je account vereist meervoudige authenticatie, maar er zijn geen ondersteunde methoden ingesteld op dit apparaat. Meld je aan op een apparaat met je authenticator-app of beveiligingssleutel, of neem contact op met de beheerders van deze instantie."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "Je account wordt niet langer beschermd door tweefactorauthenticatie wanneer je met je wachtwoord inlogt. Je verliest ook verhoogde machtigingen in communities die tweefactorauthenticatie vereisen."
 

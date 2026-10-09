@@ -2105,6 +2105,12 @@
         "msgid": "Added the tag {name}"
       },
       {
+        "msgid": "Added {createdDate}, last used {lastUsedDate}"
+      },
+      {
+        "msgid": "Added {createdDate}, never used"
+      },
+      {
         "msgid": "Allow AV1 for screen sharing"
       },
       {
@@ -2192,6 +2198,9 @@
         "msgid": "Approve this app from the {productName} app you already use. No password needed."
       },
       {
+        "msgid": "Apps and devices"
+      },
+      {
         "msgid": "Are you sure you want to delete {threadName}? This cannot be undone."
       },
       {
@@ -2199,6 +2208,9 @@
       },
       {
         "msgid": "Ask for a passkey after your password when you sign in"
+      },
+      {
+        "msgid": "Ask for a second step after your password when you sign in."
       },
       {
         "msgid": "Attach an image or a video to post in a media channel."
@@ -2439,6 +2451,9 @@
       },
       {
         "msgid": "Code from the {productName} app"
+      },
+      {
+        "msgid": "Codes from your authenticator app are your second step when you sign in."
       },
       {
         "msgid": "Combobox"
@@ -2684,6 +2699,9 @@
         "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
       },
       {
+        "msgid": "Delete passkey {passkeyName}"
+      },
+      {
         "msgid": "Delete prompt"
       },
       {
@@ -2724,6 +2742,9 @@
       },
       {
         "msgid": "Disable direct messages and friend requests"
+      },
+      {
+        "msgid": "Disable or delete your account"
       },
       {
         "msgid": "Disable translation DOM guard"
@@ -3329,6 +3350,9 @@
         "msgid": "Make the instance yours"
       },
       {
+        "msgid": "Manage devices"
+      },
+      {
         "msgid": "Manage posts"
       },
       {
@@ -3450,6 +3474,9 @@
       },
       {
         "msgid": "No part of {query} could be applied. Fix the underlined value or add something to search for."
+      },
+      {
+        "msgid": "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
       },
       {
         "msgid": "No posts match your search"
@@ -3866,6 +3893,9 @@
         "msgid": "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
       },
       {
+        "msgid": "Rename passkey {passkeyName}"
+      },
+      {
         "msgid": "Reply to message above"
       },
       {
@@ -4233,6 +4263,9 @@
       },
       {
         "msgid": "Sign-in method"
+      },
+      {
+        "msgid": "Sign-in methods"
       },
       {
         "msgid": "Signing in as {name}"
@@ -4626,6 +4659,9 @@
       },
       {
         "msgid": "Turn off audio sharing for this source or try again in a moment."
+      },
+      {
+        "msgid": "Turn off authenticator app"
       },
       {
         "msgid": "Turn on"
@@ -5211,6 +5247,9 @@
       },
       {
         "msgid": "{count, plural, one {# new message} other {# new messages}}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{count, plural, one {# video} other {# videos}}"
@@ -6888,6 +6927,9 @@
       },
       {
         "msgid": "{count, plural, one {# message} other {# messages}}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
@@ -10007,6 +10049,9 @@
       },
       {
         "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{formattedPresenceCount} online"
