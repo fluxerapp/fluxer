@@ -1,0 +1,102 @@
+[
+	{
+		"name": "@fluxer/webauthn",
+		"platforms": ["darwin", "linux", "win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/platform-info",
+		"platforms": ["darwin", "linux", "win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/mac-app-audio",
+		"platforms": ["darwin"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/mac-clipboard",
+		"platforms": ["darwin"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/mac-sysctl",
+		"platforms": ["darwin"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/mac-tcc",
+		"platforms": ["darwin"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/macos-input-hook",
+		"platforms": ["darwin"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-audio-capture",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-evdev",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-input-hook",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-notifications",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-portals",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/linux-screen-capture",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/system-hunspell",
+		"platforms": ["linux"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/win-clipboard",
+		"platforms": ["win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/win-process-loopback",
+		"platforms": ["win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/win-shell",
+		"platforms": ["win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/windows-input-hook",
+		"platforms": ["win32"],
+		"severity": "fatal"
+	},
+	{
+		"name": "@fluxer/app-store",
+		"platforms": ["darwin", "linux", "win32"],
+		"severity": "degraded"
+	},
+	{
+		"name": "@fluxer/gateway-socket",
+		"platforms": ["darwin", "linux", "win32"],
+		"severity": "degraded"
+	}
+]
