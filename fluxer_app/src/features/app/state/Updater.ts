@@ -133,6 +133,7 @@ class Updater {
 	private unsubscribeNativeEvents: (() => void) | null = null;
 	private unsubscribeDesktopUpdate: (() => void) | null = null;
 	private desktopUpdateReported = false;
+	private desktopUpdateRunning = false;
 	private olderShellModuleUpdateReady = false;
 	private olderShellUpdateDownloaded = false;
 	private olderShellInstallWhenDownloaded = false;
@@ -175,6 +176,10 @@ class Updater {
 
 	private get manualNativeDownloadInFlight(): boolean {
 		return this.snapshot.context.manualNativeDownloadInFlight;
+	}
+
+	get desktopUpdateInProgress(): boolean {
+		return this.desktopUpdateRunning;
 	}
 
 	get desktopUpdateAvailable(): boolean {
@@ -258,6 +263,7 @@ class Updater {
 		this.unsubscribeDesktopUpdate = desktopUpdate.onStateChanged((state) => {
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateRunning = state.updating === true;
 			});
 		});
 		await this.refreshDesktopUpdateState();
@@ -290,6 +296,7 @@ class Updater {
 			const state = await desktopUpdate.state();
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateRunning = state.updating === true;
 			});
 		} catch (error) {
 			logger.warn('Failed to read the desktop update state', error);
@@ -735,6 +742,7 @@ class Updater {
 			this.unsubscribeDesktopUpdate = null;
 		}
 		this.desktopUpdateReported = false;
+		this.desktopUpdateRunning = false;
 		this.olderShellModuleUpdateReady = false;
 		this.olderShellUpdateDownloaded = false;
 		this.olderShellInstallWhenDownloaded = false;

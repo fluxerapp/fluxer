@@ -226,6 +226,84 @@ const CHECK_FOR_UPDATES_DESCRIPTOR = msg({
 	message: 'Check for updates',
 	comment: 'Tray menu item. Triggers the auto-updater to look for a new desktop build.',
 });
+const UPDATE_APP_NOW_DESCRIPTOR = msg({
+	message: 'Update {appName} now',
+	comment:
+		'Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).',
+});
+const CHECK_FOR_UPDATES_MENU_DESCRIPTOR = msg({
+	message: 'Check for updates...',
+	comment:
+		'Desktop app menu item that looks for a new desktop version. The trailing ellipsis shows that a dialog follows.',
+});
+const UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR = msg({
+	message: 'An update for {appName} is available.',
+	comment: 'Native desktop dialog headline after a manual update check found an update.',
+});
+const UPDATE_AVAILABLE_DETAIL_DESCRIPTOR = msg({
+	message: '{appName} will close, install the update and open again.',
+	comment:
+		'Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.',
+});
+const UPDATE_RELOAD_DETAIL_DESCRIPTOR = msg({
+	message: '{appName} will reload to finish updating.',
+	comment:
+		'Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.',
+});
+const UPDATE_NOW_DESCRIPTOR = msg({
+	message: 'Update now',
+	comment: 'Native desktop dialog button that installs the waiting desktop update.',
+});
+const UPDATE_LATER_DESCRIPTOR = msg({
+	message: 'Later',
+	comment: 'Native desktop dialog button that closes an update dialog without updating.',
+});
+const UPDATE_OK_DESCRIPTOR = msg({
+	message: 'OK',
+	comment: 'Native desktop dialog button that closes the dialog saying the app is up to date.',
+});
+const UPDATE_DOWNLOAD_DESCRIPTOR = msg({
+	message: 'Download',
+	comment: 'Native desktop dialog button that opens the download page for a new desktop version in the browser.',
+});
+const UPDATE_MANUAL_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} {version} is available.',
+	comment:
+		'Native desktop dialog headline on installs that cannot update themselves. {version} is the new version number.',
+});
+const UPDATE_MANUAL_DETAIL_DESCRIPTOR = msg({
+	message: 'Download the new version to update {appName}.',
+	comment: 'Native desktop dialog body under the headline announcing a new version that must be downloaded by hand.',
+});
+const UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} is up to date.',
+	comment: 'Native desktop dialog headline after a manual update check found nothing newer.',
+});
+const UPDATE_UP_TO_DATE_DETAIL_DESCRIPTOR = msg({
+	message: 'You have version {version}.',
+	comment: 'Native desktop dialog body under the up to date headline. {version} is the installed version number.',
+});
+const UPDATE_CHECK_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} couldn't check for updates.",
+	comment: 'Native desktop dialog headline when a manual update check could not reach the update server.',
+});
+const UPDATE_CHECK_FAILED_DETAIL_DESCRIPTOR = msg({
+	message: 'Check your internet connection and try again.',
+	comment: 'Native desktop dialog body under the headline saying the update check failed.',
+});
+const UPDATE_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} couldn't finish updating.",
+	comment: 'Native desktop dialog headline when a desktop update the user started did not complete.',
+});
+const UPDATE_FAILED_DETAIL_DESCRIPTOR = msg({
+	message: 'The update did not download or install. Try again or download it yourself.',
+	comment:
+		'Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.',
+});
+const UPDATE_STILL_DOWNLOADING_DETAIL_DESCRIPTOR = msg({
+	message: 'The update is still downloading. Try again in a few minutes.',
+	comment: 'Native desktop dialog body shown when the update download is slow and still running in the background.',
+});
 const COPY_BUILD_INFO_DESCRIPTOR = msg({
 	message: 'Copy build info',
 	comment: 'Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.',
@@ -424,6 +502,24 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.tray.disconnectFrom': DISCONNECT_FROM_DESCRIPTOR,
 	'desktop.tray.disconnectVoice': DISCONNECT_FROM_VOICE_DESCRIPTOR,
 	'desktop.tray.checkForUpdates': CHECK_FOR_UPDATES_DESCRIPTOR,
+	'desktop.tray.updateNow': UPDATE_APP_NOW_DESCRIPTOR,
+	'desktop.appMenu.checkForUpdates': CHECK_FOR_UPDATES_MENU_DESCRIPTOR,
+	'desktop.update.availableMessage': UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR,
+	'desktop.update.availableDetail': UPDATE_AVAILABLE_DETAIL_DESCRIPTOR,
+	'desktop.update.reloadDetail': UPDATE_RELOAD_DETAIL_DESCRIPTOR,
+	'desktop.update.install': UPDATE_NOW_DESCRIPTOR,
+	'desktop.update.later': UPDATE_LATER_DESCRIPTOR,
+	'desktop.update.ok': UPDATE_OK_DESCRIPTOR,
+	'desktop.update.download': UPDATE_DOWNLOAD_DESCRIPTOR,
+	'desktop.update.manualMessage': UPDATE_MANUAL_MESSAGE_DESCRIPTOR,
+	'desktop.update.manualDetail': UPDATE_MANUAL_DETAIL_DESCRIPTOR,
+	'desktop.update.upToDateMessage': UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR,
+	'desktop.update.upToDateDetail': UPDATE_UP_TO_DATE_DETAIL_DESCRIPTOR,
+	'desktop.update.checkFailedMessage': UPDATE_CHECK_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.update.checkFailedDetail': UPDATE_CHECK_FAILED_DETAIL_DESCRIPTOR,
+	'desktop.update.failedMessage': UPDATE_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.update.failedDetail': UPDATE_FAILED_DETAIL_DESCRIPTOR,
+	'desktop.update.stillDownloadingDetail': UPDATE_STILL_DOWNLOADING_DETAIL_DESCRIPTOR,
 	'desktop.tray.copyBuildInfo': COPY_BUILD_INFO_DESCRIPTOR,
 	'desktop.tray.restart': RESTART_DESCRIPTOR,
 	'desktop.tray.quit': QUIT_DESCRIPTOR,

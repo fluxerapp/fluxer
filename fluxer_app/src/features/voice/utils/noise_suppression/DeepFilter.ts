@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModuleForAsset} from '@app/features/platform/utils/DesktopModuleAssets';
 import {acquireIdleVoiceInputContext, isVoiceInputSourceLive} from '@app/features/voice/engine/VoiceInputAudioContext';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import NoiseSuppressionAvailability, {
@@ -164,6 +165,9 @@ async function fetchDeepFilterAssets(): Promise<DeepFilterAssets> {
 		controller.abort(new DeepFilterUnavailableError('assets', 'DeepFilterNet assets took too long to download'));
 	}, DEEP_FILTER_ASSET_TOTAL_MS);
 	try {
+		if (!(await ensureDesktopModuleForAsset(DEEP_FILTER_WASM_URL))) {
+			throw new DeepFilterUnavailableError('assets', 'The DeepFilterNet module has not finished downloading');
+		}
 		const [module, modelBytes] = await Promise.all([
 			fetchAssetBody(DEEP_FILTER_WASM_URL, controller).then(compileDeepFilterWasm),
 			fetchAssetBody(DEEP_FILTER_MODEL_URL, controller).then(readDeepFilterModel),

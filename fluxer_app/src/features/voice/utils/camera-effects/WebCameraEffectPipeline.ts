@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModule} from '@app/features/platform/utils/DesktopModuleAssets';
 import {
 	collectSettledFailures,
 	throwCollectedFailures,
@@ -37,6 +38,7 @@ import {
 	createWebCameraEffectVideoFrameProducer,
 	type WebCameraEffectVideoFrameProducer,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectVideoFrameSource';
+import {DESKTOP_CAMERA_EFFECTS_MODULE_NAME} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const VIDEO_TRACK_KIND = 'video';
 
@@ -395,6 +397,9 @@ export class WebCameraEffectPipeline implements WebCameraPipeline {
 		const capability = detectWebCameraSegmentationCapability();
 		if (!capability.available) {
 			throw new Error(capability.reason);
+		}
+		if (!(await ensureDesktopModule(DESKTOP_CAMERA_EFFECTS_MODULE_NAME))) {
+			throw new Error('The camera effects module has not finished downloading');
 		}
 		const settings = source.getSettings();
 		let configuredFrameRate = settings.frameRate;
