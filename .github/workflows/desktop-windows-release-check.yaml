@@ -100,7 +100,7 @@ jobs:
             Write-Host "== install $from, then update to $env:VERSION"
             Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
             if (Test-Path $installRoot) { Remove-Item -Recurse -Force $installRoot }
-            Remove-Item -Recurse -Force (Split-Path $logPath -Parent) -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force (Split-Path (Split-Path $logPath -Parent) -Parent) -ErrorAction SilentlyContinue
             $setup = Join-Path $env:RUNNER_TEMP "setup-$from.exe"
             Invoke-WebRequest -Uri "https://pkgs.fluxer.com/desktop/$env:CHANNEL/win32/$env:ARCH/$from/setup" -OutFile $setup
             Start-Process -FilePath $setup -ArgumentList '--silent' -Wait
