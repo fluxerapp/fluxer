@@ -63,6 +63,11 @@ function applyDocumentBranding(productName: string, faviconUrl: string | null, t
 	setDocumentTitleProductName(productName);
 	setMeta('application-name', productName);
 	setMeta('apple-mobile-web-app-title', productName);
+	if (themeColor !== null) {
+		document.documentElement.style.setProperty('--brand-primary', themeColor);
+	} else {
+		document.documentElement.style.removeProperty('--brand-primary');
+	}
 	if (faviconUrl === null) {
 		removeLink('icon');
 		restoreDefaultLinks('icon');
