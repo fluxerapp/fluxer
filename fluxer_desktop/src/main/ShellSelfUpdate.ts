@@ -73,14 +73,23 @@ function readInstalledVelopackVersion(manager: VelopackUpdateManager): string {
 	}
 }
 
-function hasUnlandedVelopackApply(manager: VelopackUpdateManager): boolean {
+const UNLANDED_APPLY_RETRY_AFTER_MS = 30 * 60_000;
+
+type UnlandedApply = 'none' | 'recent' | 'stale';
+
+function classifyUnlandedVelopackApply(manager: VelopackUpdateManager): UnlandedApply {
 	const attempt = readVelopackApplyAttempt();
-	if (attempt == null) return false;
+	if (attempt == null) return 'none';
 	if (compareShellVersions(readInstalledVelopackVersion(manager), attempt.version) >= 0) {
 		clearVelopackApplyAttempt();
-		return false;
+		return 'none';
 	}
-	return true;
+	if (Date.now() - attempt.attemptedAt < UNLANDED_APPLY_RETRY_AFTER_MS) {
+		return 'recent';
+	}
+	logger.warn('An earlier update never installed, retrying from the feed', {version: attempt.version});
+	clearVelopackApplyAttempt();
+	return 'stale';
 }
 
 function getStagedVelopackVersion(staged: UpdateInfo | VelopackAsset): string | null {
@@ -122,16 +131,19 @@ function downloadVelopackUpdateOnce(
 async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): Promise<void> {
 	const {UpdateManager} = requireModule('velopack') as typeof import('velopack');
 	const manager = new UpdateManager(getUpdateBaseUrl());
-	if (hasUnlandedVelopackApply(manager)) {
+	const unlanded = classifyUnlandedVelopackApply(manager);
+	if (unlanded === 'recent') {
 		control.settle({reason: 'install-failed', detail: 'the last downloaded update was never installed'});
 		return;
 	}
-	let staged: UpdateInfo | VelopackAsset | null;
-	try {
-		staged = manager.getUpdatePendingRestart();
-	} catch (error) {
-		control.settle({reason: 'check-failed', detail: errorDetail(error)});
-		return;
+	let staged: UpdateInfo | VelopackAsset | null = null;
+	if (unlanded === 'none') {
+		try {
+			staged = manager.getUpdatePendingRestart();
+		} catch (error) {
+			control.settle({reason: 'check-failed', detail: errorDetail(error)});
+			return;
+		}
 	}
 	if (control.isSettled()) return;
 	if (staged == null) {
