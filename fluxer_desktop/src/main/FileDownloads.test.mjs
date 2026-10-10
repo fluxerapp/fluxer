@@ -30,6 +30,7 @@ function transform(name) {
 }
 
 const happyEyeballsSource = transform('DesktopHappyEyeballs.ts');
+const ipAddressSource = transform('../../../packages/ip_utils/src/IpAddress.ts');
 const outboundSource = transform('DesktopOutboundHTTP.ts');
 const fileDownloadsSource = transform('FileDownloads.ts');
 
@@ -111,6 +112,11 @@ async function loadFileDownloads({registerOrigin = true} = {}) {
 	});
 	vm.runInContext(happyEyeballsSource.code, happyEyeballsContext, {filename: happyEyeballsSource.path});
 	stubs['@electron/main/DesktopHappyEyeballs'] = happyEyeballsModule.exports;
+
+	const ipAddressModule = {exports: {}};
+	const ipAddressContext = vm.createContext({...sandbox, exports: ipAddressModule.exports, module: ipAddressModule});
+	vm.runInContext(ipAddressSource.code, ipAddressContext, {filename: ipAddressSource.path});
+	stubs['@fluxer/ip_utils/src/IpAddress'] = ipAddressModule.exports;
 
 	const outboundModule = {exports: {}};
 	sandbox.module = outboundModule;

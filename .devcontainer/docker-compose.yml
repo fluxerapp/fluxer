@@ -86,11 +86,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: package-hono-types-node-modules
-        target: /workspaces/fluxer/packages/hono_types/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: package-i18n-node-modules
         target: /workspaces/fluxer/packages/i18n/node_modules
         volume:
@@ -349,7 +344,6 @@ volumes:
   package-errors-node-modules:
   package-geo-utils-node-modules:
   package-hono-node-modules:
-  package-hono-types-node-modules:
   package-i18n-node-modules:
   package-instance-bootstrap-node-modules:
   package-ip-utils-node-modules:

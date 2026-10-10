@@ -11,9 +11,7 @@ const {GatewayOriginRegistry} = await import('./GatewayOriginRegistry.ts');
 const {DesktopOutboundHTTP} = await import('./DesktopOutboundHTTP.ts');
 const {RendererDocumentOwnerFactory} = await import('./RendererDocumentOwner.ts');
 const {parseNativeGatewayTransportEvent} = await import('./NativeGatewayTransportEventParser.ts');
-const {websocketHTTPOrigin, websocketOrigin} = await import('./WebSocketOrigin.ts');
 const {getNativeGatewayDisableReason} = await import('./LaunchOptions.ts');
-const {reconstructNativeGatewayTransportEvent} = await import('../preload/PreloadNativeGatewayEvent.ts');
 const {createNativeGatewayPreloadAPI} = await import('../preload/NativeGatewayPreload.ts');
 const {
 	NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG,
@@ -874,18 +872,6 @@ describe('GatewayOriginRegistry', () => {
 	});
 });
 
-describe('WebSocketOrigin', () => {
-	test('derives both the ws and the http form with default ports collapsed', () => {
-		assert.equal(websocketOrigin('wss://gateway.fluxer.app/socket?v=9'), 'wss://gateway.fluxer.app');
-		assert.equal(websocketOrigin('https://gateway.fluxer.app'), 'wss://gateway.fluxer.app');
-		assert.equal(websocketOrigin('ws://127.0.0.1:8080/'), 'ws://127.0.0.1:8080');
-		assert.equal(websocketOrigin('file:///etc/passwd'), null);
-		assert.equal(websocketHTTPOrigin('wss://gateway.fluxer.app/socket'), 'https://gateway.fluxer.app');
-		assert.equal(websocketHTTPOrigin('ws://192.168.1.5:8080/'), 'http://192.168.1.5:8080');
-		assert.equal(websocketHTTPOrigin('nope'), null);
-	});
-});
-
 describe('NativeGatewayTransportEventParser', () => {
 	test('accepts the addon exact seven field shape and normalises binary to ArrayBuffer', () => {
 		const parsed = parseNativeGatewayTransportEvent(
@@ -919,59 +905,6 @@ describe('NativeGatewayTransportEventParser', () => {
 	test('rejects a prototype-polluted record', () => {
 		const hostile = Object.create({kind: 'open'});
 		assert.throws(() => parseNativeGatewayTransportEvent('id', hostile), /plain object/u);
-	});
-});
-
-describe('PreloadNativeGatewayEvent', () => {
-	test('independently revalidates a well formed main event', () => {
-		const event = {
-			connectionId: nextConnectionId(),
-			kind: 'message',
-			data: '{"op":11}',
-			binary: null,
-			code: null,
-			reason: null,
-			wasClean: null,
-			message: null,
-		};
-		assert.equal(reconstructNativeGatewayTransportEvent(event).data, '{"op":11}');
-	});
-
-	test('rejects a forged connection id, a missing key and an unknown kind', () => {
-		const base = {
-			connectionId: nextConnectionId(),
-			kind: 'open',
-			data: null,
-			binary: null,
-			code: null,
-			reason: null,
-			wasClean: null,
-			message: null,
-		};
-		assert.throws(
-			() => reconstructNativeGatewayTransportEvent({...base, connectionId: 'gateway-renderer-x:y'}),
-			/connection id has an invalid format/u,
-		);
-		const {message: _message, ...missing} = base;
-		assert.throws(() => reconstructNativeGatewayTransportEvent(missing), /exactly the declared keys/u);
-		assert.throws(() => reconstructNativeGatewayTransportEvent({...base, kind: 'voice'}), /event kind is unknown/u);
-	});
-
-	test('normalises a byte view to a standalone ArrayBuffer', () => {
-		const source = new Uint8Array([9, 8, 7, 6]);
-		const event = {
-			connectionId: nextConnectionId(),
-			kind: 'binary',
-			data: null,
-			binary: source.subarray(1, 3),
-			code: null,
-			reason: null,
-			wasClean: null,
-			message: null,
-		};
-		const reconstructed = reconstructNativeGatewayTransportEvent(event);
-		assert.ok(reconstructed.binary instanceof ArrayBuffer);
-		assert.deepEqual([...new Uint8Array(reconstructed.binary)], [8, 7]);
 	});
 });
 

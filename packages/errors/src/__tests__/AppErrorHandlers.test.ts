@@ -3,9 +3,8 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Locales} from '@fluxer/constants/src/Locales';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
-import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
+import {AppErrorHandler, type BaseHonoEnv} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
-import type {BaseHonoEnv} from '@fluxer/hono_types/src/HonoTypes';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it, vi} from 'vitest';
