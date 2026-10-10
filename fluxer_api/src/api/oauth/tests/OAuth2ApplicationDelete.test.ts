@@ -94,25 +94,17 @@ describe('OAuth2 Application Delete', () => {
 			.execute();
 		const foundMessage = messages.find((message) => message.id === botMessageId);
 		expect(foundMessage).toBeDefined();
-		expect(foundMessage?.author.id).not.toBe(createResult.botUserId);
+		expect(foundMessage?.author.id).toBe(createResult.botUserId);
+		expect(foundMessage?.author.bot).toBe(true);
 		expect(foundMessage?.author.username).toBe('DeletedUser');
 		expect(foundMessage?.author.discriminator).toBe('0000');
-		const previousAuthorCount = await createBuilderWithoutAuth<{
+		const authorCount = await createBuilderWithoutAuth<{
 			count: number;
 		}>(harness)
 			.get(`/test/users/${createResult.botUserId}/messages/count`)
 			.expect(HTTP_STATUS.OK)
 			.execute();
-		expect(previousAuthorCount.count).toBe(0);
-		const replacementAuthorId = foundMessage?.author.id;
-		expect(replacementAuthorId).toBeTruthy();
-		const replacementAuthorCount = await createBuilderWithoutAuth<{
-			count: number;
-		}>(harness)
-			.get(`/test/users/${replacementAuthorId}/messages/count`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(replacementAuthorCount.count).toBe(1);
+		expect(authorCount.count).toBe(1);
 	});
 	test('enforces access control', async () => {
 		const owner = await createTestAccount(harness);
