@@ -9,6 +9,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import type {User} from '@app/features/user/models/User';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 
 export interface UserDisplayNameLike {
 	username: string;
@@ -52,7 +53,7 @@ export function getDisplayName(user: UserDisplayNameLike): string {
 }
 
 export function getNickname(user: User, guildId?: string | null, channelId?: string): string {
-	if (user.id === '0') {
+	if (user.id === FLUXERBOT_ID) {
 		const productName = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.product_name;
 		if (productName) return formatNicknameForStreamerMode(productName);
 	}

@@ -27,6 +27,7 @@ import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfi
 import type {Profile} from '@app/features/user/models/Profile';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg, ph, plural} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -97,7 +98,7 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 	}
 	const displayName = NicknameUtils.getNickname(user, null, channel?.id);
 	const fluxerTag = NicknameUtils.formatTagForStreamerMode(
-		user.id === '0' ? `${displayName}#${user.discriminator}` : user.tag,
+		user.id === FLUXERBOT_ID ? `${displayName}#${user.discriminator}` : user.tag,
 	);
 	const handleSendFriendRequest = () => {
 		RelationshipActionUtils.sendFriendRequest(i18n, user.id);
