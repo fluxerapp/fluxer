@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmailTemplate, EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
-
 export const EMAIL_I18N_MESSAGES = {
 	account_deletion_cancelled: {
 		subject: 'Your {product_name} account is no longer scheduled for deletion',
@@ -104,9 +102,3 @@ export const EMAIL_I18N_MESSAGES = {
 		body: 'Hello {username},\n\nGood news: your {product_name} account suspension has been lifted.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}\n\n}\n}You can now log back in and continue using {product_name} as normal.\n\n– {product_name} Safety Team',
 	},
 } as const;
-
-export function defineEmailI18nLocaleMessages<const TMessages extends Partial<Record<EmailTemplateKey, EmailTemplate>>>(
-	messages: TMessages,
-): TMessages {
-	return messages;
-}

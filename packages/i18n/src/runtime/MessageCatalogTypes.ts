@@ -47,27 +47,6 @@ export type MessageVariablesForTemplate<T extends string> = [TemplatePlaceholder
 export type MessageArgsForTemplate<T extends string> = [MessageVariablesForTemplate<T>] extends [never]
 	? [variables?: undefined]
 	: [variables: MessageVariablesForTemplate<T>];
-type LocaleMessageForTemplate<Source extends string, Translation extends string> = [
-	Exclude<TemplatePlaceholderNames<Source>, TemplatePlaceholderNames<Translation>>,
-] extends [never]
-	? Translation
-	: never;
-type StaticLocaleMessagesForCatalog<
-	TCatalog extends Record<string, string>,
-	TMessages extends Partial<Record<keyof TCatalog, string>>,
-> = {
-	readonly [Key in keyof TMessages]: Key extends keyof TCatalog
-		? TMessages[Key] extends string
-			? LocaleMessageForTemplate<TCatalog[Key], TMessages[Key]>
-			: never
-		: never;
-};
-
-export function defineStaticLocaleMessages<TCatalog extends Record<string, string>>() {
-	return <const TMessages extends Partial<Record<keyof TCatalog, string>>>(
-		messages: TMessages & StaticLocaleMessagesForCatalog<TCatalog, TMessages>,
-	): TMessages => messages;
-}
 
 function collectMessageTemplateVariables(tokens: ReadonlyArray<Token>, variables: Set<string>): void {
 	for (const token of tokens) {

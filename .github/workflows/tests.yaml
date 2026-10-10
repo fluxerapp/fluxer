@@ -496,14 +496,14 @@ jobs:
       - name: Compile locale catalogs
         run: pnpm i18n:compile
 
-      - name: Check drift of compiled locale modules
+      - name: Check drift of synced catalogs
         run: |
           if ! git diff --exit-code -- \
-            packages/errors/src/i18n/locales \
-            fluxer_api/pkgs/email/src/email_i18n/locales \
+            packages/errors/src/i18n/weblate \
+            fluxer_api/pkgs/email/src/email_i18n/weblate \
             fluxer_api/pkgs/email/src/email_i18n/EmailI18nTypes.generated.ts \
-            fluxer_api/src/api/content_i18n/locales; then
-            echo "::error::Compiled locale modules are outdated. Run 'pnpm i18n:compile' and commit the result. Translations belong in the weblate/ catalogs, not in the generated locales/ modules."
+            fluxer_api/src/api/content_i18n/weblate; then
+            echo "::error::Static catalogs are out of sync with their sources. Run 'pnpm i18n:compile' and commit the result."
             exit 1
           fi
 

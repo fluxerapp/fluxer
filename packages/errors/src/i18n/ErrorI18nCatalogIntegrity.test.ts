@@ -13,7 +13,6 @@ import {describe, expect, it} from 'vitest';
 
 const WEBLATE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'weblate');
 const SOURCE_SYNC_COMMAND = 'pnpm i18n:source-sync';
-const COMPILE_COMMAND = 'pnpm i18n:compile';
 
 const ENGLISH_VARIANT_LOCALES = new Set<string>(['en-GB']);
 
@@ -22,8 +21,8 @@ const ENGLISH_IS_THE_ADJUDICATED_TRANSLATION = new Set<string>(['nl:http.conflic
 type FlatCatalog = Record<string, string>;
 
 const SOURCE_CATALOG = ERROR_I18N_MESSAGES as FlatCatalog;
-const COMPILED_LOCALE_CATALOGS = ERROR_I18N_LOCALE_MESSAGES as Record<string, FlatCatalog>;
-const STATIC_LOCALES = Object.keys(COMPILED_LOCALE_CATALOGS).sort();
+const LOCALE_CATALOGS = ERROR_I18N_LOCALE_MESSAGES as Record<string, FlatCatalog>;
+const STATIC_LOCALES = Object.keys(LOCALE_CATALOGS).sort();
 
 type ErrorMessageProbe = (
 	key: string,
@@ -35,14 +34,6 @@ const probeErrorMessage = getErrorMessageResult as unknown as ErrorMessageProbe;
 
 function readJsonCatalog(filePath: string): FlatCatalog {
 	return JSON.parse(fs.readFileSync(filePath, 'utf8')) as FlatCatalog;
-}
-
-function readWeblateCatalog(locale: string): FlatCatalog {
-	return readJsonCatalog(path.join(WEBLATE_DIR, 'locales', `${locale}.json`));
-}
-
-function readCompiledCatalog(locale: string): FlatCatalog {
-	return COMPILED_LOCALE_CATALOGS[locale];
 }
 
 function quoteMessage(value: string): string {
@@ -163,52 +154,13 @@ describe('error i18n catalog integrity', () => {
 		expect(problems).toEqual([]);
 	});
 
-	it('keeps every compiled locale module byte-identical to the weblate JSON it is generated from', () => {
-		const problems: Array<string> = [];
+	it('registers every weblate locale in ErrorI18nLocales.ts', () => {
 		const weblateLocales = fs
 			.readdirSync(path.join(WEBLATE_DIR, 'locales'))
 			.filter((entry) => entry.endsWith('.json'))
 			.map((entry) => entry.slice(0, -'.json'.length))
 			.sort();
-		for (const locale of weblateLocales) {
-			if (!STATIC_LOCALES.includes(locale)) {
-				problems.push(
-					`${locale} / *: weblate/locales/${locale}.json is translated but ErrorI18nLocales.ts ships no ${locale} catalog, so none of it reaches users. Run ${COMPILE_COMMAND} and register the locale in ErrorI18nLocales.ts.`,
-				);
-			}
-		}
-		for (const locale of STATIC_LOCALES) {
-			if (!weblateLocales.includes(locale)) {
-				problems.push(
-					`${locale} / *: ErrorI18nLocales.ts ships a ${locale} catalog with no weblate/locales/${locale}.json behind it, so translators cannot reach it. Run ${SOURCE_SYNC_COMMAND}.`,
-				);
-				continue;
-			}
-			const weblate = readWeblateCatalog(locale);
-			const compiled = readCompiledCatalog(locale);
-			for (const key of unionOfKeys(weblate, compiled)) {
-				const translated = weblate[key];
-				const shipped = compiled[key];
-				if (translated === undefined) {
-					problems.push(
-						`${locale} / ${key}: locales/${locale}.ts ships ${quoteMessage(shipped)} but weblate/locales/${locale}.json has no such key. Run ${COMPILE_COMMAND}.`,
-					);
-					continue;
-				}
-				if (shipped === undefined) {
-					problems.push(
-						`${locale} / ${key}: weblate/locales/${locale}.json holds ${quoteMessage(translated)} but locales/${locale}.ts does not ship it. Run ${COMPILE_COMMAND}.`,
-					);
-					continue;
-				}
-				if (shipped !== translated) {
-					problems.push(
-						`${locale} / ${key}: locales/${locale}.ts ships ${quoteMessage(shipped)} but weblate/locales/${locale}.json holds ${quoteMessage(translated)}. The compiled catalog is stale. Run ${COMPILE_COMMAND}.`,
-					);
-				}
-			}
-		}
-		expect(problems).toEqual([]);
+		expect(STATIC_LOCALES).toEqual(weblateLocales);
 	});
 
 	it('ships no translated value that is still byte-identical to the English source', () => {
@@ -217,10 +169,10 @@ describe('error i18n catalog integrity', () => {
 			if (ENGLISH_VARIANT_LOCALES.has(locale)) {
 				continue;
 			}
-			const compiled = readCompiledCatalog(locale);
-			for (const key of Object.keys(compiled).sort()) {
+			const translated = LOCALE_CATALOGS[locale];
+			for (const key of Object.keys(translated).sort()) {
 				const source = SOURCE_CATALOG[key];
-				if (source === undefined || compiled[key] !== source) {
+				if (source === undefined || translated[key] !== source) {
 					continue;
 				}
 				if (ENGLISH_IS_THE_ADJUDICATED_TRANSLATION.has(`${locale}:${key}`)) {
@@ -243,13 +195,13 @@ describe('error i18n catalog integrity', () => {
 			}
 		}
 		for (const locale of STATIC_LOCALES) {
-			const compiled = readCompiledCatalog(locale);
-			for (const key of Object.keys(compiled).sort()) {
+			const translated = LOCALE_CATALOGS[locale];
+			for (const key of Object.keys(translated).sort()) {
 				const source = SOURCE_CATALOG[key];
 				if (source === undefined) {
 					continue;
 				}
-				const problem = describeIcuProblem(locale, key, compiled[key], source);
+				const problem = describeIcuProblem(locale, key, translated[key], source);
 				if (problem !== null) {
 					problems.push(problem);
 				}
