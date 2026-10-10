@@ -7,6 +7,7 @@ import {
 	MEDIA_PROXY_METADATA_REQUEST_VERSION,
 	type MediaProxyFrameRequest,
 	type MediaProxyFrameResponse,
+	type MediaProxyMetadataOptions,
 	type MediaProxyMetadataRequest,
 	type MediaProxyMetadataResponse,
 	type MediaProxyNsfwMode,
@@ -36,6 +37,17 @@ const MEDIA_PROXY_FRAMES_MAX_BYTES = 512 * 1024;
 const MEDIA_PROXY_SNIFF_MAX_BYTES = 1024;
 const MEDIA_PROXY_REQUEST_TIMEOUT_MS = ms('30 seconds');
 const MEDIA_PROXY_SNIFF_TIMEOUT_MS = ms('2 seconds');
+const MEDIA_PROXY_BUFFERED_INPUT_MAX_BYTES = 500 * 1024 * 1024;
+const MEDIA_PROXY_SPOOLED_INPUT_BYTES_PER_SECOND = 16 * 1024 * 1024;
+
+export function metadataRequestTimeoutMs(sizeBytes: number | undefined): number {
+	if (sizeBytes === undefined || sizeBytes <= MEDIA_PROXY_BUFFERED_INPUT_MAX_BYTES) {
+		return MEDIA_PROXY_REQUEST_TIMEOUT_MS;
+	}
+	return (
+		MEDIA_PROXY_REQUEST_TIMEOUT_MS + Math.ceil(sizeBytes / MEDIA_PROXY_SPOOLED_INPUT_BYTES_PER_SECOND) * ms('1 second')
+	);
+}
 
 function isMediaProxySniffResponse(value: unknown): value is MediaProxySniffResponse {
 	return isJsonRecord(value) && (value.content_type === null || typeof value.content_type === 'string');
@@ -105,9 +117,16 @@ export class MediaService extends IMediaService {
 		this.proxyURL = new URL(Config.endpoints.media);
 	}
 
-	async getMetadata(request: MediaProxyMetadataRequest): Promise<MediaProxyMetadataResponse | null> {
+	async getMetadata(
+		request: MediaProxyMetadataRequest,
+		options: MediaProxyMetadataOptions = {},
+	): Promise<MediaProxyMetadataResponse | null> {
 		const nsfwMode = this.getNsfwMode(request);
-		const response = await this.makeRequest('/_metadata', this.toMetadataWireRequest(request, nsfwMode));
+		const response = await this.makeRequest(
+			'/_metadata',
+			this.toMetadataWireRequest(request, nsfwMode),
+			metadataRequestTimeoutMs(options.sizeBytes),
+		);
 		if (!response) {
 			return null;
 		}

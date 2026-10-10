@@ -249,6 +249,7 @@ export class AttachmentProcessingService {
 				uploadFilename: attachment.upload_filename,
 				filename: attachment.filename,
 				nsfwMode,
+				sizeBytes: uploadedFile.contentLength,
 			});
 			if (metadata) {
 				applyFinalObjectMetadata = true;
@@ -406,14 +407,18 @@ export class AttachmentProcessingService {
 		uploadFilename: string;
 		filename: string;
 		nsfwMode: MediaProxyNsfwMode;
+		sizeBytes: number;
 	}): Promise<MediaProxyMetadataResponse | null> {
 		try {
-			const metadata = await this.mediaService.getMetadata({
-				type: 'upload',
-				upload_filename: params.uploadFilename,
-				filename: params.filename,
-				nsfw: params.nsfwMode,
-			});
+			const metadata = await this.mediaService.getMetadata(
+				{
+					type: 'upload',
+					upload_filename: params.uploadFilename,
+					filename: params.filename,
+					nsfw: params.nsfwMode,
+				},
+				{sizeBytes: params.sizeBytes},
+			);
 			if (metadata) {
 				return metadata;
 			}

@@ -42,6 +42,10 @@ export type MediaProxyMetadataRequest =
 	| MediaProxyMetadataBase64Request
 	| MediaProxyMetadataS3Request;
 
+export interface MediaProxyMetadataOptions {
+	sizeBytes?: number;
+}
+
 export interface MediaProxyMetadataResponse {
 	format: string;
 	content_type: string;
@@ -83,7 +87,10 @@ export interface MediaProxyFrameResponse {
 }
 
 export abstract class IMediaService {
-	abstract getMetadata(request: MediaProxyMetadataRequest): Promise<MediaProxyMetadataResponse | null>;
+	abstract getMetadata(
+		request: MediaProxyMetadataRequest,
+		options?: MediaProxyMetadataOptions,
+	): Promise<MediaProxyMetadataResponse | null>;
 
 	abstract getExternalMediaProxyURL(url: string): string;
 
