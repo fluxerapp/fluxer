@@ -54,7 +54,7 @@ export function getDisplayName(user: UserDisplayNameLike): string {
 export function getNickname(user: User, guildId?: string | null, channelId?: string): string {
 	if (user.id === '0') {
 		const productName = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.product_name;
-		return productName ? formatNicknameForStreamerMode(productName) : '';
+		if (productName) return formatNicknameForStreamerMode(productName);
 	}
 	let name = user.displayName || user.globalName || user.username || user.id || '';
 	const relationship = Relationships.getRelationship(user.id);
