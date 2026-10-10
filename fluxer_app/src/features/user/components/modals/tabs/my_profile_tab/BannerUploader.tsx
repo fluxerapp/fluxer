@@ -5,8 +5,8 @@ import {
 	ANIMATED_IMAGE_FORMATS,
 	BANNER_ASPECT_RATIO_LABEL,
 	BANNER_MINIMUM_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
@@ -183,11 +183,11 @@ export const BannerUploader = observer(
 		}, [i18n]);
 		const processBannerFile = useCallback(
 			async (file: File) => {
-				if (file.size > 10 * 1024 * 1024) {
+				if (file.size > GlobalLimits.getAvatarMaxSize()) {
 					showUserErrorModal(
 						i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
 						i18n._(BANNER_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						}),
 					);
 					return;
@@ -264,7 +264,7 @@ export const BannerUploader = observer(
 				title: i18n._(CHANGE_BANNER_DESCRIPTOR),
 				uploadHint: formatImageUploadMinimumHint(i18n, {
 					formats: ANIMATED_IMAGE_FORMATS,
-					maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+					maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 					minimumSize: BANNER_MINIMUM_SIZE_LABEL,
 					aspectRatio: BANNER_ASPECT_RATIO_LABEL,
 				}),

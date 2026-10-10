@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {
 	getAspectRatioRange,
 	type ImageDimensions,
@@ -134,7 +135,6 @@ interface AssetConfig {
 	maxHeight: number;
 	minWidth: number;
 	minHeight: number;
-	sizeLimitBytes: number;
 	minHeightRatio?: number;
 	maxHeightRatio?: number;
 }
@@ -147,7 +147,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.GUILD_ICON]: {
 		aspectRatio: 1,
@@ -156,7 +155,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.CHANNEL_ICON]: {
 		aspectRatio: 1,
@@ -165,7 +163,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1024,
 		minWidth: 256,
 		minHeight: 256,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.GUILD_BANNER]: {
 		aspectRatio: 16 / 9,
@@ -174,7 +171,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
 	},
@@ -185,7 +181,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 723,
 		minWidth: 680,
 		minHeight: 240,
-		sizeLimitBytes: 10 * 1024 * 1024,
 	},
 	[AssetType.SPLASH]: {
 		aspectRatio: 16 / 9,
@@ -194,7 +189,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
 	},
@@ -205,7 +199,6 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		maxHeight: 1152,
 		minWidth: 960,
 		minHeight: 540,
-		sizeLimitBytes: 10 * 1024 * 1024,
 		minHeightRatio: 0.5,
 		maxHeightRatio: 1,
 	},
@@ -317,7 +310,7 @@ export const AssetCropModal: React.FC<AssetCropModalProps> = observer(
 				cropShape={config.cropShape}
 				maxWidth={config.maxWidth}
 				maxHeight={config.maxHeight}
-				sizeLimitBytes={config.sizeLimitBytes}
+				sizeLimitBytes={GlobalLimits.getAvatarMaxSize()}
 				minHeightRatio={config.minHeightRatio}
 				maxHeightRatio={config.maxHeightRatio}
 				canSkipOriginal={(dimensions) => canSkipOriginalAssetImage(assetType, dimensions)}

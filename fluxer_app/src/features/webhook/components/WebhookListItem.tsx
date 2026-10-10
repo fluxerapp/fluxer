@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {IMAGE_MAX_SIZE_BYTES} from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
@@ -159,12 +159,12 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 		const handleAvatarUpload = useCallback(async () => {
 			const [file] = await openFilePicker({accept: getAcceptString('avatar')});
 			if (!file) return;
-			if (file.size > 10 * 1024 * 1024) {
+			if (file.size > GlobalLimits.getAvatarMaxSize()) {
 				showGenericErrorModal({
 					title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 					message: () =>
 						i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						}),
 					dataFlx: 'webhook.webhook-list-item.avatar-too-large-error-modal',
 				});

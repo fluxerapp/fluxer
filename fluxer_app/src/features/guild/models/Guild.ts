@@ -8,7 +8,12 @@ import {LARGE_GUILD_THRESHOLD} from '@fluxer/constants/src/GatewayConstants';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildFeatures, GuildNSFWLevel, GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {MAX_GUILD_EMOJIS, MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
+import {
+	EMOJI_MAX_SIZE,
+	MAX_GUILD_EMOJIS,
+	MAX_GUILD_STICKERS,
+	STICKER_MAX_SIZE,
+} from '@fluxer/constants/src/LimitConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -346,6 +351,14 @@ export class Guild {
 			return Number.POSITIVE_INFINITY;
 		}
 		return this.resolveGuildLimit('max_guild_stickers', MAX_GUILD_STICKERS);
+	}
+
+	get maxEmojiSize(): number {
+		return this.resolveGuildLimit('emoji_max_size', EMOJI_MAX_SIZE);
+	}
+
+	get maxStickerSize(): number {
+		return this.resolveGuildLimit('sticker_max_size', STICKER_MAX_SIZE);
 	}
 
 	private resolveGuildLimit(key: LimitKey, fallback: number): number {

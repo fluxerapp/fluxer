@@ -4,9 +4,9 @@ import {
 	ANIMATED_ICON_FEATURE,
 	ANIMATED_IMAGE_FORMATS,
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
@@ -75,7 +75,7 @@ export const GuildIconUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_ICON_DESCRIPTOR),
 		uploadHint: formatImageUploadRecommendedHint(i18n, {
 			formats: iconFormats,
-			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 			recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 		}),
 	});

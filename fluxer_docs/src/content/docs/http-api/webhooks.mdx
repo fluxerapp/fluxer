@@ -839,7 +839,7 @@ The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/
 | name | string | Webhook name (1-80 characters) |
 | avatar?<sup>1</sup> | ?base64 string | Base64-encoded avatar image, or null |
 
-<sup>1</sup> A leading data URI header is stripped at the first comma before decoding, and the base64 payload is 1 through 13981016 characters
+<sup>1</sup> A leading data URI header is stripped at the first comma before decoding, and the base64 payload is 1 through 139810136 characters
 
 The decoded bytes must be at most the resolved [avatar_max_size](/http-api/instance/#limit-keys) value, which is the 10 MiB ceiling of 10485760 bytes by default. The image must be an accepted avatar upload format, and an animated AVIF is rejected.
 

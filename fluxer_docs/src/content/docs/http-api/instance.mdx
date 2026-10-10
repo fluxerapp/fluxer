@@ -346,8 +346,8 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 
 | Value | Description |
 | --- | --- |
-| avatar_max_size | Maximum file size for avatar uploads in bytes, in user scope |
-| emoji_max_size | Maximum file size for emoji uploads in bytes, in guild scope |
+| avatar_max_size | Maximum file size for avatar uploads in bytes, effective up to 104857600, in user scope |
+| emoji_max_size | Maximum file size for emoji uploads in bytes, effective up to 104857600, in guild scope |
 | feature_animated_avatar | Allow animated avatar uploads, in user scope |
 | feature_animated_banner | Allow animated banner uploads, in user scope |
 | feature_custom_discriminator | Allow custom discriminator selection, in user scope. Ignored for people on an instance with the `none` tag style |
@@ -389,7 +389,7 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | max_voice_message_duration | Maximum voice message duration in seconds, in user and guild scope |
 | max_webhooks_per_channel | Maximum webhooks per channel, in guild scope |
 | max_webhooks_per_guild | Maximum webhooks per guild, in guild scope |
-| sticker_max_size | Maximum file size for sticker uploads in bytes, in guild scope |
+| sticker_max_size | Maximum file size for sticker uploads in bytes, effective up to 104857600, in guild scope |
 
 <sup>1</sup> Emoji limits are enforced as one shared total against `max_guild_emojis`, and the aliases exist only for older clients. The default of each alias equals the `max_guild_emojis` default
 

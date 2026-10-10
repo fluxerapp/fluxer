@@ -3,7 +3,6 @@
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {StickerGridItem} from '@app/features/emoji/components/stickers/StickerGridItem';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
 import * as GuildStickerCommands from '@app/features/expressions/commands/GuildStickerCommands';
@@ -34,7 +33,7 @@ import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GUILD_STICKERS, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import type {GuildStickerWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -227,7 +226,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		},
 		[canManageExpressions, canCreateExpressions, currentUserId],
 	);
-	const stickerMaxSizeLabel = formatFileSize(i18n.locale, GlobalLimits.getStickerMaxSize());
+	const stickerMaxSizeLabel = formatFileSize(i18n.locale, guild?.maxStickerSize ?? STICKER_MAX_SIZE);
 	return (
 		<div className={styles.container} data-flx="guild.guild-tabs.guild-stickers-tab.container">
 			<CloneAllowedToggle

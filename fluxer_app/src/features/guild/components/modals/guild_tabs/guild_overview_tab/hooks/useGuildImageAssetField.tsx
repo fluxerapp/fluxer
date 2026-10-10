@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import {AssetCropModal, type AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
@@ -10,7 +11,6 @@ import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions
 import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
 import {
 	blobToDataUrl,
-	MAX_IMAGE_BYTES,
 	revokeObjectUrl,
 } from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/utils/ImageAsset';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
@@ -78,7 +78,6 @@ export interface UseGuildImageAssetFieldArgs {
 	previewUrl: string | null;
 	setPreviewUrl: React.Dispatch<React.SetStateAction<string | null>>;
 	setHasCleared: React.Dispatch<React.SetStateAction<boolean>>;
-	maxBytes?: number;
 	labelForMessages: string;
 	gif?: GifPolicy;
 	aspectRatio?: AspectRatioConfig;
@@ -107,7 +106,6 @@ export function useGuildImageAssetField({
 	previewUrl,
 	setPreviewUrl,
 	setHasCleared,
-	maxBytes = MAX_IMAGE_BYTES,
 	labelForMessages,
 	gif,
 	aspectRatio,
@@ -115,6 +113,7 @@ export function useGuildImageAssetField({
 	uploadHint,
 }: UseGuildImageAssetFieldArgs): ImageAssetFieldController {
 	const {i18n} = useLingui();
+	const maxBytes = GlobalLimits.getAvatarMaxSize();
 	const label = labelForMessages;
 	const requestIdRef = useRef(0);
 	const [isProcessing, setIsProcessing] = useState(false);

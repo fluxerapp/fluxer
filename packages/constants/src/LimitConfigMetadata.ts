@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
+import {BASE64_IMAGE_MAX_SIZE, MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
 
 export const LIMIT_KEYS = [
 	'avatar_max_size',
@@ -320,6 +320,8 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 		scope: 'guild',
 		isToggle: false,
 		unit: 'bytes',
+		min: 1,
+		max: BASE64_IMAGE_MAX_SIZE,
 	},
 	sticker_max_size: {
 		key: 'sticker_max_size',
@@ -329,6 +331,8 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 		scope: 'guild',
 		isToggle: false,
 		unit: 'bytes',
+		min: 1,
+		max: BASE64_IMAGE_MAX_SIZE,
 	},
 	max_attachment_file_size: {
 		key: 'max_attachment_file_size',
@@ -347,6 +351,8 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 		scope: 'user',
 		isToggle: false,
 		unit: 'bytes',
+		min: 1,
+		max: BASE64_IMAGE_MAX_SIZE,
 	},
 	max_custom_backgrounds: {
 		key: 'max_custom_backgrounds',

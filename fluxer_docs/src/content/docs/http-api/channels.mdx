@@ -531,12 +531,12 @@ Every field is optional, and an omitted field preserves its current value.
 | Field | Type | Description |
 | --- | --- | --- |
 | name? | ?string | The name of the group (1-100 characters after normalisation), or null to clear it |
-| icon?<sup>1</sup> | ?base64 string | The base64-encoded icon image (at most 13,981,014 encoded characters), or null to clear it |
+| icon?<sup>1</sup> | ?base64 string | The base64-encoded icon image (at most 139,810,136 encoded characters), or null to clear it |
 | owner_id?<sup>2</sup> | ?snowflake | The ID of the new owner |
 | nicks?<sup>3</sup> | ?map[snowflake, ?string] | The nicknames keyed by the decimal user ID (each 0-32 characters, or null) |
 | nsfw?<sup>4</sup> | ?boolean | Whether the group is marked for mature content |
 
-<sup>1</sup> Raw base64 or a data URL, with 1 through 13,981,014 characters after the prefix
+<sup>1</sup> Raw base64 or a data URL, with 1 through 139,810,136 characters after the prefix
 
 <sup>2</sup> An explicit null requests no transfer. The caller must be the current owner and the target a current recipient
 

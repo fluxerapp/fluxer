@@ -3,7 +3,6 @@
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
 import {
-	AVATAR_MAX_SIZE,
 	CHANNEL_RATE_LIMIT_PER_USER_MAX,
 	CHANNEL_RATE_LIMIT_PER_USER_MIN,
 	CHANNEL_TOPIC_MAX_LENGTH,
@@ -33,7 +32,7 @@ import {
 import {ThreadAutoArchiveDurationSchema} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import {ReadStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import {ChannelOverwriteTypeSchema, GeneralChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {ContentWarningLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -134,9 +133,7 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 			'Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.',
 		),
 	...ChannelContentWarningFields,
-	icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded icon image for group DM channels'),
+	icon: createBase64ImageType().nullish().describe('Base64-encoded icon image for group DM channels'),
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner for group DM channels'),
 	nicks: ChannelNicknameOverrides.optional().describe('Custom nicknames for users in this channel'),
 	rtc_region: createStringType(RTC_REGION_ID_MIN_LENGTH, RTC_REGION_ID_MAX_LENGTH)
@@ -257,9 +254,7 @@ const ChannelUpdateLinkRequest = ChannelUpdateCommon.extend({
 const ChannelUpdateGroupDmRequest = z.object({
 	type: createNamedLiteral(ChannelTypes.GROUP_DM, 'GROUP_DM', 'Channel type (group DM)'),
 	name: GeneralChannelNameType.nullish().describe('The name of the group DM'),
-	icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded icon image for the group DM'),
+	icon: createBase64ImageType().nullish().describe('Base64-encoded icon image for the group DM'),
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner of the group DM'),
 	nicks: ChannelNicknameOverrides.nullish().describe('Custom nicknames for users in this group DM'),
 	nsfw: z.boolean().nullish().describe('Whether the group DM is marked for mature content (owner only)'),

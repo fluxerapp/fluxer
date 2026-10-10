@@ -3,12 +3,9 @@
 import {Routes} from '@app/app/Routes';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {
-	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
-	STATIC_IMAGE_FORMATS,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {AVATAR_RECOMMENDED_SIZE_LABEL, STATIC_IMAGE_FORMATS} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
@@ -95,10 +92,10 @@ export function useGuildCreateIconField({
 		try {
 			const [file] = await openFilePicker({accept: getAcceptStringFiltered('guild_icon', false)});
 			if (!file) return;
-			if (file.size > 10 * 1024 * 1024) {
+			if (file.size > GlobalLimits.getAvatarMaxSize()) {
 				showIconUploadErrorModal(
 					i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-						imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+						imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 					}),
 				);
 				return;
@@ -150,7 +147,7 @@ export function useGuildCreateIconField({
 			title: i18n._(messages.changeIcon),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+				maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUpload,

@@ -6,7 +6,7 @@ import {
 	MessageFlags,
 	MessageFlagsDescriptions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {AVATAR_MAX_SIZE, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {
 	MAX_APPLIED_TAGS_PER_THREAD,
 	THREAD_NAME_MAX_LENGTH,
@@ -19,7 +19,7 @@ import {
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	coerceNumberFromString,
@@ -37,9 +37,7 @@ import {z} from 'zod';
 
 export const WebhookCreateRequest = z.object({
 	name: WebhookNameType.describe('The name of the webhook'),
-	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('The avatar image as a base64-encoded data URI'),
+	avatar: createBase64ImageType().nullish().describe('The avatar image as a base64-encoded data URI'),
 });
 
 export type WebhookCreateRequest = z.infer<typeof WebhookCreateRequest>;
@@ -47,9 +45,7 @@ export type WebhookCreateRequest = z.infer<typeof WebhookCreateRequest>;
 export const WebhookUpdateRequest = z
 	.object({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('The new avatar image as a base64-encoded data URI'),
+		avatar: createBase64ImageType().nullish().describe('The new avatar image as a base64-encoded data URI'),
 		channel_id: SnowflakeType.describe('The ID of the channel to move the webhook to'),
 	})
 	.partial();
@@ -59,9 +55,7 @@ export type WebhookUpdateRequest = z.infer<typeof WebhookUpdateRequest>;
 export const WebhookTokenUpdateRequest = z
 	.strictObject({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('The new avatar image as a base64-encoded data URI'),
+		avatar: createBase64ImageType().nullish().describe('The new avatar image as a base64-encoded data URI'),
 	})
 	.partial();
 

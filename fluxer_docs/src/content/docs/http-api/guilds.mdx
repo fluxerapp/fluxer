@@ -522,7 +522,7 @@ Creates a guild owned by the caller. Requires a user session credential. Returns
 
 A `name` outside 1 to 100 characters after normalisation returns `STRING_LENGTH_INVALID`. A blocked name returns 403 `CONTENT_BLOCKED`.
 
-The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`.
+The `icon` base64 payload is bounded to 1 to 139810136 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`.
 
 Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set plus `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS`. The `general` channel becomes the system channel.
 

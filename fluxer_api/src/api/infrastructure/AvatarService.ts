@@ -95,13 +95,13 @@ export class AvatarService {
 			return null;
 		}
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
-		if (imageBuffer.length > maxAvatarSize) {
+		if (Buffer.byteLength(base64Data, 'base64') > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxAvatarSize,
 			});
 		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const kind = this.prefixToKind(prefix);
 		const metadata = this.requireAllowedMetadata({
 			metadata: await this.mediaService.getMetadata({
@@ -143,13 +143,13 @@ export class AvatarService {
 	}> {
 		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxEmojiSize = this.resolveSizeLimit('emoji_max_size', EMOJI_MAX_SIZE, guildFeatures);
-		if (imageBuffer.length > maxEmojiSize) {
+		if (Buffer.byteLength(base64Data, 'base64') > maxEmojiSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxEmojiSize,
 			});
 		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const metadata = this.requireAllowedMetadata({
 			metadata: await this.mediaService.getMetadata({
 				type: 'base64',
@@ -244,13 +244,13 @@ export class AvatarService {
 	}> {
 		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxStickerSize = this.resolveSizeLimit('sticker_max_size', STICKER_MAX_SIZE, guildFeatures);
-		if (imageBuffer.length > maxStickerSize) {
+		if (Buffer.byteLength(base64Data, 'base64') > maxStickerSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxStickerSize,
 			});
 		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const metadata = this.requireAllowedMetadata({
 			metadata: await this.mediaService.getMetadata({
 				type: 'base64',

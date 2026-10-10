@@ -435,7 +435,7 @@ Updates the bot account an application owns and returns the resulting [bot profi
 
 <sup>2</sup> Accepted only when it equals the bot's current discriminator. Any other value returns the field code `BOT_DISCRIMINATOR_CANNOT_BE_CHANGED`
 
-<sup>3</sup> The value can include a `data:...;base64,` prefix, which Fluxer strips before it measures the payload. The remaining base64 payload is bounded at 13981016 characters for both fields, the encoded length of a full 10485760-byte image, and a longer value is rejected with the field code `BASE64_LENGTH_INVALID`
+<sup>3</sup> The value can include a `data:...;base64,` prefix, which Fluxer strips before it measures the payload. The remaining base64 payload is bounded at 139810136 characters for both fields, the encoded length of a 104857600-byte image, and a longer value is rejected with the field code `BASE64_LENGTH_INVALID`. The decoded image must fit the resolved `avatar_max_size` [limit](/http-api/instance/#limit-keys), 10485760 bytes by default, or it is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`
 
 <sup>4</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation or the profile substring blocklist blocks the value
 

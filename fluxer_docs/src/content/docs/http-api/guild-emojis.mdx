@@ -58,9 +58,9 @@ The image and name submitted for one new emoji.
 
 <sup>3</sup> The decoded ceiling is the resolved `emoji_max_size` [limit key](/http-api/instance/#limit-keys) in guild scope, 524288 bytes by default
 
-The remaining encoded part is bounded to 699052 characters, the base64 expansion of the 524288 byte default. A longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`. An image over the resolved ceiling returns `IMAGE_SIZE_EXCEEDS_LIMIT` at the same path, and `maxSize` is the ceiling that applied.
+The remaining encoded part is bounded to 139810136 characters, the base64 expansion of a 104857600 byte image. A longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`. An image over the resolved ceiling returns `IMAGE_SIZE_EXCEEDS_LIMIT` at the same path, and `maxSize` is the ceiling that applied.
 
-The 699052 character bound does not move with the limit key, so a resolved ceiling above 524288 bytes admits no more than 524289 decoded bytes.
+The character bound does not move with the limit key, so a resolved ceiling above 104857600 bytes admits no more than 104857602 decoded bytes.
 
 Accepted upload formats are PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG. Fluxer takes the format and the animation state from the decoded image. An animated AVIF is rejected.
 

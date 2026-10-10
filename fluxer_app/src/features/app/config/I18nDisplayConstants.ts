@@ -67,7 +67,6 @@ export const STATIC_IMAGE_WITH_AVIF_FORMATS = formatAssetUploadExtensions('splas
 export const ANIMATED_IMAGE_FORMATS = formatAssetUploadExtensions('avatar');
 export const ANIMATED_AVATAR_FORMATS = formatKnownAnimatedAssetExtensions('avatar');
 export const AVIF_FORMAT_LABEL = 'AVIF';
-export const IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const BACKGROUND_MEDIA_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const CUSTOM_SOUND_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 export const AVATAR_RECOMMENDED_SIZE_LABEL = '512×512px';

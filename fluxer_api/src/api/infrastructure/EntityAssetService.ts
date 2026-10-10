@@ -291,13 +291,13 @@ export class EntityAssetService {
 		animated: boolean;
 	}> {
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveAvatarSizeLimit();
-		if (imageBuffer.length > maxAvatarSize) {
+		if (Buffer.byteLength(base64Data, 'base64') > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxAvatarSize,
 			});
 		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const kind = this.mapAssetTypeToAssetKind(assetType);
 		const metadata = this.requireAllowedMetadata({
 			metadata: await this.mediaService.getMetadata({

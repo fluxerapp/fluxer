@@ -4,10 +4,10 @@ import {ImagePreviewField} from '@app/features/app/components/shared/ImagePrevie
 import {
 	ANIMATED_BANNER_FEATURE,
 	ANIMATED_IMAGE_FORMATS,
-	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_FORMATS,
 	WIDE_IMAGE_ASPECT_RATIO_LABEL,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {AssetType, getAssetConfig} from '@app/features/expressions/components/modals/AssetCropModal';
 import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
 import {getAspectRatioFromDimensions} from '@app/features/expressions/utils/AssetImageGeometry';
@@ -97,7 +97,7 @@ export const GuildBannerUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_BANNER_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHint(i18n, {
 			formats: bannerFormats,
-			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+			maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 			minimumSize: bannerMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 		}),

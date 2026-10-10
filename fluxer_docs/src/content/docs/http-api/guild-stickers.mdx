@@ -68,7 +68,7 @@ The item shape shared by [Create guild sticker](#create-guild-sticker) and each 
 | name<sup>1</sup> | string | The name of the sticker (2-30 characters) |
 | description?<sup>2</sup> | ?string | The sticker description (1-500 characters), or null for none |
 | tags? | array[string] | [Sticker tags](#sticker-tags), defaulting to an empty array |
-| image<sup>3</sup> | base64 string | The image data, with at most 524288 decoded bytes |
+| image<sup>3</sup> | base64 string | The image data (at most the resolved `sticker_max_size` limit in decoded bytes, 524288 by default) |
 
 <sup>1</sup> The value is trimmed before the bound applies, as it is for `description` and each tag
 
@@ -76,9 +76,9 @@ The item shape shared by [Create guild sticker](#create-guild-sticker) and each 
 
 <sup>3</sup> A data URL prefix is accepted and everything up to the first comma is removed before any bound applies
 
-The remaining encoded part is bounded to 699052 characters, which encodes a full 524288 byte image, and a longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`.
+The remaining encoded part is bounded to 139810136 characters, which encodes a 104857600 byte image, and a longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`.
 
-Decoded bytes are at most the operator-configured `sticker_max_size` [limit key](/http-api/instance/#limit-keys) value, resolved against the guild's complete feature set and defaulting to 524288. A larger image is rejected on the `image` path with `IMAGE_SIZE_EXCEEDS_LIMIT`, whose message names the resolved ceiling. An image over 524289 bytes exceeds the 699052 character bound and returns `BASE64_LENGTH_INVALID`, so a configured value above 524289 never applies.
+Decoded bytes are at most the operator-configured `sticker_max_size` [limit key](/http-api/instance/#limit-keys) value, resolved against the guild's complete feature set and defaulting to 524288. A larger image is rejected on the `image` path with `IMAGE_SIZE_EXCEEDS_LIMIT`, whose message names the resolved ceiling. The character bound does not move with the limit key, so a configured value above 104857600 admits no more than 104857602 decoded bytes.
 
 Accepted upload formats are PNG, JPEG, APNG, GIF, WebP, AVIF, and SVG. Fluxer takes the format from the decoded image. An animated AVIF is rejected. Fluxer detects animation state from the image, so this object has no animation field.
 

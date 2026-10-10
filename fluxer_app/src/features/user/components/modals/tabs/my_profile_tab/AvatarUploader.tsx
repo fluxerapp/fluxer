@@ -6,10 +6,10 @@ import {
 	ANIMATED_AVATAR_FORMATS,
 	ANIMATED_IMAGE_FORMATS,
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
@@ -163,11 +163,11 @@ export const AvatarUploader = observer(
 		);
 		const processAvatarFile = useCallback(
 			async (file: File) => {
-				if (file.size > 10 * 1024 * 1024) {
+				if (file.size > GlobalLimits.getAvatarMaxSize()) {
 					showUserErrorModal(
 						i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
 						i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						}),
 					);
 					return;
@@ -308,13 +308,13 @@ export const AvatarUploader = observer(
 			const uploadHint = canUploadAnimatedAvatar
 				? formatImageUploadRecommendedHint(i18n, {
 						formats: ANIMATED_IMAGE_FORMATS,
-						maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+						maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 						recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 					})
 				: shouldShowPremiumFeatures()
 					? formatImageUploadRecommendedHintWithNote(i18n, {
 							formats: STATIC_IMAGE_FORMATS,
-							maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 							note: i18n._(ANIMATED_AVATARS_REQUIRE_PREMIUM_NOTE_DESCRIPTOR, {
 								animatedAvatarFormats: ANIMATED_AVATAR_FORMATS,
@@ -323,7 +323,7 @@ export const AvatarUploader = observer(
 						})
 					: formatImageUploadRecommendedHint(i18n, {
 							formats: STATIC_IMAGE_FORMATS,
-							maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
+							maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
 							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 						});
 			openAssetSourceModal({
