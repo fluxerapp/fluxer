@@ -5850,13 +5850,6 @@
 						"required": true,
 						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the channel"
-					},
-					{
-						"name": "location",
-						"in": "query",
-						"required": false,
-						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
-						"description": "Accepted and ignored"
 					}
 				]
 			},
@@ -5915,13 +5908,6 @@
 						"required": true,
 						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the channel"
-					},
-					{
-						"name": "location",
-						"in": "query",
-						"required": false,
-						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
-						"description": "Accepted and ignored"
 					}
 				]
 			}
@@ -6140,13 +6126,6 @@
 						"required": true,
 						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the user"
-					},
-					{
-						"name": "location",
-						"in": "query",
-						"required": false,
-						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
-						"description": "Accepted and ignored"
 					}
 				]
 			},
@@ -6212,13 +6191,6 @@
 						"required": true,
 						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the user"
-					},
-					{
-						"name": "location",
-						"in": "query",
-						"required": false,
-						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
-						"description": "Accepted and ignored"
 					}
 				]
 			}
@@ -31490,8 +31462,7 @@
 						"maximum": 21600,
 						"description": "Seconds a user has to wait before sending another message (0-21600)",
 						"$ref": "#/components/schemas/Int32Type"
-					},
-					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+					}
 				},
 				"required": ["name"]
 			},
@@ -36252,8 +36223,7 @@
 						},
 						"description": "The first message of the post",
 						"$ref": "#/components/schemas/ForumThreadMessageRequest"
-					},
-					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+					}
 				},
 				"required": ["name", "message"],
 				"x-fluxer-experiment": "channel_threads"
@@ -36272,8 +36242,7 @@
 					"invitable": {
 						"description": "Whether non-moderators can add other non-moderators (private threads)",
 						"type": "boolean"
-					},
-					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+					}
 				},
 				"required": ["name", "type"]
 			},
