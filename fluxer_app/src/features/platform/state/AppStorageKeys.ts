@@ -29,6 +29,7 @@ export const AppStorageKey = Object.freeze({
 	UI_INBOX_POPOUT_SIZE: 'fluxer:ui:inbox-popout-size',
 	UI_SIDEBAR_WIDTH: 'fluxer:ui:sidebar-width',
 	VOICE_SETTINGS: 'VoiceSettings',
+	WINDOWS_FONT: 'WindowsFont',
 } as const);
 
 export type AppStorageKey = (typeof AppStorageKey)[keyof typeof AppStorageKey];
@@ -54,6 +55,7 @@ const GLOBAL_APP_STORAGE_KEY_LOOKUP: Readonly<Record<string, true>> = Object.fre
 	[AppStorageKey.THEME_LIBRARY_LOCAL_FILES]: true,
 	[AppStorageKey.THEME_LIBRARY_MIGRATED]: true,
 	[AppStorageKey.THEME_LIBRARY_THEMES]: true,
+	[AppStorageKey.WINDOWS_FONT]: true,
 });
 
 function keyStartsWithPrefix(key: string, prefix: AppStorageKey): boolean {

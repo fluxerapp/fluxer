@@ -1128,7 +1128,7 @@ msgstr "{count, plural, one {找到 # 個社群} other {找到 # 個社群}}"
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
 msgstr "{count, plural, one {# 個社群有獨立設定} other {# 個社群有獨立設定}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}因時空電容器故障，暫時無法使用。"
 
@@ -2916,7 +2916,7 @@ msgstr "存取您的基本個人檔案資訊（使用者名稱、大頭貼等）
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:59
 msgid "Accessibility"
 msgstr "協助工具"
@@ -5097,7 +5097,7 @@ msgstr "附件"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:179
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
 msgid "Audio"
 msgstr "音訊"
 
@@ -6579,7 +6579,7 @@ msgid "California"
 msgstr "加利福尼亞州"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:164
 msgid "Call"
 msgstr "通話"
 
@@ -7520,7 +7520,7 @@ msgid "Channel added to favorites"
 msgstr "已將頻道加到我的最愛"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:23
 msgid "Channel badges"
 msgstr "頻道徽章"
 
@@ -7731,7 +7731,7 @@ msgid "Chat font size"
 msgstr "聊天字體大小"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:79
 msgid "chat input"
 msgstr "聊天輸入框"
 
@@ -8597,7 +8597,7 @@ msgid "Clock"
 msgstr "時鐘"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:40
 msgid "Clone emoji"
 msgstr "複製表情符號"
 
@@ -8607,7 +8607,7 @@ msgid "Clone emoji to..."
 msgstr "複製表情符號到…"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:44
 msgid "Clone sticker"
 msgstr "複製貼圖"
 
@@ -9050,7 +9050,7 @@ msgid "Community at capacity"
 msgstr "社群人數已滿"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:14
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:19
 msgid "Community badges"
 msgstr "社群徽章"
 
@@ -9414,7 +9414,7 @@ msgstr "確定"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:26
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "在加入語音頻道前確認"
@@ -9706,7 +9706,7 @@ msgstr "內容安全閘門"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:168
 msgid "Context menu"
 msgstr "操作選單"
 
@@ -9970,7 +9970,7 @@ msgid "Copy device ID"
 msgstr "複製裝置 ID"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:48
 msgid "Copy emoji"
 msgstr "複製表情符號"
 
@@ -10163,7 +10163,7 @@ msgid "Copy stats JSON"
 msgstr "複製統計資料 JSON"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:52
 msgid "Copy sticker"
 msgstr "複製貼圖"
 
@@ -12069,7 +12069,7 @@ msgstr "德拉瓦州"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:194
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:201
 msgid "Delete"
 msgstr "刪除"
 
@@ -12364,7 +12364,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "已刪除該成員最近 {duration} 的訊息記錄"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:128
 msgid "Deleted text"
 msgstr "已刪除的文字"
 
@@ -12754,7 +12754,7 @@ msgid "Different sizes & member counts"
 msgstr "不同尺寸和成員數"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "調暗刪除線文字"
 
@@ -12769,7 +12769,7 @@ msgstr "直接輸入"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:10
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:576
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:99
 msgid "Direct message"
 msgstr "私訊"
 
@@ -13210,7 +13210,7 @@ msgid "District of Columbia"
 msgstr "哥倫比亞特區"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:193
 msgid "DM"
 msgstr "DM"
 
@@ -14189,7 +14189,7 @@ msgstr "已取消隱藏嵌入內容"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:176
 msgid "Emoji"
 msgstr "表情符號"
 
@@ -14205,7 +14205,7 @@ msgid "emoji {emojiName}"
 msgstr "表情符號 {emojiName}"
 
 #. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:36
 msgid "Emoji and sticker cloning shortcuts"
 msgstr "表情符號與貼圖複製捷徑"
 
@@ -14403,7 +14403,7 @@ msgid "Enable extra option"
 msgstr "啟用額外選項"
 
 #. Toggle label and settings search entry for controlling whether favorites are visible throughout the app.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:58
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:63
 msgid "Enable favorites"
 msgstr "啟用我的最愛"
 
@@ -15167,7 +15167,7 @@ msgid "expanded"
 msgstr "已展開"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:27
 msgid "Experimental"
 msgstr "實驗性功能"
 
@@ -16553,7 +16553,7 @@ msgstr "友善的機器人"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:103
 msgid "Friends"
 msgstr "好友"
 
@@ -16942,7 +16942,7 @@ msgstr "取得年訂閱"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:172
 msgid "GIF"
 msgstr "GIF"
 
@@ -17391,7 +17391,7 @@ msgid "Graphics"
 msgstr "顯示卡"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:132
 msgid "Gray text"
 msgstr "灰色文字"
 
@@ -19732,7 +19732,7 @@ msgid "Keep my current settings"
 msgstr "保留我的目前設定"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:59
 msgid "Keep Neko still"
 msgstr "讓 Neko 保持不動"
 
@@ -21044,7 +21044,7 @@ msgstr "將最上方的收件匣頻道標示為已讀"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:136
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -21582,7 +21582,7 @@ msgstr "要提及此身分組嗎？"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:657
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
 msgid "Mentions"
 msgstr "提及"
 
@@ -22710,7 +22710,7 @@ msgstr "已靜音"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:87
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "已靜音"
@@ -22733,7 +22733,7 @@ msgstr "遭管理員設為靜音"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:83
 msgid "Muted channels"
 msgstr "已關閉通知的頻道"
 
@@ -22951,7 +22951,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "只朗讀您正在檢視的頻道。朗讀功能會跟隨您切換頻道。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:160
 msgid "Narration"
 msgstr "旁白"
 
@@ -23006,7 +23006,7 @@ msgid "Need an account?"
 msgstr "還沒有帳號嗎？"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:75
 msgid "Neko"
 msgstr "貓咪"
 
@@ -24580,7 +24580,7 @@ msgstr "不透明度"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/platform/utils/DesktopLocaleBridge.ts:332
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:25
 msgid "Open"
 msgstr "開啟"
 
@@ -25142,7 +25142,7 @@ msgid "Operating system"
 msgstr "作業系統"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "啟用實驗性的個別社群與頻道未讀標記控制功能"
 
@@ -26053,7 +26053,7 @@ msgstr "將此訊息釘選到頻道，讓所有人都能看到。"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:197
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -26278,7 +26278,7 @@ msgid "Popped out"
 msgstr "已在獨立視窗開啟"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:204
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:209
 msgid "Popup"
 msgstr "彈出式視窗"
 
@@ -27333,7 +27333,7 @@ msgid "Reactivate subscription"
 msgstr "重新啟用訂閱"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:144
 msgid "Read aloud"
 msgstr "朗讀"
 
@@ -27350,7 +27350,7 @@ msgstr "讀取訊息歷史記錄"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:140
 msgid "Read messages"
 msgstr "讀取訊息"
 
@@ -27857,7 +27857,7 @@ msgstr "記住視窗大小和位置"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:200
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:205
 #: src/features/webhook/components/WebhookListItem.tsx:278
 msgid "Remove"
 msgstr "移除"
@@ -28563,7 +28563,7 @@ msgid "Require a passkey as your second factor"
 msgstr "要求以通行金鑰作為第二道驗證"
 
 #. Short label for an advanced voice-channel navigation preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:20
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:22
 msgid "Require double-click to join voice channels"
 msgstr "需要按兩下才能加入語音頻道"
 
@@ -30401,6 +30401,12 @@ msgstr "查看此頻道。拒絕給予 {everyoneMention} 會讓頻道變成私�
 msgid "Seek preview"
 msgstr "進度預覽"
 
+# auto-i18n: reviewed unchanged
+#. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:61
+msgid "Segoe UI"
+msgstr "Segoe UI"
+
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
@@ -31418,7 +31424,7 @@ msgid "Show a content warning in this channel"
 msgstr "在此頻道中顯示內容警示"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:56
 msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
 msgstr "顯示一鍵捷徑，可從允許的社群複製自訂表情符號和貼圖"
 
@@ -31514,7 +31520,7 @@ msgstr "顯示刪除按鈕"
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:71
 msgid "Show download button"
 msgstr "顯示下載按鈕"
 
@@ -31590,7 +31596,7 @@ msgid "Show guidelines"
 msgstr "顯示指南"
 
 #. Toggle label and settings search entry for showing the help center button in the sidebar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:67
 msgid "Show help center button"
 msgstr "顯示說明中心按鈕"
 
@@ -31812,7 +31818,7 @@ msgid "Show store folder"
 msgstr "顯示儲存資料夾"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "以稍微柔和的顏色顯示刪除線 Markdown 文字。"
 
@@ -31824,6 +31830,11 @@ msgstr "顯示「隱藏嵌入內容」按鈕"
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "顯示系統匣圖示"
+
+#. Settings search entry description. One-line summary of what the setting controls. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:65
+msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
+msgstr "以 Fluxer Sans（先前預設字體）顯示文字，而非 Windows 系統字體"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:34
@@ -32233,7 +32244,7 @@ msgid "Skip this step"
 msgstr "略過此步驟"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:73
+#: src/app/App.tsx:74
 msgid "Skip to content"
 msgstr "跳到內容"
 
@@ -32871,7 +32882,7 @@ msgstr "觀眾 - {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:156
 msgid "Speech"
 msgstr "語音"
 
@@ -33607,14 +33618,14 @@ msgid "Streaming privacy on"
 msgstr "直播隱私已開啟"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:124
 msgid "Strike through"
 msgstr "刪除線"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:120
 msgid "Strikethrough"
 msgstr "刪除線"
 
@@ -33802,6 +33813,11 @@ msgstr "切換帳號"
 #: src/features/app/components/floating/UserAreaPopout.tsx:579
 msgid "Switch accounts"
 msgstr "切換帳號"
+
+#. Nagbar button that opens the setting for switching the app font back to Fluxer Sans. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:21
+msgid "Switch back to Fluxer Sans"
+msgstr "切換回 Fluxer Sans"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:53
@@ -34403,6 +34419,11 @@ msgstr "文字格式"
 msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
 msgstr "啟用透明度時，文字會以灰階反鋸齒而非 ClearType 呈現，因此看起來會比較柔和。"
 
+#. Nagbar message shown once to existing Windows users after the default app font changed to the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:16
+msgid "Text on Windows now uses the system font. You can switch back to Fluxer Sans in settings."
+msgstr "現在 Windows 上的文字會使用系統字體。你可以在設定中切換回 Fluxer Sans。"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
@@ -34425,7 +34446,7 @@ msgstr "文字大小"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:428
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:152
 msgid "Text-to-speech"
 msgstr "文字轉語音"
 
@@ -36600,7 +36621,7 @@ msgid "Try sending your message again."
 msgstr "請再試一次傳送訊息。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:148
 msgid "TTS"
 msgstr "TTS"
 
@@ -37570,7 +37591,7 @@ msgstr "未讀"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:91
 msgid "Unread"
 msgstr "未讀"
 
@@ -37582,7 +37603,7 @@ msgid "Unread badge"
 msgstr "未讀標記"
 
 #. Settings search entry label for opting into experimental per-community unread badge controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:6
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:11
 msgid "Unread badge customization"
 msgstr "未讀標記自訂功能"
 
@@ -37591,7 +37612,7 @@ msgstr "未讀標記自訂功能"
 #. Short label in the channel notification settings dropdown. Keep it concise.
 #: src/features/channel/components/channel_header_components/ChannelNotificationSettingsDropdown.tsx:38
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:72
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:10
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:15
 msgid "Unread badges"
 msgstr "未讀標記"
 
@@ -38242,6 +38263,11 @@ msgstr "使用外部貼圖"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:486
 msgid "Use filters or enter keywords to find messages"
 msgstr "使用篩選條件或輸入關鍵字來尋找訊息"
+
+#. Toggle label and settings search entry for showing app text in the Fluxer Sans font instead of the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+msgid "Use Fluxer Sans on Windows"
+msgstr "在 Windows 上使用 Fluxer Sans"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
@@ -39354,7 +39380,7 @@ msgstr "顯示使用者狀態的視覺指示器，使用與頭像相同的遮罩
 #: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:95
 msgid "Voice"
 msgstr "語音"
 
@@ -39586,7 +39612,7 @@ msgstr "已作廢"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "Volume"
 msgstr "音量"
 

@@ -51,6 +51,11 @@ export const SHOW_NEKO_DESCRIPTOR = msg({
 	message: 'Show Neko',
 	comment: 'Toggle label and settings search entry for showing the Neko sprite that chases the cursor.',
 });
+export const USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR = msg({
+	message: 'Use Fluxer Sans on Windows',
+	comment:
+		'Toggle label and settings search entry for showing app text in the Fluxer Sans font instead of the Windows system font. Fluxer Sans is a font name and must not be translated.',
+});
 export const KEEP_NEKO_STILL_DESCRIPTOR = msg({
 	message: 'Keep Neko still',
 	comment: 'Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.',

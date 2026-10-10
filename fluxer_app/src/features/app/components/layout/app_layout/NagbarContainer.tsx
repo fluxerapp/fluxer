@@ -23,6 +23,7 @@ import {TermsAcceptanceNagbar} from '@app/features/app/components/layout/app_lay
 import {UnclaimedAccountNagbar} from '@app/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar';
 import {VisionaryMfaNagbar} from '@app/features/app/components/layout/app_layout/nagbars/VisionaryMfaNagbar';
 import {VoiceSessionRestoreNagbar} from '@app/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar';
+import {WindowsFontNagbar} from '@app/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {SoftwareEncoderNagbar} from '@app/features/voice/components/SoftwareEncoderNagbar';
@@ -228,6 +229,14 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.domain-moved-nagbar"
+							/>
+						);
+					case NagbarType.WINDOWS_FONT:
+						return (
+							<WindowsFontNagbar
+								key={nagbar.type}
+								isMobile={mobileLayout.enabled}
+								data-flx="app.app-layout.nagbar-container.windows-font-nagbar"
 							/>
 						);
 					default:

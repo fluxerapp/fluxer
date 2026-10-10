@@ -38,7 +38,11 @@ function resolveStoreName(expression: string, source: string): string {
 	return value;
 }
 
-export const STORES_WITHOUT_DEPLOYED_DATA: ReadonlySet<string> = new Set(['SourceMaps', 'BackgroundAccountPresence']);
+export const STORES_WITHOUT_DEPLOYED_DATA: ReadonlySet<string> = new Set([
+	'SourceMaps',
+	'BackgroundAccountPresence',
+	'WindowsFont',
+]);
 
 export function readPersistedStoreNames(): Array<string> {
 	const names = new Set<string>();
