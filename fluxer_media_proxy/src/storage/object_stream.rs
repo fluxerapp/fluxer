@@ -4,23 +4,13 @@ use super::{
     HeadResult, ObjectStreamPlan, StorageError, Store, StreamObject, StreamRange,
     record_storage_outcome,
 };
-use crate::{config::StorageBackend, constants};
+use crate::config::StorageBackend;
 
 impl Store {
     pub async fn head_object(&self, bucket: &str, key: &str) -> Result<HeadResult, StorageError> {
-        self.head_object_limited(bucket, key, constants::MAX_MEDIA_PROXY_BYTES)
-            .await
-    }
-
-    pub async fn head_object_limited(
-        &self,
-        bucket: &str,
-        key: &str,
-        max_bytes: usize,
-    ) -> Result<HeadResult, StorageError> {
         match self.cfg.storage.backend {
-            StorageBackend::Local => self.head_local(bucket, key, max_bytes).await,
-            StorageBackend::S3 => self.head_s3(bucket, key, max_bytes).await,
+            StorageBackend::Local => self.head_local(bucket, key).await,
+            StorageBackend::S3 => self.head_s3(bucket, key).await,
         }
     }
 
@@ -33,7 +23,6 @@ impl Store {
         self.stream_object_inner(ObjectStreamPlan {
             bucket,
             key,
-            max_bytes: constants::MAX_MEDIA_PROXY_BYTES,
             range: match range_header {
                 Some(header) => StreamRange::Header(header),
                 None => StreamRange::Full,

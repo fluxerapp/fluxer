@@ -80,7 +80,6 @@ enum ContentDigestRequest {
 struct ObjectStreamPlan<'a> {
     bucket: &'a str,
     key: &'a str,
-    max_bytes: usize,
     range: StreamRange<'a>,
 }
 

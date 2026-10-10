@@ -82,7 +82,6 @@ impl Store {
         &self,
         bucket: &str,
         key: &str,
-        max_bytes: usize,
     ) -> Result<HeadResult, StorageError> {
         // A HEAD is a read, so it follows the same endpoint and signing policy as a body read.
         // Sending it to the write origin instead would bypass the configured read endpoint and
@@ -98,9 +97,6 @@ impl Store {
             return Err(StorageError::S3(s3_error_summary(response).await));
         }
         let content_length = http_headers::parse_content_length(response.headers()).unwrap_or(0);
-        if content_length > max_bytes as u64 {
-            return Err(StorageError::StreamTooLong);
-        }
         let content_type = response_content_type(response.headers());
         Ok(HeadResult {
             content_length,
@@ -155,12 +151,6 @@ impl Store {
             return Err(StorageError::S3(s3_error_summary(response).await));
         }
         let content_length = http_headers::parse_content_length(response.headers());
-        if let Some(content_length) = content_length
-            && matches!(plan.range, StreamRange::Full)
-            && content_length > plan.max_bytes as u64
-        {
-            return Err(StorageError::StreamTooLong);
-        }
         let content_type = response_content_type(response.headers());
         let content_range = header_str(response.headers(), header::CONTENT_RANGE)
             .and_then(|value| range::parse_content_range(Some(&value)));

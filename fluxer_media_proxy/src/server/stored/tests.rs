@@ -285,6 +285,48 @@ async fn a_stored_passthrough_stream_declares_the_length_it_serves() {
     assert_eq!(&b"hello"[..], &response_body(response).await[..]);
 }
 
+#[tokio::test]
+async fn a_stored_passthrough_serves_objects_larger_than_the_buffer_cap() {
+    let tmp = tempfile::tempdir().unwrap();
+    let storage_root = tmp.path().canonicalize().unwrap();
+    let app = test_app_state(asset_test_config(&storage_root));
+    let bucket = app.cfg.storage.bucket_cdn.clone();
+    app.store
+        .write_object(&bucket, "a/big.mp4", b"head", "video/mp4")
+        .await
+        .unwrap();
+    let total_len = constants::MAX_MEDIA_PROXY_BYTES as u64 + 1;
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(storage_root.join(&bucket).join("a/big.mp4"))
+        .unwrap()
+        .set_len(total_len)
+        .unwrap();
+    let mut range = HeaderMap::new();
+    range.insert(header::RANGE, "bytes=0-3".parse().unwrap());
+
+    let head =
+        passthrough::serve_stored_raw(&app, Method::HEAD, &bucket, "a/big.mp4", &HeaderMap::new())
+            .await;
+    assert_eq!(StatusCode::OK, head.status());
+    assert_eq!(
+        Some(total_len.to_string().as_str()),
+        head.headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+    );
+
+    let get = passthrough::serve_stored_raw(&app, Method::GET, &bucket, "a/big.mp4", &range).await;
+    assert_eq!(StatusCode::PARTIAL_CONTENT, get.status());
+    assert_eq!(
+        Some(format!("bytes 0-3/{total_len}").as_str()),
+        get.headers()
+            .get(header::CONTENT_RANGE)
+            .and_then(|value| value.to_str().ok())
+    );
+    assert_eq!(&b"head"[..], &response_body(get).await[..]);
+}
+
 fn fake_asset_object(read_status: Option<u16>) -> crate::storage::tests::FakeObject {
     crate::storage::tests::FakeObject {
         body: crate::test_fixtures::synthetic_png(512, 512),
