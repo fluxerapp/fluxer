@@ -228,8 +228,33 @@ async function stripMetadataWithExiftool(data: Uint8Array, extension: string): P
 	}
 }
 
-async function stripVideoMetadataInPlace(inputPath: string, outputPath: string): Promise<void> {
-	await execFilePromise('ffmpeg', [
+function ffmpegMuxerForContentType(contentType: string): string | null {
+	if (contentType.includes('3gpp')) return '3gp';
+	if (contentType.includes('mp4')) return 'mp4';
+	if (contentType.includes('webm')) return 'webm';
+	if (contentType.includes('quicktime')) return 'mov';
+	if (contentType.includes('x-matroska')) return 'matroska';
+	if (contentType.includes('x-msvideo')) return 'avi';
+	if (contentType.includes('x-flv')) return 'flv';
+	if (contentType.includes('mp2t')) return 'mpegts';
+	if (contentType.includes('mpeg')) return contentType.startsWith('audio/') ? 'mp3' : 'mpeg';
+	if (contentType.includes('x-ms-wmv')) return 'asf';
+	if (contentType.includes('wav')) return 'wav';
+	if (contentType.includes('flac')) return 'flac';
+	if (contentType.includes('aac')) return 'adts';
+	if (contentType.includes('aiff')) return 'aiff';
+	if (contentType.includes('ogg')) return 'ogg';
+	return null;
+}
+
+const FFMPEG_FAST_START_MUXERS = new Set(['mp4', 'mov', '3gp']);
+
+export function ffmpegMetadataStripArgs(inputPath: string, outputPath: string, contentType: string): Array<string> {
+	const muxer = ffmpegMuxerForContentType(contentType);
+	if (!muxer) {
+		throw new Error(`No ffmpeg output format for content type ${contentType}`);
+	}
+	return [
 		'-hide_banner',
 		'-loglevel',
 		'warning',
@@ -247,9 +272,12 @@ async function stripVideoMetadataInPlace(inputPath: string, outputPath: string):
 		'-1',
 		'-c',
 		'copy',
+		...(FFMPEG_FAST_START_MUXERS.has(muxer) ? ['-movflags', '+faststart'] : []),
+		'-f',
+		muxer,
 		'-y',
 		outputPath,
-	]);
+	];
 }
 
 async function cleanupTempFiles(paths: ReadonlyArray<string>): Promise<
@@ -392,8 +420,9 @@ async function stripVideoFileToFile(
 	outputPath: string,
 	contentType: string,
 ): Promise<{contentType: string; width?: number; height?: number}> {
-	await stripVideoMetadataInPlace(inputPath, outputPath);
-	return {contentType: normalizeContentType(contentType)};
+	const normalizedContentType = normalizeContentType(contentType);
+	await execFilePromise('ffmpeg', ffmpegMetadataStripArgs(inputPath, outputPath, normalizedContentType));
+	return {contentType: normalizedContentType};
 }
 
 export async function processMediaFile(
