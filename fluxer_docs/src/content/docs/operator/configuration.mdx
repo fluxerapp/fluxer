@@ -1765,6 +1765,8 @@ The premium tier name and information link, the billing switch, the Stripe secre
 
 Size-based attachment lifetimes. The built-in default is on.
 
+Changes also apply to attachments that were uploaded earlier. Turning expiry off removes every expiry date at once and stops deletion. Turning it on, or changing a size or lifetime rule, starts a background job that recalculates the expiry of existing attachments. An attachment that the new settings would expire sooner is kept for at least the renew window first.
+
 #### Instance Config, Gateway Rollout Configuration
 
 Session and guild rollout percentages, RPC timeouts, and Gateway concurrency.
