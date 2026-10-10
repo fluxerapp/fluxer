@@ -34,6 +34,7 @@ import type React from 'react';
 import {useCallback} from 'react';
 
 const PUSH_RELAY_NOTICE_URL = 'https://fluxer.com/push-relay';
+const DEFAULT_THEME_COLOR = 0x4641d9;
 
 export type RegistrationMode = 'open' | 'approval' | 'closed';
 export type PremiumMode = 'mirror' | 'everyone';
@@ -844,11 +845,11 @@ export const BrandingStep = observer(
 	}: {
 		productName: string;
 		productNameError: boolean;
-		themeColor: number;
+		themeColor: number | null;
 		assets: ReadonlyArray<BrandingAssetState>;
 		disabled: boolean;
 		onProductNameChange: (value: string) => void;
-		onThemeColorChange: (value: number) => void;
+		onThemeColorChange: (value: number | null) => void;
 		onUploadAsset: (kind: SetupBrandingAssetKind) => void;
 		onClearAsset: (kind: SetupBrandingAssetKind) => void;
 	}) => {
@@ -873,8 +874,11 @@ export const BrandingStep = observer(
 				/>
 				<ColorPickerField
 					label={i18n._(THEME_COLOR_LABEL_DESCRIPTOR)}
-					value={themeColor}
+					value={themeColor ?? DEFAULT_THEME_COLOR}
 					onChange={onThemeColorChange}
+					defaultValue={DEFAULT_THEME_COLOR}
+					isDefaultValue={themeColor === null}
+					onReset={() => onThemeColorChange(null)}
 					disabled={disabled}
 					data-flx="app.self-hosted-setup-wizard-gate.theme-color-field"
 				/>

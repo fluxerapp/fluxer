@@ -161,10 +161,10 @@ const STEP_NAVIGATION_LOCK_MS = 320;
 
 const BRANDING_ASSET_KINDS: ReadonlyArray<SetupBrandingAssetKind> = ['icon', 'symbol', 'logo', 'wordmark', 'favicon'];
 
-function hexToNumber(value: string | null): number {
-	if (!value) return 0;
+function hexToNumber(value: string | null): number | null {
+	if (!value) return null;
 	const match = /^#?([0-9a-fA-F]{6})$/.exec(value.trim());
-	if (!match) return 0;
+	if (!match) return null;
 	return parseInt(match[1], 16) >>> 0;
 }
 
@@ -463,7 +463,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const [creatingRecoveryKit, setCreatingRecoveryKit] = useState(false);
 
 	const [productName, setProductName] = useState('');
-	const [themeColor, setThemeColor] = useState(0);
+	const [themeColor, setThemeColor] = useState<number | null>(null);
 	const [registrationMode, setRegistrationMode] = useState<RegistrationMode>('open');
 	const [singleCommunityEnabled, setSingleCommunityEnabled] = useState(false);
 	const [singleCommunityName, setSingleCommunityName] = useState('');
@@ -902,7 +902,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				app_public: {
 					branding: {
 						product_name: productNameTrimmed,
-						theme_color: numberToHexColor(themeColor),
+						theme_color: themeColor === null ? null : numberToHexColor(themeColor),
 					},
 					setup: {configured: true},
 				},
