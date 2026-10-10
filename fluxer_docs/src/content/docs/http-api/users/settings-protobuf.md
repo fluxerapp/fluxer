@@ -84,6 +84,7 @@ An over-length string draws two entries for the one path.
 | double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji a double tap on a message adds as a reaction |
 | announcement_prompts? | [announcement prompts state](#announcement-prompts-state-object) object | Hidden announcement channel prompt state |
 | double_tap_action | int32 | [Double tap action](#double-tap-actions) on a message |
+| swipe_right_to_left_action | int32 | [Swipe right to left action](#swipe-right-to-left-actions) in a channel |
 
 <sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
@@ -886,3 +887,13 @@ The `double_tap_action` field selects what a double tap on a message does in the
 | 1 | DOUBLE_TAP_ACTION_REACT | Add the `double_tap_reaction` emoji as a reaction |
 | 2 | DOUBLE_TAP_ACTION_EDIT | Edit the message, when it is the account's own message |
 | 3 | DOUBLE_TAP_ACTION_NONE | Do nothing |
+
+## Swipe right to left actions
+
+The `swipe_right_to_left_action` field selects what a right to left swipe in a channel does in the mobile client.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | SWIPE_ACTION_UNSPECIFIED | No explicit action is selected |
+| 1 | SWIPE_ACTION_CHANNEL_DETAILS | Open the channel details |
+| 2 | SWIPE_ACTION_REPLY | Reply to the swiped message |

@@ -53,6 +53,7 @@ message SyncedPreferences {
   ChannelFrecencyState channel_frecency = 115;
   AnnouncementPromptsState announcement_prompts = 116;
   DoubleTapAction double_tap_action = 117;
+  SwipeAction swipe_right_to_left_action = 118;
 
 }
 
@@ -286,6 +287,12 @@ enum DoubleTapAction {
   DOUBLE_TAP_ACTION_REACT = 1;
   DOUBLE_TAP_ACTION_EDIT = 2;
   DOUBLE_TAP_ACTION_NONE = 3;
+}
+
+enum SwipeAction {
+  SWIPE_ACTION_UNSPECIFIED = 0;
+  SWIPE_ACTION_CHANNEL_DETAILS = 1;
+  SWIPE_ACTION_REPLY = 2;
 }
 
 message ReactionEmoji {
