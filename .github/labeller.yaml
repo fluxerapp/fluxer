@@ -67,9 +67,6 @@ p:geo-utils:
 p:hono:
   - changed-files:
     - any-glob-to-any-file: packages/hono/**/*
-p:hono-types:
-  - changed-files:
-    - any-glob-to-any-file: packages/hono_types/**/*
 p:i18n:
   - changed-files:
     - any-glob-to-any-file: packages/i18n/**/*

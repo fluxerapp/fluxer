@@ -4,7 +4,7 @@ import {initializeStore} from '@app/features/platform/utils/StoreInitialization'
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import Users from '@app/features/user/state/Users';
 import {PrivacyPreferencesSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
-import {extractTimestampFromSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {makeAutoObservable} from 'mobx';
 
 const SHOW_ACTIVE_NOW_DEFAULT = true;
@@ -15,7 +15,7 @@ function getPreuploadMessageAttachmentsDefaultForUserId(userId: string | null | 
 	if (!userId) {
 		return false;
 	}
-	const createdAtMs = extractTimestampFromSnowflake(userId);
+	const createdAtMs = extractTimestamp(userId);
 	return Number.isFinite(createdAtMs) && createdAtMs >= PREUPLOAD_MESSAGE_ATTACHMENTS_DEFAULT_ON_AFTER_MS;
 }
 

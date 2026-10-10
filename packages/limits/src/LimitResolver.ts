@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import type {ILimitEvaluator} from '@fluxer/limits/src/ILimitEvaluator';
-import {LimitEvaluator} from '@fluxer/limits/src/LimitEvaluator';
+import {DEFAULT_FREE_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {applyRuleToResolvedLimits, ruleMatches, sortRulesBySpecificity} from '@fluxer/limits/src/LimitRuleRuntime';
 import type {
 	LimitConfigSnapshot,
 	LimitEvaluationOptions,
@@ -10,17 +10,19 @@ import type {
 	LimitMatchContext,
 } from '@fluxer/limits/src/LimitTypes';
 
-export function createLimitEvaluator(snapshot: LimitConfigSnapshot): ILimitEvaluator {
-	return new LimitEvaluator(snapshot);
-}
-
 export function resolveLimits(
 	snapshot: LimitConfigSnapshot,
 	ctx: LimitMatchContext,
 	options?: LimitEvaluationOptions,
 ): LimitEvaluationResult {
-	const evaluator = createLimitEvaluator(snapshot);
-	return evaluator.resolveAll(ctx, options);
+	const evaluationContext = options?.evaluationContext ?? 'user';
+	const resolvedLimits = {...(options?.baseLimits ?? DEFAULT_FREE_LIMITS)};
+	for (const rule of sortRulesBySpecificity(snapshot.rules)) {
+		if (ruleMatches(rule.filters, ctx)) {
+			applyRuleToResolvedLimits(resolvedLimits, rule, evaluationContext);
+		}
+	}
+	return {limits: resolvedLimits};
 }
 
 export function resolveLimit(
@@ -29,6 +31,5 @@ export function resolveLimit(
 	key: LimitKey,
 	options?: LimitEvaluationOptions,
 ): number {
-	const evaluator = createLimitEvaluator(snapshot);
-	return evaluator.resolveOne(ctx, key, options);
+	return resolveLimits(snapshot, ctx, options).limits[key];
 }

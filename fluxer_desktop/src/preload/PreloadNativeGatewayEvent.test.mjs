@@ -69,11 +69,13 @@ describe('reconstructing a native gateway transport event in the preload', () =>
 	});
 
 	test('a binary frame is copied out of a view so the sender cannot mutate it afterwards', () => {
-		const view = new Uint8Array([1, 2, 3, 4]);
+		const source = new Uint8Array([9, 1, 2, 3, 4, 9]);
+		const view = source.subarray(1, 5);
 		const event = reconstructNativeGatewayTransportEvent(
 			frame({kind: NativeGatewayTransportEventKind.BINARY, binary: view}),
 		);
 		view[0] = 99;
+		assert.ok(event.binary instanceof ArrayBuffer);
 		assert.deepEqual(Array.from(new Uint8Array(event.binary)), [1, 2, 3, 4]);
 	});
 

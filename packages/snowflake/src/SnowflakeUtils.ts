@@ -16,7 +16,11 @@ function toClampedTimestamp(timestamp: number): number {
 }
 
 export function extractTimestamp(snowflake: string): number {
-	return extractTimestampFromSnowflake(snowflake);
+	try {
+		return extractTimestampWithEpoch(BigInt(snowflake), FLUXER_EPOCH);
+	} catch (_error) {
+		return Number.NaN;
+	}
 }
 
 export function extractTimestampBigInt(snowflake: bigint): number {
@@ -86,17 +90,8 @@ export function age(snowflake: string): number {
 	return Date.now() - timestamp;
 }
 
-export function extractTimestampFromSnowflake(snowflake: string, epoch?: string | bigint): number {
-	try {
-		const epochBigInt = epoch != null ? (typeof epoch === 'string' ? BigInt(epoch) : epoch) : FLUXER_EPOCH;
-		return extractTimestampWithEpoch(BigInt(snowflake), epochBigInt);
-	} catch (_error) {
-		return Number.NaN;
-	}
-}
-
-export function extractTimestampFromSnowflakeAsDate(snowflake: string, epoch?: string | bigint): Date {
-	const timestamp = extractTimestampFromSnowflake(snowflake, epoch);
+export function extractTimestampFromSnowflakeAsDate(snowflake: string): Date {
+	const timestamp = extractTimestamp(snowflake);
 	if (Number.isNaN(timestamp)) {
 		return new Date();
 	}
