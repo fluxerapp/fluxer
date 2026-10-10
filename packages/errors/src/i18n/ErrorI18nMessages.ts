@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineStaticLocaleMessages} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
-
 export const ERROR_I18N_MESSAGES = {
 	'account.communication_disabled': 'Communication is disabled.',
 	'account.email_verification_required': 'Email verification is required for this action.',
@@ -594,5 +592,3 @@ export const ERROR_I18N_MESSAGES = {
 
 export type ErrorI18nCatalog = typeof ERROR_I18N_MESSAGES;
 export type ErrorI18nKey = keyof ErrorI18nCatalog;
-
-export const defineErrorI18nLocaleMessages = defineStaticLocaleMessages<ErrorI18nCatalog>();

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineStaticLocaleMessages} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
-
 export const CONTENT_I18N_MESSAGES = {
 	'auth.unknown_location': 'Unknown location',
 	'billing.donation_description_monthly': 'Monthly donation to support {product_name}',
@@ -234,5 +232,3 @@ export const CONTENT_I18N_MESSAGES = {
 
 export type ContentI18nCatalog = typeof CONTENT_I18N_MESSAGES;
 export type ContentI18nKey = keyof ContentI18nCatalog;
-
-export const defineContentI18nLocaleMessages = defineStaticLocaleMessages<ContentI18nCatalog>();
