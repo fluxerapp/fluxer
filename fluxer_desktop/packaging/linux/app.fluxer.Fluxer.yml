@@ -24,6 +24,7 @@ finish-args:
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=com.canonical.indicator.application
   - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.gnome.Mutter.IdleMonitor
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 build-options:
   strip: false
