@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getSsoRequestUrlPolicy} from '@app/api/instance/SsoConfigValidation';
 import {Logger} from '@app/api/Logger';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
@@ -68,13 +69,16 @@ function normalizeIssuerForCompare(value: string): string {
 export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<DiscoveredOidcProviderMetadata | null> {
 	try {
 		const url = buildDiscoveryUrl(issuer);
-		const resp = await FetchUtils.sendRequest({
-			url: url.toString(),
-			method: 'GET',
-			headers: {Accept: 'application/json'},
-			timeout: ms('10 seconds'),
-			serviceName: 'sso_oidc_discovery',
-		});
+		const resp = await FetchUtils.sendRequest(
+			{
+				url: url.toString(),
+				method: 'GET',
+				headers: {Accept: 'application/json'},
+				timeout: ms('10 seconds'),
+				serviceName: 'sso_oidc_discovery',
+			},
+			{requestUrlPolicy: getSsoRequestUrlPolicy()},
+		);
 		if (resp.status < 200 || resp.status >= 300) {
 			FetchUtils.discardResponseBody(resp.stream, resp.status);
 			return null;
