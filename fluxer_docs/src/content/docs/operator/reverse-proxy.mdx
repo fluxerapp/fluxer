@@ -58,6 +58,22 @@ Forward all paths unchanged to the edge. No internal routing changes are needed.
 
 With `FLUXER_PUBLIC_SCHEME=https` the admin CSRF cookie is `__Host-csrf_token`, which browsers accept only over HTTPS.
 
+#### Keep TLS 1.2 enabled
+
+The Android and iOS apps play video through a media library whose TLS stack offers only TLS 1.2. The rest of each app uses the system TLS stack. Behind a proxy that accepts only TLS 1.3 the apps sign in and load messages and images, but every video fails with "Could not play this video."
+
+Accept TLS 1.2 alongside TLS 1.3. TLS 1.2 can stay limited to ECDHE key exchange with AES-GCM or ChaCha20-Poly1305, which the apps support.
+
+| Proxy | Setting |
+| --- | --- |
+| nginx | `ssl_protocols TLSv1.2 TLSv1.3;` |
+| Caddy | `protocols tls1.2 tls1.3` |
+| Traefik | `minVersion: VersionTLS12` |
+| HAProxy | `ssl-min-ver TLSv1.2` |
+| Apache httpd | `SSLProtocol -all +TLSv1.2 +TLSv1.3` |
+
+Caddy and Traefik accept both versions by default, so their rows apply only where a `tls` block or a TLS option already sets a floor. The HAProxy keyword goes on the `bind` line. On Cloudflare, keep Minimum TLS Version at 1.2 or lower. The bundled edge accepts both versions.
+
 #### Forward WebSocket upgrades
 
 The client connection is on `/gateway` and voice signalling is on `/livekit/*`. Both open as WebSocket upgrades. Check that the handshake completes through whatever is in front of the instance, with your own hostname in place of `chat.example.com`:
