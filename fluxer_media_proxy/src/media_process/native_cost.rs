@@ -5,8 +5,8 @@ use super::image_probe::probe_image_dims;
 use super::loaded_image::static_output_pixels;
 use super::native_runtime::ensure_vips_init;
 use crate::{
-    image_quality::ImageQuality, image_transform::ImageOptions, media_limits::MediaLimits, mime,
-    output_format::OutputFormat,
+    constants, image_quality::ImageQuality, image_transform::ImageOptions,
+    media_limits::MediaLimits, mime, output_format::OutputFormat,
 };
 
 pub const AV_NATIVE_COST_BYTES: usize = 256 << 20;
@@ -53,6 +53,12 @@ pub fn image_transform_cost(
     Ok(input.len().saturating_add(pixel_cost))
 }
 
+pub fn av_native_cost(input_len: usize) -> usize {
+    input_len
+        .min(constants::MAX_MEDIA_PROXY_BYTES)
+        .saturating_add(AV_NATIVE_COST_BYTES)
+}
+
 pub fn metadata_cost(input: &[u8], media_limits: &MediaLimits) -> Result<usize, MediaError> {
     let sniffed_mime = mime::sniff(input).mime;
     match mime::category(sniffed_mime) {
@@ -64,9 +70,7 @@ pub fn metadata_cost(input: &[u8], media_limits: &MediaLimits) -> Result<usize, 
                 .len()
                 .saturating_add(source_pixels * decode_bytes_per_pixel(sniffed_mime)))
         }
-        Some(mime::Category::Video | mime::Category::Audio) => {
-            Ok(input.len().saturating_add(AV_NATIVE_COST_BYTES))
-        }
+        Some(mime::Category::Video | mime::Category::Audio) => Ok(av_native_cost(input.len())),
         _ => Ok(input.len()),
     }
 }

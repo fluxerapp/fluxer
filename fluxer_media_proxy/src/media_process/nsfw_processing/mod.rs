@@ -377,7 +377,7 @@ pub(super) fn extract_video_frames_for_nsfw(
         deadline_ms,
     } = request;
     if input.is_empty() {
-        return Err(MediaError::StreamTooLong);
+        return Err(MediaError::MediaDecodeFailed);
     }
     let runtime = vips_runtime()?;
     let seed = nsfw_frame_seed(input);

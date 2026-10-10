@@ -1,22 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use super::super::nsfw_processing::{VideoNSFWFramesRequest, extract_video_frames_for_nsfw};
 use super::super::placeholder::{encode_thumbhash, optional_thumbhash};
 use super::super::{
-    MediaError, MetadataOptions, NSFW_PREVIEW_MAX_DIMENSION, metadata_json_with_options,
-    probe_av_metadata,
+    AV_NATIVE_COST_BYTES, MediaError, MetadataOptions, NSFW_PREVIEW_MAX_DIMENSION,
+    extract_video_thumbnail, metadata_cost, metadata_json_with_options, probe_av_metadata,
 };
 use super::fixtures::{metadata_value, test_media_limits};
 use crate::{
+    constants,
     metrics::transform::TransformMetrics,
     mime,
     nsfw::{NSFWClient, NSFWPolicy},
+    output_format::OutputFormat,
     test_fixtures::{
         fixture_audio_mp3_with_png_cover_art, fixture_audio_mp4_with_attached_picture,
         fixture_audio_only_mp4, fixture_h264_mp4, fixture_mkv_with_png_video_stream,
         fixture_mp4_with_undecodable_video, synthetic_png, synthetic_wav,
     },
 };
-use std::sync::Arc;
+use std::{io::Write as _, sync::Arc};
+
+fn mapped_past_the_buffer_bound(head: &[u8]) -> memmap2::Mmap {
+    let mut file = tempfile::tempfile().expect("temp file");
+    file.write_all(head).expect("written head");
+    file.set_len(constants::MAX_MEDIA_PROXY_BYTES as u64 + 1)
+        .expect("sparse tail");
+    unsafe { memmap2::Mmap::map(&file).expect("mapped file") }
+}
 
 #[test]
 fn metadata_json_includes_dimensions_and_placeholder() {
@@ -257,4 +268,55 @@ fn metadata_refuses_jxl_above_the_decode_pixel_cap() {
             .unwrap_err()
         });
     assert_eq!(MediaError::InvalidImageDimensions, err);
+}
+
+#[test]
+fn metadata_refuses_an_image_past_the_buffer_bound() {
+    let png = mapped_past_the_buffer_bound(&synthetic_png(16, 16));
+    assert_eq!("image/png", mime::sniff(&png).mime);
+    let err = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(async {
+            metadata_json_with_options(
+                &png,
+                "huge.png",
+                MetadataOptions::default(),
+                &test_media_limits(),
+                &NSFWClient::disabled(),
+                &TransformMetrics::new(),
+            )
+            .await
+            .unwrap_err()
+        });
+    assert_eq!(MediaError::StreamTooLong, err);
+}
+
+#[test]
+fn native_cost_of_a_video_past_the_buffer_bound_leaves_out_the_mapped_tail() {
+    let mp4 = mapped_past_the_buffer_bound(&fixture_h264_mp4());
+    assert_eq!(
+        constants::MAX_MEDIA_PROXY_BYTES + AV_NATIVE_COST_BYTES,
+        metadata_cost(&mp4, &test_media_limits()).expect("video cost")
+    );
+}
+
+#[test]
+fn video_reads_accept_an_input_past_the_buffer_bound() {
+    let mp4 = mapped_past_the_buffer_bound(&fixture_h264_mp4());
+    let limits = test_media_limits();
+
+    let probe = probe_av_metadata(&mp4, NSFW_PREVIEW_MAX_DIMENSION, &limits, None)
+        .expect("probed video")
+        .probe;
+    assert!(probe.has_video);
+    let poster = extract_video_thumbnail(&mp4, OutputFormat::WebP, &limits).expect("poster frame");
+    assert_eq!("image/webp", mime::sniff(&poster.bytes).mime);
+    let frames = extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
+        input: &mp4,
+        duration_seconds: probe.duration_seconds,
+        deadline_ms: None,
+    })
+    .expect("sampled frames");
+    assert!(!frames.is_empty());
 }

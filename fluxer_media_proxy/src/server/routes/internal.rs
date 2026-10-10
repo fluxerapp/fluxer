@@ -10,8 +10,8 @@ use crate::{
     server::{
         format_policy::is_svg_content_type,
         media_operations::{
-            MediaFailure, MediaInput, MediaInputLimit, MetadataOutput, load_media_input,
-            resolve_metadata,
+            MediaFailure, MediaInput, MediaInputLimit, MetadataOutput, STORED_SNIFF_PREFIX_BYTES,
+            load_media_input, read_sniff_prefix, resolve_metadata,
         },
         response::{
             MediaResponse,
@@ -34,11 +34,8 @@ use axum::{
 };
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
-use futures_util::StreamExt as _;
 use serde::Deserialize;
 use std::sync::Arc;
-
-const UPLOAD_SNIFF_PREFIX_BYTES: usize = 8192;
 
 #[derive(Debug, Deserialize)]
 struct MetadataRequest {
@@ -304,7 +301,7 @@ pub(in crate::server) async fn sniff_handler(
         Ok(req) => req,
         Err(_) => return text(StatusCode::BAD_REQUEST, "Bad Request"),
     };
-    let range = format!("bytes=0-{}", UPLOAD_SNIFF_PREFIX_BYTES - 1);
+    let range = format!("bytes=0-{}", STORED_SNIFF_PREFIX_BYTES - 1);
     let object = match app
         .store
         .stream_object(
@@ -335,20 +332,6 @@ pub(in crate::server) async fn sniff_handler(
         StatusCode::OK,
         serde_json::json!({ "content_type": content_type }).to_string(),
     )
-}
-
-async fn read_sniff_prefix(body: Body) -> Result<Vec<u8>, axum::Error> {
-    let mut prefix = Vec::with_capacity(UPLOAD_SNIFF_PREFIX_BYTES);
-    let mut chunks = body.into_data_stream();
-    while prefix.len() < UPLOAD_SNIFF_PREFIX_BYTES {
-        let Some(chunk) = chunks.next().await else {
-            break;
-        };
-        let chunk = chunk?;
-        let wanted = chunk.len().min(UPLOAD_SNIFF_PREFIX_BYTES - prefix.len());
-        prefix.extend_from_slice(&chunk[..wanted]);
-    }
-    Ok(prefix)
 }
 
 fn check_internal_auth(headers: &HeaderMap, secret: &str) -> bool {
@@ -885,7 +868,7 @@ mod tests {
         let stream_source = upload.clone();
         let body = Body::from_stream(futures_util::stream::poll_fn(move |_| {
             assert!(
-                yielded < UPLOAD_SNIFF_PREFIX_BYTES,
+                yielded < STORED_SNIFF_PREFIX_BYTES,
                 "the body was polled again after {yielded} bytes were yielded"
             );
             let end = (yielded + 1000).min(stream_source.len());
@@ -896,7 +879,7 @@ mod tests {
 
         let prefix = read_sniff_prefix(body).await.expect("prefix read");
 
-        assert_eq!(&upload[..UPLOAD_SNIFF_PREFIX_BYTES], prefix.as_slice());
+        assert_eq!(&upload[..STORED_SNIFF_PREFIX_BYTES], prefix.as_slice());
     }
 
     #[tokio::test]

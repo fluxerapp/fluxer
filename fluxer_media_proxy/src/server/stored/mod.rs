@@ -20,6 +20,7 @@ use crate::{
             effective_animated_image_output_format, extension_from_mime, is_svg_content_type,
             same_format_loaded_image_request_can_use_original_with_sniff,
         },
+        media_operations::spool_stored_media,
         params::{
             animated_param, asset_manual_format_override, asset_wants_animated, bool_param,
             filename_from_storage_key,
@@ -31,12 +32,13 @@ use crate::{
         },
         state::AppState,
         transform::{
-            ServeBytesRequest,
+            CachedVideoTransformRequest, ServeBytesRequest,
             cache::{
                 CachedTransformRequest, cached_transform, cached_transform_hit,
                 coalescer_failure_response,
             },
             cache_key::{TransformCacheKeyInput, transform_cache_key},
+            cached_video_transform_response,
             execution::{coalesced_work_result, deadline_instant, run_transform},
             original_image_content_type,
             parameters::TransformRoute,
@@ -336,6 +338,66 @@ async fn read_attachment(
         .store
         .read_object(&app.cfg.storage.bucket_cdn, key)
         .await
+    {
+        Ok(object) => object,
+        Err(StorageError::StreamTooLong) => {
+            return serve_spooled_attachment_video(app, method, key, params, headers).await;
+        }
+        Err(err) => return storage_error_response(key, err),
+    };
+    serve_bytes_or_transform(
+        app.media.transforms(),
+        ServeBytesRequest {
+            method,
+            data: object.data,
+            content_type: object.content_type,
+            cache_identity: key,
+            filename,
+            route: TransformRoute::Attachment,
+            params,
+            headers,
+        },
+    )
+    .await
+}
+
+static SPOOLED_ATTACHMENT_READS: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+async fn serve_spooled_attachment_video(
+    app: &Arc<AppState>,
+    method: Method,
+    key: &str,
+    params: &HashMap<String, String>,
+    headers: &HeaderMap,
+) -> Response {
+    let filename = filename_from_storage_key(key);
+    let cached = || {
+        cached_video_transform_response(
+            app.media.transforms(),
+            CachedVideoTransformRequest {
+                method: method.clone(),
+                cache_identity: key,
+                filename,
+                route: TransformRoute::Attachment,
+                params,
+                headers,
+            },
+        )
+    };
+    if let Some(response) = cached() {
+        return response;
+    }
+    let _serial = SPOOLED_ATTACHMENT_READS.lock().await;
+    if let Some(response) = cached() {
+        return response;
+    }
+    let object = match spool_stored_media(
+        app,
+        &app.cfg.storage.bucket_cdn,
+        key,
+        &[mime::Category::Video],
+    )
+    .await
     {
         Ok(object) => object,
         Err(err) => return storage_error_response(key, err),

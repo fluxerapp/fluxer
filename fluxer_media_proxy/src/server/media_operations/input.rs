@@ -4,18 +4,23 @@ use super::failure::MediaFailure;
 use crate::{
     byte_budget::BudgetedBytes,
     constants::{self, AssetExtension},
+    mime,
     server::{
         external::fetch_external,
         params::url_filename,
         self_origin::{self, SelfOrigin},
         state::AppState,
     },
-    spool::spool_to_temp,
-    storage::{self, StorageError},
+    spool::{SpoolError, spool_to_temp},
+    storage::{self, StorageError, StreamObject},
 };
+use axum::body::Body;
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
+use futures_util::StreamExt as _;
 use tracing::warn;
+
+pub(in crate::server) const STORED_SNIFF_PREFIX_BYTES: usize = 8192;
 
 pub(in crate::server) enum MediaInput {
     Base64 {
@@ -178,29 +183,75 @@ async fn read_stored_input(
         .read_object_limited(bucket, key, buffer_limit, &budget)
         .await
     {
-        Err(StorageError::StreamTooLong) => spool_stored_input(app, bucket, key).await,
+        Err(StorageError::StreamTooLong) => Ok(spool_stored_media(
+            app,
+            bucket,
+            key,
+            &[mime::Category::Video, mime::Category::Audio],
+        )
+        .await?
+        .data),
         other => Ok(other?.data.as_bytes().clone()),
     }
 }
 
-async fn spool_stored_input(
+pub(in crate::server) async fn spool_stored_media(
     app: &AppState,
     bucket: &str,
     key: &str,
-) -> Result<Bytes, StorageError> {
+    categories: &[mime::Category],
+) -> Result<storage::Object, StorageError> {
+    let range = format!("bytes=0-{}", STORED_SNIFF_PREFIX_BYTES - 1);
+    let head = app.store.stream_object(bucket, key, Some(&range)).await?;
+    let prefix = read_sniff_prefix(head.body)
+        .await
+        .map_err(|err| StorageError::ObjectStorage(err.into()))?;
+    let sniffed = mime::sniff(&prefix).mime;
+    if !mime::is_supported_media_mime(sniffed)
+        || !mime::category(sniffed).is_some_and(|category| categories.contains(&category))
+    {
+        return Err(StorageError::StreamTooLong);
+    }
     let object = app.store.stream_object(bucket, key, None).await?;
+    Ok(storage::Object {
+        data: spool_stream(app, object).await?,
+        content_type: sniffed.to_owned(),
+    })
+}
+
+async fn spool_stream(app: &AppState, object: StreamObject) -> Result<Bytes, StorageError> {
+    let Some(content_length) = object.content_length else {
+        return Err(StorageError::StreamTooLong);
+    };
     let relay = &app.cfg.upload_relay;
     let spooled = spool_to_temp(
         object.body,
-        object.content_length,
+        Some(content_length),
         relay.spool_max_total_bytes,
         &relay.spool_dir,
         relay.spool_chunk_bytes,
         relay.spool_max_total_bytes,
     )
     .await
-    .map_err(|err| StorageError::ObjectStorage(err.into()))?;
+    .map_err(|err| match err {
+        SpoolError::PayloadTooLarge => StorageError::StreamTooLong,
+        other => StorageError::ObjectStorage(other.into()),
+    })?;
     Ok(Bytes::from_owner(spooled.into_mapped()?))
+}
+
+pub(in crate::server) async fn read_sniff_prefix(body: Body) -> Result<Vec<u8>, axum::Error> {
+    let mut prefix = Vec::with_capacity(STORED_SNIFF_PREFIX_BYTES);
+    let mut chunks = body.into_data_stream();
+    while prefix.len() < STORED_SNIFF_PREFIX_BYTES {
+        let Some(chunk) = chunks.next().await else {
+            break;
+        };
+        let chunk = chunk?;
+        let wanted = chunk.len().min(STORED_SNIFF_PREFIX_BYTES - prefix.len());
+        prefix.extend_from_slice(&chunk[..wanted]);
+    }
+    Ok(prefix)
 }
 
 async fn read_own_object(
@@ -229,7 +280,11 @@ pub(super) fn retained_input_bytes(data: BudgetedBytes) -> Bytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
+    use crate::{
+        config::Config,
+        storage::tests::{FakeObject, FakeS3, fake_s3},
+    };
+    use axum::http::{Method, StatusCode, header};
 
     const BUFFER_LIMIT: MediaInputLimit = MediaInputLimit {
         encoded_bytes: 1024,
@@ -308,6 +363,114 @@ mod tests {
                 .is_none(),
             "a spooled copy is never visible in the spool directory"
         );
+    }
+
+    fn upload_input(key: &str) -> MediaInput {
+        MediaInput::Upload {
+            upload_filename: key.to_owned(),
+            filename: None,
+        }
+    }
+
+    fn body_reads(fake: &FakeS3) -> Vec<Option<String>> {
+        fake.requests()
+            .into_iter()
+            .filter(|(method, _, _, _)| *method == Method::GET)
+            .map(|(_, _, headers, _)| {
+                headers
+                    .get(header::RANGE)
+                    .and_then(|value| value.to_str().ok())
+                    .map(str::to_owned)
+            })
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn object_storage_spools_a_video_larger_than_the_buffer_limit() {
+        let fake = fake_s3().await;
+        let mp4 = crate::test_fixtures::fixture_h264_mp4();
+        fake.put_object(
+            "uploads/big.mp4",
+            FakeObject {
+                body: mp4.clone(),
+                content_type: Some("application/octet-stream".to_owned()),
+                ..FakeObject::default()
+            },
+        );
+        let tmp = tempfile::tempdir().unwrap();
+        let app = AppState::for_tests(fake.config(tmp.path()));
+
+        let loaded = load_media_input(&app, upload_input("big.mp4"), BUFFER_LIMIT)
+            .await
+            .unwrap_or_else(|failure| panic!("upload input failed: {}", failure.code()));
+
+        assert_eq!(&mp4[..], &loaded.data[..]);
+        assert_eq!(
+            vec![None, Some("bytes=0-8191".to_owned()), None],
+            body_reads(&fake)
+        );
+    }
+
+    #[tokio::test]
+    async fn an_oversized_input_that_is_not_audio_or_video_is_refused_from_its_prefix() {
+        let fake = fake_s3().await;
+        let mut png = crate::test_fixtures::synthetic_png(8, 8);
+        png.resize(BUFFER_LIMIT.decoded_bytes + 1, 0);
+        for (key, body) in [
+            ("uploads/huge.png", png),
+            (
+                "uploads/notes.mp4",
+                vec![b'a'; BUFFER_LIMIT.decoded_bytes + 1],
+            ),
+        ] {
+            fake.put_object(
+                key,
+                FakeObject {
+                    body,
+                    ..FakeObject::default()
+                },
+            );
+        }
+        let tmp = tempfile::tempdir().unwrap();
+        let app = AppState::for_tests(fake.config(tmp.path()));
+
+        for key in ["huge.png", "notes.mp4"] {
+            let failure = load_media_input(&app, upload_input(key), BUFFER_LIMIT)
+                .await
+                .err()
+                .expect("only audio and video are read past the buffer limit");
+            assert_eq!("metadata_upload_read", failure.code(), "{key}");
+        }
+
+        assert_eq!(
+            vec![
+                None,
+                Some("bytes=0-8191".to_owned()),
+                None,
+                Some("bytes=0-8191".to_owned())
+            ],
+            body_reads(&fake)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_stream_without_a_declared_length_is_not_spooled() {
+        let tmp = tempfile::tempdir().unwrap();
+        let app = local_storage_app(&tmp.path().canonicalize().unwrap());
+        let object = StreamObject {
+            body: Body::from_stream(futures_util::stream::iter([Ok::<_, std::io::Error>(
+                Bytes::from_static(b"payload"),
+            )])),
+            status: StatusCode::OK,
+            content_length: None,
+            content_type: "video/mp4".to_owned(),
+            byte_range: None,
+            total_length: None,
+        };
+
+        let refused = spool_stream(&app, object).await;
+
+        assert!(matches!(refused, Err(StorageError::StreamTooLong)));
     }
 
     #[tokio::test]

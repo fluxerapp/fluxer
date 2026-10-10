@@ -4,7 +4,7 @@ use super::super::nsfw_processing::{
     VideoNSFWFramesRequest, compute_frame_sample_timestamps, extract_video_frames_for_nsfw,
     nsfw_frame_seed,
 };
-use super::super::probe_av_metadata;
+use super::super::{MediaError, probe_av_metadata};
 use super::fixtures::test_media_limits;
 
 #[test]
@@ -72,4 +72,18 @@ fn extract_video_frames_for_nsfw_returns_multiple_frames() {
         assert!(f.len() > 100, "JPEG frame too small ({} bytes)", f.len());
         assert_eq!(&f[..2], &[0xFF, 0xD8], "not a JPEG");
     }
+}
+
+#[test]
+fn an_empty_input_fails_to_decode_for_the_probe_and_the_frame_sampler() {
+    let frames = extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
+        input: &[],
+        duration_seconds: None,
+        deadline_ms: None,
+    });
+    assert_eq!(Some(MediaError::MediaDecodeFailed), frames.err());
+    assert_eq!(
+        Some(MediaError::MediaDecodeFailed),
+        probe_av_metadata(&[], 0, &test_media_limits(), None).err()
+    );
 }

@@ -4,7 +4,10 @@ mod failure;
 mod input;
 
 pub(in crate::server) use failure::MediaFailure;
-pub(in crate::server) use input::{MediaInput, MediaInputLimit, load_media_input};
+pub(in crate::server) use input::{
+    MediaInput, MediaInputLimit, STORED_SNIFF_PREFIX_BYTES, load_media_input, read_sniff_prefix,
+    spool_stored_media,
+};
 
 use crate::{
     constants::{self, AssetExtension},
@@ -34,6 +37,9 @@ pub(in crate::server) async fn resolve_metadata(
     include_data: bool,
 ) -> Result<MetadataOutput, MediaFailure> {
     let mut input = load_media_input(app, input, MediaInputLimit::INTERNAL_REQUEST).await?;
+    if include_data && input.data.len() > constants::MAX_MEDIA_PROXY_BYTES {
+        return Err(MediaFailure::MetadataDecodedTooLarge);
+    }
     if include_data && metadata_input_is_svg(&input) {
         input = rasterize_metadata_svg(app, input).await?;
     }

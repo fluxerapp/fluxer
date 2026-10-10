@@ -82,9 +82,7 @@ pub(in crate::server) async fn run_video_transform(
     let deadline = deadline_instant(deadline_ms);
     let media_limits = runtime.limits();
     let transform_metrics = runtime.metrics();
-    let cost_bytes = data
-        .len()
-        .saturating_add(media_process::AV_NATIVE_COST_BYTES);
+    let cost_bytes = media_process::av_native_cost(data.len());
     let timed = runtime
         .tasks()
         .run_native(

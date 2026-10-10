@@ -327,6 +327,74 @@ async fn a_stored_passthrough_serves_objects_larger_than_the_buffer_cap() {
     assert_eq!(&b"head"[..], &response_body(get).await[..]);
 }
 
+fn poster_params() -> HashMap<String, String> {
+    HashMap::from([
+        ("format".to_owned(), "webp".to_owned()),
+        ("width".to_owned(), "64".to_owned()),
+    ])
+}
+
+#[tokio::test]
+async fn a_spooled_attachment_video_serves_its_poster_and_then_answers_from_the_cache() {
+    let tmp = tempfile::tempdir().unwrap();
+    let storage_root = tmp.path().canonicalize().unwrap();
+    let app = test_app_state(asset_test_config(&storage_root));
+    let bucket = app.cfg.storage.bucket_cdn.clone();
+    let key = "attachments/1/2/clip.mp4";
+    app.store
+        .write_object(
+            &bucket,
+            key,
+            &crate::test_fixtures::fixture_h264_mp4(),
+            "application/octet-stream",
+        )
+        .await
+        .unwrap();
+    let params = poster_params();
+    let headers = HeaderMap::new();
+
+    let poster = serve_spooled_attachment_video(&app, Method::GET, key, &params, &headers).await;
+    assert_eq!(StatusCode::OK, poster.status());
+    let poster = response_body(poster).await;
+    assert_eq!("image/webp", mime::sniff(&poster).mime);
+
+    std::fs::remove_file(storage_root.join(&bucket).join(key)).unwrap();
+    let cached = serve_spooled_attachment_video(&app, Method::GET, key, &params, &headers).await;
+    assert_eq!(StatusCode::OK, cached.status());
+    assert_eq!(&poster[..], &response_body(cached).await[..]);
+}
+
+#[tokio::test]
+async fn a_spooled_attachment_read_refuses_everything_but_video() {
+    let tmp = tempfile::tempdir().unwrap();
+    let storage_root = tmp.path().canonicalize().unwrap();
+    let app = test_app_state(asset_test_config(&storage_root));
+    let bucket = app.cfg.storage.bucket_cdn.clone();
+    let params = poster_params();
+    for (key, data) in [
+        (
+            "attachments/1/2/huge.png",
+            crate::test_fixtures::synthetic_png(8, 8),
+        ),
+        (
+            "attachments/1/2/song.wav",
+            crate::test_fixtures::synthetic_wav(),
+        ),
+        ("attachments/1/2/disk.iso", vec![0u8; 4096]),
+    ] {
+        app.store
+            .write_object(&bucket, key, &data, "application/octet-stream")
+            .await
+            .unwrap();
+
+        let refused =
+            serve_spooled_attachment_video(&app, Method::GET, key, &params, &HeaderMap::new())
+                .await;
+
+        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, refused.status(), "{key}");
+    }
+}
+
 fn fake_asset_object(read_status: Option<u16>) -> crate::storage::tests::FakeObject {
     crate::storage::tests::FakeObject {
         body: crate::test_fixtures::synthetic_png(512, 512),
