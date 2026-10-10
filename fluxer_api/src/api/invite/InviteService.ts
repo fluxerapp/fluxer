@@ -13,7 +13,6 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
-import type {Channel} from '@app/api/models/Channel';
 import {Invite} from '@app/api/models/Invite';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
@@ -459,12 +458,6 @@ export class InviteService {
 			action: 'delete',
 			auditLogReason,
 		});
-	}
-
-	async resolveVanityUrlChannel(guildId: GuildID): Promise<Channel | null> {
-		const channelId = await this.apiContext.services.gateway.getVanityUrlChannel(guildId);
-		if (!channelId) return null;
-		return await this.channelService.channelData.operations.getChannelSystem(channelId);
 	}
 
 	async getChannelInvitesSorted({userId, viewer, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {

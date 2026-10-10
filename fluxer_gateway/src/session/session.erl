@@ -145,8 +145,6 @@ handle_cast({dispatch, Event, Data}, State) when
     is_binary(Event), is_list(Data)
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
-handle_cast({initial_global_presences, Presences}, State) ->
-    handle_cast_presences(Presences, State);
 handle_cast({voice_rejected, ErrorAtom}, State) when is_atom(ErrorAtom) ->
     ok = session_voice:report_rejection(ErrorAtom, State),
     {noreply, State};
@@ -155,18 +153,6 @@ handle_cast({voice_signal, Data}, State) when is_map(Data) ->
     {noreply, State};
 handle_cast(Msg, State) ->
     handle_cast_guild_or_lifecycle(Msg, State).
-
--spec handle_cast_presences(term(), session_state()) ->
-    {noreply, session_state()}.
-handle_cast_presences(Presences, State) ->
-    case map_list(Presences) of
-        {ok, PresenceMaps} ->
-            session_lifecycle:handle_initial_global_presences(
-                PresenceMaps, State
-            );
-        error ->
-            {noreply, State}
-    end.
 
 -spec handle_cast_guild_or_lifecycle(term(), session_state()) ->
     {noreply, session_state()} | {stop, normal, session_state()}.
@@ -398,20 +384,6 @@ binary_list([Value | Rest], Acc) when is_binary(Value) ->
 binary_list(_, _) ->
     error.
 
--spec map_list(term()) -> {ok, [map()]} | error.
-map_list(Value) when is_list(Value) ->
-    map_list(Value, []);
-map_list(_) ->
-    error.
-
--spec map_list([term()], [map()]) -> {ok, [map()]} | error.
-map_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-map_list([Value | Rest], Acc) when is_map(Value) ->
-    map_list(Rest, [Value | Acc]);
-map_list(_, _) ->
-    error.
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
@@ -573,28 +545,6 @@ handle_info_stops_on_current_resume_timeout_test() ->
     CurrentToken = make_ref(),
     State = #{socket_pid => undefined, resume_timer => {CurrentToken, make_ref()}},
     ?assertMatch({stop, normal, _}, handle_info({resume_timeout, CurrentToken}, State)).
-
-handle_info_merges_gateway_timing_update_test() ->
-    BaseTimings = gateway_timings:record_function(
-        base,
-        <<"base/0">>,
-        gateway_timings:start() - 10,
-        gateway_timings:new()
-    ),
-    UpdateTimings = gateway_timings:record_function(
-        update,
-        <<"update/0">>,
-        gateway_timings:start() - 5,
-        gateway_timings:new()
-    ),
-    {noreply, State1} = handle_info(
-        {gateway_timing_update, UpdateTimings},
-        #{gw_timings => BaseTimings}
-    ),
-    Timings = gateway_timings:finalize(maps:get(gw_timings, State1)),
-    TraceNames = [maps:get(<<"name">>, Span) || Span <- maps:get(<<"trace">>, Timings)],
-    ?assert(lists:member(<<"base/0">>, TraceNames)),
-    ?assert(lists:member(<<"update/0">>, TraceNames)).
 
 handle_presence_rejoin_check_reconnects_when_unattached_test() ->
     {noreply, State1} = handle_presence_rejoin_check(#{presence_pid => undefined}),

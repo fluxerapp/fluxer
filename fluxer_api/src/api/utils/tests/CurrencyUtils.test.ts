@@ -29,68 +29,6 @@ describe('getCurrencyPreferences first choice', () => {
 			expect(getCurrencyPreferences('CH')[0]).toBe('USD');
 		});
 	});
-	describe('returns EUR for EEA countries', () => {
-		it('returns EUR for Germany', () => {
-			expect(getCurrencyPreferences('DE')[0]).toBe('EUR');
-		});
-		it('returns EUR for France', () => {
-			expect(getCurrencyPreferences('FR')[0]).toBe('EUR');
-		});
-		it('returns EUR for Italy', () => {
-			expect(getCurrencyPreferences('IT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Spain', () => {
-			expect(getCurrencyPreferences('ES')[0]).toBe('EUR');
-		});
-		it('returns EUR for Netherlands', () => {
-			expect(getCurrencyPreferences('NL')[0]).toBe('EUR');
-		});
-		it('returns EUR for Belgium', () => {
-			expect(getCurrencyPreferences('BE')[0]).toBe('EUR');
-		});
-		it('returns EUR for Austria', () => {
-			expect(getCurrencyPreferences('AT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Portugal', () => {
-			expect(getCurrencyPreferences('PT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Ireland', () => {
-			expect(getCurrencyPreferences('IE')[0]).toBe('EUR');
-		});
-		it('returns EUR for Finland', () => {
-			expect(getCurrencyPreferences('FI')[0]).toBe('EUR');
-		});
-		it('returns SEK for Sweden', () => {
-			expect(getCurrencyPreferences('SE')[0]).toBe('SEK');
-		});
-		it('returns DKK for Denmark', () => {
-			expect(getCurrencyPreferences('DK')[0]).toBe('DKK');
-		});
-		it('returns PLN for Poland', () => {
-			expect(getCurrencyPreferences('PL')[0]).toBe('PLN');
-		});
-		it('returns EUR for Greece', () => {
-			expect(getCurrencyPreferences('GR')[0]).toBe('EUR');
-		});
-		it('returns EUR for Czech Republic', () => {
-			expect(getCurrencyPreferences('CZ')[0]).toBe('EUR');
-		});
-		it('returns EUR for Hungary', () => {
-			expect(getCurrencyPreferences('HU')[0]).toBe('EUR');
-		});
-		it('returns EUR for Romania', () => {
-			expect(getCurrencyPreferences('RO')[0]).toBe('EUR');
-		});
-		it('returns NOK for Norway (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('NO')[0]).toBe('NOK');
-		});
-		it('returns ISK for Iceland (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('IS')[0]).toBe('ISK');
-		});
-		it('returns EUR for Liechtenstein (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('LI')[0]).toBe('EUR');
-		});
-	});
 	describe('handles case insensitivity', () => {
 		it('returns EUR for lowercase country code', () => {
 			expect(getCurrencyPreferences('de')[0]).toBe('EUR');

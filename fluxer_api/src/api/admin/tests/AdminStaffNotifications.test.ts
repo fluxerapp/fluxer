@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {scheduledDeletionEmailTemplate} from '@app/api/admin/services/AdminUserDeletionService';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -31,25 +28,6 @@ const DELETION_TEMPLATES = [
 	'scheduled_deletion_notification',
 	'account_scheduled_deletion',
 ];
-
-const NON_ENFORCEMENT_TEMPLATES: Record<number, string> = {
-	1: 'account_deletion_scheduled_requested',
-	2: 'scheduled_deletion_notification',
-	19: 'account_deletion_scheduled_inactivity',
-};
-
-describe('scheduledDeletionEmailTemplate', () => {
-	test.each(Object.entries(NON_ENFORCEMENT_TEMPLATES))('code %s picks %s', (code, template) => {
-		expect(scheduledDeletionEmailTemplate(Number(code))).toBe(template);
-	});
-
-	test.each(Object.entries(DeletionReasons).filter(([, code]) => !(code in NON_ENFORCEMENT_TEMPLATES)))(
-		'%s picks the enforcement template',
-		(_name, code) => {
-			expect(scheduledDeletionEmailTemplate(code)).toBe('account_scheduled_deletion');
-		},
-	);
-});
 
 describe('Admin staff notifications', () => {
 	let harness: ApiTestHarness;

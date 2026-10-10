@@ -26,7 +26,6 @@ import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {PasswordResetToken} from '@app/api/models/PasswordResetToken';
 import type {Payment} from '@app/api/models/Payment';
 import type {PushSubscription} from '@app/api/models/PushSubscription';
-import type {ReadState} from '@app/api/models/ReadState';
 import type {RecentMention} from '@app/api/models/RecentMention';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {SavedMessage} from '@app/api/models/SavedMessage';
@@ -36,7 +35,6 @@ import type {UserNote} from '@app/api/models/UserNote';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import type {VisionarySlot} from '@app/api/models/VisionarySlot';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
-import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import type {
 	HistoricalDmChannelSummary,
@@ -59,7 +57,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 	private relationshipRepo: UserRelationshipRepository;
 	private channelRepo: UserChannelRepository;
 	private contentRepo: UserContentRepository;
-	private readStateRepo: ReadStateRepository;
 
 	constructor(kv: IKVProvider = getKVClient()) {
 		this.accountRepo = new UserAccountRepository(kv);
@@ -68,7 +65,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		this.relationshipRepo = new UserRelationshipRepository();
 		this.channelRepo = new UserChannelRepository();
 		this.contentRepo = new UserContentRepository();
-		this.readStateRepo = new ReadStateRepository();
 	}
 
 	async create(data: UserRow): Promise<User> {
@@ -154,10 +150,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.accountRepo.listUsers(userIds);
 	}
 
-	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {
-		return this.accountRepo.listAllUsersPaginated(limit, lastUserId);
-	}
-
 	async scanAllUsersPage(
 		limit: number,
 		pageState?: string | null,
@@ -187,10 +179,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.accountRepo.removePendingDeletion(userId, pendingDeletionAt);
 	}
 
-	async findUsersPendingDeletion(now: Date): Promise<Array<User>> {
-		return this.accountRepo.findUsersPendingDeletion(now);
-	}
-
 	async findUsersPendingDeletionByDate(deletionDate: string): Promise<
 		Array<{
 			user_id: bigint;
@@ -198,10 +186,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		}>
 	> {
 		return this.accountRepo.findUsersPendingDeletionByDate(deletionDate);
-	}
-
-	async isUserPendingDeletion(userId: UserID, deletionDate: string): Promise<boolean> {
-		return this.accountRepo.isUserPendingDeletion(userId, deletionDate);
 	}
 
 	async scheduleDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void> {
@@ -331,10 +315,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async createPasswordResetToken(tokenData: PasswordResetTokenRow): Promise<PasswordResetToken> {
 		return this.authRepo.createPasswordResetToken(tokenData);
-	}
-
-	async deletePasswordResetToken(token: string): Promise<void> {
-		return this.authRepo.deletePasswordResetToken(token);
 	}
 
 	async deleteAllPasswordResetTokens(userId: UserID): Promise<void> {
@@ -572,10 +552,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.channelRepo.deleteAllReadStates(userId);
 	}
 
-	async getReadStates(userId: UserID): Promise<Array<ReadState>> {
-		return this.readStateRepo.listReadStates(userId);
-	}
-
 	async getRecentMention(userId: UserID, messageId: MessageID): Promise<RecentMention | null> {
 		return this.contentRepo.getRecentMention(userId, messageId);
 	}
@@ -589,10 +565,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		before?: MessageID,
 	): Promise<Array<RecentMention>> {
 		return this.contentRepo.listRecentMentions(userId, includeEveryone, includeRole, includeGuilds, limit, before);
-	}
-
-	async createRecentMention(mention: RecentMentionRow): Promise<RecentMention> {
-		return this.contentRepo.createRecentMention(mention);
 	}
 
 	async createRecentMentions(mentions: Array<RecentMentionRow>): Promise<void> {
@@ -675,10 +647,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.contentRepo.clearGiftPremiumReversed(code, seconds);
 	}
 
-	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
-		return this.contentRepo.updateGiftCode(code, data);
-	}
-
 	async linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void> {
 		return this.contentRepo.linkGiftCodeToCheckoutSession(code, checkoutSessionId);
 	}
@@ -759,10 +727,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async expandVisionarySlots(byCount: number): Promise<void> {
 		return this.contentRepo.expandVisionarySlots(byCount);
-	}
-
-	async shrinkVisionarySlots(toCount: number): Promise<void> {
-		return this.contentRepo.shrinkVisionarySlots(toCount);
 	}
 
 	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {

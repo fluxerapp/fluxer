@@ -6,13 +6,6 @@ import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountI
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
-export type PushProviderEnvironment = 'production' | 'development';
-
-interface PushProviderAppConfig {
-	appId: string;
-	topic?: string;
-	environment?: PushProviderEnvironment;
-}
 
 export interface AppStoreAppConfig {
 	bundleId: string;
@@ -262,11 +255,6 @@ export interface APIConfig {
 			rpId: string;
 			allowedOrigins: Array<string>;
 		};
-		vapid: {
-			publicKey: string;
-			privateKey: string;
-			email?: string;
-		};
 		bluesky: BlueskyOAuthConfig;
 	};
 	klipy: {
@@ -321,14 +309,6 @@ export interface APIConfig {
 	inactivityDeletionThresholdDays?: number;
 	push: {
 		publicVapidKey?: string;
-		apns: {
-			enabled: boolean;
-			teamId?: string;
-			keyId?: string;
-			privateKey?: string;
-			privateKeyPath?: string;
-			apps: Array<PushProviderAppConfig>;
-		};
 	};
 	appStore: {
 		enabled: boolean;

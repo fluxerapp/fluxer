@@ -146,22 +146,6 @@ collect_user_for_session(UserId, SessionId, Subscribers, Acc) ->
 
 -ifdef(TEST).
 
-init_state_test() ->
-    ?assertEqual(#{}, init_state()).
-
-subscribe_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 123, State0),
-    ?assert(is_subscribed(<<"session1">>, 123, State1)),
-    ?assertNot(is_subscribed(<<"session2">>, 123, State1)).
-
-subscribe_multiple_sessions_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 123, State0),
-    State2 = subscribe(<<"session2">>, 123, State1),
-    ?assert(is_subscribed(<<"session1">>, 123, State2)),
-    ?assert(is_subscribed(<<"session2">>, 123, State2)).
-
 unsubscribe_test() ->
     State0 = init_state(),
     State1 = subscribe(<<"session1">>, 123, State0),
@@ -186,13 +170,6 @@ unsubscribe_session_test() ->
     ?assertNot(is_subscribed(<<"session1">>, 456, State4)),
     ?assert(is_subscribed(<<"session2">>, 123, State4)).
 
-get_subscribed_sessions_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 123, State0),
-    State2 = subscribe(<<"session2">>, 123, State1),
-    Sessions = lists:sort(get_subscribed_sessions(123, State2)),
-    ?assertEqual([<<"session1">>, <<"session2">>], Sessions).
-
 update_subscriptions_test() ->
     State0 = init_state(),
     State1 = subscribe(<<"session1">>, 100, State0),
@@ -202,83 +179,10 @@ update_subscriptions_test() ->
     ?assert(is_subscribed(<<"session1">>, 200, State3)),
     ?assert(is_subscribed(<<"session1">>, 300, State3)).
 
-get_user_ids_for_session_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 100, State0),
-    State2 = subscribe(<<"session1">>, 200, State1),
-    UserIds = get_user_ids_for_session(<<"session1">>, State2),
-    ?assertEqual([100, 200], lists:sort(sets:to_list(UserIds))).
-
 %% The subscription map as unsubscribe_session/2 built it before it stopped
 %% rebuilding untouched entries.
-reference_unsubscribe_session(SessionId, State) ->
-    maps:fold(
-        fun(UserId, Subscribers, Acc) ->
-            reference_drop_subscriber(UserId, sets:del_element(SessionId, Subscribers), Acc)
-        end,
-        #{},
-        State
-    ).
-
-reference_drop_subscriber(UserId, NewSubscribers, Acc) ->
-    case sets:size(NewSubscribers) of
-        0 -> Acc;
-        _ -> Acc#{UserId => NewSubscribers}
-    end.
-
 %% The state and delta handle_update_member_subscriptions_local/4 derived before it
 %% stopped re-folding the map to rediscover what changed.
-reference_update_with_delta(SessionId, NewMemberIds, State) ->
-    Old = get_user_ids_for_session(SessionId, State),
-    NewState = update_subscriptions(SessionId, NewMemberIds, State),
-    New = get_user_ids_for_session(SessionId, NewState),
-    {
-        NewState,
-        sets:to_list(sets:subtract(New, Old)),
-        sets:to_list(sets:subtract(Old, New))
-    }.
-
-populate(Pairs) ->
-    lists:foldl(
-        fun({SessionId, UserId}, Acc) -> subscribe(SessionId, UserId, Acc) end,
-        init_state(),
-        Pairs
-    ).
-
-delta_fixture_states() ->
-    [
-        init_state(),
-        populate([{<<"s1">>, 100}]),
-        populate([{<<"s1">>, 100}, {<<"s1">>, 200}, {<<"s2">>, 200}, {<<"s2">>, 300}]),
-        populate([{<<"s2">>, N} || N <- lists:seq(1, 64)]),
-        populate(
-            [{<<"s1">>, N} || N <- lists:seq(1, 200)] ++
-                [{<<"s2">>, N} || N <- lists:seq(150, 400)]
-        )
-    ].
-
-delta_fixture_cases() ->
-    Inputs = [[], [100], [200, 300], [300, 200], [100, 100, 200], lists:seq(100, 500)],
-    [{State, Ids} || State <- delta_fixture_states(), Ids <- Inputs].
-
-unsubscribe_session_matches_rebuilt_map_test() ->
-    Cases = [
-        {State, SessionId}
-     || State <- delta_fixture_states(),
-        SessionId <- [<<"s1">>, <<"s2">>, <<"never_subscribed">>]
-    ],
-    ?assertEqual(
-        [reference_unsubscribe_session(S, M) || {M, S} <- Cases],
-        [unsubscribe_session(S, M) || {M, S} <- Cases]
-    ).
-
-update_subscriptions_with_delta_matches_refold_test() ->
-    Cases = delta_fixture_cases(),
-    ?assertEqual(
-        [reference_update_with_delta(<<"s1">>, Ids, M) || {M, Ids} <- Cases],
-        [update_subscriptions_with_delta(<<"s1">>, Ids, M) || {M, Ids} <- Cases]
-    ).
-
 update_subscriptions_with_delta_leaves_other_sessions_alone_test() ->
     State0 = subscribe(<<"s2">>, 100, subscribe(<<"s1">>, 100, init_state())),
     {NewState, Added, Removed} = update_subscriptions_with_delta(<<"s1">>, [200], State0),

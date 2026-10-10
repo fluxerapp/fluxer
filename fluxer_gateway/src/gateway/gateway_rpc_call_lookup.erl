@@ -187,7 +187,4 @@ resolve_owner_node_returns_unavailable_when_invalid_owner_test() ->
         resolve_owner_node(456, fun(_ChannelId) -> {bad_owner} end)
     ).
 
-call_manager_server_ref_local_test() ->
-    ?assertEqual(call_manager, call_manager_server_ref(node())).
-
 -endif.

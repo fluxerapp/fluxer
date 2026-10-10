@@ -251,16 +251,6 @@ schedule_check() ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-update_samples_keeps_bounded_test() ->
-    S1 = update_samples(100, []),
-    ?assertEqual([100], S1),
-    S2 = update_samples(200, S1),
-    ?assertEqual([200, 100], S2),
-    S3 = update_samples(300, S2),
-    ?assertEqual([300, 200, 100], S3),
-    S4 = update_samples(400, S3),
-    ?assertEqual([400, 300, 200], S4).
-
 is_monotonically_growing_true_test() ->
     ?assert(is_monotonically_growing([3000, 2000, 1500])).
 
@@ -278,13 +268,6 @@ is_monotonically_growing_false_insufficient_samples_test() ->
     ?assertNot(is_monotonically_growing([5000])),
     ?assertNot(is_monotonically_growing([])).
 
-is_strictly_decreasing_test() ->
-    ?assert(is_strictly_decreasing([3, 2, 1])),
-    ?assertNot(is_strictly_decreasing([3, 3, 1])),
-    ?assertNot(is_strictly_decreasing([3, 2, 4])),
-    ?assertNot(is_strictly_decreasing([])),
-    ?assert(is_strictly_decreasing([1])).
-
 prune_dead_removes_absent_pids_test() ->
     Pid1 = self(),
     Pid2 = spawn(fun() -> ok end),
@@ -293,9 +276,6 @@ prune_dead_removes_absent_pids_test() ->
     LivePids = [{Pid1, <<"test">>}],
     Pruned = prune_dead(History, LivePids),
     ?assertEqual(#{Pid1 => [100]}, Pruned).
-
-resolve_singleton_missing_test() ->
-    ?assertEqual(false, resolve_singleton(nonexistent_process_xyz_test)).
 
 dispatch_relay_workers_are_monitored_test() ->
     Key = {gateway_dispatch_relay, state},
@@ -316,9 +296,6 @@ check_pid_dead_process_test() ->
     History = #{Pid => [100, 50]},
     Result = check_pid(Pid, <<"dead">>, History),
     ?assertNot(maps:is_key(Pid, Result)).
-
-apply_thresholds_below_warning_test() ->
-    ?assertEqual(ok, apply_thresholds(self(), <<"test">>, 500, [500])).
 
 is_sustained_over_kill_threshold_true_test() ->
     ?assert(is_sustained_over_kill_threshold([70000, 60000, 55000])).

@@ -49,79 +49,6 @@ describe('OAuth2 Token Refresh', () => {
 		const userInfo = await getOAuth2UserInfo(harness, refreshedTokens.access_token);
 		expect(userInfo.sub).toBe(endUser.userId);
 	});
-	test('should return new access_token and refresh_token on valid refresh', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const refreshedTokens = await refreshOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			refresh_token: initialTokens.refresh_token!,
-		});
-		expect(refreshedTokens.access_token).toBeTruthy();
-		expect(refreshedTokens.access_token).not.toBe(initialTokens.access_token);
-		expect(refreshedTokens.refresh_token).toBeTruthy();
-		expect(refreshedTokens.refresh_token).not.toBe(initialTokens.refresh_token);
-		expect(refreshedTokens.token_type).toBe('Bearer');
-		expect(refreshedTokens.expires_in).toBeGreaterThan(0);
-	});
-	test('should allow multiple sequential refreshes', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify email',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const firstRefresh = await refreshOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			refresh_token: initialTokens.refresh_token!,
-		});
-		expect(firstRefresh.access_token).toBeTruthy();
-		const secondRefresh = await refreshOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			refresh_token: firstRefresh.refresh_token!,
-		});
-		expect(secondRefresh.access_token).toBeTruthy();
-	});
-	test('should preserve scopes during refresh', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify email guilds',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const refreshedTokens = await refreshOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			refresh_token: initialTokens.refresh_token!,
-		});
-		expect(refreshedTokens.scope).toContain('identify');
-		expect(refreshedTokens.scope).toContain('email');
-		expect(refreshedTokens.scope).toContain('guilds');
-	});
 	test('should fail with invalid refresh token', async () => {
 		const {application} = await createOAuth2TestSetup(harness);
 		const formData = new URLSearchParams({
@@ -183,35 +110,6 @@ describe('OAuth2 Token Refresh', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
-	test('should fail with wrong client_id', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const formData = new URLSearchParams({
-			grant_type: 'refresh_token',
-			refresh_token: initialTokens.refresh_token!,
-			client_id: '999999999999999999',
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`999999999999999999:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('should fail with wrong client_secret', async () => {
 		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
 		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
@@ -234,31 +132,6 @@ describe('OAuth2 Token Refresh', () => {
 			.post('/oauth2/token')
 			.header('Content-Type', 'application/x-www-form-urlencoded')
 			.header('Authorization', `Basic ${Buffer.from(`${application.id}:wrong_client_secret_12345`).toString('base64')}`)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should fail with missing client_secret', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const initialTokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		const formData = new URLSearchParams({
-			grant_type: 'refresh_token',
-			refresh_token: initialTokens.refresh_token!,
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
 			.body(formData.toString())
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();

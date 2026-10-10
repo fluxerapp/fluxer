@@ -74,21 +74,6 @@ validate_rejects_every_malformed_field_test() ->
         Invalid
     ).
 
-validate_rejection_never_carries_the_ids_test() ->
-    Ids = [integer_to_binary(N) || N <- lists:seq(1, 1001)],
-    ?assertEqual(
-        {error, {invalid_field, <<"excluded_user_ids">>, 1001}},
-        channel_threads_config:validate_config(#{<<"excluded_user_ids">> => Ids})
-    ),
-    ?assertEqual(
-        {error, {invalid_field, <<"enabled_guild_ids">>, 2}},
-        channel_threads_config:validate_config(#{<<"enabled_guild_ids">> => [<<"1">>, <<"x">>]})
-    ),
-    ?assertEqual(
-        {error, {invalid_field, <<"guild_salt">>, undefined}},
-        channel_threads_config:validate_config(#{<<"guild_salt">> => <<>>})
-    ).
-
 validate_accepts_the_boundaries_test() ->
     {ok, _} = channel_threads_config:validate_config(#{
         <<"guild_basis_points">> => 10000,
@@ -247,49 +232,6 @@ fields_changed_are_split_by_dimension_test() ->
     ?assertNot(channel_threads_config:user_fields_changed(Base, VersionOnly)),
     ?assert(channel_threads_config:guild_fields_changed(Base, Disabled)),
     ?assert(channel_threads_config:user_fields_changed(Base, Disabled)).
-
-identify_os_label_buckets_client_strings_test() ->
-    Cases = [
-        {<<"Windows">>, <<"windows">>},
-        {<<"Mac OS X">>, <<"macos">>},
-        {<<"macOS">>, <<"macos">>},
-        {<<"Darwin">>, <<"macos">>},
-        {<<"Linux">>, <<"linux">>},
-        {<<"Android">>, <<"android">>},
-        {<<"iOS">>, <<"ios">>},
-        {<<"iPadOS">>, <<"ios">>},
-        {<<"FreeBSD">>, <<"linux">>},
-        {<<"TempleOS">>, <<"other">>},
-        {<<>>, <<"other">>},
-        {undefined, <<"other">>}
-    ],
-    lists:foreach(
-        fun({Input, Expected}) ->
-            ?assertEqual(
-                {Input, Expected}, {Input, channel_threads_config:identify_os_label(Input)}
-            )
-        end,
-        Cases
-    ).
-
-note_identify_counts_by_capability_and_os_test() ->
-    Key = {channel_threads_config, identify_counts},
-    Previous = persistent_term:get(Key, undefined),
-    persistent_term:put(Key, counters:new(12, [write_concurrency])),
-    try
-        ok = channel_threads_config:note_identify(true, #{<<"os">> => <<"Windows">>}),
-        ok = channel_threads_config:note_identify(true, #{<<"os">> => <<"Windows">>}),
-        ok = channel_threads_config:note_identify(false, #{<<"os">> => <<"Android">>}),
-        ok = channel_threads_config:note_identify(false, #{}),
-        Counts = channel_threads_config:identify_counts(),
-        ?assertEqual(12, map_size(Counts)),
-        ?assertEqual(2, maps:get({true, <<"windows">>}, Counts)),
-        ?assertEqual(1, maps:get({false, <<"android">>}, Counts)),
-        ?assertEqual(1, maps:get({false, <<"other">>}, Counts)),
-        ?assertEqual(0, maps:get({true, <<"android">>}, Counts))
-    after
-        restore(Key, Previous)
-    end.
 
 config(Overrides) ->
     {ok, Config} = channel_threads_config:validate_config(

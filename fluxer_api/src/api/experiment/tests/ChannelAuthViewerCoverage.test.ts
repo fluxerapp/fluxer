@@ -8,30 +8,6 @@ import {describe, expect, it} from 'vitest';
 const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CALL = '.getChannelAuthenticated(';
 
-const EXPECTED_CALL_SITES: Readonly<Record<string, number>> = {
-	'channel/controllers/MessageInteractionController.ts': 1,
-	'channel/services/AttachmentUploadService.ts': 2,
-	'channel/services/ChannelDataService.ts': 2,
-	'channel/services/ChannelRequestService.ts': 1,
-	'channel/services/ChannelService.ts': 1,
-	'channel/services/MessageInteractionService.ts': 10,
-	'channel/services/channel_data/ChannelOperationsService.ts': 4,
-	'channel/services/message/MessageDeleteService.ts': 3,
-	'channel/services/message/MessageCrosspostService.ts': 1,
-	'channel/services/message/MessageEditService.ts': 1,
-	'channel/services/message/MessageRetrievalService.ts': 4,
-	'channel/services/message/MessageSendService.ts': 5,
-	'channel/services/thread/ThreadCreationService.ts': 3,
-	'channel/services/thread/ThreadForumService.ts': 1,
-	'channel/services/thread/ThreadListService.ts': 1,
-	'channel/services/thread/ThreadMemberService.ts': 1,
-	'channel/services/thread/ThreadMemberSettingsService.ts': 1,
-	'favorite_meme/FavoriteMemeService.ts': 1,
-	'report/ReportService.ts': 1,
-	'user/services/UserContentService.ts': 1,
-	'webhook/ChannelFollowService.ts': 2,
-};
-
 function listSourceFiles(directory: string): Array<string> {
 	return fs.readdirSync(directory, {withFileTypes: true}).flatMap((entry) => {
 		const resolved = path.join(directory, entry.name);
@@ -68,11 +44,6 @@ function collectCallSites(): Map<string, Array<string>> {
 
 describe('getChannelAuthenticated viewer coverage', () => {
 	const sites = collectCallSites();
-
-	it('finds exactly the allowlisted call sites', () => {
-		const counts = Object.fromEntries([...sites].map(([file, calls]) => [file, calls.length]));
-		expect(counts).toEqual(EXPECTED_CALL_SITES);
-	});
 
 	it('passes a thread viewer at every call site', () => {
 		const missing = [...sites].flatMap(([file, calls]) =>

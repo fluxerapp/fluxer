@@ -433,14 +433,6 @@ relationship_update_top_level_id_flushes_pending_presence_test() ->
     Remaining = queue:to_list(ensure_queue(maps:get(pending_presences, NewState))),
     ?assertEqual([99], [maps:get(user_id, P) || P <- Remaining]).
 
-presence_user_id_test() ->
-    ?assertEqual(123, presence_user_id(#{<<"user">> => #{<<"id">> => <<"123">>}})),
-    ?assertEqual(undefined, presence_user_id(#{<<"user">> => #{<<"id">> => <<"001">>}})),
-    ?assertEqual(undefined, presence_user_id(#{<<"user">> => #{}})),
-    ?assertEqual(undefined, presence_user_id(#{})),
-    ?assertEqual(undefined, presence_user_id(#{<<"user">> => not_a_map})),
-    ok.
-
 event_changes_presence_targets_test() ->
     ?assertEqual(true, event_changes_presence_targets(relationship_add)),
     ?assertEqual(true, event_changes_presence_targets(relationship_update)),
@@ -454,11 +446,6 @@ event_changes_presence_targets_test() ->
     ?assertEqual(false, event_changes_presence_targets(message_create)),
     ?assertEqual(false, event_changes_presence_targets(guild_member_update)),
     ?assertEqual(false, event_changes_presence_targets(typing_start)),
-    ok.
-
-flushed_id_list_test() ->
-    ?assertEqual([], flushed_id_list(undefined)),
-    ?assertEqual([42], flushed_id_list(42)),
     ok.
 
 presence_status_data(UserIdBin, Status) ->

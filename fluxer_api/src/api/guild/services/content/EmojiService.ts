@@ -15,7 +15,6 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {User} from '@app/api/models/User';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -27,7 +26,6 @@ import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {GuildEmojiResponse, GuildEmojiWithUserResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export class EmojiService {
 	constructor(
@@ -68,24 +66,6 @@ export class EmojiService {
 		await this.contentHelpers.getGuildData({userId, guildId});
 		const emojis = await this.guildRepository.listEmojis(guildId);
 		return await mapGuildEmojisWithUsersToResponse(emojis, this.userCacheService, requestCache);
-	}
-
-	async getEmojiUser(params: {
-		userId: UserID;
-		guildId: GuildID;
-		emojiId: EmojiID;
-		requestCache: RequestCache;
-	}): Promise<UserPartialResponse> {
-		const {userId, guildId, emojiId, requestCache} = params;
-		await this.contentHelpers.getGuildData({userId, guildId});
-		const emoji = await this.guildRepository.getEmoji(emojiId, guildId);
-		if (!emoji) throw new UnknownGuildEmojiError();
-		const userPartial = await getCachedUserPartialResponse({
-			userId: emoji.creatorId,
-			userCacheService: this.userCacheService,
-			requestCache,
-		});
-		return userPartial;
 	}
 
 	async createEmoji(

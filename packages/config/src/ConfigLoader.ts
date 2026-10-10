@@ -785,13 +785,6 @@ export async function loadConfig(): Promise<MasterConfig> {
 	return cachedConfig;
 }
 
-export function getConfig(): MasterConfig {
-	if (!cachedConfig) {
-		throw new Error('Config not loaded. Call loadConfig() first.');
-	}
-	return cachedConfig;
-}
-
 export function resetConfig(): void {
 	cachedConfig = null;
 }

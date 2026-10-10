@@ -10,8 +10,6 @@
     local_voice_states_for_channel/2,
     local_pending_joins_for_channel/2,
     parse_voice_channel_id/1,
-    voice_state_rpc_entries/1,
-    pending_join_rpc_entries/1,
     fetch_guild_data/1,
     guild_state_call/2,
     guild_id_call/2
@@ -116,12 +114,6 @@ parse_voice_channel_id(ChannelId) ->
             error
     end.
 
--spec voice_state_rpc_entries(term()) -> [map()].
-voice_state_rpc_entries(VoiceStates) when is_list(VoiceStates) ->
-    lists:filtermap(fun voice_state_rpc_entry/1, VoiceStates);
-voice_state_rpc_entries(_) ->
-    [].
-
 -spec voice_state_rpc_entry(term()) -> false | {true, map()}.
 voice_state_rpc_entry(VS) when is_map(VS) ->
     Entry0 = #{
@@ -175,24 +167,6 @@ voice_state_rpc_entry_or_undefined(VS) ->
         {true, Entry} -> Entry;
         false -> undefined
     end.
-
--spec pending_join_rpc_entries(term()) -> [map()].
-pending_join_rpc_entries(Pending) when is_list(Pending) ->
-    lists:filtermap(fun pending_join_rpc_entry_from_map/1, Pending);
-pending_join_rpc_entries(_) ->
-    [].
-
--spec pending_join_rpc_entry_from_map(term()) -> false | {true, map()}.
-pending_join_rpc_entry_from_map(PendingJoin) when is_map(PendingJoin) ->
-    ConnId = maps:get(
-        connection_id, PendingJoin, maps:get(<<"connection_id">>, PendingJoin, null)
-    ),
-    case pending_join_rpc_entry(ConnId, PendingJoin) of
-        undefined -> false;
-        Entry -> {true, Entry}
-    end;
-pending_join_rpc_entry_from_map(_) ->
-    false.
 
 -spec pending_join_rpc_entry(term(), term()) -> map() | undefined.
 pending_join_rpc_entry(ConnId, Metadata) when is_map(Metadata) ->

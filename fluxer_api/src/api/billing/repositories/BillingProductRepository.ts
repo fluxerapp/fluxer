@@ -7,7 +7,7 @@ import {
 	isExistingNewer,
 	rowsEquivalent,
 } from '@app/api/billing/repositories/BillingRepoHelpers';
-import {fetchOne, fetchPage, type PagedQueryResult} from '@app/api/database/CassandraQueryExecution';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {BillingProductRow} from '@app/api/database/types/BillingTypes';
 import {BILLING_PRODUCT_COLUMNS} from '@app/api/database/types/BillingTypes';
 import {BillingProducts} from '@app/api/Tables';
@@ -17,26 +17,10 @@ const FETCH_BY_ID = BillingProducts.selectCql({
 	where: BillingProducts.where.eq('provider_id'),
 	limit: 1,
 });
-const FETCH_ALL = BillingProducts.selectCql();
 
 export class BillingProductRepository {
 	async findById(providerId: string): Promise<BillingProductRow | null> {
 		return fetchOne<BillingProductRow>(FETCH_BY_ID, {provider_id: providerId});
-	}
-
-	async listAllActive(page?: {
-		pageSize: number;
-		pageState?: string | null;
-	}): Promise<PagedQueryResult<BillingProductRow>> {
-		const result = await fetchPage<BillingProductRow>(
-			FETCH_ALL,
-			{},
-			{pageSize: page?.pageSize ?? 100, pageState: page?.pageState ?? null},
-		);
-		return {
-			rows: result.rows.filter((r) => r.active === true),
-			pageState: result.pageState,
-		};
 	}
 
 	async upsertFromStripe(p: Stripe.Product): Promise<{

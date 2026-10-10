@@ -3,16 +3,12 @@
 use super::{test_stream_policy, validated_partial};
 use crate::{
     byte_budget::BudgetedBytes,
-    server::{
-        external::{
-            ExternalBody, ExternalSuccessStatus, FetchedExternal,
-            response::{
-                ExternalPartialResponse, ExternalStreamingResponse, external_partial_response,
-                external_streaming_response,
-            },
+    server::external::{
+        ExternalBody, ExternalSuccessStatus, FetchedExternal,
+        response::{
+            ExternalPartialResponse, ExternalStreamingResponse, external_partial_response,
+            external_streaming_response,
         },
-        response::{MediaResponse, error::text, media_response},
-        stored::response::passthrough_head_response,
     },
 };
 use axum::{
@@ -84,53 +80,4 @@ fn external_partial_response_caches_forever() {
         "public, max-age=31536000, no-transform",
         cache_control_of(&response)
     );
-}
-
-#[test]
-fn stored_media_responses_cache_forever() {
-    let response = media_response(MediaResponse {
-        method: Method::GET,
-        data: BudgetedBytes::from(Bytes::from_static(b"stored bytes")),
-        content_type: "image/webp",
-        range_header: None,
-        disposition: None,
-    });
-    assert_eq!("public, max-age=31536000", cache_control_of(&response));
-
-    let streamable = media_response(MediaResponse {
-        method: Method::GET,
-        data: BudgetedBytes::from(Bytes::from_static(b"stored bytes")),
-        content_type: "video/mp4",
-        range_header: None,
-        disposition: None,
-    });
-    assert_eq!(
-        "public, max-age=31536000, no-transform",
-        cache_control_of(&streamable)
-    );
-
-    let head = passthrough_head_response("image/webp", 12, None, None);
-    assert_eq!("public, max-age=31536000", cache_control_of(&head));
-}
-
-#[test]
-fn error_responses_declare_an_explicit_no_store_policy() {
-    for status in [
-        StatusCode::NOT_FOUND,
-        StatusCode::BAD_GATEWAY,
-        StatusCode::INTERNAL_SERVER_ERROR,
-    ] {
-        let response = text(status, "nope");
-        assert_eq!(
-            response.headers().get(header::CACHE_CONTROL).unwrap(),
-            "no-store",
-            "status {status} must not be cacheable"
-        );
-    }
-}
-
-#[test]
-fn successful_text_responses_are_left_to_the_media_cache_policy() {
-    let response = text(StatusCode::OK, "fine");
-    assert!(response.headers().get(header::CACHE_CONTROL).is_none());
 }

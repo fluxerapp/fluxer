@@ -26,10 +26,6 @@ class RecordingWorkerService implements IWorkerService<WorkerTaskName> {
 	async cancelJob(): Promise<boolean> {
 		return false;
 	}
-
-	async retryDeadLetterJob(): Promise<boolean> {
-		return false;
-	}
 }
 
 class OverflowingWorkerService implements IWorkerService<WorkerTaskName> {
@@ -42,10 +38,6 @@ class OverflowingWorkerService implements IWorkerService<WorkerTaskName> {
 	}
 
 	async cancelJob(): Promise<boolean> {
-		return false;
-	}
-
-	async retryDeadLetterJob(): Promise<boolean> {
 		return false;
 	}
 }

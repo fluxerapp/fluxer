@@ -5,41 +5,24 @@
 
 -export([
     get_safe/3,
-    get_nested/3,
     ensure_map/1,
     ensure_list/1,
     get_integer/3
 ]).
 
--export_type([key/0, path/0, default/0]).
+-export_type([key/0, default/0]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
 -type key() :: atom() | binary() | term().
--type path() :: [key()].
 -type default() :: term().
 
 -spec get_safe(Map :: map() | term(), Key :: key(), Default :: default()) -> term().
 get_safe(Map, Key, Default) when is_map(Map) ->
     maps:get(Key, Map, Default);
 get_safe(_NotMap, _Key, Default) ->
-    Default.
-
--spec get_nested(Map :: map() | term(), Path :: path(), Default :: default()) -> term().
-get_nested(Map, [], _Default) when is_map(Map) ->
-    Map;
-get_nested(_NotMap, [], Default) ->
-    Default;
-get_nested(Map, [Key | Rest], Default) when is_map(Map) ->
-    case maps:find(Key, Map) of
-        {ok, Value} ->
-            get_nested(Value, Rest, Default);
-        error ->
-            Default
-    end;
-get_nested(_NotMap, _Path, Default) ->
     Default.
 
 -spec ensure_map(term()) -> map().

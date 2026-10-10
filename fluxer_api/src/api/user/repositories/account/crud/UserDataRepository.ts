@@ -34,16 +34,6 @@ const FETCH_ACTIVITY_TRACKING_CQL = Users.selectCql({
 	limit: 1,
 });
 
-function createFetchAllUsersFirstPageQuery(limit: number) {
-	return Users.select({limit});
-}
-
-const createFetchAllUsersPaginatedQuery = (limit: number) =>
-	Users.select({
-		where: Users.where.tokenGt('user_id', 'last_user_id'),
-		limit,
-	});
-
 type UserPatch = Partial<{
 	[K in Exclude<keyof UserRow, 'user_id'> & string]: DbOp<UserRow[K]>;
 }>;
@@ -95,18 +85,6 @@ export class UserDataRepository {
 			throw new UnknownUserError();
 		}
 		return user;
-	}
-
-	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {
-		let users: Array<UserRow>;
-		if (lastUserId) {
-			const query = createFetchAllUsersPaginatedQuery(limit);
-			users = await fetchMany<UserRow>(query.bind({last_user_id: lastUserId}));
-		} else {
-			const query = createFetchAllUsersFirstPageQuery(limit);
-			users = await fetchMany<UserRow>(query.bind({}));
-		}
-		return users.map((user) => new User(user));
 	}
 
 	async scanAllUsersPage(

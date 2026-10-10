@@ -16,10 +16,6 @@ const FETCH_SOUND_CQL = UserEntranceSounds.select({
 const LIST_SELECTIONS_CQL = UserEntranceSoundSelections.select({
 	where: UserEntranceSoundSelections.where.eq('user_id'),
 });
-const FETCH_SELECTION_CQL = UserEntranceSoundSelections.select({
-	where: [UserEntranceSoundSelections.where.eq('user_id'), UserEntranceSoundSelections.where.eq('scope_id')],
-	limit: 1,
-});
 
 export class EntranceSoundRepository {
 	async listSounds(userId: UserID): Promise<Array<EntranceSound>> {
@@ -44,13 +40,6 @@ export class EntranceSoundRepository {
 	async listSelections(userId: UserID): Promise<Array<EntranceSoundSelection>> {
 		const rows = await fetchMany<UserEntranceSoundSelectionRow>(LIST_SELECTIONS_CQL.bind({user_id: userId}));
 		return rows.map((row) => new EntranceSoundSelection(row));
-	}
-
-	async getSelection(userId: UserID, scopeId: string): Promise<EntranceSoundSelection | null> {
-		const row = await fetchOne<UserEntranceSoundSelectionRow>(
-			FETCH_SELECTION_CQL.bind({user_id: userId, scope_id: scopeId}),
-		);
-		return row ? new EntranceSoundSelection(row) : null;
 	}
 
 	async upsertSelection(selection: EntranceSoundSelection): Promise<EntranceSoundSelection> {

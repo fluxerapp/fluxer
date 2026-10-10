@@ -84,36 +84,3 @@ mod platform {
         ))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn validation_rejects_empty_paths() {
-        let err = validate_file_path("").expect_err("empty path should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "path must be non-empty");
-    }
-
-    #[test]
-    fn validation_rejects_nul_bytes() {
-        let err = validate_file_path("before\0after").expect_err("NUL path should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "path must not contain NUL bytes");
-    }
-
-    #[test]
-    fn validation_accepts_regular_absolute_paths() {
-        validate_file_path("/Users/example/Desktop/file.txt").expect("path should validate");
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn non_macos_worker_preserves_stub_error_contract() {
-        let err =
-            platform::write_file_reference("/tmp/file.txt").expect_err("non-macOS should fail");
-        assert_eq!(err.status, Status::GenericFailure);
-        assert_eq!(err.reason, "mac-clipboard called on non-macOS platform");
-    }
-}

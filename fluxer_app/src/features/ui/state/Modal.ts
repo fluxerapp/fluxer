@@ -202,10 +202,6 @@ class ModalState {
 		}
 	}
 
-	get orderedModals(): Array<ModalWithStackInfo> {
-		return this.getOrderedModals(document);
-	}
-
 	getOrderedModals(ownerDocument: Document = document): Array<ModalWithStackInfo> {
 		const modals = this.modals.filter((modal) => modal.ownerDocument === ownerDocument);
 		const topmostRegularIndex = modals.findLastIndex((m) => !m.isBackground);

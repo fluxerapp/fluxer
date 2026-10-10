@@ -71,13 +71,6 @@ describe('guild search thread scope', () => {
 		expect(indexJobs()).toHaveLength(1);
 	});
 
-	it('keeps enqueueing every unindexed channel in a control guild', async () => {
-		const s = await setup();
-		const indexJobs = spyIndexJobs();
-		expect(await search(s.owner, {context_guild_id: s.guildId})).toEqual({indexing: true});
-		expect(indexJobs().length).toBeGreaterThan(1);
-	});
-
 	it('never reports indexing for threads', async () => {
 		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const s = await setup();

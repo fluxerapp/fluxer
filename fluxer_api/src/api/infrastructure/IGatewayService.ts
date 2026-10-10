@@ -126,12 +126,6 @@ export interface GatewayChannelMention {
 	type: number;
 }
 
-export interface GatewayMentionSources {
-	directUserIds: Array<UserID>;
-	roleUserIds: Array<UserID>;
-	everyoneUserIds: Array<UserID>;
-}
-
 export interface GatewayMentionSourceEntry {
 	userId: UserID;
 	direct: boolean;
@@ -174,46 +168,6 @@ export abstract class IGatewayService {
 	abstract getGuildMemoryStats(limit: number): Promise<GatewayGuildMemoryStats>;
 
 	abstract getVoiceStateCounts(): Promise<GatewayVoiceStateCounts>;
-
-	abstract getUsersToMentionByRoles(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		roleIds: Array<RoleID>;
-		authorId: UserID;
-	}): Promise<Array<UserID>>;
-
-	abstract getUsersToMentionByUserIds(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		userIds: Array<UserID>;
-		authorId: UserID;
-	}): Promise<Array<UserID>>;
-
-	abstract getAllUsersToMention(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-	}): Promise<Array<UserID>>;
-
-	abstract resolveAllMentions(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-		mentionEveryone: boolean;
-		mentionHere: boolean;
-		roleIds: Array<RoleID>;
-		userIds: Array<UserID>;
-	}): Promise<Array<UserID>>;
-
-	abstract resolveMentionSources(params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-		mentionEveryone: boolean;
-		mentionHere: boolean;
-		roleIds: Array<RoleID>;
-		userIds: Array<UserID>;
-	}): Promise<GatewayMentionSources>;
 
 	abstract resolveMentionSourcesPage(params: {
 		guildId: GuildID;
@@ -297,8 +251,6 @@ export abstract class IGatewayService {
 		channelId?: ChannelID;
 	}): Promise<boolean>;
 
-	abstract getVanityUrlChannel(guildId: GuildID): Promise<ChannelID | null>;
-
 	abstract getFirstViewableTextChannel(guildId: GuildID): Promise<ChannelID | null>;
 
 	abstract dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
@@ -323,8 +275,6 @@ export abstract class IGatewayService {
 		success: boolean;
 	}>;
 
-	abstract disconnectVoiceUser(params: {guildId: GuildID; userId: UserID; connectionId: string}): Promise<void>;
-
 	abstract disconnectVoiceUserIfInChannel(params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
@@ -333,11 +283,6 @@ export abstract class IGatewayService {
 	}): Promise<{
 		success: boolean;
 		ignored?: boolean;
-	}>;
-
-	abstract disconnectAllVoiceUsersInChannel(params: {guildId: GuildID; channelId: ChannelID}): Promise<{
-		success: boolean;
-		disconnectedCount: number;
 	}>;
 
 	abstract confirmVoiceConnection(params: {
@@ -352,15 +297,6 @@ export abstract class IGatewayService {
 
 	abstract getVoiceStatesForChannel(params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
 		voiceStates: Array<GatewayVoiceStateEntry>;
-	}>;
-
-	abstract getPendingJoinsForChannel(params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
-		pendingJoins: Array<{
-			connectionId: string;
-			userId: string;
-			tokenNonce: string;
-			expiresAt: number;
-		}>;
 	}>;
 
 	abstract getVoiceState(params: {guildId: GuildID; userId: UserID}): Promise<{
@@ -407,10 +343,6 @@ export abstract class IGatewayService {
 	abstract ringCallRecipients(channelId: ChannelID, recipients: Array<string>, caller?: CallCaller): Promise<boolean>;
 
 	abstract stopRingingCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean>;
-
-	abstract deleteCall(channelId: ChannelID): Promise<boolean>;
-
-	abstract getDiscoveryOnlineCounts(guildIds: Array<GuildID>): Promise<Map<GuildID, number>>;
 
 	abstract getDiscoveryGuildCounts(guildIds: Array<GuildID>): Promise<
 		Map<

@@ -27,8 +27,4 @@ export class OAuth2AccessToken {
 			created_at: this.createdAt,
 		};
 	}
-
-	hasScope(scope: string): boolean {
-		return this.scope.has(scope);
-	}
 }

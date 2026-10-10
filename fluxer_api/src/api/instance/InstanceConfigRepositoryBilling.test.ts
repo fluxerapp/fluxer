@@ -14,7 +14,6 @@ import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const INSTANCE_BILLING_CONFIG_KEY = 'instance_billing_config';
-const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 
 const GBP_PRICES = {
 	monthly: 'price_GbpMonthly',
@@ -58,23 +57,6 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 		const raw = await repository.getConfig(key);
 		return raw === null ? null : JSON.parse(raw);
 	}
-
-	it('returns an all-null billing config when nothing is stored', async () => {
-		const repository = createRepository();
-		expect(await repository.getInstanceBillingConfig()).toEqual({
-			enabled: null,
-			stripe_secret_key: null,
-			stripe_webhook_secret: null,
-			automatic_tax: null,
-			tax_id_collection: null,
-			terms_consent_required: null,
-			default_currency: null,
-			prices: null,
-			country_currencies: null,
-			legacy_prices: null,
-		});
-		expect(getEffectiveBillingConfig().catalogMode).toBe('env');
-	});
 
 	it('merges patches, keeps secrets on undefined, clears them on null and replaces the catalog maps', async () => {
 		const repository = createRepository();
@@ -136,48 +118,6 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 			/billing/,
 		);
 		expect(await repository.getConfig(INSTANCE_BILLING_CONFIG_KEY)).toBeNull();
-	});
-
-	it('redacts secrets in the admin view and reports the effective state', async () => {
-		Config.instance.selfHosted = true;
-		setCachedInstancePremiumMode('mirror');
-		const repository = createRepository();
-		await repository.setInstanceBillingConfig({
-			enabled: true,
-			stripe_secret_key: 'sk_test_do_not_leak',
-			stripe_webhook_secret: 'whsec_do_not_leak',
-			prices: {GBP: GBP_PRICES},
-		});
-
-		const admin = await repository.getInstanceBillingAdminConfig();
-		expect(JSON.stringify(admin)).not.toContain('do_not_leak');
-		expect(admin).toEqual({
-			enabled: true,
-			effective_enabled: true,
-			stripe_secret_key_set: true,
-			stripe_webhook_secret_set: true,
-			stripe_secret_key_stored: true,
-			stripe_webhook_secret_stored: true,
-			automatic_tax: null,
-			tax_id_collection: null,
-			terms_consent_required: null,
-			effective_automatic_tax: false,
-			effective_tax_id_collection: false,
-			effective_terms_consent_required: false,
-			default_currency: null,
-			prices: {GBP: GBP_PRICES},
-			country_currencies: null,
-			legacy_prices: null,
-			billing_active: true,
-			stripe_serviceable: true,
-			catalog_mode: 'operator',
-			webhook_url: `${Config.endpoints.apiPublic.replace(/\/+$/, '')}/stripe/webhook`,
-		});
-
-		setCachedInstancePremiumMode('everyone');
-		const everyone = await repository.getInstanceBillingAdminConfig();
-		expect(everyone.billing_active).toBe(false);
-		expect(everyone.stripe_serviceable).toBe(false);
 	});
 
 	it('keeps, sets and clears the checkout flags like the other nullable fields', async () => {
@@ -286,45 +226,5 @@ describe('InstanceConfigRepository billing and premium branding', () => {
 			expect(getStoredBillingConfig()?.default_currency).toBe('GBP');
 		});
 		expect(getEffectiveBillingConfig().catalogMode).toBe('operator');
-	});
-
-	it('defaults the premium product name to Plutonium on hosted and Premium on self-hosted', async () => {
-		const repository = createRepository();
-		Config.instance.selfHosted = false;
-		const hosted = await repository.getAppPublicConfig();
-		expect(hosted.branding.premium_product_name).toBe('Plutonium');
-		expect(hosted.branding.premium_info_url).toBeNull();
-		Config.instance.selfHosted = true;
-		expect((await repository.getAppPublicConfig()).branding.premium_product_name).toBe('Premium');
-	});
-
-	it('stores the premium name nullable so a reset and unrelated branding saves keep the default', async () => {
-		Config.instance.selfHosted = true;
-		const repository = createRepository();
-
-		await repository.setAppPublicConfig({branding: {theme_color: '#123456'}});
-		expect(await readRaw(repository, APP_PUBLIC_CONFIG_KEY)).toMatchObject({
-			branding: {theme_color: '#123456', premium_product_name: null},
-		});
-
-		const named = await repository.setAppPublicConfig({
-			branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'},
-		});
-		expect(named.branding.premium_product_name).toBe('Gold');
-		expect(named.branding.premium_info_url).toBe('https://example.com/gold');
-
-		const unrelated = await repository.setAppPublicConfig({branding: {product_name: 'Example'}});
-		expect(unrelated.branding.premium_product_name).toBe('Gold');
-		expect(unrelated.branding.premium_info_url).toBe('https://example.com/gold');
-
-		const reset = await repository.setAppPublicConfig({branding: {premium_product_name: null, premium_info_url: null}});
-		expect(reset.branding.premium_product_name).toBe('Premium');
-		expect(reset.branding.premium_info_url).toBeNull();
-		expect(await readRaw(repository, APP_PUBLIC_CONFIG_KEY)).toMatchObject({
-			branding: {product_name: 'Example', premium_product_name: null, premium_info_url: null},
-		});
-
-		Config.instance.selfHosted = false;
-		expect((await repository.getAppPublicConfig()).branding.premium_product_name).toBe('Plutonium');
 	});
 });

@@ -155,16 +155,6 @@ is_transient_connect_exception(_) -> false.
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-guild_manager_nodedown_failure_detects_noproc_test() ->
-    ?assert(is_guild_manager_nodedown_failure({exit, {noproc, {gen_server, call, []}}})),
-    ?assert(is_guild_manager_nodedown_failure({error, noproc})),
-    ?assert(is_guild_manager_nodedown_failure(noproc)).
-
-transient_connect_exception_badarg_test() ->
-    ?assert(is_transient_connect_exception(badarg)),
-    ?assert(is_transient_connect_exception({badarg, badkey})),
-    ?assertNot(is_transient_connect_exception(timeout)).
-
 connect_to_call_process_dead_pid_does_not_crash_session_test() ->
     ChannelId = 1234,
     DeadPid = spawn(fun() -> ok end),

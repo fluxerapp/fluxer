@@ -4,12 +4,9 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
-	acceptFriendRequest,
 	assertRelationshipId,
 	assertRelationshipType,
-	blockUser,
 	listRelationships,
-	removeRelationship,
 	sendFriendRequest,
 } from '@app/api/user/tests/RelationshipTestUtils';
 import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
@@ -28,30 +25,6 @@ describe('UserRelationshipEndpoints', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
-	});
-	test('friend request lifecycle', async () => {
-		const requester = await createTestAccount(harness);
-		const target = await createTestAccount(harness);
-		const {json: outgoing} = await sendFriendRequest(harness, requester.token, target.userId);
-		assertRelationshipId(outgoing, target.userId);
-		assertRelationshipType(outgoing, RelationshipTypes.OUTGOING_REQUEST);
-		const {json: targetRels} = await listRelationships(harness, target.token);
-		expect(targetRels).toHaveLength(1);
-		expect(targetRels[0]!.type).toBe(RelationshipTypes.INCOMING_REQUEST);
-		assertRelationshipId(targetRels[0]!, requester.userId);
-		const {json: accepted} = await acceptFriendRequest(harness, target.token, requester.userId);
-		assertRelationshipId(accepted, requester.userId);
-		assertRelationshipType(accepted, RelationshipTypes.FRIEND);
-		const {json: requesterRels} = await listRelationships(harness, requester.token);
-		expect(requesterRels).toHaveLength(1);
-		assertRelationshipType(requesterRels[0]!, RelationshipTypes.FRIEND);
-		assertRelationshipId(requesterRels[0]!, target.userId);
-		await removeRelationship(harness, requester.token, target.userId);
-		const {json: afterDelete} = await listRelationships(harness, target.token);
-		expect(afterDelete).toHaveLength(0);
-		const {json: blocked} = await blockUser(harness, target.token, requester.userId);
-		assertRelationshipType(blocked, RelationshipTypes.BLOCKED);
-		assertRelationshipId(blocked, requester.userId);
 	});
 	test('staff force accept immediately creates friendship despite target privacy settings', async () => {
 		const requester = await createTestAccount(harness);

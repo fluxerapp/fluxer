@@ -843,13 +843,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sdk_not_found_when_dll_missing() {
-        let dummy_path = "/this/path/does/not/exist/fake-libmfxhw64.dll";
-        let result = unsafe { Library::new(dummy_path) };
-        assert!(result.is_err());
-    }
-
-    #[test]
     fn fourcc_nv12_packs_correctly() {
         assert_eq!(MFX_FOURCC_NV12, 0x3231564E);
     }
@@ -933,32 +926,5 @@ mod tests {
         property: Vec<u8>,
         value_u32: u32,
         variant_type: u32,
-    }
-
-    #[test]
-    fn mock_set_filter_records_property_and_value() {
-        let mut record = FilterRecord::default();
-        let property = FILTER_PROPERTY_ACCEL;
-        let variant = MfxVariant {
-            version: MfxStructVersion {
-                minor: MFX_VARIANT_VERSION_MINOR,
-                major: MFX_VARIANT_VERSION_MAJOR,
-            },
-            type_: MFX_VARIANT_TYPE_U32,
-            data: MfxVariantData {
-                u32_: MFX_ACCEL_MODE_VIA_D3D11,
-            },
-        };
-        let mut len: usize = 0;
-        while *property.get(len).unwrap_or(&1) != 0 {
-            len += 1;
-        }
-        record.property.extend_from_slice(&property[..len]);
-        record.variant_type = variant.type_;
-        record.value_u32 = unsafe { variant.data.u32_ };
-        assert_eq!(record.property, b"mfxImplDescription.AccelerationMode");
-        assert_eq!(record.variant_type, MFX_VARIANT_TYPE_U32);
-        assert_eq!(record.value_u32, MFX_ACCEL_MODE_VIA_D3D11);
-        assert_eq!(record.value_u32, 0x0300);
     }
 }

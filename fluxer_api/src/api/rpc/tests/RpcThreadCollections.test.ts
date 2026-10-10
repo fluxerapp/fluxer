@@ -66,18 +66,6 @@ describe('RpcService thread collections', () => {
 			.execute();
 	}
 
-	test('control guild collections carry no thread keys', async () => {
-		await setup();
-		const channels = await rpc<Record<string, unknown>>({
-			type: 'guild_collection',
-			guild_id: guildId,
-			collection: 'channels',
-		});
-		for (const key of ['thread_gate', 'thread_tainted', 'threads', 'thread_members', 'thread_only_channels']) {
-			expect(channels.data).not.toHaveProperty(key);
-		}
-	});
-
 	test('active guild channel collections carry the gate and forums but load threads separately', async () => {
 		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		await setup();
@@ -131,38 +119,6 @@ describe('RpcService thread collections', () => {
 			expect.objectContaining({channel_id: forum.id, ...defaults}),
 		);
 		expect(flip.data.thread_parent_settings.map((settings) => settings.channel_id)).not.toContain(channelId);
-	});
-
-	test('a tainted guild that left the experiment keeps only the taint marker', async () => {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
-		await setup();
-		await startThread();
-		await setChannelThreadsConfig({enabled: true, user_basis_points: 10000, disabled_guild_ids: [guildId]});
-		const {data} = await rpc<Record<string, unknown>>({
-			type: 'guild_collection',
-			guild_id: guildId,
-			collection: 'channels',
-		});
-		expect(data.thread_tainted).toBe(true);
-		for (const key of ['thread_gate', 'threads', 'thread_members', 'thread_only_channels']) {
-			expect(data).not.toHaveProperty(key);
-		}
-	});
-
-	test('a tainted guild keeps the taint marker after the kill switch', async () => {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
-		await setup();
-		await startThread();
-		await setChannelThreadsConfig({enabled: false});
-		const {data} = await rpc<Record<string, unknown>>({
-			type: 'guild_collection',
-			guild_id: guildId,
-			collection: 'channels',
-		});
-		expect(data.thread_tainted).toBe(true);
-		for (const key of ['thread_gate', 'threads', 'thread_members', 'thread_only_channels']) {
-			expect(data).not.toHaveProperty(key);
-		}
 	});
 
 	test('counts forum post unreads after the acknowledged message', async () => {

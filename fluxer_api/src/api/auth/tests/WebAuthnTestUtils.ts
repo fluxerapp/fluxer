@@ -403,39 +403,6 @@ export function createAuthenticationResponse(
 	};
 }
 
-export function createAuthenticationResponseWithoutUV(
-	device: WebAuthnDevice,
-	options: WebAuthnAuthenticationOptions,
-): WebAuthnAuthenticationResponse {
-	const challenge = decodeBase64URL(options.challenge);
-	if (options.rpId) {
-		device.rpId = options.rpId;
-	}
-	const clientData = {
-		type: 'webauthn.get',
-		challenge: encodeBase64URL(challenge),
-		origin: device.origin,
-		crossOrigin: false,
-	};
-	const clientDataJSON = Buffer.from(JSON.stringify(clientData));
-	const authData = buildAssertionAuthData(device, false);
-	const clientDataHash = createHash('sha256').update(clientDataJSON).digest();
-	const sigInput = Buffer.concat([authData, clientDataHash]);
-	const signature = signWithPrivateKey(device, sigInput);
-	return {
-		id: encodeBase64URL(device.credentialId),
-		rawId: encodeBase64URL(device.credentialId),
-		type: 'public-key',
-		clientExtensionResults: {},
-		response: {
-			clientDataJSON: encodeBase64URL(clientDataJSON),
-			authenticatorData: encodeBase64URL(authData),
-			signature: encodeBase64URL(signature),
-			userHandle: encodeBase64URL(device.userHandle),
-		},
-	};
-}
-
 export async function registerWebAuthnCredential(
 	harness: ApiTestHarness,
 	token: string,

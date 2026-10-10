@@ -66,8 +66,4 @@ export class AuthSessionRuntimeCommitter {
 			throw error;
 		}
 	}
-
-	async abort(prepared: PreparedRuntimeConfig): Promise<void> {
-		await this.dependencies.abortRuntimeSnapshot(prepared);
-	}
 }

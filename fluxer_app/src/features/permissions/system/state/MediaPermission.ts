@@ -204,17 +204,6 @@ class MediaPermission {
 		logger.debug('Updated screen recording permission to granted');
 	}
 
-	reset(): void {
-		this.microphoneExplicitlyDenied = false;
-		this.cameraExplicitlyDenied = false;
-		this.screenRecordingExplicitlyDenied = false;
-		this.microphonePermissionState = null;
-		this.cameraPermissionState = null;
-		this.screenRecordingPermissionState = null;
-		this.initialized = false;
-		logger.debug('Reset all permissions');
-	}
-
 	isInitialized(): boolean {
 		return this.initialized;
 	}

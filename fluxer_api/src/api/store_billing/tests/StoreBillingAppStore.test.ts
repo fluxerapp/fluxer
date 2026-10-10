@@ -4,6 +4,8 @@ import {randomUUID} from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {getStoreBillingRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
@@ -20,6 +22,7 @@ import {
 	setTestPremium,
 	uninstallStoreBillingWorker,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
+import {GiftCodes} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
@@ -912,7 +915,7 @@ describe('App Store purchases', () => {
 		const result = await claim(purchaser, await signStoredTransaction('production', transactionId));
 		const giftCode = result.gift_code!;
 		await redeem(redeemer, giftCode);
-		await getUserRepository().updateGiftCode(giftCode, {redeemed_at: new Date(Date.now() - ms('40 days'))});
+		await upsertOne(GiftCodes.patchByPk({code: giftCode}, {redeemed_at: Db.set(new Date(Date.now() - ms('40 days')))}));
 		const redeemed = await findUser(redeemer.userId);
 		await getUserRepository().patchUpsert(
 			redeemed.id,

@@ -430,12 +430,6 @@ class MemberSearch {
 		this.initialized = false;
 	}
 
-	cleanup(): void {
-		this.terminate();
-		this.initialized = false;
-		this.recentFetches.clear();
-	}
-
 	async fetchMembersInBackground(query: string, guildIds: Array<string>, priorityGuildId?: string): Promise<void> {
 		const trimmed = query.trim();
 		if (!trimmed) {

@@ -168,12 +168,3 @@ export function cancel(): void {
 		source.disconnect();
 	} catch {}
 }
-
-export async function warmUp(voiceKey: string): Promise<void> {
-	ensureConfig();
-	try {
-		await ensureVoice(voiceKey);
-	} catch (error) {
-		logger.debug('Failed to warm up TTS fallback voice', error);
-	}
-}

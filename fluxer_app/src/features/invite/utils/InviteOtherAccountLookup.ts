@@ -40,7 +40,7 @@ function candidateTarget(account: Account): InstanceHTTPTarget | null {
 	}
 }
 
-export function inviteLookupCandidates(
+function inviteLookupCandidates(
 	accounts: ReadonlyArray<Account>,
 	origin: InviteLookupOrigin,
 ): Array<InviteLookupCandidate> {

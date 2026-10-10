@@ -72,27 +72,6 @@ class FakeMeilisearchClient implements MeilisearchClient {
 }
 
 describe('MeilisearchMessageAdapter', () => {
-	it('creates missing indexes and applies settings before becoming available', async () => {
-		const client = new FakeMeilisearchClient();
-		const adapter = new MeilisearchMessageAdapter({client});
-
-		await adapter.initialize();
-
-		expect(adapter.isAvailable()).toBe(true);
-		expect(client.requests.map((request) => `${request.method} ${request.path}`)).toEqual([
-			'GET /indexes/messages',
-			'POST /indexes',
-			'PUT /indexes/messages/settings/searchable-attributes',
-			'PUT /indexes/messages/settings/filterable-attributes',
-			'PUT /indexes/messages/settings/sortable-attributes',
-			'PATCH /indexes/messages/settings/pagination',
-		]);
-		expect(client.waitedTaskUids).toEqual([1, 2, 3, 4, 5]);
-		expect(client.requests.find((request) => request.path.endsWith('/settings/pagination'))?.body).toEqual({
-			maxTotalHits: 10000,
-		});
-	});
-
 	it('treats an index created concurrently by another process as created', async () => {
 		const client = new FakeMeilisearchClient();
 		client.failedTasks.set(1, new MeilisearchTaskError('Index `messages` already exists.', 'index_already_exists'));

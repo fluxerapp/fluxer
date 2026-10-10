@@ -61,10 +61,6 @@ class RecordingWorkerService implements IWorkerService {
 		return false;
 	}
 
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
 	followerRemovals(): Array<RecordedJob> {
 		return this.jobs.filter((job) => job.taskType === 'removeChannelFollowers');
 	}

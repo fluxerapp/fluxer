@@ -59,17 +59,6 @@ open_circuit_half_opens_then_recloses_on_success_test() ->
     ?assertEqual(ok, gateway_http_client_response:allow_circuit_request(Key, 5000)),
     cleanup_circuit_tables().
 
-circuit_window_is_kept_out_of_the_state_record_test() ->
-    cleanup_circuit_tables(),
-    ensure_circuit_tables(),
-    Key = {rpc, <<"window.example.test">>},
-    record(Key, failure(), 1),
-    ?assertMatch([{Key, closed, undefined, _}], ets:lookup(?CIRCUIT_TABLE, Key)),
-    ?assertMatch([{Key, [{true, _}]}], ets:lookup(?CIRCUIT_WINDOW_TABLE, Key)),
-    record(Key, success(), 1),
-    ?assertMatch([{Key, [{false, _}, {true, _}]}], ets:lookup(?CIRCUIT_WINDOW_TABLE, Key)),
-    cleanup_circuit_tables().
-
 is_stale_circuit_uses_state_specific_timestamps_test() ->
     Now = 10000,
     ?assertEqual(

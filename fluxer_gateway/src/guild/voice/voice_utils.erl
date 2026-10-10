@@ -7,7 +7,6 @@
     build_voice_token_rpc_request/6,
     build_voice_token_rpc_request/8,
     build_force_disconnect_rpc_request/4,
-    build_update_participant_rpc_request/5,
     build_update_participant_rpc_request/6,
     build_update_participant_permissions_rpc_request/5,
     add_geolocation_to_request/3,
@@ -145,19 +144,6 @@ build_force_disconnect_rpc_request(GuildId, ChannelId, UserId, ConnectionId) ->
         _ ->
             BaseReq#{<<"guild_id">> => integer_to_binary(GuildId)}
     end.
-
--spec build_update_participant_rpc_request(
-    integer() | null, integer(), integer(), boolean(), boolean()
-) -> map().
-build_update_participant_rpc_request(GuildId, ChannelId, UserId, Mute, Deaf) ->
-    build_update_participant_rpc_request(
-        GuildId,
-        ChannelId,
-        UserId,
-        Mute,
-        Deaf,
-        #{can_speak => true, can_stream => true, can_video => true}
-    ).
 
 -spec build_update_participant_rpc_request(
     integer() | null, integer(), integer(), boolean(), boolean(), voice_permissions()

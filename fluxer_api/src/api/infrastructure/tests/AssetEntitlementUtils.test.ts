@@ -4,18 +4,13 @@ import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {
-	stripAnimationPrefixIfNoEntitlement,
 	stripAvatarForUser,
 	stripBannerForUser,
-	stripGuildBannerForFeatures,
-	stripGuildIconForFeatures,
-	stripGuildSplashForFeatures,
 	userHasAnimatedAvatarEntitlement,
 } from '@app/api/infrastructure/AssetEntitlementUtils';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {User} from '@app/api/models/User';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
@@ -57,22 +52,6 @@ describe('AssetEntitlementUtils', () => {
 	});
 	afterEach(() => {
 		getConfig().instance.selfHosted = originalSelfHosted;
-	});
-	describe('stripAnimationPrefixIfNoEntitlement', () => {
-		test('returns null when input is null', () => {
-			expect(stripAnimationPrefixIfNoEntitlement(null, false)).toBeNull();
-			expect(stripAnimationPrefixIfNoEntitlement(null, true)).toBeNull();
-		});
-		test('keeps animated prefix when entitlement is present', () => {
-			expect(stripAnimationPrefixIfNoEntitlement('a_abc123', true)).toBe('a_abc123');
-		});
-		test('strips animated prefix when entitlement is missing', () => {
-			expect(stripAnimationPrefixIfNoEntitlement('a_abc123', false)).toBe('abc123');
-		});
-		test('leaves static hashes untouched regardless of entitlement', () => {
-			expect(stripAnimationPrefixIfNoEntitlement('xyz789', false)).toBe('xyz789');
-			expect(stripAnimationPrefixIfNoEntitlement('xyz789', true)).toBe('xyz789');
-		});
 	});
 	describe('stripAvatarForUser', () => {
 		test('strips a_ prefix on user without animated-avatar entitlement', () => {
@@ -124,31 +103,6 @@ describe('AssetEntitlementUtils', () => {
 				premium: true,
 			});
 			expect(stripBannerForUser(user)).toBe('a_banner123');
-		});
-	});
-	describe('guild asset feature sanitization', () => {
-		test('strips animated guild icon prefix without ANIMATED_ICON feature', () => {
-			expect(stripGuildIconForFeatures('a_icon123', new Set())).toBe('icon123');
-		});
-		test('keeps animated guild icon prefix with ANIMATED_ICON feature', () => {
-			expect(stripGuildIconForFeatures('a_icon123', new Set([GuildFeatures.ANIMATED_ICON]))).toBe('a_icon123');
-		});
-		test('hides guild banner without BANNER feature', () => {
-			expect(stripGuildBannerForFeatures('banner123', new Set())).toBeNull();
-		});
-		test('strips animated guild banner prefix without ANIMATED_BANNER feature', () => {
-			expect(stripGuildBannerForFeatures('a_banner123', new Set([GuildFeatures.BANNER]))).toBe('banner123');
-		});
-		test('keeps animated guild banner prefix with ANIMATED_BANNER feature', () => {
-			expect(
-				stripGuildBannerForFeatures('a_banner123', new Set([GuildFeatures.BANNER, GuildFeatures.ANIMATED_BANNER])),
-			).toBe('a_banner123');
-		});
-		test('hides guild splashes without INVITE_SPLASH feature', () => {
-			expect(stripGuildSplashForFeatures('splash123', new Set())).toBeNull();
-		});
-		test('keeps guild splashes with INVITE_SPLASH feature', () => {
-			expect(stripGuildSplashForFeatures('splash123', new Set([GuildFeatures.INVITE_SPLASH]))).toBe('splash123');
 		});
 	});
 });

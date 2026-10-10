@@ -1737,7 +1737,6 @@ dependencies = [
  "anyhow",
  "axum",
  "clap",
- "fluxer_common",
  "hyper",
  "hyper-util",
  "libc",
@@ -1781,7 +1780,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "tempfile",
 ]
 
 [[package]]
@@ -2017,24 +2015,17 @@ name = "fluxer_common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "aws-credential-types",
- "aws-sigv4",
- "axum",
  "base64 0.23.1",
  "hex",
  "hmac 0.13.0",
- "maxminddb",
- "moka",
  "reqwest",
  "serde_json",
  "sha2 0.11.0",
  "tempfile",
  "thiserror",
  "time",
- "tracing",
  "tracing-subscriber",
  "url",
- "urlencoding",
 ]
 
 [[package]]
@@ -2638,12 +2629,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "791930b43c0d5973160d90a8f3894509f2b273430f5c5c73b668636d0287c5c0"
 
 [[package]]
-name = "ipnetwork"
-version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf370abdafd54d13e54a620e8c3e1145f28e46cc9d704bc6d94414559df41763"
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2889,18 +2874,6 @@ dependencies = [
  "proc-macro2-diagnostics",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "maxminddb"
-version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b43d2458d977b610b04a3858e6504f06133663d303a1a0606601b530bfc9bc6"
-dependencies = [
- "ipnetwork",
- "memchr",
- "serde",
- "thiserror",
 ]
 
 [[package]]

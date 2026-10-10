@@ -101,31 +101,8 @@ class Drafts {
 		return this.draftSegments[channelId] ?? EMPTY_SEGMENTS;
 	}
 
-	cleanupEmptyDrafts(): void {
-		for (const channelId of Object.keys(this.drafts)) {
-			const content = this.drafts[channelId];
-			if (!content || content.trim().length === 0) {
-				delete this.drafts[channelId];
-				delete this.draftSegments[channelId];
-			}
-		}
-		for (const channelId of Object.keys(this.draftSegments)) {
-			if (!(channelId in this.drafts)) {
-				delete this.draftSegments[channelId];
-			}
-		}
-	}
-
 	getAllDrafts(): ReadonlyArray<[string, string]> {
 		return Object.entries(this.drafts);
-	}
-
-	hasDraft(channelId: string): boolean {
-		return channelId in this.drafts;
-	}
-
-	getDraftCount(): number {
-		return Object.keys(this.drafts).length;
 	}
 }
 

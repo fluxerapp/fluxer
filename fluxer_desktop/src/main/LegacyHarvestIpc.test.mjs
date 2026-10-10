@@ -17,8 +17,6 @@ const {
 	DESKTOP_LEGACY_HARVEST_CHANNELS,
 	DESKTOP_LEGACY_HARVEST_VALUE_ENCODING_KEY,
 	DESKTOP_LEGACY_REPLANT_MARKER_KEY,
-	desktopLegacyReplantMarker,
-	isDesktopLegacyReplantMarker,
 } = await import('../../../packages/desktop_ipc/src/LegacyHarvestContract.ts');
 const {
 	DESKTOP_LEGACY_AUTHORITY_MARKER_KEY,
@@ -276,13 +274,5 @@ describe('serving a harvest whose blob reference is damaged', () => {
 		assert.equal(served.stores[0].records[0].value.avatar, null);
 		assert.equal(served.localStorage.theme, 'dark');
 		cleanupLegacyHarvestHandlers();
-	});
-});
-
-describe('the replant marker', () => {
-	test('the writer produces exactly what the reader accepts', () => {
-		assert.equal(isDesktopLegacyReplantMarker(desktopLegacyReplantMarker(1_700_000_000_000)), true);
-		assert.equal(isDesktopLegacyReplantMarker(JSON.stringify({version: 2, replantedAt: 1})), false);
-		assert.equal(isDesktopLegacyReplantMarker(null), false);
 	});
 });

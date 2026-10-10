@@ -72,9 +72,6 @@ function recordingClient(statements: Array<Statement>): IPostgresClient {
 		},
 		async connect() {},
 		async shutdown() {},
-		isConnected() {
-			return true;
-		},
 		async transaction(fn: (db: unknown) => Promise<unknown>) {
 			return fn(client);
 		},

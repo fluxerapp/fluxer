@@ -110,12 +110,3 @@ filtermap_snowflake(RoleId) ->
         Id when is_integer(Id), Id > 0 -> {true, Id};
         _ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-new_returns_nif_ref_test() ->
-    Ref = new(123),
-    ?assert(is_reference(Ref)).
-
--endif.

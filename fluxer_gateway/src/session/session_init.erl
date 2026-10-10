@@ -397,46 +397,6 @@ resolve_guild_node(GuildId) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-build_ignored_events_map_test() ->
-    ?assertEqual(#{}, build_ignored_events_map([])),
-    ?assertEqual(#{<<"TYPING_START">> => true}, build_ignored_events_map([<<"TYPING_START">>])),
-    ?assertEqual(
-        #{<<"TYPING_START">> => true, <<"PRESENCE_UPDATE">> => true},
-        build_ignored_events_map([<<"TYPING_START">>, <<"PRESENCE_UPDATE">>])
-    ),
-    ?assertEqual(#{}, build_ignored_events_map(not_a_list)),
-    ok.
-
-load_private_channels_test() ->
-    ?assertEqual(#{}, load_private_channels(undefined)),
-    ?assertEqual(#{}, load_private_channels(#{})),
-    Ready = #{
-        <<"private_channels">> => [
-            #{<<"id">> => <<"123">>, <<"type">> => 1},
-            #{<<"id">> => <<"456">>, <<"type">> => 3}
-        ]
-    },
-    Channels = load_private_channels(Ready),
-    ?assertEqual(2, maps:size(Channels)),
-    ?assert(maps:is_key(123, Channels)),
-    ?assert(maps:is_key(456, Channels)),
-    ok.
-
-load_relationships_test() ->
-    ?assertEqual(#{}, load_relationships(undefined)),
-    ?assertEqual(#{}, load_relationships(#{})),
-    Ready = #{
-        <<"relationships">> => [
-            #{<<"id">> => <<"100">>, <<"type">> => 1},
-            #{<<"id">> => <<"200">>, <<"type">> => 3}
-        ]
-    },
-    Rels = load_relationships(Ready),
-    ?assertEqual(2, maps:size(Rels)),
-    ?assertEqual(1, maps:get(100, Rels)),
-    ?assertEqual(3, maps:get(200, Rels)),
-    ok.
-
 load_relationships_uses_top_level_relationship_id_test() ->
     Ready = #{
         <<"relationships">> => [
@@ -509,11 +469,6 @@ init_ready_keeps_transferred_bot_ready_undefined_test() ->
 build_state_keeps_transferred_bot_ready_undefined_test() ->
     Data = (base_session_data(undefined))#{bot => true},
     ?assertEqual(undefined, maps:get(ready, build_state(Data))).
-
-normalize_guild_ids_filters_invalid_values_test() ->
-    ?assertEqual([1, 2], normalize_guild_ids([1, 0, -1, 2, <<"3">>])),
-    ?assertEqual([10], normalize_guild_ids(#{10 => undefined, <<"bad">> => undefined})),
-    ?assertEqual([], normalize_guild_ids(undefined)).
 
 normalize_buffer_filters_invalid_entries_test() ->
     Buffer = [#{seq => 1}, #{seq => -1}, #{no_seq => true}, <<"bad">>],

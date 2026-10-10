@@ -16,8 +16,7 @@
     delete/1,
     rebalance/0,
     rebalance_async/0,
-    pending_handoff_count/0,
-    handoff_to_target/1
+    pending_handoff_count/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -88,11 +87,6 @@ pending_handoff_count() ->
         _ -> 0
     end.
 
--spec handoff_to_target(node()) -> ok.
-handoff_to_target(TargetNode) ->
-    _ = guild_counts_cache_query:safe_local_call({handoff_to_target, TargetNode}, ok),
-    ok.
-
 -spec init([]) -> {ok, state(), hibernate}.
 init([]) ->
     process_flag(trap_exit, true),
@@ -134,9 +128,6 @@ handle_call(pending_handoff_count, _From, State) ->
     {reply, guild_counts_cache_remote:pending_handoff_count_from_state(State), State};
 handle_call(rebalance, _From, State) ->
     {reply, ok, guild_counts_cache_remote:rebalance_ownership(State)};
-handle_call({handoff_to_target, TargetNode}, _From, State) ->
-    {reply, ok,
-        guild_counts_cache_remote:handoff_all_to_target_async(require_node(TargetNode), State)};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -232,12 +223,6 @@ require_guild_ids(_) ->
 require_count(Count) when is_integer(Count), Count >= 0 ->
     Count;
 require_count(_) ->
-    error(badarg).
-
--spec require_node(term()) -> node().
-require_node(Node) when is_atom(Node) ->
-    Node;
-require_node(_) ->
     error(badarg).
 
 -spec require_pending_operation(term()) -> pending_operation().

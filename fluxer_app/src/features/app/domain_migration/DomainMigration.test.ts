@@ -7,7 +7,6 @@ import {
 } from '@app/features/app/domain_migration/DomainMigrationAppStorage';
 import {
 	detectDomainMigrationInstallKind,
-	installDomainMovedApp,
 	readDomainMigrationDiscovery,
 } from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import * as core from '@app/features/app/domain_migration/DomainMigrationCore';
@@ -564,109 +563,6 @@ describe('classifyDomainMigrationInstallKind', () => {
 		vi.stubGlobal('matchMedia', (query: string) => ({matches: query === '(display-mode: standalone)'}));
 		vi.stubGlobal('navigator', {userAgent: CHROME_DESKTOP_UA, maxTouchPoints: 0});
 		expect(detectDomainMigrationInstallKind()).toBe('chromium-desktop');
-	});
-});
-
-describe('shouldShowDomainMovedNotice', () => {
-	const source = core.resolveDomainMigrationSide('https://web.fluxer.app');
-	const completed: core.DomainMigrationMarker = {
-		state: 'completed',
-		target: 'https://fluxer.com',
-		at: NOW,
-		attempts: 1,
-	};
-
-	function notice(overrides: Partial<core.DomainMovedNoticeInput>): core.DomainMovedNoticeInput {
-		return {
-			side: source,
-			installKind: 'webkit',
-			discovery: ENABLED_DISCOVERY,
-			assignmentEnabled: true,
-			marker: null,
-			dismissedAt: null,
-			now: NOW,
-			...overrides,
-		};
-	}
-
-	it('shows in installed apps on the source once the user is in the rollout', () => {
-		for (const installKind of ['chromium-android', 'webkit', 'firefox', 'other'] as const) {
-			expect(core.shouldShowDomainMovedNotice(notice({installKind}))).toBe(true);
-			expect(core.shouldShowDomainMovedNotice(notice({installKind, assignmentEnabled: false}))).toBe(false);
-			expect(core.shouldShowDomainMovedNotice(notice({installKind, assignmentEnabled: false, marker: completed}))).toBe(
-				true,
-			);
-		}
-	});
-
-	it('waits for the handoff in Chromium desktop apps', () => {
-		expect(core.shouldShowDomainMovedNotice(notice({installKind: 'chromium-desktop'}))).toBe(false);
-		expect(core.shouldShowDomainMovedNotice(notice({installKind: 'chromium-desktop', marker: completed}))).toBe(true);
-	});
-
-	it.each<[string, Partial<core.DomainMovedNoticeInput>]>([
-		['a browser tab', {installKind: 'none', marker: completed}],
-		['the target', {side: core.resolveDomainMigrationSide('https://fluxer.com')}],
-		['a self-hosted origin', {side: core.resolveDomainMigrationSide('https://chat.example.com')}],
-		['the kill switch', {discovery: {...ENABLED_DISCOVERY, enabled: false}}],
-		['missing discovery', {discovery: null}],
-	])('stays hidden for %s', (_label, overrides) => {
-		expect(core.shouldShowDomainMovedNotice(notice(overrides))).toBe(false);
-	});
-
-	it('comes back seven days after a dismissal', () => {
-		expect(core.shouldShowDomainMovedNotice(notice({dismissedAt: NOW - 1000}))).toBe(false);
-		expect(
-			core.shouldShowDomainMovedNotice(notice({dismissedAt: NOW - core.DOMAIN_MIGRATION_MOVED_DISMISS_MS + 1})),
-		).toBe(false);
-		expect(core.shouldShowDomainMovedNotice(notice({dismissedAt: NOW - core.DOMAIN_MIGRATION_MOVED_DISMISS_MS}))).toBe(
-			true,
-		);
-	});
-
-	it('builds the new app links from the side target', () => {
-		expect(core.domainMovedInstallUrl('https://canary.fluxer.com')).toBe('https://canary.fluxer.com/app');
-		expect(core.domainMovedManifestId('https://fluxer.com')).toBe('https://fluxer.com/');
-		expect(core.domainMovedBrowserMigrationUrl('https://fluxer.com')).toBe(
-			'https://fluxer.com/migrate/begin?start=1&next=%2Fapp',
-		);
-	});
-});
-
-describe('installDomainMovedApp', () => {
-	afterEach(() => {
-		vi.unstubAllGlobals();
-		vi.restoreAllMocks();
-	});
-
-	it('opens the new app in the browser straight from the click without the install API', () => {
-		const open = vi.spyOn(window, 'open').mockReturnValue(null);
-		const onUnavailable = vi.fn();
-		vi.stubGlobal('navigator', {userAgent: CHROME_DESKTOP_UA});
-		installDomainMovedApp('https://fluxer.com', onUnavailable);
-		expect(open).toHaveBeenCalledWith('https://fluxer.com/app', '_blank', 'noopener');
-		expect(onUnavailable).not.toHaveBeenCalled();
-	});
-
-	it('shows the fallback instead of a late popup when the install fails', async () => {
-		const open = vi.spyOn(window, 'open').mockReturnValue(null);
-		const onUnavailable = vi.fn();
-		const install = vi.fn().mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
-		vi.stubGlobal('navigator', {userAgent: CHROME_DESKTOP_UA, install});
-		installDomainMovedApp('https://fluxer.com', onUnavailable);
-		await vi.waitFor(() => expect(onUnavailable).toHaveBeenCalledOnce());
-		expect(install).toHaveBeenCalledWith('https://fluxer.com/app', 'https://fluxer.com/');
-		expect(open).not.toHaveBeenCalled();
-	});
-
-	it('does nothing more when the user cancels the install', async () => {
-		const onUnavailable = vi.fn();
-		const install = vi.fn().mockRejectedValue(new DOMException('cancelled', 'AbortError'));
-		vi.stubGlobal('navigator', {userAgent: CHROME_DESKTOP_UA, install});
-		installDomainMovedApp('https://fluxer.com', onUnavailable);
-		await Promise.resolve();
-		await Promise.resolve();
-		expect(onUnavailable).not.toHaveBeenCalled();
 	});
 });
 

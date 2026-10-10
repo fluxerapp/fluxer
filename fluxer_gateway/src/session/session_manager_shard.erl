@@ -140,11 +140,6 @@ handle_call(get_global_count, _From, State) ->
 handle_call(reconnect_drain, _From, State) ->
     DrainCount = session_manager_shard_drain:broadcast_reconnect_drain(State),
     {reply, {ok, DrainCount}, State};
-handle_call({transfer_to, TargetNode}, _From, State) when is_atom(TargetNode) ->
-    TransferCount = session_manager_shard_drain:broadcast_transfer_to(TargetNode, State),
-    {reply, {ok, TransferCount}, State};
-handle_call({transfer_to_topology, TargetNodes}, _From, State) ->
-    handle_transfer_topology(TargetNodes, State);
 handle_call({handoff_to_topology, TargetNodes}, _From, State) ->
     handle_handoff_topology(TargetNodes, State);
 handle_call(_, _From, State) ->
@@ -162,17 +157,6 @@ handle_lookup_or_rehydrate(SessionId, Token, SocketPid, State) ->
 handle_session_count(State) ->
     Sessions = maps:get(sessions, State),
     {reply, {ok, maps:size(Sessions)}, State}.
-
--spec handle_transfer_topology(term(), state()) ->
-    {reply, {ok, non_neg_integer()}, state()}.
-handle_transfer_topology(TargetNodes, State) ->
-    case atom_list(TargetNodes) of
-        {ok, Nodes} ->
-            Count = session_manager_shard_drain:broadcast_transfer_to_topology(Nodes, State),
-            {reply, {ok, Count}, State};
-        error ->
-            {reply, {ok, 0}, State}
-    end.
 
 -spec handle_handoff_topology(term(), state()) ->
     {reply, {ok, #{attempted := non_neg_integer(), handed_off := non_neg_integer()}}, state()}.

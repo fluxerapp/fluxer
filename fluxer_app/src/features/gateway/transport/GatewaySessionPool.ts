@@ -287,10 +287,6 @@ class GatewaySessionPool {
 		return this.backgroundSessions.connectionCount;
 	}
 
-	shutdownBackground(): void {
-		this.backgroundSessions.shutdown();
-	}
-
 	private syncForegroundPresence(): void {
 		const presence = LocalPresence.getGatewayPresence();
 		if (presence === null) {

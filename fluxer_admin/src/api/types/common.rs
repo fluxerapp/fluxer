@@ -285,11 +285,6 @@ pub struct BulkBanResult {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct BanAvatarResult {
-    pub hash_short: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SuccessResponse {
     pub success: bool,
 }

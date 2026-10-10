@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	computeInboundVideoDecodeHealth,
 	findInboundVideoDecodeSample,
 	findStalledVideoDecoder,
 } from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
@@ -57,28 +56,5 @@ describe('the baseline decode floor', () => {
 
 	it('still withdraws an optional codec', () => {
 		expect(markScreenShareDecodeFailure('av1', 'test')).toBe(true);
-	});
-});
-
-describe('inbound video smoothness', () => {
-	it('reports decoded frame rate and mean inter-frame delay in milliseconds', () => {
-		const previous = buildSample({
-			timestamp: 1000,
-			framesDecoded: 100,
-			totalInterFrameDelay: 2,
-			totalSquaredInterFrameDelay: 0.04,
-			freezeCount: 1,
-		});
-		const current = buildSample({
-			timestamp: 3000,
-			framesDecoded: 160,
-			totalInterFrameDelay: 4,
-			totalSquaredInterFrameDelay: 0.08,
-			freezeCount: 3,
-		});
-		const health = computeInboundVideoDecodeHealth(previous, current);
-		expect(health?.decodedFps).toBe(30);
-		expect(health?.meanInterFrameDelayMs).toBe(33.3);
-		expect(health?.freezes).toBe(2);
 	});
 });

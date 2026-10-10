@@ -4,20 +4,17 @@ import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepo
 import type {IpAuthorizationTicketCache} from '@app/api/auth/AuthLogin';
 import {getTicketCacheKey} from '@app/api/auth/AuthLogin';
 import {
-	type ChannelID,
 	createApplicationID,
 	createAttachmentID,
 	createChannelID,
 	createGuildID,
 	createMessageID,
 	createUserID,
-	type GuildID,
 	type MessageID,
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
@@ -38,14 +35,11 @@ import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
-import {StorageService} from '@app/api/infrastructure/StorageService';
 import {Logger} from '@app/api/Logger';
-import {requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {getKVClient, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '@app/api/Tables';
-import {resetTestHarnessState} from '@app/api/test/TestHarnessReset';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
@@ -53,10 +47,7 @@ import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserA
 import {UserChannelRepository} from '@app/api/user/repositories/UserChannelRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {processUserDeletion} from '@app/api/user/services/UserDeletionService';
-import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
-import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 import {parseReportedClientOs} from '@app/api/utils/SessionClientIdentity';
-import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
 import {processInactivityDeletionsCore} from '@app/api/worker/tasks/ProcessInactivityDeletions';
 import {setWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {initializeWorkerDependencies} from '@app/api/worker/WorkerDependencies';
@@ -65,7 +56,6 @@ import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitCon
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {EmailServiceNotTestableError} from '@fluxer/errors/src/domains/auth/EmailServiceNotTestableError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {AclsMustBeNonEmptyError} from '@fluxer/errors/src/domains/core/AclsMustBeNonEmptyError';
 import {DeletionFailedError} from '@fluxer/errors/src/domains/core/DeletionFailedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -79,7 +69,6 @@ import {TestHarnessDisabledError} from '@fluxer/errors/src/domains/core/TestHarn
 import {TestHarnessForbiddenError} from '@fluxer/errors/src/domains/core/TestHarnessForbiddenError';
 import {UpdateFailedError} from '@fluxer/errors/src/domains/core/UpdateFailedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {InvalidBotFlagError} from '@fluxer/errors/src/domains/oauth/InvalidBotFlagError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {UnknownUserFlagError} from '@fluxer/errors/src/domains/user/UnknownUserFlagError';
@@ -95,21 +84,6 @@ const TEST_EMAIL_ENDPOINT = '/test/emails';
 const TEST_AUTH_HEADER = 'x-test-token';
 const MAX_TEST_PRIVATE_CHANNELS = 1000;
 const GIFT_DURATION_TYPES = new Set<GiftCodeDurationType>(['days', 'weeks', 'months', 'years']);
-
-const TEST_ASSET_MESSAGES = {
-	guildBannerMissing: 'Guild has no banner set.',
-	guildIconMissing: 'Guild has no icon set.',
-	guildSplashMissing: 'Guild has no splash set.',
-	memberAvatarMissing: 'Member has no guild avatar set.',
-	memberBannerMissing: 'Member has no guild banner set.',
-	unknownError: 'Unknown error.',
-	userAvatarMissing: 'User has no avatar set.',
-	userBannerMissing: 'User has no banner set.',
-} as const;
-
-function getAssetVerificationErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : TEST_ASSET_MESSAGES.unknownError;
-}
 
 interface GiftDurationInput {
 	duration_months?: number;
@@ -190,16 +164,6 @@ const MessagesByAuthorV2 = defineTable<MessageByAuthorRow, 'author_id' | 'messag
 const FETCH_CHANNEL_STATE = ChannelState.select({
 	where: ChannelState.where.eq('channel_id'),
 	limit: 1,
-});
-const FETCH_CHANNEL_BUCKETS = ChannelMessageBuckets.select({
-	columns: ['bucket', 'updated_at'],
-	where: ChannelMessageBuckets.where.eq('channel_id'),
-	orderBy: {col: 'bucket', direction: 'DESC'},
-});
-const FETCH_CHANNEL_EMPTY_BUCKETS = ChannelEmptyBuckets.select({
-	columns: ['bucket', 'updated_at'],
-	where: ChannelEmptyBuckets.where.eq('channel_id'),
-	orderBy: {col: 'bucket', direction: 'DESC'},
 });
 
 function ensureHarnessAccess(ctx: Context<HonoEnv>) {
@@ -282,11 +246,6 @@ export function TestHarnessController(app: HonoApp) {
 		}
 		emailService.clearSentEmails();
 		return ctx.body(null, 204);
-	});
-	app.post('/test/reset', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		await resetTestHarnessState();
-		return ctx.json({reset: true}, 200);
 	});
 	app.patch('/test/users/:userId/flags', async (ctx) => {
 		ensureHarnessAccess(ctx);
@@ -659,23 +618,6 @@ export function TestHarnessController(app: HonoApp) {
 		await cacheService.publish(`ip-auth:${ticket}`, payload);
 		await cacheService.set(`ip-auth-result:${ticket}`, payload, 60);
 		return ctx.json({success: true});
-	});
-	app.get('/test/auth/ip-authorization/poll', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const cacheService = ctx.get('cacheService');
-		const ticket = ctx.req.query('ticket');
-		if (!ticket) {
-			return ctx.json({error: 'ticket query parameter is required'}, 400);
-		}
-		const result = await cacheService.get<string>(`ip-auth-result:${ticket}`);
-		if (!result) {
-			return ctx.json({found: false}, 200);
-		}
-		const parsed = JSON.parse(result) as {
-			token: string;
-			user_id: string;
-		};
-		return ctx.json({found: true, ...parsed}, 200);
 	});
 	app.post('/test/auth/ip-authorization/expire', async (ctx) => {
 		ensureHarnessAccess(ctx);
@@ -1134,312 +1076,6 @@ export function TestHarnessController(app: HonoApp) {
 			member_count: memberCount,
 		});
 	});
-	app.get('/test/verify-asset/user/:userId/avatar', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const userRepository = new UserRepository();
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		if (!user.avatarHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.userAvatarMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = user.avatarHash.startsWith('a_') ? user.avatarHash.slice(2) : user.avatarHash;
-		const s3Key = `avatars/${userId}/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: user.avatarHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: user.avatarHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/user/:userId/banner', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const userRepository = new UserRepository();
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		if (!user.bannerHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.userBannerMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = user.bannerHash.startsWith('a_') ? user.bannerHash.slice(2) : user.bannerHash;
-		const s3Key = `banners/${userId}/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: user.bannerHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: user.bannerHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/guild/:guildId/icon', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			guildId?: string;
-		};
-		const guildIdParam = params.guildId;
-		if (!guildIdParam) {
-			throw new Error('Missing guildId parameter');
-		}
-		const guildId = createGuildID(BigInt(guildIdParam));
-		const guildRepository = new GuildRepository();
-		const guild = await guildRepository.findUnique(guildId);
-		if (!guild) {
-			throw new UnknownGuildError();
-		}
-		if (!guild.iconHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.guildIconMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = guild.iconHash.startsWith('a_') ? guild.iconHash.slice(2) : guild.iconHash;
-		const s3Key = `icons/${guildId}/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: guild.iconHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: guild.iconHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/guild/:guildId/banner', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			guildId?: string;
-		};
-		const guildIdParam = params.guildId;
-		if (!guildIdParam) {
-			throw new Error('Missing guildId parameter');
-		}
-		const guildId = createGuildID(BigInt(guildIdParam));
-		const guildRepository = new GuildRepository();
-		const guild = await guildRepository.findUnique(guildId);
-		if (!guild) {
-			throw new UnknownGuildError();
-		}
-		if (!guild.bannerHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.guildBannerMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = guild.bannerHash.startsWith('a_') ? guild.bannerHash.slice(2) : guild.bannerHash;
-		const s3Key = `banners/${guildId}/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: guild.bannerHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: guild.bannerHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/guild/:guildId/splash', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			guildId?: string;
-		};
-		const guildIdParam = params.guildId;
-		if (!guildIdParam) {
-			throw new Error('Missing guildId parameter');
-		}
-		const guildId = createGuildID(BigInt(guildIdParam));
-		const guildRepository = new GuildRepository();
-		const guild = await guildRepository.findUnique(guildId);
-		if (!guild) {
-			throw new UnknownGuildError();
-		}
-		if (!guild.splashHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.guildSplashMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = guild.splashHash.startsWith('a_') ? guild.splashHash.slice(2) : guild.splashHash;
-		const s3Key = `splashes/${guildId}/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: guild.splashHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: guild.splashHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/guild/:guildId/member/:userId/avatar', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			guildId?: string;
-			userId?: string;
-		};
-		const guildIdParam = params.guildId;
-		const userIdParam = params.userId;
-		if (!guildIdParam) {
-			throw new Error('Missing guildId parameter');
-		}
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const guildId = createGuildID(BigInt(guildIdParam));
-		const userId = createUserID(BigInt(userIdParam));
-		const guildRepository = new GuildRepository();
-		const member = await guildRepository.getMember(guildId, userId);
-		if (!member) {
-			throw new UnknownGuildMemberError();
-		}
-		if (!member.avatarHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.memberAvatarMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = member.avatarHash.startsWith('a_') ? member.avatarHash.slice(2) : member.avatarHash;
-		const s3Key = `guilds/${guildId}/users/${userId}/avatars/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: member.avatarHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: member.avatarHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
-	app.get('/test/verify-asset/guild/:guildId/member/:userId/banner', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			guildId?: string;
-			userId?: string;
-		};
-		const guildIdParam = params.guildId;
-		const userIdParam = params.userId;
-		if (!guildIdParam) {
-			throw new Error('Missing guildId parameter');
-		}
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const guildId = createGuildID(BigInt(guildIdParam));
-		const userId = createUserID(BigInt(userIdParam));
-		const guildRepository = new GuildRepository();
-		const member = await guildRepository.getMember(guildId, userId);
-		if (!member) {
-			throw new UnknownGuildMemberError();
-		}
-		if (!member.bannerHash) {
-			return ctx.json({
-				hash: null,
-				existsInS3: null,
-				message: TEST_ASSET_MESSAGES.memberBannerMissing,
-			});
-		}
-		const storageService = new StorageService();
-		const hashWithoutPrefix = member.bannerHash.startsWith('a_') ? member.bannerHash.slice(2) : member.bannerHash;
-		const s3Key = `guilds/${guildId}/users/${userId}/banners/${hashWithoutPrefix}`;
-		try {
-			const metadata = await storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return ctx.json({
-				hash: member.bannerHash,
-				s3Key,
-				existsInS3: metadata !== null,
-				metadata,
-			});
-		} catch (error) {
-			return ctx.json({
-				hash: member.bannerHash,
-				s3Key,
-				existsInS3: false,
-				error: getAssetVerificationErrorMessage(error),
-			});
-		}
-	});
 	app.get('/test/users/:userId/data-exists', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		const params = ctx.req.param() as {
@@ -1512,34 +1148,6 @@ export function TestHarnessController(app: HonoApp) {
 		};
 		Logger.info({userId: userId.toString(), response}, '[test/users/:userId/data-exists] Returning response');
 		return ctx.json(response, 200);
-	});
-	app.get('/test/users/:userId/relationships', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const userRepository = new UserRepository();
-		const relationships = await userRepository.listRelationships(userId);
-		return ctx.json({relationships}, 200);
-	});
-	app.get('/test/users/:userId/sessions', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const authSessionRepository = new AuthSessionRepository();
-		const sessions = await authSessionRepository.listAuthSessions(userId);
-		return ctx.json({sessions, count: sessions.length}, 200);
 	});
 	app.get('/test/users/:userId/messages/count', async (ctx) => {
 		ensureHarnessAccess(ctx);
@@ -1720,115 +1328,6 @@ export function TestHarnessController(app: HonoApp) {
 			await snowflakeService.shutdown();
 		}
 	});
-	app.post('/test/attachment-decay/rows', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const payload = (await ctx.req.json()) as {
-			rows?: Array<{
-				attachment_id?: string;
-				channel_id?: string;
-				message_id?: string;
-				expires_at?: string;
-				uploaded_at?: string;
-				last_accessed_at?: string;
-				filename?: string;
-				size_bytes?: string | number;
-				cost?: number;
-				lifetime_days?: number;
-				status?: string | null;
-			}>;
-		};
-		if (!payload.rows || payload.rows.length === 0) {
-			throw InputValidationError.fromCode('rows', ValidationErrorCodes.ROWS_IS_REQUIRED);
-		}
-		const repo = new AttachmentDecayRepository();
-		let inserted = 0;
-		for (const row of payload.rows) {
-			if (!row.attachment_id || !row.channel_id || !row.message_id || !row.expires_at) {
-				throw InputValidationError.fromCode('attachment_id', ValidationErrorCodes.ATTACHMENT_FIELDS_REQUIRED);
-			}
-			let attachmentIdNum: bigint;
-			let channelIdNum: bigint;
-			let messageIdNum: bigint;
-			try {
-				attachmentIdNum = BigInt(row.attachment_id);
-				channelIdNum = BigInt(row.channel_id);
-				messageIdNum = BigInt(row.message_id);
-			} catch {
-				throw InputValidationError.fromCode(
-					'attachment_id',
-					ValidationErrorCodes.ATTACHMENT_IDS_MUST_BE_VALID_INTEGERS,
-				);
-			}
-			const expiresAt = new Date(row.expires_at);
-			if (Number.isNaN(expiresAt.getTime())) {
-				throw new InvalidTimestampError('expires_at must be a valid timestamp');
-			}
-			const uploadedAt = row.uploaded_at ? new Date(row.uploaded_at) : expiresAt;
-			const lastAccessedAt = row.last_accessed_at ? new Date(row.last_accessed_at) : uploadedAt;
-			if (Number.isNaN(uploadedAt.getTime()) || Number.isNaN(lastAccessedAt.getTime())) {
-				throw new InvalidTimestampError('uploaded_at and last_accessed_at must be valid timestamps');
-			}
-			const sizeInput = row.size_bytes ?? '1024';
-			let sizeBytes: bigint;
-			try {
-				sizeBytes = typeof sizeInput === 'number' ? BigInt(sizeInput) : BigInt(sizeInput);
-			} catch {
-				throw InputValidationError.fromCode('size_bytes', ValidationErrorCodes.SIZE_BYTES_MUST_BE_VALID_INTEGER);
-			}
-			await repo.upsert({
-				attachment_id: createAttachmentID(attachmentIdNum),
-				channel_id: createChannelID(channelIdNum),
-				message_id: createMessageID(messageIdNum),
-				filename: row.filename ?? 'attachment-decay-test.bin',
-				size_bytes: sizeBytes,
-				uploaded_at: uploadedAt,
-				expires_at: expiresAt,
-				last_accessed_at: lastAccessedAt,
-				cost: row.cost ?? 1,
-				lifetime_days: row.lifetime_days ?? 1,
-				status: row.status ?? null,
-				expiry_bucket: getExpiryBucket(expiresAt),
-			});
-			inserted++;
-		}
-		return ctx.json({inserted}, 200);
-	});
-	app.post('/test/attachment-decay/clear', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const repo = new AttachmentDecayRepository();
-		const deleted = await repo.clearAll(30);
-		return ctx.json({deleted}, 200);
-	});
-	app.post('/test/attachment-decay/query', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const payload = (await ctx.req.json()) as {
-			bucket?: number | string;
-			current_time?: string;
-			limit?: number;
-		};
-		const bucketValue = payload.bucket ? Number(payload.bucket) : undefined;
-		if (!bucketValue) {
-			throw InputValidationError.fromCode('bucket', ValidationErrorCodes.BUCKET_IS_REQUIRED);
-		}
-		const currentTime = payload.current_time ? new Date(payload.current_time) : new Date();
-		if (Number.isNaN(currentTime.getTime())) {
-			throw new InvalidTimestampError('current_time must be a valid timestamp');
-		}
-		const repo = new AttachmentDecayRepository();
-		const rows = await repo.fetchExpiredByBucket(bucketValue, currentTime, payload.limit ?? 200);
-		return ctx.json(
-			{
-				rows: rows.map((row) => ({
-					attachment_id: row.attachment_id.toString(),
-					channel_id: row.channel_id.toString(),
-					message_id: row.message_id.toString(),
-					expires_at: row.expires_at.toISOString(),
-					expiry_bucket: row.expiry_bucket,
-				})),
-			},
-			200,
-		);
-	});
 	app.get('/test/attachment-decay/:attachment_id', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		const params = ctx.req.param() as {
@@ -1862,48 +1361,6 @@ export function TestHarnessController(app: HonoApp) {
 			},
 			200,
 		);
-	});
-	app.get('/test/messages/:channel_id/:message_id/with-reference', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			channel_id?: string;
-			message_id?: string;
-		};
-		const channelIdParam = params.channel_id;
-		const messageIdParam = params.message_id;
-		if (!channelIdParam) {
-			throw new Error('Missing channel_id parameter');
-		}
-		if (!messageIdParam) {
-			throw new Error('Missing message_id parameter');
-		}
-		const channelId = createChannelID(BigInt(channelIdParam));
-		const messageId = createMessageID(BigInt(messageIdParam));
-		const channelRepository = new ChannelRepository();
-		const message = await channelRepository.messages.getMessage(channelId, messageId);
-		if (!message) {
-			throw new UnknownMessageError();
-		}
-		const channel = await channelRepository.findUnique(channelId);
-		const messageResponse = await createMessageResponseDataService().buildMessageForChannel({
-			channel: channel ?? {guildId: null},
-			message,
-		});
-		return ctx.json(messageResponse, 200);
-	});
-	app.post('/test/worker/expire-attachments', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		Logger.info({}, '[test/worker/expire-attachments] Request received');
-		const snowflakeService = getSnowflakeService();
-		try {
-			const workerDeps = await initializeWorkerDepsWithHarnessEmail(ctx, snowflakeService);
-			setWorkerDependencies(workerDeps);
-			await processExpiredAttachments();
-			Logger.info({}, '[test/worker/expire-attachments] Completed successfully');
-			return ctx.json({success: true}, 200);
-		} finally {
-			await snowflakeService.shutdown();
-		}
 	});
 	app.post('/test/users/:userId/set-last-active-at', async (ctx) => {
 		ensureHarnessAccess(ctx);
@@ -2070,77 +1527,6 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UpdateFailedError(error instanceof Error ? error.message : String(error));
 		}
 	});
-	app.post('/test/users/:userId/harvest/:harvestId/set-expiration', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-			harvestId?: string;
-		};
-		const userIdParam = params.userId;
-		const harvestIdParam = params.harvestId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		if (!harvestIdParam) {
-			throw new Error('Missing harvestId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const harvestId = BigInt(harvestIdParam);
-		const body = await ctx.req.json();
-		const {expires_at} = body as {
-			expires_at?: string;
-		};
-		if (!expires_at) {
-			throw new InvalidTimestampError('expires_at is required');
-		}
-		let date: Date;
-		try {
-			date = new Date(expires_at);
-			if (Number.isNaN(date.getTime())) {
-				throw new InvalidTimestampError();
-			}
-		} catch {
-			throw new InvalidTimestampError();
-		}
-		const harvestRepository = new UserHarvestRepository();
-		await harvestRepository.setDownloadUrlExpiry(userId, harvestId, date);
-		return ctx.json({success: true}, 200);
-	});
-	app.get('/test/users/:userId/presence/has-active', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		try {
-			const gatewayService = ctx.get('gatewayService');
-			const hasActive = await gatewayService.hasActivePresence(userId);
-			return ctx.json(
-				{
-					user_id: userId.toString(),
-					has_active: hasActive,
-				},
-				200,
-			);
-		} catch (error) {
-			Logger.error(
-				{userId: userId.toString(), error: error instanceof Error ? error.message : String(error)},
-				'[test/users/:userId/presence/has-active] Error checking presence',
-			);
-			return ctx.json(
-				{
-					user_id: userId.toString(),
-					has_active: false,
-					error: error instanceof Error ? error.message : String(error),
-				},
-				200,
-			);
-		}
-	});
 	app.post('/test/messages/seed', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		interface SeedMessageInput {
@@ -2303,122 +1689,6 @@ export function TestHarnessController(app: HonoApp) {
 			200,
 		);
 	});
-	app.get('/test/channels/:channelId/state', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			channelId?: string;
-		};
-		const channelIdParam = params.channelId;
-		if (!channelIdParam) {
-			throw new Error('Missing channelId parameter');
-		}
-		const channelId = createChannelID(BigInt(channelIdParam));
-		const state = await fetchOne<ChannelStateRow>(FETCH_CHANNEL_STATE.bind({channel_id: channelId}));
-		if (!state) {
-			return ctx.json(
-				{
-					channel_id: channelId.toString(),
-					exists: false,
-				},
-				200,
-			);
-		}
-		return ctx.json(
-			{
-				channel_id: channelId.toString(),
-				exists: true,
-				created_bucket: state.created_bucket,
-				has_messages: state.has_messages,
-				last_message_id: state.last_message_id?.toString() ?? null,
-				last_message_bucket: state.last_message_bucket,
-				updated_at: state.updated_at.toISOString(),
-			},
-			200,
-		);
-	});
-	app.get('/test/channels/:channelId/buckets', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			channelId?: string;
-		};
-		const channelIdParam = params.channelId;
-		if (!channelIdParam) {
-			throw new Error('Missing channelId parameter');
-		}
-		const channelId = createChannelID(BigInt(channelIdParam));
-		const rows = await fetchMany<Pick<ChannelMessageBucketRow, 'bucket' | 'updated_at'>>(
-			FETCH_CHANNEL_BUCKETS.bind({channel_id: channelId}),
-		);
-		return ctx.json(
-			{
-				channel_id: channelId.toString(),
-				buckets: rows.map((r) => ({
-					bucket: r.bucket,
-					updated_at: r.updated_at.toISOString(),
-				})),
-				count: rows.length,
-			},
-			200,
-		);
-	});
-	app.get('/test/channels/:channelId/empty-buckets', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			channelId?: string;
-		};
-		const channelIdParam = params.channelId;
-		if (!channelIdParam) {
-			throw new Error('Missing channelId parameter');
-		}
-		const channelId = createChannelID(BigInt(channelIdParam));
-		const rows = await fetchMany<Pick<ChannelEmptyBucketRow, 'bucket' | 'updated_at'>>(
-			FETCH_CHANNEL_EMPTY_BUCKETS.bind({channel_id: channelId}),
-		);
-		return ctx.json(
-			{
-				channel_id: channelId.toString(),
-				empty_buckets: rows.map((r) => ({
-					bucket: r.bucket,
-					updated_at: r.updated_at.toISOString(),
-				})),
-				count: rows.length,
-			},
-			200,
-		);
-	});
-	app.delete('/test/channels/:channelId/messages', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			channelId?: string;
-		};
-		const channelIdParam = params.channelId;
-		if (!channelIdParam) {
-			throw new Error('Missing channelId parameter');
-		}
-		const channelId = createChannelID(BigInt(channelIdParam));
-		const batch = new BatchBuilder();
-		batch.addPrepared(ChannelMessageBuckets.deletePartition({channel_id: channelId}));
-		batch.addPrepared(ChannelEmptyBuckets.deletePartition({channel_id: channelId}));
-		const createdBucket = BucketUtils.makeBucket(channelId);
-		batch.addPrepared(
-			ChannelState.upsertAll({
-				channel_id: channelId,
-				created_bucket: createdBucket,
-				has_messages: false,
-				last_message_id: null,
-				last_message_bucket: null,
-				updated_at: new Date(),
-			}),
-		);
-		await batch.execute();
-		return ctx.json(
-			{
-				channel_id: channelId.toString(),
-				cleared: true,
-			},
-			200,
-		);
-	});
 	app.post('/test/channels/:channelId/mark-indexed', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		const params = ctx.req.param() as {
@@ -2566,142 +1836,6 @@ export function TestHarnessController(app: HonoApp) {
 			},
 			200,
 		);
-	});
-	app.get(
-		'/test/oauth2/require-identify',
-		(ctx, next) => {
-			ensureHarnessAccess(ctx);
-			return next();
-		},
-		requireOAuth2Scope('identify'),
-		(ctx) => {
-			return ctx.json({ok: true}, 200);
-		},
-	);
-	app.post('/test/visionary-slots/expand', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const body = await ctx.req.json();
-		const {count} = body as {
-			count?: number;
-		};
-		if (typeof count !== 'number' || count <= 0) {
-			return ctx.json({error: 'count must be a positive number'}, 400);
-		}
-		const userRepository = new UserRepository();
-		await userRepository.expandVisionarySlots(count);
-		return ctx.body(null, 204);
-	});
-	app.post('/test/visionary-slots/reserve', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const body = await ctx.req.json();
-		const {slot_index: slotIndex, user_id: userIdInput} = body as {
-			slot_index?: number;
-			user_id?: string;
-		};
-		if (typeof slotIndex !== 'number') {
-			return ctx.json({error: 'slot_index is required and must be a number'}, 400);
-		}
-		if (!userIdInput) {
-			return ctx.json({error: 'user_id is required'}, 400);
-		}
-		const userId = createUserID(BigInt(userIdInput));
-		const userRepository = new UserRepository();
-		await userRepository.reserveVisionarySlot(slotIndex, userId);
-		return ctx.body(null, 204);
-	});
-	app.post('/test/gift-codes/create', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const body = await ctx.req.json();
-		const {
-			code,
-			duration_months: durationMonths,
-			duration_type: durationTypeInput,
-			duration_quantity: durationQuantityInput,
-			created_by_user_id: createdByUserIdInput,
-			visionary_sequence_number: visionarySequenceNumber,
-		} = body as {
-			code?: string;
-			duration_months?: number;
-			duration_type?: string;
-			duration_quantity?: number;
-			created_by_user_id?: string;
-			visionary_sequence_number?: number | null;
-		};
-		if (!code) {
-			return ctx.json({error: 'code is required'}, 400);
-		}
-		if (!createdByUserIdInput) {
-			return ctx.json({error: 'created_by_user_id is required'}, 400);
-		}
-		let durationType: GiftCodeDurationType;
-		let durationQuantity: number;
-		try {
-			const parsedDuration = parseGiftDurationInput({
-				duration_months: durationMonths,
-				duration_type: durationTypeInput,
-				duration_quantity: durationQuantityInput,
-			});
-			durationType = parsedDuration.durationType;
-			durationQuantity = parsedDuration.durationQuantity;
-		} catch (error) {
-			return ctx.json({error: error instanceof Error ? error.message : 'Invalid duration payload'}, 400);
-		}
-		const createdByUserId = createUserID(BigInt(createdByUserIdInput));
-		const userRepository = new UserRepository();
-		await userRepository.createGiftCode({
-			code,
-			duration_months: null,
-			duration_type: durationType,
-			duration_quantity: durationQuantity,
-			created_at: new Date(),
-			created_by_user_id: createdByUserId,
-			redeemed_at: null,
-			redeemed_by_user_id: null,
-			stripe_payment_intent_id: null,
-			visionary_sequence_number: visionarySequenceNumber ?? null,
-			checkout_session_id: null,
-			version: 1,
-		});
-		return ctx.body(null, 204);
-	});
-	app.post('/test/voice/confirm-connection', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const body = await ctx.req.json();
-		const {
-			guild_id: guildIdInput,
-			channel_id: channelIdInput,
-			connection_id: connectionId,
-		} = body as {
-			guild_id?: string | null;
-			channel_id?: string;
-			connection_id?: string;
-		};
-		if (!channelIdInput) {
-			return ctx.json({error: 'channel_id is required'}, 400);
-		}
-		if (!connectionId) {
-			return ctx.json({error: 'connection_id is required'}, 400);
-		}
-		const gatewayService = ctx.get('gatewayService');
-		const channelId = createChannelID(BigInt(channelIdInput));
-		const guildId = guildIdInput ? createGuildID(BigInt(guildIdInput)) : undefined;
-		const pendingJoins = await gatewayService.getPendingJoinsForChannel({guildId, channelId});
-		const pendingJoin = pendingJoins.pendingJoins.find((join) => join.connectionId === connectionId);
-		const confirmParams: {
-			guildId?: GuildID;
-			channelId: ChannelID;
-			connectionId: string;
-			tokenNonce?: string;
-		} = {
-			guildId,
-			channelId,
-			connectionId,
-		};
-		if (pendingJoin) {
-			confirmParams.tokenNonce = pendingJoin.tokenNonce;
-		}
-		const result = await gatewayService.confirmVoiceConnection(confirmParams);
-		return ctx.json(result, result.success ? 200 : 409);
 	});
 	app.post('/test/users/:userId/set-contact-info', async (ctx) => {
 		ensureHarnessAccess(ctx);

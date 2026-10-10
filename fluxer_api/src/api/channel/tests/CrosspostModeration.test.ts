@@ -102,10 +102,6 @@ class CrosspostQueueWorker implements IWorkerService {
 		return false;
 	}
 
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
 	syncJobs(): Array<QueuedJob> {
 		return this.recorded.filter((job) => job.taskType === CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE);
 	}

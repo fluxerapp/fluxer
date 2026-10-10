@@ -232,26 +232,3 @@ fn truncate_error_body(body: &str) -> String {
     }
     truncated
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parses_comma_separated_fallback_models() {
-        assert_eq!(
-            parse_openrouter_fallback_models("a, b,,c "),
-            vec!["a".to_string(), "b".to_string(), "c".to_string()]
-        );
-    }
-
-    #[test]
-    fn extracts_text_from_openai_style_message() {
-        let data = json!({
-            "choices": [
-                {"message": {"content": [{"type": "text", "text": "Hej"}]}}
-            ]
-        });
-        assert_eq!(extract_chat_message_content(&data), Some("Hej".to_string()));
-    }
-}

@@ -6,7 +6,6 @@ import {maskThreadArtifacts} from '@app/api/channel/services/message/ThreadMessa
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
-import {ChannelHelpers} from '@app/api/guild/services/channel/ChannelHelpers';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {Channel} from '@app/api/models/Channel';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -107,20 +106,6 @@ describe('thread NSFW scope', () => {
 	});
 });
 
-describe('forum positioning', () => {
-	it('ranks forums with text channels above voice channels', () => {
-		const category = channel(1n, ChannelTypes.GUILD_CATEGORY, {position: 1});
-		const text = channel(2n, ChannelTypes.GUILD_TEXT, {parent_id: category.id, position: 2});
-		const forum = channel(3n, ChannelTypes.GUILD_FORUM, {parent_id: category.id, position: 3});
-		const voice = channel(4n, ChannelTypes.GUILD_VOICE, {parent_id: category.id, position: 4});
-		const existing = [category, text, forum, voice];
-		expect(ChannelHelpers.getNextGlobalChannelPosition(ChannelTypes.GUILD_TEXT, category.id, existing)).toBe(4);
-		const parents = new Map(existing.map((c) => [c.id, c.parentId]));
-		expect(() => ChannelHelpers.validateChannelVoicePlacement([category, text, voice, forum], parents)).toThrow();
-		expect(() => ChannelHelpers.validateChannelVoicePlacement([category, forum, text, voice], parents)).not.toThrow();
-	});
-});
-
 describe('thread artifact masking', () => {
 	it('drops thread created messages and clears thread bits including nested ones', () => {
 		const masked = maskThreadArtifacts([
@@ -136,10 +121,5 @@ describe('thread artifact masking', () => {
 		expect(masked[0]?.flags).toBe(0);
 		expect(masked[0]?.referenced_message?.flags).toBe(0);
 		expect(masked[1]?.referenced_message).toBeNull();
-	});
-
-	it('returns the same array when nothing carries a thread artifact', () => {
-		const responses = [message({id: '1'})];
-		expect(maskThreadArtifacts(responses)).toBe(responses);
 	});
 });

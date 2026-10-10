@@ -76,10 +76,6 @@ class EntranceSoundLibrary {
 		return Object.values(this.sounds).sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 	}
 
-	get count(): number {
-		return Object.keys(this.sounds).length;
-	}
-
 	getById(soundId: string | null | undefined): EntranceSoundEntry | null {
 		if (!soundId) return null;
 		return this.sounds[soundId] ?? null;

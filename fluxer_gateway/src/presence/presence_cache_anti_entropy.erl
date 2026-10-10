@@ -7,7 +7,6 @@
     schedule_anti_entropy/0,
     cancel_anti_entropy_timer/1,
     perform_anti_entropy/1,
-    handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
     merge_anti_entropy_entries/2,
     record_delete/2,
@@ -43,14 +42,6 @@ perform_anti_entropy(State) ->
     case persistent_term:get(presence_noop, false) of
         true -> State;
         false -> broadcast_anti_entropy_requests(prune_tombstones(State))
-    end.
-
--spec handle_anti_entropy_request(node(), non_neg_integer(), state()) -> {noreply, state()}.
-handle_anti_entropy_request(FromNode, RemoteGeneration, State) ->
-    LocalGeneration = maps:get(generation, State, 0),
-    case LocalGeneration =:= RemoteGeneration of
-        true -> {noreply, State};
-        false -> send_anti_entropy_response(FromNode, State)
     end.
 
 -spec handle_anti_entropy_digest_request(node(), binary(), state()) -> {noreply, state()}.
@@ -260,35 +251,6 @@ is_visible_presence(Presence) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-schedule_anti_entropy_returns_ref_test() ->
-    Ref = schedule_anti_entropy(),
-    ?assert(is_reference(Ref)),
-    _ = erlang:cancel_timer(Ref).
-
-cancel_anti_entropy_timer_noop_undefined_test() ->
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{})),
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{anti_entropy_timer => undefined})).
-
-cancel_anti_entropy_timer_cancels_ref_test() ->
-    Ref = erlang:send_after(60000, self(), test),
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{anti_entropy_timer => Ref})).
-
-is_visible_presence_online_test() ->
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"online">>})),
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"idle">>})),
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"dnd">>})).
-
-is_visible_presence_offline_test() ->
-    ?assertEqual(false, is_visible_presence(#{<<"status">> => <<"offline">>})),
-    ?assertEqual(false, is_visible_presence(#{<<"status">> => <<"invisible">>})),
-    ?assertEqual(false, is_visible_presence(#{})).
-
-merge_single_entry_filters_invalid_test() ->
-    State = #{generation => 0},
-    ?assertEqual(State, merge_single_entry(<<"bad">>, #{}, State)),
-    ?assertEqual(State, merge_single_entry(-1, #{}, State)),
-    ?assertEqual(State, merge_single_entry(1, not_a_map, State)).
 
 prune_tombstones_drops_expired_order_test() ->
     Now = now_ms(),

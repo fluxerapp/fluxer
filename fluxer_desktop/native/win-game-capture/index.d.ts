@@ -135,5 +135,4 @@ export declare function getAvailability(): AvailabilityInfo;
 export declare function listSources(): Promise<Array<ScreenCaptureSourceDescriptor>>;
 export declare function elevateGpuSchedulingPriority(processId?: number, priorityClass?: 'high' | 'realtime'): boolean;
 export declare function restoreGpuSchedulingPriority(processId?: number): boolean;
-export declare function __setBindingForTests(binding: unknown): void;
 export declare const loadError: Error | null;

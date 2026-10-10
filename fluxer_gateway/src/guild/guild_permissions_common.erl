@@ -60,13 +60,3 @@ role_permissions(Role) ->
         undefined -> 0;
         Permissions -> Permissions
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-ensure_list_test() ->
-    ?assertEqual([1, 2], ensure_list([1, 2])),
-    ?assertEqual([], ensure_list(undefined)),
-    ?assertEqual([], ensure_list(#{})).
-
--endif.

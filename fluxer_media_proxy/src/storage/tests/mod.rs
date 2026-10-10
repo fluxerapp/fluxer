@@ -249,15 +249,6 @@ async fn serve_fake_s3(state: FakeS3, request: axum::extract::Request) -> Respon
     if let Some(last_modified) = object.last_modified.clone() {
         headers.push((header::LAST_MODIFIED, last_modified));
     }
-    if let Some(requested) = parts.headers.get(header::IF_MATCH)
-        && object.etag.as_deref() != requested.to_str().ok()
-    {
-        return fake_s3_response(
-            StatusCode::PRECONDITION_FAILED,
-            Vec::new(),
-            b"<Error>PreconditionFailed</Error>",
-        );
-    }
     if parts.method == Method::HEAD {
         let advertised = vec![0u8; usize::try_from(total_length).expect("fake length fits usize")];
         return fake_s3_response(StatusCode::OK, headers, &advertised);

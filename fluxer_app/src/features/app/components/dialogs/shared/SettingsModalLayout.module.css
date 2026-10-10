@@ -92,76 +92,6 @@
 	}
 }
 
-.mobileWrapper {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	background: var(--settings-panel-background);
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileHeaderContainer {
-	position: relative;
-	flex-shrink: 0;
-	z-index: 10;
-	background: var(--background-primary);
-}
-
-.mobileHeaderContent {
-	width: 100%;
-}
-
-.mobileContentContainer {
-	position: relative;
-	flex: 1 1 auto;
-	overflow: hidden;
-}
-
-.mobileContentPane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	contain: layout style paint;
-}
-
-.mobileSlideContainer {
-	display: flex;
-	height: 100%;
-	width: 200%;
-	-webkit-backface-visibility: hidden;
-	backface-visibility: hidden;
-}
-
-.mobilePane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	-webkit-overflow-scrolling: touch;
-	overscroll-behavior-y: contain;
-	contain: layout style paint;
-}
-
-.mobilePaneActive {
-	z-index: 2;
-}
-
-.mobilePaneInactive {
-	z-index: 1;
-	pointer-events: none;
-}
-
 .desktopSidebar {
 	flex: 0 0 clamp(15.75rem, 24svw, 20rem);
 	display: flex;
@@ -561,13 +491,6 @@
 	.closeButton:hover {
 	background: var(--settings-hover-background);
 	color: var(--text-primary);
-}
-
-.preloadContent {
-	position: absolute;
-	opacity: 0;
-	pointer-events: none;
-	visibility: hidden;
 }
 
 .desktopScrollSpacerTop {

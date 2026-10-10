@@ -28,13 +28,6 @@ class LayerManager {
 		document.addEventListener('keydown', this.handleGlobalEscape, {capture: true});
 	}
 
-	destroy() {
-		if (!this.isInitialized) return;
-		this.isInitialized = false;
-		document.removeEventListener('keydown', this.handleGlobalEscape, {capture: true});
-		this.layers = [];
-	}
-
 	private handleGlobalEscape = (event: KeyboardEvent) => {
 		if (event.key !== 'Escape') return;
 		const topLayer = this.getTopLayer();

@@ -147,14 +147,6 @@ export function createSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}
 	return new SnowflakeGenerator(options);
 }
 
-export function setDefaultSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}): void {
-	defaultGenerator = createSnowflakeGenerator(options);
-}
-
-export function resetDefaultSnowflakeGenerator(): void {
-	defaultGenerator = null;
-}
-
 export function generateSnowflake(workerIdOrOptions?: number | SnowflakeGeneratorOptions): bigint {
 	if (workerIdOrOptions !== undefined) {
 		return new SnowflakeGenerator(workerIdOrOptions).generate();

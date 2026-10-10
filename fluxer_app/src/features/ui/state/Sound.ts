@@ -422,10 +422,6 @@ class Sound {
 		}
 	}
 
-	setVolume(volume: number): void {
-		this.volume = Math.max(0, Math.min(1, volume));
-	}
-
 	getMasterVolume(): number {
 		return this.settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
 	}

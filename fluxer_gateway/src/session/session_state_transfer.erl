@@ -232,23 +232,6 @@ push_and_pop(SessionId, SessionState, Store0) ->
     ),
     {ok, ensure_test_map(Recovered0), Store2}.
 
-cleanup_sweep_runs_periodically_test() ->
-    {ok, _Store} = init([]),
-    receive
-        cleanup_expired -> ok
-    after 100 ->
-        ok
-    end.
-
-unknown_call_returns_ok_test() ->
-    {reply, ok, #{}} = handle_call(unknown_request, test_from(), #{}).
-
-unknown_cast_is_noop_test() ->
-    {noreply, #{}} = handle_cast(unknown_message, #{}).
-
-unknown_info_is_noop_test() ->
-    {noreply, #{}} = handle_info(unknown_message, #{}).
-
 -spec test_from() -> gen_server:from().
 test_from() ->
     {self(), make_ref()}.

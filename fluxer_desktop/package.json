@@ -48,7 +48,6 @@
 		"@fluxer/linux-input-hook": "file:./native/linux-input-hook",
 		"@fluxer/linux-notifications": "file:./native/linux-notifications",
 		"@fluxer/linux-portals": "file:./native/linux-portals",
-		"@fluxer/linux-screen-capture": "file:./native/linux-screen-capture",
 		"@fluxer/mac-app-audio": "file:./native/mac-app-audio",
 		"@fluxer/mac-clipboard": "file:./native/mac-clipboard",
 		"@fluxer/mac-screen-capture": "file:./native/mac-screen-capture",

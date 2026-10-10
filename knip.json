@@ -11,19 +11,15 @@
 		"fluxer_app/src/media/images/badges/partner.d.svg.ts",
 		"fluxer_app/src/media/images/badges/plutonium.d.svg.ts",
 		"fluxer_app/src/media/images/badges/staff.d.svg.ts",
-		"fluxer_app/src/media/images/i-like-food.d.svg.ts",
-		"tools/ci/templates/libfluxcore_wrapper.d.ts",
-		"tools/ci/templates/libfluxcore_wrapper.js"
+		"fluxer_app/src/media/images/i-like-food.d.svg.ts"
 	],
 	"ignoreIssues": {
 		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
-		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
 		"fluxer_app/src/features/notification/utils/EntranceSoundScopes.ts": ["exports"],
 		"fluxer_app/src/features/platform/state/PersistentStorage.ts": ["exports"],
 		"fluxer_app/src/features/voice/utils/CodecCapabilityDetector.ts": ["exports"],
 		"fluxer_app/src/index.tsx": ["unlisted"],
-		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
 		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
@@ -67,9 +63,7 @@
 				"src/main/**/*.test.{ts,mjs}",
 				"scripts/release-check.mjs",
 				"native/*/index.{js,d.ts}",
-				"native/*/loader-diagnostics.cjs",
-				"native/*/*.test.mjs",
-				"native/*/test/**/*.mjs"
+				"native/*/loader-diagnostics.cjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
 			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],

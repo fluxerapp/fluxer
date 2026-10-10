@@ -190,8 +190,6 @@ const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof AccessDeniedError ||
 	error instanceof NsfwContentRequiresAgeVerificationError;
 
-export const UserContentServiceTestHooks = {isUnreachableEntityError};
-
 export class UserContentService {
 	private readonly updatePropagator: BaseUserUpdatePropagator;
 	private readonly userRepository: UserContentRepository;

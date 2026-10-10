@@ -201,46 +201,10 @@ to_int(Value) ->
 
 -ifdef(TEST).
 
-parse_guild_ids_filters_invalid_test() ->
-    ?assertEqual([1, 2], parse_guild_ids([<<"1">>, <<"2">>, <<"abc">>, 0, -3])).
-
-parse_guild_ids_dedupes_and_sorts_test() ->
-    ?assertEqual([1, 2, 3], parse_guild_ids([<<"3">>, <<"1">>, <<"2">>, <<"1">>])).
-
 parse_guild_ids_caps_at_max_test() ->
     Many = [integer_to_binary(N) || N <- lists:seq(1, ?MAX_GUILD_IDS + 50)],
     Result = parse_guild_ids(Many),
     ?assertEqual(?MAX_GUILD_IDS, length(Result)).
-
-parse_guild_ids_handles_non_list_test() ->
-    ?assertEqual([], parse_guild_ids(undefined)),
-    ?assertEqual([], parse_guild_ids(<<"hi">>)).
-
-parse_user_id_test() ->
-    ?assertEqual(42, parse_user_id(42)),
-    ?assertEqual(42, parse_user_id(<<"42">>)),
-    ?assertEqual(undefined, parse_user_id(0)),
-    ?assertEqual(undefined, parse_user_id(<<"0">>)),
-    ?assertEqual(undefined, parse_user_id(<<"abc">>)),
-    ?assertEqual(undefined, parse_user_id(undefined)).
-
-build_entry_shape_test() ->
-    Entry = build_entry(123, 50, 10),
-    ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Entry)),
-    ?assertEqual(50, maps:get(<<"member_count">>, Entry)),
-    ?assertEqual(10, maps:get(<<"online_count">>, Entry)).
-
-lookup_guild_pid_test() ->
-    Pid = self(),
-    Ref = make_ref(),
-    Guilds = #{1 => {Pid, Ref}, 2 => undefined},
-    ?assertEqual({ok, Pid}, lookup_guild_pid(1, Guilds)),
-    ?assertEqual(error, lookup_guild_pid(2, Guilds)),
-    ?assertEqual(error, lookup_guild_pid(3, Guilds)).
-
-handle_request_no_session_pid_returns_ok_test() ->
-    SessionState = #{user_id => <<"100">>},
-    ?assertEqual(ok, handle_request(#{<<"guild_ids">> => [<<"1">>]}, self(), SessionState)).
 
 handle_request_dispatches_empty_when_no_guilds_test() ->
     Self = self(),

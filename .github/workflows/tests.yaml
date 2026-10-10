@@ -15,7 +15,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
   CARGO_PROFILE_DEV_DEBUG: none
   CARGO_PROFILE_TEST_DEBUG: none
   CARGO_INCREMENTAL: '0'
@@ -43,7 +42,7 @@ jobs:
           path: target/debug/fluxer-ci
           key: >-
             fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
+            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
 
       - name: Build ci helper
         if: steps.ci-helper.outputs.cache-hit != 'true'
@@ -56,7 +55,7 @@ jobs:
           path: target/debug/fluxer-ci
           key: >-
             fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
+            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -98,7 +97,7 @@ jobs:
           path: target/debug/fluxer-ci
           key: >-
             fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
+            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
 
       - name: Build ci helper
         if: steps.ci-helper.outputs.cache-hit != 'true'
@@ -127,7 +126,6 @@ jobs:
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
             'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
@@ -150,7 +148,6 @@ jobs:
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
             'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
@@ -309,7 +306,7 @@ jobs:
           path: target/debug/fluxer-ci
           key: >-
             fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
+            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
 
       - name: Build ci helper
         if: steps.ci-helper.outputs.cache-hit != 'true'
@@ -390,7 +387,7 @@ jobs:
           path: target/debug/fluxer-ci
           key: >-
             fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
+            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
 
       - name: Build ci helper
         if: steps.ci-helper.outputs.cache-hit != 'true'
@@ -419,7 +416,6 @@ jobs:
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
             'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
@@ -442,7 +438,6 @@ jobs:
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
             'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',

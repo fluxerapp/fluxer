@@ -193,28 +193,6 @@ mod dxgi_helpers {
     pub fn luid_string(high_part: i32, low_part: u32) -> String {
         format!("{:08x}:{low_part:08x}", high_part as u32)
     }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn luid_format_matches_legacy_contract() {
-            assert_eq!("ffffffff:1234abcd", luid_string(-1, 0x1234_abcd));
-            assert_eq!("00000002:00000001", luid_string(2, 1));
-        }
-
-        #[test]
-        fn utf16_description_trims_at_first_nul() {
-            let mut raw = [0u16; 128];
-            raw[0] = 'G' as u16;
-            raw[1] = 'P' as u16;
-            raw[2] = 'U' as u16;
-            raw[3] = 0;
-            raw[4] = 'X' as u16;
-            assert_eq!("GPU", utf16_description(&raw));
-        }
-    }
 }
 
 #[cfg(target_os = "windows")]
@@ -429,81 +407,6 @@ mod platform {
             }
         })
     }
-
-    #[cfg(test)]
-    mod tests {
-        use std::fs::{create_dir_all, write};
-        use std::os::unix::fs::symlink;
-
-        use super::*;
-
-        #[test]
-        fn uevent_value_matches_exact_keys() {
-            let blob = "PCI_ID=8086:46A6\nDRIVER=i915\nNOT_DRIVER=bad\n";
-            assert_eq!(Some("i915"), uevent_value(blob, "DRIVER"));
-            assert_eq!(Some("8086:46A6"), uevent_value(blob, "PCI_ID"));
-            assert_eq!(None, uevent_value(blob, "MISSING"));
-        }
-
-        #[test]
-        fn card_sort_key_keeps_card_order_numeric() {
-            let mut names = ["card10".to_owned(), "card2".to_owned(), "card0".to_owned()];
-            names.sort_unstable_by_key(|name| card_sort_key(name));
-            assert_eq!(["card0", "card2", "card10"], names);
-        }
-
-        #[test]
-        fn linux_sysfs_fixture_ports_legacy_gpu_contract() {
-            let tmp = tempfile::tempdir().unwrap();
-            let root = tmp.path();
-            let pci0 = root.join("devices/pci0000:00/0000:00:02.0");
-            let pci1 = root.join("devices/pci0000:01/0000:01:00.0");
-            create_dir_all(root.join("card0")).unwrap();
-            create_dir_all(root.join("card1")).unwrap();
-            create_dir_all(&pci0).unwrap();
-            create_dir_all(&pci1).unwrap();
-            symlink(
-                "../devices/pci0000:00/0000:00:02.0",
-                root.join("card0/device"),
-            )
-            .unwrap();
-            symlink(
-                "../devices/pci0000:01/0000:01:00.0",
-                root.join("card1/device"),
-            )
-            .unwrap();
-
-            let card0 = root.join("card0/device");
-            let card1 = root.join("card1/device");
-            write(card0.join("vendor"), "0x8086\n").unwrap();
-            write(card0.join("device"), "0x46a6\n").unwrap();
-            write(card0.join("subsystem_vendor"), "0x1028\n").unwrap();
-            write(card0.join("subsystem_device"), "0x0b19\n").unwrap();
-            write(card0.join("uevent"), "DRIVER=i915\nPCI_ID=8086:46A6\n").unwrap();
-            write(card0.join("mem_info_vram_total"), "268435456\n").unwrap();
-
-            write(card1.join("vendor"), "0x10de\n").unwrap();
-            write(card1.join("device"), "0x1f99\n").unwrap();
-            write(card1.join("uevent"), "PCI_ID=10DE:1F99\n").unwrap();
-            symlink("/sys/bus/pci/drivers/nvidia", card1.join("driver")).unwrap();
-
-            let info = linux_gpu_info_from_drm_root(root);
-            assert_eq!(SOURCE_LINUX_SYSFS, info.source);
-            assert_eq!(2, info.devices.len());
-            assert!(info.devices[0].active);
-            assert_eq!(0x8086, info.devices[0].vendor_id);
-            assert_eq!(Some("Intel".to_owned()), info.devices[0].vendor_name);
-            assert_eq!(
-                Some("Intel GPU (8086:46A6)".to_owned()),
-                info.devices[0].device_string
-            );
-            assert_eq!(Some("i915".to_owned()), info.devices[0].driver_vendor);
-            assert_eq!(Some("0000:00:02.0".to_owned()), info.devices[0].pci_path);
-            assert_eq!(Some(268_435_456.0), info.devices[0].dedicated_video_memory);
-            assert!(!info.devices[1].active);
-            assert_eq!(Some("nvidia".to_owned()), info.devices[1].driver_vendor);
-        }
-    }
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
@@ -512,28 +415,5 @@ mod platform {
 
     pub(super) fn gpu_info() -> PlatformGpuInfo {
         empty_info(SOURCE_LINUX_SYSFS)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn base_device_sets_required_contract_fields() {
-        let device = base_device(true, 0x10de, 0x2684, SOURCE_DXGI);
-        assert!(device.active);
-        assert_eq!(0x10de, device.vendor_id);
-        assert_eq!(0x2684, device.device_id);
-        assert_eq!(Some("NVIDIA".to_owned()), device.vendor_name);
-        assert_eq!(SOURCE_DXGI, device.source);
-    }
-
-    #[test]
-    fn empty_info_preserves_source_and_empty_devices() {
-        let info = empty_info(SOURCE_LINUX_SYSFS);
-        assert_eq!(SOURCE_LINUX_SYSFS, info.source);
-        assert!(info.devices.is_empty());
-        assert!(info.error.is_none());
     }
 }

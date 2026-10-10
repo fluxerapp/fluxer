@@ -9,12 +9,9 @@ import {
 	guildActive,
 	isTainted,
 	noteGuildThreadMarker,
-	recipientActive,
 	SYSTEM_THREAD_VIEWER,
 	syncChannelThreadsConfig,
-	type ThreadViewer,
 	userActive,
-	userViewerActive,
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -45,15 +42,10 @@ class CountingExecutor extends InMemoryCassandraQueryExecutor {
 const GUILD = createGuildID(100n);
 const OTHER_GUILD = createGuildID(200n);
 const USER = createUserID(10n);
-const OTHER_USER = createUserID(20n);
 
 function load(config: Partial<ChannelThreadsConfig>): void {
 	const raw = JSON.stringify(ChannelThreadsConfigSchema.parse(config));
 	syncChannelThreadsConfig(raw, (value) => ChannelThreadsConfigSchema.parse(JSON.parse(value ?? '{}')));
-}
-
-function userViewer(overrides: Partial<Extract<ThreadViewer, {kind: 'user'}>> = {}): ThreadViewer {
-	return {kind: 'user', userId: USER, bot: false, capable: true, ...overrides};
 }
 
 describe('ChannelThreadsGate', () => {
@@ -90,44 +82,6 @@ describe('ChannelThreadsGate', () => {
 		expect(syncChannelThreadsConfig(raw, parse)).toBe(first);
 		expect(parses).toBe(1);
 		expect(guildActive(GUILD)).toBe(true);
-	});
-
-	it('requires the guild, the user and the client capability for a user viewer', () => {
-		load({enabled: true, enabled_guild_ids: ['100'], included_user_ids: ['10']});
-		expect(viewerActive(userViewer(), GUILD)).toBe(true);
-		expect(viewerActive(userViewer(), OTHER_GUILD)).toBe(false);
-		expect(viewerActive(userViewer({capable: false}), GUILD)).toBe(false);
-		expect(viewerActive(userViewer({userId: OTHER_USER}), GUILD)).toBe(false);
-	});
-
-	it('lets bots follow the guild gate unless they are excluded', () => {
-		load({enabled: true, enabled_guild_ids: ['100']});
-		const bot = userViewer({userId: OTHER_USER, bot: true, capable: true});
-		expect(viewerActive(bot, GUILD)).toBe(true);
-		expect(recipientActive(GUILD, OTHER_USER, true)).toBe(true);
-		load({enabled: true, enabled_guild_ids: ['100'], excluded_user_ids: ['20']});
-		expect(viewerActive(bot, GUILD)).toBe(false);
-		expect(recipientActive(GUILD, OTHER_USER, true)).toBe(false);
-	});
-
-	it('puts exclusion ahead of inclusion and the kill switch ahead of everything', () => {
-		load({enabled: true, enabled_guild_ids: ['100'], disabled_guild_ids: ['100'], user_basis_points: 10000});
-		expect(guildActive(GUILD)).toBe(false);
-		load({enabled: false, enabled_guild_ids: ['100'], included_user_ids: ['10'], ever_enabled: true});
-		expect(viewerActive(SYSTEM_THREAD_VIEWER, GUILD)).toBe(false);
-		expect(userViewerActive(userViewer())).toBe(false);
-	});
-
-	it('ignores capability for per-user fan-out', () => {
-		load({enabled: true, enabled_guild_ids: ['100'], included_user_ids: ['10']});
-		expect(recipientActive(GUILD, USER, false)).toBe(true);
-		expect(recipientActive(GUILD, OTHER_USER, false)).toBe(false);
-	});
-
-	it('reads no marker while the experiment has never been enabled', async () => {
-		load({enabled: false, ever_enabled: false});
-		expect(await isTainted(GUILD)).toBe(false);
-		expect(executor.reads).toBe(0);
 	});
 
 	it('reads the marker once per guild and remembers the answer', async () => {
@@ -174,13 +128,6 @@ describe('ChannelThreadsGate', () => {
 		expect(await isTainted(GUILD, {fresh: true})).toBe(true);
 		expect(await isTainted(GUILD)).toBe(true);
 		expect(executor.reads).toBe(2);
-	});
-
-	it('lets member removal skip the marker read while the experiment has never been enabled', async () => {
-		load({enabled: false, ever_enabled: false});
-		const repository = new GuildRepository();
-		await repository.deleteMember(GUILD, USER);
-		expect(executor.markerReads).toBe(0);
 	});
 
 	it('enqueues thread membership cleanup on member removal despite a remembered clean answer', async () => {

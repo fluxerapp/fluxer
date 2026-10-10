@@ -216,10 +216,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		return this.screenShareCapturePaused;
 	}
 
-	getIsScreenSharePending(): boolean {
-		return this.isScreenSharePending;
-	}
-
 	setSourceLifecycleBridge(bridge: VoiceEngineV2AppSourceLifecycleBridge | null): void {
 		this.sourceLifecycleBridge = bridge;
 	}
@@ -1209,11 +1205,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			logger.warn('Failed to apply immediate screen share audio mute', {error, muted});
 		});
 		this.syncLocalScreenShareAudioStateInternal(participant, !muted);
-	}
-
-	async toggleScreenShareFromKeybind(room: Room | null): Promise<void> {
-		const current = LocalVoiceState.getSelfStream();
-		await this.setScreenShareEnabled(room, !current);
 	}
 
 	resetStreamTracking(): void {

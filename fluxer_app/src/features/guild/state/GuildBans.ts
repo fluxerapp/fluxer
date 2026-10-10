@@ -28,10 +28,6 @@ class GuildBans {
 		}
 	}
 
-	isKnownBanned(guildId: string, userId: string): boolean {
-		return this.bannedUsersByGuild.get(guildId)?.has(userId) ?? false;
-	}
-
 	reset(): void {
 		this.bannedUsersByGuild.clear();
 	}

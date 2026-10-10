@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BillingActionIntentRepository} from '@app/api/billing/repositories/BillingActionIntentRepository';
 import {BillingChargeRepository} from '@app/api/billing/repositories/BillingChargeRepository';
 import {BillingCheckoutSessionRepository} from '@app/api/billing/repositories/BillingCheckoutSessionRepository';
 import {BillingCustomerRepository} from '@app/api/billing/repositories/BillingCustomerRepository';
@@ -14,7 +13,6 @@ import {BillingProductRepository} from '@app/api/billing/repositories/BillingPro
 import {BillingRefundRepository} from '@app/api/billing/repositories/BillingRefundRepository';
 import {BillingSubscriptionRepository} from '@app/api/billing/repositories/BillingSubscriptionRepository';
 import {BillingWebhookEventRepository} from '@app/api/billing/repositories/BillingWebhookEventRepository';
-import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export class BillingRepository {
@@ -31,9 +29,8 @@ export class BillingRepository {
 	readonly checkoutSessions: BillingCheckoutSessionRepository;
 	readonly disputes: BillingDisputeRepository;
 	readonly webhookEvents: BillingWebhookEventRepository;
-	readonly actionIntents: BillingActionIntentRepository;
 
-	constructor(snowflakeService: ISnowflakeService, kv: IKVProvider) {
+	constructor(kv: IKVProvider) {
 		this.payments = new BillingPaymentRepository();
 		this.invoices = new BillingInvoiceRepository(this.payments);
 		this.customers = new BillingCustomerRepository();
@@ -47,6 +44,5 @@ export class BillingRepository {
 		this.checkoutSessions = new BillingCheckoutSessionRepository();
 		this.disputes = new BillingDisputeRepository();
 		this.webhookEvents = new BillingWebhookEventRepository(kv);
-		this.actionIntents = new BillingActionIntentRepository(snowflakeService);
 	}
 }

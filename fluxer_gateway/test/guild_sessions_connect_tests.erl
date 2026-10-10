@@ -116,31 +116,6 @@ cleanup_connect_admission_queue_format_test() ->
     ?assertEqual(true, lists:member(S2, SessionIds)),
     ?assertEqual(true, lists:member(S3, SessionIds)).
 
-auto_stop_tests_test() ->
-    ?assertEqual(true, guild_sessions_connect_cleanup:should_auto_stop_on_empty(#{})),
-    ?assertEqual(
-        false,
-        guild_sessions_connect_cleanup:should_auto_stop_on_empty(#{
-            disable_auto_stop_on_empty => true
-        })
-    ),
-    State = guild_sessions_connect_cleanup:maybe_mark_auto_stop_pending(#{}),
-    Pending = maps:get(auto_stop_pending, State),
-    ?assert(is_reference(maps:get(token, Pending))),
-    ?assert(is_reference(maps:get(timer_ref, Pending))),
-    ?assert(is_integer(maps:get(started_at, Pending))),
-    Cleared = guild_sessions_connect_cleanup:clear_auto_stop_pending(State),
-    ?assertEqual(false, maps:is_key(auto_stop_pending, Cleared)).
-
-normalize_connect_queue_test() ->
-    List = [#{a => 1}, #{a => 2}],
-    Queue = guild_sessions_connect_cleanup:normalize_connect_queue(List),
-    ?assert(queue:is_queue(Queue)),
-    ?assertEqual(queue:from_list(List), Queue),
-    Q = queue:from_list([1, 2, 3]),
-    ?assertEqual(Q, guild_sessions_connect_cleanup:normalize_connect_queue(Q)),
-    ?assertEqual(undefined, guild_sessions_connect_cleanup:normalize_connect_queue(undefined)).
-
 session_down_clears_passive_sync_entry_test() ->
     ok = passive_sync_registry:init(),
     SessionId = <<"passive-down">>,

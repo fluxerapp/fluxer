@@ -93,10 +93,6 @@ export class SyncTaskWorkerService implements IWorkerService {
 		return false;
 	}
 
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
 	get pending(): ReadonlyArray<QueuedWorkerJob> {
 		return this.queue.map((entry) => entry.job);
 	}

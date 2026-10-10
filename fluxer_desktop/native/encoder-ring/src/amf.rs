@@ -349,13 +349,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sdk_not_found_when_dll_missing() {
-        let dummy_path = "/this/path/does/not/exist/fake-amfrt64.dll";
-        let result = unsafe { Library::new(dummy_path) };
-        assert!(result.is_err());
-    }
-
-    #[test]
     fn amf_status_constants_match_spec() {
         assert_eq!(AMF_OK, 0);
         assert_eq!(AMF_REPEAT, 5);

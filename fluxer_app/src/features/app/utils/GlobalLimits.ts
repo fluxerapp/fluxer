@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 
 const FALLBACKS = {
 	emoji_max_size: 384 * 1024,
@@ -22,10 +21,6 @@ class GlobalLimitsClass {
 			key: 'sticker_max_size',
 			fallback: FALLBACKS.sticker_max_size,
 		});
-	}
-
-	get(key: LimitKey, fallback: number): number {
-		return LimitResolver.resolve({key, fallback});
 	}
 }
 

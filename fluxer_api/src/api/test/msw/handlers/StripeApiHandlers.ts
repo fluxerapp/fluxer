@@ -63,9 +63,7 @@ interface StripeApiMockConfig {
 	charges?: Record<string, Partial<MockStripeCharge>>;
 	customers?: Record<string, Partial<MockStripeCustomer>>;
 	invoices?: Record<string, Partial<MockStripeInvoice> & {subscriptionId?: string}>;
-	paymentIntents?: Record<string, Partial<MockStripePaymentIntent>>;
 	paymentMethods?: Record<string, Partial<MockStripePaymentMethod>>;
-	setupIntents?: Record<string, Partial<MockStripeSetupIntent>>;
 	subscriptions?: Record<string, Partial<MockStripeSubscriptionState>>;
 	prices?: Record<string, MockStripePriceOverrides>;
 }
@@ -522,14 +520,6 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 					overrides.payment_method_details ?? createDefaultCharge(chargeId).payment_method_details,
 			});
 		}
-		for (const [paymentIntentId, overrides] of Object.entries(config.paymentIntents ?? {})) {
-			paymentIntentStore.set(paymentIntentId, {
-				...createDefaultPaymentIntent(paymentIntentId),
-				...overrides,
-				id: paymentIntentId,
-				object: 'payment_intent',
-			});
-		}
 		for (const [paymentMethodId, overrides] of Object.entries(config.paymentMethods ?? {})) {
 			const defaultPaymentMethod = createDefaultPaymentMethod(paymentMethodId, overrides.customer ?? 'cus_test_1');
 			paymentMethodStore.set(paymentMethodId, {
@@ -544,42 +534,6 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 					exp_year: overrides.card?.exp_year ?? defaultPaymentMethod.card.exp_year,
 					last4: overrides.card?.last4 ?? defaultPaymentMethod.card.last4,
 				},
-			});
-		}
-		for (const [setupIntentId, overrides] of Object.entries(config.setupIntents ?? {})) {
-			const defaultSetupIntent = createDefaultSetupIntent(setupIntentId);
-			const paymentMethodOverride = overrides.payment_method;
-			const paymentMethod =
-				typeof paymentMethodOverride === 'string' || paymentMethodOverride == null
-					? (paymentMethodOverride ?? defaultSetupIntent.payment_method)
-					: (() => {
-							const defaultPaymentMethod = createDefaultPaymentMethod(
-								paymentMethodOverride.id ?? `pm_${setupIntentId}`,
-							);
-							const mergedPaymentMethod: MockStripePaymentMethod = {
-								...defaultPaymentMethod,
-								...paymentMethodOverride,
-								id: paymentMethodOverride.id ?? `pm_${setupIntentId}`,
-								object: 'payment_method',
-								card: {
-									brand: paymentMethodOverride.card?.brand ?? defaultPaymentMethod.card.brand,
-									country: paymentMethodOverride.card?.country ?? defaultPaymentMethod.card.country,
-									exp_month: paymentMethodOverride.card?.exp_month ?? defaultPaymentMethod.card.exp_month,
-									exp_year: paymentMethodOverride.card?.exp_year ?? defaultPaymentMethod.card.exp_year,
-									last4: paymentMethodOverride.card?.last4 ?? defaultPaymentMethod.card.last4,
-								},
-							};
-							return mergedPaymentMethod;
-						})();
-			if (paymentMethod && typeof paymentMethod !== 'string') {
-				paymentMethodStore.set(paymentMethod.id, paymentMethod);
-			}
-			setupIntentStore.set(setupIntentId, {
-				...defaultSetupIntent,
-				...overrides,
-				id: setupIntentId,
-				object: 'setup_intent',
-				payment_method: paymentMethod,
 			});
 		}
 		for (const [customerId, overrides] of Object.entries(config.customers ?? {})) {

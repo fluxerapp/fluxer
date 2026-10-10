@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::{snowflake, types as generated_types};
+use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
-use super::types::{BanAvatarResult, BanCheckResult, BlocklistEntryPage, BulkBanResult};
+use super::types::{BanCheckResult, BlocklistEntryPage, BulkBanResult};
 
 impl AdminApiClient {
     pub async fn ban_email(&self, email: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
@@ -247,16 +247,6 @@ impl AdminApiClient {
     pub async fn check_avatar_hash_ban(&self, hash_short: &str) -> ApiResult<BanCheckResult> {
         self.check_blocklist_entry("avatar-hash", hash_short, None)
             .await
-    }
-
-    pub async fn ban_user_avatar(&self, user_id: &str) -> ApiResult<BanAvatarResult> {
-        let body = generated_types::BanUserAvatarRequest::default();
-        let response = self
-            .generated()
-            .ban_admin_user_avatar(&snowflake(user_id), &body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
     }
 
     pub async fn ban_profile_substring(

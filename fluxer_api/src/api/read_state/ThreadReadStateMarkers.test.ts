@@ -223,12 +223,6 @@ describe('thread read state markers', () => {
 			expect(visibleReadStates([control, marked], {userId: USER, capable: false})).toEqual([control]);
 			expect(visibleReadStates([control, marked], {userId: USER, capable: true})).toEqual([control, marked]);
 		});
-
-		it('counts marked rows in the badge for enrolled recipients whatever their client', () => {
-			expect(badgeReadStates([control, marked], USER)).toEqual([control]);
-			load({enabled: true, enabled_guild_ids: [GUILD.toString()], included_user_ids: [USER.toString()]});
-			expect(badgeReadStates([control, marked], USER)).toEqual([control, marked]);
-		});
 	});
 
 	describe('marker resolution', () => {

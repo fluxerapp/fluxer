@@ -75,10 +75,7 @@ disconnect_removes_voice_state_count_for_null_channel_test() ->
 
 validate_dm_viewer_stream_keys_accepts_many_same_channel_connections_test() ->
     VoiceStates = validation_voice_states(100, 48),
-    Keys = [
-        voice_state_utils:build_stream_key(undefined, 100, conn_id(Index))
-     || Index <- lists:seq(1, 48)
-    ],
+    Keys = [<<"dm:100:", (conn_id(Index))/binary>> || Index <- lists:seq(1, 48)],
     ?assertEqual(
         {ok, Keys}, dm_voice_state:validate_dm_viewer_stream_keys(Keys, 100, VoiceStates)
     ).

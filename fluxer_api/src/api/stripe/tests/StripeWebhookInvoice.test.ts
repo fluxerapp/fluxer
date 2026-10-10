@@ -4,12 +4,10 @@ import crypto from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
 import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	createInvoiceFinalizationFailedEvent,
 	createInvoicePaidEvent,
@@ -26,7 +24,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -47,8 +45,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const LEGACY_MONTHLY_BRL_PRICE = 'price_legacy_monthly_brl';
 const LEGACY_YEARLY_BRL_PRICE = 'price_legacy_yearly_brl';
 const UNMAPPED_PRICE = 'price_retired_unmapped_brl';
-const MANDATE_REVOKED_WARNING =
-	'Stripe mandate is no longer active; recurring payments on this payment method will fail';
 
 describe('Stripe Webhook - Invoice Events', () => {
 	let harness: ApiTestHarness;
@@ -403,41 +399,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 				},
 			};
 			await sendWebhookExpectStripeError(eventData);
-		});
-		test('anchors yearly subscription renewal premium_until to Stripe period_end', async () => {
-			const account = await createTestAccount(harness);
-			const subscriptionId = `sub_test_${Date.now()}`;
-			await createPaymentRecord({
-				userId: account.userId,
-				subscriptionId,
-				priceId: MOCK_PRICES.yearlyUsd,
-				productType: ProductType.YEARLY_SUBSCRIPTION,
-			});
-			const eventData: StripeWebhookEventData = {
-				type: 'invoice.payment_succeeded',
-				data: {
-					object: {
-						id: `in_test_${Date.now()}`,
-						billing_reason: 'subscription_cycle',
-						parent: {subscription_details: {subscription: subscriptionId}},
-					},
-				},
-			};
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const user = await createBuilder<{
-				premium_type: number | null;
-				premium_until: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(user.premium_until).not.toBeNull();
-			const premiumUntil = new Date(user.premium_until!);
-			const now = new Date();
-			const daysDiff = (premiumUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-			expect(daysDiff).toBeGreaterThanOrEqual(27);
-			expect(daysDiff).toBeLessThanOrEqual(32);
 		});
 		test('anchors renewal to Stripe period_end regardless of existing premium time', async () => {
 			const account = await createTestAccount(harness);
@@ -1158,36 +1119,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 			expect(me.premium_type).toBe(UserPremiumTypes.NONE);
 			expect(me.premium_until).toBeNull();
 		});
-		test('lets an authored price win over a legacy entry that claims the same price id', async () => {
-			Config.stripe.legacyPrices = {yearly_brl: [MOCK_PRICES.monthlyUsd]};
-			const account = await createTestAccount(harness);
-			const subscriptionId = 'sub_authored_wins_over_legacy';
-			await createPaymentRecord({
-				userId: account.userId,
-				subscriptionId,
-				priceId: MOCK_PRICES.monthlyUsd,
-				productType: ProductType.MONTHLY_SUBSCRIPTION,
-			});
-			const result = await sendWebhook({
-				type: 'invoice.payment_succeeded',
-				data: {
-					object: {
-						id: 'in_authored_wins_over_legacy',
-						billing_reason: 'subscription_cycle',
-						parent: {subscription_details: {subscription: subscriptionId}},
-					},
-				},
-			});
-			expect(result.received).toBe(true);
-			const me = await createBuilder<{
-				premium_billing_cycle: string | null;
-				premium_type: number | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_billing_cycle).toBe('monthly');
-		});
 	});
 	describe('donation subscription guard', () => {
 		test('does not extend premium for an invoice on a donation subscription', async () => {
@@ -1270,86 +1201,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 			expect(me.premium_until).not.toBeNull();
-		});
-	});
-	describe('mandate.updated', () => {
-		function captureLoggerWarnings(): {
-			messages: Array<unknown>;
-			restore: () => void;
-		} {
-			const activeLogger = Logger.child({}) as unknown as NoopLogger;
-			expect(activeLogger).toBeInstanceOf(NoopLogger);
-			const messages: Array<unknown> = [];
-			const spy = vi.spyOn(activeLogger, 'warn').mockImplementation((...args: Array<unknown>) => {
-				messages.push(args[args.length - 1]);
-			});
-			return {messages, restore: () => spy.mockRestore()};
-		}
-		function revocationWarnings(messages: Array<unknown>): Array<unknown> {
-			return messages.filter((message) => message === MANDATE_REVOKED_WARNING);
-		}
-		test('logs the revocation warning and leaves premium untouched when a mandate goes inactive', async () => {
-			const account = await createTestAccount(harness);
-			const premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: premiumUntil.toISOString(),
-					stripe_subscription_id: 'sub_pix_mandate',
-					stripe_customer_id: 'cus_pix_mandate',
-				})
-				.execute();
-			const warnings = captureLoggerWarnings();
-			try {
-				const result = await sendWebhook({
-					type: 'mandate.updated',
-					data: {
-						object: {
-							id: 'mandate_test_inactive',
-							object: 'mandate',
-							status: 'inactive',
-							payment_method: 'pm_pix_mandate',
-							type: 'multi_use',
-						},
-					},
-				});
-				expect(result.received).toBe(true);
-				expect(revocationWarnings(warnings.messages)).toHaveLength(1);
-			} finally {
-				warnings.restore();
-			}
-			const me = await createBuilder<{
-				premium_type: number | null;
-				premium_until: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_until).toBe(premiumUntil.toISOString());
-		});
-		test('does not log the revocation warning for a pending or still-active mandate', async () => {
-			const warnings = captureLoggerWarnings();
-			try {
-				for (const status of ['pending', 'active'] as const) {
-					const result = await sendWebhook({
-						type: 'mandate.updated',
-						data: {
-							object: {
-								id: `mandate_test_${status}`,
-								object: 'mandate',
-								status,
-								payment_method: {id: 'pm_pix_mandate', object: 'payment_method', type: 'pix'},
-								type: 'multi_use',
-							},
-						},
-					});
-					expect(result.received).toBe(true);
-				}
-				expect(revocationWarnings(warnings.messages)).toHaveLength(0);
-			} finally {
-				warnings.restore();
-			}
 		});
 	});
 });

@@ -69,7 +69,7 @@ const registry = installElectronStub({
 });
 
 const {configureUserDataPath} = await import('@electron/common/UserDataPath');
-const {getModuleStoreRoot, getModuleStoreTreeRoot, ModuleStore} = await import('@electron/main/ModuleStore');
+const {getModuleStoreRoot, ModuleStore} = await import('@electron/main/ModuleStore');
 const {setCommittedModuleFiles} = await import('@electron/main/ModuleBootHandoff');
 const {createOnDemandModuleInstaller} = await import('@electron/main/ModuleOnDemand');
 const {getDesktopLocalAppAuthorization} = await import('@electron/main/LocalAppProtocolAuthorization');
@@ -219,7 +219,7 @@ describe('the committed module index reaches the renderer through the real proto
 
 	test('a committed module asset is served from the store with an immutable cache policy', async () => {
 		const {store, sha256: digest} = await commitRendererModule();
-		assert.equal(store.storeRoot, getModuleStoreTreeRoot(userData.base));
+		assert.equal(store.storeRoot, path.join(getModuleStoreRoot(userData.base), 'store'));
 
 		setCommittedModuleFiles(store.storeRoot, await store.buildModuleIndex());
 

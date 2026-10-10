@@ -16,30 +16,6 @@ export const MiscRateLimitConfigs = {
 		bucket: 'ip:geo_lookup',
 		config: {limit: 30, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	DOWNLOAD_DESKTOP_LATEST: {
-		bucket: 'download:desktop:latest',
-		config: {limit: 60, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	DOWNLOAD_DESKTOP_METADATA: {
-		bucket: 'download:desktop:metadata',
-		config: {limit: 120, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	DOWNLOAD_ARTIFACT: {
-		bucket: 'download:artifact',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	DOWNLOAD_PACKAGE: {
-		bucket: 'download:package',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	DOWNLOAD_STORE_REDIRECT: {
-		bucket: 'download:store:redirect',
-		config: {limit: 30, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	DOWNLOAD_MODULE: {
-		bucket: 'download:module',
-		config: {limit: 30, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
 	READ_STATE_ACK_BULK: {
 		bucket: 'read_state:ack_bulk',
 		config: {limit: 20, windowMs: ms('10 seconds')},

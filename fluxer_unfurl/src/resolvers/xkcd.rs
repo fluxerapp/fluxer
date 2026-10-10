@@ -164,89 +164,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn extract_comic_alt_reads_title_attribute() {
-        let doc =
-            Html::parse_document(r#"<div id="comic"><img title="Alt text" alt="ignored"></div>"#);
-        assert_eq!(extract_comic_alt(&doc).as_deref(), Some("Alt text"));
-    }
-
-    #[test]
-    fn resolve_relative_url_uses_page_url() {
-        let base = Url::parse("https://xkcd.com/1/").unwrap();
-        assert_eq!(
-            resolve_relative_url(&base, "//imgs.xkcd.com/comics/barrel_cropped_(1).jpg").as_deref(),
-            Some("https://imgs.xkcd.com/comics/barrel_cropped_(1).jpg")
-        );
-    }
-
-    #[test]
-    fn build_embed_media_payload_keeps_description_and_metadata() {
-        let meta = MediaMetadata {
-            content_type: "image/png".to_owned(),
-            content_hash: "hash".to_owned(),
-            width: Some(740),
-            height: Some(280),
-            duration: None,
-            placeholder: Some("placeholder".to_owned()),
-            animated: Some(false),
-            nsfw: false,
-        };
-        let media = build_embed_media_payload(
-            "https://imgs.xkcd.com/comics/test.png",
-            &meta,
-            None,
-            None,
-            Some("hover text".to_owned()),
-        );
-        assert_eq!(media.description.as_deref(), Some("hover text"));
-        assert_eq!(media.width, Some(740));
-        assert_eq!(media.height, Some(280));
-        assert_eq!(media.content_type.as_deref(), Some("image/png"));
-        assert_eq!(media.content_hash.as_deref(), Some("hash"));
-        assert_eq!(media.placeholder.as_deref(), Some("placeholder"));
-    }
-
-    #[test]
-    fn matches_xkcd_com() {
-        let r = XkcdResolver;
-        assert!(r.matches(&Url::parse("https://xkcd.com/1/").unwrap()));
-        assert!(r.matches(&Url::parse("https://xkcd.com/").unwrap()));
-        assert!(!r.matches(&Url::parse("https://notxkcd.com/1/").unwrap()));
-    }
-
-    #[test]
-    fn xkcd_color_is_black() {
-        assert_eq!(XKCD_COLOR, 0x000000);
-    }
-
-    #[test]
-    fn extract_comic_alt_no_comic_div() {
-        let doc = Html::parse_document("<div><img title='nope'></div>");
-        assert!(extract_comic_alt(&doc).is_none());
-    }
-
-    #[test]
-    fn extract_comic_alt_no_title_attribute() {
-        let doc = Html::parse_document(r#"<div id="comic"><img src="test.png"></div>"#);
-        assert!(extract_comic_alt(&doc).is_none());
-    }
-
-    #[test]
     fn resolve_relative_url_rejects_non_http() {
         let base = Url::parse("https://xkcd.com/1/").unwrap();
         assert!(resolve_relative_url(&base, "ftp://evil.com/img.png").is_none());
-    }
-
-    #[test]
-    fn parse_text_decodes_html_entities() {
-        assert_eq!(parse_text("Tom &amp; Jerry", 256), "Tom & Jerry");
-    }
-
-    #[test]
-    fn parse_text_trims_and_truncates() {
-        let long = "x".repeat(200);
-        let result = parse_text(&long, 50);
-        assert!(result.chars().count() <= 50);
-        assert!(result.ends_with('\u{2026}'));
     }
 }

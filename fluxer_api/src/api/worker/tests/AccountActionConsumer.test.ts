@@ -11,32 +11,19 @@ import {
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
-import {
-	ACTIONS_STREAM,
-	type ActionEnvelope,
-	type ActionOutcome,
-	effectsConsumer,
-} from '@app/api/infrastructure/activity/Contract.generated';
+import type {ActionEnvelope, ActionOutcome} from '@app/api/infrastructure/activity/Contract.generated';
 import {User} from '@app/api/models/User';
 import {NEW_CONVERSATION_LIMIT_MAX_MS} from '@app/api/user/NewConversationLimit';
 import type {AccountStateDeps} from '@app/api/user/services/AccountStateApplier';
-import {
-	type AccountActionDeps,
-	applyAction,
-	handleActionMessage,
-	startAccountActionConsumer,
-	stopAccountActionConsumer,
-} from '@app/api/worker/AccountActionConsumer';
+import {type AccountActionDeps, applyAction, handleActionMessage} from '@app/api/worker/AccountActionConsumer';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {AdminArchiveResponse} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
-import {AckPolicy, DeliverPolicy, type JsMsg, jetstream, jetstreamManager} from '@nats-io/jetstream';
-import {connect} from '@nats-io/transport-node';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {JsMsg} from '@nats-io/jetstream';
+import {beforeEach, describe, expect, it} from 'vitest';
 
 const USER_ID = '1174109840998400001';
 const NOW = 1_759_000_000_000;
-const NATS_URL = process.env.FLUXER_TEST_ACTIVITY_NATS_URL;
 const DAY_MS = 86_400_000;
 const DELETION_DELAY_MS = 7 * DAY_MS;
 
@@ -738,61 +725,5 @@ describe('account action messages', () => {
 		await handleActionMessage(h.deps, last.msg);
 		expect(outcomes).toMatchObject([{status: 'failed', detail: 'Error: datastore unavailable'}]);
 		expect(last.state.acked).toBe(1);
-	});
-});
-
-describe.skipIf(!NATS_URL)('account action consumer against JetStream', () => {
-	let nc: Awaited<ReturnType<typeof connect>>;
-	beforeAll(async () => {
-		nc = await connect({servers: NATS_URL, token: process.env.FLUXER_TEST_ACTIVITY_NATS_TOKEN});
-		const jsm = await jetstreamManager(nc);
-		await jsm.streams.delete(ACTIONS_STREAM).catch(() => undefined);
-		await jsm.streams.add({name: ACTIONS_STREAM, subjects: ['act.*']});
-		for (const partition of [0, 7]) {
-			await jsm.consumers.add(ACTIONS_STREAM, {
-				durable_name: effectsConsumer(partition),
-				filter_subject: `act.${String(partition).padStart(2, '0')}`,
-				ack_policy: AckPolicy.Explicit,
-				max_ack_pending: 1,
-				deliver_policy: DeliverPolicy.All,
-			});
-		}
-	});
-	afterAll(async () => {
-		await stopAccountActionConsumer();
-		await nc?.close();
-	});
-
-	it('applies each action in order and acknowledges it after the outcome', async () => {
-		const h = harness();
-		h.users.put();
-		h.deps.now = Date.now;
-		const outcomes: Array<ActionOutcome> = [];
-		h.deps.publishOutcome = async (_key, outcome) => {
-			outcomes.push(outcome);
-		};
-		h.deps.js = jetstream(nc);
-		h.deps.retryDelayMs = 200;
-		const js = jetstream(nc);
-		const expires = Date.now() + 60_000;
-		await js.publish('act.07', JSON.stringify(limitEnvelope({id: 'a:07:1:0', expires_at_ms: expires})), {
-			msgID: 'a:07:1:0',
-		});
-		await js.publish('act.07', JSON.stringify(limitEnvelope({id: 'a:07:2:0', on: false, expires_at_ms: expires})), {
-			msgID: 'a:07:2:0',
-		});
-		startAccountActionConsumer(h.deps);
-		const deadline = Date.now() + 10_000;
-		while (outcomes.length < 2 && Date.now() < deadline) {
-			await new Promise((resolve) => setTimeout(resolve, 50));
-		}
-		expect(outcomes.map((outcome) => [outcome.action_id, outcome.status])).toEqual([
-			['a:07:1:0', 'applied'],
-			['a:07:2:0', 'applied'],
-		]);
-		expect(h.users.current().flags).toBe(0n);
-		const info = await (await jetstreamManager(nc)).consumers.info(ACTIONS_STREAM, effectsConsumer(7));
-		expect(info.num_ack_pending).toBe(0);
-		expect(info.num_pending).toBe(0);
 	});
 });

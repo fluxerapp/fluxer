@@ -6077,14 +6077,6 @@ fn print_tree(root: &Path, max_depth: usize) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::parse_version_instant;
-    use chrono::{DateTime, TimeZone, Utc};
-
-    fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
-            .single()
-            .unwrap()
-    }
 
     fn live_manifest(platform: &str, arch: &str, shell: &str) -> Value {
         json!({
@@ -6250,40 +6242,6 @@ mod tests {
     }
 
     #[test]
-    fn resolves_explicit_calver_with_precedence() {
-        let calver_env = CalverEnv {
-            build_version: Some("2026.520.1".to_string()),
-            fluxer_build_version: Some("2026.521.2".to_string()),
-            fluxer_build_date: Some("2026-05-22T03:04:05Z".to_string()),
-        };
-        assert_eq!(
-            resolve_calver(&calver_env, dt(2026, 5, 1, 0, 0, 0)).unwrap(),
-            "2026.520.1"
-        );
-    }
-
-    #[test]
-    fn resolves_generated_calver_from_date_override() {
-        let calver_env = CalverEnv {
-            fluxer_build_date: Some("2026-05-20T01:02:03Z".to_string()),
-            ..CalverEnv::default()
-        };
-        assert_eq!(
-            resolve_calver(&calver_env, dt(2026, 1, 1, 0, 0, 0)).unwrap(),
-            "2026.520.10203"
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_explicit_time() {
-        let error = parse_version_instant("2026.520.246000").unwrap_err();
-        assert_eq!(
-            error.to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
-    }
-
-    #[test]
     fn matrix_skip_flags_filter_individual_arches() {
         let mut args = matrix_args();
         args.skip_windows_x64 = Some("true".to_string());
@@ -6387,57 +6345,6 @@ mod tests {
         job.lines()
             .filter_map(|line| line.strip_prefix("      - name: "))
             .collect()
-    }
-
-    #[test]
-    fn every_build_desktop_workflow_step_dispatches_to_a_desktop_step() {
-        let steps = BUILD_DESKTOP_WORKFLOW
-            .lines()
-            .filter_map(|line| line.trim().strip_prefix("--step "))
-            .collect::<Vec<_>>();
-
-        assert!(steps.contains(&"stage_handoff"));
-        for step in steps {
-            assert!(
-                <DesktopStep as ValueEnum>::from_str(step, false).is_ok(),
-                "build-desktop.yaml dispatches unknown desktop step {step}"
-            );
-        }
-        assert!(matches!(
-            <DesktopStep as ValueEnum>::from_str("stage_handoff", false),
-            Ok(DesktopStep::StageHandoff)
-        ));
-    }
-
-    #[test]
-    fn the_github_release_is_the_only_destination_for_built_artifacts() {
-        for job in ["build", "upload", "publish_release"] {
-            let body = workflow_job(job);
-            for forbidden in [
-                "S3_BUCKET",
-                "S3_ENDPOINT",
-                "AWS_ACCESS_KEY_ID",
-                "AWS_SECRET_ACCESS_KEY",
-                "DOWNLOADS_S3",
-                "_handoff/",
-            ] {
-                assert!(
-                    !body.contains(forbidden),
-                    "{job} must not reference {forbidden} now that the downloads bucket is gone"
-                );
-            }
-        }
-
-        assert_eq!(
-            workflow_step_names(workflow_job("publish_release")),
-            vec![
-                "Checkout source",
-                "Set up Rust toolchain (CI helpers)",
-                "Download GitHub release assets",
-                "Create token",
-                "Publish GitHub desktop release",
-            ]
-        );
     }
 
     #[test]

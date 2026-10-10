@@ -100,13 +100,6 @@ export async function loginWithPassword({
 	};
 }
 
-export async function completeLoginSession(
-	payload: LoginSuccessPayload,
-	runtimeSnapshot: RuntimeConfigSnapshot,
-): Promise<void> {
-	await AuthenticationCommands.completeLogin({...payload, runtimeSnapshot});
-}
-
 export async function loginWithMfaCode({
 	code,
 	ticket,
@@ -248,66 +241,6 @@ export async function completeSsoLogin({
 	};
 }
 
-interface RegisterSuccessResult {
-	type: 'success';
-	payload: LoginSuccessPayload;
-}
-
-interface RegisterPendingApprovalResult {
-	type: 'pending_approval';
-	userId: string;
-}
-
-export type RegisterResult = RegisterSuccessResult | RegisterPendingApprovalResult;
-
-export async function registerAccount({
-	email,
-	globalName,
-	username,
-	password,
-	dateOfBirth,
-	consent,
-	inviteCode,
-	giftCode,
-	registrationUrlCode,
-	runtimeSnapshot,
-}: {
-	email: string;
-	globalName?: string;
-	username?: string;
-	password: string;
-	dateOfBirth: string;
-	consent: boolean;
-	inviteCode?: string;
-	giftCode?: string;
-	registrationUrlCode?: string;
-	runtimeSnapshot: RuntimeConfigSnapshot;
-}): Promise<RegisterResult> {
-	const response = await AuthenticationCommands.register(
-		{
-			email,
-			global_name: globalName,
-			username,
-			password,
-			date_of_birth: dateOfBirth,
-			consent,
-			invite_code: inviteCode ?? giftCode,
-			registration_url_code: registrationUrlCode,
-		},
-		authRequestTargetFromSnapshot(runtimeSnapshot),
-	);
-	if (AuthenticationCommands.isRegistrationPendingApprovalResponse(response)) {
-		return {
-			type: 'pending_approval',
-			userId: response.user_id,
-		};
-	}
-	return {
-		type: 'success',
-		payload: toLoginSuccessPayload(response),
-	};
-}
-
 export type PasswordResetResult =
 	| {type: 'success'; payload: LoginSuccessPayload}
 	| {type: 'mfa'; challenge: MfaChallenge};
@@ -368,15 +301,4 @@ export async function recoverAccount({
 		},
 		kit,
 	};
-}
-
-export async function resendIpAuthorization(ticket: string, runtimeSnapshot: RuntimeConfigSnapshot): Promise<void> {
-	return AuthenticationCommands.resendIpAuthorization({ticket, target: authCommandTarget(runtimeSnapshot)});
-}
-
-export async function pollIpAuthorization(
-	ticket: string,
-	runtimeSnapshot: RuntimeConfigSnapshot,
-): Promise<AuthenticationCommands.IpAuthorizationPollResult> {
-	return AuthenticationCommands.pollIpAuthorization({ticket, target: authCommandTarget(runtimeSnapshot)});
 }

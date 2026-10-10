@@ -79,27 +79,6 @@ function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	return Array.from(normalized);
 }
 
-function mapApnsApps(
-	apps:
-		| Array<{
-				app_id?: string;
-				topic?: string;
-				environment?: 'production' | 'development';
-		  }>
-		| undefined,
-): APIConfig['push']['apns']['apps'] {
-	return (apps ?? []).map((app) => {
-		if (!app.app_id) {
-			throw new Error('FLUXER_PUSH_APNS_APPS contains an entry with no app_id');
-		}
-		return {
-			appId: app.app_id,
-			topic: app.topic,
-			environment: app.environment,
-		};
-	});
-}
-
 const TRUSTED_CALLER_MIN_KEY_LENGTH = 32;
 
 function parseTrustedCaller(entry: unknown, index: number): TrustedCallerConfig {
@@ -397,11 +376,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				rpId: master.auth.passkeys.rp_id,
 				allowedOrigins: master.auth.passkeys.additional_allowed_origins,
 			},
-			vapid: {
-				publicKey: master.auth.vapid.public_key,
-				privateKey: master.auth.vapid.private_key,
-				email: master.auth.vapid.email,
-			},
 			bluesky: master.auth.bluesky as BlueskyOAuthConfig,
 		},
 		klipy: {
@@ -456,14 +430,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		push: {
 			publicVapidKey: master.auth.vapid.public_key,
-			apns: {
-				enabled: master.integrations.push.apns.enabled,
-				teamId: master.integrations.push.apns.team_id,
-				keyId: master.integrations.push.apns.key_id,
-				privateKey: master.integrations.push.apns.private_key,
-				privateKeyPath: master.integrations.push.apns.private_key_path,
-				apps: mapApnsApps(master.integrations.push.apns.apps),
-			},
 		},
 		appStore: {
 			enabled: master.integrations.app_store.enabled,

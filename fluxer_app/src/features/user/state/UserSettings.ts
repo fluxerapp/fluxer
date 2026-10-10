@@ -392,10 +392,6 @@ class UserSettingsState {
 		writePersistedSyncedPreferences(SYNCED_PREFERENCES_WIRE_KEY, this.wireSyncedPreferences);
 	}
 
-	getStatus(): StatusType {
-		return this.status;
-	}
-
 	getStatusResetsAt(): string | null {
 		return this.statusResetsAt;
 	}

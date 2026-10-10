@@ -9,17 +9,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op")]
 pub enum UserRequest {
-    GetById {
-        user_id: i64,
-    },
-    GetPartialById {
-        user_id: i64,
-    },
     GetPartialsByIds {
         user_ids: Vec<i64>,
-    },
-    GetApiPartialById {
-        user_id: String,
     },
     GetApiPartialsByIds {
         user_ids: Vec<String>,
@@ -33,10 +24,7 @@ pub enum UserRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum UserResponse {
-    Found(User),
-    FoundPartial(UserPartial),
     FoundPartials(Vec<UserPartial>),
-    FoundApiPartial(ApiUserPartial),
     FoundApiPartials(Vec<ApiUserPartial>),
     NotFound,
     Invalidated,

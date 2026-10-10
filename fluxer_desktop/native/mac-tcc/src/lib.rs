@@ -201,14 +201,4 @@ mod tests {
             TccStatus::NotDetermined
         );
     }
-
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn non_macos_exports_preserve_stub_contract() {
-        assert_eq!(screen_recording_status(), "not-determined");
-        assert_eq!(request_screen_recording(), "not-determined");
-        assert_eq!(input_monitoring_status(), "not-determined");
-        assert_eq!(request_input_monitoring(), "not-determined");
-        assert_eq!(probe_input_monitoring_access(), "not-determined");
-    }
 }

@@ -78,10 +78,6 @@ export class UserContentRepository implements IUserContentRepository {
 		return this.giftCodeRepository.clearGiftPremiumReversed(code, seconds);
 	}
 
-	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
-		return this.giftCodeRepository.updateGiftCode(code, data);
-	}
-
 	async linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void> {
 		return this.giftCodeRepository.linkGiftCodeToCheckoutSession(code, checkoutSessionId);
 	}
@@ -178,10 +174,6 @@ export class UserContentRepository implements IUserContentRepository {
 		);
 	}
 
-	async createRecentMention(mention: RecentMentionRow): Promise<RecentMention> {
-		return this.recentMentionRepository.createRecentMention(mention);
-	}
-
 	async createRecentMentions(mentions: Array<RecentMentionRow>): Promise<void> {
 		return this.recentMentionRepository.createRecentMentions(mentions);
 	}
@@ -224,10 +216,6 @@ export class UserContentRepository implements IUserContentRepository {
 
 	async expandVisionarySlots(byCount: number): Promise<void> {
 		return this.visionarySlotRepository.expandVisionarySlots(byCount);
-	}
-
-	async shrinkVisionarySlots(toCount: number): Promise<void> {
-		return this.visionarySlotRepository.shrinkVisionarySlots(toCount);
 	}
 
 	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {

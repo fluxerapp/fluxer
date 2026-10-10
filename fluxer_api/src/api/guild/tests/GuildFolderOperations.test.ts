@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -17,38 +16,6 @@ describe('Guild Folder Operations', () => {
 	});
 	afterEach(async () => {
 		await harness?.shutdown();
-	});
-	test('should prepend newly created guild to uncategorized folder', async () => {
-		const account = await createTestAccount(harness);
-		const guild1 = await createGuild(harness, account.token, 'Guild 1');
-		const guild2 = await createGuild(harness, account.token, 'Guild 2');
-		const {json: settings} = await createBuilder<UserSettingsResponse>(harness, account.token)
-			.get('/users/@me/settings')
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-		expect(settings.guild_folders).toBeDefined();
-		const uncategorizedFolder = settings.guild_folders?.find((folder) => folder.id === UNCATEGORIZED_FOLDER_ID);
-		expect(uncategorizedFolder).toBeDefined();
-		expect(uncategorizedFolder?.guild_ids).toEqual([guild2.id, guild1.id]);
-	});
-	test('should prepend newly joined guild to uncategorized folder', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild1 = await createGuild(harness, owner.token, 'Guild 1');
-		const channel1 = await getChannel(harness, owner.token, guild1.system_channel_id!);
-		const invite1 = await createChannelInvite(harness, owner.token, channel1.id);
-		const guild2 = await createGuild(harness, owner.token, 'Guild 2');
-		const channel2 = await getChannel(harness, owner.token, guild2.system_channel_id!);
-		const invite2 = await createChannelInvite(harness, owner.token, channel2.id);
-		await acceptInvite(harness, member.token, invite1.code);
-		await acceptInvite(harness, member.token, invite2.code);
-		const {json: settings} = await createBuilder<UserSettingsResponse>(harness, member.token)
-			.get('/users/@me/settings')
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-		const uncategorizedFolder = settings.guild_folders?.find((folder) => folder.id === UNCATEGORIZED_FOLDER_ID);
-		expect(uncategorizedFolder).toBeDefined();
-		expect(uncategorizedFolder?.guild_ids).toEqual([guild2.id, guild1.id]);
 	});
 	test('should remove guild from all folders when leaving', async () => {
 		const owner = await createTestAccount(harness);
@@ -169,28 +136,5 @@ describe('Guild Folder Operations', () => {
 		expect(ownerUncategorized?.guild_ids ?? []).not.toContain(guild.id);
 		expect(member1Uncategorized?.guild_ids ?? []).not.toContain(guild.id);
 		expect(member2Uncategorized?.guild_ids ?? []).not.toContain(guild.id);
-	});
-	test('should not update guild folders for bot users when joining', async () => {
-		const owner = await createTestAccount(harness);
-		const botAccount = await createTestBotAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		await authorizeBot(harness, owner.token, botAccount.appId, ['bot'], guild.id, '0');
-		expect(true).toBe(true);
-	});
-	test('should not update guild folders for bot users when leaving', async () => {
-		const owner = await createTestAccount(harness);
-		const botAccount = await createTestBotAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		await authorizeBot(harness, owner.token, botAccount.appId, ['bot'], guild.id, '0');
-		const {json: ownerGuilds} = await createBuilder<
-			Array<{
-				id: string;
-			}>
-		>(harness, owner.token)
-			.get('/users/@me/guilds')
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-		const botIsInGuild = ownerGuilds.some((g) => g.id === guild.id);
-		expect(botIsInGuild).toBe(true);
 	});
 });

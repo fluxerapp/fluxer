@@ -17,15 +17,12 @@ impl RouterService for UsersRouter {
 
     fn route_key(req: &UserRequest) -> String {
         match req {
-            UserRequest::GetById { user_id }
-            | UserRequest::GetPartialById { user_id }
-            | UserRequest::Invalidate { user_id } => user_id.to_string(),
+            UserRequest::Invalidate { user_id } => user_id.to_string(),
             UserRequest::GetPartialsByIds { user_ids } => user_ids
                 .iter()
                 .min()
                 .map(ToString::to_string)
                 .unwrap_or_else(|| "0".to_owned()),
-            UserRequest::GetApiPartialById { user_id } => user_id.clone(),
             UserRequest::GetApiPartialsByIds { user_ids } => user_ids
                 .iter()
                 .min()
@@ -36,8 +33,6 @@ impl RouterService for UsersRouter {
 
     fn coalesce_key(req: &UserRequest) -> Option<String> {
         match req {
-            UserRequest::GetById { user_id } => Some(format!("get:{user_id}")),
-            UserRequest::GetPartialById { user_id } => Some(format!("partial:{user_id}")),
             UserRequest::GetPartialsByIds { user_ids } => {
                 let mut ids = user_ids.clone();
                 ids.sort_unstable();
@@ -50,7 +45,6 @@ impl RouterService for UsersRouter {
                         .join(",")
                 ))
             }
-            UserRequest::GetApiPartialById { user_id } => Some(format!("api_partial:{user_id}")),
             UserRequest::GetApiPartialsByIds { user_ids } => {
                 let mut ids = user_ids.clone();
                 ids.sort_unstable();

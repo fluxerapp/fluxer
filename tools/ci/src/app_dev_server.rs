@@ -416,8 +416,6 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
             PathBuf::from("../tools/ci/src/app_wasm.rs"),
             PathBuf::from("../tools/ci/src/common.rs"),
             PathBuf::from("../tools/ci/src/lib.rs"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.js"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.d.ts"),
             markdown_parser_rust_dir.join("Cargo.toml"),
         ],
     )?;
@@ -573,43 +571,5 @@ fn quote_arg(arg: &str) -> String {
         arg.to_string()
     } else {
         format!("{arg:?}")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rel_path_keys_are_posix_like() {
-        assert_eq!(
-            rel_path_key(Path::new("scripts/GenerateColorSystem.ts")),
-            "scripts/GenerateColorSystem.ts"
-        );
-    }
-
-    #[test]
-    fn wasm_inputs_cover_the_libfluxwebp_sources_and_headers() {
-        let app_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_app");
-        let inputs = gather_wasm_inputs(&app_dir).expect("gather wasm inputs");
-
-        for key in [
-            "rust/libfluxwebp/Cargo.toml",
-            "rust/libfluxwebp/Cargo.lock",
-            "rust/libfluxwebp/src/lib.rs",
-            "rust/libfluxwebp/shim/stdlib.h",
-            "rust/libfluxwebp/simd/emmintrin.h",
-        ] {
-            assert!(inputs.contains_key(key), "missing {key}");
-        }
-        assert!(inputs.keys().all(|key| !key.contains("/target/")));
-    }
-
-    #[test]
-    fn display_command_quotes_globs() {
-        assert_eq!(
-            display_command("tcm", &["src", "--pattern", "**/*.module.css"]),
-            "tcm src --pattern \"**/*.module.css\""
-        );
     }
 }

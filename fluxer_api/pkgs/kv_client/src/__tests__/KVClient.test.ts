@@ -116,22 +116,10 @@ describe('KVClient script execution', () => {
 					run: async (client) => client.extendLock('lock:key', 'token', 30),
 				},
 				{
-					name: 'renewSnowflakeNode',
-					reply: 1,
-					keyCount: 1,
-					run: async (client) => client.renewSnowflakeNode('snowflake:1', 'instance', 30),
-				},
-				{
 					name: 'checkLeakyBucketLimit',
 					reply: RATE_LIMIT_REPLY,
 					keyCount: 1,
 					run: async (client) => client.checkLeakyBucketLimit('rate_limit:bucket', 5, 1000, 1),
-				},
-				{
-					name: 'tryConsumeTokens',
-					reply: 2,
-					keyCount: 1,
-					run: async (client) => client.tryConsumeTokens('tokens:key', 2, 10, 1, 1000),
 				},
 				{
 					name: 'scheduleBulkDeletion',

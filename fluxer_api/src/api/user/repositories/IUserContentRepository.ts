@@ -21,7 +21,6 @@ export interface IUserContentRepository {
 		limit: number,
 		before?: MessageID,
 	): Promise<Array<RecentMention>>;
-	createRecentMention(mention: ExactRow<RecentMentionRow>): Promise<RecentMention>;
 	createRecentMentions(mentions: Array<ExactRow<RecentMentionRow>>): Promise<void>;
 	deleteRecentMention(mention: RecentMention): Promise<void>;
 	deleteRecentMentions(mentions: Array<RecentMention>): Promise<void>;
@@ -42,7 +41,6 @@ export interface IUserContentRepository {
 	unrevokeGiftCode(code: string): Promise<void>;
 	markGiftPremiumReversed(gift: GiftCode, seconds: number): Promise<boolean>;
 	clearGiftPremiumReversed(code: string, seconds: number): Promise<boolean>;
-	updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void>;
 	linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void>;
 	listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>>;
 	createPushSubscription(data: ExactRow<PushSubscriptionRow>): Promise<PushSubscription>;
@@ -80,7 +78,6 @@ export interface IUserContentRepository {
 	getSubscriptionInfo(subscriptionId: string): Promise<PaymentBySubscriptionRow | null>;
 	listVisionarySlots(): Promise<Array<VisionarySlot>>;
 	expandVisionarySlots(byCount: number): Promise<void>;
-	shrinkVisionarySlots(toCount: number): Promise<void>;
 	reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void>;
 	unreserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void>;
 }

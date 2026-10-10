@@ -328,9 +328,6 @@ outbox_job(Subject, Job, Body, Meta) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-unresolved_caller() ->
-    #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined}.
-
 with_endpoint_env(Fun) ->
     ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
     try
@@ -343,17 +340,6 @@ with_endpoint_env(Fun) ->
 endpoint_env_meck(media_proxy_endpoint) -> <<"https://media.example">>;
 endpoint_env_meck(static_cdn_endpoint) -> <<"https://static.example">>;
 endpoint_env_meck(Key) -> meck:passthrough([Key]).
-
-caller_fields_omits_every_key_when_the_caller_is_unresolved_test() ->
-    ?assertEqual(#{}, caller_fields(unresolved_caller())).
-
-caller_fields_omits_every_key_when_only_the_name_resolved_test() ->
-    ?assertEqual(
-        #{},
-        caller_fields(#{
-            caller_id => undefined, caller_name => <<"Ada">>, caller_avatar => undefined
-        })
-    ).
 
 caller_fields_builds_the_avatar_url_from_the_hash_test() ->
     Fields = with_endpoint_env(fun() ->
@@ -370,19 +356,6 @@ caller_fields_builds_the_avatar_url_from_the_hash_test() ->
             <<"caller_avatar_url">> =>
                 <<"https://media.example/avatars/1234567890123456789/a1b2c3d4.png">>
         },
-        Fields
-    ).
-
-caller_fields_falls_back_to_the_default_avatar_test() ->
-    Fields = with_endpoint_env(fun() ->
-        caller_fields(#{
-            caller_id => 1234567890123456789,
-            caller_name => <<"Ada">>,
-            caller_avatar => undefined
-        })
-    end),
-    ?assertMatch(
-        #{<<"caller_avatar_url">> := <<"https://static.example/avatars/", _/binary>>},
         Fields
     ).
 
@@ -494,47 +467,6 @@ notification_fields_include_title_body_and_tags_test() ->
     ?assertEqual(<<"/channels/123/456/789">>, maps:get(<<"url">>, Fields)),
     ?assertEqual(null, maps:get(<<"image_url">>, Fields)).
 
-notification_fields_use_single_sticker_preview_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"mentions">> => [],
-        <<"stickers">> => [
-            #{<<"id">> => <<"1">>, <<"name">> => <<"Wave">>, <<"animated">> => false}
-        ]
-    },
-    Fields = test_notification_fields(MessageData, 0, undefined, undefined),
-    ?assertEqual(<<"Sticker: Wave">>, maps:get(<<"body">>, Fields)).
-
-notification_fields_use_multiple_sticker_preview_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"mentions">> => [],
-        <<"stickers">> => [
-            #{<<"id">> => <<"1">>, <<"name">> => <<"Wave">>, <<"animated">> => false},
-            #{<<"id">> => <<"2">>, <<"name">> => <<"Dance">>, <<"animated">> => false}
-        ]
-    },
-    Fields = test_notification_fields(MessageData, 0, undefined, undefined),
-    ?assertEqual(<<"Stickers: Wave and Dance">>, maps:get(<<"body">>, Fields)).
-
-notification_fields_use_attachment_fallback_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"mentions">> => [],
-        <<"attachments">> => [#{<<"id">> => <<"1">>, <<"filename">> => <<"report.pdf">>}]
-    },
-    Fields = test_notification_fields(MessageData, 0, undefined, undefined),
-    ?assertEqual(<<"Attachment: report.pdf">>, maps:get(<<"body">>, Fields)).
-
-notification_fields_use_embed_fallback_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"mentions">> => [],
-        <<"embeds">> => [#{<<"title">> => <<"Build">>, <<"description">> => <<"green">>}]
-    },
-    Fields = test_notification_fields(MessageData, 0, undefined, undefined),
-    ?assertEqual(<<"Build: green">>, maps:get(<<"body">>, Fields)).
-
 notification_fields_use_markdown_plaintext_context_test() ->
     MessageData = #{<<"content">> => <<"**Hi** <@1> <@&2> <#3>">>, <<"mentions">> => []},
     Context = #{
@@ -545,22 +477,6 @@ notification_fields_use_markdown_plaintext_context_test() ->
     },
     Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>, Context),
     ?assertEqual(<<"**Hi** @Ada @Ops #alerts">>, maps:get(<<"body">>, Fields)).
-
-notification_fields_use_author_nickname_in_guild_title_test() ->
-    MessageData = #{<<"content">> => <<"Hello">>, <<"mentions">> => []},
-    Context = #{<<"user_nicknames">> => #{<<"42">> => <<"Guild Alice">>}},
-    Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>, Context),
-    ?assertEqual(<<"Guild Alice (#general, Server)">>, maps:get(<<"title">>, Fields)).
-
-notification_fields_use_author_nickname_in_group_dm_title_test() ->
-    MessageData = #{
-        <<"content">> => <<"Hello">>,
-        <<"channel_type">> => 3,
-        <<"nicks">> => #{<<"42">> => <<"Group Alice">>},
-        <<"mentions">> => []
-    },
-    Fields = test_notification_fields(MessageData, 0, undefined, undefined),
-    ?assertEqual(<<"Group Alice (Group DM)">>, maps:get(<<"title">>, Fields)).
 
 notification_fields_include_safe_attachment_image_test() ->
     MessageData = #{

@@ -459,25 +459,3 @@ fn users_url(base: &str, params: &UserListParams, page: u32) -> String {
     pairs.push(format!("page={page}"));
     format!("{base}/users?{}", pairs.join("&"))
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn params() -> UserListParams {
-        UserListParams::from_query(None, None, None, None, None, None)
-    }
-
-    #[test]
-    fn username_mode_has_no_email_search() {
-        let markup = search_form("/admin", &params(), false).into_string();
-        assert!(!markup.contains("search-email"));
-        assert!(markup.contains("search-q"));
-    }
-
-    #[test]
-    fn email_mode_keeps_the_email_search() {
-        let markup = search_form("/admin", &params(), true).into_string();
-        assert!(markup.contains("search-email"));
-    }
-}

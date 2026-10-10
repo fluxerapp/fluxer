@@ -195,18 +195,6 @@ export class ReadStateService {
 		}
 	}
 
-	async incrementMentionCount({
-		userId,
-		channelId,
-		messageId,
-	}: {
-		userId: UserID;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<void> {
-		await this.repository.incrementReadStateMentions(userId, channelId, messageId, 1);
-	}
-
 	async bulkIncrementMentionCounts(updates: Array<ReadStateMentionUpdate>): Promise<void> {
 		if (updates.length === 0) {
 			return;

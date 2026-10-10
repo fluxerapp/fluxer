@@ -226,17 +226,6 @@ permission_or_throw(Value) ->
     end.
 
 -ifdef(TEST).
-parse_channel_id_test() ->
-    ?assertEqual(undefined, parse_channel_id(<<"0">>)).
-
-permission_or_throw_accepts_zero_test() ->
-    ?assertEqual(0, permission_or_throw(<<"0">>)).
-
-permission_or_throw_rejects_malformed_test() ->
-    ?assertError(
-        {gateway_rpc_error, <<"invalid_params">>}, permission_or_throw(<<"bad">>)
-    ).
-
 check_permission_unknown_guild_raises_guild_not_found_test() ->
     Payload = #{
         <<"guild_id">> => <<"1">>,

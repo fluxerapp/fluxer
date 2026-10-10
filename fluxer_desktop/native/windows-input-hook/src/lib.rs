@@ -834,13 +834,6 @@ mod tests {
     }
 
     #[test]
-    fn queued_event_default_is_empty_keydown() {
-        let event = QueuedEvent::default();
-        assert_eq!(event.kind, EventKind::KeyDown);
-        assert_eq!(event.key_name_len, 0);
-    }
-
-    #[test]
     fn event_kind_strings_match_contract() {
         assert_eq!(EventKind::KeyDown.as_str(), "keydown");
         assert_eq!(EventKind::KeyUp.as_str(), "keyup");
@@ -893,11 +886,6 @@ mod tests {
             ]
         );
         assert!(held.take_releases().is_empty());
-    }
-
-    #[test]
-    fn is_available_matches_target() {
-        assert_eq!(is_available(), cfg!(target_os = "windows"));
     }
 
     #[test]

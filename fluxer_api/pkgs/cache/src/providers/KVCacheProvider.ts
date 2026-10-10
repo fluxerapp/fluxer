@@ -192,12 +192,6 @@ export class KVCacheProvider extends ICacheService {
 		return await this.client.extendLock(lockKey, token, ttlSeconds);
 	}
 
-	async getAndRenewTtl<T>(key: string, newTtlSeconds: number): Promise<T | null> {
-		const value = await this.client.getex(key, newTtlSeconds);
-		if (value == null) return null;
-		return safeJsonParse<T>(value, this.logger);
-	}
-
 	async publish(channel: string, message: string): Promise<void> {
 		await this.client.publish(channel, message);
 	}

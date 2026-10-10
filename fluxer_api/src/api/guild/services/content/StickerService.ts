@@ -16,7 +16,6 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import type {User} from '@app/api/models/User';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -31,7 +30,6 @@ import type {
 	GuildStickerResponse,
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export class StickerService {
 	constructor(
@@ -72,24 +70,6 @@ export class StickerService {
 		await this.contentHelpers.getGuildData({userId, guildId});
 		const stickers = await this.guildRepository.listStickers(guildId);
 		return await mapGuildStickersWithUsersToResponse(stickers, this.userCacheService, requestCache);
-	}
-
-	async getStickerUser(params: {
-		userId: UserID;
-		guildId: GuildID;
-		stickerId: StickerID;
-		requestCache: RequestCache;
-	}): Promise<UserPartialResponse> {
-		const {userId, guildId, stickerId, requestCache} = params;
-		await this.contentHelpers.getGuildData({userId, guildId});
-		const sticker = await this.guildRepository.getSticker(stickerId, guildId);
-		if (!sticker) throw new UnknownGuildStickerError();
-		const userPartial = await getCachedUserPartialResponse({
-			userId: sticker.creatorId,
-			userCacheService: this.userCacheService,
-			requestCache,
-		});
-		return userPartial;
 	}
 
 	async createSticker(

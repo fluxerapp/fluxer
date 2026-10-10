@@ -26,7 +26,7 @@ export class MessageRepository extends IMessageRepository {
 		this.dataRepo = new MessageDataRepository();
 		this.deletionRepo = new MessageDeletionRepository(this.dataRepo);
 		this.attachmentRepo = new MessageAttachmentRepository();
-		this.authorRepo = new MessageAuthorRepository(this.dataRepo, this.deletionRepo);
+		this.authorRepo = new MessageAuthorRepository(this.dataRepo);
 		this.channelDataRepo = channelDataRepo;
 	}
 
@@ -86,20 +86,8 @@ export class MessageRepository extends IMessageRepository {
 		return this.authorRepo.listMessagesByAuthor(authorId, limit, lastMessageId);
 	}
 
-	async deleteMessagesByAuthor(
-		authorId: UserID,
-		channelIds?: Array<ChannelID>,
-		messageIds?: Array<MessageID>,
-	): Promise<void> {
-		return this.authorRepo.deleteMessagesByAuthor(authorId, channelIds, messageIds);
-	}
-
 	async anonymizeMessage(channelId: ChannelID, messageId: MessageID, newAuthorId: UserID): Promise<void> {
 		return this.authorRepo.anonymizeMessage(channelId, messageId, newAuthorId);
-	}
-
-	async authorHasMessage(authorId: UserID, channelId: ChannelID, messageId: MessageID): Promise<boolean> {
-		return this.authorRepo.hasMessageByAuthor(authorId, channelId, messageId);
 	}
 
 	async lookupAttachmentByChannelAndFilename(

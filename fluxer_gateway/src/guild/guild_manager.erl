@@ -12,12 +12,7 @@
     start_or_lookup/2,
     lookup/1,
     lookup/2,
-    ensure_started/1,
-    ensure_started/2,
     local_guild_count/0,
-    local_guild_ids/0,
-    handoff_for_drain/0,
-    handoff_to_target/1,
     handoff_to_topology/1,
     call_via_manager/2,
     call_via_manager_local/2
@@ -52,14 +47,6 @@ lookup(GuildId) ->
 lookup(GuildId, Timeout) ->
     normalize_pid_reply(call_via_manager({lookup, GuildId}, Timeout)).
 
--spec ensure_started(guild_id()) -> ok | {error, term()}.
-ensure_started(GuildId) ->
-    ensure_started(GuildId, ?DEFAULT_GEN_SERVER_TIMEOUT).
-
--spec ensure_started(guild_id(), pos_integer()) -> ok | {error, term()}.
-ensure_started(GuildId, Timeout) ->
-    normalize_ensure_started(call_via_manager({ensure_started, GuildId}, Timeout), GuildId).
-
 -spec local_guild_count() -> non_neg_integer().
 local_guild_count() ->
     case call_via_manager_local(get_local_count, ?DEFAULT_GEN_SERVER_TIMEOUT) of
@@ -68,25 +55,6 @@ local_guild_count() ->
         {error, Reason} -> error({guild_count_unavailable, Reason});
         Other -> error({unexpected_guild_count_reply, Other})
     end.
-
--spec local_guild_ids() -> [integer()].
-local_guild_ids() ->
-    case call_via_manager_local(list_local_guild_ids, ?DEFAULT_GEN_SERVER_TIMEOUT) of
-        {ok, Ids} when is_list(Ids) -> require_guild_ids(Ids);
-        {error, Reason} -> error({guild_ids_unavailable, Reason});
-        Other -> error({unexpected_guild_ids_reply, Other})
-    end.
-
--spec handoff_for_drain() -> handoff_result() | {error, term()}.
-handoff_for_drain() ->
-    normalize_handoff_result(
-        call_via_manager_local(handoff_for_drain, ?DEFAULT_GEN_SERVER_TIMEOUT)
-    ).
-
--spec handoff_to_target(node()) -> handoff_result() | {error, term()}.
-handoff_to_target(TargetNode) ->
-    Request = {handoff_to_target, TargetNode},
-    normalize_handoff_result(call_via_manager_local(Request, ?DEFAULT_GEN_SERVER_TIMEOUT)).
 
 -spec handoff_to_topology([node()]) -> handoff_result() | {error, term()}.
 handoff_to_topology(TargetNodes) ->
@@ -126,8 +94,6 @@ handle_plain_call({start_or_lookup, GuildId}, From, State) ->
     forward_guild_call(start_or_lookup, GuildId, From, State);
 handle_plain_call({lookup, GuildId}, From, State) ->
     forward_guild_call(lookup, GuildId, From, State);
-handle_plain_call({ensure_started, GuildId}, From, State) ->
-    forward_guild_call(ensure_started, GuildId, From, State);
 handle_plain_call({start_transferred, GuildId, TransferState}, From, State) ->
     forward_start_transferred(GuildId, TransferState, From, State);
 handle_plain_call({stop_guild, GuildId}, From, State) ->
@@ -148,19 +114,9 @@ handle_manager_call({reload_all_guilds, GuildIds}, State) ->
 handle_manager_call(get_local_count, State) ->
     {Reply, NewState} = guild_manager_router:aggregate_counts(get_local_count, State),
     {reply, Reply, NewState};
-handle_manager_call(list_local_guild_ids, State) ->
-    {reply, {ok, guild_manager_handoff:collect_local_guild_ids(State)}, State};
 handle_manager_call(get_global_count, State) ->
     {Reply, NewState} = guild_manager_router:aggregate_counts(get_global_count, State),
     {reply, Reply, NewState};
-handle_manager_call(handoff_for_drain, State) ->
-    {Result, NewState} = guild_manager_handoff:perform_handoff_for_drain(State),
-    {reply, Result, NewState};
-handle_manager_call({handoff_to_target, TargetNode}, State) ->
-    {Result, NewState} = guild_manager_handoff:perform_handoff_to_target(
-        require_node(TargetNode), State
-    ),
-    {reply, Result, NewState};
 handle_manager_call({handoff_to_topology, TargetNodes}, State) ->
     {Result, NewState} = guild_manager_handoff:perform_handoff_to_topology(
         require_nodes(TargetNodes), State
@@ -180,8 +136,6 @@ handle_timed_forward_call({start_or_lookup, GuildId}, Timeout, From, State) ->
     forward_timed_guild_call(start_or_lookup, GuildId, Timeout, From, State);
 handle_timed_forward_call({lookup, GuildId}, Timeout, From, State) ->
     forward_timed_guild_call(lookup, GuildId, Timeout, From, State);
-handle_timed_forward_call({ensure_started, GuildId}, Timeout, From, State) ->
-    forward_timed_guild_call(ensure_started, GuildId, Timeout, From, State);
 handle_timed_forward_call({start_transferred, GuildId, TransferState}, Timeout, From, State) ->
     forward_timed_start_transferred(GuildId, TransferState, Timeout, From, State);
 handle_timed_forward_call({stop_guild, GuildId}, Timeout, From, State) ->
@@ -203,26 +157,9 @@ handle_timed_manager_call({reload_all_guilds, GuildIds}, _Timeout, _From, State)
 handle_timed_manager_call(get_local_count, _Timeout, _From, State) ->
     {Reply, NewState} = guild_manager_router:aggregate_counts(get_local_count, State),
     {reply, Reply, NewState};
-handle_timed_manager_call(list_local_guild_ids, _Timeout, _From, State) ->
-    {reply, {ok, guild_manager_handoff:collect_local_guild_ids(State)}, State};
 handle_timed_manager_call(get_global_count, _Timeout, _From, State) ->
     {Reply, NewState} = guild_manager_router:aggregate_counts(get_global_count, State),
     {reply, Reply, NewState};
-handle_timed_manager_call(handoff_for_drain, _Timeout, From, State) ->
-    async_handoff_reply(
-        self(),
-        From,
-        fun() -> guild_manager_handoff:perform_handoff_for_drain(State) end
-    ),
-    {noreply, State};
-handle_timed_manager_call({handoff_to_target, TargetNode}, _Timeout, From, State) ->
-    Target = require_node(TargetNode),
-    async_handoff_reply(
-        self(),
-        From,
-        fun() -> guild_manager_handoff:perform_handoff_to_target(Target, State) end
-    ),
-    {noreply, State};
 handle_timed_manager_call({handoff_to_topology, TargetNodes}, _Timeout, From, State) ->
     Targets = require_nodes(TargetNodes),
     async_handoff_reply(
@@ -377,17 +314,6 @@ forward_timed_start_transferred(GuildId0, TransferState, Timeout, From, State) -
     GuildId = require_guild_id(GuildId0),
     Request = {start_transferred, GuildId, require_map(TransferState)},
     guild_manager_router:forward_call(GuildId, Request, Timeout, From, State).
-
--spec normalize_ensure_started(term(), guild_id()) -> ok | {error, term()}.
-normalize_ensure_started(ok, _GuildId) ->
-    ok;
-normalize_ensure_started({ok, GuildPid}, GuildId) when is_pid(GuildPid) ->
-    guild_manager_cache:maybe_cache_guild_pid(GuildId, {lookup, GuildId}, {ok, GuildPid}),
-    ok;
-normalize_ensure_started({error, _Reason} = Error, _GuildId) ->
-    Error;
-normalize_ensure_started(_Other, _GuildId) ->
-    {error, unavailable}.
 
 -spec normalize_handoff_result(term()) -> handoff_result() | {error, term()}.
 normalize_handoff_result(#{attempted := Attempted, handed_off := HandedOff}) when

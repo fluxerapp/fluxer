@@ -7,13 +7,11 @@
     new/0,
     start/0,
     elapsed_us/1,
-    record/3,
     record_function/4,
     record_function/5,
     span/2,
     span/3,
     merge/2,
-    finalize/1,
     from_state/1,
     put_state/2,
     merge_state/2,
@@ -57,10 +55,6 @@ elapsed_us(StartedAtUs) when is_integer(StartedAtUs) ->
     max(start() - StartedAtUs, 0);
 elapsed_us(_) ->
     0.
-
--spec record(term(), integer(), recorder()) -> recorder().
-record(Name, StartedAtUs, Recorder) ->
-    record_function(Name, Name, StartedAtUs, Recorder).
 
 -spec record_function(term(), term(), integer(), recorder()) -> recorder().
 record_function(StepName, FunctionName, StartedAtUs, Recorder) ->
@@ -115,17 +109,6 @@ merge(Recorder0, Recorder1) ->
         false ->
             Recorder
     end.
-
--spec finalize(term()) -> map().
-finalize(Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    Trace = lists:reverse(maps:get(trace, Recorder, [])),
-    #{
-        <<"unit">> => <<"microseconds">>,
-        <<"total_us">> => total_us(Recorder, Trace),
-        <<"pod_name">> => maps:get(pod_name, Recorder, pod_name()),
-        <<"trace">> => Trace
-    }.
 
 -spec from_state(map()) -> recorder().
 from_state(State) when is_map(State) ->
@@ -191,39 +174,6 @@ ensure_recorder(
     Recorder1;
 ensure_recorder(_) ->
     new().
-
--spec total_us(recorder(), [map()]) -> non_neg_integer().
-total_us(Recorder, Trace) ->
-    case Trace of
-        [] -> local_elapsed_us(Recorder);
-        _ -> trace_total_us(Trace)
-    end.
-
--spec local_elapsed_us(recorder()) -> non_neg_integer().
-local_elapsed_us(Recorder) ->
-    case maps:get(started_node, Recorder, undefined) of
-        NodeName when NodeName =:= node() ->
-            elapsed_us(maps:get(started_at_us, Recorder, start()));
-        _ ->
-            0
-    end.
-
--spec trace_total_us([map()]) -> non_neg_integer().
-trace_total_us(Trace) ->
-    sum_non_neg_integers([span_duration_us(Span) || Span <- Trace]).
-
--spec sum_non_neg_integers([non_neg_integer()]) -> non_neg_integer().
-sum_non_neg_integers([]) ->
-    0;
-sum_non_neg_integers([Value | Rest]) ->
-    Value + sum_non_neg_integers(Rest).
-
--spec span_duration_us(map()) -> non_neg_integer().
-span_duration_us(Span) ->
-    case maps:get(<<"duration_us">>, Span, 0) of
-        Value when is_integer(Value), Value >= 0 -> Value;
-        _ -> 0
-    end.
 
 -spec ensure_started_node(map()) -> node() | undefined.
 ensure_started_node(Recorder) ->

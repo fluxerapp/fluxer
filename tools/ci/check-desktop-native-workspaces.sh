@@ -14,8 +14,6 @@ mode="${1:-}"
 linux_workspaces=(
 	"app-store/Cargo.toml"
 	"audio-apm/Cargo.toml"
-	"audio-mix/Cargo.toml"
-	"audio-timing/Cargo.toml"
 	"encoder-ring/Cargo.toml"
 	"gateway-socket/Cargo.toml"
 	"gpu-rebuild/Cargo.toml"
@@ -25,17 +23,12 @@ linux_workspaces=(
 	"linux-input-hook/Cargo.toml"
 	"linux-notifications/Cargo.toml"
 	"linux-portals/Cargo.toml"
-	"linux-screen-capture/Cargo.toml"
 	"platform-info/Cargo.toml"
 	"rt-thread/Cargo.toml"
 	"rust/Cargo.toml"
 	"screen-frame-bus/Cargo.toml"
 	"system-hunspell/Cargo.toml"
 	"webauthn/Cargo.toml"
-)
-
-fuzz_workspaces=(
-	"rust/fuzz/Cargo.toml"
 )
 
 macos_workspaces=(
@@ -86,13 +79,6 @@ workspace_category() {
 	for classified_manifest in "${linux_workspaces[@]}"; do
 		if [ "$relative_manifest" = "$classified_manifest" ]; then
 			printf 'linux\n'
-			return
-		fi
-	done
-
-	for classified_manifest in "${fuzz_workspaces[@]}"; do
-		if [ "$relative_manifest" = "$classified_manifest" ]; then
-			printf 'fuzz\n'
 			return
 		fi
 	done
@@ -166,7 +152,6 @@ if [ ! -s "$manifest_list" ]; then
 fi
 
 linux_count=0
-fuzz_count=0
 macos_count=0
 windows_count=0
 
@@ -184,7 +169,6 @@ while IFS= read -r manifest; do
 	category="$(workspace_category "$relative_manifest")"
 	case "$category" in
 	linux) linux_count=$((linux_count + 1)) ;;
-	fuzz) fuzz_count=$((fuzz_count + 1)) ;;
 	macos) macos_count=$((macos_count + 1)) ;;
 	windows) windows_count=$((windows_count + 1)) ;;
 	*) fail "Unclassified desktop native workspace: $relative_manifest" ;;
@@ -194,7 +178,6 @@ done <"$manifest_list"
 
 printf '%s\n' \
 	"${linux_workspaces[@]}" \
-	"${fuzz_workspaces[@]}" \
 	"${macos_workspaces[@]}" \
 	"${windows_workspaces[@]}" |
 	LC_ALL=C sort >"$expected_inventory"
@@ -230,7 +213,6 @@ while IFS= read -r manifest; do
 	clippy)
 		case "$category" in
 		linux) printf 'Clippy full Linux/shared coverage: %s\n' "$relative_manifest" ;;
-		fuzz) printf 'Clippy fuzz-target coverage: %s\n' "$relative_manifest" ;;
 		macos) printf 'Clippy Linux stub/common coverage; macOS backend not validated: %s\n' "$relative_manifest" ;;
 		windows) printf 'Clippy Linux stub/common coverage; Windows backend not validated: %s\n' "$relative_manifest" ;;
 		esac
@@ -239,7 +221,6 @@ while IFS= read -r manifest; do
 	test)
 		case "$category" in
 		linux) printf 'Test full Linux/shared coverage: %s\n' "$relative_manifest" ;;
-		fuzz) printf 'Test command is a no-op for test=false fuzz binaries: %s\n' "$relative_manifest" ;;
 		macos) printf 'Test Linux stub/common coverage; macOS backend not validated: %s\n' "$relative_manifest" ;;
 		windows) printf 'Test Linux stub/common coverage; Windows backend not validated: %s\n' "$relative_manifest" ;;
 		esac
@@ -249,6 +230,6 @@ while IFS= read -r manifest; do
 	checked_count=$((checked_count + 1))
 done <"$manifest_list"
 
-discovered_count=$((linux_count + fuzz_count + macos_count + windows_count))
-printf 'Desktop native workspace categories: discovered=%s linux-full=%s fuzz=%s macos-stub-common=%s windows-stub-common=%s\n' "$discovered_count" "$linux_count" "$fuzz_count" "$macos_count" "$windows_count"
+discovered_count=$((linux_count + macos_count + windows_count))
+printf 'Desktop native workspace categories: discovered=%s linux-full=%s macos-stub-common=%s windows-stub-common=%s\n' "$discovered_count" "$linux_count" "$macos_count" "$windows_count"
 printf 'Desktop native %s summary: checked=%s\n' "$mode" "$checked_count"

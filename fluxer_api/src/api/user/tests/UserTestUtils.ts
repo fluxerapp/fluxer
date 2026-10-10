@@ -11,7 +11,6 @@ import type {
 	UserPrivateResponse,
 	UserProfileFullResponse,
 	UserSettingsResponse,
-	UserTagCheckResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export async function fetchUserMe(
@@ -122,53 +121,8 @@ export async function fetchUserSettings(
 	return {response, json};
 }
 
-export async function checkUsernameDiscriminatorAvailability(
-	harness: ApiTestHarness,
-	username: string,
-	discriminator: string,
-	token: string,
-): Promise<{
-	response: Response;
-	json: UserTagCheckResponse;
-}> {
-	const {response, json} = await createBuilder<UserTagCheckResponse>(harness, token)
-		.get(`/users/check-tag?username=${encodeURIComponent(username)}&discriminator=${encodeURIComponent(discriminator)}`)
-		.executeWithResponse();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}`);
-	}
-	return {response, json};
-}
-
 export async function deleteAccount(harness: ApiTestHarness, token: string, password: string): Promise<void> {
 	await createBuilder<void>(harness, token).post('/users/@me/delete').body({password}).expect(204).execute();
-}
-
-export async function setUserNote(
-	harness: ApiTestHarness,
-	token: string,
-	targetId: string,
-	note: string | null,
-): Promise<void> {
-	await createBuilder<void>(harness, token).put(`/users/@me/notes/${targetId}`).body({note}).expect(204).execute();
-}
-
-export async function preloadMessages(
-	harness: ApiTestHarness,
-	token: string,
-	channels: Array<number>,
-): Promise<{
-	response: Response;
-	json: Record<string, never>;
-}> {
-	const {response, json} = await createBuilder<Record<string, never>>(harness, token)
-		.post('/users/@me/preload-messages')
-		.body({channels})
-		.executeWithResponse();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}`);
-	}
-	return {response, json: json as Record<string, never>};
 }
 
 export async function updateGuildSettings(

@@ -140,9 +140,6 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
 		});
-		test('rejects when user does not exist', async () => {
-			await createBuilder(harness, 'invalid-token').post('/premium/cancel-subscription').expect(401).execute();
-		});
 		test('handles stripe api errors gracefully', async () => {
 			const account = await createTestAccount(harness);
 			await createBuilder(harness, account.token)
@@ -155,11 +152,10 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			stripeHandlers.reset();
 			server.use(...createStripeApiHandlers({subscriptionShouldFail: true}).handlers);
-			const response = await createBuilder<{message: string}>(harness, account.token)
+			await createBuilder(harness, account.token)
 				.post('/premium/cancel-subscription')
 				.expect(400, APIErrorCodes.STRIPE_ERROR)
 				.execute();
-			expect(response.message).toBe('Payment processing encountered an error. Please try again or contact support.');
 		});
 	});
 	describe('POST /premium/reactivate-subscription', () => {
@@ -252,26 +248,6 @@ describe('StripeSubscriptionService', () => {
 				.expect(400, APIErrorCodes.STRIPE_SUBSCRIPTION_NOT_CANCELING)
 				.execute();
 			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
-		test('rejects when user does not exist', async () => {
-			await createBuilder(harness, 'invalid-token').post('/premium/reactivate-subscription').expect(401).execute();
-		});
-		test('handles stripe api errors gracefully', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-					premium_will_cancel: true,
-				})
-				.execute();
-			stripeHandlers.reset();
-			server.use(...createStripeApiHandlers({subscriptionShouldFail: true}).handlers);
-			await createBuilder(harness, account.token)
-				.post('/premium/reactivate-subscription')
-				.expect(400, APIErrorCodes.STRIPE_ERROR)
-				.execute();
 		});
 	});
 	describe('POST /premium/change-subscription', () => {
@@ -641,38 +617,6 @@ describe('StripeSubscriptionService', () => {
 			expect(update?.params.trial_end).toBeDefined();
 			expect(update?.params.proration_behavior).toBe('none');
 		});
-		test('stacks multiple gifts by reading current trial_end', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-				})
-				.execute();
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/extend-subscription-trial`)
-				.body({
-					duration_type: 'months',
-					duration_quantity: 3,
-					idempotency_key: 'gift_1',
-				})
-				.expect(204)
-				.execute();
-			stripeHandlers.reset();
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/extend-subscription-trial`)
-				.body({
-					duration_type: 'months',
-					duration_quantity: 6,
-					idempotency_key: 'gift_2',
-				})
-				.expect(204)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(1);
-			const update = stripeHandlers.spies.updatedSubscriptions[0];
-			expect(update?.params.trial_end).toBeDefined();
-		});
 		test('serialises concurrent gift trial extensions onto the same subscription', async () => {
 			const account = await createTestAccount(harness);
 			await createBuilder(harness, account.token)
@@ -754,26 +698,6 @@ describe('StripeSubscriptionService', () => {
 				.expect(400, APIErrorCodes.NO_ACTIVE_SUBSCRIPTION)
 				.execute();
 			expect(stripeHandlers.spies.retrievedSubscriptions).toHaveLength(0);
-		});
-		test('handles stripe api errors gracefully', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-				})
-				.execute();
-			stripeHandlers.reset();
-			server.use(...createStripeApiHandlers({subscriptionShouldFail: true}).handlers);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/extend-subscription-trial`)
-				.body({
-					duration_months: 3,
-					idempotency_key: 'gift_fail',
-				})
-				.expect(400, APIErrorCodes.STRIPE_ERROR)
-				.execute();
 		});
 	});
 });

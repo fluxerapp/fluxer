@@ -130,19 +130,3 @@ extract_user_id_from_event(EventData) ->
     guild_dispatch_decorate:parse_snowflake(
         <<"user.id">>, maps:get(<<"id">>, MUser, undefined)
     ).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-extract_user_id_from_event_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"42">>}},
-    ?assertEqual(42, extract_user_id_from_event(EventData)).
-
-extract_user_id_from_event_missing_test() ->
-    ?assertEqual(undefined, extract_user_id_from_event(#{})).
-
-extract_user_id_from_event_invalid_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"invalid">>}},
-    ?assertEqual(undefined, extract_user_id_from_event(EventData)).
-
--endif.

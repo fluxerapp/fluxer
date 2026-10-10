@@ -42,7 +42,7 @@ type NatsGifRequest =
 	| {op: 'RegisterShare'; api_key: string; id: string; q: string; locale: string; country: string}
 	| {op: 'ResolveByUrl'; api_key: string; url: string; locale: string; country: string};
 
-export function extractKlipySlugFromUrl(rawUrl: string): string | null {
+function extractKlipySlugFromUrl(rawUrl: string): string | null {
 	let parsed: URL;
 	try {
 		parsed = new URL(rawUrl);
@@ -69,7 +69,7 @@ export function extractKlipySlugFromUrl(rawUrl: string): string | null {
 	}
 }
 
-export function buildKlipyShareUrl(slug: string): string {
+function buildKlipyShareUrl(slug: string): string {
 	const trimmed = slug.trim();
 	if (!trimmed) {
 		return `${KLIPY_SHARE_ORIGIN}/gifs`;

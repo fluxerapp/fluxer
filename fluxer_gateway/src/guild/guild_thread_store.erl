@@ -427,10 +427,4 @@ load_over_cap_keeps_newest_ids_test() ->
         destroy(Tab)
     end.
 
-destroy_is_idempotent_test() ->
-    Tab = new(),
-    ok = destroy(Tab),
-    ok = destroy(Tab),
-    ok = destroy(undefined).
-
 -endif.

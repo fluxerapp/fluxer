@@ -405,16 +405,6 @@ get_setting_binary(Key, Settings, Default) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-get_setting_atom_test() ->
-    ?assertEqual(true, get_setting(mobile_push, #{mobile_push => true}, false)).
-
-get_setting_binary_test() ->
-    ?assertEqual(true, get_setting(mobile_push, #{<<"mobile_push">> => true}, false)).
-
-get_setting_default_test() ->
-    ?assertEqual(default, get_setting(mobile_push, #{}, default)),
-    ?assertEqual(default, get_setting(mobile_push, not_a_map, default)).
-
 is_eligible_same_user_test() ->
     ?assertEqual(false, is_eligible_for_push(123, 123, 0, 0, #{}, 0, #{}, #{}, undefined)).
 

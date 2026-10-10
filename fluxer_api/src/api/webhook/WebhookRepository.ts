@@ -251,10 +251,6 @@ export class WebhookRepository extends IWebhookRepository {
 		await batch.execute();
 	}
 
-	async findManyByIds(webhookIds: Array<WebhookID>): Promise<Array<Webhook>> {
-		return this.fetchWebhooksByIds(webhookIds);
-	}
-
 	async listIdsBySourceChannel(
 		sourceChannelId: ChannelID,
 		options: {afterWebhookId?: WebhookID; limit: number},

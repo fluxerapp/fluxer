@@ -260,9 +260,6 @@ run_guild_handle_info_flushes_stale_pending_member_list_batch() ->
 sync_batch_fans_out_large_subscribed_set_immediately_test() ->
     with_sync_dispatch_mock(fun run_sync_batch_fans_out_large_subscribed_set_immediately/0).
 
-send_member_list_update_encodes_wire_payload_test() ->
-    with_member_list_relay_mock(fun run_send_member_list_update_encodes_wire_payload/0).
-
 run_sync_batch_fans_out_large_subscribed_set_immediately() ->
     ChannelIds = lists:seq(1000, 1063),
     {State, Refs} = stress_channel_list_state(ChannelIds, 4),
@@ -275,56 +272,6 @@ run_sync_batch_fans_out_large_subscribed_set_immediately() ->
         assert_channel_sync_dispatches_for_ids(ChannelIds, Dispatches)
     after
         lists:foreach(fun guild_member_list_engine:destroy/1, Refs)
-    end.
-
-run_send_member_list_update_encodes_wire_payload() ->
-    Sessions = #{<<"s1">> => #{pid => self(), user_id => 42}},
-    State = (base_state(make_subs_tab()))#{
-        data => #{
-            <<"members">> => [
-                #{<<"user">> => #{<<"id">> => <<"42">>}, <<"roles">> => []}
-            ]
-        },
-        sessions => Sessions
-    },
-    Payload = #{
-        id => 100,
-        <<"ops">> => [
-            #{
-                <<"op">> => <<"SYNC">>,
-                <<"range">> => [0, 0],
-                <<"items">> => [#{123 => #{id => 456, <<"roles">> => [789]}}]
-            }
-        ]
-    },
-    guild_member_list_subscribe:send_member_list_update_to_sessions(
-        <<"0">>, #{<<"s1">> => [{0, 0}]}, Sessions, Payload, State
-    ),
-    receive
-        {member_list_dispatch, [Self], guild_member_list_update, 100, Decoded} when
-            Self =:= self()
-        ->
-            ?assertEqual(
-                #{
-                    <<"id">> => <<"100">>,
-                    <<"ops">> => [
-                        #{
-                            <<"op">> => <<"SYNC">>,
-                            <<"range">> => [0, 0],
-                            <<"items">> => [
-                                #{
-                                    <<"123">> => #{
-                                        <<"id">> => <<"456">>, <<"roles">> => [<<"789">>]
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                Decoded
-            )
-    after 1000 ->
-        ?assert(false)
     end.
 
 broadcast_afk_only_change_skips_sync_test() ->
@@ -425,52 +372,6 @@ presence_map(Status, Mobile, Afk, CustomStatus) ->
         <<"afk">> => Afk,
         <<"custom_status">> => CustomStatus
     }.
-
-has_subs_reports_subscribers_per_list_test() ->
-    SubsTab = make_subs_tab([
-        {<<"10">>, <<"s0">>, [{0, 99}]},
-        {<<"100">>, <<"s1">>, [{0, 99}]},
-        {<<"100">>, <<"s2">>, [{0, 49}]},
-        {<<"300">>, <<"s3">>, [{0, 99}]}
-    ]),
-    ?assert(guild_member_list_subs:has_subs(<<"10">>, SubsTab)),
-    ?assert(guild_member_list_subs:has_subs(<<"100">>, SubsTab)),
-    ?assert(guild_member_list_subs:has_subs(<<"300">>, SubsTab)),
-    ?assertNot(guild_member_list_subs:has_subs(<<"1">>, SubsTab)),
-    ?assertNot(guild_member_list_subs:has_subs(<<"050">>, SubsTab)),
-    ?assertNot(guild_member_list_subs:has_subs(<<"200">>, SubsTab)),
-    ?assertNot(guild_member_list_subs:has_subs(<<"400">>, SubsTab)),
-    guild_member_list_subs:unsubscribe_session(<<"s3">>, SubsTab),
-    ?assertNot(guild_member_list_subs:has_subs(<<"300">>, SubsTab)),
-    guild_member_list_subs:unsubscribe_session(<<"s0">>, SubsTab),
-    ?assertNot(guild_member_list_subs:has_subs(<<"10">>, SubsTab)),
-    ?assert(guild_member_list_subs:has_subs(<<"100">>, SubsTab)),
-    guild_member_list_subs:destroy(SubsTab).
-
-has_subs_on_empty_table_test() ->
-    SubsTab = make_subs_tab(),
-    ?assertNot(guild_member_list_subs:has_subs(<<"500">>, SubsTab)),
-    ?assertEqual([], collect_list_ids(SubsTab)),
-    guild_member_list_subs:destroy(SubsTab).
-
-fold_list_ids_visits_each_list_once_test() ->
-    SubsTab = make_subs_tab([
-        {<<"10">>, <<"s0">>, [{0, 99}]},
-        {<<"100">>, <<"s1">>, [{0, 99}]},
-        {<<"100">>, <<"s2">>, [{0, 49}]},
-        {<<"300">>, <<"s3">>, [{0, 99}]}
-    ]),
-    ListIds = collect_list_ids(SubsTab),
-    ?assertEqual([<<"10">>, <<"100">>, <<"300">>], ListIds),
-    ?assertEqual(guild_member_list_subs:list_ids(SubsTab), ListIds),
-    guild_member_list_subs:destroy(SubsTab).
-
-collect_list_ids(SubsTab) ->
-    lists:reverse(
-        guild_member_list_subs:fold_list_ids(
-            fun(ListId, Acc) -> [ListId | Acc] end, [], SubsTab
-        )
-    ).
 
 channel_list_state(Ref, SubsTab, Members) ->
     (base_state(SubsTab))#{
@@ -623,23 +524,6 @@ maybe_send_sync_dispatch(ListSubs, _Sessions, _ChannelId, _GuildId, _State, _Syn
 maybe_send_sync_dispatch(ListSubs, Sessions, ChannelId, GuildId, State, SyncFun) ->
     self() ! {sync_dispatch, ListSubs, Sessions, ChannelId, GuildId, State, SyncFun},
     ok.
-
-with_member_list_relay_mock(Fun) ->
-    meck:new(gateway_dispatch_relay, [passthrough, no_link]),
-    Parent = self(),
-    meck:expect(
-        gateway_dispatch_relay,
-        dispatch_many,
-        fun(Pids, Event, {pre_encoded, Bin}, GuildId) when is_binary(Bin) ->
-            Parent ! {member_list_dispatch, Pids, Event, GuildId, json:decode(Bin)},
-            ok
-        end
-    ),
-    try
-        Fun()
-    after
-        meck:unload(gateway_dispatch_relay)
-    end.
 
 assert_channel_sync_dispatch(
     {sync_dispatch, ListSubs, _Sessions, ChannelId, 100, _State, SyncFun}

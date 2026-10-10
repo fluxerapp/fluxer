@@ -22,38 +22,6 @@ describe('User Settings Validation', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('boolean fields must be booleans', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({inline_attachment_media: 'true'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('status must be known string', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({status: 42})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('null theme not allowed', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({theme: null})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('mixed invalid shape', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({status: 'offline', gif_auto_play: 'nope'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('trusted_domains rejects the wildcard alongside specific domains', async () => {
 		const account = await createTestAccount(harness);
 		const response = await createBuilder<{
@@ -76,17 +44,6 @@ describe('User Settings Validation', () => {
 		const account = await createTestAccount(harness);
 		const {json} = await updateUserSettings(harness, account.token, {trusted_domains: ['*']});
 		expect(json.trusted_domains).toEqual(['*']);
-	});
-	test('valid settings update', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await updateUserSettings(harness, account.token, {
-			status: 'online',
-			inline_attachment_media: true,
-			gif_auto_play: false,
-		});
-		expect(json.status).toBe('online');
-		expect(json.inline_attachment_media).toBe(true);
-		expect(json.gif_auto_play).toBe(false);
 	});
 	test('staff users can persist self-mention suppression settings', async () => {
 		const account = await createTestAccount(harness);

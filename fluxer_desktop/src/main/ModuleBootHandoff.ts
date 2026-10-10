@@ -30,7 +30,6 @@ interface ModuleBootHandoffState {
 	mainWindowSignalled: boolean;
 	mainWindowReadySignalled: boolean;
 	mainWindow: BrowserWindow | null;
-	liveMainWindow: BrowserWindow | null;
 	onDemandModuleInstaller: OnDemandModuleInstaller | null;
 	mainWindowFactory: MainWindowFactory | null;
 	secondInstanceForwarding: boolean;
@@ -41,7 +40,6 @@ interface ModuleBootHandoffState {
 	readonly bufferedOpenUrls: Array<string>;
 	readonly committedModuleFilesListeners: Set<CommittedModuleFilesListener>;
 	readonly mainWindowListeners: Set<MainWindowListener>;
-	readonly mainWindowObservers: Set<MainWindowListener>;
 	readonly mainWindowReadyListeners: Set<MainWindowReadyListener>;
 }
 
@@ -50,7 +48,6 @@ const handoffState: ModuleBootHandoffState = {
 	mainWindowSignalled: false,
 	mainWindowReadySignalled: false,
 	mainWindow: null,
-	liveMainWindow: null,
 	onDemandModuleInstaller: null,
 	mainWindowFactory: null,
 	secondInstanceForwarding: false,
@@ -61,7 +58,6 @@ const handoffState: ModuleBootHandoffState = {
 	bufferedOpenUrls: [],
 	committedModuleFilesListeners: new Set(),
 	mainWindowListeners: new Set(),
-	mainWindowObservers: new Set(),
 	mainWindowReadyListeners: new Set(),
 };
 
@@ -157,10 +153,6 @@ export function observeCommittedModuleFiles(listener: CommittedModuleFilesListen
 	};
 }
 
-export function getCommittedModuleFiles(): ReadonlyMap<string, string> {
-	return handoffState.committedModuleFileIndex.files;
-}
-
 export function setOnDemandModuleInstaller(installer: OnDemandModuleInstaller | null): void {
 	handoffState.onDemandModuleInstaller = installer;
 }
@@ -178,7 +170,6 @@ export function getMainWindowFactory(): MainWindowFactory | null {
 }
 
 export function signalMainWindowCreated(window: BrowserWindow | null): void {
-	handoffState.liveMainWindow = window;
 	if (!handoffState.mainWindowSignalled) {
 		handoffState.mainWindowSignalled = true;
 		handoffState.mainWindow = window;
@@ -192,13 +183,6 @@ export function signalMainWindowCreated(window: BrowserWindow | null): void {
 			}
 		}
 	}
-	for (const observer of Array.from(handoffState.mainWindowObservers)) {
-		try {
-			observer(window);
-		} catch (error) {
-			logger.error('A main window observer threw', error);
-		}
-	}
 }
 
 export function onMainWindowCreated(listener: MainWindowListener): void {
@@ -207,14 +191,6 @@ export function onMainWindowCreated(listener: MainWindowListener): void {
 		return;
 	}
 	handoffState.mainWindowListeners.add(listener);
-}
-
-export function observeMainWindow(observer: MainWindowListener): () => void {
-	handoffState.mainWindowObservers.add(observer);
-	observer(handoffState.liveMainWindow);
-	return () => {
-		handoffState.mainWindowObservers.delete(observer);
-	};
 }
 
 export function signalMainWindowReady(): void {

@@ -80,8 +80,6 @@ export interface FrameSinkDiagnostics {
 
 export declare const loadError: Error | null;
 
-export declare function __setBindingForTests(binding: unknown): void;
-
 export declare interface ScreenCapture {
 	on(event: 'error', listener: (err: Error) => void): this;
 	on(event: 'closed', listener: () => void): this;

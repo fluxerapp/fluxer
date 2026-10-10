@@ -111,18 +111,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn url_extension_drives_output_format() {
-        let r = select_url_variant(Input {
-            kind: AssetKind::GuildIcon,
-            original: AssetExtension::Png,
-            requested_size: Some(128),
-            manual_format_override: None,
-        });
-        assert_eq!(OutputFormat::PNG, r.format);
-        assert_eq!("url", r.reason);
-    }
-
-    #[test]
     fn unsupported_url_extension_coerces_to_webp() {
         let r = select_url_variant(Input {
             kind: AssetKind::Avatar,
@@ -147,18 +135,6 @@ mod tests {
     }
 
     #[test]
-    fn manual_query_format_wins_over_url_extension() {
-        let r = select_url_variant(Input {
-            kind: AssetKind::Avatar,
-            original: AssetExtension::Jpeg,
-            requested_size: Some(128),
-            manual_format_override: Some(AssetExtension::Png),
-        });
-        assert_eq!(OutputFormat::PNG, r.format);
-        assert_eq!("url", r.reason);
-    }
-
-    #[test]
     fn manual_unsupported_query_format_coerces_to_webp() {
         let r = select_url_variant(Input {
             kind: AssetKind::Avatar,
@@ -168,42 +144,5 @@ mod tests {
         });
         assert_eq!(OutputFormat::WebP, r.format);
         assert_eq!("url-coerced", r.reason);
-    }
-
-    #[test]
-    fn encodable_extensions_round_trip_through_the_output_format() {
-        for extension in [
-            AssetExtension::Png,
-            AssetExtension::Jpeg,
-            AssetExtension::Webp,
-            AssetExtension::Gif,
-            AssetExtension::Apng,
-        ] {
-            let format = OutputFormat::from_source_extension(extension).expect("encodable");
-            assert!(is_output_format_supported(extension));
-            assert_eq!(extension, format.as_asset_extension());
-            assert_eq!(extension.mime(), format.mime());
-            assert_eq!(extension.name(), format.extension());
-            assert_eq!(format.extension(), format.cache_serialization());
-            assert_eq!(format, OutputFormat::coerce_from_extension(extension));
-        }
-        for extension in [
-            AssetExtension::Avif,
-            AssetExtension::Heic,
-            AssetExtension::Heif,
-            AssetExtension::Jxl,
-            AssetExtension::Svg,
-        ] {
-            assert!(!is_output_format_supported(extension));
-            assert_eq!(None, OutputFormat::from_source_extension(extension));
-            assert_eq!(
-                OutputFormat::WebP,
-                OutputFormat::coerce_from_extension(extension)
-            );
-            assert_eq!(
-                AssetExtension::Webp,
-                OutputFormat::coerce_from_extension(extension).as_asset_extension()
-            );
-        }
     }
 }

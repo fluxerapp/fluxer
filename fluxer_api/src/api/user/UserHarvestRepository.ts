@@ -10,7 +10,6 @@ import type {UserHarvestRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
 import {UserHarvests} from '@app/api/Tables';
 import {UserHarvest} from '@app/api/user/UserHarvestModel';
-import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 
 const FIND_HARVEST_CQL = UserHarvests.selectCql({
 	where: [UserHarvests.where.eq('user_id'), UserHarvests.where.eq('harvest_id')],
@@ -156,19 +155,6 @@ export class UserHarvestRepository {
 			{userId: harvest.userId, harvestId: harvest.harvestId, errorMessage},
 			'Marked harvest as terminally failed',
 		);
-	}
-
-	async setDownloadUrlExpiry(userId: UserID, harvestId: bigint, expiresAt: Date): Promise<void> {
-		const harvest = await this.findByUserAndHarvestId(userId, harvestId);
-		if (!harvest) throw new UnknownHarvestError();
-		const applied = await executeConditional(
-			UserHarvests.conditionalPatchByPk(
-				{user_id: userId, harvest_id: harvestId},
-				{download_url_expires_at: Db.set(expiresAt)},
-				{requested_at: harvest.requestedAt},
-			),
-		);
-		if (!applied) throw new UnknownHarvestError();
 	}
 
 	private async patchOwned(harvest: UserHarvest, patch: UserHarvestPatch): Promise<void> {

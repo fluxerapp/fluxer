@@ -20,13 +20,11 @@ import type * as UpdaterModalCommands from '@app/features/updater/commands/Updat
 import {
 	createUpdaterMachineSnapshot,
 	getUpdaterDisplayVersion,
-	getUpdaterMachineStateValue,
 	hasManualNativeDownload,
 	transitionUpdaterMachineSnapshot,
 	type UpdateInfo,
 	type UpdaterMachineEvent,
 	type UpdaterMachineSnapshot,
-	type UpdaterState,
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
@@ -204,10 +202,6 @@ class Updater {
 
 	get nativeManualUpdateAvailable(): boolean {
 		return this.updateInfo.native.available && this.hasManualNativeDownload;
-	}
-
-	get state(): UpdaterState {
-		return getUpdaterMachineStateValue(this.snapshot);
 	}
 
 	get isChecking(): boolean {
@@ -726,10 +720,6 @@ class Updater {
 		} finally {
 			this.transition({type: 'manualDownload.finished'});
 		}
-	}
-
-	reset(): void {
-		this.transition({type: 'reset'});
 	}
 
 	dispose(): void {

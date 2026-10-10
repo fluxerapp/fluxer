@@ -52,10 +52,6 @@ describe('isPasswordPwned', () => {
 	beforeEach(() => {
 		resetPwnedPasswordCacheForTesting();
 	});
-	test('the fixture passwords are distinct but share a range prefix', () => {
-		expect(PWNED_PASSWORD).not.toBe(SAFE_PASSWORD_SAME_PREFIX);
-		expect(prefixOf(PWNED_PASSWORD)).toBe(prefixOf(SAFE_PASSWORD_SAME_PREFIX));
-	});
 	test('reports a breached password from the range response', async () => {
 		const requestedPrefixes: Array<string> = [];
 		server.use(rangeHandler(requestedPrefixes, [suffixOf(PWNED_PASSWORD)]));

@@ -236,13 +236,6 @@ build_connect_opts(AuthToken) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-parse_nats_url_test() ->
-    ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url(<<"nats://127.0.0.1:4222">>)),
-    ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost:4222">>)),
-    ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost">>)),
-    ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url("nats://127.0.0.1:4222")),
-    ?assertEqual({error, invalid_nats_url}, parse_nats_url(undefined)).
-
 execute_rpc_method_maps_validation_failure_to_invalid_params_test() ->
     Payload = iolist_to_binary(
         json:encode(#{

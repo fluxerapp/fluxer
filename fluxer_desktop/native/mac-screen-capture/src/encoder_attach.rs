@@ -545,13 +545,6 @@ mod tests {
         ));
     }
 
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn off_macos_init_fails() {
-        let err = EncoderAttachment::try_new(640, 480).err();
-        assert!(matches!(err, Some(EncoderAttachError::RingInitFailed)));
-    }
-
     #[cfg(target_os = "macos")]
     #[test]
     fn macos_attach_then_detach() {

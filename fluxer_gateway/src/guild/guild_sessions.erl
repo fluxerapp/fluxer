@@ -24,7 +24,6 @@
     set_session_push_hold/3,
     released_push_holds/2,
     handle_send_guild_sync/2,
-    handle_send_members_chunk/3,
     build_viewable_channel_map/1
 ]).
 
@@ -156,10 +155,6 @@ released_push_holds(SessionIds, State) ->
 -spec handle_send_guild_sync(session_id(), guild_state()) -> guild_state().
 handle_send_guild_sync(SessionId, State) ->
     guild_sessions_passive:handle_send_guild_sync(SessionId, State).
-
--spec handle_send_members_chunk(session_id(), map(), guild_state()) -> ok.
-handle_send_members_chunk(SessionId, ChunkData, State) ->
-    guild_sessions_passive:handle_send_members_chunk(SessionId, ChunkData, State).
 
 -spec filter_sessions_for_channel(
     sessions_map(), channel_id(), session_id() | undefined, guild_state()
@@ -473,28 +468,6 @@ build_viewable_channel_map(ChannelIds) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-should_exclude_session_test() ->
-    ?assertEqual(false, should_exclude_session(<<"s1">>, undefined)),
-    ?assertEqual(true, should_exclude_session(<<"s1">>, <<"s1">>)),
-    ?assertEqual(false, should_exclude_session(<<"s1">>, <<"s2">>)).
-
-is_pending_or_excluded_pending_test() ->
-    S = #{pending_connect => true},
-    ?assertEqual(true, is_pending_or_excluded(<<"s1">>, S, undefined)).
-
-is_pending_or_excluded_excluded_test() ->
-    S = #{},
-    ?assertEqual(true, is_pending_or_excluded(<<"s1">>, S, <<"s1">>)).
-
-is_pending_or_excluded_neither_test() ->
-    S = #{},
-    ?assertEqual(false, is_pending_or_excluded(<<"s1">>, S, <<"s2">>)),
-    ?assertEqual(false, is_pending_or_excluded(<<"s1">>, S, undefined)).
-
-is_pending_or_excluded_pending_false_test() ->
-    S = #{pending_connect => false},
-    ?assertEqual(false, is_pending_or_excluded(<<"s1">>, S, undefined)).
-
 filter_active_sessions_test() ->
     S1 = #{user_id => 1, pending_connect => false},
     S2 = #{user_id => 2, pending_connect => true},
@@ -514,21 +487,10 @@ filter_active_sessions_with_predicate_test() ->
     ?assertEqual(1, length(Result)),
     [{<<"b">>, _}] = Result.
 
-store_memo_test() ->
-    ?assertEqual(#{7 => 42}, store_memo(7, 42, #{})),
-    ?assertEqual(#{7 => 42}, store_memo(7, 42, #{7 => 42})).
-
 store_memo_bound_test() ->
     Full = maps:from_list([{I, 0} || I <- lists:seq(1, ?MAX_MEMO_ENTRIES)]),
     ?assertEqual(Full, store_memo(0, 1, Full)),
     ?assertEqual(?MAX_MEMO_ENTRIES, map_size(store_memo(0, 1, Full))).
-
-memo_member_permissions_hit_test() ->
-    Memo = #{9 => 123},
-    ?assertEqual({123, Memo}, memo_member_permissions(9, 5, #{}, Memo)).
-
-memo_member_permissions_miss_test() ->
-    ?assertEqual({0, #{9 => 0}}, memo_member_permissions(9, 5, #{}, #{})).
 
 -spec reference_session_can_access_message(map(), channel_id(), binary(), guild_state()) ->
     boolean().
@@ -579,13 +541,6 @@ reference_filter_message_direct(Sessions, ChannelId, MessageId, SessionIdOpt, St
         reference_session_can_view_channel(S, ChannelId, State) andalso
             reference_session_can_access_message(S, ChannelId, MessageId, State)
     end).
-
-memo_member_channel_access_hit_test() ->
-    Memo = #{1001 => true},
-    ?assertEqual({true, Memo}, memo_member_channel_access(1001, 10, #{}, Memo)).
-
-memo_member_channel_access_miss_test() ->
-    ?assertEqual({false, #{1001 => false}}, memo_member_channel_access(1001, 10, #{}, #{})).
 
 memo_session_can_view_channel_listed_skips_memo_test() ->
     Session = #{user_id => 1001, viewable_channels => #{10 => true}},

@@ -95,7 +95,6 @@ import {
 } from '@electron/main/NativeHardwareEncoder';
 import {type NativeModulePreflightResult, runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
 import {armNativeProbeCache} from '@electron/main/NativeProbeCache';
-import {cleanupNativeScreenCapture, registerNativeScreenCaptureHandlers} from '@electron/main/NativeScreenCapture';
 import {applyPreReadyChromiumConfiguration} from '@electron/main/PreReadyChromium';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {
@@ -540,11 +539,6 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to remove the legacy Squirrel uninstall entry:', error);
 				}
 				try {
-					runStartupPhase('native-screen-capture-handlers', registerNativeScreenCaptureHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register native screen capture handlers:', error);
-				}
-				try {
 					runStartupPhase('native-hardware-encoder-handlers', registerNativeHardwareEncoderHandlers);
 				} catch (error: unknown) {
 					log.error('[Init] Failed to register native hardware encoder handlers:', error);
@@ -691,7 +685,6 @@ if (launchConfigurationError) {
 			cleanupIpcHandlers({quitting: true});
 			cleanupGlobalShortcuts();
 			cleanupNativeAudio();
-			cleanupNativeScreenCapture();
 			cleanupNativeHardwareEncoderHandlers();
 			cleanupVirtmic();
 			destroyDesktopTray();

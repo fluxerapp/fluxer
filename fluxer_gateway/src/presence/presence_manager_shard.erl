@@ -41,9 +41,6 @@ handle_call({dispatch, UserId, Event, Data}, _From, State) when
     do_dispatch(UserId, Event, Data, State);
 handle_call({start_or_lookup, Request}, _From, State) when is_map(Request) ->
     do_start_or_lookup(Request, State);
-handle_call({terminate_all_sessions, UserId}, _From, State) when is_integer(UserId) ->
-    {Result, NewState} = terminate_sessions_for_user(UserId, State),
-    {reply, Result, NewState};
 handle_call(Request, From, State) ->
     handle_call_info(Request, From, State).
 
@@ -258,47 +255,6 @@ lookup_via_registry(UserId, State) ->
             {error, not_found, State}
     end.
 
--spec terminate_sessions_for_user(user_id(), state()) -> {ok, state()}.
-terminate_sessions_for_user(UserId, State) ->
-    Presences = maps:get(presences, State),
-    case maps:get(UserId, Presences, undefined) of
-        {Pid, Ref} ->
-            terminate_known_presence(UserId, Pid, Ref, State);
-        undefined ->
-            terminate_via_registry(UserId, State)
-    end.
-
--spec terminate_known_presence(user_id(), pid(), reference(), state()) -> {ok, state()}.
-terminate_known_presence(UserId, Pid, Ref, State) ->
-    case process_liveness:is_alive(Pid) of
-        true ->
-            gen_server:cast(Pid, {terminate_all_sessions}),
-            {ok, State};
-        false ->
-            demonitor(Ref, [flush]),
-            PresenceName = process_registry:build_process_key(presence, UserId),
-            process_registry:safe_unregister(PresenceName),
-            Presences = maps:get(presences, State),
-            terminate_sessions_for_user(
-                UserId, State#{presences := maps:remove(UserId, Presences)}
-            )
-    end.
-
--spec terminate_via_registry(user_id(), state()) -> {ok, state()}.
-terminate_via_registry(UserId, State) ->
-    Presences = maps:get(presences, State),
-    PresenceName = process_registry:build_process_key(presence, UserId),
-    case process_registry:lookup_or_monitor(PresenceName, UserId, Presences) of
-        {ok, Pid, Ref, NewPresences0} ->
-            CleanPresences = sanitize_presences(maps:remove(PresenceName, NewPresences0)),
-            FinalPresences = CleanPresences#{UserId => {Pid, Ref}},
-            update_cache(UserId, Pid),
-            gen_server:cast(Pid, {terminate_all_sessions}),
-            {ok, State#{presences := FinalPresences}};
-        {error, not_found} ->
-            {ok, State}
-    end.
-
 -spec update_cache(user_id(), pid()) -> ok.
 update_cache(UserId, Pid) ->
     Timestamp = erlang:monotonic_time(millisecond),
@@ -354,34 +310,6 @@ normalize_start_link(ignore) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-init_returns_empty_presences_test() ->
-    {ok, State, hibernate} = init(#{shard_index => 0}),
-    ?assertEqual(#{}, maps:get(presences, State)),
-    ?assertEqual(0, maps:get(shard_index, State)).
-
-init_stores_shard_index_test() ->
-    {ok, State, hibernate} = init(#{shard_index => 7}),
-    ?assertEqual(7, maps:get(shard_index, State)).
-
-update_cache_handles_missing_table_test() ->
-    ?assertEqual(ok, update_cache(999, self())).
-
-find_user_ids_by_pid_test() ->
-    Pid1 = self(),
-    Pid2 = spawn(fun test_wait_for_stop/0),
-    Ref1 = make_ref(),
-    Ref2 = make_ref(),
-    Ref3 = make_ref(),
-    Presences = #{
-        100 => {Pid1, Ref1},
-        200 => {Pid2, Ref2},
-        300 => {Pid1, Ref3}
-    },
-    Found = lists:sort(find_user_ids_by_pid(Pid1, Presences)),
-    ?assertEqual([100, 300], Found),
-    ?assertEqual([200], find_user_ids_by_pid(Pid2, Presences)),
-    Pid2 ! stop.
-
 process_down_clears_the_pid_cache_test() ->
     Pid = spawn(fun test_wait_for_stop/0),
     UserId = 987654321,
@@ -394,9 +322,6 @@ process_down_clears_the_pid_cache_test() ->
     ),
     ?assertEqual([], ets:lookup(presence_pid_cache, UserId)),
     Pid ! stop.
-
-find_user_ids_by_pid_empty_test() ->
-    ?assertEqual([], find_user_ids_by_pid(self(), #{})).
 
 -spec test_wait_for_stop() -> ok.
 test_wait_for_stop() ->

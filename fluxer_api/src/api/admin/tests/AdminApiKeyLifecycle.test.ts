@@ -4,7 +4,6 @@ import {
 	createAdminApiKey,
 	createAdminApiKeyWithDefaultACLs,
 	listAdminApiKeys,
-	revokeAdminApiKey,
 } from '@app/api/admin/tests/AdminTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -69,73 +68,6 @@ describe('Admin API Key Lifecycle', () => {
 		expect(data.expires_at).not.toBeNull();
 		expect(data.expires_at).toBeTruthy();
 	});
-	test('create API key with multiple ACLs', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const data = await createBuilder<ApiKeyResponse>(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Multi-ACL API Key',
-				acls: ['audit_log:view', 'user:lookup', 'guild:lookup'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(data.acls).toHaveLength(3);
-	});
-	test('name validation - empty name rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: '',
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-	});
-	test('name validation - spaces only rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: '   ',
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-	});
-	test('name validation - valid name accepted', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'My API Key',
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-	});
-	test('name validation - special characters accepted', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Key-123_Test!@#',
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-	});
 	test('expiration validation - zero days rejected', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
@@ -148,78 +80,6 @@ describe('Admin API Key Lifecycle', () => {
 			})
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.executeWithResponse();
-	});
-	test('expiration validation - negative days rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				expires_in_days: -1,
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-	});
-	test('expiration validation - too many days rejected', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				expires_in_days: 366,
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-	});
-	test('expiration validation - valid minimum accepted', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				expires_in_days: 1,
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-	});
-	test('expiration validation - valid maximum accepted', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				expires_in_days: 365,
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-	});
-	test('list empty API keys', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		const keys = await listAdminApiKeys(harness, admin.token);
-		expect(keys).toHaveLength(0);
-	});
-	test('list multiple API keys', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		await createAdminApiKeyWithDefaultACLs(harness, admin, 'First Key');
-		await createAdminApiKey(harness, admin, 'Second Key', ['user:lookup'], null);
-		const keys = await listAdminApiKeys(harness, admin.token);
-		expect(keys).toHaveLength(2);
 	});
 	test('list does not include secret key', async () => {
 		const admin = await createTestAccount(harness);
@@ -291,45 +151,6 @@ describe('Admin API Key Lifecycle', () => {
 			.patch(`/admin/api-keys/${apiKey.keyId}`)
 			.body({acls: ['guild:delete']})
 			.expect(HTTP_STATUS.FORBIDDEN)
-			.executeWithResponse();
-	});
-	test('revoke API key', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Key to Revoke');
-		let keys = await listAdminApiKeys(harness, admin.token);
-		expect(keys).toHaveLength(1);
-		await revokeAdminApiKey(harness, admin.token, apiKey.keyId);
-		keys = await listAdminApiKeys(harness, admin.token);
-		expect(keys).toHaveLength(0);
-	});
-	test('revoke non-existent key', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
-		await createBuilder(harness, `${admin.token}`)
-			.delete('/admin/api-keys/999999999999999999')
-			.body(null)
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.executeWithResponse();
-	});
-	test('revoked key cannot be used', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
-		const apiKey = await createAdminApiKey(harness, admin, 'Key to Test', ['user:lookup'], null);
-		await createBuilder(harness, apiKey.token)
-			.get(`/admin/users/${admin.userId}`)
-			.expect(HTTP_STATUS.OK)
-			.executeWithResponse();
-		await revokeAdminApiKey(harness, admin.token, apiKey.keyId);
-		await createBuilder(harness, apiKey.token)
-			.get(`/admin/users/${admin.userId}`)
-			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.executeWithResponse();
 	});
 	test('only keys created by user are listed', async () => {

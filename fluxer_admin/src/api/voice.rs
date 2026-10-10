@@ -5,8 +5,8 @@ use crate::api::generated::types as generated_types;
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     CreateVoiceRegionResponse, CreateVoiceServerResponse, DeleteVoiceResponse,
-    GetVoiceRegionResponse, GetVoiceServerResponse, ListVoiceRegionsResponse,
-    ListVoiceServersResponse, UpdateVoiceRegionResponse, UpdateVoiceServerResponse,
+    GetVoiceRegionResponse, ListVoiceRegionsResponse, ListVoiceServersResponse,
+    UpdateVoiceRegionResponse, UpdateVoiceServerResponse,
 };
 
 impl AdminApiClient {
@@ -78,19 +78,6 @@ impl AdminApiClient {
         let response = self
             .generated()
             .list_admin_voice_servers(region_id)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
-    }
-
-    pub async fn get_voice_server(
-        &self,
-        region_id: &str,
-        server_id: &str,
-    ) -> ApiResult<GetVoiceServerResponse> {
-        let response = self
-            .generated()
-            .get_admin_voice_server(region_id, server_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

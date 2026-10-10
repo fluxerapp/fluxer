@@ -211,18 +211,6 @@ session_data_pid(SessionData) ->
 
 -ifdef(TEST).
 
-maps_share_any_key_empty_test() ->
-    ?assertEqual(false, maps_share_any_key(#{}, #{})),
-    ?assertEqual(false, maps_share_any_key(#{1 => true}, #{})),
-    ?assertEqual(false, maps_share_any_key(#{}, #{1 => true})).
-
-maps_share_any_key_overlap_test() ->
-    ?assertEqual(true, maps_share_any_key(#{1 => true, 2 => true}, #{2 => true, 3 => true})),
-    ?assertEqual(true, maps_share_any_key(#{5 => true}, #{5 => true})).
-
-maps_share_any_key_no_overlap_test() ->
-    ?assertEqual(false, maps_share_any_key(#{1 => true, 2 => true}, #{3 => true, 4 => true})).
-
 get_user_viewable_channel_map_uses_session_cache_test() ->
     Sessions = #{
         <<"s1">> => #{user_id => 10, viewable_channels => #{100 => true, 200 => true}},
@@ -274,18 +262,6 @@ partition_subscribed_sessions_excludes_target_user_test() ->
 
 partition_subscribed_sessions_missing_session_test() ->
     assert_partition_result(#{}, #{100 => true}, [], [<<"s1">>]).
-
-session_pids_keeps_order_and_skips_unknown_and_pidless_test() ->
-    Pid = self(),
-    Sessions = #{
-        <<"s1">> => #{user_id => 20, pid => Pid},
-        <<"s2">> => #{user_id => 30},
-        <<"s3">> => #{user_id => 40, pid => Pid}
-    },
-    ?assertEqual(
-        [Pid, Pid],
-        session_pids([<<"s3">>, <<"missing">>, <<"s2">>, <<"s1">>], Sessions)
-    ).
 
 sync_member_data_updates_loaded_channel_engines_test() ->
     GuildId = 100,

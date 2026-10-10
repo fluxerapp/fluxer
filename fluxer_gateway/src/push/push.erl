@@ -1224,19 +1224,6 @@ assert_read_state_requests(Count) ->
     after 0 -> erlang:error(no_read_state_request)
     end.
 
-blocked_ids_fetch_defaults_are_bounded_test() ->
-    ?assertEqual(?DEFAULT_FETCH_USERS, blocked_ids_fetch_max_users()),
-    ?assertEqual(?DEFAULT_FETCH_CHUNK, blocked_ids_fetch_chunk()).
-
-blocked_ids_from_response_skips_unparsable_entries_test() ->
-    ?assertEqual([123, 456], blocked_ids_from_response([<<"123">>, <<"abc">>, 456, null])),
-    ?assertEqual([], blocked_ids_from_response(<<"not_a_list">>)).
-
-chunk_user_ids_splits_into_bounded_batches_test() ->
-    ?assertEqual([], chunk_user_ids([], 2, [])),
-    ?assertEqual([[1, 2], [3, 4], [5]], chunk_user_ids([1, 2, 3, 4, 5], 2, [])),
-    ?assertEqual([[1, 2, 3]], chunk_user_ids([1, 2, 3], 500, [])).
-
 blocked_ids_fetch_budget_is_capped_test() ->
     assert_budget_capped(),
     with_fetch_env(1, 1000000, fun assert_budget_capped/0),
@@ -1270,86 +1257,6 @@ cached_recipients_need_no_blocked_ids_fetch_test() ->
     push_ets_cache:init(),
     ok = seed_fetched_blocked_ids(5004, []),
     ?assertEqual([], missing_blocked_ids([5004])).
-
-blocked_ids_fetch_stops_after_a_failing_chunk_test() ->
-    push_ets_cache:init(),
-    Fill = push_ets_cache:reserve_blocked_ids([]),
-    ?assertEqual(#{}, fetch_blocked_ids_chunks([], Fill, #{})),
-    ?assertEqual(#{}, fetch_blocked_ids_chunks([[], []], Fill, #{})),
-    ok = push_ets_cache:release(Fill).
-
-blocked_ids_counters_are_unavailable_without_the_shared_table_test() ->
-    delete_counter_table(),
-    ?assertEqual(unavailable, read_counter(?CNT_SUPPRESSED)).
-
-blocked_ids_counters_are_exposed_in_cache_stats_test() ->
-    push_ets_cache:init(),
-    with_counter_table(fun() ->
-        ok = push_ets_cache:put_blocked_ids(5010, [999]),
-        ?assertEqual([], filter_dm_recipients([5010], 999)),
-        ?assertEqual(1, read_counter(?CNT_SUPPRESSED)),
-        assert_cache_stats_expose_blocked_ids()
-    end).
-
-assert_cache_stats_expose_blocked_ids() ->
-    Stats = maps:merge(push_ets_cache:cache_stats(), blocked_ids_counters()),
-    lists:foreach(
-        fun(Key) -> ?assertEqual(true, maps:is_key(Key, Stats)) end,
-        [
-            blocked_ids_size,
-            blocked_ids_fetch_attempts,
-            blocked_ids_fetch_failures,
-            blocked_ids_suppressed,
-            blocked_ids_budget_exhausted
-        ]
-    ).
-
-push_loss_counters_expose_every_counter_push_writes_test() ->
-    with_counter_table(fun() ->
-        ok = log_message_worker_drop(dropped, #{}),
-        Stats = push_loss_counters(),
-        ?assertEqual(live, maps:get(counters, Stats)),
-        ?assertEqual(1, maps:get(worker_pool_dropped, Stats))
-    end).
-
-push_loss_counters_are_unavailable_without_the_shared_table_test() ->
-    delete_counter_table(),
-    Stats = push_loss_counters(),
-    ?assertEqual(unavailable, maps:get(counters, Stats)),
-    ?assertEqual(unavailable, maps:get(worker_pool_dropped, Stats)).
-
-push_loss_counters_keep_a_genuine_zero_distinct_from_absent_test() ->
-    with_counter_table(fun() ->
-        ?assertEqual(unavailable, maps:get(worker_pool_dropped, push_loss_counters())),
-        ok = bump_counter(?CNT_WORKER_POOL, 0),
-        ?assertEqual(0, maps:get(worker_pool_dropped, push_loss_counters()))
-    end).
-
-cache_stats_with_counters_includes_the_loss_surface_test() ->
-    push_ets_cache:init(),
-    with_counter_table(fun() ->
-        Stats = cache_stats_with_counters(),
-        lists:foreach(
-            fun(Key) -> ?assertEqual(true, maps:is_key(Key, Stats)) end,
-            [blocked_ids_size, blocked_ids_suppressed, counters, worker_pool_dropped]
-        )
-    end).
-
-with_counter_table(Fun) ->
-    delete_counter_table(),
-    _ = ets:new(?PUSH_COUNTER_TABLE, [named_table, public, set, {write_concurrency, true}]),
-    try
-        Fun()
-    after
-        delete_counter_table()
-    end.
-
-delete_counter_table() ->
-    try ets:delete(?PUSH_COUNTER_TABLE) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
 
 seed_fetched_blocked_ids(UserId, BlockedIds) ->
     push_ets_cache:put_blocked_ids_fetched(

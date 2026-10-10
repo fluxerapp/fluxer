@@ -32,7 +32,6 @@ export interface IUserAuthRepository {
 	deleteEmailVerificationToken(token: string): Promise<void>;
 	getPasswordResetToken(token: string): Promise<PasswordResetToken | null>;
 	createPasswordResetToken(tokenData: PasswordResetTokenRow): Promise<PasswordResetToken>;
-	deletePasswordResetToken(token: string): Promise<void>;
 	deleteAllPasswordResetTokens(userId: UserID): Promise<void>;
 	getEmailRevertToken(token: string): Promise<EmailRevertToken | null>;
 	createEmailRevertToken(tokenData: EmailRevertTokenRow): Promise<EmailRevertToken>;

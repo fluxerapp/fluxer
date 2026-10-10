@@ -17,7 +17,3 @@ export interface ResolvedListFormatterConfig {
 	style: ListFormatStyle;
 	type: ListFormatType;
 }
-
-export interface IListFormatter {
-	format(items: ReadonlyArray<string>): string;
-}

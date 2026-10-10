@@ -5,8 +5,6 @@ import {getCachedListFormatter} from '@pkgs/list_utils/src/ListFormattingCache';
 import {formatListWithFallback} from '@pkgs/list_utils/src/ListFormattingFallback';
 import {isIntlListFormatLocaleSupported, isIntlListFormatSupported} from '@pkgs/list_utils/src/ListFormattingSupport';
 import type {
-	IListFormatter,
-	ListFormatOptions,
 	ListFormatStyle,
 	ListFormatType,
 	ListFormatterConfig,
@@ -16,10 +14,6 @@ import type {
 const DEFAULT_LOCALE = Locales.EN_US;
 const DEFAULT_LIST_FORMAT_STYLE: ListFormatStyle = 'long';
 const DEFAULT_LIST_FORMAT_TYPE: ListFormatType = 'conjunction';
-
-export function isListFormatSupported(): boolean {
-	return isIntlListFormatSupported();
-}
 
 function normalizeLocale(locale: string): string {
 	if (!isIntlListFormatLocaleSupported(locale)) {
@@ -55,7 +49,7 @@ function formatItems(items: ReadonlyArray<string>, config: ResolvedListFormatter
 	if (items.length === 1) {
 		return items[0] ?? '';
 	}
-	if (!isListFormatSupported()) {
+	if (!isIntlListFormatSupported()) {
 		return formatListWithFallback(items, config.type);
 	}
 	return formatWithIntl(items, config);
@@ -64,25 +58,4 @@ function formatItems(items: ReadonlyArray<string>, config: ResolvedListFormatter
 export function formatListWithConfig(items: ReadonlyArray<string>, config: ListFormatterConfig = {}): string {
 	const resolvedConfig = resolveListFormatterConfig(config);
 	return formatItems(items, resolvedConfig);
-}
-
-export function createListFormatter(config: ListFormatterConfig = {}): IListFormatter {
-	const resolvedConfig = resolveListFormatterConfig(config);
-	return {
-		format(items: ReadonlyArray<string>): string {
-			return formatItems(items, resolvedConfig);
-		},
-	};
-}
-
-export function formatList(
-	items: Array<string>,
-	locale: string = DEFAULT_LOCALE,
-	options: ListFormatOptions = {},
-): string {
-	return formatListWithConfig(items, {
-		locale,
-		style: options.style,
-		type: options.type,
-	});
 }

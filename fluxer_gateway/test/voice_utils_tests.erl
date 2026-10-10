@@ -53,15 +53,6 @@ build_force_disconnect_rpc_request_test() ->
     ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Req)),
     ?assertEqual(<<"conn">>, maps:get(<<"connection_id">>, Req)).
 
-build_update_participant_rpc_request_test() ->
-    Req = voice_utils:build_update_participant_rpc_request(123, 456, 789, true, false),
-    ?assertEqual(<<"voice_update_participant">>, maps:get(<<"type">>, Req)),
-    ?assertEqual(true, maps:get(<<"mute">>, Req)),
-    ?assertEqual(false, maps:get(<<"deaf">>, Req)),
-    ?assertEqual(true, maps:get(<<"can_speak">>, Req)),
-    ?assertEqual(true, maps:get(<<"can_stream">>, Req)),
-    ?assertEqual(true, maps:get(<<"can_video">>, Req)).
-
 build_update_participant_rpc_request_with_permissions_test() ->
     VoicePerms = #{
         can_speak => true,

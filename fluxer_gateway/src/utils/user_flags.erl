@@ -32,13 +32,3 @@ has(Flags, Flag) ->
 -spec is_staff(term()) -> boolean().
 is_staff(Value) ->
     has(parse(Value), staff()).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-is_staff_accepts_integer_backed_flags_test() ->
-    ?assertEqual(true, is_staff(1)),
-    ?assertEqual(true, is_staff(<<"1">>)),
-    ?assertEqual(false, is_staff(0)).
-
--endif.

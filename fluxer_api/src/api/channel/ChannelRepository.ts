@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {AttachmentID, ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {ChannelRepository as NewChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
 import type {GuildChannelListMode} from '@app/api/channel/repositories/IChannelDataRepository';
@@ -10,7 +10,6 @@ import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import type {MessageReaction} from '@app/api/models/MessageReaction';
 
 export class ChannelRepository extends IChannelRepository {
 	private repository: NewChannelRepository;
@@ -48,10 +47,6 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.channelData.upsert(data);
 	}
 
-	async updateLastMessageId(channelId: ChannelID, messageId: MessageID, opts?: {isInsert?: boolean}): Promise<void> {
-		return this.repository.channelData.updateLastMessageId(channelId, messageId, opts);
-	}
-
 	async delete(channelId: ChannelID, guildId?: GuildID, type?: number): Promise<void> {
 		return this.repository.channelData.delete(channelId, guildId, type);
 	}
@@ -86,112 +81,12 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.messages.bulkDeleteMessages(channelId, messageIds);
 	}
 
-	async listChannelPins(channelId: ChannelID, beforePinnedTimestamp: Date, limit?: number): Promise<Array<Message>> {
-		return this.repository.messageInteractions.listChannelPins(channelId, beforePinnedTimestamp, limit);
-	}
-
-	async listMessageReactions(channelId: ChannelID, messageId: MessageID): Promise<Array<MessageReaction>> {
-		return this.repository.messageInteractions.listMessageReactions(channelId, messageId);
-	}
-
-	async listReactionUsers(
-		channelId: ChannelID,
-		messageId: MessageID,
-		emojiName: string,
-		limit?: number,
-		after?: UserID,
-		emojiId?: EmojiID,
-	): Promise<Array<MessageReaction>> {
-		return this.repository.messageInteractions.listReactionUsers(
-			channelId,
-			messageId,
-			emojiName,
-			limit,
-			after,
-			emojiId,
-		);
-	}
-
-	async addReaction(
-		channelId: ChannelID,
-		messageId: MessageID,
-		userId: UserID,
-		emojiName: string,
-		emojiId?: EmojiID,
-		emojiAnimated?: boolean,
-	): Promise<MessageReaction> {
-		return this.repository.messageInteractions.addReaction(
-			channelId,
-			messageId,
-			userId,
-			emojiName,
-			emojiId,
-			emojiAnimated,
-		);
-	}
-
-	async removeReaction(
-		channelId: ChannelID,
-		messageId: MessageID,
-		userId: UserID,
-		emojiName: string,
-		emojiId?: EmojiID,
-	): Promise<void> {
-		return this.repository.messageInteractions.removeReaction(channelId, messageId, userId, emojiName, emojiId);
-	}
-
-	async removeAllReactions(channelId: ChannelID, messageId: MessageID): Promise<void> {
-		return this.repository.messageInteractions.removeAllReactions(channelId, messageId);
-	}
-
-	async removeAllReactionsForEmoji(
-		channelId: ChannelID,
-		messageId: MessageID,
-		emojiName: string,
-		emojiId?: EmojiID,
-	): Promise<void> {
-		return this.repository.messageInteractions.removeAllReactionsForEmoji(channelId, messageId, emojiName, emojiId);
-	}
-
-	async countReactionUsers(
-		channelId: ChannelID,
-		messageId: MessageID,
-		emojiName: string,
-		emojiId?: EmojiID,
-	): Promise<number> {
-		return this.repository.messageInteractions.countReactionUsers(channelId, messageId, emojiName, emojiId);
-	}
-
-	async countUniqueReactions(channelId: ChannelID, messageId: MessageID): Promise<number> {
-		return this.repository.messageInteractions.countUniqueReactions(channelId, messageId);
-	}
-
-	async checkUserReactionExists(
-		channelId: ChannelID,
-		messageId: MessageID,
-		userId: UserID,
-		emojiName: string,
-		emojiId?: EmojiID,
-	): Promise<boolean> {
-		return this.repository.messageInteractions.checkUserReactionExists(
-			channelId,
-			messageId,
-			userId,
-			emojiName,
-			emojiId,
-		);
-	}
-
 	async listGuildChannels(guildId: GuildID, mode: GuildChannelListMode): Promise<Array<Channel>> {
 		return this.repository.channelData.listGuildChannels(guildId, mode);
 	}
 
 	async listChannels(channelIds: Array<ChannelID>): Promise<Array<Channel>> {
 		return this.repository.channelData.listChannels(channelIds);
-	}
-
-	async countGuildChannels(guildId: GuildID): Promise<number> {
-		return this.repository.channelData.countGuildChannels(guildId);
 	}
 
 	async lookupAttachmentByChannelAndFilename(
@@ -213,14 +108,6 @@ export class ChannelRepository extends IChannelRepository {
 		}>
 	> {
 		return this.repository.messages.listMessagesByAuthor(authorId, limit, lastMessageId);
-	}
-
-	async deleteMessagesByAuthor(
-		authorId: UserID,
-		channelIds?: Array<ChannelID>,
-		messageIds?: Array<MessageID>,
-	): Promise<void> {
-		return this.repository.messages.deleteMessagesByAuthor(authorId, channelIds, messageIds);
 	}
 
 	async anonymizeMessage(channelId: ChannelID, messageId: MessageID, newAuthorId: UserID): Promise<void> {

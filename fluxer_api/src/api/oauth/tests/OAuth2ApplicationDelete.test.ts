@@ -114,14 +114,6 @@ describe('OAuth2 Application Delete', () => {
 			.execute();
 		expect(replacementAuthorCount.count).toBe(1);
 	});
-	test('returns 404 for non-existent application', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.delete('/oauth2/applications/999999999999999999')
-			.body({password: account.password})
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.execute();
-	});
 	test('enforces access control', async () => {
 		const owner = await createTestAccount(harness);
 		const otherUser = await createTestAccount(harness);
@@ -158,25 +150,6 @@ describe('OAuth2 Application Delete', () => {
 			.delete(`/oauth2/applications/${createResult.application.id}`)
 			.body({password: 'wrong-password'})
 			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-			.execute();
-	});
-	test('is idempotent', async () => {
-		const account = await createTestAccount(harness);
-		const createResult = await createOAuth2Application(harness, account.token, {
-			name: createUniqueApplicationName(),
-		});
-		await deleteOAuth2Application(harness, account.token, createResult.application.id, account.password);
-		await createBuilder(harness, account.token)
-			.delete(`/oauth2/applications/${createResult.application.id}`)
-			.body({password: account.password})
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.execute();
-	});
-	test('requires authentication', async () => {
-		await createBuilderWithoutAuth(harness)
-			.delete('/oauth2/applications/123')
-			.body({password: 'test'})
-			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
 });

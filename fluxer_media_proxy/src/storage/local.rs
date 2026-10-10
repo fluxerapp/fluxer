@@ -3,7 +3,6 @@
 use super::{
     BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, HeadResult,
     ObjectStreamPlan, STORAGE_STREAM_CHUNK_BYTES, StorageError, Store, StreamObject, StreamRange,
-    identity::{LocalSourceObject, SourceObjectIdentity, local_source_object_identity},
     keys::{safe_bucket, safe_key},
     map_not_found,
     relay_body::{RelayBody, RelayPutOptions},
@@ -16,7 +15,6 @@ use http::StatusCode;
 use sha2::{Digest as _, Sha256};
 use std::{
     fs::Metadata,
-    os::unix::fs::MetadataExt as _,
     path::{Path, PathBuf},
 };
 use tokio::io::{AsyncReadExt as _, AsyncSeekExt as _, AsyncWriteExt as _};
@@ -48,12 +46,6 @@ impl Store {
         }
         let content_length =
             usize::try_from(metadata.len()).map_err(|_| StorageError::StreamTooLong)?;
-        if let Some(expected) = request.expected_identity {
-            let identity = local_identity(request.bucket, request.key, &metadata);
-            if identity != *expected {
-                return Err(StorageError::ObjectChanged);
-            }
-        }
         let data = read_exact_bytes(file, content_length, request.budget).await?;
         let content_type = mime::detect(&data[..data.len().min(8192)], request.key, None);
         Ok(BufferedStorageObject {
@@ -85,7 +77,6 @@ impl Store {
         Ok(HeadResult {
             content_length: metadata.len(),
             content_type: local_content_type(key),
-            identity: local_identity(bucket, key, &metadata),
         })
     }
 
@@ -97,12 +88,6 @@ impl Store {
         let (mut file, metadata) = open_local_read_file(&path).await?;
         if metadata.len() > plan.max_bytes as u64 {
             return Err(StorageError::StreamTooLong);
-        }
-        if let Some(expected) = plan.expected_identity {
-            let identity = local_identity(plan.bucket, plan.key, &metadata);
-            if identity != *expected {
-                return Err(StorageError::ObjectChanged);
-            }
         }
         let total_len = usize::try_from(metadata.len()).map_err(|_| StorageError::StreamTooLong)?;
         let byte_range = match plan.range {
@@ -123,12 +108,6 @@ impl Store {
                     });
                 }
             },
-            StreamRange::Bytes(byte_range) => {
-                if byte_range.start > byte_range.end || byte_range.end >= total_len {
-                    return Err(StorageError::ObjectChanged);
-                }
-                Some(byte_range)
-            }
         };
         let (status, body_len, start) = match byte_range {
             Some(byte_range) => (
@@ -222,18 +201,6 @@ fn local_content_type(key: &str) -> String {
     mime::extension_mime(key)
         .unwrap_or("application/octet-stream")
         .to_owned()
-}
-
-fn local_identity(bucket: &str, key: &str, metadata: &Metadata) -> SourceObjectIdentity {
-    local_source_object_identity(LocalSourceObject {
-        bucket,
-        key,
-        content_length: metadata.len(),
-        content_type: &local_content_type(key),
-        modified_nanos: i128::from(metadata.mtime()) * 1_000_000_000
-            + i128::from(metadata.mtime_nsec()),
-        inode: metadata.ino(),
-    })
 }
 
 async fn open_local_read_file(path: &Path) -> Result<(tokio::fs::File, Metadata), StorageError> {

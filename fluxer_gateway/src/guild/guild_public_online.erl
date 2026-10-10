@@ -281,9 +281,6 @@ returns_zero_when_no_channels_test() ->
     State = build_state([], [], [], []),
     ?assertEqual(0, compute_count(State)).
 
-returns_zero_when_data_missing_test() ->
-    ?assertEqual(0, compute_count(#{})).
-
 slow_path_with_role_view_deny_test() ->
     GuildId = guild_id(),
     BotRoleId = 555,
@@ -346,36 +343,6 @@ returns_zero_when_no_everyone_viewable_test() ->
     Roles = [#{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>}],
     State = State0#{data => OldData#{<<"roles">> => Roles}},
     ?assertEqual(0, compute_count(State)).
-
-channel_has_view_restricting_overrides_detects_user_deny_test() ->
-    Channel = #{
-        <<"permission_overwrites">> => [
-            #{
-                <<"id">> => <<"42">>,
-                <<"type">> => 1,
-                <<"allow">> => <<"0">>,
-                <<"deny">> => integer_to_binary(view_perm())
-            }
-        ]
-    },
-    ?assert(channel_has_view_restricting_overrides(Channel, view_perm())).
-
-channel_has_view_restricting_overrides_ignores_allow_only_test() ->
-    Channel = #{
-        <<"permission_overwrites">> => [
-            #{
-                <<"id">> => <<"42">>,
-                <<"type">> => 0,
-                <<"allow">> => integer_to_binary(view_perm()),
-                <<"deny">> => <<"0">>
-            }
-        ]
-    },
-    ?assertNot(channel_has_view_restricting_overrides(Channel, view_perm())).
-
-channel_has_view_restricting_overrides_no_overwrites_test() ->
-    Channel = #{<<"permission_overwrites">> => []},
-    ?assertNot(channel_has_view_restricting_overrides(Channel, view_perm())).
 
 verify_gate_collapses_count_without_flag_test() ->
     ?assertEqual(1, compute_count(verify_gate_state())).

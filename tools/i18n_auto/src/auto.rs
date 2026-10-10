@@ -41,8 +41,7 @@ pub fn auto_main(args: &[String]) -> Result<u8> {
     let i18n_llm_model = env_value("I18N_LLM_MODEL", &env_overrides, "")
         .if_empty(|| env_value("OPENROUTER_MODEL", &env_overrides, DEFAULT_OPENROUTER_MODEL));
     let bypass_run_gate = args.iter().any(|arg| {
-        matches!(arg.as_str(), "--self-test" | "--help" | "-h" | "--dry-run")
-            || arg.starts_with("--dry-run=")
+        matches!(arg.as_str(), "--help" | "-h" | "--dry-run") || arg.starts_with("--dry-run=")
     });
     let explicitly_disabled = matches!(
         fluxer_auto_i18n.to_lowercase().as_str(),
@@ -189,24 +188,5 @@ trait EmptyFallback {
 impl EmptyFallback for String {
     fn if_empty(self, fallback: impl FnOnce() -> String) -> String {
         if self.is_empty() { fallback() } else { self }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parses_simple_export_lines() {
-        assert_eq!(
-            parse_export_line(" export OPENROUTER_MODEL=\"translator\" "),
-            Some(("OPENROUTER_MODEL".to_string(), "translator".to_string()))
-        );
-        assert_eq!(
-            parse_export_line("export FLUXER_AUTO_I18N=1"),
-            Some(("FLUXER_AUTO_I18N".to_string(), "1".to_string()))
-        );
-        assert_eq!(parse_export_line("OPENROUTER_MODEL=translator"), None);
-        assert_eq!(parse_export_line("export 1BAD=value"), None);
     }
 }

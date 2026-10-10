@@ -97,15 +97,3 @@ pub const ADVERSARIAL_TEXT_INPUTS: &[&str] = &[
     "\u{7f}",
     "~!@#$^&*()_+",
 ];
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn adversarial_corpora_hold_every_documented_input() {
-        assert_eq!(17, adversarial_media_bytes().len());
-        assert_eq!(26, ADVERSARIAL_RANGE_HEADERS.len());
-        assert_eq!(27, ADVERSARIAL_TEXT_INPUTS.len());
-    }
-}

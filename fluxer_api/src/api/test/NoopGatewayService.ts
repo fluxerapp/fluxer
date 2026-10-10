@@ -24,7 +24,6 @@ import {
 	type CallData,
 	type GatewayChannelMention,
 	type GatewayGuildMemoryStats,
-	type GatewayMentionSources,
 	type GatewayMentionSourcesPage,
 	type GatewayNodeStats,
 	type GatewayVoiceStateCounts,
@@ -180,60 +179,6 @@ export class NoopGatewayService extends IGatewayService {
 			total_voice_states: 0,
 			regions: [],
 			servers: [],
-		};
-	}
-
-	async getUsersToMentionByRoles(_params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		roleIds: Array<RoleID>;
-		authorId: UserID;
-	}): Promise<Array<UserID>> {
-		return [];
-	}
-
-	async getUsersToMentionByUserIds(_params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		userIds: Array<UserID>;
-		authorId: UserID;
-	}): Promise<Array<UserID>> {
-		return [];
-	}
-
-	async getAllUsersToMention(_params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-	}): Promise<Array<UserID>> {
-		return [];
-	}
-
-	async resolveAllMentions(_params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-		mentionEveryone: boolean;
-		mentionHere: boolean;
-		roleIds: Array<RoleID>;
-		userIds: Array<UserID>;
-	}): Promise<Array<UserID>> {
-		return [];
-	}
-
-	async resolveMentionSources(_params: {
-		guildId: GuildID;
-		channelId: ChannelID;
-		authorId: UserID;
-		mentionEveryone: boolean;
-		mentionHere: boolean;
-		roleIds: Array<RoleID>;
-		userIds: Array<UserID>;
-	}): Promise<GatewayMentionSources> {
-		return {
-			directUserIds: [],
-			roleUserIds: [],
-			everyoneUserIds: [],
 		};
 	}
 
@@ -832,10 +777,6 @@ export class NoopGatewayService extends IGatewayService {
 		return maxPosition;
 	}
 
-	async getVanityUrlChannel(_guildId: GuildID): Promise<ChannelID | null> {
-		return null;
-	}
-
 	async getFirstViewableTextChannel(_guildId: GuildID): Promise<ChannelID | null> {
 		return null;
 	}
@@ -871,8 +812,6 @@ export class NoopGatewayService extends IGatewayService {
 		return {success: false};
 	}
 
-	async disconnectVoiceUser(_params: {guildId: GuildID; userId: UserID; connectionId: string}): Promise<void> {}
-
 	async disconnectVoiceUserIfInChannel(_params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
@@ -883,13 +822,6 @@ export class NoopGatewayService extends IGatewayService {
 		ignored?: boolean;
 	}> {
 		return {success: false, ignored: true};
-	}
-
-	async disconnectAllVoiceUsersInChannel(_params: {guildId: GuildID; channelId: ChannelID}): Promise<{
-		success: boolean;
-		disconnectedCount: number;
-	}> {
-		return {success: false, disconnectedCount: 0};
 	}
 
 	async confirmVoiceConnection(_params: {
@@ -910,17 +842,6 @@ export class NoopGatewayService extends IGatewayService {
 		return {
 			voiceStates: [...(this.voiceStatesByChannel.get(this.getVoiceStateKey(params)) ?? [])],
 		};
-	}
-
-	async getPendingJoinsForChannel(_params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
-		pendingJoins: Array<{
-			connectionId: string;
-			userId: string;
-			tokenNonce: string;
-			expiresAt: number;
-		}>;
-	}> {
-		return {pendingJoins: []};
 	}
 
 	async getVoiceState(_params: {guildId: GuildID; userId: UserID}): Promise<{
@@ -989,14 +910,6 @@ export class NoopGatewayService extends IGatewayService {
 
 	async stopRingingCallRecipients(_channelId: ChannelID, _recipients: Array<string>): Promise<boolean> {
 		return true;
-	}
-
-	async deleteCall(_channelId: ChannelID): Promise<boolean> {
-		return true;
-	}
-
-	async getDiscoveryOnlineCounts(_guildIds: Array<GuildID>): Promise<Map<GuildID, number>> {
-		return new Map();
 	}
 
 	async getDiscoveryGuildCounts(_guildIds: Array<GuildID>): Promise<

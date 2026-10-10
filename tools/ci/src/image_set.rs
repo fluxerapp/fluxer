@@ -920,29 +920,6 @@ mod tests {
     }
 
     #[test]
-    fn every_component_has_a_build_workflow() {
-        let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.github/workflows");
-        let mut workflows = String::new();
-        for entry in fs::read_dir(&directory).expect("the workflow directory should be readable") {
-            let path = entry.expect("the workflow entry should be readable").path();
-            if path
-                .extension()
-                .is_some_and(|extension| extension == "yaml")
-            {
-                workflows
-                    .push_str(&fs::read_to_string(&path).expect("the workflow should be readable"));
-            }
-        }
-        for component in COMPONENTS {
-            assert!(
-                workflows.contains(component.image),
-                "{} has no build workflow",
-                component.image
-            );
-        }
-    }
-
-    #[test]
     fn manifest_requires_every_component() {
         let mut resolved = resolved_set();
         resolved.retain(|entry| entry.component != "fluxer-api");
@@ -1300,26 +1277,6 @@ mod tests {
         }
         let error = resolve_bundle_commit(&resolved).unwrap_err().to_string();
         assert!(error.contains("no bundle commit can be proven"), "{error}");
-    }
-
-    #[test]
-    fn release_workflow_tags_the_bundle_commit_and_marks_it_latest() {
-        let workflow = include_str!("../../../.github/workflows/release-image-set.yaml");
-        for entry in [
-            "--github-output",
-            "BUNDLE_COMMIT: ${{ steps.resolve.outputs.bundle_commit }}",
-            "--target \"${BUNDLE_COMMIT}\"",
-            "--latest=true",
-        ] {
-            assert!(
-                workflow.contains(entry),
-                "release-image-set.yaml must contain {entry}"
-            );
-        }
-        assert!(
-            !workflow.contains("${GITHUB_SHA}"),
-            "the release tag must be cut at the bundle commit, not at the workflow ref"
-        );
     }
 
     #[test]

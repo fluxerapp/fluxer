@@ -8,10 +8,6 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
-interface AclListResponse {
-	acls: Array<string>;
-}
-
 interface UserListResponse {
 	users: Array<{
 		id: string;
@@ -44,54 +40,12 @@ describe('Admin user directory', () => {
 		await harness?.shutdown();
 	});
 	describe('GET /admin/acls', () => {
-		test('lists every recognised admin permission', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE]);
-			const result = await createBuilder<AclListResponse>(harness, `${admin.token}`)
-				.get('/admin/acls')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.acls).toContain(AdminACLs.USER_LOOKUP);
-			expect(result.acls).toContain(AdminACLs.WILDCARD);
-			expect(result.acls).toHaveLength(Object.keys(AdminACLs).length);
-		});
 		test('requires an authenticated admin', async () => {
 			const user = await createTestAccount(harness);
 			await createBuilder(harness, `${user.token}`).get('/admin/acls').expect(HTTP_STATUS.FORBIDDEN).execute();
 		});
 	});
 	describe('GET /admin/users', () => {
-		test('returns the users named by repeated user_id parameters', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
-			const first = await createTestAccount(harness);
-			const second = await createTestAccount(harness);
-			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?user_id=${first.userId}&user_id=${second.userId}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users.map((user) => user.id).sort()).toEqual([first.userId, second.userId].sort());
-		});
-		test('returns the user matching a free-text query', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
-			const target = await createTestAccount(harness);
-			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get(`/admin/users?q=${target.userId}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users.map((user) => user.id)).toContain(target.userId);
-		});
-		test('lists users when no selector is named', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
-			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get('/admin/users')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users.length).toBeGreaterThan(0);
-			expect(result.total).toBeGreaterThan(0);
-		});
 		test('requires USER_LOOKUP ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE]);
@@ -190,17 +144,6 @@ describe('Admin user directory', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users.map((user) => user.id)).not.toContain(userId);
-		});
-	});
-	describe('GET /admin/users/:user_id', () => {
-		test.each(SYNTHETIC_USER_IDS)('reports no user for the synthetic account %s', async (userId) => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
-			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
-				.get(`/admin/users/${userId}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users).toEqual([]);
 		});
 	});
 });

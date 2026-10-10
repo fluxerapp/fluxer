@@ -152,10 +152,6 @@ export class GatewayRpcClient {
 		return this.call('call.stop_ringing', {channel_id: channelId, recipients});
 	}
 
-	async deleteCall(channelId: string): Promise<boolean> {
-		return this.call('call.delete', {channel_id: channelId});
-	}
-
 	async getNodeStats(): Promise<unknown> {
 		return this.call('process.node_stats', {});
 	}

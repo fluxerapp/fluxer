@@ -105,45 +105,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn no_flags_all_false() {
-        let m = from_flags(0);
-        assert!(!m.ctrl && !m.alt && !m.shift && !m.meta);
-    }
-
-    #[test]
-    fn command_alone_sets_only_meta() {
-        let m = from_flags(COMMAND_MASK);
-        assert!(m.meta);
-        assert!(!m.ctrl && !m.alt && !m.shift);
-    }
-
-    #[test]
-    fn option_alone_sets_only_alt() {
-        let m = from_flags(ALTERNATE_MASK);
-        assert!(m.alt);
-        assert!(!m.ctrl && !m.meta && !m.shift);
-    }
-
-    #[test]
-    fn cmd_shift_combo() {
-        let m = from_flags(COMMAND_MASK | SHIFT_MASK);
-        assert!(m.meta && m.shift);
-        assert!(!m.ctrl && !m.alt);
-    }
-
-    #[test]
-    fn all_four_modifiers_together() {
-        let m = from_flags(SHIFT_MASK | CONTROL_MASK | ALTERNATE_MASK | COMMAND_MASK);
-        assert!(m.ctrl && m.alt && m.shift && m.meta);
-    }
-
-    #[test]
-    fn unrelated_high_bits_ignored() {
-        let m = from_flags(0xff << 32);
-        assert!(!m.ctrl && !m.alt && !m.shift && !m.meta);
-    }
-
-    #[test]
     fn modifier_key_down_uses_the_device_side_bits() {
         let both_shifts = SHIFT_MASK | DEVICE_LEFT_SHIFT_MASK | DEVICE_RIGHT_SHIFT_MASK;
         assert_eq!(

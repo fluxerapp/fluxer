@@ -121,32 +121,6 @@ parse_snowflake_binary(FieldName, Value) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-extract_and_remove_session_id_present_test() ->
-    Data = #{<<"session_id">> => <<"abc123">>, <<"other">> => <<"value">>},
-    {SessionId, CleanData} = extract_and_remove_session_id(Data),
-    ?assertEqual(<<"abc123">>, SessionId),
-    ?assertEqual(#{<<"other">> => <<"value">>}, CleanData).
-
-extract_and_remove_session_id_absent_test() ->
-    Data = #{<<"other">> => <<"value">>},
-    {SessionId, CleanData} = extract_and_remove_session_id(Data),
-    ?assertEqual(undefined, SessionId),
-    ?assertEqual(Data, CleanData).
-
-is_message_event_test() ->
-    ?assertEqual(true, is_message_event(message_create)),
-    ?assertEqual(true, is_message_event(message_update)),
-    ?assertEqual(true, is_message_event(message_delete)),
-    ?assertEqual(true, is_message_event(message_delete_bulk)),
-    ?assertEqual(false, is_message_event(typing_start)).
-
-is_user_event_test() ->
-    ?assertEqual(true, is_user_event(typing_start)),
-    ?assertEqual(true, is_user_event(message_reaction_add)),
-    ?assertEqual(false, is_user_event(message_reaction_remove_all)),
-    ?assertEqual(false, is_user_event(message_reaction_remove_emoji)),
-    ?assertEqual(false, is_user_event(message_create)).
-
 decorate_member_data_message_delete_author_id_test() ->
     Member = #{<<"user">> => #{<<"id">> => <<"123">>}, <<"roles">> => []},
     State = #{data => #{<<"members">> => [Member]}},

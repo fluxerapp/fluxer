@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import {describe, test} from 'node:test';
-import {fileURLToPath} from 'node:url';
 import {installElectronStub} from './LocalAppTestSupport.test.mjs';
 
 const events = [];
@@ -118,8 +116,6 @@ const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
 const {armBlockedShellUpdate, getBlockedShellUpdate, SPLASH_MANUAL_UPDATE_MESSAGE} = await import(
 	'@electron/main/ShellUpdateSplash'
 );
-
-const UPDATER_SOURCE = readFileSync(fileURLToPath(new URL('./Updater.ts', import.meta.url)), 'utf8');
 
 const SELF_UPDATE_PLAN = {capability: ShellUpdateCapability.SELF_UPDATE, updater: 'velopack'};
 const MANUAL_PLATFORM_PLAN = {capability: ShellUpdateCapability.MANUAL_DOWNLOAD, reason: 'platform'};
@@ -242,18 +238,6 @@ describe('shell update capability', () => {
 				platform: process.platform,
 			}),
 		);
-	});
-
-	test('the updater keeps no platform checks and no download page of its own', () => {
-		assert.doesNotMatch(UPDATER_SOURCE, /isPortableMode|isFlatpakRuntime|isRunningFromAppImage/);
-		assert.doesNotMatch(UPDATER_SOURCE, /const DOWNLOAD_PAGE_URL =/);
-		assert.match(UPDATER_SOURCE, /const plan = resolveShellUpdatePlan\(\);/);
-	});
-
-	test('the updater reads the arch and the format urls from the shared leaf instead of keeping its own', () => {
-		assert.doesNotMatch(UPDATER_SOURCE, /const UPDATE_BASE_URL =|function getUpdateBaseUrl\(/);
-		assert.doesNotMatch(UPDATER_SOURCE, /function buildManualLatestDownloadUrl/);
-		assert.match(UPDATER_SOURCE, /from '@electron\/main\/ShellDownloadFormats'/);
 	});
 });
 

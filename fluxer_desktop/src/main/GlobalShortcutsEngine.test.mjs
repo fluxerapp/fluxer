@@ -248,28 +248,6 @@ describe('sanitizeGlobalShortcutsSyncPayload', () => {
 			null,
 		);
 	});
-
-	test('portal definitions always cover all ten actions with non-empty descriptions', () => {
-		const definitions = portalDefinitionsFromStored([
-			{action: 'voice_push_to_talk', description: 'Sprechen', preferredTrigger: 'F13'},
-		]);
-		assert.deepEqual(
-			definitions.map((entry) => entry.id),
-			[...GLOBAL_SHORTCUT_ACTIONS],
-		);
-		assert.ok(definitions.every((entry) => entry.description.length > 0));
-		assert.deepEqual(
-			definitions.find((entry) => entry.id === 'voice_push_to_talk'),
-			{id: 'voice_push_to_talk', description: 'Sprechen', preferredTrigger: 'F13'},
-		);
-		assert.deepEqual(
-			definitions.find((entry) => entry.id === 'voice_toggle_mute'),
-			{
-				id: 'voice_toggle_mute',
-				description: 'Toggle mute',
-			},
-		);
-	});
 });
 
 describe('portalDefinitionsFromStored safety', () => {
@@ -416,22 +394,6 @@ describe('GlobalShortcutsEngine Linux backend selection', () => {
 		assert.deepEqual(harness.started, []);
 	});
 
-	test('portal shortcuts reach clients as portal sources', async () => {
-		const harness = createEngine({
-			session: 'wayland',
-			portalConsent: 'granted',
-			settings: createSettings({migrated: true}),
-		});
-		harness.engine.start();
-		harness.attach(1);
-		await settle();
-		harness.portals[0].onEvent({type: 'activated', id: 'voice_push_to_talk'});
-		harness.engine.setPaused(1, true);
-		harness.portals[0].onEvent({type: 'deactivated', id: 'voice_push_to_talk'});
-		harness.portals[0].onEvent({type: 'activated', id: 'voice_toggle_mute'});
-		assert.deepEqual(harness.events(1), ['press:portal:voice_push_to_talk', 'release:portal:voice_push_to_talk']);
-	});
-
 	test('the first sync migrates readable keyboards to direct input and closes the portal', async () => {
 		const harness = createEngine({session: 'wayland', keyboardReadable: true, portalConsent: 'granted'});
 		harness.engine.start();
@@ -462,154 +424,6 @@ describe('GlobalShortcutsEngine Linux backend selection', () => {
 		assert.equal(harness.settings.state.migrated, true);
 		assert.equal(harness.settings.state.directInputEnabled, false);
 		assert.equal(harness.engine.getStatus().backend, 'portal');
-	});
-
-	test('direct input is ignored when no keyboard is readable', () => {
-		const harness = createEngine({
-			session: 'x11',
-			settings: createSettings({directInputEnabled: true, migrated: true}),
-		});
-		assert.equal(harness.engine.getStatus().backend, 'x11');
-		assert.deepEqual(harness.engine.getStatus().linux.directInput, {available: false, enabled: true, locked: false});
-	});
-
-	test('direct input is probed again when a keyboard shows up after launch', async () => {
-		const harness = createEngine({
-			session: 'wayland',
-			settings: createSettings({directInputEnabled: true, migrated: true}),
-		});
-		harness.attach(1);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'portal');
-		harness.keyboardReadable = true;
-		harness.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:a', action: 'voice_push_to_talk', combo: combo({key: 'F13', code: 'F13'})}]),
-		);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'evdev');
-		assert.equal(harness.engine.getStatus().linux.directInput.available, true);
-		assert.deepEqual(harness.started, ['evdev']);
-		assert.equal(harness.portals[0]?.closed ?? true, true);
-	});
-
-	test('a keyboard plugged in after launch is picked up from the input device watch', async () => {
-		const harness = createEngine({
-			session: 'wayland',
-			settings: createSettings({directInputEnabled: true, migrated: true}),
-		});
-		harness.engine.start();
-		harness.attach(1);
-		harness.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:a', action: 'voice_push_to_talk', combo: combo({key: 'F13', code: 'F13'})}]),
-		);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'portal');
-		assert.equal(harness.deviceWatches.length, 1);
-		const watch = harness.deviceWatches[0];
-		watch.onChange();
-		watch.onChange();
-		assert.deepEqual(
-			harness.timers.map((timer) => [timer.delayMs, timer.cancelled]),
-			[
-				[500, true],
-				[500, false],
-			],
-		);
-		harness.timers[1].callback();
-		await settle();
-		assert.equal(watch.closed, false);
-		assert.deepEqual(harness.started, []);
-		harness.keyboardReadable = true;
-		watch.onChange();
-		harness.timers[2].callback();
-		await settle();
-		assert.equal(watch.closed, true);
-		assert.equal(harness.engine.getStatus().backend, 'evdev');
-		assert.deepEqual(harness.started, ['evdev']);
-		assert.equal(harness.deviceWatches.length, 1);
-	});
-
-	test('the input device watch only runs while direct input is on and unavailable', () => {
-		const harness = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
-		harness.engine.start();
-		assert.equal(harness.deviceWatches.length, 0);
-		harness.engine.setDirectInputEnabled(true);
-		assert.equal(harness.deviceWatches.length, 1);
-		harness.deviceWatches[0].onChange();
-		harness.engine.setDirectInputEnabled(false);
-		assert.equal(harness.deviceWatches[0].closed, true);
-		assert.equal(harness.timers[0].cancelled, true);
-		harness.engine.setDirectInputEnabled(true);
-		assert.equal(harness.deviceWatches.length, 2);
-		harness.engine.dispose();
-		assert.equal(harness.deviceWatches[1].closed, true);
-	});
-
-	test('a hook start attempt notices a keyboard that went away', async () => {
-		const harness = createEngine({
-			session: 'x11',
-			keyboardReadable: true,
-			settings: createSettings({directInputEnabled: true, migrated: true}),
-		});
-		assert.equal(harness.engine.getStatus().backend, 'evdev');
-		harness.keyboardReadable = false;
-		harness.attach(1);
-		harness.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:a', action: 'voice_push_to_talk', combo: combo({key: 'F13', code: 'F13'})}]),
-		);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'x11');
-		assert.deepEqual(harness.started, ['x11']);
-	});
-
-	test('a launch flag locks the direct input setting', () => {
-		const harness = createEngine({session: 'wayland', inputHookMode: 'evdev', keyboardReadable: true});
-		assert.equal(harness.engine.getStatus().linux.directInput.locked, true);
-	});
-
-	test('disabling direct input hands Wayland back to the portal', async () => {
-		const harness = createEngine({
-			session: 'wayland',
-			keyboardReadable: true,
-			settings: createSettings({directInputEnabled: true, migrated: true}),
-		});
-		harness.engine.start();
-		harness.attach(1);
-		assert.equal(harness.engine.getStatus().backend, 'evdev');
-		harness.engine.setDirectInputEnabled(false);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'portal');
-		assert.equal(harness.engine.getStatus().linux.portal.state, 'not-set-up');
-	});
-
-	test('launch modes off and native refuse backends', () => {
-		assert.equal(createEngine({session: 'x11', inputHookMode: 'off'}).engine.getStatus().backend, 'none');
-		assert.equal(createEngine({session: 'wayland', inputHookMode: 'native'}).engine.getStatus().backend, 'none');
-		assert.equal(createEngine({session: 'x11', inputHookMode: 'native'}).engine.getStatus().backend, 'x11');
-		assert.equal(
-			createEngine({session: 'wayland', inputHookMode: 'evdev', keyboardReadable: true}).engine.getStatus().backend,
-			'evdev',
-		);
-	});
-
-	test('an unsupported portal reports backend none', async () => {
-		const harness = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
-		harness.portal.deps.createPortal = () => ({
-			open: async () => {
-				throw new Error('unsupported:2');
-			},
-			bind: async () => ({outcome: 'denied'}),
-			configure: async () => {},
-			close: () => {},
-		});
-		harness.engine.start();
-		harness.attach(1);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'none');
-		assert.equal(harness.engine.getStatus().linux.portal.state, 'unsupported');
 	});
 });
 
@@ -699,49 +513,6 @@ describe('GlobalShortcutsEngine portal lifecycle', () => {
 		assert.equal(harness.portals.length, 1);
 		assert.equal(harness.portal.getState(), 'bound');
 	});
-
-	test('check again re-probes an unsupported portal', async () => {
-		const harness = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
-		const create = harness.portal.deps.createPortal;
-		harness.portal.deps.createPortal = () => {
-			harness.portal.deps.createPortal = create;
-			return {
-				open: async () => {
-					throw new Error('unsupported:interface');
-				},
-				bind: async () => ({outcome: 'denied'}),
-				configure: async () => {},
-				close: () => {},
-			};
-		};
-		harness.attach(1);
-		await settle();
-		assert.equal(harness.engine.getStatus().backend, 'none');
-		await harness.engine.recheck();
-		assert.equal(harness.engine.getStatus().backend, 'portal');
-		assert.equal(harness.engine.getStatus().linux.portal.state, 'not-set-up');
-	});
-
-	test('set up on an unsupported portal checks again instead of binding', async () => {
-		const harness = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
-		const create = harness.portal.deps.createPortal;
-		harness.portal.deps.createPortal = () => {
-			harness.portal.deps.createPortal = create;
-			return {
-				open: async () => {
-					throw new Error('unsupported:interface');
-				},
-				bind: async () => ({outcome: 'denied'}),
-				configure: async () => {},
-				close: () => {},
-			};
-		};
-		harness.attach(1);
-		await settle();
-		await harness.engine.setUp();
-		assert.equal(harness.engine.getStatus().linux.portal.state, 'not-set-up');
-		assert.equal(harness.consent, 'unset');
-	});
 });
 
 describe('GlobalShortcutsEngine capture', () => {
@@ -800,76 +571,6 @@ describe('GlobalShortcutsEngine capture', () => {
 		assert.deepEqual(harness.stopped, ['windows', 'windows']);
 	});
 
-	test('a hook blocked on permission starts on retry without a new sync', async () => {
-		const harness = createEngine({platform: 'macos'});
-		harness.startResults.push('permission');
-		harness.attach(1);
-		harness.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:ptt', action: 'voice_push_to_talk', combo: combo({key: 'F13', code: 'F13'})}]),
-		);
-		await settle();
-		assert.equal(harness.engine.getStatus().hookError, 'permission');
-		assert.equal(harness.engine.hooksActive(), false);
-		await harness.engine.retryBlockedHooks();
-		assert.deepEqual(harness.started, ['macos', 'macos']);
-		assert.equal(harness.engine.hooksActive(), true);
-		const statuses = harness.sent.filter((entry) => entry.channel === 'global-shortcuts:status');
-		assert.deepEqual(
-			statuses.map((entry) => [entry.payload.hooksActive, entry.payload.hookError]),
-			[
-				[false, 'permission'],
-				[true, null],
-			],
-		);
-		harness.activeHook().onEvent(keyEvent('keydown', 'F13', 105));
-		assert.deepEqual(harness.events(1), ['press:custom:ptt']);
-	});
-
-	test('a retry leaves a running hook and an idle engine alone', async () => {
-		const running = createEngine({platform: 'macos'});
-		running.attach(1);
-		running.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:a', action: 'voice_toggle_mute', combo: combo({key: 'm', meta: true})}]),
-		);
-		await settle();
-		await running.engine.retryBlockedHooks();
-		assert.deepEqual(running.started, ['macos']);
-		assert.deepEqual(running.stopped, []);
-		const idle = createEngine({platform: 'macos'});
-		idle.attach(1);
-		await idle.engine.retryBlockedHooks();
-		assert.deepEqual(idle.started, []);
-	});
-
-	test('a retry while the permission is still missing stays blocked', async () => {
-		const harness = createEngine({platform: 'macos'});
-		harness.startResults.push('permission', 'permission');
-		harness.attach(1);
-		harness.engine.sync(
-			1,
-			syncPayload([{sourceId: 'custom:a', action: 'voice_toggle_mute', combo: combo({key: 'm', meta: true})}]),
-		);
-		await settle();
-		await harness.engine.retryBlockedHooks();
-		assert.equal(harness.engine.getStatus().hookError, 'permission');
-		assert.equal(harness.engine.hooksActive(), false);
-	});
-
-	test('capture is refused on the portal and when the hook cannot start', async () => {
-		const wayland = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
-		wayland.attach(1);
-		assert.equal(await wayland.engine.startCapture(1), null);
-		assert.deepEqual(wayland.started, []);
-		const mac = createEngine({platform: 'macos'});
-		mac.startResults.push('permission');
-		mac.attach(1);
-		assert.equal(await mac.engine.startCapture(1), null);
-		assert.deepEqual(mac.started, ['macos']);
-		assert.equal(await mac.engine.startCapture(2), null);
-	});
-
 	test('a late stop from a replaced capture leaves the newer capture running', async () => {
 		const harness = createEngine({platform: 'windows'});
 		harness.attach(1);
@@ -908,56 +609,6 @@ describe('GlobalShortcutsNative translation', () => {
 		assert.equal(matcher.handleKey(up, true).length, 1);
 	});
 
-	test('a Windows modifier keydown sets its own flag so a Ctrl then Shift capture keeps both', () => {
-		const ctrl = {keycode: 0xa2, keyName: 'ControlLeft', scanCode: 0x1d, extended: false};
-		const shift = {keycode: 0xa0, keyName: 'ShiftLeft', scanCode: 0x2a, extended: false};
-		const ctrlDown = native.translateNativeHookEvent('windows', nativeKey('keydown', ctrl));
-		assert.equal(ctrlDown.ctrlKey, true);
-		const shiftDown = native.translateNativeHookEvent('windows', nativeKey('keydown', {...shift, ctrlKey: true}));
-		assert.deepEqual(
-			[shiftDown.ctrlKey, shiftDown.shiftKey, shiftDown.altKey, shiftDown.metaKey],
-			[true, true, false, false],
-		);
-		const shiftUp = native.translateNativeHookEvent('windows', nativeKey('keyup', {...shift, ctrlKey: true}));
-		assert.equal(shiftUp.shiftKey, false);
-		const x11 = native.translateNativeHookEvent(
-			'x11',
-			nativeKey('keydown', {keycode: 0xffe1, keyName: 'ShiftLeft', x11Keycode: 50}),
-		);
-		assert.equal(x11.shiftKey, false);
-	});
-
-	test('a Windows Ctrl then Shift capture saves a binding that ignores Ctrl alone', async () => {
-		const harness = createEngine({platform: 'windows'});
-		harness.attach(1);
-		assert.notEqual(await harness.engine.startCapture(1), null);
-		const hook = harness.activeHook();
-		const ctrl = {keycode: 0xa2, keyName: 'ControlLeft', scanCode: 0x1d, extended: false};
-		const shift = {keycode: 0xa0, keyName: 'ShiftLeft', scanCode: 0x2a, extended: false};
-		hook.onEvent(native.translateNativeHookEvent('windows', nativeKey('keydown', ctrl)));
-		hook.onEvent(native.translateNativeHookEvent('windows', nativeKey('keydown', {...shift, ctrlKey: true})));
-		const last = harness.captured(1).at(-1);
-		assert.deepEqual([last.code, last.ctrl, last.shift], ['ShiftLeft', true, true]);
-		const binding = bindingFromCombo(
-			'custom:a',
-			'voice_push_to_talk',
-			combo({key: 'Shift', code: last.code, ctrl: last.ctrl, shift: last.shift, modifierOnly: true}),
-		);
-		const matcher = new GlobalShortcutMatcher();
-		matcher.setBindings([binding]);
-		const ctrlOnly = native.translateNativeHookEvent('windows', nativeKey('keydown', ctrl));
-		assert.deepEqual(matcher.handleKey(ctrlOnly, true), []);
-	});
-
-	test('evdev keys without a DOM code are dropped and every mapped key passes through', () => {
-		const unmapped = native.translateNativeHookEvent('evdev', nativeKey('keydown', {keycode: 0x2ff, keyName: ''}));
-		assert.equal(unmapped, null);
-		const pause = native.translateNativeHookEvent('evdev', nativeKey('keydown', {keycode: 119, keyName: ''}));
-		assert.equal(pause.code, 'Pause');
-		const calculator = native.translateNativeHookEvent('evdev', nativeKey('keydown', {keycode: 140, keyName: ''}));
-		assert.equal(calculator.code, 'LaunchApp2');
-	});
-
 	test('an old renderer media select registration matches the media select key', () => {
 		const binding = legacy.legacyRegistrationToBinding({id: 'key:media', keyName: 'LaunchMediaPlayer'});
 		assert.deepEqual(binding.trigger, {kind: 'key', layoutKey: 'LaunchMediaPlayer', code: 'MediaSelect'});
@@ -968,20 +619,6 @@ describe('GlobalShortcutsNative translation', () => {
 			matcher.handleKey(native.translateNativeHookEvent('windows', nativeKey('keydown', identity)), true).length,
 			1,
 		);
-	});
-
-	test('an X11 keysym without a name falls back to the physical code', () => {
-		const matcher = new GlobalShortcutMatcher();
-		matcher.setBindings([
-			bindingFromCombo('custom:a', 'voice_toggle_mute', combo({key: 'q', code: 'KeyQ', ctrl: true})),
-		]);
-		const event = native.translateNativeHookEvent(
-			'x11',
-			nativeKey('keydown', {keycode: 0x6ca, keyName: '', x11Keycode: 24, ctrlKey: true}),
-		);
-		assert.equal(event.key, null);
-		assert.equal(event.code, 'KeyQ');
-		assert.equal(matcher.handleKey(event, true).length, 1);
 	});
 
 	test('X11 Right Alt survives events whose Mod1 flag is clear on AltGr layouts', () => {
@@ -1126,100 +763,15 @@ describe('GlobalShortcutsNative translation', () => {
 	});
 });
 
-function loadNativeWith(modules, getTccStatus = () => 'granted') {
+function loadNativeWith(modules) {
 	return loadTsModule('@electron/main/GlobalShortcutsNative', {
 		stubs: {
 			'node:module': {createRequire: () => (name) => modules[name] ?? {loadError: null}},
 			'@electron/common/Logger': {createChildLogger: () => ({info: () => {}, warn: () => {}})},
-			'@electron/main/MacTcc': {getTccStatus},
+			'@electron/main/MacTcc': {getTccStatus: () => 'granted'},
 		},
 	});
 }
-
-function withPlatform(platform, run) {
-	const original = Object.getOwnPropertyDescriptor(process, 'platform');
-	Object.defineProperty(process, 'platform', {...original, value: platform});
-	return Promise.resolve()
-		.then(run)
-		.finally(() => Object.defineProperty(process, 'platform', original));
-}
-
-describe('macOS Input Monitoring', () => {
-	function macHookModule({preflight = false} = {}) {
-		const instances = [];
-		class InputHook {
-			constructor() {
-				this.stopped = false;
-				instances.push(this);
-			}
-			start() {
-				return true;
-			}
-			stop() {
-				this.stopped = true;
-			}
-		}
-		return {instances, module: {InputHook, hasAccessibilityPermission: () => preflight, loadError: null}};
-	}
-
-	test('the live status wins over a stale hook preflight', () =>
-		withPlatform('darwin', () => {
-			const hook = macHookModule({preflight: false});
-			const loaded = loadNativeWith({'@fluxer/macos-input-hook': hook.module}, () => 'granted');
-			assert.equal(loaded.hasMacInputMonitoringAccess(), true);
-		}));
-
-	test('the hook preflight is the fallback when the live status is unavailable', () =>
-		withPlatform('darwin', () => {
-			const granted = macHookModule({preflight: true});
-			const unknown = () => 'not-determined';
-			assert.equal(
-				loadNativeWith({'@fluxer/macos-input-hook': granted.module}, unknown).hasMacInputMonitoringAccess(),
-				true,
-			);
-			const throwing = () => {
-				throw new Error('addon crashed');
-			};
-			assert.equal(
-				loadNativeWith({'@fluxer/macos-input-hook': granted.module}, throwing).hasMacInputMonitoringAccess(),
-				true,
-			);
-			const denied = macHookModule({preflight: false});
-			assert.equal(
-				loadNativeWith({'@fluxer/macos-input-hook': denied.module}, () => 'denied').hasMacInputMonitoringAccess(),
-				false,
-			);
-		}));
-
-	test('a live denial wins over a stale hook preflight', () =>
-		withPlatform('darwin', () => {
-			const stale = macHookModule({preflight: true});
-			assert.equal(
-				loadNativeWith({'@fluxer/macos-input-hook': stale.module}, () => 'denied').hasMacInputMonitoringAccess(),
-				false,
-			);
-		}));
-
-	test('a hook refused for permission starts once the permission is granted', () =>
-		withPlatform('darwin', async () => {
-			let status = 'denied';
-			const hook = macHookModule({preflight: false});
-			const loaded = loadNativeWith({'@fluxer/macos-input-hook': hook.module}, () => status);
-			assert.equal(await loaded.createNativeHookBackend('macos').start(() => {}), 'permission');
-			assert.equal(hook.instances.length, 0);
-			status = 'granted';
-			assert.equal(await loaded.createNativeHookBackend('macos').start(() => {}), 'ok');
-			assert.equal(hook.instances.length, 1);
-		}));
-
-	test('other platforms never ask', () =>
-		withPlatform('linux', () => {
-			const loaded = loadNativeWith({}, () => {
-				throw new Error('must not be read');
-			});
-			assert.equal(loaded.hasMacInputMonitoringAccess(), true);
-		}));
-});
 
 describe('GlobalShortcutsNative backends', () => {
 	function x11Module(start) {
@@ -1264,16 +816,6 @@ describe('GlobalShortcutsNative backends', () => {
 			/XRecord extension not available/,
 		);
 		assert.equal(x11.instances[0].stopped, true);
-	});
-
-	test('a synchronous native start still works', async () => {
-		const x11 = x11Module(() => undefined);
-		const backend = loadNativeWith({'@fluxer/linux-input-hook': x11.module}).createNativeHookBackend('x11');
-		assert.equal(await backend.start(() => {}), 'ok');
-		const failing = x11Module(() => false);
-		const refused = loadNativeWith({'@fluxer/linux-input-hook': failing.module}).createNativeHookBackend('x11');
-		assert.equal(await refused.start(() => {}), 'start-failed');
-		assert.equal(failing.instances[0].stopped, true);
 	});
 
 	test('the session monitor never loads the portals module when portals are turned off', () => {

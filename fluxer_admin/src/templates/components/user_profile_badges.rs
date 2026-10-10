@@ -103,38 +103,3 @@ pub fn user_profile_badges(
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn render(self_hosted: bool, name: Option<&str>, premium_type: i32) -> String {
-        user_profile_badges(
-            "https://static.example.com",
-            0,
-            Some(premium_type),
-            Some("2026-01-01"),
-            self_hosted,
-            name,
-            false,
-        )
-        .into_string()
-    }
-
-    #[test]
-    fn hosted_premium_badges_keep_their_fluxer_labels() {
-        assert!(
-            render(false, Some("Gold"), 1).contains("Fluxer Plutonium subscriber since 2026-01-01")
-        );
-        assert!(render(false, None, 2).contains("Fluxer Visionary since 2026-01-01"));
-    }
-
-    #[test]
-    fn self_hosted_premium_badges_use_the_configured_name() {
-        let markup = render(true, Some("Gold"), 1);
-        assert!(markup.contains("Gold subscriber since 2026-01-01"));
-        assert!(!markup.contains("Plutonium"));
-        assert!(render(true, Some("Gold"), 2).contains("Gold subscriber since"));
-        assert!(!render(true, None, 1).contains("img"));
-    }
-}

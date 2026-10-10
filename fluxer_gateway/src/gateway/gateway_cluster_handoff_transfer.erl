@@ -173,13 +173,6 @@ normalize_pids(_Pids) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-normalize_members_sorts_and_filters_test() ->
-    ?assertEqual(
-        lists:usort([node(), bad, 'z@host']),
-        normalize_members(['z@host', node(), bad, 123])
-    ),
-    ?assertEqual([node()], normalize_members(not_a_list)).
-
 run_handoff_handles_missing_managers_test() ->
     persistent_term:put(
         {fluxer_gateway, runtime_config},

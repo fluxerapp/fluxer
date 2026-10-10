@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
 import {
 	createDmChannel,
@@ -15,7 +14,6 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -196,22 +194,5 @@ describe('Message send permissions', () => {
 				getGuildMember.mockRestore();
 			}
 		}
-	});
-
-	it('allows bot message content up to 4000 characters', async () => {
-		const {owner, guild, systemChannel} = await setupTestGuildWithMembers(harness, 0);
-		const botAccount = await createTestBotAccount(harness);
-		const botPermissions = (Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString();
-		await authorizeBot(harness, owner.token, botAccount.appId, ['bot'], guild.id, botPermissions);
-		const content = 'b'.repeat(MAX_MESSAGE_LENGTH_PREMIUM);
-
-		const sentMessage = await createBuilder<MessageResponse>(harness, `Bot ${botAccount.botToken}`)
-			.post(`/channels/${systemChannel.id}/messages`)
-			.body({content})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-
-		expect(sentMessage.content).toBe(content);
-		expect(sentMessage.author.id).toBe(botAccount.botUserId);
 	});
 });

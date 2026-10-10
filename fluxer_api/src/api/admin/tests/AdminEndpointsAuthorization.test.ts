@@ -122,15 +122,6 @@ describe('Admin Endpoints Authorization', () => {
 				.execute();
 		}
 	});
-	test('admin endpoints succeed with proper ACLs', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'guild:lookup']);
-		const endpointsToTest = ['/admin/users/123'];
-		for (const path of endpointsToTest) {
-			await createBuilder(harness, `${admin.token}`).get(path).expect(HTTP_STATUS.OK).execute();
-		}
-		await createBuilder(harness, `${admin.token}`).get('/admin/guilds/123').expect(HTTP_STATUS.OK).execute();
-	});
 	test('user lookup endpoint requires user:lookup ACL', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);

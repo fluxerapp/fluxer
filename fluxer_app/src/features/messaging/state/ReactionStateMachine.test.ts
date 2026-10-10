@@ -5,19 +5,13 @@ import {
 	applyRemove,
 	applyRemoveAll,
 	applyRemoveEmoji,
-	createReactionMachineSnapshot,
 	emptyMap,
 	getEmojiKey,
-	getReactionStateValue,
 	getRecord,
 	hydrate,
 	mapToReactions,
-	reactionsEqual,
 	sameEmoji,
 	trackReactor,
-	trackReactors,
-	transitionReactionMap,
-	transitionReactionSnapshot,
 	untrackReactor,
 } from '@app/features/messaging/state/ReactionStateMachine';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
@@ -297,15 +291,6 @@ describe('ReactionStateMachine: mapToReactions', () => {
 		const arr = mapToReactions(m);
 		expect(arr[0].me).toBe(true);
 	});
-	it('reactionsEqual identifies count/me changes', () => {
-		const a = [{emoji: FIRE, count: 2}] as any;
-		const b = [{emoji: FIRE, count: 2}] as any;
-		expect(reactionsEqual(a, b)).toBe(true);
-		const c = [{emoji: FIRE, count: 3}] as any;
-		expect(reactionsEqual(a, c)).toBe(false);
-		const d = [{emoji: FIRE, count: 2, me: true}] as any;
-		expect(reactionsEqual(a, d)).toBe(false);
-	});
 });
 
 describe('ReactionStateMachine: trackReactor / untrackReactor', () => {
@@ -417,125 +402,5 @@ describe('ReactionStateMachine: complex scenarios', () => {
 		expect(m.size).toBe(0);
 		m = add(m, FIRE, ALICE);
 		expect(getRecord(m, FIRE)!.count).toBe(1);
-	});
-});
-
-describe('ReactionStateMachine: XState transition surface', () => {
-	it('keeps empty snapshots stable for no-op empty-state events', () => {
-		const snapshot = createReactionMachineSnapshot(emptyMap(), ME);
-		expect(
-			transitionReactionSnapshot(snapshot, {
-				type: 'reaction.hydrate',
-				reactions: [],
-				currentUserId: ME,
-			}),
-		).toBe(snapshot);
-		expect(transitionReactionSnapshot(snapshot, {type: 'reaction.removeAll'})).toBe(snapshot);
-		expect(
-			transitionReactionSnapshot(snapshot, {
-				type: 'reaction.removeEmoji',
-				emoji: FIRE,
-			}),
-		).toBe(snapshot);
-	});
-	it('updates empty snapshot context when a hydrate changes current user', () => {
-		const snapshot = createReactionMachineSnapshot(emptyMap(), ME);
-		const next = transitionReactionSnapshot(snapshot, {
-			type: 'reaction.hydrate',
-			reactions: [],
-			currentUserId: ALICE,
-		});
-		expect(next).not.toBe(snapshot);
-		expect(next.context.currentUserId).toBe(ALICE);
-	});
-	it('transitions maps directly without allocating for empty no-op events', () => {
-		const map = emptyMap();
-		expect(transitionReactionMap(map, {type: 'reaction.removeAll'})).toBe(map);
-		expect(transitionReactionMap(map, {type: 'reaction.removeEmoji', emoji: FIRE})).toBe(map);
-		expect(
-			transitionReactionMap(map, {
-				type: 'reaction.trackReactors',
-				emoji: FIRE,
-				userIds: [ALICE, BOB],
-			}),
-		).toBe(map);
-	});
-	it('moves between empty and active states from reaction events', () => {
-		let snapshot = createReactionMachineSnapshot(emptyMap(), ME);
-		expect(getReactionStateValue(snapshot)).toBe('empty');
-		snapshot = transitionReactionSnapshot(snapshot, {
-			type: 'reaction.add',
-			emoji: FIRE,
-			userId: ME,
-			isCurrentUser: true,
-		});
-		expect(getReactionStateValue(snapshot)).toBe('active');
-		expect(getRecord(snapshot.context.map, FIRE)!.count).toBe(1);
-		snapshot = transitionReactionSnapshot(snapshot, {
-			type: 'reaction.remove',
-			emoji: FIRE,
-			userId: ME,
-			isCurrentUser: true,
-		});
-		expect(getReactionStateValue(snapshot)).toBe('empty');
-		expect(getRecord(snapshot.context.map, FIRE)).toBeUndefined();
-	});
-	it('trackReactors batches fetched users without inflating an already-correct count', () => {
-		let m = hydrate(emptyMap(), [{emoji: FIRE, count: 3}]);
-		m = trackReactors(m, FIRE, [ALICE, BOB, CAROL]);
-		expect(getRecord(m, FIRE)!.count).toBe(3);
-		expect([...getRecord(m, FIRE)!.knownReactors].sort()).toEqual([ALICE, BOB, CAROL].sort());
-	});
-	it('stress: repeated add/remove echoes keep count, me, and known reactors coherent', () => {
-		const users = [ME, ALICE, BOB, CAROL];
-		const expected = new Set<string>();
-		let snapshot = createReactionMachineSnapshot(emptyMap(), ME);
-		for (let i = 0; i < 600; i++) {
-			const userId = users[(i * 17 + 3) % users.length];
-			const shouldAdd = (i * 7) % 5 < 3 || !expected.has(userId);
-			if (shouldAdd) {
-				expected.add(userId);
-				snapshot = transitionReactionSnapshot(snapshot, {
-					type: 'reaction.add',
-					emoji: FIRE,
-					userId,
-					isCurrentUser: userId === ME,
-				});
-				if (i % 11 === 0) {
-					snapshot = transitionReactionSnapshot(snapshot, {
-						type: 'reaction.add',
-						emoji: FIRE,
-						userId,
-						isCurrentUser: userId === ME,
-					});
-				}
-			} else {
-				expected.delete(userId);
-				snapshot = transitionReactionSnapshot(snapshot, {
-					type: 'reaction.remove',
-					emoji: FIRE,
-					userId,
-					isCurrentUser: userId === ME,
-				});
-				if (i % 13 === 0) {
-					snapshot = transitionReactionSnapshot(snapshot, {
-						type: 'reaction.remove',
-						emoji: FIRE,
-						userId,
-						isCurrentUser: userId === ME,
-					});
-				}
-			}
-			const record = getRecord(snapshot.context.map, FIRE);
-			if (expected.size === 0) {
-				expect(record).toBeUndefined();
-				expect(getReactionStateValue(snapshot)).toBe('empty');
-			} else {
-				expect(record!.count).toBe(expected.size);
-				expect(record!.me).toBe(expected.has(ME));
-				expect([...record!.knownReactors].sort()).toEqual([...expected].sort());
-				expect(getReactionStateValue(snapshot)).toBe('active');
-			}
-		}
 	});
 });

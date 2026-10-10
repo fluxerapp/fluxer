@@ -43,7 +43,6 @@ describe('without crypto.randomUUID', () => {
 		]);
 		const toastId = Toasts.success('saved');
 		expect(toastId).toMatch(UUID_V4);
-		expect(Toasts.hasToast(toastId)).toBe(true);
 		expect(generateCustomKeybindId()).toMatch(UUID_V4);
 	});
 });

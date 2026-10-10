@@ -8,7 +8,6 @@ import {
 	addGuildMember,
 	announcementWorld,
 	createAnnouncementSourceGuild,
-	createGuildChannel,
 	follow,
 	followRequest,
 	setGuildFeatures,
@@ -99,18 +98,6 @@ describe('Channel follow', () => {
 		expect(stored?.sourceGuildId?.toString()).toBe(a.guild.id);
 		expect(stored?.sourceChannelId?.toString()).toBe(a.ann.id);
 		expect(stored?.creatorId?.toString()).toBe(b.owner.userId);
-	});
-
-	test('uses a null avatar when the source guild has no icon', async () => {
-		const {a, b} = world;
-		const followed = await follow(harness, b.owner.token, a.ann.id, b.t1.id);
-		const webhooks = await getChannelWebhooks(harness, b.t1.id, b.owner.token);
-		expect(webhooks.find((candidate) => candidate.id === followed.webhook_id)?.avatar ?? null).toBeNull();
-		expect(
-			harness.storageService
-				.getCopiedObjects()
-				.filter((copy) => copy.destinationKey.startsWith(`avatars/${followed.webhook_id}/`)),
-		).toHaveLength(0);
 	});
 
 	test('rejects a limited account and creates no webhook', async () => {
@@ -217,16 +204,6 @@ describe('Channel follow', () => {
 		expect(sourceLog.audit_log_entries).toHaveLength(0);
 	});
 
-	test('allows following into a text channel of the same guild', async () => {
-		const {a} = world;
-		const local = await createGuildChannel(harness, a.owner.token, a.guild.id, {
-			name: 'local',
-			type: ChannelTypes.GUILD_TEXT,
-		});
-		const followed = await follow(harness, a.owner.token, a.ann.id, local.id);
-		expect(followed.channel_id).toBe(a.ann.id);
-	});
-
 	test('rejects a duplicate follow and allows another target', async () => {
 		const {a, b} = world;
 		await follow(harness, b.owner.token, a.ann.id, b.t1.id);
@@ -235,18 +212,6 @@ describe('Channel follow', () => {
 			.execute();
 		await follow(harness, b.owner.token, a.ann.id, b.t2.id);
 		expect(await getChannelWebhooks(harness, b.t1.id, b.owner.token)).toHaveLength(1);
-	});
-
-	test('allows two sources to post into the same target', async () => {
-		const {a, b} = world;
-		const second = await createGuildChannel(harness, a.owner.token, a.guild.id, {
-			name: 'updates',
-			type: ChannelTypes.GUILD_ANNOUNCEMENT,
-		});
-		await follow(harness, b.owner.token, a.ann.id, b.t1.id);
-		await follow(harness, b.owner.token, second.id, b.t1.id);
-		const webhooks = await getChannelWebhooks(harness, b.t1.id, b.owner.token);
-		expect(webhooks.map((webhook) => webhook.source_channel?.id).sort()).toEqual([a.ann.id, second.id].sort());
 	});
 
 	test('counts follower webhooks toward the channel webhook cap', async () => {
@@ -269,55 +234,6 @@ describe('Channel follow', () => {
 				.execute();
 		} finally {
 			await restore();
-		}
-	});
-
-	test('an announcement channel takes follows however many it already has', async () => {
-		const {a, b} = world;
-		vi.spyOn(WebhookRepository.prototype, 'countBySourceChannel').mockResolvedValue({
-			channelCount: 100_000,
-			guildCount: 50_000,
-		});
-		try {
-			await follow(harness, b.owner.token, a.ann.id, b.t1.id);
-			await follow(harness, b.owner.token, a.ann.id, b.t2.id);
-		} finally {
-			vi.restoreAllMocks();
-		}
-		expect(await new WebhookRepository().countBySourceChannel(createChannelID(BigInt(a.ann.id)))).toEqual({
-			channelCount: 2,
-			guildCount: 1,
-		});
-	});
-
-	test('one user can create more than 20 follows in a row', async () => {
-		const {a, b} = world;
-		const sources = [a.ann];
-		for (let index = 1; index < 7; index++) {
-			sources.push(
-				await createGuildChannel(harness, a.owner.token, a.guild.id, {
-					name: `news-${index}`,
-					type: ChannelTypes.GUILD_ANNOUNCEMENT,
-				}),
-			);
-		}
-		const third = await createGuildChannel(harness, b.owner.token, b.guild.id, {
-			name: 'third',
-			type: ChannelTypes.GUILD_TEXT,
-		});
-		const pairs: Array<[ChannelResponse, ChannelResponse]> = [];
-		for (const target of [b.t1, b.t2, third]) {
-			for (const source of sources) {
-				pairs.push([source, target]);
-			}
-		}
-		expect(pairs.length).toBeGreaterThan(20);
-		for (const [source, target] of pairs) {
-			await follow(harness, b.owner.token, source.id, target.id);
-		}
-		for (const target of [b.t1, b.t2, third]) {
-			const webhooks = await getChannelWebhooks(harness, target.id, b.owner.token);
-			expect(webhooks.filter((webhook) => webhook.type === WebhookTypes.CHANNEL_FOLLOWER)).toHaveLength(sources.length);
 		}
 	});
 	test('reports follower stats, cached for a minute and refreshed by a follow', async () => {

@@ -23,10 +23,6 @@ class TextareaSelection {
 		delete this.channelSelections[channelId];
 	}
 
-	setEditingSelection(channelId: string, messageId: string, snapshot: TextareaSelectionSnapshot): void {
-		this.editingSelections[this.getEditingKey(channelId, messageId)] = cloneTextareaSelectionSnapshot(snapshot);
-	}
-
 	getEditingSelection(channelId: string, messageId: string): TextareaSelectionSnapshot | null {
 		const snapshot = this.editingSelections[this.getEditingKey(channelId, messageId)];
 		return snapshot ? cloneTextareaSelectionSnapshot(snapshot) : null;

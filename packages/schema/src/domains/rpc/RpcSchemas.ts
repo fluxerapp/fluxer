@@ -129,17 +129,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 			.describe('List of subscriptions to delete'),
 	}),
 	z.object({
-		type: z
-			.literal('send_apns_push')
-			.describe('Request type for sending an APNs notification through the API HTTP/2 client'),
-		user_id: SnowflakeType.describe('ID of the user receiving the notification'),
-		subscription_id: createStringType().describe('ID of the APNs subscription to report back to the gateway'),
-		device_token: createStringType(1, 4096).describe('APNs device token'),
-		app_id: createStringType(1, 128).describe('Client app channel or bundle mapping identifier'),
-		provider_environment: z.enum(['production', 'development']).describe('APNs provider environment'),
-		payload: z.record(z.string(), z.unknown()).describe('Notification payload built by the gateway'),
-	}),
-	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Request type for fetching blocked user IDs'),
 		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch blocked lists for'),
 	}),
@@ -484,17 +473,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('delete_push_subscriptions').describe('Response type for push subscription deletion'),
 		data: z.object({success: z.boolean().describe('Whether the deletion was successful')}).describe('Deletion result'),
-	}),
-	z.object({
-		type: z.literal('send_apns_push').describe('Response type for APNs push delivery'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether APNs accepted the notification'),
-				should_delete: z.boolean().describe('Whether the gateway should delete this subscription'),
-				reason: z.string().optional().describe('APNs or local failure reason'),
-				status_code: z.number().optional().describe('APNs HTTP status code'),
-			})
-			.describe('APNs delivery result'),
 	}),
 	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Response type for blocked user IDs'),

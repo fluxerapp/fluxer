@@ -270,7 +270,7 @@ Internal endpoints address one container from another and never appear in a brow
 
 #### `FLUXER_INTERNAL_API_ENDPOINT`
 
-Default `http://127.0.0.1:8080` in the Gateway. The API address used by `gateway` and `push`, and the discovery fallback of `app-proxy`. `push` refuses to start without it. Compose sets `http://api:8080`.
+Default `http://127.0.0.1:8080` in the Gateway. The API address used by `gateway` and `push`. `push` refuses to start without it. Compose sets `http://api:8080`.
 
 #### `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT`
 
@@ -332,11 +332,11 @@ All are optional.
 
 #### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
-Default `false`. Whether the client-IP header is trusted. Compose forwards it from `.env` with a default of `true`, because the edge sets the header on every upstream hop. It reaches every service that reads it, `app-proxy` included. The API has no peer-address fallback, so `false` on `api` makes every non-exempt request a 403.
+Default `false`. Whether the client-IP header is trusted. Compose forwards it from `.env` with a default of `true`, because the edge sets the header on every upstream hop. The API has no peer-address fallback, so `false` on `api` makes every non-exempt request a 403.
 
 #### `FLUXER_CLIENT_IP_HEADER_NAME`
 
-Default `x-forwarded-for`. Which header has the client IP. Read by `api`, `worker`, `admin`, `app-proxy`, and `gateway`. It must match what the edge sets. Compose forwards it from `.env`.
+Default `x-forwarded-for`. Which header has the client IP. Read by `api`, `worker`, `admin`, and `gateway`. It must match what the edge sets. Compose forwards it from `.env`.
 
 #### `FLUXER_API_IP_BAN_EXEMPT_IPS`
 
@@ -528,7 +528,7 @@ Default `local`. The region string. `media-proxy` defaults to `us-east-1`. Compo
 
 #### `FLUXER_S3_ACCESS_KEY_ID`
 
-Default empty. The access key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`. `app-proxy` reads it only to fetch an `s3://` GeoIP database. Compose fills it from `FLUXER_S3_ACCESS_KEY`.
+Default empty. The access key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`. Compose fills it from `FLUXER_S3_ACCESS_KEY`.
 
 #### `FLUXER_S3_SECRET_ACCESS_KEY`
 
@@ -1213,7 +1213,7 @@ Default `10000`. Purge request timeout. Accepts 1000 to 10000. The range is chec
 
 #### `FLUXER_GEOIP_DB_PATH`
 
-Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. Read by `api`, `worker` and `app-proxy`. Compose forwards it from `.env`.
+Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. Read by `api` and `worker`. Compose forwards it from `.env`.
 
 ## Instance identity and branding
 
@@ -1573,22 +1573,6 @@ Default `./static`. Where the client's SPA bundle lives, unrelated to `static-pr
 
 No default. An upstream to fetch `index.html` from. Leave unset for the shipped image. Compose forwards it from `.env`.
 
-#### `DISCOVERY_UPSTREAM_URL`
-
-Default `http://localhost:8088/api/.well-known/fluxer`. Where the bootstrap discovery document is fetched. Compose sets `http://edge:8088/.well-known/fluxer`. That internal listener supplies the client-IP header the API requires, so leave it pointed at the edge.
-
-#### `DISCOVERY_REFRESH_INTERVAL_MS`
-
-Default `60000`. How often discovery is refetched. Unprefixed name. Compose forwards it from `.env`.
-
-#### `PUBLIC_BOOTSTRAP_API_ENDPOINT`
-
-Default `/api`. The API path put in the page bootstrap. Compose sets `/api`, the path the edge routes to the API.
-
-#### `PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT`
-
-No default. The absolute API URL in the bootstrap. Compose forwards it from `.env`, and builds it from the public origin when it is unset.
-
 #### `FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS`
 
 Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api` to the API. Invalid entries are logged and dropped. Compose forwards it from `.env`.
@@ -1719,7 +1703,7 @@ Compose writes each of these from the `.env` name given, so setting the name its
 
 #### Fixed wiring
 
-`FLUXER_ENV`, `FLUXER_SELF_HOSTED`, `FLUXER_DATABASE_BACKEND`, the listen ports `FLUXER_API_PORT`, `FLUXER_GATEWAY_PORT`, `FLUXER_MEDIA_PROXY_PORT`, `FLUXER_APP_PROXY_PORT` and `FLUXER_ADMIN_PORT`, the internal endpoints `FLUXER_INTERNAL_API_ENDPOINT`, `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT` and `FLUXER_MEDIA_PROXY_ENDPOINT`, the `FLUXER_API_ENDPOINT` of `admin`, `FLUXER_SVC_NAME`, `FLUXER_SVC_MODE`, `FLUXER_SVC_SHARD_ID`, `FLUXER_SVC_SHARD_COUNT`, `FLUXER_API_WORKER_MODE`, `FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER`, `FLUXER_MEDIA_PROXY_MODE`, `FLUXER_MEDIA_PROXY_STORAGE_BACKEND`, `DISCOVERY_UPSTREAM_URL` and `PUBLIC_BOOTSTRAP_API_ENDPOINT`. Compose sets each to a fixed value that the edge, the health checks or another service depend on. A different value gives no working stack.
+`FLUXER_ENV`, `FLUXER_SELF_HOSTED`, `FLUXER_DATABASE_BACKEND`, the listen ports `FLUXER_API_PORT`, `FLUXER_GATEWAY_PORT`, `FLUXER_MEDIA_PROXY_PORT`, `FLUXER_APP_PROXY_PORT` and `FLUXER_ADMIN_PORT`, the internal endpoints `FLUXER_INTERNAL_API_ENDPOINT`, `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT` and `FLUXER_MEDIA_PROXY_ENDPOINT`, the `FLUXER_API_ENDPOINT` of `admin`, `FLUXER_SVC_NAME`, `FLUXER_SVC_MODE`, `FLUXER_SVC_SHARD_ID`, `FLUXER_SVC_SHARD_COUNT`, `FLUXER_API_WORKER_MODE`, `FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER`, `FLUXER_MEDIA_PROXY_MODE` and `FLUXER_MEDIA_PROXY_STORAGE_BACKEND`. Compose sets each to a fixed value that the edge, the health checks or another service depend on. A different value gives no working stack.
 
 #### Names the stack has no use for
 
@@ -1837,7 +1821,7 @@ The third-party images above are the defaults of the names under [Images](#image
 
 The edge and LiveKit are the only services that publish ports. The edge publishes 80/tcp, 443/tcp, 443/udp, or one plain-HTTP port under the overlay. LiveKit publishes 7881/tcp and 7882/udp. Everything else is reachable only over the bridge network.
 
-Most settings reach `api`, `worker`, `gateway`, `media-proxy`, `push`, `admin` and the internal services through one shared environment block, so one line in `.env` reaches every one of them that reads it. `app-proxy` takes its own list, since it reads the public address, the client IP settings, the GeoIP database and its own names. The edge takes the `FLUXER_EDGE_` variables and `FLUXER_ADMIN_BASE_PATH`. The third-party services take their image name, their memory limit, and their own tuning: `postgres` the password, database, role and `FLUXER_POSTGRES_` server settings, `meilisearch` the master key and `FLUXER_MEILISEARCH_` values, `valkey` the `FLUXER_VALKEY_` values, `seaweedfs` its heap ceiling and telemetry switch, and `livekit` the key pair, the port, STUN and log level variables. `static-proxy` reads no environment variables.
+Most settings reach `api`, `worker`, `gateway`, `media-proxy`, `push`, `admin` and the internal services through one shared environment block, so one line in `.env` reaches every one of them that reads it. `app-proxy` takes its own list, since it reads the static, media and S3 upload origins and its own names. The edge takes the `FLUXER_EDGE_` variables and `FLUXER_ADMIN_BASE_PATH`. The third-party services take their image name, their memory limit, and their own tuning: `postgres` the password, database, role and `FLUXER_POSTGRES_` server settings, `meilisearch` the master key and `FLUXER_MEILISEARCH_` values, `valkey` the `FLUXER_VALKEY_` values, `seaweedfs` its heap ceiling and telemetry switch, and `livekit` the key pair, the port, STUN and log level variables. `static-proxy` reads no environment variables.
 
 The internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
 
@@ -1937,7 +1921,7 @@ Default `256mb`. The ceiling for `static-proxy`. The service reads no environmen
 
 #### `FLUXER_APP_PROXY_MEMORY_LIMIT`
 
-Default `256mb`. The ceiling for `app-proxy`. It holds the discovery cache and reads no database.
+Default `256mb`. The ceiling for `app-proxy`. It reads no database.
 
 #### `FLUXER_SNOWFLAKES_MEMORY_LIMIT`
 

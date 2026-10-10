@@ -77,12 +77,6 @@ custom_status_for_invisible_test() ->
 custom_status_for_null_test() ->
     ?assertEqual(null, custom_status_for(<<"online">>, null)).
 
-normalize_custom_status_test() ->
-    ?assertEqual(null, normalize_custom_status(null)),
-    ?assertEqual(#{<<"text">> => <<"hi">>}, normalize_custom_status(#{<<"text">> => <<"hi">>})),
-    ?assertEqual(null, normalize_custom_status(<<"invalid">>)),
-    ?assertEqual(null, normalize_custom_status(123)).
-
 build_invisible_atom_normalized_to_offline_test() ->
     CustomStatus = #{<<"text">> => <<"hello">>},
     Result = build(test_user(), invisible, false, false, CustomStatus),

@@ -88,38 +88,6 @@ describe('thread read states', () => {
 		return {owner, member, guildId: guild.id, channelId: channel.id, thread};
 	}
 
-	it('keeps the READY payload of a control user identical once the experiment is live elsewhere', async () => {
-		const account = await createTestAccount(harness);
-		await ensureSessionStarted(harness, account.token);
-		const guild = await createGuild(harness, account.token, 'control');
-		const channel = await createChannel(harness, account.token, guild.id, 'general');
-		const message = await sendMessage(harness, account.token, channel.id, 'hello');
-		await createBuilder(harness, account.token)
-			.post(`/channels/${channel.id}/messages/${message.id}/ack`)
-			.body({})
-			.expect(204)
-			.execute();
-		await createBuilder(harness, account.token)
-			.patch(`/users/@me/guilds/${guild.id}/settings`)
-			.body({
-				channel_overrides: {
-					[channel.id]: {collapsed: false, message_notifications: 1, muted: true, mute_config: null},
-				},
-			})
-			.expect(200)
-			.execute();
-		const baseline = await session(account);
-		const other = await createTestAccount(harness);
-		const otherGuild = await createGuild(harness, other.token, 'enrolled');
-		await setChannelThreadsConfig({
-			enabled: true,
-			enabled_guild_ids: [otherGuild.id],
-			included_user_ids: [other.userId],
-		});
-		expect(await session(account)).toEqual(baseline);
-		expect(await session(account, true)).toEqual(baseline);
-	});
-
 	it('stamps the author self-ack and shows thread read states only to capable sessions', async () => {
 		const s = await activeSetup();
 		const sent = await threadsRequest<MessageResponse>(harness, s.member.token)

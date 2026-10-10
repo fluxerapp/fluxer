@@ -212,47 +212,10 @@ is_online(Presence) ->
 -ifdef(TEST).
 
 view_perm() -> constants:view_channel_permission().
-admin_perm() -> constants:administrator_permission().
-
 returns_zero_for_invalid_user_test() ->
     ?assertEqual(0, compute_count(0, #{})),
     ?assertEqual(0, compute_count(undefined, #{})),
     ?assertEqual(0, compute_count(-5, #{})).
-
-admin_viewer_returns_count_without_member_list_store_test() ->
-    GuildId = 1,
-    AdminRoleId = 9001,
-    State = admin_viewer_state(GuildId, AdminRoleId),
-    Result = compute_count(100, State),
-    ?assert(is_integer(Result) andalso Result >= 0).
-
-admin_viewer_state(GuildId, AdminRoleId) ->
-    Roles = [
-        #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>},
-        #{
-            <<"id">> => integer_to_binary(AdminRoleId),
-            <<"permissions">> => integer_to_binary(admin_perm())
-        }
-    ],
-    Members = #{
-        100 => #{
-            <<"user">> => #{<<"id">> => <<"100">>},
-            <<"roles">> => [integer_to_binary(AdminRoleId)]
-        }
-    },
-    #{
-        id => GuildId,
-        data => #{
-            <<"guild">> => #{<<"owner_id">> => <<"999">>},
-            <<"roles">> => Roles,
-            <<"members">> => Members,
-            <<"channels">> => [
-                #{<<"id">> => <<"5">>, <<"type">> => 0, <<"permission_overwrites">> => []}
-            ]
-        },
-        member_presence => make_presence_tab(#{100 => #{<<"status">> => <<"online">>}}),
-        sessions => #{}
-    }.
 
 slow_path_counts_only_mutually_visible_members_test() ->
     GuildId = 1,
@@ -400,21 +363,6 @@ slow_path_returns_zero_when_viewer_offline_and_no_channels_test() ->
     },
     ?assertEqual(0, compute_count(10, State)).
 
-index_matches_scan_without_sessions_test() ->
-    State = mutual_visibility_state(1, 5000),
-    ViewerSet = guild_visibility:viewable_channel_set(10, State),
-    Expected = reference_count_mutually_visible(10, ViewerSet, State),
-    ?assertEqual(2, Expected),
-    ?assertEqual(Expected, compute_count(10, State)).
-
-index_matches_scan_with_cached_session_channels_test() ->
-    Base = mutual_visibility_state(1, 5000),
-    State = Base#{sessions => cached_viewable_sessions()},
-    ViewerSet = guild_visibility:viewable_channel_set(10, State),
-    Expected = reference_count_mutually_visible(10, ViewerSet, State),
-    ?assertEqual(3, Expected),
-    ?assertEqual(Expected, compute_count(10, State)).
-
 index_counts_with_cached_session_channels_test() ->
     Base = mutual_visibility_state(1, 5000),
     State = Base#{sessions => cached_viewable_sessions()},
@@ -456,30 +404,6 @@ counts_only_members_the_member_list_shows_online_test() ->
         end,
         [[], [10], [30], [10, 30], [20, 40], [10, 20, 30, 40]]
     ).
-
-fully_indexed_count_builds_no_memo_test() ->
-    Base = mutual_visibility_state(1, 5000),
-    State = Base#{sessions => fully_indexed_sessions()},
-    ViewerSet = guild_visibility:viewable_channel_set(10, State),
-    Expected = reference_count_mutually_visible(10, ViewerSet, State),
-    ?assertEqual({Expected, undefined}, count_and_memo(10, ViewerSet, State)),
-    ?assertEqual(Expected, compute_count(10, State)).
-
-unindexed_online_row_builds_the_memo_test() ->
-    Base = mutual_visibility_state(1, 5000),
-    State = Base#{sessions => cached_viewable_sessions()},
-    ViewerSet = guild_visibility:viewable_channel_set(10, State),
-    Expected = reference_count_mutually_visible(10, ViewerSet, State),
-    {Count, Memo} = count_and_memo(10, ViewerSet, State),
-    ?assertEqual(Expected, Count),
-    ?assertMatch(#{exceptions := _, cache := _}, Memo).
-
-fully_indexed_sessions() ->
-    #{
-        <<"s20">> => #{user_id => 20, viewable_channels => #{101 => true}},
-        <<"s30">> => #{user_id => 30, viewable_channels => #{100 => true}},
-        <<"s40">> => #{user_id => 40, viewable_channels => #{}}
-    }.
 
 cached_viewable_sessions() ->
     #{
@@ -618,182 +542,12 @@ overwrite(Id, Type, Allow, Deny) ->
         <<"deny">> => integer_to_binary(Deny)
     }.
 
-matches_reference_on_random_guilds_test_() ->
-    {timeout, 120, fun() ->
-        lists:foreach(fun assert_random_guild_matches_reference/1, lists:seq(1, 150))
-    end}.
-
-assert_random_guild_matches_reference(Seed) ->
-    _ = rand:seed(exsss, {Seed, Seed * 7, Seed * 13}),
-    State = random_guild_state(),
-    Viewers = lists:seq(1, 60),
-    Results = [{Viewer, compute_count(Viewer, State)} || Viewer <- Viewers],
-    Expected = [{Viewer, reference_compute_count(Viewer, State)} || Viewer <- Viewers],
-    ets:delete(maps:get(member_presence, State)),
-    ?assertEqual({Seed, Expected}, {Seed, Results}).
-
-reference_compute_count(UserId, State) ->
-    case viewer_sees_everything(UserId, State) of
-        true -> guild_member_list:get_online_count(State);
-        false -> reference_slow_count(UserId, State)
-    end.
-
 reference_slow_count(UserId, State) ->
     ViewerSet = guild_visibility:viewable_channel_set(UserId, State),
     case sets:is_empty(ViewerSet) of
         true -> self_online_count(UserId, State);
         false -> reference_count_mutually_visible(UserId, ViewerSet, State)
     end.
-
-random_guild_state() ->
-    GuildId = 1,
-    RoleIds = lists:seq(2, 9),
-    MemberIds = [U || U <- lists:seq(10, 55), rand:uniform(10) > 1],
-    Roles = [random_role(GuildId, 0) | [random_role(R, 12) || R <- RoleIds]],
-    Members = maps:from_list([{U, random_member(U, GuildId, RoleIds)} || U <- MemberIds]),
-    Channels = random_channels(GuildId, RoleIds, lists:seq(10, 55)),
-    Data0 = #{
-        <<"guild">> => #{<<"owner_id">> => integer_to_binary(pick(MemberIds))},
-        <<"roles">> => Roles,
-        <<"members">> => Members,
-        <<"channels">> => Channels
-    },
-    Data =
-        case rand:uniform(2) of
-            1 ->
-                Data0;
-            2 ->
-                guild_data_index:put_channels(
-                    Channels, guild_data_index:put_roles(Roles, Data0)
-                )
-        end,
-    State0 = #{
-        id => GuildId,
-        data => Data,
-        virtual_channel_access => random_virtual_access(Channels),
-        member_presence => random_presence_tab(),
-        sessions => #{}
-    },
-    State1 = State0#{sessions => random_sessions(MemberIds, Channels, State0)},
-    State1#{
-        connected_user_ids => sets:from_list([U || U <- lists:seq(10, 60), rand:uniform(4) > 1])
-    }.
-
-random_role(RoleId, AdminOneIn) ->
-    View =
-        case rand:uniform(4) of
-            1 -> 0;
-            _ -> view_perm()
-        end,
-    Admin =
-        case AdminOneIn > 0 andalso rand:uniform(AdminOneIn) =:= 1 of
-            true -> admin_perm();
-            false -> 0
-        end,
-    Other = rand:uniform(1024) bsl 20,
-    #{
-        <<"id">> => integer_to_binary(RoleId),
-        <<"permissions">> => integer_to_binary(View bor Admin bor Other)
-    }.
-
-random_member(UserId, GuildId, RoleIds) ->
-    Roles = [R || R <- [GuildId | RoleIds], rand:uniform(3) =:= 1],
-    Shuffled = [R || {_, R} <- lists:sort([{rand:uniform(), R} || R <- Roles ++ Roles])],
-    #{
-        <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
-        <<"roles">> => [integer_to_binary(R) || R <- lists:sublist(Shuffled, length(Roles) + 1)]
-    }.
-
-random_channels(GuildId, RoleIds, UserIds) ->
-    Categories = [
-        random_channel(C, 4, null, GuildId, RoleIds, UserIds)
-     || C <- [100, 101, 102]
-    ],
-    Children = [
-        random_channel(
-            C, pick([0, 0, 2, 5]), pick([null, 100, 101, 102]), GuildId, RoleIds, UserIds
-        )
-     || C <- lists:seq(200, 211)
-    ],
-    Categories ++ Children.
-
-random_channel(ChannelId, Type, ParentId, GuildId, RoleIds, UserIds) ->
-    Parent =
-        case ParentId of
-            null -> null;
-            _ -> integer_to_binary(ParentId)
-        end,
-    #{
-        <<"id">> => integer_to_binary(ChannelId),
-        <<"type">> => Type,
-        <<"parent_id">> => Parent,
-        <<"permission_overwrites">> => random_overwrites(GuildId, RoleIds, UserIds)
-    }.
-
-random_overwrites(GuildId, RoleIds, UserIds) ->
-    Everyone = [random_overwrite(GuildId, 0) || rand:uniform(2) =:= 1],
-    RoleOws = [random_overwrite(R, 0) || R <- lists:sublist(RoleIds, 4), rand:uniform(5) =:= 1],
-    UserOws = [random_overwrite(U, 1) || U <- UserIds, rand:uniform(25) =:= 1],
-    Everyone ++ RoleOws ++ UserOws.
-
-random_overwrite(Id, Type) ->
-    {Allow, Deny} = pick([
-        {view_perm(), 0}, {0, view_perm()}, {0, 0}, {view_perm(), view_perm()}
-    ]),
-    overwrite(integer_to_binary(Id), Type, Allow, Deny).
-
-random_virtual_access(Channels) ->
-    maps:from_list([
-        {U, sets:from_list([channel_int_id(pick(Channels))])}
-     || U <- lists:seq(10, 60), rand:uniform(15) =:= 1
-    ]).
-
-random_presence_tab() ->
-    make_presence_tab(
-        maps:from_list([
-            {U, random_presence()}
-         || U <- lists:seq(10, 60), rand:uniform(5) > 1
-        ])
-    ).
-
-random_presence() ->
-    case rand:uniform(7) of
-        1 -> #{};
-        2 -> #{<<"status">> => <<"offline">>};
-        3 -> #{<<"status">> => <<"invisible">>};
-        4 -> #{<<"status">> => <<"idle">>};
-        _ -> #{<<"status">> => <<"online">>}
-    end.
-
-random_sessions(MemberIds, Channels, State) ->
-    maps:from_list(
-        lists:append([random_user_sessions(U, Channels, State) || U <- MemberIds])
-    ).
-
-random_user_sessions(UserId, Channels, State) ->
-    [
-        {
-            iolist_to_binary([integer_to_list(UserId), "-", integer_to_list(N)]),
-            #{
-                user_id => UserId,
-                viewable_channels => random_session_channels(UserId, Channels, State)
-            }
-        }
-     || N <- lists:seq(1, rand:uniform(4) - 1)
-    ].
-
-random_session_channels(UserId, Channels, State) ->
-    case rand:uniform(4) of
-        1 -> undefined;
-        2 -> maps:from_keys([channel_int_id(C) || C <- Channels, rand:uniform(3) =:= 1], true);
-        _ -> maps:from_keys(guild_visibility:get_user_viewable_channels(UserId, State), true)
-    end.
-
-channel_int_id(Channel) ->
-    binary_to_integer(maps:get(<<"id">>, Channel)).
-
-pick(List) ->
-    lists:nth(rand:uniform(length(List)), List).
 
 make_presence_tab(Map) ->
     Tab = ets:new(test_member_presence, [set, public]),

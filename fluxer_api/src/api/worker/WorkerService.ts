@@ -89,8 +89,4 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 		await this.ledger.requestCancel(jobId);
 		return true;
 	}
-
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
 }

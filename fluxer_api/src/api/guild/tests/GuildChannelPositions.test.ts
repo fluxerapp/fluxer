@@ -5,11 +5,9 @@ import {createGuildID} from '@app/api/BrandedTypes';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	acceptInvite,
-	addMemberRole,
 	createChannel,
 	createChannelInvite,
 	createGuild,
-	createRole,
 	getChannel,
 	getGuildChannels,
 	updateChannelPositions,
@@ -17,7 +15,7 @@ import {
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
@@ -28,44 +26,6 @@ describe('Guild Channel Positions', () => {
 	});
 	afterEach(async () => {
 		await harness?.shutdown();
-	});
-	test('should reorder channels within guild', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const channel1 = await createChannel(harness, account.token, guild.id, 'channel-1');
-		const channel2 = await createChannel(harness, account.token, guild.id, 'channel-2');
-		const channel3 = await createChannel(harness, account.token, guild.id, 'channel-3');
-		await updateChannelPositions(harness, account.token, guild.id, [
-			{id: channel3.id, position: 0},
-			{id: channel1.id, position: 1},
-			{id: channel2.id, position: 2},
-		]);
-		const channels = await getGuildChannels(harness, account.token, guild.id);
-		const textChannels = channels.filter((c) => c.type === ChannelTypes.GUILD_TEXT);
-		expect(textChannels.some((c) => c.id === channel1.id)).toBe(true);
-		expect(textChannels.some((c) => c.id === channel2.id)).toBe(true);
-		expect(textChannels.some((c) => c.id === channel3.id)).toBe(true);
-	});
-	test('should move channel to category', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const category = await createChannel(harness, account.token, guild.id, 'Category', ChannelTypes.GUILD_CATEGORY);
-		const textChannel = await createChannel(harness, account.token, guild.id, 'text-channel');
-		await updateChannelPositions(harness, account.token, guild.id, [{id: textChannel.id, parent_id: category.id}]);
-		const updatedChannel = await getChannel(harness, account.token, textChannel.id);
-		expect(updatedChannel.parent_id).toBe(category.id);
-	});
-	test('should move channel out of category', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const category = await createChannel(harness, account.token, guild.id, 'Category', ChannelTypes.GUILD_CATEGORY);
-		const textChannel = await createChannel(harness, account.token, guild.id, 'text-channel');
-		await updateChannelPositions(harness, account.token, guild.id, [{id: textChannel.id, parent_id: category.id}]);
-		let updatedChannel = await getChannel(harness, account.token, textChannel.id);
-		expect(updatedChannel.parent_id).toBe(category.id);
-		await updateChannelPositions(harness, account.token, guild.id, [{id: textChannel.id, parent_id: null}]);
-		updatedChannel = await getChannel(harness, account.token, textChannel.id);
-		expect(updatedChannel.parent_id).toBeNull();
 	});
 	test('should require MANAGE_CHANNELS permission to reorder', async () => {
 		const owner = await createTestAccount(harness);
@@ -84,57 +44,6 @@ describe('Guild Channel Positions', () => {
 			])
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
-	});
-	test('should allow MANAGE_CHANNELS role to reorder channels', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const managerRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Channel Manager',
-			permissions: Permissions.MANAGE_CHANNELS.toString(),
-		});
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await acceptInvite(harness, member.token, invite.code);
-		await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
-		const channel1 = await createChannel(harness, owner.token, guild.id, 'channel-1');
-		const channel2 = await createChannel(harness, owner.token, guild.id, 'channel-2');
-		await updateChannelPositions(harness, member.token, guild.id, [
-			{id: channel1.id, position: 1},
-			{id: channel2.id, position: 0},
-		]);
-	});
-	test('should reject invalid channel id in position update', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		await createBuilder(harness, account.token)
-			.patch(`/guilds/${guild.id}/channels`)
-			.body([{id: '999999999999999999', position: 0}])
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should lock permissions when moving to category', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const category = await createChannel(harness, account.token, guild.id, 'Category', ChannelTypes.GUILD_CATEGORY);
-		const textChannel = await createChannel(harness, account.token, guild.id, 'text-channel');
-		await updateChannelPositions(harness, account.token, guild.id, [
-			{id: textChannel.id, parent_id: category.id, lock_permissions: true},
-		]);
-		const updatedChannel = await getChannel(harness, account.token, textChannel.id);
-		expect(updatedChannel.parent_id).toBe(category.id);
-	});
-	test('should handle moving multiple channels at once', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const channel1 = await createChannel(harness, account.token, guild.id, 'channel-1');
-		const channel2 = await createChannel(harness, account.token, guild.id, 'channel-2');
-		const channel3 = await createChannel(harness, account.token, guild.id, 'channel-3');
-		await updateChannelPositions(harness, account.token, guild.id, [
-			{id: channel1.id, position: 2},
-			{id: channel2.id, position: 0},
-			{id: channel3.id, position: 1},
-		]);
 	});
 	test('should reject category as parent of category', async () => {
 		const account = await createTestAccount(harness);

@@ -21,14 +21,6 @@ class Initialization {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	get isLoading(): boolean {
-		return this.state === InitializationState.LOADING;
-	}
-
-	get isConnecting(): boolean {
-		return this.state === InitializationState.CONNECTING;
-	}
-
 	get isReady(): boolean {
 		return this.state === InitializationState.READY;
 	}

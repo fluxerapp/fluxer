@@ -61,9 +61,6 @@ route_method(Method, _Params) ->
 
 -ifdef(TEST).
 
-route_method_guild_test() ->
-    ?assertError({gateway_rpc_error, _}, route_method(<<"unknown.method">>, #{})).
-
 method_is_mutating_test() ->
     ?assert(method_is_mutating(<<"guild.dispatch">>)),
     ?assert(method_is_mutating(<<"call.create">>)),

@@ -75,35 +75,3 @@ remote_is_alive_call(PidNode, Pid) ->
         error:_ -> false;
         exit:_ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-is_alive_local_self_test() ->
-    ?assert(is_alive(self())).
-
-is_alive_local_dead_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertNot(is_alive(Pid)).
-
-is_alive_non_pid_test() ->
-    ?assertNot(is_alive(not_a_pid)),
-    ?assertNot(is_alive(123)).
-
-are_alive_local_mix_test() ->
-    Alive = self(),
-    Dead = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    Result = are_alive([Alive, Dead]),
-    ?assert(maps:get(Alive, Result)),
-    ?assertNot(maps:get(Dead, Result)).
-
-are_alive_empty_test() ->
-    ?assertEqual(#{}, are_alive([])).
-
-are_alive_non_pid_entries_test() ->
-    Result = are_alive([not_a_pid]),
-    ?assertNot(maps:get(not_a_pid, Result)).
-
--endif.

@@ -5,7 +5,7 @@ import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager
 
 const textEncoder = new TextEncoder();
 
-export const GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT = 'config.gateway.rollout';
+const GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT = 'config.gateway.rollout';
 
 interface GatewayRolloutConfigNatsMessage {
 	type: 'gateway_rollout_config';

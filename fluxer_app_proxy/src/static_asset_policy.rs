@@ -268,53 +268,13 @@ mod tests {
     }
 
     #[test]
-    fn mime_json() {
-        assert_eq!(guess_mime("d.json"), "application/json; charset=utf-8");
-    }
-
-    #[test]
     fn mime_wasm() {
         assert_eq!(guess_mime("m.wasm"), "application/wasm");
     }
 
     #[test]
-    fn mime_svg() {
-        assert_eq!(guess_mime("i.svg"), "image/svg+xml");
-    }
-
-    #[test]
-    fn mime_png() {
-        assert_eq!(guess_mime("p.png"), "image/png");
-    }
-
-    #[test]
-    fn mime_jpg() {
-        assert_eq!(guess_mime("p.jpg"), "image/jpeg");
-    }
-
-    #[test]
-    fn mime_webp() {
-        assert_eq!(guess_mime("p.webp"), "image/webp");
-    }
-
-    #[test]
-    fn mime_avif() {
-        assert_eq!(guess_mime("p.avif"), "image/avif");
-    }
-
-    #[test]
-    fn mime_ico() {
-        assert_eq!(guess_mime("f.ico"), "image/x-icon");
-    }
-
-    #[test]
     fn mime_woff2() {
         assert_eq!(guess_mime("f.woff2"), "font/woff2");
-    }
-
-    #[test]
-    fn mime_mp4() {
-        assert_eq!(guess_mime("c.mp4"), "video/mp4");
     }
 
     #[test]

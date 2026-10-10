@@ -41,6 +41,4 @@ export abstract class IGuildModerationRepository {
 	abstract listAuditLogsByIds(guildId: GuildID, logIds: Array<bigint>): Promise<Array<GuildAuditLog>>;
 
 	abstract deleteAuditLogs(guildId: GuildID, logs: Array<GuildAuditLog>): Promise<void>;
-
-	abstract updateAuditLogsIndexedAt(guildId: GuildID, indexedAt: Date | null): Promise<void>;
 }

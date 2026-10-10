@@ -595,91 +595,14 @@ impl_not_implemented_for_trait!(QsvHandoff, "QsvHandoff");
 mod tests {
     use super::*;
 
-    struct NoopCallback;
-    impl EncoderCompletionCallback for NoopCallback {
-        fn on_complete(&mut self, _sequence: u64, _encoded_bytes: u32) {}
-    }
-
     fn submission() -> EncoderSubmission {
         EncoderSubmission::new(0xfeed_face, 7, EncoderDims::new(1920, 1080), 42)
-    }
-
-    #[test]
-    fn nvenc_stub_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::nvenc();
-        let mut cb = NoopCallback;
-        let err = NvencHandoff::encode_shared(&mut h, submission(), &mut cb).err();
-        assert!(matches!(err, Some(RingError::NotImplemented { what })
-            if what.contains("Nvenc")));
-    }
-
-    #[test]
-    fn amf_stub_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::amf();
-        let mut cb = NoopCallback;
-        let err = AmfHandoff::encode_shared(&mut h, submission(), &mut cb).err();
-        assert!(matches!(err, Some(RingError::NotImplemented { what })
-            if what.contains("Amf")));
-    }
-
-    #[test]
-    fn qsv_stub_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::qsv();
-        let mut cb = NoopCallback;
-        let err = QsvHandoff::encode_shared(&mut h, submission(), &mut cb).err();
-        assert!(matches!(err, Some(RingError::NotImplemented { what })
-            if what.contains("Qsv")));
     }
 
     #[test]
     fn encoder_dims_rejects_zero_width_via_assert() {
         let result = std::panic::catch_unwind(|| EncoderDims::new(0, 1080));
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn nvenc_stub_register_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::nvenc();
-        let dims = EncoderDims::new(1920, 1080);
-        let err = NvencHandoff::register_slot(&mut h, 0xabc, 0, dims).err();
-        assert!(matches!(err, Some(EncoderError::NotImplemented { what })
-            if what.contains("Nvenc")));
-    }
-
-    #[test]
-    fn amf_stub_register_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::amf();
-        let dims = EncoderDims::new(1920, 1080);
-        let err = AmfHandoff::register_slot(&mut h, 0xabc, 0, dims).err();
-        assert!(matches!(err, Some(EncoderError::NotImplemented { what })
-            if what.contains("Amf")));
-    }
-
-    #[test]
-    fn qsv_stub_register_returns_not_implemented() {
-        let mut h = NotImplementedHandoff::qsv();
-        let dims = EncoderDims::new(1920, 1080);
-        let err = QsvHandoff::register_slot(&mut h, 0xabc, 0, dims).err();
-        assert!(matches!(err, Some(EncoderError::NotImplemented { what })
-            if what.contains("Qsv")));
-    }
-
-    #[test]
-    fn stub_poll_completed_returns_none() {
-        let mut h_nv = NotImplementedHandoff::nvenc();
-        let mut h_amf = NotImplementedHandoff::amf();
-        let mut h_qsv = NotImplementedHandoff::qsv();
-        let slot = HandoffSlot::new(0, 0xdead);
-        assert!(NvencHandoff::poll_completed(&mut h_nv, slot).is_none());
-        assert!(AmfHandoff::poll_completed(&mut h_amf, slot).is_none());
-        assert!(QsvHandoff::poll_completed(&mut h_qsv, slot).is_none());
-    }
-
-    #[test]
-    fn stub_unregister_does_not_panic() {
-        let mut h = NotImplementedHandoff::nvenc();
-        let slot = HandoffSlot::new(0, 0xdead);
-        NvencHandoff::unregister_slot(&mut h, slot);
     }
 
     #[test]

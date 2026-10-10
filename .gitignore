@@ -36,8 +36,6 @@
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
 /fluxer_gateway/priv/
 
-/fluxer_desktop/native/rust/fuzz/artifacts/
-/fluxer_desktop/native/rust/fuzz/corpus/
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 

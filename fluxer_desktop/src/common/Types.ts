@@ -279,41 +279,6 @@ export interface VirtmicAvailability {
 
 export type VirtmicNode = Record<string, string>;
 
-export interface VirtmicRoutingGraphNode {
-	id: number;
-	props: VirtmicNode;
-}
-
-export interface VirtmicRoutingGraphPort {
-	id: number;
-	nodeId: number;
-	direction: string;
-	channel: string;
-	props: VirtmicNode;
-}
-
-export interface VirtmicRoutingGraphLink {
-	outputNodeId: number;
-	outputPortId: number;
-	inputNodeId: number;
-	inputPortId: number;
-	owned: boolean;
-	passive: boolean;
-}
-
-export interface VirtmicRoutingGraph {
-	backend: VirtmicBackend | 'none' | string;
-	nodes: Array<VirtmicRoutingGraphNode>;
-	ports: Array<VirtmicRoutingGraphPort>;
-	ownedLinks: Array<VirtmicRoutingGraphLink>;
-}
-
-export interface VirtmicRoutingGraphResult {
-	ok: boolean;
-	graph?: VirtmicRoutingGraph;
-	availability: VirtmicAvailability;
-}
-
 export interface VirtmicLinkOptions {
 	ignoreDevices?: boolean;
 	ignoreInputMedia?: boolean;
@@ -328,7 +293,6 @@ export interface VirtmicApi {
 		targets?: Array<VirtmicNode>;
 		availability: VirtmicAvailability;
 	}>;
-	getRoutingGraph: () => Promise<VirtmicRoutingGraphResult>;
 	stop: () => Promise<void>;
 }
 
@@ -400,17 +364,6 @@ export interface NativeAudioEndMessage {
 	detail?: string;
 }
 
-export interface NativeAudioRoutingGraphSnapshot {
-	captureId: string;
-	graph: VirtmicRoutingGraph | null;
-}
-
-export interface NativeAudioRoutingGraphResult {
-	ok: boolean;
-	graphs: Array<NativeAudioRoutingGraphSnapshot>;
-	availability: NativeAudioAvailability;
-}
-
 export interface NativeAudioApi {
 	getAvailability: () => Promise<NativeAudioAvailability>;
 	listAudibleApplications: () => Promise<Array<NativeAudioApplication>>;
@@ -418,82 +371,8 @@ export interface NativeAudioApi {
 	start: (options: NativeAudioStartOptions) => Promise<NativeAudioStartResult>;
 	setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>) => Promise<boolean>;
 	stop: (captureId: string) => Promise<void>;
-	getRoutingGraph: (captureId?: string) => Promise<NativeAudioRoutingGraphResult>;
 	onFrame: (callback: (message: NativeAudioFrameMessage) => void) => () => void;
 	onEnd: (callback: (message: NativeAudioEndMessage) => void) => () => void;
-}
-
-export type NativeScreenCaptureBackend = 'macos-sck' | 'windows-dxgi' | 'windows-game-capture' | 'linux-pipewire';
-export type WindowsHagsState = 'enabled' | 'disabled' | 'unknown' | 'unsupported';
-
-export interface NativeScreenCaptureAvailability {
-	available: boolean;
-	backend?: NativeScreenCaptureBackend;
-	capabilities?: {
-		hidesCursor: boolean;
-		screens: boolean;
-		windows: boolean;
-	};
-	reason?:
-		| 'unsupported-platform'
-		| 'addon-not-installed'
-		| 'load-failed'
-		| 'os-version-too-old'
-		| 'permission-denied'
-		| 'disabled-by-launch';
-	detail?: string;
-	windowsHagsState?: WindowsHagsState;
-	windowsHagsDetail?: string;
-}
-
-export type NativeScreenCaptureSourceKind = 'screen' | 'window' | 'game';
-
-export interface NativeScreenCaptureSource {
-	kind: NativeScreenCaptureSourceKind;
-	id: string;
-	name: string;
-	width: number;
-	height: number;
-	appName?: string;
-	bundleId?: string;
-	targetPid?: number;
-}
-
-export interface NativeScreenCaptureRect {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-
-export interface NativeScreenCaptureStartOptions {
-	sourceId: string;
-	sourceKind: NativeScreenCaptureSourceKind;
-	width?: number;
-	height?: number;
-	frameRate?: number;
-	captureId?: string;
-	colorRange?: 'full' | 'limited';
-	colorSpace?: 'rec709' | 'srgb';
-	showCursorClicks?: boolean;
-	captureRect?: NativeScreenCaptureRect;
-	nativeFrameSinkRequired: true;
-}
-
-export interface NativeScreenCaptureStartResult {
-	captureId: string;
-	width: number;
-	height: number;
-	frameRate: number;
-	pixelFormat: 'nv12' | 'bgra';
-}
-
-export type NativeScreenCaptureEndReason = 'stopped' | 'source-vanished' | 'addon-error';
-
-export interface NativeScreenCaptureEndMessage {
-	captureId: string;
-	reason: NativeScreenCaptureEndReason;
-	detail?: string;
 }
 
 export type NativeScreenCaptureLifecycleEventKind = 'error' | 'closed' | 'closed-clean' | 'stalled' | 'diagnostic';
@@ -507,56 +386,7 @@ export interface NativeScreenCaptureLifecycleMessage {
 	source?: NativeScreenCaptureLifecycleSource;
 }
 
-export type NativeScreenCaptureStrategy = 'wgc' | 'dxgi-duplication' | 'window-gdi' | string;
-
-export interface NativeScreenCaptureDiagnostics {
-	state?: number;
-	apiType?: number;
-	transport?: number;
-	fallbackReason?: number;
-	captureFlags?: number;
-	width?: number;
-	height?: number;
-	dxgiFormat?: number;
-	frameCounter?: number;
-	droppedFrameCounter?: number;
-	lastPresentTimestampUs?: number;
-	lastError?: number;
-	activeStrategy?: NativeScreenCaptureStrategy;
-	lastFallbackReason?: string;
-	backend?: string;
-	requestedImportMode?: string;
-	importMode?: string;
-	mapHost?: boolean;
-	noModifiers?: boolean;
-	linear?: boolean;
-	zeroCopy?: boolean;
-	gpuImportAvailable?: boolean;
-	deviceUuidAdvertised?: boolean;
-	supportedImportModes?: Array<string>;
-	clientConnected?: boolean;
-	connectedClient?: string;
-	connectedPid?: number;
-	textureFormat?: string;
-	textureModifier?: string;
-	unsupportedFrameCounter?: number;
-	lastDiagnostic?: string;
-	lastAddonError?: string;
-	captureId?: string;
-	sourceId?: string;
-	sourceKind?: NativeScreenCaptureSourceKind;
-	startedAtMs?: number;
-	windowsHagsState?: WindowsHagsState;
-	windowsHagsDetail?: string;
-}
-
 export interface NativeScreenCaptureApi {
-	getAvailability: () => Promise<NativeScreenCaptureAvailability>;
-	listSources: () => Promise<Array<NativeScreenCaptureSource>>;
-	start: (options: NativeScreenCaptureStartOptions) => Promise<NativeScreenCaptureStartResult>;
-	getDiagnostics: (captureId: string) => Promise<NativeScreenCaptureDiagnostics | null>;
-	stop: (captureId: string) => Promise<void>;
-	onEnd: (callback: (message: NativeScreenCaptureEndMessage) => void) => () => void;
 	onLifecycleEvent: (callback: (message: NativeScreenCaptureLifecycleMessage) => void) => () => void;
 }
 

@@ -173,14 +173,6 @@ move_member_user_not_in_voice_test() ->
     State = test_state(#{}),
     {reply, {error, not_found, voice_user_not_in_voice}, _} = move_member(Request, State).
 
-find_user_voice_states_filters_test() ->
-    VoiceStates = #{
-        <<"conn-a">> => voice_state_fixture(10, 100, <<"conn-a">>),
-        <<"conn-b">> => voice_state_fixture(11, 101, <<"conn-b">>)
-    },
-    Result = find_user_voice_states(10, VoiceStates),
-    ?assertEqual(#{<<"conn-a">> => maps:get(<<"conn-a">>, VoiceStates)}, Result).
-
 select_connections_to_move_specific_connection_test() ->
     VoiceStates = #{
         <<"conn-a">> => voice_state_fixture(10, 100, <<"conn-a">>),
@@ -189,12 +181,6 @@ select_connections_to_move_specific_connection_test() ->
     Selected = select_connections_to_move(<<"conn-b">>, 11, VoiceStates, #{}),
     ?assertEqual(#{<<"conn-b">> => maps:get(<<"conn-b">>, VoiceStates)}, Selected),
     ?assertEqual(#{}, select_connections_to_move(<<"conn-b">>, 10, VoiceStates, #{})).
-
-normalize_channel_id_test() ->
-    ?assertEqual(null, normalize_channel_id(null)),
-    ?assertEqual(123, normalize_channel_id(123)),
-    ?assertEqual(456, normalize_channel_id(<<"456">>)),
-    ?assertEqual(null, normalize_channel_id(undefined)).
 
 test_state(VoiceStates) ->
     #{

@@ -15,7 +15,6 @@
 -export([get_guild_state/2, get_guild_state/3]).
 -export([build_connect_snapshot/2]).
 -export([fetch_latest_voice_states/1]).
--export([find_everyone_viewable_text_channel/2]).
 
 -type guild_state() :: map().
 -type guild_reply(T) :: {reply, T, guild_state()}.
@@ -138,10 +137,6 @@ get_everyone_viewable_text_channel(State) ->
         Channels, State
     ),
     {reply, #{channel_id => EveryoneChannelId}, State}.
-
--spec find_everyone_viewable_text_channel([map()], guild_state()) -> integer() | null.
-find_everyone_viewable_text_channel(Channels, State) ->
-    guild_data_channels:find_everyone_viewable_text_channel(Channels, State).
 
 -spec get_guild_state(user_id(), guild_state()) -> map().
 get_guild_state(UserId, State) ->
@@ -609,14 +604,6 @@ trim_applies_at_every_member_count_test() ->
     ?assertEqual(true, should_trim_connect_snapshot(trim_state(1))),
     ?assertEqual(true, should_trim_connect_snapshot(maps:remove(member_count, trim_state(1)))).
 
-trim_ignores_threshold_env_test() ->
-    application:set_env(fluxer_gateway, connect_snapshot_trim_member_threshold, 20000),
-    try
-        ?assertEqual(true, should_trim_connect_snapshot(trim_state(1)))
-    after
-        application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold)
-    end.
-
 trim_needs_members_ets_test() ->
     ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10, data => #{}})),
     ?assertEqual(
@@ -624,15 +611,5 @@ trim_needs_members_ets_test() ->
         should_trim_connect_snapshot(#{member_count => 10, data => #{members_ets => 7}})
     ),
     ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10})).
-
-trim_and_projection_target_disjoint_keys_test() ->
-    ?assertEqual(
-        [],
-        [
-            Key
-         || Key <- ?CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS,
-            lists:member(Key, ?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS)
-        ]
-    ).
 
 -endif.

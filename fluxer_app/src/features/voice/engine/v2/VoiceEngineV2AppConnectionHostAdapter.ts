@@ -9,13 +9,11 @@ import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelC
 import {
 	createVoiceConnectionSnapshot,
 	getVoiceConnectionFailedTarget,
-	getVoiceConnectionFailureReason,
 	isLatestVoiceConnectionAttempt,
 	isVoiceConnectionFailed,
 	selectVoiceConnectionServerUpdateDecision,
 	transitionVoiceConnectionSnapshot,
 	type VoiceConnectionEvent,
-	type VoiceConnectionFailureReason,
 	type VoiceConnectionLocalDisconnectReason,
 	type VoiceConnectionSnapshot,
 } from '@app/features/voice/engine/VoiceConnectionStateMachine';
@@ -31,7 +29,6 @@ import {selectLocalMediaPublicationsForConnectionRepublish} from '@app/features/
 import {
 	assertDisconnectReason,
 	assertNonEmptyString,
-	assertObjectLike,
 	assertOptionalNonEmptyString,
 	assertVoiceServerUpdateShape,
 	hasAnyTerminalTransport,
@@ -58,7 +55,7 @@ import type {
 	RoomOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {Room as LiveKitRoom, RoomEvent, Track} from 'livekit-client';
+import {Room as LiveKitRoom, Track} from 'livekit-client';
 import {makeObservable, observableRef} from 'mobx';
 import type {Subscription} from 'rxjs';
 import {timer} from 'rxjs';
@@ -260,10 +257,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		return this.reconnect.shouldAutoReconnect;
 	}
 
-	get reconnectAttempts(): number {
-		return this.reconnect.reconnectAttempts;
-	}
-
 	get disconnecting(): boolean {
 		return this.isLocalDisconnecting;
 	}
@@ -276,39 +269,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		return isVoiceConnectionFailed(this.connectionSnapshot);
 	}
 
-	get connectFailureReason(): VoiceConnectionFailureReason {
-		return getVoiceConnectionFailureReason(this.connectionSnapshot);
-	}
-
 	get connectFailedTarget(): {guildId: string | null; channelId: string} | null {
 		return getVoiceConnectionFailedTarget(this.connectionSnapshot);
-	}
-
-	get regionHotSwapInProgress(): boolean {
-		return this.hotSwapState.inProgress;
-	}
-
-	enqueueOrRun(operation: HotSwapQueuedOperation): void {
-		assert.equal(typeof operation, 'function', 'enqueueOrRun.operation must be a function');
-		assert.ok(this.hotSwapOperationQueue.length <= 4096, 'enqueueOrRun pre-condition: queue under cap');
-		if (!this.hotSwapState.inProgress) {
-			try {
-				const result = operation();
-				if (result && typeof (result as Promise<void>).catch === 'function') {
-					void (result as Promise<void>).catch((error) => {
-						logger.error('Immediate operation failed', {error});
-					});
-				}
-			} catch (error) {
-				logger.error('Immediate operation failed', {error});
-			}
-			return;
-		}
-		logger.debug('Queueing operation during hot-swap', {queueLength: this.hotSwapOperationQueue.length + 1});
-		this.update(() => {
-			this.transitionConnection({type: 'hotSwap.queueOperation'});
-		});
-		this.hotSwapOperationQueue.push(operation);
 	}
 
 	private async drainHotSwapQueue(): Promise<void> {
@@ -1028,42 +990,14 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.invalidateThrottleAttempt();
 	}
 
-	scheduleReconnect(callback: () => void): boolean {
-		assert.equal(typeof callback, 'function', 'scheduleReconnect.callback must be a function');
-		return this.reconnect.scheduleReconnect(callback);
-	}
-
 	markReconnectionAttempted(): void {
 		assert.ok(this.reconnect !== null, 'markReconnectionAttempted pre-condition: reconnect policy present');
 		this.reconnect.markAttempted();
 	}
 
-	resetReconnectState(): void {
-		assert.ok(this.reconnect !== null, 'resetReconnectState pre-condition: reconnect policy present');
-		this.reconnect.reset();
-	}
-
 	forgetReconnectChannel(channelId: string): void {
 		assertNonEmptyString(channelId, 'forgetReconnectChannel.channelId');
 		this.reconnect.forgetChannel(channelId);
-	}
-
-	updateChannelId(channelId: string): void {
-		assertNonEmptyString(channelId, 'updateChannelId.channelId');
-		this.update(() => {
-			this.transitionConnection({type: 'connection.updateChannel', channelId});
-		});
-		logger.info('Channel updated', {channelId});
-	}
-
-	acceptServerChannelChange(channelId: string): void {
-		assertNonEmptyString(channelId, 'acceptServerChannelChange.channelId');
-		const previousChannelId = this.connectionState.channelId;
-		this.update(() => {
-			this.transitionConnection({type: 'connection.acceptServerChannelChange', channelId});
-		});
-		this.reconnect.setLastConnectedChannel(this.connectionState.guildId, channelId);
-		logger.info('Accepted server channel change', {previousChannelId, newChannelId: channelId});
 	}
 
 	createGuardedHandler<T extends ReadonlyArray<unknown>>(
@@ -1088,45 +1022,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				logger.error('Guarded voice handler failed', {attemptId, error});
 			}
 		};
-	}
-
-	bindConnectionEvents(
-		room: Room,
-		attemptId: number,
-		handlers: {
-			onConnected: () => void;
-			onDisconnected: (reason?: unknown) => void;
-			onReconnecting: () => void;
-			onReconnected: () => void;
-		},
-	): void {
-		assertObjectLike<Room>(room, 'bindConnectionEvents.room');
-		assert.equal(typeof attemptId, 'number', 'bindConnectionEvents.attemptId must be a number');
-		assertObjectLike<typeof handlers>(handlers, 'bindConnectionEvents.handlers');
-		assert.equal(
-			typeof handlers.onConnected,
-			'function',
-			'bindConnectionEvents.handlers.onConnected must be a function',
-		);
-		assert.equal(
-			typeof handlers.onDisconnected,
-			'function',
-			'bindConnectionEvents.handlers.onDisconnected must be a function',
-		);
-		assert.equal(
-			typeof handlers.onReconnecting,
-			'function',
-			'bindConnectionEvents.handlers.onReconnecting must be a function',
-		);
-		assert.equal(
-			typeof handlers.onReconnected,
-			'function',
-			'bindConnectionEvents.handlers.onReconnected must be a function',
-		);
-		room.on(RoomEvent.Connected, this.createGuardedHandler(attemptId, handlers.onConnected));
-		room.on(RoomEvent.Disconnected, this.createGuardedHandler(attemptId, handlers.onDisconnected));
-		room.on(RoomEvent.Reconnecting, this.createGuardedHandler(attemptId, handlers.onReconnecting));
-		room.on(RoomEvent.Reconnected, this.createGuardedHandler(attemptId, handlers.onReconnected));
 	}
 
 	resetConnectionState(): void {
