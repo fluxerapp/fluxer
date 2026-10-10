@@ -3,7 +3,6 @@
 	"gasp": {
 		"plex": {
 			"8": 10,
-			"16": 7,
 			"65535": 15
 		},
 		"cjk": {
@@ -34,7 +33,7 @@
 			},
 			"FluxerSansKR": {
 				"targetBytes": 65536,
-				"codepointsPerChunk": 1386,
+				"codepointsPerChunk": 1389,
 				"chunks": 10,
 				"codepoints": 12183
 			}
@@ -119,7 +118,6 @@
 			"latinCore": true,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 895,
@@ -599,7 +597,6 @@
 			"latinCore": true,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 1049,
@@ -1079,7 +1076,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 1032,
@@ -1327,7 +1323,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 458,
@@ -1575,7 +1570,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 437,
@@ -1823,7 +1817,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 451,
@@ -2071,7 +2064,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 451,
@@ -3207,7 +3199,6 @@
 			"latinCore": false,
 			"gasp": {
 				"8": 10,
-				"16": 7,
 				"65535": 15
 			},
 			"codepoints": 12183,
@@ -3473,24 +3464,24 @@
 				"unslicedBytes": 441260,
 				"scenarios": {
 					"mixed script": {
-						"bytes": 63284,
+						"bytes": 63056,
 						"chunks": 1,
-						"ratio": 6.973
+						"ratio": 6.998
 					},
 					"display name": {
-						"bytes": 177560,
+						"bytes": 177464,
 						"chunks": 3,
-						"ratio": 2.485
+						"ratio": 2.486
 					},
 					"sentence": {
-						"bytes": 460524,
+						"bytes": 460532,
 						"chunks": 8,
 						"ratio": 0.958
 					},
 					"full coverage": {
-						"bytes": 525676,
+						"bytes": 525580,
 						"chunks": 10,
-						"ratio": 0.839
+						"ratio": 0.84
 					}
 				}
 			}
@@ -3550,298 +3541,298 @@
 			"bytes": 486
 		},
 		"manifest.json": {
-			"sha256": "bd26f377acbd7451f9c60843bdd848a7ac8c0b0f2b42b25d1891ee7055d15d01",
-			"bytes": 1210588
+			"sha256": "da980d123e88665fa0e87c0d5693b527293ee4d6738711fbf4035f9888d09ab5",
+			"bytes": 1210587
 		}
 	},
 	"files": {
 		"files/FluxerSans/FluxerSans-Thin.woff2": {
-			"sha256": "993a205532cc4188418cc73962bd9a6bec3f82ad51e4d67c1e828ef2c868028f",
-			"bytes": 61924
+			"sha256": "7ac20ff43089547f1b32c599119436a110333b770a82140993d11f657c9c0936",
+			"bytes": 62068
 		},
 		"files/FluxerSans/FluxerSans-ExtraLight.woff2": {
-			"sha256": "4c921460548443cb8affecc21028e37115aa2bcd3aad6b574c893de7a84a7749",
-			"bytes": 66532
+			"sha256": "d9204e11aee2b83dd4fe7e1d1e8793745112fce64029fbef8887a0f62c57dddc",
+			"bytes": 66520
 		},
 		"files/FluxerSans/FluxerSans-Light.woff2": {
-			"sha256": "013b4631bf7471429a60e17d5af221b16225c4e903ac855046a107e42d485a29",
-			"bytes": 66456
+			"sha256": "2d574ef23a10a03ec0439ba9ce594df178eacff53b1b8250aa9bea5d0ef201a9",
+			"bytes": 66292
 		},
 		"files/FluxerSans/FluxerSans-Regular.woff2": {
-			"sha256": "cdb79205a6e574a7055c2867d5feb9cfb2358da5e9db47d342ce90b069085ffd",
-			"bytes": 62852
+			"sha256": "0e0cf8d44c556bd6882552cba5f57cad5b0f1de69d790255951f5086a6b0f4f0",
+			"bytes": 62856
 		},
 		"files/FluxerSans/FluxerSans-Text.woff2": {
-			"sha256": "74914b6a03c25546c314a725364d40539f79c4993e301e46f4a922f8803dc8f7",
-			"bytes": 66268
+			"sha256": "ad81d823ac038c886cca3935380bf8b7355b1753e7170cbd0a6f33600af0c816",
+			"bytes": 66236
 		},
 		"files/FluxerSans/FluxerSans-Medium.woff2": {
-			"sha256": "99f021ebb47b9ad07544127a13cfbb9eecea3a9dc4afbdd682fbf50737619292",
-			"bytes": 66656
+			"sha256": "b801fccf0ab6d917d16724d685b7b6f88d894504a2b860d8f10d9f4a0a43d6ac",
+			"bytes": 66692
 		},
 		"files/FluxerSans/FluxerSans-SemiBold.woff2": {
-			"sha256": "ceb68296608a0cfe15a9aa8a68cea6bb3682f62eebbf7b0b654612dc85992b70",
-			"bytes": 67088
+			"sha256": "86787ec2363f23ad8def22848649ec76e00c97d5ed1d5823a846fae326ce3615",
+			"bytes": 66912
 		},
 		"files/FluxerSans/FluxerSans-Bold.woff2": {
-			"sha256": "6fd8328cdaff47617c513d02e5974f3c90cb62892de2ce7f48884b99719d6d44",
-			"bytes": 62884
+			"sha256": "e24292013967952cc84985c6d691c87b561037f8adeb4f240ff70a67266f36d4",
+			"bytes": 62964
 		},
 		"files/FluxerSans/FluxerSans-ThinItalic.woff2": {
-			"sha256": "f27c155b64f138ff3f3af8263662ebc3ed166c3e60c8a9fa8c152d45af87eae2",
-			"bytes": 66680
+			"sha256": "5347cd6c2704791d9cc6c9099afa4c27bf6f1a8528a57e92bdcdde83b14a391a",
+			"bytes": 66784
 		},
 		"files/FluxerSans/FluxerSans-ExtraLightItalic.woff2": {
-			"sha256": "1e247c613c03729a13739f1466f2bd274682e9c80d6355e59fee6c70c8bbc737",
-			"bytes": 71012
+			"sha256": "4c2927704967bcc1e4df861f9844836dadbfedec0afb8b7afcdb5f0588ea3943",
+			"bytes": 71096
 		},
 		"files/FluxerSans/FluxerSans-LightItalic.woff2": {
-			"sha256": "eca7b195133e861b32aed60a7c90d2b08c643cf69f9e417624109e697d658be4",
-			"bytes": 70996
+			"sha256": "36ef6b3d37468b048c0a0580703e499996c3ee01467ac97a9060182d2f4cf70a",
+			"bytes": 70988
 		},
 		"files/FluxerSans/FluxerSans-Italic.woff2": {
-			"sha256": "671c278ffa98ecb71b598a99f5050f2c5c025bd569f7e5b487c41fedd2879c7e",
-			"bytes": 67128
+			"sha256": "4318b3cd228792b7ef24f8b2ecbf0b2a922257c2996817c7b500ff7793214201",
+			"bytes": 67240
 		},
 		"files/FluxerSans/FluxerSans-TextItalic.woff2": {
-			"sha256": "7f7f1add79652131d08750ef85050f8c7d18f992624e79ccec086091e2efb0aa",
-			"bytes": 71092
+			"sha256": "6ebf4dd894073865d457f372ff9c07266812528bdd5fda3b30b7d155560fd5bb",
+			"bytes": 71076
 		},
 		"files/FluxerSans/FluxerSans-MediumItalic.woff2": {
-			"sha256": "fef18bbc19d5294e6a15806571c55050e43435273148a999274ae11f1cb78914",
-			"bytes": 71272
+			"sha256": "a7813216c2d272c35f4d477336ae81c941441c3eae0932c16f2e41743fec7c1b",
+			"bytes": 71056
 		},
 		"files/FluxerSans/FluxerSans-SemiBoldItalic.woff2": {
-			"sha256": "cc1ef95d1a3fc93b96969ca72128c70761b83868b48c2025f35f44ec0bcd6253",
-			"bytes": 70772
+			"sha256": "4d3a5828c4891c797a97651b137bda483f75f384cc9b56e67426fb63c1b76c27",
+			"bytes": 70660
 		},
 		"files/FluxerSans/FluxerSans-BoldItalic.woff2": {
-			"sha256": "7b11828dca0b27e1fe0875412c4031de828854f3c78fff9e9e08501231522be0",
-			"bytes": 66596
+			"sha256": "712d327ee9be8ec05f238b115326d78d8888f659e37a09cf76943ff98ac95db5",
+			"bytes": 66636
 		},
 		"files/FluxerMono/FluxerMono-Thin.woff2": {
-			"sha256": "b5c44ce0ac1f77380583374bfdd3376a4d0d17825f1bd2f91e6e546f5e63e245",
-			"bytes": 49240
+			"sha256": "5081dd4d0ed0fa4b494caf361c19ab6375d83c815ed0dcdd41453c942dd9967c",
+			"bytes": 49196
 		},
 		"files/FluxerMono/FluxerMono-ExtraLight.woff2": {
-			"sha256": "485a7d153b4aa8740e49c25e6ea45f10f004cd6db539ad5b2f6854e9db2e8cdc",
-			"bytes": 49656
+			"sha256": "a0d90a1401ebc3f29ef8a818a9370bfb57597c0dde3f58ccf5977436911ee4a9",
+			"bytes": 49468
 		},
 		"files/FluxerMono/FluxerMono-Light.woff2": {
-			"sha256": "d9731daf47bb7606163aaa6406d4edbf6c0cc789f4672e58393ba3d96375d6df",
-			"bytes": 49408
+			"sha256": "665d77939210213ea1414d99a4cae24f7464d9ec09a1805e279c5336c755e20f",
+			"bytes": 49332
 		},
 		"files/FluxerMono/FluxerMono-Regular.woff2": {
-			"sha256": "c2ff03362ca68e04c3e620d7eca16871e54b5fa093778a1af869868685bd11f1",
-			"bytes": 49148
+			"sha256": "a6f1f68d101a7fa1de24cbe18439320447b6edb06e29724c573f38dadcebc37d",
+			"bytes": 49160
 		},
 		"files/FluxerMono/FluxerMono-Text.woff2": {
-			"sha256": "a401498fb8d0879323231714e354cf661165e5ff60e0d065069b424fc0900f99",
-			"bytes": 49868
+			"sha256": "7390bfec0e76b4c6a3875ccef3514de59adf3a36998d93f2c9b7dd3075714be3",
+			"bytes": 49932
 		},
 		"files/FluxerMono/FluxerMono-Medium.woff2": {
-			"sha256": "cfa6d11b26b038078ee5ea7c06ef23f22261fbfb38d67a6eda3b1e305f2b24d8",
-			"bytes": 50308
+			"sha256": "35cdf15d22c491cbe78a6f2a817400fa97dec4e7cc01ee575549c41ac4a3ac53",
+			"bytes": 50416
 		},
 		"files/FluxerMono/FluxerMono-SemiBold.woff2": {
-			"sha256": "48840355fd673148bd8ee67af1e464a7b1df606511e941f5b117e0a1a301ee84",
-			"bytes": 50536
+			"sha256": "cfb987e6075a3696276fe431a78ec38ad25b8997eb90eaf99060eef7ba4e7f9e",
+			"bytes": 50588
 		},
 		"files/FluxerMono/FluxerMono-Bold.woff2": {
-			"sha256": "1666f304080eb3bf85355a647034f772b7df7185582840fe0d76aa83b828c583",
-			"bytes": 50372
+			"sha256": "832bbbe0693dc49434afa042efe1e5fb18466c7eff66fbff8112c4c08c64a4ea",
+			"bytes": 50304
 		},
 		"files/FluxerMono/FluxerMono-ThinItalic.woff2": {
-			"sha256": "fc537b88be12feec00e8ef38ae7c2852731106f6a8fb0a41554f9514ce4c7edf",
-			"bytes": 52508
+			"sha256": "d4f27666ae434980babc223edf36f0f2e405046e44880e5d895ca679309e7de9",
+			"bytes": 52340
 		},
 		"files/FluxerMono/FluxerMono-ExtraLightItalic.woff2": {
-			"sha256": "f0401f3090cb6bc77cdfffc8ad1b0dce3d1aa681664c733232c9ed27e280d68d",
-			"bytes": 53576
+			"sha256": "dad217d04709b3ed50c33c4c19552ab4dcba10d96b59e43f5afa1de6a189401e",
+			"bytes": 53604
 		},
 		"files/FluxerMono/FluxerMono-LightItalic.woff2": {
-			"sha256": "d0ed7c154715f9dec7771884cbc9a1265c110bde33c26f319a51b1ae6d902113",
-			"bytes": 53900
+			"sha256": "b65b391bf70e17f49e14df376c943b493bcd54dd23c834a9e95d2a765a1aa73f",
+			"bytes": 53880
 		},
 		"files/FluxerMono/FluxerMono-Italic.woff2": {
-			"sha256": "fbb52eede7c8ded80ae4b7c88956a334810f471d16e1d08a79a27005b7bf3008",
-			"bytes": 53548
+			"sha256": "b5c2d4ce820854b48ec8a8575d3f0460a9e6dcc11d2b41ba958097e00ce403ef",
+			"bytes": 53480
 		},
 		"files/FluxerMono/FluxerMono-TextItalic.woff2": {
-			"sha256": "fd68d710284c23cbeb94d46b65e66114ff971dc06615e980315a02546d2fc2fa",
-			"bytes": 55104
+			"sha256": "ce7d7e07cdaa26a56c685e67b2463b0cd51dcc7f8c36c7089b481ef45673d9b9",
+			"bytes": 55072
 		},
 		"files/FluxerMono/FluxerMono-MediumItalic.woff2": {
-			"sha256": "700b8aebe2da28c55c3acef6a827a56c09cab83bc23a28ff9e7feb70f0632dd1",
-			"bytes": 54828
+			"sha256": "6438b9225b8481682a61a7d04a77b2ea180fd6b25e1dc2003ac635409d83f765",
+			"bytes": 54912
 		},
 		"files/FluxerMono/FluxerMono-SemiBoldItalic.woff2": {
-			"sha256": "69e58317340b00891f39b131e3747750ab839db30e39d1754ddfc68f61fb7de9",
-			"bytes": 54772
+			"sha256": "e653913de2922ea24b6eb23ee646eb47aa19784b6b65efcc0edddccf514bc6da",
+			"bytes": 54736
 		},
 		"files/FluxerMono/FluxerMono-BoldItalic.woff2": {
-			"sha256": "5c0d1d9741fd8597a696e38f9ec75a9af54d4c7af01e4845e458e9b54430e2b1",
-			"bytes": 53944
+			"sha256": "df41b2436dec4f558fe6123de977f29bf423300f8a2740e5399dad2638f99e59",
+			"bytes": 53840
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Thin.woff2": {
-			"sha256": "ba72f22f3b0b53058544d86f4f75a9b9472178aa35a5fb410a172d7e3c936203",
-			"bytes": 73468
+			"sha256": "aa77e31ffbca179e4e30bdadb4304da5ec7800170fc0c38fb79ba30ab637adad",
+			"bytes": 73356
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-ExtraLight.woff2": {
-			"sha256": "4af927e1f652ea7c48fc9c31b24fd5c0176dc6888568875fff2adc7b8c386aca",
-			"bytes": 76180
+			"sha256": "ab4ef3d0af9056680f457e871884e7689e40d50e49dda6715b17ee5b067ea383",
+			"bytes": 76192
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Light.woff2": {
-			"sha256": "31d5c5c61ad0b3c00aef3b4a1d4802f92fe289a21aa7443a0208f8207a647cec",
-			"bytes": 75412
+			"sha256": "4f3203b9c4e57c34454022818f9ef94d30742d1c709863e7fb43804e4a4a06df",
+			"bytes": 75360
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Regular.woff2": {
-			"sha256": "16f302044864bf239b29af97ae7ba8e2966a0e15a19babe114292c2086c87b9b",
-			"bytes": 71940
+			"sha256": "29841624d1849869da1beb6466463c27b7bd5e46d3b75ee008e4c44d0a246270",
+			"bytes": 71856
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Text.woff2": {
-			"sha256": "bd760809387cfaa98880c22c3a3765839526c9e7e9d7c436db54255b43ea6733",
-			"bytes": 76604
+			"sha256": "5ab9fe4d02ae224a41a50e42fa1cc0aecf66030faac9425fb77a767844f66f07",
+			"bytes": 76560
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Medium.woff2": {
-			"sha256": "50caecc5bf6e18c83aa6d93aa875031e16a335a6e9a6e9e20784f9369fab756e",
-			"bytes": 75628
+			"sha256": "cbdc5a9cb69c5f07ff6b56af9b98bd3af15ceb7c5b2ad97f034d890e7c703f89",
+			"bytes": 75708
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-SemiBold.woff2": {
-			"sha256": "9b2a5e82fdbf0aa3789b45e1bf9093cf4e1afb4713880a635c5e983929c1e176",
-			"bytes": 76300
+			"sha256": "c8a3d3e5aa571f172ccabc5890b4058d578f2eac13bdc9fa097f71b20590bb02",
+			"bytes": 76208
 		},
 		"files/FluxerSansArabic/FluxerSansArabic-Bold.woff2": {
-			"sha256": "c43e202c086e4bcf126a0d3c0395b7fa6c598892d7c1dffccfb59ea9a32e782e",
-			"bytes": 73748
+			"sha256": "25dfa3e0450976cf59d437bfc82d09437c0649c3df37d9e008894ac9856085cc",
+			"bytes": 73840
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Thin.woff2": {
-			"sha256": "49211b8a13a76701195f7f12291ebdc687ad6e14675dbee180ae49ff46cb9dc8",
-			"bytes": 105116
+			"sha256": "e5f59608c5301884a679cba9d0b27d716a8af8fb5bc4911cb59f652c8474f100",
+			"bytes": 105236
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-ExtraLight.woff2": {
-			"sha256": "51127dd5d583fae6d069271f041dceb9cc174994a4bac7078f418b3743474aba",
-			"bytes": 112196
+			"sha256": "1ce0a020709d36b543e3fc500b159639da298af929f95d6901bec4ce9cdd2d45",
+			"bytes": 112428
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Light.woff2": {
-			"sha256": "c0641d9e07e28e5e0a82ab289e50d58f4b3fd72580399e9f6d7f1f0f93a3f6a9",
-			"bytes": 111736
+			"sha256": "6c80607807b9920730c10a1458bf4b58824d059941ff78f66a9935b2fe5b19a7",
+			"bytes": 111760
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Regular.woff2": {
-			"sha256": "b5938ee989d1ad04039b521942b9f4ba87ec1eecc028787a8caf7c2f29d06a3d",
-			"bytes": 103968
+			"sha256": "b3fcaa21f4ffc4787b4e49d28e232e81029f98f56f8016d700a4341f45fea83d",
+			"bytes": 104092
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Text.woff2": {
-			"sha256": "02a9c47066bf7807600bdbc5e477e784085a82207bf7eca53724f09fbefa3b98",
-			"bytes": 109432
+			"sha256": "aff6033433da7ed39b2a2b1abb8800459876f892610157730f006e7b1703ef3d",
+			"bytes": 109384
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Medium.woff2": {
-			"sha256": "2916045fac224c5698676107155808acedfae40d97adab8a710489cdbb2303ca",
-			"bytes": 107012
+			"sha256": "f10cae5a9be2fcd55392670f3039b93239d9034fe5ba46681c0f7725c37fea5c",
+			"bytes": 107140
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-SemiBold.woff2": {
-			"sha256": "2e9fe2975332c8720bc3c21d8806fedaf1f5090d8f856afbb358b1a8e9ed991a",
-			"bytes": 107364
+			"sha256": "ec1ae36c42ec42bc9142c64c69a4b0cdea921c5c3ca401e60cf3584e5c7c9ffa",
+			"bytes": 107332
 		},
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Bold.woff2": {
-			"sha256": "813a72e18efc4b99838477a0f742ec672a8967e25f15fdc809c23b6231939a29",
-			"bytes": 100776
+			"sha256": "e5c337bf1073fcda561dfe8e211bf47da5586097dac9bc6718c6b777d25ffdcd",
+			"bytes": 100692
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Thin.woff2": {
-			"sha256": "b58a6e2e3e7106940748115d2893a1e4077a1abb7c1df5c1e093f0ddad00777e",
-			"bytes": 34332
+			"sha256": "3ca4457b9336ab95ea298244dc951d9e359f769713bff15eccd51dbfa3bd0dd5",
+			"bytes": 34168
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-ExtraLight.woff2": {
-			"sha256": "517ef474c83faedbf62902ea558a3f6bab8e3d85d768adecab741ebb84838613",
-			"bytes": 35512
+			"sha256": "f8955a9020dedaa2e934f5cb6690374abf20d9092a114dbfbdbf654be8512fbe",
+			"bytes": 35496
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Light.woff2": {
-			"sha256": "b4cb4f073ccb430ba1849af43d38534424d6bfd309d1dad6e07d0edd7d5205de",
-			"bytes": 35020
+			"sha256": "dc74122c0009a2a227c7cfb8258877b5e429fcfc8a529fada59513dcabc5b985",
+			"bytes": 34896
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Regular.woff2": {
-			"sha256": "401197d8aa04c4c7a6bb81c78fd0b8fa541ab8afaf9f739e60fbf45a405c2797",
-			"bytes": 33156
+			"sha256": "43944c929207e7ec845963ff7f92a1707e00b90cbf08bf2ecc4c12ace1b272d5",
+			"bytes": 33256
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Text.woff2": {
-			"sha256": "6c5449377d679f272c801c562949d5b57e8fcf5a10b9ac0c7599133cad0d4da5",
-			"bytes": 34632
+			"sha256": "259aa86c1b9aefb54510b105f63863efd8c07c73b4f033f194beb27d2aa428b7",
+			"bytes": 34540
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Medium.woff2": {
-			"sha256": "a99ac2629be23f6ec0a3d76fb476168a28bf4a33ac5972f25f41cd32acb112af",
-			"bytes": 34672
+			"sha256": "8701e67788766830425bf47e1f87eed5b5f92eece4667a9181ba63249ac6dc8e",
+			"bytes": 34784
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-SemiBold.woff2": {
-			"sha256": "00bbd4c5154921a46cd57a9cf3619a8d3fdba96f274a743940cabca09d3afde8",
-			"bytes": 34948
+			"sha256": "ef9069da9f48b8905fa9a0329afa7a1ae7ecfb0197e4ff9afe04ea0d8fa05b08",
+			"bytes": 35044
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Bold.woff2": {
-			"sha256": "797d7225b7dca784afc1b004861fbb3f100e2f9e9fe7a3049139bfc08b583a97",
-			"bytes": 33720
+			"sha256": "afb3c756aaa1fb27aa892b8be4e499768d6c3924304629a1a57e755dcf850c2b",
+			"bytes": 33804
 		},
 		"files/FluxerSansThai/FluxerSansThai-Thin.woff2": {
-			"sha256": "c8a81f38be110a4549dcf4e5a86d41218b74d9ac14d1e3a1f4fb7fffea74fe73",
-			"bytes": 40880
+			"sha256": "897e4e26a160691756c7fc3451118b1d193ce7536d08f077c5ece74af0ecc07f",
+			"bytes": 40916
 		},
 		"files/FluxerSansThai/FluxerSansThai-ExtraLight.woff2": {
-			"sha256": "02925f4517b62b921bdef68d6333401762136ae8f8a2b9508a65005aee18ef13",
-			"bytes": 42116
+			"sha256": "5406635cf4836882b2924a163d643461cf7db3dec9e00e6b9de8855efece66f4",
+			"bytes": 42184
 		},
 		"files/FluxerSansThai/FluxerSansThai-Light.woff2": {
-			"sha256": "0dc0445adfcd3543262272a271a451140c615a44d1861d1cc03720aa7426b42d",
-			"bytes": 41648
+			"sha256": "5038d59185a52ab56f37fda94cc2583d00b25b3a37844c13f894162edf48d58f",
+			"bytes": 41652
 		},
 		"files/FluxerSansThai/FluxerSansThai-Regular.woff2": {
-			"sha256": "eaf0fb4aec7befa0fc3e4e2fd6ebc2d9176a3e554a12134f93c65c0400808dce",
-			"bytes": 39884
+			"sha256": "6f31db3a1dd40bd884711603409d6c3292a0e646a5d2c0548fbae434412764c5",
+			"bytes": 39840
 		},
 		"files/FluxerSansThai/FluxerSansThai-Text.woff2": {
-			"sha256": "f1503df61b65cb06d10f32dc6ca0d98bcd240abd8f6aa8dea35180a2c468c2d8",
-			"bytes": 41040
+			"sha256": "9c3b734c0a6c713fa3d8d643da38fc9908e88ccf6eeb9ee552420ddd19b99be5",
+			"bytes": 41008
 		},
 		"files/FluxerSansThai/FluxerSansThai-Medium.woff2": {
-			"sha256": "635f70e49c4026a5679ba03c5c5c5f7ae299c6448229eaa77d004b548178ec96",
-			"bytes": 40992
+			"sha256": "6bf065f633743675b1563097243f926ee84bfa91173c6971d59b85960aaede6d",
+			"bytes": 41068
 		},
 		"files/FluxerSansThai/FluxerSansThai-SemiBold.woff2": {
-			"sha256": "73a2d9cd51b15e14e2dc37aaaae00f99dc7c005dd37dad864bcb5b7646cbd421",
-			"bytes": 41408
+			"sha256": "a7daaf5d6fb58b12e081d0cdb30115d3db0cb4e2a7a68998a7fac83f3644f7d8",
+			"bytes": 41416
 		},
 		"files/FluxerSansThai/FluxerSansThai-Bold.woff2": {
-			"sha256": "918ad35a0b9bcca5913a92a857d57d39a17eba7d367194df78423e763358f0fe",
-			"bytes": 40180
+			"sha256": "a4f18fa77a2dea9e52c0f63ee801ea5a6545596bc15e84908f938e6190f9c6b9",
+			"bytes": 40300
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Thin.woff2": {
-			"sha256": "ec66372863f483e535451f165cb67bd5543784acfd8e6788cfcea0e33ab8bf70",
-			"bytes": 43200
+			"sha256": "5b3ed57fd06bb438dd9a5a2b42a898a3e4f966455737d25e136058f052402d54",
+			"bytes": 43328
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-ExtraLight.woff2": {
-			"sha256": "a6e5ae34cd36ef4e8b00cca4114b6193650cc9ccbd7bdeae0e865afe3fd64d20",
-			"bytes": 44800
+			"sha256": "5b6df825334b70d0dd20fcc0b87fd68171f4879ceced30e2e4abc06de88c06e5",
+			"bytes": 44808
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Light.woff2": {
-			"sha256": "1ba14e6fbf7bf79f8256878f9b6dd82fb5fe3cf42608f8cfab6e007ffd5c2089",
-			"bytes": 44248
+			"sha256": "a74d5032667c4b4cd354c6667fddc332cf7041ab5ecd2c224c45bd820cf2f480",
+			"bytes": 44208
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Regular.woff2": {
-			"sha256": "295bffdb42f9c873f9c0ea9d67459834d0b0b5ea23b597cec51fe673b6331069",
-			"bytes": 42352
+			"sha256": "de16e00c9384e3da5477462d91b4a804f07027a9b1e62b8db408ba34cd93edd2",
+			"bytes": 42340
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Text.woff2": {
-			"sha256": "ae7a18885f8a88aab9f8003b2223f8cd90d3df29d30f0b47523384dcd24f1620",
+			"sha256": "2ccab24bda8732cf46029f71e31601dd00a9d7f3ec74cd741ae92c5b85864062",
 			"bytes": 43920
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Medium.woff2": {
-			"sha256": "381761cd9fac2cc13e7cbe32ea972458dc76ad105841b116211ceaaf883b6e1f",
-			"bytes": 44068
+			"sha256": "b941188f2919b4b5354dbb1610ad7e34bc77b4bda540c898fe19d2f012675d9b",
+			"bytes": 44072
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-SemiBold.woff2": {
-			"sha256": "07d89d95768750bbb7a1b1d08d29d7cd319850df12911b2f512d47f874d780f1",
-			"bytes": 44480
+			"sha256": "02e8d562e207ae6b9e63d7077cbb53810d183bfef8cb068a8f4f2d3ef0eafedf",
+			"bytes": 44604
 		},
 		"files/FluxerSansThaiLooped/FluxerSansThaiLooped-Bold.woff2": {
-			"sha256": "628381cb954391495a2ecf44c7f8a543d753f1c14592d73d28fd37178c750748",
-			"bytes": 43108
+			"sha256": "c4d68b5d35a30fe2bed98dc06bedf0ffc752b64cfefa87d49af015d35b5beeec",
+			"bytes": 43028
 		},
 		"files/FluxerSansJP/FluxerSansJP-Thin.000.woff2": {
 			"sha256": "c77c37341bdb511697fa4f034c28f5b2ea32d06562886d540f7e48116499db1d",
@@ -9188,324 +9179,324 @@
 			"bytes": 7644
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.000.woff2": {
-			"sha256": "2e0e49f52c85f21f09f99199ae4842a018d00a0cc9fe445bbf0c8f66e1ed8af4",
-			"bytes": 40520
+			"sha256": "362e4023e660f4b6d2342d502ad86716c881af5b7df263393230dfbcb2c428ff",
+			"bytes": 40388
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.001.woff2": {
-			"sha256": "b5491d6437c63235d5302ece5ab07ecf035588cca4bf0bd3588c8af0887c95e9",
-			"bytes": 41552
+			"sha256": "005d30902d664252cc41c4d66c55c63291dd07762fe67fd4746b5e6e5158882c",
+			"bytes": 41588
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.002.woff2": {
-			"sha256": "ae181c8cc3e5f6a35a47239fb6e640bc8aa4f19149be992815edc97d31160943",
-			"bytes": 35828
+			"sha256": "5722f01337a68bfd1a44b5d1bb7950d09d97605af828d8d5d1abb5c17ad8731a",
+			"bytes": 35904
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.003.woff2": {
-			"sha256": "8579619e205a2366d9acc9e51d88abd386c21aa3b45fda1996a484796aa65b18",
-			"bytes": 42072
+			"sha256": "b41e2bc316476216aa45bda4b1f6fe81c257bd8e2eb2ac76962551a8cbeb6e96",
+			"bytes": 42132
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.004.woff2": {
-			"sha256": "8d3df69721c10a0e9ab486d00e52aedc649810a2570e789d63e912c7c11744a9",
-			"bytes": 43648
+			"sha256": "2969d4f3e2b677e6af435e7f8953860ee452e52c3be91010e201343186c8f70b",
+			"bytes": 43476
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.005.woff2": {
-			"sha256": "269b308166fdbb8175754b10b20f748360154c9b88044b41fcebb7198377798d",
-			"bytes": 45852
+			"sha256": "7735c0909969b8ae2d3644ac32bb61f9596d6597ab3f608c4ad4110386071a9f",
+			"bytes": 45820
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.006.woff2": {
-			"sha256": "19d42e33bda00437adc3bea5eb2f1ddb36819c38bbc6758da8c1c3222f0eecba",
-			"bytes": 48364
+			"sha256": "768b400b21caacc15f0c6a25a9f052b9f7aaefcf3b1e1103d00d320b54ccaf06",
+			"bytes": 48324
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.007.woff2": {
-			"sha256": "c8b5ce2b75e6dee1d1e14ae721c1dc877c06a98fafeb5bee97881c050f0efbb3",
-			"bytes": 45464
+			"sha256": "f8d6ab1f64ad66805c108ed1b4b0ed4800d8a0d174b702f49629b544dbef99b9",
+			"bytes": 45444
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.008.woff2": {
-			"sha256": "161907fe0408c156743d17ce85cb964c2ce53a2b9cf7158f41e05010198fc43b",
-			"bytes": 46932
+			"sha256": "e8be87ebf5c18f5a6935a5867f4f21f0e3a3bc40aae26f0f7bdf330bc6438529",
+			"bytes": 46892
 		},
 		"files/FluxerSansKR/FluxerSansKR-Thin.009.woff2": {
-			"sha256": "211e14785603c5e21cda944778a46aa317994d9e5c35adf9ce11493f870bf737",
-			"bytes": 10072
+			"sha256": "67bdf8a114ed1c75bd886cd3f4908ac041dcfe1364ca61a354f1fe55ec2745aa",
+			"bytes": 10104
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.000.woff2": {
-			"sha256": "14f544ada0f4824597667599d0aa1453a2090a8c684b9e05691a27a5a7a30135",
-			"bytes": 41912
+			"sha256": "8aa24284ec463b3fbb1203566b3bbf41be3e43aecc1db938a40246bb8b29d54c",
+			"bytes": 41796
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.001.woff2": {
-			"sha256": "d51e231edb6d68057d0e5bddbfb254e77445d5c25ec21849f51d96d9eaaabc76",
-			"bytes": 52176
+			"sha256": "f161dbde17a67693345cd00cc0ff8ac6666c7099351f55780bd408d86b410736",
+			"bytes": 52268
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.002.woff2": {
-			"sha256": "ebbb6e8522be0ecb70b9d308177fbf6bf969ed757d7e2201b67451172660558d",
-			"bytes": 46840
+			"sha256": "e8a1bcef2b05e56b524ec1de4998589feeda3c09839326eed14fab3ec690f0b7",
+			"bytes": 46776
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.003.woff2": {
-			"sha256": "6412ecbdf9234e8835d42543553f30668608e35362a3a4be0c64ec0559a963f8",
-			"bytes": 51840
+			"sha256": "a273c6ab5b76edbc2b457dfc3bfbaa28dcfd3821d919f7ed2e3670e4b424af73",
+			"bytes": 51760
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.004.woff2": {
-			"sha256": "6049991d1d26a808c5f8c7c68c7d2c76035869cb96005f6541e897048e3aa3d0",
-			"bytes": 55136
+			"sha256": "a9e809e5d8f35c3e72f96d56e0bc2118c5686f298bb334304bcc37ebc762fa22",
+			"bytes": 55116
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.005.woff2": {
-			"sha256": "255b0446ea2999bb179b447fb36533479ceb8b47248eafdc1d4f8a3a7cdcddb8",
-			"bytes": 59684
+			"sha256": "af23c176049bb6d92feccac2d72eee2bde3288aa688197e54f4c339df82dd6ec",
+			"bytes": 59632
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.006.woff2": {
-			"sha256": "7bc804fbd0c67c29c4f343cf8950038434fe9fb254e1f6b21aecf30f3b59e936",
-			"bytes": 62464
+			"sha256": "66a50e13dd8e80f6efeaf4879ddea9a0ab36dc28ecb632536cb8cd082a4ac8e6",
+			"bytes": 62544
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.007.woff2": {
-			"sha256": "c3e5be29cdffc557e6a39e2ac904dd6c18cf5de8eb9b87ca7763b76fcbe76a66",
-			"bytes": 57076
+			"sha256": "73ec5b3ddc582483659c90b4a11bca4550029e307df3ca8cb681426415e146df",
+			"bytes": 57004
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.008.woff2": {
-			"sha256": "e265f75a344d9d310029e117dee61559cf1164de440cc32ce6e82aded1550d4d",
-			"bytes": 58312
+			"sha256": "c8633e7991219cfbc5a456b7cd386f4d587293b385a136cda104d0a92166bb72",
+			"bytes": 58428
 		},
 		"files/FluxerSansKR/FluxerSansKR-ExtraLight.009.woff2": {
-			"sha256": "71672f532fb035907e34db86ad4846dd2aba90c0d173e145b12b44b31e869d0b",
-			"bytes": 10004
+			"sha256": "83db323aa8e8e1ae420fe8874b1416c0492d27ca9ee864537b4e3f083b9cc442",
+			"bytes": 9972
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.000.woff2": {
-			"sha256": "132428bdb0f7cc463933bd43729277015f21e87fd2a14a71c00f6da53c792764",
-			"bytes": 41908
+			"sha256": "95697c94fc2bc57987a6c897e2fdee4b4e5a2b0869ddcccfd5e3d184d13d3f7b",
+			"bytes": 41948
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.001.woff2": {
-			"sha256": "a77681b3fe7fda85b9c6f6c047d06c6a9796d8ff94f8ffc6404068365c31a83b",
-			"bytes": 54504
+			"sha256": "7ebf09ba496ef568c2c9d0ed08f6bc3cb6a834f08518d644452db013a276a536",
+			"bytes": 54492
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.002.woff2": {
-			"sha256": "0fa5c5a48a1541c2fb31d3f7906fbdcd1d04025544a134608f409b58f28cbe23",
-			"bytes": 49444
+			"sha256": "badbe6246ba7a742a88b9b9fc832150e94f3445dc0468964d0a6e812dbcf5181",
+			"bytes": 49368
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.003.woff2": {
-			"sha256": "4a450e1e07f5ad5a5e8fafa125a2a80b5e289b638f7e6d0bad648e3685d8e079",
-			"bytes": 54132
+			"sha256": "ff4279f667fa59a63f038df070707d7001ec1f93e16b8c814915ccb822b79822",
+			"bytes": 54064
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.004.woff2": {
-			"sha256": "911d91f77d5b3eac0ce41b062b1f5cc5003b8aff89b39198c1fa11300305bb05",
-			"bytes": 58020
+			"sha256": "6ecc6b0b88dd3991e4e86c4efafc0bf689cb7a8880ea8eb27997f129c624803d",
+			"bytes": 57996
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.005.woff2": {
-			"sha256": "0ad9831b7f4b4969162f71dd8c70c5f0ae6930046047ef295db85a6151ad74a6",
-			"bytes": 63088
+			"sha256": "47d47d6a5ba2573c5b4f5565031f95b5b88f20a644b77065bd6e19dbe166c260",
+			"bytes": 63244
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.006.woff2": {
-			"sha256": "b19025f5d547f6cc9bf3ca10da72743e2d4fe90ff3c53c260a1c295a3768e656",
-			"bytes": 65724
+			"sha256": "bc9bf041c0d88f0a430eca0154ada085ed8dcb3a189bad1cfa90c8d2832fda5c",
+			"bytes": 65752
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.007.woff2": {
-			"sha256": "6ae5aca98a7cb074352a3d84ed2c5d5d86d6adebe98a01ce993fdd5d19211670",
-			"bytes": 60012
+			"sha256": "5803b8926c3a2b469cb1b619ec72c461ecd1dd65e85c361a450a65882e5a3b30",
+			"bytes": 60068
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.008.woff2": {
-			"sha256": "6838c84141a0879539e82e0b055310bf241b071dc993fbd64749c229a5bf01d9",
-			"bytes": 61908
+			"sha256": "74bb2672996465dec3687e55498aedb57a540f31c76920e97235d9fa4bce9641",
+			"bytes": 61928
 		},
 		"files/FluxerSansKR/FluxerSansKR-Light.009.woff2": {
-			"sha256": "cd9b9ac784f98243601695aeca1a49c8ac7802ec83f5443180b07d52cf8fe92d",
+			"sha256": "372836b23c7958e4d3d883bd5f57984860ff9e2f67ebe2d6b88fcabc53c1fc50",
 			"bytes": 10000
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.000.woff2": {
-			"sha256": "94f10f5517a990fb0ef03460414997f9fa270a26044dd06ccfc78c8402579b27",
-			"bytes": 40444
+			"sha256": "5e7c5be8a64f432833e270a08932f6ece672c3d82d40cf06ef438b2637ec9cc6",
+			"bytes": 40556
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.001.woff2": {
-			"sha256": "64ed3c4b9d3d6c1eee2e87dbd2ebd552282c6b4b541fe33a0448e07a9973b07c",
-			"bytes": 55212
+			"sha256": "6ab560d52f2adaa3114b64d3d4df4e571886f38499b46a74520e7ef0ca4d61b9",
+			"bytes": 55184
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.002.woff2": {
-			"sha256": "b590a47b68a1c616c9ba211bb2c4129f475e18ab47a51b0628c831917f27f59b",
-			"bytes": 50212
+			"sha256": "0b1f2e3680a04d7822fdc666bc016955302f202232d18004c79d934be70f094e",
+			"bytes": 50340
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.003.woff2": {
-			"sha256": "f632557e5c9beac092a7e6c766a52cde1d5502258c037b75bb12b206f6aa19b5",
-			"bytes": 55176
+			"sha256": "67f0c7f73200006fce41bfeea7880353007762c8774399de641a80eead0a7913",
+			"bytes": 55096
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.004.woff2": {
-			"sha256": "8904c3ccf906ea73ceda6b742ddf841a80a3d032ae0f1d4ffa5a25598059a383",
-			"bytes": 58772
+			"sha256": "b06c70c3ddb5847b662fd5da2f3e5d39f8ff01bf914234d65806337b13002270",
+			"bytes": 58780
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.005.woff2": {
-			"sha256": "636d3e157926315dcc0f8a16ee74498651faa52f03660f19d1b9d58e0dc71a36",
-			"bytes": 63928
+			"sha256": "66c0eeb8eb703f4567f64a09732383a847f3ef48d5e4b96377587f547f950c42",
+			"bytes": 63904
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.006.woff2": {
-			"sha256": "33cd0e14be4659d1a29123730807e87dac43c49f418a8d244b9fc11293618525",
-			"bytes": 67172
+			"sha256": "85a7907a03be7cd682256386cbb868ada1403b72eb44e64e5dd09316f6239057",
+			"bytes": 67184
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.007.woff2": {
-			"sha256": "e4ed4ebe7efd8962e3e2da1af0a06c1815cc66d28afd10c9faede27c26b9b28d",
-			"bytes": 61500
+			"sha256": "0a1b3405cf48acef6719eb03bdc3beeec00137057fe1fcc6d35180a76adce9f4",
+			"bytes": 61528
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.008.woff2": {
-			"sha256": "a74d43cb69b2577356fcfdec91aa97ff78f6c109efbabecfb4ef08fe9ecc4b6c",
-			"bytes": 63284
+			"sha256": "1bfe8f3102f8e855a6d9142c389f06e40508ed70d00ece4e6c573fa0d902f396",
+			"bytes": 63056
 		},
 		"files/FluxerSansKR/FluxerSansKR-Regular.009.woff2": {
-			"sha256": "fdc9f0481c255e6c247910d214dca29369df59a730c184afd1dd5f97adf625f6",
-			"bytes": 9976
+			"sha256": "0aa143af4689c3b24492676787d9fa62e99dbe8d791d417db6af0d3da4a8e5ef",
+			"bytes": 9952
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.000.woff2": {
-			"sha256": "dbe925e1e4e1165a0c99fd1622b34d32707ec3ab1a178096333528c0eaffab4d",
-			"bytes": 41940
+			"sha256": "cd27b63f42186aec5ddb62c28acdca18eb0ec82f92eb1af0a81d89921b51b2cc",
+			"bytes": 41892
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.001.woff2": {
-			"sha256": "5f7e6c2d7540ee257ec6dccc849531527dc7c8228c6ba722cfc82a386b9a2e20",
-			"bytes": 55128
+			"sha256": "bb130765f7373a7e0f88c5b873eab2b65b396a41ae5ef241c43e229cab8a31bc",
+			"bytes": 55012
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.002.woff2": {
-			"sha256": "163d899efe47da893fc2630634fbe2d86b2af7d2fefa94565dc9837d1c197098",
-			"bytes": 49988
+			"sha256": "a44d32513561d6649376db7c6444a688c90c47df43e7410970a9c104bdb0530e",
+			"bytes": 49912
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.003.woff2": {
-			"sha256": "8b5a35a31fe7442d3994c876136fc0f4419278c7aaa8dcddf7555100a0321c0b",
-			"bytes": 54736
+			"sha256": "0612c71869cf0ca26463d93cc0ded89e6a6721b1cc671f461fa6632753f4b487",
+			"bytes": 54660
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.004.woff2": {
-			"sha256": "5137c9d32824eb343982e4a5116c9ddf5df8f69450bbbda18c4dfdbfb6fdb1a9",
-			"bytes": 58360
+			"sha256": "8b4edf02f95764e34eebc4618d82f945a3d265b38147a84b54cf489d755427e7",
+			"bytes": 58292
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.005.woff2": {
-			"sha256": "725a313715f72f5c33898eb2e6c6e7c229e2b88e38feaacd044d25e82ca00a0f",
-			"bytes": 63840
+			"sha256": "7f19c859346a5adb7ea4b33b5b988e6b1d129bf3dfc0ba42c78e4fda245c150f",
+			"bytes": 63996
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.006.woff2": {
-			"sha256": "7edda6bd066f1144eac604208d26868d34fc9dc34574439d325fe364237c6472",
-			"bytes": 66984
+			"sha256": "c32da1573f70e3c1d07047f7352854397ee6f5b8eb36cb1867706d0b5516d6a8",
+			"bytes": 67024
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.007.woff2": {
-			"sha256": "e90b445b146da0125711b60bd23c771beeb8c7f55700eaa62fb942df6a34a9f5",
-			"bytes": 61624
+			"sha256": "a4bb49a1877127faf8ef37d26906e95c382c80795b60c637753e859932761fcb",
+			"bytes": 61508
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.008.woff2": {
-			"sha256": "7c51b7b1fc0c99f2396c3cbc4d8f788230082f3c33e73afc98ab5cfdbe9ecebf",
-			"bytes": 63188
+			"sha256": "ce2d6cabf38168049490faf2abb0768d915577c66f8f863b3fc3165fd500b6cc",
+			"bytes": 63272
 		},
 		"files/FluxerSansKR/FluxerSansKR-Text.009.woff2": {
-			"sha256": "59d1024d72dc4a8398bbf662849514b4b44f8b67fbbf1e3440b14681eab81cb7",
-			"bytes": 10064
+			"sha256": "7cd172304507622ade4a5cf8918947cff9e482de900593266fe1541250f40c91",
+			"bytes": 10032
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.000.woff2": {
-			"sha256": "d7b73a7f8a6d8425542efa3b201451b12eb51600d705d2315eba42c02a6c464e",
-			"bytes": 42016
+			"sha256": "15c032a730d00b63d471d2ea90ad69904d4034a4ad266fba2c0c1b79dbd2ee24",
+			"bytes": 41876
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.001.woff2": {
-			"sha256": "6eba8a4855a4fbebdf43df857ece62d9b43754ac13efc8278bbd606cbe97ec64",
-			"bytes": 54944
+			"sha256": "de3559345ccfafb9628ff79ca06b9e9e773bc3c611b6cff786571d7e8ddcee23",
+			"bytes": 54876
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.002.woff2": {
-			"sha256": "cf8ab108bc2598586dc985a47320f6da41045146243e4a02f7dc4e7767cdf61d",
-			"bytes": 50204
+			"sha256": "84f44a89e41c657e48ed8d787cae15a992d69d5eb5b0e1cf932c4301b1e2c5d6",
+			"bytes": 50176
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.003.woff2": {
-			"sha256": "45e58fb55aa3f965a22c953654c190fe0d836cf8c803e511a1edd3d8803cd2a5",
-			"bytes": 54708
+			"sha256": "ef92bc5065c18a5cecdf578d98e460b4e08dd5d97dd80a4c450a4b5c719ae79a",
+			"bytes": 54672
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.004.woff2": {
-			"sha256": "91778e1ad0546b8860fa9e31a7c1dd2ab59d84f31377d9b88f863fe8b7b2e50c",
-			"bytes": 58340
+			"sha256": "8fbe851c40fcc685dc8764bd1a8cb9f4bcf19f904181ac689b8c49d3572ef975",
+			"bytes": 58448
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.005.woff2": {
-			"sha256": "36c16f6582203c774d5deef319b2cabcbc8cd76696adae99ae523de919599d0f",
-			"bytes": 64120
+			"sha256": "7193b00271ed00de4476decfe4ae436b839776f726279b4d89e8a0482e6ed7a9",
+			"bytes": 64320
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.006.woff2": {
-			"sha256": "12519dd30075b77ade308b225bbb728ba14048d009a3f2a7d79e1b6719387766",
-			"bytes": 66844
+			"sha256": "b241427c29a387edbbe0a14b6b5d3ef94db0fc92ad2751cab5285ad8b4b16bd2",
+			"bytes": 67048
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.007.woff2": {
-			"sha256": "d5e34ea5592033176e6e180fef76d8fbc0cd880e79208e4e0c7ffe852cf53463",
-			"bytes": 61624
+			"sha256": "eee97b1653df858049363e48986549f9169efd77915784112bf1c40e2668b15c",
+			"bytes": 61668
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.008.woff2": {
-			"sha256": "4fe557715b1a6f98a122ce11a95ca787113fd1c473a32e4c02109ae90a010cd2",
-			"bytes": 63244
+			"sha256": "6a281b94bc0c618babe5e1117448a9b3135682635139bd36de1c8261f2cefb35",
+			"bytes": 63236
 		},
 		"files/FluxerSansKR/FluxerSansKR-Medium.009.woff2": {
-			"sha256": "2960364e1033a45cf66ee86c4d76322f80a8bc2faa80381b20c4ec14ab23b26e",
-			"bytes": 10048
+			"sha256": "f163d01de2854a3b97399fca9eb32211305557d670020f92609d5da0023b347f",
+			"bytes": 10032
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.000.woff2": {
-			"sha256": "8c02e7737cf56655003e69d808741041f04906abee9ae171d9b5f7e46f9a401a",
-			"bytes": 41480
+			"sha256": "a358ae5c3e2df397a16110aa52468dd9d89aa7398fd72c7ff44905a63a3d1698",
+			"bytes": 41460
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.001.woff2": {
-			"sha256": "28a068b8c4af27ec2587e3d07fbf87c9a5716f1e7c24df8b1e67058029c9c4cc",
-			"bytes": 55200
+			"sha256": "6371b6cca9b7b164c7b5438f2a0a9422d2afd6e8a577fcc89bf3b0db92378efe",
+			"bytes": 54944
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.002.woff2": {
-			"sha256": "09dd3d2b5118affb4c6e2113a5a5eb27627605154fe7414b2ed55401a8947339",
-			"bytes": 49764
+			"sha256": "cb5f6a9f56725a48f3ea052e901937870644cc84eb635dfd5cb9a93cfe49f181",
+			"bytes": 49880
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.003.woff2": {
-			"sha256": "75c5749f3dbd50e249c7a4e765fd407ac488e71e7ac9177526e01a72480e5099",
-			"bytes": 54888
+			"sha256": "27f84287d224aac209eb64459c4d6c65b2169cd2631dabc9a058aa862a838557",
+			"bytes": 54780
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.004.woff2": {
-			"sha256": "a8c0eacb4f41d33b5ff19e0183ed98a244d6e5ebb7ac57a24f962290963e058b",
-			"bytes": 58376
+			"sha256": "968700416689b6e975695aa76ff81b79c6266a53179ecf44574657dff6c3e714",
+			"bytes": 58276
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.005.woff2": {
-			"sha256": "3280d14e3bae39e58c4d0132ee72c4f0283895ec9536817cc472a8ca9a043aaa",
-			"bytes": 63948
+			"sha256": "906afc306c29a08fd039dd3c8e92b2e1992c61f1857cd869cf68799e8b676a26",
+			"bytes": 63988
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.006.woff2": {
-			"sha256": "ddaeae3e9169cf6cbb16a5cfae93f7b6aba151c546498c40f38b6eaec2ed1c2e",
-			"bytes": 66032
+			"sha256": "99654edb17198417687afbd58c654edcfc2de6f205460b3af10181d33cf168b1",
+			"bytes": 66012
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.007.woff2": {
-			"sha256": "73d155278b9dcc17e89dd1713d66601c18849d28f4365352d8a21f2897e43578",
-			"bytes": 61684
+			"sha256": "0ea0d95dae2d80706a404e86abc9fa50d54395a457a93f34c140bb2b17911dbf",
+			"bytes": 61488
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.008.woff2": {
-			"sha256": "9bd1d611835171128f0180db2825d46a9641b456c7203f0e19470c2b28cc2b01",
-			"bytes": 62252
+			"sha256": "2da276cff6645ac25074b78b0a74e37f441ce8eeeb6b5e74dce21a4ead13cc2c",
+			"bytes": 62276
 		},
 		"files/FluxerSansKR/FluxerSansKR-SemiBold.009.woff2": {
-			"sha256": "0c13259294423be08d87975187eab7d9502d7f67ee19829c88580f0fa45c849d",
-			"bytes": 10216
+			"sha256": "4e0a57ef355fe189257f649504be0f64f459cb9cf107c34f33bc8a430a551940",
+			"bytes": 10160
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.000.woff2": {
-			"sha256": "d8d523d06224d5cd5cc5d8d487a3e4db2291c7412aae342ac6ae654d80dbcc46",
-			"bytes": 39808
+			"sha256": "07b62fa49262f077196eaf25bfed714c11d7ec28b664ba2ab3e718f171970828",
+			"bytes": 39900
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.001.woff2": {
-			"sha256": "516b440c3f22bed03892010f91a17e8761eec1f36ee4ee524ccf5d0c32def837",
-			"bytes": 46648
+			"sha256": "c68a7dbd0787b11070ae30893a672a09298208b994ab56c89b3a3d67d93ada0a",
+			"bytes": 46628
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.002.woff2": {
-			"sha256": "bfe3633dd54bc3efa36c0dc0cb40efa53b608dc7454b7a26a5b58dc6a2385900",
-			"bytes": 42020
+			"sha256": "4e0a50c54310d1728ea6c365a1c0ee736a6322b3d6394e7510f1b1edb7a4803a",
+			"bytes": 42168
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.003.woff2": {
-			"sha256": "5441036058e72319a91baad2339ce82855f6c71ef0780abbd374007f32191565",
-			"bytes": 46600
+			"sha256": "9d1147aea1113baf78b8c43a3e54d52dcbca4cbc0feb0acca84c70fca4769d79",
+			"bytes": 46596
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.004.woff2": {
-			"sha256": "e3df280fdada9b5e1ba6c6eb17eb63ce74eea1fc6d5183e6502d937c638d0440",
-			"bytes": 48256
+			"sha256": "4bf28b042222908e0ec57bc907f90f7cbbfe500b1ad8557da0b4ee19da159770",
+			"bytes": 48304
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.005.woff2": {
-			"sha256": "c432b6c94089766d2b062985f1d802540cac8c8de87483dff4f8a496c54e71db",
-			"bytes": 53108
+			"sha256": "e52861b96918e5c1d4926e11989477dc867afc579190ac0658b6395c95c252b9",
+			"bytes": 53056
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.006.woff2": {
-			"sha256": "41d3de74cb2dc6b8109103d3f5cef6ac4f62934d02f54b0625d0621fd5164345",
-			"bytes": 53604
+			"sha256": "a7d8738dfd4427989850970bd562ae265628475b86b9b1843cff122d22c59b20",
+			"bytes": 53552
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.007.woff2": {
-			"sha256": "1ad095974ddc1cbef0686bdddcf362b8de729b7dc7d57f0266a06bbb57c585f6",
-			"bytes": 52660
+			"sha256": "9e5595f0be31c2562d43cb4d0b7dd5b813c8f3bd8142ce45e3a1eab800a820e3",
+			"bytes": 52732
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.008.woff2": {
-			"sha256": "acee97a8ff82d83a611772e5e732e5fd04bc43a020dcba57b6e8c0b40db36303",
-			"bytes": 51804
+			"sha256": "5c283181293ebe18c1c8153c898519c4dd1c76f566bda9f5907e7e63a7cd10ae",
+			"bytes": 51860
 		},
 		"files/FluxerSansKR/FluxerSansKR-Bold.009.woff2": {
-			"sha256": "5f072ab83fb8550c1761d55bace9ffbdd069d4dff48d6f47f637df5076edbefe",
-			"bytes": 9960
+			"sha256": "51cde2ab4ac58de40c8af0b49dc4424cac39ef3c5a3ab42d61117c8e3ca38482",
+			"bytes": 9964
 		}
 	}
 }
