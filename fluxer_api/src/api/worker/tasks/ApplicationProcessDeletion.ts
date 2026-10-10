@@ -45,6 +45,11 @@ const applicationProcessDeletion: WorkerTaskHandler = async (payload, helpers) =
 				username: DELETED_USER_USERNAME,
 				global_name: DELETED_USER_GLOBAL_NAME,
 				discriminator: DELETED_USER_DISCRIMINATOR,
+				avatar_hash: null,
+				banner_hash: null,
+				bio: null,
+				pronouns: null,
+				accent_color: null,
 			},
 			botUser.toRow(),
 		);
