@@ -8,12 +8,14 @@ import {
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {setLimitOverride} from '@app/api/test/LimitTestUtils';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Channel create in a category', () => {
 	let harness: ApiTestHarness;
@@ -22,6 +24,9 @@ describe('Channel create in a category', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
+	});
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	async function setupCategoryManager(extraAllow = 0n) {
@@ -114,5 +119,98 @@ describe('Channel create in a category', () => {
 			})
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
 			.execute();
+	});
+
+	it('applies a configured max_channels_per_category on create', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const category = await createChannel(harness, owner.token, guild.id, 'full', ChannelTypes.GUILD_CATEGORY);
+		const restore = await setLimitOverride(harness, {max_channels_per_category: 0});
+		try {
+			await createBuilder(harness, owner.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'overflow', type: ChannelTypes.GUILD_TEXT, parent_id: category.id})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_CATEGORY_CHANNELS)
+				.execute();
+			await createChannel(harness, owner.token, guild.id, 'at-root');
+		} finally {
+			await restore();
+		}
+	});
+
+	it('applies a configured max_guild_channels on create', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const restore = await setLimitOverride(harness, {max_guild_channels: 0});
+		try {
+			await createBuilder(harness, owner.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'overflow', type: ChannelTypes.GUILD_TEXT})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_GUILD_CHANNELS)
+				.execute();
+		} finally {
+			await restore();
+		}
+	});
+
+	it('lets a raised max_channels_per_category admit a channel past the default', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const category = await createChannel(harness, owner.token, guild.id, 'busy', ChannelTypes.GUILD_CATEGORY);
+		vi.spyOn(NoopGatewayService.prototype, 'getCategoryChannelCount').mockResolvedValue(50);
+		await createBuilder(harness, owner.token)
+			.post(`/guilds/${guild.id}/channels`)
+			.body({name: 'fifty-first', type: ChannelTypes.GUILD_TEXT, parent_id: category.id})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_CATEGORY_CHANNELS)
+			.execute();
+		const restore = await setLimitOverride(harness, {max_channels_per_category: 500});
+		try {
+			const created = await createBuilder<ChannelResponse>(harness, owner.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'fifty-first', type: ChannelTypes.GUILD_TEXT, parent_id: category.id})
+				.execute();
+			expect(created.parent_id).toBe(category.id);
+		} finally {
+			await restore();
+		}
+	});
+
+	it('lets a raised max_guild_channels admit a channel past the default', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		vi.spyOn(NoopGatewayService.prototype, 'getChannelCount').mockResolvedValue(500);
+		await createBuilder(harness, owner.token)
+			.post(`/guilds/${guild.id}/channels`)
+			.body({name: 'one-more', type: ChannelTypes.GUILD_TEXT})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_GUILD_CHANNELS)
+			.execute();
+		const restore = await setLimitOverride(harness, {max_guild_channels: 1000});
+		try {
+			await createChannel(harness, owner.token, guild.id, 'one-more');
+		} finally {
+			await restore();
+		}
+	});
+
+	it('applies a configured max_channels_per_category when a channel is moved into a category', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const category = await createChannel(harness, owner.token, guild.id, 'target', ChannelTypes.GUILD_CATEGORY);
+		const channel = await createChannel(harness, owner.token, guild.id, 'mover');
+		const move = () =>
+			createBuilder(harness, owner.token)
+				.patch(`/guilds/${guild.id}/channels`)
+				.body([{id: channel.id, parent_id: category.id}]);
+		const restoreLowered = await setLimitOverride(harness, {max_channels_per_category: 0});
+		try {
+			await move().expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_CATEGORY_CHANNELS).execute();
+		} finally {
+			await restoreLowered();
+		}
+		vi.spyOn(NoopGatewayService.prototype, 'getCategoryChannelCount').mockResolvedValue(50);
+		await move().expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.MAX_CATEGORY_CHANNELS).execute();
+		const restoreRaised = await setLimitOverride(harness, {max_channels_per_category: 500});
+		try {
+			await move().expect(HTTP_STATUS.NO_CONTENT).execute();
+		} finally {
+			await restoreRaised();
+		}
+		const moved = await createBuilder<ChannelResponse>(harness, owner.token).get(`/channels/${channel.id}`).execute();
+		expect(moved.parent_id).toBe(category.id);
 	});
 });

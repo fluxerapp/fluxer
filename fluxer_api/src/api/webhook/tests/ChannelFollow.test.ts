@@ -11,13 +11,13 @@ import {
 	follow,
 	followRequest,
 	setGuildFeatures,
-	setLimitOverride,
 } from '@app/api/channel/tests/AnnouncementTestUtils';
 import {createGuild, createPermissionOverwrite, updateGuild} from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {setLimitOverride} from '@app/api/test/LimitTestUtils';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';

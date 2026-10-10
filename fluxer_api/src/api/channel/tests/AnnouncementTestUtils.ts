@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createWebhookID} from '@app/api/BrandedTypes';
 import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
 import {
@@ -36,11 +36,8 @@ import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
-import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import type {FollowedChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelFollowSchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -210,30 +207,6 @@ export async function setGuildFeatures(
 		.post(`/test/guilds/${guildId}/features`)
 		.body({add_features: features.add ?? [], remove_features: features.remove ?? []})
 		.execute();
-}
-
-export async function setLimitOverride(
-	harness: ApiTestHarness,
-	limits: Partial<Record<LimitKey, number>>,
-): Promise<() => Promise<void>> {
-	const admin = await setUserACLs(harness, await createTestAccount(harness), [
-		AdminACLs.AUTHENTICATE,
-		AdminACLs.INSTANCE_LIMIT_CONFIG_VIEW,
-		AdminACLs.INSTANCE_LIMIT_CONFIG_UPDATE,
-	]);
-	const current = await createBuilder<{limit_config: LimitConfigSnapshot}>(harness, admin.token)
-		.get('/admin/limit-config')
-		.execute();
-	const writeConfig = async (rules: LimitConfigSnapshot['rules']) => {
-		await createBuilder(harness, admin.token)
-			.put('/admin/limit-config')
-			.body({limit_config: {traitDefinitions: current.limit_config.traitDefinitions, rules}})
-			.execute();
-	};
-	await writeConfig([...current.limit_config.rules, {id: 'announcement_test_override', limits}]);
-	return async () => {
-		await writeConfig(current.limit_config.rules);
-	};
 }
 
 const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
