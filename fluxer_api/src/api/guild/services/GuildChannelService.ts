@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createChannelID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
@@ -112,6 +112,7 @@ export class GuildChannelService {
 			userId: params.userId,
 			guildId: params.guildId,
 			permission: Permissions.MANAGE_CHANNELS,
+			channelId: params.data.parent_id ? createChannelID(params.data.parent_id) : undefined,
 		});
 		const response = await this.channelOps.createChannel(params, auditLogReason);
 		const [masked] = await maskChannelResponseThreadBits(params.guildId, params.viewer, [response]);
@@ -155,11 +156,17 @@ export class GuildChannelService {
 		await this.channelOps.sanitizeTextChannelNames(params);
 	}
 
-	private async checkPermission(params: {userId: UserID; guildId: GuildID; permission: bigint}): Promise<void> {
+	private async checkPermission(params: {
+		userId: UserID;
+		guildId: GuildID;
+		permission: bigint;
+		channelId?: ChannelID;
+	}): Promise<void> {
 		const hasPermission = await this.gatewayService.checkPermission({
 			guildId: params.guildId,
 			userId: params.userId,
 			permission: params.permission,
+			channelId: params.channelId,
 		});
 		if (!hasPermission) throw new MissingPermissionsError();
 		const guildData = await this.gatewayService.getGuildData({guildId: params.guildId, userId: params.userId});

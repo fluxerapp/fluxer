@@ -104,6 +104,7 @@ export class ChannelOperationsService {
 				guildId: params.guildId,
 				userId: params.userId,
 				permission: Permissions.MANAGE_ROLES,
+				channelId: parentId ?? undefined,
 			});
 			if (!canManageRoles) throw new MissingPermissionsError();
 			const basePermissions = await this.gatewayService.getUserPermissions({

@@ -137,11 +137,12 @@ A guild holds at most the instance-configured `max_guild_channels` [limit](/http
 
 <RouteHeader method="POST" path="/v1/guilds/{guild_id}/channels" bot auditReason mfa />
 
-Creates a guild channel and returns its [channel object](/http-api/channels/#channel-object) with status 200. Requires [MANAGE_CHANNELS](/http-api/permissions/) at guild level. Emits a [Channel Create](/gateway/events/#channel-create) Gateway event.
+Creates a guild channel and returns its [channel object](/http-api/channels/#channel-object) with status 200. Requires [MANAGE_CHANNELS](/http-api/permissions/) in the parent category when `parent_id` is supplied, and at guild level otherwise. Emits a [Channel Create](/gateway/events/#channel-create) Gateway event.
 
 ### Limitations
 
-- Supplying `permission_overwrites` also requires [MANAGE_ROLES](/http-api/permissions/) at guild level.
+- Supplying `permission_overwrites` also requires [MANAGE_ROLES](/http-api/permissions/) in the same context.
+- Both permissions resolve through the parent category's overwrites. A category overwrite that allows one grants it for that category only, and a category overwrite that denies one blocks a caller who holds it at guild level.
 
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions). It also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
 
@@ -216,7 +217,7 @@ Only the allowed mask is compared, so a supplied deny is stored without any auth
 | --- | --- | --- |
 | 200 | [channel](/http-api/channels/#channel-object) object | Channel was created |
 | 400<sup>1</sup><sup>2</sup> | [error response](/http-api/#error-response) | Body, type, name, parent, URL, voice setting, or content warning text is invalid, a channel limit is reached, or the caller has no enrolled authenticator in an elevated-MFA guild |
-| 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS`, is not a member of the guild, supplied overwrites without `MANAGE_ROLES`, or allowed a permission they do not hold in the parent context, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a member of the guild, lacks `MANAGE_CHANNELS` in the parent category or in the guild when no parent is supplied, supplied overwrites without `MANAGE_ROLES` in that context, or allowed a permission they do not hold there, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> A schema or parent failure returns `INVALID_FORM_BODY` and names the field with `CATEGORIES_CANNOT_HAVE_PARENTS`, `INVALID_PARENT_CHANNEL`, or `PARENT_MUST_BE_CATEGORY`. A capacity failure returns the top-level `MAX_GUILD_CHANNELS` or `MAX_CATEGORY_CHANNELS`
