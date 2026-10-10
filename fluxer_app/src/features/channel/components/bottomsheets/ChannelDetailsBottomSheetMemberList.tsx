@@ -11,6 +11,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {resolveMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
+import {resolveMemberListMobile} from '@app/features/member/hooks/useMemberListMobile';
 import {resolveMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
@@ -118,6 +119,9 @@ const MobileMemberListItem = observer(
 		const {i18n} = useLingui();
 		const isTyping = TypingIndicator.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
 		const status = resolveMemberListPresence({guildId: guild.id, channelId, userId: member.user.id});
+		const isMobile = member.isCurrentUser()
+			? undefined
+			: resolveMemberListMobile({guildId: guild.id, channelId, userId: member.user.id});
 		const memberListCustomStatus = resolveMemberListCustomStatus({
 			guildId: guild.id,
 			channelId,
@@ -175,6 +179,7 @@ const MobileMemberListItem = observer(
 						showOffline={member.user.id === Authentication.currentUserId || isTyping}
 						guildId={guild.id}
 						status={status}
+						isMobile={isMobile}
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}
 						mediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}

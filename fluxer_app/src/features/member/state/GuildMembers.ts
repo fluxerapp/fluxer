@@ -7,6 +7,7 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Users from '@app/features/user/state/Users';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {makeAutoObservable} from 'mobx';
 
 type Members = Record<string, GuildMember>;
@@ -213,6 +214,19 @@ class GuildMembers {
 		}
 		this.members[guildId][member.user.id] = new GuildMember(guildId, member);
 		this.nonMembers[guildId]?.delete(member.user.id);
+	}
+
+	hydrateOrRefresh(guildId: string, member: GuildMemberData): void {
+		const existing = this.members[guildId]?.[member.user.id];
+		if (!existing) {
+			this.hydrateIfMissing(guildId, member);
+			return;
+		}
+		Users.handleUserUpdate(member.user as WireUser);
+		if (existing.user === Users.getUser(member.user.id) && existing.matches(member)) {
+			return;
+		}
+		this.members[guildId][member.user.id] = new GuildMember(guildId, member);
 	}
 
 	handleMemberRemove(guildId: string, userId: string): void {

@@ -61,6 +61,25 @@ export class GuildMember {
 		this.mentionFlags = (guildMember.mention_flags ?? 0) as MentionReplyPreference;
 	}
 
+	matches(guildMember: GuildMemberData): boolean {
+		const until = guildMember.communication_disabled_until
+			? new Date(guildMember.communication_disabled_until).getTime()
+			: null;
+		return (
+			this.nick === (guildMember.nick ?? null) &&
+			this.avatar === (guildMember.avatar ?? null) &&
+			this.banner === (guildMember.banner ?? null) &&
+			this.accentColor === (guildMember.accent_color ?? null) &&
+			this.mute === (guildMember.mute ?? false) &&
+			this.deaf === (guildMember.deaf ?? false) &&
+			this.profileFlags === (guildMember.profile_flags ?? 0) &&
+			this.mentionFlags === (guildMember.mention_flags ?? 0) &&
+			(this.communicationDisabledUntil?.getTime() ?? null) === until &&
+			this.roles.size === guildMember.roles.length &&
+			guildMember.roles.every((roleId) => this.roles.has(roleId))
+		);
+	}
+
 	isAvatarUnset(): boolean {
 		return (this.profileFlags & GuildMemberProfileFlags.AVATAR_UNSET) !== 0;
 	}
