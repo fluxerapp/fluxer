@@ -219,6 +219,21 @@ describe('InstanceConfigRepository', () => {
 		expect(config.branding.product_name).toBe('Kept');
 	});
 
+	it('serves the theme colour as six-digit hex and drops a stored value that is not hex', async () => {
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		expect((await repository.setAppPublicConfig({branding: {theme_color: '7B2CE4'}})).branding.theme_color).toBe(
+			'#7b2ce4',
+		);
+		expect((await repository.setAppPublicConfig({branding: {theme_color: '#AbC'}})).branding.theme_color).toBe(
+			'#aabbcc',
+		);
+
+		await repository.setConfig(APP_PUBLIC_CONFIG_KEY, JSON.stringify({branding: {theme_color: 'rgb(123, 44, 228)'}}));
+		expect((await repository.getAppPublicConfig()).branding.theme_color).toBeNull();
+	});
+
 	it('stores uploaded branding assets as references and resolves them against the current media endpoint', async () => {
 		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());

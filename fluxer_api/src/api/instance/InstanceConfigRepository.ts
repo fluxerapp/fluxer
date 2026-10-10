@@ -410,6 +410,13 @@ function normalizeOptionalPublicString(value: string | null | undefined, fallbac
 	return value === undefined ? fallback : normalizeOptionalString(value);
 }
 
+function normalizeThemeColor(value: unknown): string | null {
+	const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(normalizeOptionalString(value) ?? '');
+	if (match === null) return null;
+	const digits = match[1].toLowerCase();
+	return `#${digits.length === 3 ? digits.replace(/./g, '$&$&') : digits}`;
+}
+
 function getDefaultPremiumProductName(): string {
 	return Config.instance.selfHosted ? 'Premium' : 'Plutonium';
 }
@@ -423,7 +430,7 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			logo_url: normalizeOptionalString(Config.instance.branding.logoUrl),
 			wordmark_url: normalizeOptionalString(Config.instance.branding.wordmarkUrl),
 			favicon_url: normalizeOptionalString(Config.instance.branding.faviconUrl),
-			theme_color: normalizeOptionalString(Config.instance.branding.themeColor),
+			theme_color: normalizeThemeColor(Config.instance.branding.themeColor),
 			status_page_url: normalizeOptionalString(Config.instance.branding.statusPageUrl),
 			status_page_incident_history_url: normalizeOptionalString(Config.instance.branding.statusPageIncidentHistoryUrl),
 			premium_product_name: getDefaultPremiumProductName(),
@@ -740,7 +747,8 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 			logo_url: normalizeOptionalPublicString(branding.logo_url, defaults.branding.logo_url),
 			wordmark_url: normalizeOptionalPublicString(branding.wordmark_url, defaults.branding.wordmark_url),
 			favicon_url: normalizeOptionalPublicString(branding.favicon_url, defaults.branding.favicon_url),
-			theme_color: normalizeOptionalPublicString(branding.theme_color, defaults.branding.theme_color),
+			theme_color:
+				branding.theme_color === undefined ? defaults.branding.theme_color : normalizeThemeColor(branding.theme_color),
 			status_page_url: normalizeOptionalPublicString(branding.status_page_url, defaults.branding.status_page_url),
 			status_page_incident_history_url: normalizeOptionalPublicString(
 				branding.status_page_incident_history_url,

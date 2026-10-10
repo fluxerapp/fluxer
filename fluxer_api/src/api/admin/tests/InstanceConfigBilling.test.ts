@@ -362,4 +362,17 @@ describe('instance config billing on a hosted instance', () => {
 		}).execute();
 		expect(updated.app_public.branding.theme_color).toBe('#123456');
 	});
+
+	it('rejects a theme colour that is not hex', async () => {
+		const admin = await createAdmin(context.harness);
+		for (const theme_color of ['rgb(123, 44, 228)', 'rebeccapurple', '#12345']) {
+			await patchConfig(context.harness, admin, {app_public: {branding: {theme_color}}})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+				.execute();
+		}
+		const cleared = await patchConfig(context.harness, admin, {
+			app_public: {branding: {theme_color: null}},
+		}).execute();
+		expect(cleared.app_public.branding.theme_color).toBeNull();
+	});
 });

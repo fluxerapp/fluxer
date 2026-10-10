@@ -950,9 +950,9 @@ fn app_public_config_section(
                             ))
                             (text_input(
                                 "app_theme_color",
-                                "Theme Color",
+                                "Theme Color (hex)",
                                 app_public.branding.theme_color.as_deref().unwrap_or(""),
-                                "#5865f2",
+                                "#4641d9",
                             ))
                         }
                         div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {

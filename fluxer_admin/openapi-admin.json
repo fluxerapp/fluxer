@@ -11905,7 +11905,11 @@
 									"logo_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"wordmark_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"favicon_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"theme_color": {"nullable": true, "type": "string", "maxLength": 64},
+									"theme_color": {
+										"nullable": true,
+										"type": "string",
+										"pattern": "^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$"
+									},
 									"status_page_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"status_page_incident_history_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"premium_product_name": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 40},
