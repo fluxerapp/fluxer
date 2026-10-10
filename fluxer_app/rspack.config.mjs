@@ -12,7 +12,7 @@ import {
 	SwcJsMinimizerRspackPlugin,
 	sources,
 } from '@rspack/core';
-import {createPoFileRule, getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
+import {getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -502,20 +502,7 @@ export default () => {
 				'livekit-client/e2ee-worker': path.join(PKGS_DIR, 'livekit-client/src/e2ee/worker/e2ee.worker.ts'),
 				'node:assert/strict': BROWSER_ASSERT_STRICT_MODULE,
 			},
-			extensions: [
-				'.web.tsx',
-				'.web.ts',
-				'.web.jsx',
-				'.web.js',
-				'.tsx',
-				'.ts',
-				'.jsx',
-				'.js',
-				'.json',
-				'.mjs',
-				'.cjs',
-				'.po',
-			],
+			extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js', '.json', '.mjs', '.cjs'],
 			extensionAlias: {
 				'.js': ['.js', '.tsx', '.ts'],
 				'.mjs': ['.mjs', '.mts'],
@@ -580,7 +567,6 @@ export default () => {
 						},
 					},
 				},
-				createPoFileRule(),
 				{
 					test: /\.module\.css$/,
 					use: [{loader: 'postcss-loader'}],

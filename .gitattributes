@@ -4,3 +4,7 @@ fluxer_static/**/*.md text diff
 packages/fonts/files/** -text -diff
 fluxer_app/src/features/voice/utils/noise_suppression/deepfilternet3/*.wasm -text -diff
 fluxer_app/src/features/voice/utils/noise_suppression/deepfilternet3/*.tar.gz -text -diff
+fluxer_app/src/features/i18n/locales/** linguist-generated
+**/weblate/locales/** linguist-generated
+fluxer_api/src/api/openapi/openapi.json linguist-generated
+fluxer_admin/openapi-admin.json linguist-generated
