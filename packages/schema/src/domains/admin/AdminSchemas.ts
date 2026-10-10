@@ -6,7 +6,8 @@ import {
 	SystemChannelFlags,
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
-import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {LIMIT_KEY_METADATA, LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
 import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
@@ -916,6 +917,20 @@ const LimitRuleSchema = z.object({
 			},
 			{error: 'Invalid limit key detected'},
 		)
+		.superRefine((limits, ctx) => {
+			for (const key of LIMIT_KEYS) {
+				const value = limits[key];
+				const {min = 0, max} = LIMIT_KEY_METADATA[key];
+				if (value !== undefined && max !== undefined && (value < min || value > max)) {
+					ctx.addIssue({
+						code: 'custom',
+						message: ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE,
+						params: {minValue: min, maxValue: max},
+						path: [key],
+					});
+				}
+			}
+		})
 		.describe('Per-limit key values'),
 });
 const LimitConfigSchema = z.object({

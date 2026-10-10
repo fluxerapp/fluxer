@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {LIMIT_KEY_METADATA, LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
 import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
@@ -103,7 +103,7 @@ export function mergeWithCurrentDefaults(
 	const mergedRules: Array<LimitRule> = [];
 	const existingRulesMap = new Map<string, LimitRule>();
 	for (const rule of stored.rules) {
-		existingRulesMap.set(rule.id, rule);
+		existingRulesMap.set(rule.id, {...rule, limits: clampToAllowedRange(rule.limits)});
 	}
 	for (const defaultRule of newDefaults.rules) {
 		const existingRule = existingRulesMap.get(defaultRule.id);
@@ -200,6 +200,18 @@ function wasSavedUnderOtherDefaults(
 		[...modeKeys].every((key) => rule.limits[key] !== undefined) &&
 		untouchedModeKeys.every((key) => rule.limits[key] === otherDefaults[key])
 	);
+}
+
+function clampToAllowedRange(limits: Partial<Record<LimitKey, number>>): Partial<Record<LimitKey, number>> {
+	const clamped = {...limits};
+	for (const key of LIMIT_KEYS) {
+		const value = clamped[key];
+		const {min = 0, max} = LIMIT_KEY_METADATA[key];
+		if (value !== undefined && max !== undefined) {
+			clamped[key] = Math.min(Math.max(value, min), max);
+		}
+	}
+	return clamped;
 }
 
 function pickModifiedLimits(

@@ -1072,8 +1072,8 @@ fn update_limit_rule_values(
     rule.filters = build_limit_filters(form);
 }
 
-fn limit_config_result<T, E: std::fmt::Display>(
-    result: Result<T, E>,
+fn limit_config_result<T>(
+    result: Result<T, crate::api::client::ApiError>,
     success_message: &'static str,
     error_message: &'static str,
 ) -> FlashData {
@@ -1081,7 +1081,10 @@ fn limit_config_result<T, E: std::fmt::Display>(
         Ok(_) => FlashData::success(success_message),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: update limit config");
-            FlashData::error(error_message)
+            match super::billing_actions::validation_message(&error) {
+                Some(message) => FlashData::error(format!("{error_message}: {message}")),
+                None => FlashData::error(error_message),
+            }
         }
     }
 }
@@ -1397,6 +1400,28 @@ mod tests {
         assert_eq!(
             instance_config_result::<()>(Err(error)).message,
             "Failed to update instance config: policy.premium_mode: Disable billing before switching the premium mode to everyone"
+        );
+    }
+
+    #[test]
+    fn limit_config_result_surfaces_the_api_validation_message() {
+        let error = crate::api::client::ApiError::Http {
+            status: 400,
+            message: serde_json::json!({
+                "code": "INVALID_FORM_BODY",
+                "message": "Input Validation Error",
+                "errors": [{
+                    "path": "limit_config.rules.0.limits.max_bio_length",
+                    "code": "VALUE_MUST_BE_INTEGER_IN_RANGE",
+                    "message": "Value must be an integer between 0 and 320."
+                }]
+            })
+            .to_string(),
+        };
+        assert_eq!(
+            limit_config_result::<()>(Err(error), "Saved", "Failed to update limit configuration")
+                .message,
+            "Failed to update limit configuration: limit_config.rules.0.limits.max_bio_length: Value must be an integer between 0 and 320."
         );
     }
 
