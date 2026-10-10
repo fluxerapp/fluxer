@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {getDmChannelIdsForScope} from '@app/api/channel/services/message/DmScopeUtils';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import {
-	attachmentStorageChannelId,
-	collectMessageAttachments,
-	isCrosspostCopy,
-} from '@app/api/channel/services/message/MessageHelpers';
+import {attachmentDecayPayloadsForMessage} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import {
 	createMessageResponseDataService,
@@ -283,34 +279,9 @@ export class MessageRetrievalService {
 	}
 
 	private async extendAttachments(messages: Array<Message>): Promise<void> {
-		const payloads = messages.flatMap((message) => {
-			return this.buildAttachmentDecayEntriesForMessage(message);
-		});
+		const payloads = messages.flatMap(attachmentDecayPayloadsForMessage);
 		if (payloads.length === 0) return;
 		await this.attachmentDecayService.extendForAttachments(payloads);
-	}
-
-	private buildAttachmentDecayEntriesForMessage(message: Message): Array<{
-		attachmentId: AttachmentID;
-		channelId: ChannelID;
-		messageId: MessageID;
-		filename: string;
-		sizeBytes: bigint;
-		uploadedAt: Date;
-	}> {
-		const attachments = collectMessageAttachments(message);
-		if (attachments.length === 0) return [];
-		const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
-		const uploadedAt = snowflakeToDate(ownerMessageId);
-		const storageChannelId = attachmentStorageChannelId(message);
-		return attachments.map((attachment) => ({
-			attachmentId: attachment.id,
-			channelId: storageChannelId,
-			messageId: ownerMessageId,
-			filename: attachment.filename,
-			sizeBytes: attachment.size,
-			uploadedAt,
-		}));
 	}
 
 	private async applyDmScopeToSearchParams({

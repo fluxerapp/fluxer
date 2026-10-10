@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -48,6 +49,10 @@ type MessageServiceResponse =
 			FoundMentions: Array<ExtractedMentions>;
 	  }
 	| 'NotFound';
+
+async function attachmentDecayEnabled(): Promise<boolean> {
+	return (await resolveDefaultAttachmentDecayConfig()).enabled;
+}
 
 function isMessageResponse(value: unknown): value is MessageResponse {
 	return isJsonRecord(value) && typeof value.id === 'string';
@@ -113,6 +118,7 @@ export class MessageResponseDataService {
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			attachment_decay: await attachmentDecayEnabled(),
 			include_reactions: true,
 		});
 		if (typeof response === 'object' && 'FoundApiMany' in response) {
@@ -157,6 +163,7 @@ export class MessageResponseDataService {
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			attachment_decay: await attachmentDecayEnabled(),
 			include_reactions: true,
 			nonce: params.nonce,
 			tts: params.tts,
@@ -189,6 +196,7 @@ export class MessageResponseDataService {
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			attachment_decay: await attachmentDecayEnabled(),
 			include_reactions: params.includeReactions ?? true,
 			nonce: params.nonce,
 			tts: params.tts,
@@ -258,6 +266,7 @@ export class MessageResponseDataService {
 				media_endpoint: Config.endpoints.media,
 				media_proxy_secret_key: Config.mediaProxy.secretKey,
 				attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+				attachment_decay: await attachmentDecayEnabled(),
 				include_reactions: params.includeReactions ?? true,
 			});
 			if (typeof response !== 'object' || !('FoundApiMany' in response)) {

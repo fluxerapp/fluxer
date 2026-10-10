@@ -5,11 +5,15 @@ import {
 	MESSAGE_BUILD_BATCH_MAX_BYTES,
 	MessageResponseDataService,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {
+	type InstanceAttachmentDecayEffectiveConfig,
+	InstanceConfigRepository,
+} from '@app/api/instance/InstanceConfigRepository';
 import {Message} from '@app/api/models/Message';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -129,6 +133,10 @@ function batchSizes(connectionManager: FakeConnectionManager): Array<number> {
 }
 
 describe('MessageResponseDataService', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it('omits reactions from broadcast message response requests', async () => {
 		const connectionManager = new FakeConnectionManager();
 		const service = new MessageResponseDataService(connectionManager);
@@ -159,6 +167,19 @@ describe('MessageResponseDataService', () => {
 			include_reactions: true,
 			viewer_user_id: '3',
 		});
+	});
+
+	it('tells the shard whether attachment expiry is on', async () => {
+		const connectionManager = new FakeConnectionManager();
+		const service = new MessageResponseDataService(connectionManager);
+		const decayConfig = vi.spyOn(InstanceConfigRepository.prototype, 'getEffectiveAttachmentDecayConfig');
+
+		for (const enabled of [true, false]) {
+			decayConfig.mockResolvedValue({enabled} as InstanceAttachmentDecayEffectiveConfig);
+			await service.buildMessageForChannel({channel: {guildId: null}, message: makeMessage()});
+		}
+
+		expect(connectionManager.payloads.map((payload) => payload.attachment_decay)).toEqual([true, false]);
 	});
 
 	it('waits longer than the router shard timeout so the inner hop expires first', async () => {

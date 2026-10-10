@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
-import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
@@ -378,9 +378,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 				uploadedAt: snowflakeToDate(ownerMessageId),
 			})),
 		);
+		const decayEnabled = (await resolveDefaultAttachmentDecayConfig()).enabled;
 		return Promise.all(
 			attachments.map(async (attachment) => {
-				const decay = await this.attachmentDecayRepository.fetchById(attachment.id);
+				const decay = decayEnabled ? await this.attachmentDecayRepository.fetchById(attachment.id) : null;
 				const url = this.mapAttachmentUrl(message, attachment);
 				return {
 					id: attachment.id.toString(),

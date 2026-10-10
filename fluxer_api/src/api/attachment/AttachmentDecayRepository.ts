@@ -7,9 +7,11 @@ import {
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
+	fetchPage,
 } from '@app/api/database/CassandraQueryExecution';
-import {AttachmentDecayByExpiry, AttachmentDecayById} from '@app/api/Tables';
+import {AttachmentDecayByExpiry, AttachmentDecayById, ChannelMessageBuckets} from '@app/api/Tables';
 import type {AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
+import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 
 interface AttachmentDecayExpiryRow {
 	expiry_bucket: number;
@@ -26,6 +28,7 @@ const FETCH_BY_ID_CQL = AttachmentDecayById.selectCql({
 const FETCH_BY_IDS_CQL = AttachmentDecayById.selectCql({
 	where: AttachmentDecayById.where.in('attachment_id', 'attachment_ids'),
 });
+const SCAN_CHANNELS_WITH_MESSAGES_CQL = ChannelMessageBuckets.selectCql({columns: ['channel_id']});
 const createFetchExpiredByBucketQuery = (limit: number) =>
 	AttachmentDecayByExpiry.select({
 		where: [
@@ -72,6 +75,18 @@ export class AttachmentDecayRepository {
 			map.set(row.attachment_id, row);
 		}
 		return map;
+	}
+
+	async scanChannelsWithMessagesPage(
+		limit: number,
+		pageState: string | null,
+	): Promise<{channelIds: Array<ChannelID>; pageState: string | null}> {
+		const page = await fetchPage<{channel_id: ChannelID}>(
+			SCAN_CHANNELS_WITH_MESSAGES_CQL,
+			{},
+			{pageSize: limit, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {channelIds: [...new Set(page.rows.map((row) => row.channel_id))], pageState: page.pageState};
 	}
 
 	async fetchExpiredByBucket(bucket: number, currentTime: Date, limit = 200): Promise<Array<AttachmentDecayExpiryRow>> {

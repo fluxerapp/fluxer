@@ -40,6 +40,7 @@ import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/Proces
 import processStorePurchaseRefreshQueue from '@app/api/worker/tasks/ProcessStorePurchaseRefreshQueue';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from '@app/api/worker/tasks/PrunePostgresKvTtl';
+import reconcileAttachmentDecay from '@app/api/worker/tasks/ReconcileAttachmentDecay';
 import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
@@ -87,6 +88,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	deleteUserMessagesInGuildByTime,
 	drainActivitySpool,
 	expireAttachments,
+	reconcileAttachmentDecay,
 	expireReportSnapshots,
 	expireStaleJobs,
 	extractEmbeds,
