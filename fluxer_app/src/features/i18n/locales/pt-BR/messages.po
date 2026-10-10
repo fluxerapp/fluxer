@@ -25383,7 +25383,6 @@ msgstr "Não foi possível transferir a propriedade para <0>{username}</0> neste
 msgid "Ownership transferred"
 msgstr "Propriedade transferida"
 
-# auto-i18n: reviewed unchanged
 #. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P"
@@ -30385,7 +30384,6 @@ msgstr "Ver este canal. Negar para {everyoneMention} torna o canal privado."
 msgid "Seek preview"
 msgstr "Prévia ao navegar pelo vídeo"
 
-# auto-i18n: reviewed unchanged
 #. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
 msgid "Segoe UI"

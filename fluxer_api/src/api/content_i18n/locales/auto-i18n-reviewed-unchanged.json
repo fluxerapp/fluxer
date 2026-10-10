@@ -1,417 +1,111 @@
 {
-	"version": 1,
-	"locales": {
-		"en-GB": [
-			{
-				"msgctxt": "report_flow.label.abuse",
-				"msgid": "Abusive or harmful content"
-			},
-			{
-				"msgctxt": "report_flow.label.age_no_message",
-				"msgid": "No, it doesn't mention it"
-			},
-			{
-				"msgctxt": "report_flow.label.age_no_profile",
-				"msgid": "No, it doesn't mention it"
-			},
-			{
-				"msgctxt": "report_flow.label.age_yes_message",
-				"msgid": "Yes, it mentions their age"
-			},
-			{
-				"msgctxt": "report_flow.label.age_yes_profile",
-				"msgid": "Yes, their profile mentions their age"
-			},
-			{
-				"msgctxt": "report_flow.label.crisis_lines",
-				"msgid": "Crisis lines in your country"
-			},
-			{
-				"msgctxt": "report_flow.label.csam",
-				"msgid": "Real or AI-generated images or videos of child sexual abuse"
-			},
-			{
-				"msgctxt": "report_flow.label.dislike",
-				"msgid": "It's just not for me"
-			},
-			{
-				"msgctxt": "report_flow.label.eating_disorder_promotion",
-				"msgid": "Encouraging disordered eating"
-			},
-			{
-				"msgctxt": "report_flow.label.false_claims",
-				"msgid": "Spreading lies to hurt a specific person's reputation"
-			},
-			{
-				"msgctxt": "report_flow.label.fraud",
-				"msgid": "They are trying to con people out of money or accounts"
-			},
-			{
-				"msgctxt": "report_flow.label.fraud_guild",
-				"msgid": "Conning people out of money or accounts"
-			},
-			{
-				"msgctxt": "report_flow.label.graphic_violence",
-				"msgid": "Real violence shown to shock, like gore or animal cruelty"
-			},
-			{
-				"msgctxt": "report_flow.label.harassment",
-				"msgid": "Bullying, harassment or stalking"
-			},
-			{
-				"msgctxt": "report_flow.label.harassment_direct",
-				"msgid": "Repeatedly targeting someone with insults or abuse"
-			},
-			{
-				"msgctxt": "report_flow.label.hate_violence",
-				"msgid": "Hate, violence or extremism"
-			},
-			{
-				"msgctxt": "report_flow.label.illegal_goods",
-				"msgid": "Drug, weapon or other illegal sales"
-			},
-			{
-				"msgctxt": "report_flow.label.impersonation",
-				"msgid": "Pretending to be someone, or scamming people"
-			},
-			{
-				"msgctxt": "report_flow.label.impersonation_organization",
-				"msgid": "A company, brand or group"
-			},
-			{
-				"msgctxt": "report_flow.label.impersonation_person",
-				"msgid": "Me or someone close to me"
-			},
-			{
-				"msgctxt": "report_flow.label.impersonation_public_figure",
-				"msgid": "A well-known person, like a creator or politician"
-			},
-			{
-				"msgctxt": "report_flow.label.impersonation_staff",
-				"msgid": "{product_name} staff or support"
-			},
-			{
-				"msgctxt": "report_flow.label.intimate_photo",
-				"msgid": "Intimate or nude photo"
-			},
-			{
-				"msgctxt": "report_flow.label.learn_more",
-				"msgid": "Read the {product_name} Community Guidelines"
-			},
-			{
-				"msgctxt": "report_flow.label.malware_phishing",
-				"msgid": "Phishing, malware or hacking attempts"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexual_contact",
-				"msgid": "Flirting with a minor or messaging them sexually"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexual_contact_guild",
-				"msgid": "Members flirt with minors or message them sexually"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexual_content",
-				"msgid": "A minor is sharing sexual content themselves"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexual_content_profile",
-				"msgid": "A minor's profile with sexual content"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexualization",
-				"msgid": "Sexual comments about minors"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexualization_guild",
-				"msgid": "Members make sexual comments about minors"
-			},
-			{
-				"msgctxt": "report_flow.label.minor_sexualization_profile",
-				"msgid": "Sexual comments about minors in their profile"
-			},
-			{
-				"msgctxt": "report_flow.label.name",
-				"msgid": "Names"
-			},
-			{
-				"msgctxt": "report_flow.label.photo",
-				"msgid": "Pictures"
-			},
-			{
-				"msgctxt": "report_flow.label.private_info",
-				"msgid": "Sharing someone's private details"
-			},
-			{
-				"msgctxt": "report_flow.label.private_info_profile",
-				"msgid": "Their profile shares someone's private details"
-			},
-			{
-				"msgctxt": "report_flow.label.profile_text",
-				"msgid": "Profile text"
-			},
-			{
-				"msgctxt": "report_flow.label.rude_language",
-				"msgid": "Swearing or rude remarks"
-			},
-			{
-				"msgctxt": "report_flow.label.self_harm",
-				"msgid": "Someone might hurt themselves, or is encouraging self-harm"
-			},
-			{
-				"msgctxt": "report_flow.label.self_harm_guild",
-				"msgid": "Members push others to hurt themselves"
-			},
-			{
-				"msgctxt": "report_flow.label.self_harm_profile",
-				"msgid": "Their profile suggests self-harm or encourages it"
-			},
-			{
-				"msgctxt": "report_flow.label.self_harm_promotion",
-				"msgid": "Encouraging self-harm or sharing methods"
-			},
-			{
-				"msgctxt": "report_flow.label.spam",
-				"msgid": "Spam or unwanted ads"
-			},
-			{
-				"msgctxt": "report_flow.label.suicide_promotion",
-				"msgid": "Encouraging suicide or sharing methods"
-			},
-			{
-				"msgctxt": "report_flow.label.threat",
-				"msgid": "Threats or calls for violence"
-			},
-			{
-				"msgctxt": "report_flow.label.too_young",
-				"msgid": "They're under the minimum age to use {product_name}"
-			},
-			{
-				"msgctxt": "report_flow.label.violence_glorification",
-				"msgid": "Glorifying real-world violence"
-			},
-			{
-				"msgctxt": "report_flow.label.violent_threat",
-				"msgid": "Saying they will hurt someone"
-			},
-			{
-				"msgctxt": "report_flow.label.worried_self_harm",
-				"msgid": "I'm afraid they might hurt themselves"
-			},
-			{
-				"msgctxt": "report_flow.label.worried_suicide",
-				"msgid": "I'm afraid they might attempt suicide"
-			},
-			{
-				"msgctxt": "report_flow.notice.need_more_info.body",
-				"msgid": "To review this, we need a message where they say how old they are or make it clear they're under {product_name}'s minimum age. Report that message instead."
-			},
-			{
-				"msgctxt": "report_flow.notice.need_more_info.title",
-				"msgid": "We can't act on this yet"
-			},
-			{
-				"msgctxt": "report_flow.notice.need_more_info_profile.body",
-				"msgid": "To review this, we need to see where they say how old they are or make it clear they're under {product_name}'s minimum age. Report that message or profile instead."
-			},
-			{
-				"msgctxt": "report_flow.screen.abuse.title",
-				"msgid": "What does it involve?"
-			},
-			{
-				"msgctxt": "report_flow.screen.abuse_guild.title",
-				"msgid": "What are people in this community doing?"
-			},
-			{
-				"msgctxt": "report_flow.screen.age_stated_message.title",
-				"msgid": "Does this message say how old they are?"
-			},
-			{
-				"msgctxt": "report_flow.screen.age_stated_profile.title",
-				"msgid": "Does their profile say how old they are?"
-			},
-			{
-				"msgctxt": "report_flow.screen.community_parts.subtitle",
-				"msgid": "Pick as many as you need."
-			},
-			{
-				"msgctxt": "report_flow.screen.community_parts.title",
-				"msgid": "Which parts of the community are involved?"
-			},
-			{
-				"msgctxt": "report_flow.screen.crisis_support.title",
-				"msgid": "Someone can help right now"
-			},
-			{
-				"msgctxt": "report_flow.screen.false_info.title",
-				"msgid": "What's misleading about it?"
-			},
-			{
-				"msgctxt": "report_flow.screen.harassment.title",
-				"msgid": "How is someone being targeted?"
-			},
-			{
-				"msgctxt": "report_flow.screen.hate.title",
-				"msgid": "How does it attack people for who they are?"
-			},
-			{
-				"msgctxt": "report_flow.screen.impersonation.title",
-				"msgid": "Who's being impersonated, or is it a scam?"
-			},
-			{
-				"msgctxt": "report_flow.screen.minor_sexual.title",
-				"msgid": "What did you see involving a minor?"
-			},
-			{
-				"msgctxt": "report_flow.screen.minor_sexual_guild.title",
-				"msgid": "What did you see involving minors?"
-			},
-			{
-				"msgctxt": "report_flow.screen.private_info.title",
-				"msgid": "Which private details are involved?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_abuse.title",
-				"msgid": "What's harmful about their profile?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_hate_violence.title",
-				"msgid": "What does their profile show or promote?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_intro.subtitle",
-				"msgid": "Tell us what's wrong with this profile. They won't be told who reported them."
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_intro.title",
-				"msgid": "Report profile"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_minor_sexual.title",
-				"msgid": "What in their profile involves a minor?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_parts.subtitle",
-				"msgid": "Pick as many as you need."
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_parts.title",
-				"msgid": "Which parts of their profile are a problem?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_private_info.title",
-				"msgid": "Which private details are in their profile?"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_sexual.title",
-				"msgid": "Tell us about the sexual content in their profile"
-			},
-			{
-				"msgctxt": "report_flow.screen.profile_threat.title",
-				"msgid": "How does their profile involve violence?"
-			},
-			{
-				"msgctxt": "report_flow.screen.root_guild.subtitle",
-				"msgid": "Pick the closest match for what is going on in this community."
-			},
-			{
-				"msgctxt": "report_flow.screen.root_guild.title",
-				"msgid": "What's wrong with this community?"
-			},
-			{
-				"msgctxt": "report_flow.screen.root_message.subtitle",
-				"msgid": "Pick the closest match. You can check everything before it is sent."
-			},
-			{
-				"msgctxt": "report_flow.screen.root_user.subtitle",
-				"msgid": "Pick the closest match for what is in their profile."
-			},
-			{
-				"msgctxt": "report_flow.screen.root_user.title",
-				"msgid": "What's wrong with their profile?"
-			},
-			{
-				"msgctxt": "report_flow.screen.self_harm.title",
-				"msgid": "What did they say or share?"
-			},
-			{
-				"msgctxt": "report_flow.screen.self_harm_guild.title",
-				"msgid": "What are members encouraging?"
-			},
-			{
-				"msgctxt": "report_flow.screen.self_harm_profile.title",
-				"msgid": "What does their profile say or show?"
-			},
-			{
-				"msgctxt": "report_flow.screen.sexual.title",
-				"msgid": "Tell us about the sexual content"
-			},
-			{
-				"msgctxt": "report_flow.screen.sexual_guild.title",
-				"msgid": "Tell us about the sexual content in this community"
-			},
-			{
-				"msgctxt": "report_flow.screen.something_else_guild.title",
-				"msgid": "What else is going on in this community?"
-			},
-			{
-				"msgctxt": "report_flow.screen.something_else_message.title",
-				"msgid": "What else is going on?"
-			},
-			{
-				"msgctxt": "report_flow.screen.something_else_user.title",
-				"msgid": "What else is wrong with this profile?"
-			},
-			{
-				"msgctxt": "report_flow.screen.spam_kind_guild.title",
-				"msgid": "How is this community abusing the platform?"
-			},
-			{
-				"msgctxt": "report_flow.screen.spam_profile.title",
-				"msgid": "How is the account being misused?"
-			},
-			{
-				"msgctxt": "report_flow.screen.threat.title",
-				"msgid": "How does it involve violence?"
-			},
-			{
-				"msgctxt": "report_flow.screen.violence_misinfo.title",
-				"msgid": "Which of these matches it?"
-			},
-			{
-				"msgctxt": "report_flow.screen.violence_misinfo_guild.title",
-				"msgid": "Which of these happens in this community?"
-			}
-		],
-		"es-419": [
-			{
-				"msgctxt": "guild.default_channel_text",
-				"msgid": "general"
-			},
-			{
-				"msgctxt": "guild.default_channel_voice",
-				"msgid": "General"
-			}
-		],
-		"es-ES": [
-			{
-				"msgctxt": "guild.default_channel_text",
-				"msgid": "general"
-			},
-			{
-				"msgctxt": "guild.default_channel_voice",
-				"msgid": "General"
-			}
-		],
-		"ro": [
-			{
-				"msgctxt": "guild.default_channel_text",
-				"msgid": "general"
-			},
-			{
-				"msgctxt": "guild.default_channel_voice",
-				"msgid": "General"
-			}
-		]
-	}
+	"en-GB": [
+		["report_flow.label.abuse","Abusive or harmful content"],
+		["report_flow.label.age_no_message","No, it doesn't mention it"],
+		["report_flow.label.age_no_profile","No, it doesn't mention it"],
+		["report_flow.label.age_yes_message","Yes, it mentions their age"],
+		["report_flow.label.age_yes_profile","Yes, their profile mentions their age"],
+		["report_flow.label.crisis_lines","Crisis lines in your country"],
+		["report_flow.label.csam","Real or AI-generated images or videos of child sexual abuse"],
+		["report_flow.label.dislike","It's just not for me"],
+		["report_flow.label.eating_disorder_promotion","Encouraging disordered eating"],
+		["report_flow.label.false_claims","Spreading lies to hurt a specific person's reputation"],
+		["report_flow.label.fraud","They are trying to con people out of money or accounts"],
+		["report_flow.label.fraud_guild","Conning people out of money or accounts"],
+		["report_flow.label.graphic_violence","Real violence shown to shock, like gore or animal cruelty"],
+		["report_flow.label.harassment","Bullying, harassment or stalking"],
+		["report_flow.label.harassment_direct","Repeatedly targeting someone with insults or abuse"],
+		["report_flow.label.hate_violence","Hate, violence or extremism"],
+		["report_flow.label.illegal_goods","Drug, weapon or other illegal sales"],
+		["report_flow.label.impersonation","Pretending to be someone, or scamming people"],
+		["report_flow.label.impersonation_organization","A company, brand or group"],
+		["report_flow.label.impersonation_person","Me or someone close to me"],
+		["report_flow.label.impersonation_public_figure","A well-known person, like a creator or politician"],
+		["report_flow.label.impersonation_staff","{product_name} staff or support"],
+		["report_flow.label.intimate_photo","Intimate or nude photo"],
+		["report_flow.label.learn_more","Read the {product_name} Community Guidelines"],
+		["report_flow.label.malware_phishing","Phishing, malware or hacking attempts"],
+		["report_flow.label.minor_sexual_contact","Flirting with a minor or messaging them sexually"],
+		["report_flow.label.minor_sexual_contact_guild","Members flirt with minors or message them sexually"],
+		["report_flow.label.minor_sexual_content","A minor is sharing sexual content themselves"],
+		["report_flow.label.minor_sexual_content_profile","A minor's profile with sexual content"],
+		["report_flow.label.minor_sexualization","Sexual comments about minors"],
+		["report_flow.label.minor_sexualization_guild","Members make sexual comments about minors"],
+		["report_flow.label.minor_sexualization_profile","Sexual comments about minors in their profile"],
+		["report_flow.label.name","Names"],
+		["report_flow.label.photo","Pictures"],
+		["report_flow.label.private_info","Sharing someone's private details"],
+		["report_flow.label.private_info_profile","Their profile shares someone's private details"],
+		["report_flow.label.profile_text","Profile text"],
+		["report_flow.label.rude_language","Swearing or rude remarks"],
+		["report_flow.label.self_harm","Someone might hurt themselves, or is encouraging self-harm"],
+		["report_flow.label.self_harm_guild","Members push others to hurt themselves"],
+		["report_flow.label.self_harm_profile","Their profile suggests self-harm or encourages it"],
+		["report_flow.label.self_harm_promotion","Encouraging self-harm or sharing methods"],
+		["report_flow.label.spam","Spam or unwanted ads"],
+		["report_flow.label.suicide_promotion","Encouraging suicide or sharing methods"],
+		["report_flow.label.threat","Threats or calls for violence"],
+		["report_flow.label.too_young","They're under the minimum age to use {product_name}"],
+		["report_flow.label.violence_glorification","Glorifying real-world violence"],
+		["report_flow.label.violent_threat","Saying they will hurt someone"],
+		["report_flow.label.worried_self_harm","I'm afraid they might hurt themselves"],
+		["report_flow.label.worried_suicide","I'm afraid they might attempt suicide"],
+		["report_flow.notice.need_more_info.body","To review this, we need a message where they say how old they are or make it clear they're under {product_name}'s minimum age. Report that message instead."],
+		["report_flow.notice.need_more_info.title","We can't act on this yet"],
+		["report_flow.notice.need_more_info_profile.body","To review this, we need to see where they say how old they are or make it clear they're under {product_name}'s minimum age. Report that message or profile instead."],
+		["report_flow.screen.abuse.title","What does it involve?"],
+		["report_flow.screen.abuse_guild.title","What are people in this community doing?"],
+		["report_flow.screen.age_stated_message.title","Does this message say how old they are?"],
+		["report_flow.screen.age_stated_profile.title","Does their profile say how old they are?"],
+		["report_flow.screen.community_parts.subtitle","Pick as many as you need."],
+		["report_flow.screen.community_parts.title","Which parts of the community are involved?"],
+		["report_flow.screen.crisis_support.title","Someone can help right now"],
+		["report_flow.screen.false_info.title","What's misleading about it?"],
+		["report_flow.screen.harassment.title","How is someone being targeted?"],
+		["report_flow.screen.hate.title","How does it attack people for who they are?"],
+		["report_flow.screen.impersonation.title","Who's being impersonated, or is it a scam?"],
+		["report_flow.screen.minor_sexual.title","What did you see involving a minor?"],
+		["report_flow.screen.minor_sexual_guild.title","What did you see involving minors?"],
+		["report_flow.screen.private_info.title","Which private details are involved?"],
+		["report_flow.screen.profile_abuse.title","What's harmful about their profile?"],
+		["report_flow.screen.profile_hate_violence.title","What does their profile show or promote?"],
+		["report_flow.screen.profile_intro.subtitle","Tell us what's wrong with this profile. They won't be told who reported them."],
+		["report_flow.screen.profile_intro.title","Report profile"],
+		["report_flow.screen.profile_minor_sexual.title","What in their profile involves a minor?"],
+		["report_flow.screen.profile_parts.subtitle","Pick as many as you need."],
+		["report_flow.screen.profile_parts.title","Which parts of their profile are a problem?"],
+		["report_flow.screen.profile_private_info.title","Which private details are in their profile?"],
+		["report_flow.screen.profile_sexual.title","Tell us about the sexual content in their profile"],
+		["report_flow.screen.profile_threat.title","How does their profile involve violence?"],
+		["report_flow.screen.root_guild.subtitle","Pick the closest match for what is going on in this community."],
+		["report_flow.screen.root_guild.title","What's wrong with this community?"],
+		["report_flow.screen.root_message.subtitle","Pick the closest match. You can check everything before it is sent."],
+		["report_flow.screen.root_user.subtitle","Pick the closest match for what is in their profile."],
+		["report_flow.screen.root_user.title","What's wrong with their profile?"],
+		["report_flow.screen.self_harm.title","What did they say or share?"],
+		["report_flow.screen.self_harm_guild.title","What are members encouraging?"],
+		["report_flow.screen.self_harm_profile.title","What does their profile say or show?"],
+		["report_flow.screen.sexual.title","Tell us about the sexual content"],
+		["report_flow.screen.sexual_guild.title","Tell us about the sexual content in this community"],
+		["report_flow.screen.something_else_guild.title","What else is going on in this community?"],
+		["report_flow.screen.something_else_message.title","What else is going on?"],
+		["report_flow.screen.something_else_user.title","What else is wrong with this profile?"],
+		["report_flow.screen.spam_kind_guild.title","How is this community abusing the platform?"],
+		["report_flow.screen.spam_profile.title","How is the account being misused?"],
+		["report_flow.screen.threat.title","How does it involve violence?"],
+		["report_flow.screen.violence_misinfo.title","Which of these matches it?"],
+		["report_flow.screen.violence_misinfo_guild.title","Which of these happens in this community?"]
+	],
+	"es-419": [
+		["guild.default_channel_text","general"],
+		["guild.default_channel_voice","General"]
+	],
+	"es-ES": [
+		["guild.default_channel_text","general"],
+		["guild.default_channel_voice","General"]
+	],
+	"ro": [
+		["guild.default_channel_text","general"],
+		["guild.default_channel_voice","General"]
+	]
 }

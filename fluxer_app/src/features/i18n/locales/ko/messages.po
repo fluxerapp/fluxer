@@ -25383,7 +25383,6 @@ msgstr "현재 <0>{username}</0>님에게 소유권을 이전할 수 없습니�
 msgid "Ownership transferred"
 msgstr "소유권이 이전되었습니다"
 
-# auto-i18n: reviewed unchanged
 #. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P"
@@ -30385,7 +30384,6 @@ msgstr "이 채널을 볼 수 있습니다. {everyoneMention}에 대해 이 권�
 msgid "Seek preview"
 msgstr "탐색 미리보기"
 
-# auto-i18n: reviewed unchanged
 #. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
 msgid "Segoe UI"

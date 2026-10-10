@@ -17,20 +17,7 @@ pub const DEFAULT_REQUEST_TIMEOUT_SECONDS: f64 = 300.0;
 pub const DEFAULT_PROGRESS_INTERVAL_SECONDS: f64 = 20.0;
 pub const GUIDANCE_EXCERPT_CHAR_LIMIT: usize = 1600;
 
-pub const AUTO_I18N_UNCHANGED_COMMENT: &str = "# auto-i18n: reviewed unchanged";
-pub const AUTO_I18N_LEGACY_UNCHANGED_COMMENT: &str = "#. auto-i18n: reviewed unchanged";
-pub const AUTO_I18N_COMMENT_PREFIX: &str = "auto-i18n:";
 pub const AUTO_I18N_REVIEWED_UNCHANGED_FILE: &str = "auto-i18n-reviewed-unchanged.json";
-
-pub fn is_auto_i18n_unchanged_comment(comment: &str) -> bool {
-    let text = comment
-        .trim()
-        .strip_prefix("#. ")
-        .or_else(|| comment.trim().strip_prefix("# "))
-        .unwrap_or_else(|| comment.trim())
-        .trim();
-    text == "auto-i18n: reviewed unchanged"
-}
 
 pub type EnvOverlay = HashMap<String, String>;
 

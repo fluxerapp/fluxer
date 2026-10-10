@@ -959,7 +959,6 @@ msgstr "{appName} kon de update niet voltooien."
 msgid "{appName} failed to start"
 msgstr "{appName} kon niet worden gestart"
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline after a manual update check found nothing newer.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} is up to date."
@@ -1192,7 +1191,6 @@ msgstr "{count, plural, one {# ander} other {# anderen}}"
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# deelnemer aan gesprek} other {# deelnemers aan gesprek}}"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "{count, plural, one {# passkey} other {# passkeys}}"
@@ -25385,7 +25383,6 @@ msgstr "Eigendom kon op dit moment niet worden overgedragen aan <0>{username}</0
 msgid "Ownership transferred"
 msgstr "Eigendom overgedragen"
 
-# auto-i18n: reviewed unchanged
 #. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P"
@@ -30387,7 +30384,6 @@ msgstr "Dit kanaal kunnen zien. Als je deze machtiging weigert voor {everyoneMen
 msgid "Seek preview"
 msgstr "Voorbeeld bij spoelen"
 
-# auto-i18n: reviewed unchanged
 #. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
 msgid "Segoe UI"

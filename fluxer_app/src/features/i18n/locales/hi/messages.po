@@ -25383,7 +25383,6 @@ msgstr "इस समय <0>{username}</0> को स्वामित्व �
 msgid "Ownership transferred"
 msgstr "स्वामित्व ट्रांसफ़र किया गया"
 
-# auto-i18n: reviewed unchanged
 #. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P"
