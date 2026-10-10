@@ -51,13 +51,14 @@ impl RouterService for MessagesRouter {
                 can_read_message_history,
                 media_endpoint,
                 include_reactions,
+                attachment_decay,
                 nonce,
                 tts,
                 include_hidden,
                 threads_mask,
                 ..
             } => Some(format!(
-                "api-get:{channel_id}:{message_id}:{viewer_user_id}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{nonce:?}:{tts:?}:{include_hidden}:{threads_mask}"
+                "api-get:{channel_id}:{message_id}:{viewer_user_id}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{attachment_decay:?}:{nonce:?}:{tts:?}:{include_hidden}:{threads_mask}"
             )),
             MessageRequest::BuildResponse { .. } => None,
             MessageRequest::BuildResponses { .. } => None,
@@ -73,12 +74,13 @@ impl RouterService for MessagesRouter {
                 can_read_message_history,
                 media_endpoint,
                 include_reactions,
+                attachment_decay,
                 include_hidden,
                 threads_mask,
                 exclude_types,
                 ..
             } => Some(format!(
-                "api-list:{channel_id}:{viewer_user_id}:{limit}:{before_id:?}:{after_id:?}:{around_id:?}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{include_hidden}:{threads_mask}:{exclude_types:?}"
+                "api-list:{channel_id}:{viewer_user_id}:{limit}:{before_id:?}:{after_id:?}:{around_id:?}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{attachment_decay:?}:{include_hidden}:{threads_mask}:{exclude_types:?}"
             )),
             MessageRequest::ExtractMentions { .. } => None,
         }
@@ -104,6 +106,7 @@ mod tests {
             media_proxy_secret_key: "secret".to_owned(),
             attachment_url_secret_base64: None,
             include_reactions: None,
+            attachment_decay: None,
             include_hidden: false,
             threads_mask,
             exclude_types,
@@ -122,6 +125,7 @@ mod tests {
             media_proxy_secret_key: "secret".to_owned(),
             attachment_url_secret_base64: None,
             include_reactions: None,
+            attachment_decay: None,
             nonce: None,
             tts: None,
             include_hidden: false,
@@ -140,6 +144,32 @@ mod tests {
         assert_ne!(
             MessagesRouter::coalesce_key(&get_request(false)),
             MessagesRouter::coalesce_key(&get_request(true))
+        );
+    }
+
+    #[test]
+    fn coalesce_key_separates_attachment_decay_states() {
+        let mut list = list_request(false, Vec::new());
+        if let MessageRequest::ListResponses {
+            attachment_decay, ..
+        } = &mut list
+        {
+            *attachment_decay = Some(false);
+        }
+        let mut get = get_request(false);
+        if let MessageRequest::GetResponseById {
+            attachment_decay, ..
+        } = &mut get
+        {
+            *attachment_decay = Some(false);
+        }
+        assert_ne!(
+            MessagesRouter::coalesce_key(&list_request(false, Vec::new())),
+            MessagesRouter::coalesce_key(&list)
+        );
+        assert_ne!(
+            MessagesRouter::coalesce_key(&get_request(false)),
+            MessagesRouter::coalesce_key(&get)
         );
     }
 }

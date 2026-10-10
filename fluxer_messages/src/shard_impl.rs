@@ -398,9 +398,18 @@ struct ResponseBuildOptions {
     include_hidden: bool,
     threads_mask: bool,
     excluded_types: Vec<i32>,
+    attachment_decay: bool,
 }
 
 impl ResponseBuildOptions {
+    fn expiring_attachment_ids(&self, messages: &[&Message]) -> HashSet<i64> {
+        if self.attachment_decay {
+            collect_attachment_ids(messages)
+        } else {
+            HashSet::new()
+        }
+    }
+
     fn hides(&self, message: &Message) -> bool {
         self.threads_mask && message.message_type == MESSAGE_TYPE_THREAD_CREATED
     }
@@ -1138,7 +1147,7 @@ impl<T: Transport> MessagesShard<T> {
             .chain(referenced_messages.values())
             .collect::<Vec<_>>();
         let mention_context = build_message_mention_context(&all_messages);
-        let attachment_ids = collect_attachment_ids(&all_messages);
+        let attachment_ids = options.expiring_attachment_ids(&all_messages);
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
         let user_ids = collect_user_ids(&all_messages, &mention_context);
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
@@ -2549,6 +2558,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                attachment_decay,
                 nonce,
                 tts,
                 include_hidden,
@@ -2576,6 +2586,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                                 attachment_url_secret_base64.as_deref(),
                             ),
                             include_reactions: include_reactions.unwrap_or(true),
+                            attachment_decay: attachment_decay.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
@@ -2599,6 +2610,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                attachment_decay,
                 nonce,
                 tts,
                 include_hidden,
@@ -2623,6 +2635,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                                 attachment_url_secret_base64.as_deref(),
                             ),
                             include_reactions: include_reactions.unwrap_or(true),
+                            attachment_decay: attachment_decay.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
@@ -2646,6 +2659,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                attachment_decay,
                 include_hidden,
                 threads_mask,
             } => {
@@ -2668,6 +2682,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                                 attachment_url_secret_base64.as_deref(),
                             ),
                             include_reactions: include_reactions.unwrap_or(true),
+                            attachment_decay: attachment_decay.unwrap_or(true),
                             nonce: None,
                             tts: false,
                             include_hidden,
@@ -2692,6 +2707,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                attachment_decay,
                 include_hidden,
                 threads_mask,
                 mut exclude_types,
@@ -2735,6 +2751,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                                 attachment_url_secret_base64.as_deref(),
                             ),
                             include_reactions: include_reactions.unwrap_or(true),
+                            attachment_decay: attachment_decay.unwrap_or(true),
                             nonce: None,
                             tts: false,
                             include_hidden,
@@ -4215,6 +4232,7 @@ mod tests {
             include_hidden: false,
             threads_mask: false,
             excluded_types: Vec::new(),
+            attachment_decay: true,
         }
     }
 
@@ -4687,6 +4705,22 @@ mod tests {
         assert_eq!(None, mapped.url);
         assert_eq!(None, mapped.proxy_url);
         assert_eq!(Some(true), mapped.expired);
+    }
+
+    #[test]
+    fn attachment_expiry_is_only_looked_up_while_decay_is_on() {
+        let mut message = orphaned_message(1);
+        message.attachments = Some(vec![signed_attachment()]);
+        let off = ResponseBuildOptions {
+            attachment_decay: false,
+            ..build_options()
+        };
+
+        assert_eq!(
+            HashSet::from([SIGNED_ATTACHMENT_ID]),
+            build_options().expiring_attachment_ids(&[&message])
+        );
+        assert!(off.expiring_attachment_ids(&[&message]).is_empty());
     }
 
     #[test]

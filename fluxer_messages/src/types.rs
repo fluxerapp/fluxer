@@ -83,6 +83,7 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
         #[serde(default)]
@@ -101,6 +102,7 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
         #[serde(default)]
@@ -119,6 +121,7 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
@@ -139,6 +142,7 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
