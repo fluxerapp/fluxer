@@ -1379,7 +1379,7 @@ Default `536870912`, 512 MiB. The memory all buffered relay uploads may hold at 
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR`
 
-Defaults to the system temporary directory. Where relay bodies spool, and where `media-proxy` copies a stored upload above 500 MiB while it reads the media metadata. Must be writable. Compose forwards it from `.env`.
+Defaults to the system temporary directory. Where relay bodies spool, and where `media-proxy` copies a stored audio or video object above 500 MiB when it has to read inside the file. That happens when the API asks for the media metadata or a frame of an upload or a stored object, and when an attachment read asks for a frame of a video. Must be writable. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_CHUNK_BYTES`
 
@@ -1387,7 +1387,11 @@ Default `1048576`. Spool chunk size. Accepts 64 KiB to 64 MiB. Compose forwards 
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-Default `8589934592`. Total spool ceiling, shared by relay bodies and metadata reads of stored uploads above 500 MiB. An upload larger than the ceiling is stored without media metadata. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default. Compose forwards it from `.env`.
+Default `8589934592`. Total spool ceiling, shared by relay bodies and the copies of stored audio and video above 500 MiB. A relay upload that does not fit beside the copies in progress fails. An upload larger than the ceiling is stored as a plain file without media metadata, and a stored video larger than the ceiling has no poster frame. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default. Compose forwards it from `.env`.
+
+Sending an audio or video attachment above 500 MiB holds up to three copies of it on local disk at once. `media-proxy` holds one in the spool directory, and `api` holds the download and the copy it rewrites without metadata in its temporary directory. Leave free space of three times the attachment size limit for each send you expect at the same moment.
+
+`api` waits 30 seconds for the metadata of an upload up to 500 MiB. Above that it waits 30 seconds plus one second for each 16 MiB of the upload, about 94 seconds for 1 GiB and 542 seconds for 8 GiB. In that time `media-proxy` copies the upload out of object storage, reads it, and hashes it. A deployment that cannot sustain 16 MiB per second through those steps stores the upload as a plain file.
 
 #### `FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS`
 

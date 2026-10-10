@@ -23,10 +23,10 @@ Every media read route can produce these statuses in addition to the ones in its
 | 403 | Forbidden | The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) refuses the request `Origin` on an `mp` or `upload` endpoint |
 | 404 | Not found | The path is not a media route, the endpoint runs in `relay` mode, or the object does not exist |
 | 405 | Method not allowed | The method is neither `GET` nor `HEAD` |
-| 413 | Payload too large | The stored object exceeds the 500 MiB media bound and the route does not stream it unchanged |
+| 413 | Payload too large | The stored object exceeds the 500 MiB media bound and the route neither streams it unchanged nor spools it |
 | 502 | Bad gateway | The object store could not be read |
 
-The 500 MiB media bound applies where a route transforms an object or holds it in memory. A read that streams the stored object unchanged, such as an attachment read without a transformation parameter, has no size bound.
+The 500 MiB media bound applies where a route holds an object in memory. A read that streams the stored object unchanged, such as an attachment read without a transformation parameter, has no size bound. An attachment read that asks for a frame of a video above the bound copies the video to the [spool directory](/operator/configuration/#media-proxy-settings) first, one video at a time, and returns 413 when the video exceeds the spool ceiling. Any other transformation of an object above the bound returns 413.
 
 ## Get attachment
 
