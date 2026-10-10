@@ -581,6 +581,13 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
 	): void {
+		const current = this.options.presence;
+		this.options.presence = {
+			status,
+			afk: afk ?? current?.afk ?? false,
+			mobile: mobile ?? current?.mobile ?? false,
+			custom_status: customStatus === undefined ? current?.custom_status : customStatus,
+		};
 		if (!this.isConnected()) return;
 		this.sendPayload({
 			op: GatewayOpcodes.PRESENCE_UPDATE,
@@ -591,6 +598,12 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				...(customStatus !== undefined && {custom_status: customStatus}),
 			},
 		});
+	}
+
+	private resendPresence(): void {
+		const presence = this.options.presence;
+		if (!presence) return;
+		this.sendPayload({op: GatewayOpcodes.PRESENCE_UPDATE, d: presence});
 	}
 
 	private buildVoiceStatePayload(params: GatewayVoiceStateUpdateParams): GatewayPayload {
@@ -986,6 +999,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				this.updateState(GatewayState.Connected);
 				this.resetBackoffUnlessDispatchesKeepFailing();
 				this.log.info('Gateway session resumed');
+				this.resendPresence();
 				this.logDispatchTimings('RESUMED', payload.d);
 				this.emitDeferred('resumed', payload.d);
 				break;
