@@ -1379,7 +1379,7 @@ Default `536870912`, 512 MiB. The memory all buffered relay uploads may hold at 
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR`
 
-Defaults to the system temporary directory. Where relay bodies spool. Must be writable. Compose forwards it from `.env`.
+Defaults to the system temporary directory. Where relay bodies spool, and where `media-proxy` copies a stored upload above 500 MiB while it reads the media metadata. Must be writable. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_CHUNK_BYTES`
 
@@ -1387,7 +1387,7 @@ Default `1048576`. Spool chunk size. Accepts 64 KiB to 64 MiB. Compose forwards 
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-Default `8589934592`. Total spool ceiling. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default. Compose forwards it from `.env`.
+Default `8589934592`. Total spool ceiling, shared by relay bodies and metadata reads of stored uploads above 500 MiB. An upload larger than the ceiling is stored without media metadata. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS`
 

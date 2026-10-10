@@ -23,8 +23,10 @@ Every media read route can produce these statuses in addition to the ones in its
 | 403 | Forbidden | The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) refuses the request `Origin` on an `mp` or `upload` endpoint |
 | 404 | Not found | The path is not a media route, the endpoint runs in `relay` mode, or the object does not exist |
 | 405 | Method not allowed | The method is neither `GET` nor `HEAD` |
-| 413 | Payload too large | The stored object exceeds the 500 MiB media bound |
+| 413 | Payload too large | The stored object exceeds the 500 MiB media bound and the route does not stream it unchanged |
 | 502 | Bad gateway | The object store could not be read |
+
+The 500 MiB media bound applies where a route transforms an object or holds it in memory. A read that streams the stored object unchanged, such as an attachment read without a transformation parameter, has no size bound.
 
 ## Get attachment
 
