@@ -297,7 +297,6 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "הגעת למספר המרבי של {count} {count, plural, one {אימוג'י} other {אימוג'ים}}.",
 	"limits.at_least_one_entry_required": "נדרשת רשומה אחת לפחות.",
 	"limits.base64_length_invalid": "אורך מחרוזת Base64 חייב להיות בין {min} ל-{maxLength} תווים.",
-	"limits.cannot_shrink_reserved_slots": "לא ניתן להקטין את המקומות השמורים.",
 	"limits.cannot_specify_before_and_after": "לא ניתן לציין את `before` ואת `after` יחד.",
 	"limits.content_exceeds_max_length": "הטקסט מוגבל ל-{maxLength} {maxLength, plural, one {תו} other {תווים}}.",
 	"limits.integer_out_of_int64_range": "הערך השלם חורג מהטווח התקין של int64.",

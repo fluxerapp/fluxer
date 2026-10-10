@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "{count, plural, one {# emoji} other {# emoji}} sınırına ulaştın.",
 	"limits.at_least_one_entry_required": "En az bir öğe gerekli.",
 	"limits.base64_length_invalid": "Base64 dize uzunluğu {min} ile {maxLength} karakter arasında olmalı.",
-	"limits.cannot_shrink_reserved_slots": "Ayrılmış yuvaları küçültemezsin.",
 	"limits.cannot_specify_before_and_after": "Hem `before` hem de `after` belirtemezsin.",
 	"limits.content_exceeds_max_length": "Metin {maxLength, plural, one {# karakteri} other {# karakteri}} geçemez.",
 	"limits.integer_out_of_int64_range": "Tam sayı değeri geçerli int64 aralığında değil.",

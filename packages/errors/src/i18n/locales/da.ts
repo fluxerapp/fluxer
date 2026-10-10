@@ -297,7 +297,6 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Du har nået grænsen på {count, plural, one {# emoji} other {# emojis}}.",
 	"limits.at_least_one_entry_required": "Mindst ét element er nødvendigt.",
 	"limits.base64_length_invalid": "Base64-strengens længde skal være mellem {min} og {maxLength} tegn.",
-	"limits.cannot_shrink_reserved_slots": "Du kan ikke reducere antallet af reserverede pladser.",
 	"limits.cannot_specify_before_and_after": "Du kan ikke bruge både `before` og `after`.",
 	"limits.content_exceeds_max_length": "Teksten må ikke overstige {maxLength} {maxLength, plural, one {tegn} other {tegn}}.",
 	"limits.integer_out_of_int64_range": "Heltalsværdien er uden for det gyldige int64-område.",

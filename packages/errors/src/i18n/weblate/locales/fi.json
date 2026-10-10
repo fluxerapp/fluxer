@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Olet saavuttanut emojien enimmäismäärän: {count, plural, one {# emoji} other {# emojia}}.",
 	"limits.at_least_one_entry_required": "Vähintään yksi merkintä vaaditaan.",
 	"limits.base64_length_invalid": "Base64-merkkijonon pituuden on oltava {min}–{maxLength} merkkiä.",
-	"limits.cannot_shrink_reserved_slots": "Et voi vähentää varattujen paikkojen määrää.",
 	"limits.cannot_specify_before_and_after": "Et voi määrittää sekä `before`- että `after`-arvoja.",
 	"limits.content_exceeds_max_length": "Tekstin pituus saa olla enintään {maxLength, plural, one {# merkki} other {# merkkiä}}.",
 	"limits.integer_out_of_int64_range": "Kokonaislukuarvo on int64-alueen ulkopuolella.",

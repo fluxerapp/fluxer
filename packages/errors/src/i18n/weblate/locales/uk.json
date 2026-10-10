@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Досягнуто максимуму: {count} {count, plural, one {емодзі} few {емодзі} many {емодзі} other {емодзі}}.",
 	"limits.at_least_one_entry_required": "Потрібен принаймні один запис.",
 	"limits.base64_length_invalid": "Довжина рядка Base64 має бути від {min} до {maxLength} символів.",
-	"limits.cannot_shrink_reserved_slots": "Ти не можеш зменшити кількість зарезервованих слотів.",
 	"limits.cannot_specify_before_and_after": "Ти не можеш вказати одночасно `before` та `after`.",
 	"limits.content_exceeds_max_length": "Текст не повинен перевищувати {maxLength} {maxLength, plural, one {символ} few {символи} many {символів} other {символа}}.",
 	"limits.integer_out_of_int64_range": "Ціле значення виходить за межі допустимого діапазону int64.",

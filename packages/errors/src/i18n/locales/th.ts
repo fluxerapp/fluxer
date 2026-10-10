@@ -297,7 +297,6 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "คุณใช้อิโมจิครบ {count} {count, plural, other {ตัว}} แล้ว",
 	"limits.at_least_one_entry_required": "ต้องมีอย่างน้อยหนึ่งรายการ",
 	"limits.base64_length_invalid": "ความยาวสตริง Base64 ต้องอยู่ระหว่าง {min} ถึง {maxLength} ตัวอักษร",
-	"limits.cannot_shrink_reserved_slots": "คุณไม่สามารถลดจำนวนช่องที่จองไว้ได้",
 	"limits.cannot_specify_before_and_after": "คุณไม่สามารถระบุทั้ง `before` และ `after` ได้",
 	"limits.content_exceeds_max_length": "ข้อความต้องไม่เกิน {maxLength} {maxLength, plural, other {ตัวอักษร}}",
 	"limits.integer_out_of_int64_range": "ค่าจำนวนเต็มอยู่นอกช่วง int64 ที่ถูกต้อง",

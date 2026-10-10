@@ -114,7 +114,7 @@ parse_voice_channel_id(ChannelId) ->
             error
     end.
 
--spec voice_state_rpc_entry(term()) -> false | {true, map()}.
+-spec voice_state_rpc_entry(map()) -> false | {true, map()}.
 voice_state_rpc_entry(VS) when is_map(VS) ->
     Entry0 = #{
         connection_id => normalize_rpc_id(
@@ -128,9 +128,7 @@ voice_state_rpc_entry(VS) when is_map(VS) ->
     case lists:member(null, maps:values(Entry0)) of
         true -> false;
         false -> {true, maybe_attach_voice_routing_metadata(Entry0, VS)}
-    end;
-voice_state_rpc_entry(_) ->
-    false.
+    end.
 
 -spec maybe_attach_voice_routing_metadata(map(), map()) -> map().
 maybe_attach_voice_routing_metadata(Entry, VS) ->

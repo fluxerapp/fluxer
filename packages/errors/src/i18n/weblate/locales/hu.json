@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Elérted az emojik megengedett számát ({count, plural, one {#} other {#}}).",
 	"limits.at_least_one_entry_required": "Legalább egy bejegyzés szükséges.",
 	"limits.base64_length_invalid": "A Base64 karakterlánc hossza {min} és {maxLength} karakter közötti lehet.",
-	"limits.cannot_shrink_reserved_slots": "A lefoglalt helyek számát nem csökkentheted.",
 	"limits.cannot_specify_before_and_after": "Nem adhatod meg egyszerre a `before` és az `after` paramétert.",
 	"limits.content_exceeds_max_length": "A szöveg legfeljebb {maxLength, plural, one {# karakter} other {# karakter}} hosszú lehet.",
 	"limits.integer_out_of_int64_range": "Az egész érték kívül esik az érvényes int64-tartományon.",

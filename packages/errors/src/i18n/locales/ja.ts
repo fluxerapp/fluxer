@@ -297,7 +297,6 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "絵文字の上限{count, plural, other {#個}}に達しました。",
 	"limits.at_least_one_entry_required": "1つ以上のエントリが必要です。",
 	"limits.base64_length_invalid": "Base64文字列の長さは{min}～{maxLength}文字である必要があります。",
-	"limits.cannot_shrink_reserved_slots": "予約済みスロットを減らすことはできません。",
 	"limits.cannot_specify_before_and_after": "`before`と`after`は同時に指定できません。",
 	"limits.content_exceeds_max_length": "テキストは{maxLength, plural, other {#文字}}を超えることはできません。",
 	"limits.integer_out_of_int64_range": "整数値がint64の有効範囲外です。",

@@ -297,7 +297,6 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Ai atins numărul maxim de {count, plural, one {# emoji} few {# emoji} other {# de emoji}}.",
 	"limits.at_least_one_entry_required": "Este necesară cel puțin o intrare.",
 	"limits.base64_length_invalid": "Lungimea șirului Base64 trebuie să fie între {min} și {maxLength} caractere.",
-	"limits.cannot_shrink_reserved_slots": "Nu poți reduce sloturile rezervate.",
 	"limits.cannot_specify_before_and_after": "Nu poți specifica atât `before`, cât și `after`.",
 	"limits.content_exceeds_max_length": "Textul nu trebuie să depășească {maxLength, plural, one {# caracter} few {# caractere} other {# de caractere}}.",
 	"limits.integer_out_of_int64_range": "Valoarea întreagă este în afara intervalului valid pentru int64.",

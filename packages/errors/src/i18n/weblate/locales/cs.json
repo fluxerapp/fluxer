@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Dosáhli jste limitu {count, plural, one {# emoji} few {# emoji} many {# emoji} other {# emoji}}.",
 	"limits.at_least_one_entry_required": "Je vyžadován alespoň jeden záznam.",
 	"limits.base64_length_invalid": "Řetězec Base64 musí mít {min} až {maxLength} znaků.",
-	"limits.cannot_shrink_reserved_slots": "Nemůžete snížit počet rezervovaných slotů.",
 	"limits.cannot_specify_before_and_after": "Nemůžete zadat `before` i `after` zároveň.",
 	"limits.content_exceeds_max_length": "Text nesmí přesáhnout {maxLength, plural, one {# znak} few {# znaky} many {# znaku} other {# znaků}}.",
 	"limits.integer_out_of_int64_range": "Celé číslo je mimo platný rozsah int64.",
