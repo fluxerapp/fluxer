@@ -297,7 +297,6 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Dosegnut je maksimum od {count, plural, one {# emojija} few {# emojija} other {# emojija}}.",
 	"limits.at_least_one_entry_required": "Potreban je barem jedan unos.",
 	"limits.base64_length_invalid": "Duljina Base64 niza mora biti između {min} i {maxLength} znakova.",
-	"limits.cannot_shrink_reserved_slots": "Ne možeš smanjiti rezervirane utore.",
 	"limits.cannot_specify_before_and_after": "Ne možeš navesti i `before` i `after`.",
 	"limits.content_exceeds_max_length": "Tekst ne smije prelaziti {maxLength, plural, one {# znak} few {# znaka} other {# znakova}}.",
 	"limits.integer_out_of_int64_range": "Cjelobrojna vrijednost je izvan važećeg raspona za int64.",

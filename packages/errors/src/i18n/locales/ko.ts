@@ -297,7 +297,6 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "최대 {count, plural, other {#개}}의 이모지에 도달했어요.",
 	"limits.at_least_one_entry_required": "최소 한 개의 항목이 필요해요.",
 	"limits.base64_length_invalid": "Base64 문자열 길이는 {min}자에서 {maxLength}자 사이여야 해요.",
-	"limits.cannot_shrink_reserved_slots": "예약된 슬롯을 줄일 수 없어요.",
 	"limits.cannot_specify_before_and_after": "`before`와 `after`를 동시에 지정할 수 없어요.",
 	"limits.content_exceeds_max_length": "텍스트는 {maxLength, plural, other {#자}}를 초과할 수 없어요.",
 	"limits.integer_out_of_int64_range": "정수 값이 유효한 int64 범위를 벗어났어요.",

@@ -297,7 +297,6 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Ты достиг максимума: {count} {count, plural, one {эмодзи} few {эмодзи} many {эмодзи} other {эмодзи}}.",
 	"limits.at_least_one_entry_required": "Требуется хотя бы одна запись.",
 	"limits.base64_length_invalid": "Длина строки Base64 должна быть от {min} до {maxLength} символов.",
-	"limits.cannot_shrink_reserved_slots": "Нельзя уменьшить количество зарезервированных слотов.",
 	"limits.cannot_specify_before_and_after": "Нельзя указывать `before` и `after` одновременно.",
 	"limits.content_exceeds_max_length": "Текст не должен превышать {maxLength} {maxLength, plural, one {символ} few {символа} many {символов} other {символа}}.",
 	"limits.integer_out_of_int64_range": "Целочисленное значение выходит за пределы допустимого диапазона int64.",

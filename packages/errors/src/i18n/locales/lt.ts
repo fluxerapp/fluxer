@@ -297,7 +297,6 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Pasiekei {count, plural, one {# emoji} few {# emoji} many {# emoji} other {# emoji}} ribą.",
 	"limits.at_least_one_entry_required": "Reikalingas bent vienas įrašas.",
 	"limits.base64_length_invalid": "Base64 eilutės ilgis turi būti nuo {min} iki {maxLength} simbolių.",
-	"limits.cannot_shrink_reserved_slots": "Negali sumažinti rezervuotų vietų.",
 	"limits.cannot_specify_before_and_after": "Negali nurodyti `before` ir `after` vienu metu.",
 	"limits.content_exceeds_max_length": "Tekstas neturi viršyti {maxLength, plural, one {# simbolio} few {# simbolių} many {# simbolio} other {# simbolių}}.",
 	"limits.integer_out_of_int64_range": "Sveikojo skaičiaus reikšmė yra už galiojančio int64 diapazono ribų.",

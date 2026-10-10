@@ -297,7 +297,6 @@ const ERROR_I18N_ZH_TW_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "你已達到 {count, plural, other {# 個表情符號}}的上限。",
 	"limits.at_least_one_entry_required": "至少需要一個項目。",
 	"limits.base64_length_invalid": "Base64 字串長度必須介於 {min} 到 {maxLength} 個字元之間。",
-	"limits.cannot_shrink_reserved_slots": "你無法減少已保留的名額。",
 	"limits.cannot_specify_before_and_after": "你無法同時指定 `before` 和 `after`。",
 	"limits.content_exceeds_max_length": "文字不得超過 {maxLength, plural, other {# 個字元}}。",
 	"limits.integer_out_of_int64_range": "整數值超出有效的 int64 範圍。",

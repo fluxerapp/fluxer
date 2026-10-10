@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Has alcanzado el máximo de {count} {count, plural, one {emoji} other {emojis}}.",
 	"limits.at_least_one_entry_required": "Es necesaria al menos una entrada.",
 	"limits.base64_length_invalid": "La longitud de la cadena Base64 debe estar entre {min} y {maxLength} caracteres.",
-	"limits.cannot_shrink_reserved_slots": "No puedes reducir los espacios reservados.",
 	"limits.cannot_specify_before_and_after": "No puedes especificar `before` y `after` a la vez.",
 	"limits.content_exceeds_max_length": "El texto no debe exceder {maxLength} {maxLength, plural, one {carácter} other {caracteres}}.",
 	"limits.integer_out_of_int64_range": "El valor entero está fuera del rango válido de int64.",

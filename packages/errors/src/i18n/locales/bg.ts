@@ -297,7 +297,6 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Достигна максимума от {count} {count, plural, one {емоджи} other {емоджита}}.",
 	"limits.at_least_one_entry_required": "Необходим е поне един запис.",
 	"limits.base64_length_invalid": "Дължината на Base64 низа трябва да е между {min} и {maxLength} знака.",
-	"limits.cannot_shrink_reserved_slots": "Не можеш да намалиш броя на запазените слотове.",
 	"limits.cannot_specify_before_and_after": "Не можеш да зададеш едновременно `before` и `after`.",
 	"limits.content_exceeds_max_length": "Текстът не може да надвишава {maxLength} {maxLength, plural, one {знак} other {знака}}.",
 	"limits.integer_out_of_int64_range": "Стойността е извън допустимия диапазон за int64.",

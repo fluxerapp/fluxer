@@ -297,7 +297,6 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Je hebt het maximum van {count, plural, one {# emoji} other {# emoji’s}} bereikt.",
 	"limits.at_least_one_entry_required": "Minimaal één invoer is vereist.",
 	"limits.base64_length_invalid": "De Base64-string moet tussen {min} en {maxLength} tekens lang zijn.",
-	"limits.cannot_shrink_reserved_slots": "Je kunt het aantal gereserveerde slots niet verminderen.",
 	"limits.cannot_specify_before_and_after": "Je kunt niet zowel `before` als `after` opgeven.",
 	"limits.content_exceeds_max_length": "Tekst mag niet meer dan {maxLength, plural, one {# teken} other {# tekens}} bevatten.",
 	"limits.integer_out_of_int64_range": "De waarde valt buiten het geldige int64-bereik.",

@@ -286,10 +286,6 @@ You can't send messages in a non-text channel
 
 You can't send messages to this user
 
-### `CANNOT_SHRINK_RESERVED_SLOTS`
-
-You can't shrink reserved slots
-
 ### `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`
 
 Community ownership can't be transferred to a bot

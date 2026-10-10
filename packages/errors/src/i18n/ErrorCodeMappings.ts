@@ -72,7 +72,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL]: 'misc.cannot_send_messages_in_non_text_channel',
 	[APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER]: 'friends_and_dms.cannot_send_messages_to_user',
 	[APIErrorCodes.CANNOT_TRANSFER_OWNERSHIP_TO_BOT]: 'channels_and_guilds.cannot_transfer_ownership_to_bot',
-	[APIErrorCodes.CANNOT_SHRINK_RESERVED_SLOTS]: 'limits.cannot_shrink_reserved_slots',
 	[APIErrorCodes.CAPTCHA_REQUIRED]: 'captcha.required',
 	[APIErrorCodes.COMMUNICATION_DISABLED]: 'account.communication_disabled',
 	[APIErrorCodes.CONNECTION_ALREADY_EXISTS]: 'connections.already_exists',

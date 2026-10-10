@@ -297,7 +297,6 @@ const ERROR_I18N_PL_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Osiągnięto limit {count, plural, one {# emoji} few {# emoji} many {# emoji} other {# emoji}}.",
 	"limits.at_least_one_entry_required": "Wymagany jest co najmniej jeden wpis.",
 	"limits.base64_length_invalid": "Długość ciągu Base64 musi wynosić od {min} do {maxLength} znaków.",
-	"limits.cannot_shrink_reserved_slots": "Nie możesz zmniejszyć liczby zarezerwowanych miejsc.",
 	"limits.cannot_specify_before_and_after": "Nie możesz określić jednocześnie `before` i `after`.",
 	"limits.content_exceeds_max_length": "Tekst nie może mieć więcej niż {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}.",
 	"limits.integer_out_of_int64_range": "Wartość całkowita wykracza poza prawidłowy zakres int64.",

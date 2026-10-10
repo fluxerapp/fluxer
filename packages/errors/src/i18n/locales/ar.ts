@@ -297,7 +297,6 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "لقد وصلت إلى الحد الأقصى وهو {count, plural, zero {# إيموجي} one {إيموجي واحد} two {إيموجيان} few {# إيموجيات} many {# إيموجي} other {# إيموجي}}.",
 	"limits.at_least_one_entry_required": "مطلوب إدخال واحد على الأقل.",
 	"limits.base64_length_invalid": "يجب أن يتراوح طول سلسلة Base64 بين {min} و{maxLength} حرفًا.",
-	"limits.cannot_shrink_reserved_slots": "لا يمكنك تقليص الخانات المحجوزة.",
 	"limits.cannot_specify_before_and_after": "لا يمكنك تحديد `before` و`after` معًا.",
 	"limits.content_exceeds_max_length": "يجب ألا يتجاوز طول النص {maxLength, plural, zero {# حرف} one {حرفًا واحدًا} two {حرفين} few {# أحرف} many {# حرفًا} other {# حرف}}.",
 	"limits.integer_out_of_int64_range": "قيمة العدد الصحيح خارج النطاق المسموح به لـint64.",

@@ -297,7 +297,6 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"invites_and_packs.max_emojis_reached": "Kamu sudah mencapai batas maksimum {count} {count, plural, other {emoji}}.",
 	"limits.at_least_one_entry_required": "Minimal satu entri diperlukan.",
 	"limits.base64_length_invalid": "Panjang string Base64 harus antara {min} dan {maxLength} karakter.",
-	"limits.cannot_shrink_reserved_slots": "Kamu tidak bisa mengurangi slot yang dicadangkan.",
 	"limits.cannot_specify_before_and_after": "Kamu tidak bisa menentukan `before` dan `after` sekaligus.",
 	"limits.content_exceeds_max_length": "Teks tidak boleh melebihi {maxLength} {maxLength, plural, other {karakter}}.",
 	"limits.integer_out_of_int64_range": "Nilai integer di luar rentang int64 yang valid.",

@@ -293,7 +293,6 @@
 	"invites_and_packs.max_emojis_reached": "Bạn đã đạt tối đa {count} {count, plural, other {emoji}}.",
 	"limits.at_least_one_entry_required": "Cần ít nhất một mục.",
 	"limits.base64_length_invalid": "Độ dài chuỗi Base64 phải từ {min} đến {maxLength} ký tự.",
-	"limits.cannot_shrink_reserved_slots": "Bạn không thể giảm số lượng vị trí đã đặt trước.",
 	"limits.cannot_specify_before_and_after": "Bạn không thể chỉ định đồng thời `before` và `after`.",
 	"limits.content_exceeds_max_length": "Văn bản không được dài quá {maxLength} {maxLength, plural, other {ký tự}}.",
 	"limits.integer_out_of_int64_range": "Giá trị số nguyên nằm ngoài phạm vi int64 hợp lệ.",
