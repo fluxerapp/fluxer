@@ -103,20 +103,12 @@ export class MeilisearchMessageSearchService
 		await this.updateDocument(convertToSearchableMessage(message, authorIsBot));
 	}
 
-	async deleteMessage(messageId: MessageID): Promise<void> {
-		await this.deleteDocument(messageId.toString());
-	}
-
 	async deleteMessages(messageIds: Array<MessageID>): Promise<void> {
 		await this.deleteDocuments(messageIds.map((id) => id.toString()));
 	}
 
 	async deleteChannelMessages(channelId: ChannelID): Promise<void> {
 		await this.adapter.deleteByFilter(meiliTermFilter('channelId', channelId.toString()));
-	}
-
-	async deleteGuildMessages(guildId: GuildID): Promise<void> {
-		await this.adapter.deleteByFilter(meiliTermFilter('guildId', guildId.toString()));
 	}
 
 	searchMessages(
@@ -170,10 +162,6 @@ export class MeilisearchGuildSearchService
 		await this.deleteDocument(guildId.toString());
 	}
 
-	async deleteGuilds(guildIds: Array<GuildID>): Promise<void> {
-		await this.deleteDocuments(guildIds.map((id) => id.toString()));
-	}
-
 	searchGuilds(
 		query: string,
 		filters: GuildSearchFilters,
@@ -202,14 +190,6 @@ export class MeilisearchUserSearchService
 
 	async updateUser(user: User): Promise<void> {
 		await this.updateDocument(convertToSearchableUser(user));
-	}
-
-	async deleteUser(userId: UserID): Promise<void> {
-		await this.deleteDocument(userId.toString());
-	}
-
-	async deleteUsers(userIds: Array<UserID>): Promise<void> {
-		await this.deleteDocuments(userIds.map((id) => id.toString()));
 	}
 
 	searchUsers(
@@ -249,10 +229,6 @@ export class MeilisearchReportSearchService
 		await this.deleteDocument(reportId.toString());
 	}
 
-	async deleteReports(reportIds: Array<ReportID>): Promise<void> {
-		await this.deleteDocuments(reportIds.map((id) => id.toString()));
-	}
-
 	searchReports(
 		query: string,
 		filters: ReportSearchFilters,
@@ -284,18 +260,6 @@ export class MeilisearchAuditLogSearchService
 	async indexAuditLogs(logs: Array<AdminAuditLog>): Promise<void> {
 		if (logs.length === 0) return;
 		await this.indexDocuments(logs.map(convertToSearchableAuditLog));
-	}
-
-	async updateAuditLog(log: AdminAuditLog): Promise<void> {
-		await this.updateDocument(convertToSearchableAuditLog(log));
-	}
-
-	async deleteAuditLog(logId: bigint): Promise<void> {
-		await this.deleteDocument(logId.toString());
-	}
-
-	async deleteAuditLogs(logIds: Array<bigint>): Promise<void> {
-		await this.deleteDocuments(logIds.map((id) => id.toString()));
 	}
 
 	searchAuditLogs(

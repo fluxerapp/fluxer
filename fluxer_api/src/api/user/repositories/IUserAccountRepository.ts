@@ -43,7 +43,6 @@ export interface IUserAccountRepository {
 		total: number;
 	}>;
 	listUsers(userIds: Array<UserID>): Promise<Array<User>>;
-	listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>>;
 	scanAllUsersPage(
 		limit: number,
 		pageState?: string | null,
@@ -54,14 +53,12 @@ export interface IUserAccountRepository {
 	getUserGuildIds(userId: UserID): Promise<Array<GuildID>>;
 	addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void>;
 	removePendingDeletion(userId: UserID, pendingDeletionAt: Date): Promise<void>;
-	findUsersPendingDeletion(now: Date): Promise<Array<User>>;
 	findUsersPendingDeletionByDate(deletionDate: string): Promise<
 		Array<{
 			user_id: bigint;
 			deletion_reason_code: number;
 		}>
 	>;
-	isUserPendingDeletion(userId: UserID, deletionDate: string): Promise<boolean>;
 	scheduleDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void>;
 	deleteUserSecondaryIndices(userId: UserID): Promise<void>;
 	removeFromAllGuilds(userId: UserID): Promise<void>;

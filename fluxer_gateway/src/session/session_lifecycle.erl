@@ -21,7 +21,6 @@
     handle_resume/3,
     handle_resume_offline_timeout/2,
     handle_presence_update_cast/2,
-    handle_initial_global_presences/2,
     send_guild_push_hold/2
 ]).
 
@@ -568,20 +567,6 @@ send_presence_update(#{presence_pid := Pid}, SessionId, NewStatus, NewAfk, NewMo
         end,
     gen_server:cast(Pid, {presence_update, Msg}),
     ok.
-
--spec handle_initial_global_presences([map()], session_state()) -> {noreply, session_state()}.
-handle_initial_global_presences(Presences, State) ->
-    NewState = lists:foldl(
-        fun(Presence, AccState) ->
-            {noreply, Updated} = session_dispatch:handle_dispatch(
-                presence_update, Presence, AccState
-            ),
-            Updated
-        end,
-        State,
-        Presences
-    ),
-    {noreply, NewState}.
 
 -spec serialize_state(session_state()) -> map().
 serialize_state(State) ->

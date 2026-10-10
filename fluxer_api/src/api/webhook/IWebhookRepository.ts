@@ -43,8 +43,6 @@ export abstract class IWebhookRepository {
 
 	abstract countByChannel(channelId: bigint): Promise<number>;
 
-	abstract findManyByIds(webhookIds: Array<bigint>): Promise<Array<Webhook>>;
-
 	abstract listIdsBySourceChannel(
 		sourceChannelId: bigint,
 		options: {afterWebhookId?: bigint; limit: number},

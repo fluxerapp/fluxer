@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import type {UserID} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';
@@ -33,14 +30,6 @@ export class ElasticsearchUserSearchService
 
 	async updateUser(user: User): Promise<void> {
 		await this.updateDocument(convertToSearchableUser(user));
-	}
-
-	async deleteUser(userId: UserID): Promise<void> {
-		await this.deleteDocument(userId.toString());
-	}
-
-	async deleteUsers(userIds: Array<UserID>): Promise<void> {
-		await this.deleteDocuments(userIds.map((id) => id.toString()));
 	}
 
 	searchUsers(

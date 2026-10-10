@@ -26,13 +26,6 @@ export interface VoiceEngineV2AppLifecycleAdapterOptions {
 	readonly teardownPerDisposableTimeoutMs?: number;
 }
 
-function buildOperatingError(method: string, code: string, reason: string): Error {
-	const error = new Error(`VoiceEngineV2AppLifecycleAdapter.${method}: ${reason}`);
-	error.name = 'VoiceEngineV2AppLifecycleOperatingError';
-	(error as Error & {code?: string}).code = code;
-	return error;
-}
-
 function isPositiveInteger(value: unknown): value is number {
 	if (typeof value !== 'number') return false;
 	if (!Number.isFinite(value)) return false;
@@ -75,40 +68,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		this.registry = new Map();
 		this.teardownTimeoutMs = timeoutMs;
 		this.tornDown = false;
-	}
-
-	register(operationId: number, controller: AbortController, sourceAdapter: string): void {
-		assert.ok(isPositiveInteger(operationId), 'lifecycle register operationId must be a positive integer');
-		assert.ok(
-			controller !== null && typeof controller === 'object',
-			'lifecycle register controller must be an AbortController',
-		);
-		assert.equal(typeof controller.abort, 'function', 'lifecycle register controller must implement abort()');
-		assert.ok(isNonEmptyString(sourceAdapter), 'lifecycle register sourceAdapter must be a non-empty string');
-		if (this.tornDown) {
-			throw buildOperatingError('register', 'lifecycleTornDown', 'cannot register after teardown');
-		}
-		if (this.registry.has(operationId)) {
-			throw buildOperatingError(
-				'register',
-				'lifecycleOperationAlreadyRegistered',
-				`operationId ${operationId} already registered`,
-			);
-		}
-		if (this.registry.size >= LIFECYCLE_OPERATION_CAP) {
-			throw buildOperatingError(
-				'register',
-				'lifecycleRegistryFull',
-				`registry exceeded cap ${LIFECYCLE_OPERATION_CAP}`,
-			);
-		}
-		this.registry.set(operationId, {abort: controller, sourceAdapter});
-	}
-
-	unregister(operationId: number): boolean {
-		assert.ok(isPositiveInteger(operationId), 'lifecycle unregister operationId must be a positive integer');
-		assert.ok(this.registry.size <= LIFECYCLE_OPERATION_CAP, 'lifecycle registry overflow before unregister');
-		return this.registry.delete(operationId);
 	}
 
 	async cancelOperation(operationId: number, reason: string): Promise<void> {

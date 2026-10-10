@@ -659,58 +659,6 @@ truncate_preview_keeps_short_valid_content_identical_test() ->
     Content = <<"hello \xC3\xA9 world">>,
     ?assertEqual(Content, truncate_preview(Content)).
 
-a_forwarded_message_previews_its_snapshot_content_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"message_snapshots">> => [#{<<"content">> => <<"forwarded text">>}]
-    },
-    ?assertEqual(<<"forwarded text">>, build_content_preview(MessageData)).
-
-a_forwarded_attachment_previews_its_filename_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"message_snapshots">> => [
-            #{<<"content">> => null, <<"attachments">> => [#{<<"filename">> => <<"cat.png">>}]}
-        ]
-    },
-    ?assertEqual(<<"Attachment: cat.png">>, build_content_preview(MessageData)).
-
-a_forwarded_sticker_previews_its_name_test() ->
-    MessageData = #{
-        <<"content">> => <<>>,
-        <<"message_snapshots">> => [
-            #{<<"content">> => null, <<"stickers">> => [#{<<"name">> => <<"Wave">>}]}
-        ]
-    },
-    ?assertEqual(<<"Sticker: Wave">>, build_content_preview(MessageData)).
-
-own_content_wins_over_a_snapshot_test() ->
-    MessageData = #{
-        <<"content">> => <<"my words">>,
-        <<"message_snapshots">> => [#{<<"content">> => <<"forwarded text">>}]
-    },
-    ?assertEqual(<<"my words">>, build_content_preview(MessageData)).
-
-an_empty_snapshot_list_previews_nothing_test() ->
-    ?assertEqual(
-        <<>>, build_content_preview(#{<<"content">> => <<>>, <<"message_snapshots">> => []})
-    ).
-
-a_null_snapshot_field_previews_nothing_test() ->
-    ?assertEqual(
-        <<>>, build_content_preview(#{<<"content">> => <<>>, <<"message_snapshots">> => null})
-    ).
-
-announcement_channel_mentions_are_copyable_test() ->
-    ?assert(is_copyable_channel_type(5)),
-    ?assert(is_copyable_channel_mention(#{<<"type">> => 5})).
-
-build_url_dm_test() ->
-    ?assertEqual(<<"/channels/@me/456/789">>, build_url(0, 456, 789)).
-
-build_url_guild_test() ->
-    ?assertEqual(<<"/channels/123/456/789">>, build_url(123, 456, 789)).
-
 extract_image_url_keeps_a_url_within_the_size_bound_test() ->
     Url = image_url_of_size(?MAX_IMAGE_URL_BYTES),
     ?assertEqual(Url, extract_image_url(message_with_embed_image(Url))).

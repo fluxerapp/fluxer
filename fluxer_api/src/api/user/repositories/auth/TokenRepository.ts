@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {PasswordResetToken as PasswordResetTokenBrand, UserID} from '@app/api/BrandedTypes';
-import {createEmailRevertToken, createEmailVerificationToken, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {createEmailRevertToken, createEmailVerificationToken} from '@app/api/BrandedTypes';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	EmailRevertTokenRow,
@@ -73,21 +73,6 @@ export class TokenRepository {
 		);
 		await batch.execute();
 		return new PasswordResetToken(tokenData);
-	}
-
-	async deletePasswordResetToken(token: string): Promise<void> {
-		const brandedToken = createPasswordResetToken(token);
-		const tokenRow = await this.getPasswordResetToken(token);
-		if (tokenRow) {
-			const batch = new BatchBuilder();
-			batch.addPrepared(PasswordResetTokens.deleteByPk({token_: brandedToken, user_id: tokenRow.userId}));
-			batch.addPrepared(PasswordResetTokensByUserId.deleteByPk({user_id: tokenRow.userId, token_: brandedToken}));
-			await batch.execute();
-		} else {
-			await deleteOneOrMany(PasswordResetTokens.deleteCql({where: PasswordResetTokens.where.eq('token_')}), {
-				token_: brandedToken,
-			});
-		}
 	}
 
 	async deleteAllPasswordResetTokens(userId: UserID): Promise<void> {

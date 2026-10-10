@@ -147,7 +147,7 @@ export function getBillingRepository(): BillingRepository {
 		return _injectedBillingRepository;
 	}
 	if (!_billingRepository) {
-		_billingRepository = new BillingRepository(getSnowflakeService(), getKVClient());
+		_billingRepository = new BillingRepository(getKVClient());
 	}
 	return _billingRepository;
 }

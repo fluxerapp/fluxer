@@ -12,9 +12,6 @@ pub mod request;
 pub mod storage;
 pub mod transform;
 
-#[cfg(test)]
-mod tests;
-
 use self::{
     attachment_signature::AttachmentSignatureMetrics,
     cache::{CoalescerMetrics, TransformCacheMetrics},

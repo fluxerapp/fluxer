@@ -128,10 +128,6 @@ export class ScreenShareSubscriptionManager extends Store {
 		return this.getSubscriptionEntry(participantIdentity)?.subscribed ?? false;
 	}
 
-	getContext(participantIdentity: string): VoiceMediaGraphSubscriptionContext | null {
-		return this.getSubscriptionEntry(participantIdentity)?.context ?? null;
-	}
-
 	reattachAfterPublish(participantIdentity: string, publication?: RemoteTrackPublication): void {
 		const state = this.getSubscriptionEntry(participantIdentity);
 		if (!state?.subscribed || !this.room) return;

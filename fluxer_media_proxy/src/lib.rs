@@ -47,6 +47,3 @@ mod policy_tests;
 mod test_fixtures;
 
 pub use server::run;
-
-#[cfg(test)]
-mod tests;

@@ -33,13 +33,6 @@ class GuildReadStateEntry {
 	bumpChangeTicket(): void {
 		this.changeTicket.set(this.changeTicket.get() + 1);
 	}
-
-	reset(): void {
-		this.unread.set(false);
-		this.firstUnreadChannelId.set(null);
-		this.mentionCount.set(0);
-		this.mentionChannels.clear();
-	}
 }
 
 type ContributeChannel = {

@@ -178,9 +178,6 @@ handle_cast_guild(_, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
 handle_info({presence, TargetId, Payload}, State) when is_integer(TargetId), is_map(Payload) ->
     presence_broadcast:dispatch_global_presence(TargetId, Payload, State);
-handle_info({initial_presences, Presences}, State) when is_list(Presences) ->
-    presence_broadcast:dispatch_initial_presences(map_list(Presences), State),
-    {noreply, State};
 handle_info({'DOWN', Ref, process, _Pid, Reason}, State) when is_reference(Ref) ->
     presence_connect:handle_process_down(Ref, Reason, State);
 handle_info({thread_user_flip, Version} = Flip, State) when is_integer(Version) ->
@@ -283,10 +280,6 @@ binary_list(Items) ->
 user_ids(Items) ->
     [Item || Item <- Items, is_integer(Item)].
 
--spec map_list([term()]) -> [map()].
-map_list(Items) ->
-    [Item || Item <- Items, is_map(Item)].
-
 -spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
 normalize_start_link({ok, Pid}) ->
     {ok, Pid};
@@ -297,14 +290,6 @@ normalize_start_link(ignore) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-session_connect_pid_prefers_request_session_pid_test() ->
-    Caller = self(),
-    Other = spawn(fun idle_session_proc/0),
-    ?assertEqual(Other, session_connect_pid(#{session_pid => Other}, Caller)),
-    ?assertEqual(Caller, session_connect_pid(#{}, Caller)),
-    ?assertEqual(Caller, session_connect_pid(#{session_pid => undefined}, Caller)),
-    Other ! stop.
 
 presence_rejoin_notifies_all_sessions_test() ->
     Parent = self(),
@@ -325,10 +310,6 @@ thread_user_flip_is_forwarded_to_every_session_test() ->
         {thread_user_flip, 4} -> ok
     after 1000 -> ?assert(false)
     end.
-
-presence_rejoin_with_no_sessions_is_noop_test() ->
-    State = test_state(#{}),
-    ?assertEqual({noreply, State}, handle_cast(presence_rejoin, State)).
 
 reconcile_flattened_presence_uses_current_session_state_test() ->
     State = test_state(#{}),
@@ -382,13 +363,6 @@ test_session_entry(Pid) ->
         mref => make_ref(),
         socket_pid => undefined
     }.
-
--spec idle_session_proc() -> ok.
-idle_session_proc() ->
-    receive
-        stop -> ok
-    after 1000 -> ok
-    end.
 
 -spec rejoin_check_receiver(pid(), atom()) -> term().
 rejoin_check_receiver(Parent, Tag) ->

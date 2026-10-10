@@ -48,27 +48,6 @@
 	height: 3rem;
 }
 
-.iconContainer {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100%;
-}
-
-.spinner {
-	animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
 .overlay {
 	position: absolute;
 	top: 50%;

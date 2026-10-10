@@ -23,16 +23,4 @@ export class InMemoryVoiceRoomStore {
 	}
 
 	async deleteRoomServer(_guildId: GuildID | undefined, _channelId: ChannelID): Promise<void> {}
-
-	async getRegionOccupancy(_regionId: string): Promise<Array<string>> {
-		return [];
-	}
-
-	async getServerOccupancy(_regionId: string, _serverId: string): Promise<Array<string>> {
-		return [];
-	}
-
-	async listPinnedRooms(): Promise<Array<{guildId?: GuildID; channelId: ChannelID}>> {
-		return [];
-	}
 }

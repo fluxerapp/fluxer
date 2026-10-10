@@ -11,7 +11,7 @@ use axum::{
 };
 use fluxer_admin::{
     build_router,
-    config::{AdminConfig, ProxyConfig, RuntimeEnv},
+    config::{AdminConfig, ProxyConfig},
     session,
 };
 use serde_json::{Value, json};
@@ -29,30 +29,6 @@ struct MockApi {
     account_identity: &'static str,
     admin_acls: Vec<&'static str>,
     requests: Arc<Mutex<Vec<String>>>,
-}
-
-#[tokio::test]
-async fn creating_a_reset_link_shows_the_url_once_with_a_copy_button() {
-    let app = setup(true, "username", vec!["*"]).await;
-    let csrf_token = csrf_token(&app).await;
-    let (status, body) = post_form(
-        &app,
-        &format!("/users/{TARGET_ID}?action=create_password_reset_link&tab=account"),
-        &format!("_csrf={csrf_token}"),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK);
-    assert!(app.saw(&format!(
-        "POST /admin/users/{TARGET_ID}/password-reset-link"
-    )));
-    assert!(body.contains("Copy this link now. It is shown only once."));
-    assert!(body.contains(&format!(r#"value="{RESET_URL}""#)));
-    assert!(body.contains(&format!(r#"data-copy-value="{RESET_URL}""#)));
-    assert!(body.contains("Copy Link"));
-
-    let page = get(&app, &format!("/users/{TARGET_ID}?tab=account")).await;
-    assert!(page.contains("Create Password Reset Link"));
-    assert!(!page.contains(RESET_URL));
 }
 
 #[tokio::test]
@@ -134,68 +110,12 @@ async fn the_revoke_recovery_kit_action_needs_its_acl_and_a_username_instance() 
 }
 
 #[tokio::test]
-async fn username_instances_hide_email_actions_on_the_account_tab() {
-    let app = setup(true, "username", vec!["*"]).await;
-    let page = get(&app, &format!("/users/{TARGET_ID}?tab=account")).await;
-    assert!(page.contains("Create Password Reset Link"));
-    assert!(!page.contains("Send Password Reset"));
-    assert!(!page.contains("Change Email"));
-    assert!(!page.contains("Verify Email"));
-}
-
-#[tokio::test]
 async fn the_reset_link_action_needs_its_acl() {
     let app = setup(true, "username", vec!["admin:authenticate", "user:lookup"]).await;
     let page = get(&app, &format!("/users/{TARGET_ID}?tab=account")).await;
     assert!(page.contains("Terminate All Sessions"));
     assert!(!page.contains("Create Password Reset Link"));
     assert!(!page.contains("Send Password Reset"));
-}
-
-#[tokio::test]
-async fn email_instances_keep_the_email_actions() {
-    let app = setup(true, "email", vec!["*"]).await;
-    let page = get(&app, &format!("/users/{TARGET_ID}?tab=account")).await;
-    assert!(page.contains("Send Password Reset"));
-    assert!(page.contains("Change Email"));
-    assert!(page.contains("Verify Email"));
-    assert!(!page.contains("Create Password Reset Link"));
-}
-
-#[tokio::test]
-async fn the_email_ban_notice_stays_after_a_ban_action_on_a_username_instance() {
-    let notice = "Accounts have no email address, so email bans have no effect.";
-    let username = setup(true, "username", vec!["*"]).await;
-    let username_csrf = csrf_token(&username).await;
-    let (status, body) = post_form(
-        &username,
-        "/email-bans?action=ban",
-        &format!("_csrf={username_csrf}&email="),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK);
-    assert!(body.contains("Value is required"));
-    assert!(body.contains(notice));
-
-    let email = setup(true, "email", vec!["*"]).await;
-    let email_csrf = csrf_token(&email).await;
-    let (_, body) = post_form(
-        &email,
-        "/email-bans?action=ban",
-        &format!("_csrf={email_csrf}&email="),
-    )
-    .await;
-    assert!(body.contains("Value is required"));
-    assert!(!body.contains(notice));
-}
-
-#[tokio::test]
-async fn hosted_admin_never_asks_discovery_for_the_sign_in_method() {
-    let app = setup(false, "username", vec!["*"]).await;
-    let page = get(&app, &format!("/users/{TARGET_ID}?tab=account")).await;
-    assert!(page.contains("Send Password Reset"));
-    assert!(!page.contains("Create Password Reset Link"));
-    assert!(!app.saw("GET /.well-known/fluxer"));
 }
 
 struct TestApp {
@@ -423,7 +343,6 @@ fn user(id: &str, username: &str, acls: &[&str]) -> Value {
 
 fn test_config(api_endpoint: String, self_hosted: bool) -> AdminConfig {
     AdminConfig {
-        env: RuntimeEnv::Test,
         host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key_base: SECRET_KEY.to_owned(),

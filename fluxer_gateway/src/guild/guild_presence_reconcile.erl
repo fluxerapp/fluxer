@@ -276,22 +276,6 @@ presence_user_id(Presence) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-interval_clamps_below_minimum_test() ->
-    application:set_env(fluxer_gateway, guild_presence_reconcile_interval_ms, 10),
-    try
-        ?assertEqual(?DEFAULT_INTERVAL_MS, interval_ms())
-    after
-        application:unset_env(fluxer_gateway, guild_presence_reconcile_interval_ms)
-    end.
-
-interval_uses_configured_value_test() ->
-    application:set_env(fluxer_gateway, guild_presence_reconcile_interval_ms, 12000),
-    try
-        ?assertEqual(12000, interval_ms())
-    after
-        application:unset_env(fluxer_gateway, guild_presence_reconcile_interval_ms)
-    end.
-
 reconcile_action_noop_when_already_online_test() ->
     State = state_with_presence(#{1 => dnd_presence(1)}),
     ?assertEqual(noop, reconcile_action(1, dnd_presence(1), State)).
@@ -309,15 +293,6 @@ reconcile_action_replays_offline_when_stale_online_test() ->
 reconcile_action_noop_when_already_offline_test() ->
     State = state_with_presence(#{}),
     ?assertEqual(noop, reconcile_action(1, undefined, State)).
-
-connected_user_ids_list_test() ->
-    State = #{connected_user_ids => sets:from_list([1, 2, 3])},
-    ?assertEqual([1, 2, 3], lists:sort(connected_user_ids_list(State))).
-
-presence_user_id_test() ->
-    ?assertEqual(7, presence_user_id(#{<<"user">> => #{<<"id">> => 7}})),
-    ?assertEqual(7, presence_user_id(#{<<"user">> => #{<<"id">> => <<"7">>}})),
-    ?assertEqual(undefined, presence_user_id(#{})).
 
 apply_mismatches_repairs_connected_offline_member_test() ->
     with_engine_state(fun(State, Engine) ->

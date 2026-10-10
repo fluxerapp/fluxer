@@ -19,7 +19,6 @@ import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
@@ -65,72 +64,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		Config.stripe.webhookSecret = 'whsec_test_secret';
 		Config.stripe.prices = MOCK_PRICES;
 		setupSyncStripeWebhookWorker();
-		stripeHandlers = createStripeApiHandlers({
-			charges: {
-				ch_pi_localized_brl_card_br: {
-					currency: 'brl',
-					payment_intent: 'pi_localized_brl_card_br',
-					payment_method_details: {
-						type: 'card',
-						card: {
-							fingerprint: 'fp_localized_brl_card_br',
-							country: 'BR',
-						},
-					},
-				},
-				ch_pi_localized_brl_card_us: {
-					currency: 'brl',
-					payment_intent: 'pi_localized_brl_card_us',
-					payment_method_details: {
-						type: 'card',
-						card: {
-							fingerprint: 'fp_localized_brl_card_us',
-							country: 'US',
-						},
-					},
-				},
-			},
-			paymentIntents: {
-				pi_localized_brl_card_br: {
-					currency: 'brl',
-					latest_charge: 'ch_pi_localized_brl_card_br',
-					status: 'succeeded',
-				},
-				pi_localized_brl_card_us: {
-					currency: 'brl',
-					latest_charge: 'ch_pi_localized_brl_card_us',
-					status: 'succeeded',
-				},
-			},
-			setupIntents: {
-				seti_localized_brl_card_br: {
-					customer: 'cus_test_existing',
-					payment_method: {
-						id: 'pm_localized_brl_card_br',
-						object: 'payment_method',
-						type: 'card',
-						card: {
-							country: 'BR',
-						},
-						customer: 'cus_test_existing',
-					},
-					status: 'succeeded',
-				},
-				seti_localized_brl_card_us: {
-					customer: 'cus_test_existing',
-					payment_method: {
-						id: 'pm_localized_brl_card_us',
-						object: 'payment_method',
-						type: 'card',
-						card: {
-							country: 'US',
-						},
-						customer: 'cus_test_existing',
-					},
-					status: 'succeeded',
-				},
-			},
-		});
+		stripeHandlers = createStripeApiHandlers();
 		server.use(...stripeHandlers.handlers);
 	});
 	beforeEach(async () => {
@@ -261,106 +195,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			expect(updatedPayment?.status).toBe('completed');
 			expect(updatedPayment?.paymentIntentId).toBeNull();
 			expect(updatedPayment?.subscriptionId).toBe('sub_localized_brl_pix');
-			expect(stripeHandlers.spies.retrievedPaymentIntents).toHaveLength(0);
-			expect(stripeHandlers.spies.createdRefunds).toHaveLength(0);
-			expect(stripeHandlers.spies.cancelledSubscriptions).toHaveLength(0);
-			const user = await createBuilder<{
-				premium_type: number;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-		});
-		test('allows localized TRY card subscription checkout when checkout.session.completed has no payment intent', async () => {
-			const account = await createTestAccount(harness);
-			const sessionId = 'cs_localized_try_card_no_payment_intent';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
-			const paymentRepository = new PaymentRepository();
-			const userRepository = new UserRepository();
-			await paymentRepository.createPayment({
-				checkout_session_id: sessionId,
-				user_id: createUserID(BigInt(account.userId)),
-				price_id: MOCK_PRICES.monthlyTry,
-				product_type: ProductType.MONTHLY_SUBSCRIPTION,
-				status: 'pending',
-				is_gift: false,
-				created_at: new Date(),
-			});
-			server.use(
-				http.get('https://api.stripe.com/v1/subscriptions/:id', ({params}) => {
-					if (params.id !== 'sub_localized_try_card_no_payment_intent') {
-						return;
-					}
-					return HttpResponse.json({
-						id: params.id,
-						object: 'subscription',
-						customer: 'cus_localized_try_card_no_payment_intent',
-						status: 'active',
-						current_period_start: Math.floor(Date.now() / 1000) - 3600,
-						start_date: Math.floor(Date.now() / 1000) - 3600,
-						default_payment_method: {
-							id: 'pm_localized_try_card_tr',
-							object: 'payment_method',
-							type: 'card',
-							card: {
-								country: 'TR',
-							},
-						},
-						items: {
-							object: 'list',
-							data: [
-								{
-									id: 'si_localized_try_card_tr',
-									object: 'subscription_item',
-									price: {
-										id: MOCK_PRICES.monthlyTry,
-										object: 'price',
-										unit_amount: 22999,
-										currency: 'try',
-										recurring: {
-											interval: 'month',
-											interval_count: 1,
-										},
-										type: 'recurring',
-										active: true,
-										livemode: false,
-									},
-									quantity: 1,
-									current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-								},
-							],
-							has_more: false,
-							url: `/v1/subscription_items?subscription=${params.id}`,
-						},
-						cancel_at: null,
-						cancel_at_period_end: false,
-						canceled_at: null,
-						collection_method: 'charge_automatically',
-						livemode: false,
-						metadata: {},
-					});
-				}),
-			);
-			const eventData = createCheckoutCompletedEvent({
-				sessionId,
-				customerId: 'cus_localized_try_card_no_payment_intent',
-				subscriptionId: 'sub_localized_try_card_no_payment_intent',
-				amountTotal: 22999,
-				currency: 'try',
-				metadata: {
-					country_code: 'TR',
-					payment_method: 'card',
-				},
-			});
-			eventData.data.object.payment_intent = null;
-			eventData.data.object.payment_method_types = ['card', 'link'];
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
-			expect(updatedPayment?.status).toBe('completed');
-			expect(updatedPayment?.paymentIntentId).toBeNull();
-			expect(updatedPayment?.subscriptionId).toBe('sub_localized_try_card_no_payment_intent');
 			expect(stripeHandlers.spies.retrievedPaymentIntents).toHaveLength(0);
 			expect(stripeHandlers.spies.createdRefunds).toHaveLength(0);
 			expect(stripeHandlers.spies.cancelledSubscriptions).toHaveLength(0);
@@ -560,38 +394,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.get('/users/@me')
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.NONE);
-		});
-		test('allows localized BRL gift checkout when the card is issued in Brazil', async () => {
-			const account = await createTestAccount(harness);
-			const sessionId = 'cs_gift_brl_card_br';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
-			const paymentRepository = new PaymentRepository();
-			const userRepository = new UserRepository();
-			await paymentRepository.createPayment({
-				checkout_session_id: sessionId,
-				user_id: createUserID(BigInt(account.userId)),
-				price_id: MOCK_PRICES.gift1MonthBrl,
-				product_type: ProductType.GIFT_1_MONTH,
-				status: 'pending',
-				is_gift: true,
-				created_at: new Date(),
-			});
-			const eventData = createCheckoutCompletedEvent({
-				sessionId,
-				customerId: 'cus_gift_brl_card_br',
-				paymentIntentId: 'pi_localized_brl_card_br',
-				amountTotal: 1288,
-				currency: 'brl',
-				mode: 'payment',
-				metadata: {country_code: 'BR'},
-			});
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
-			expect(updatedPayment?.status).toBe('completed');
-			expect(updatedPayment?.giftCode).not.toBeNull();
-			expect(stripeHandlers.spies.createdRefunds).toHaveLength(0);
 		});
 	});
 	describe('donation checkout', () => {

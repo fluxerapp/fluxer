@@ -358,10 +358,6 @@ export class StatusPage {
 		}
 	}
 
-	clearIncident(): void {
-		this.incident = null;
-	}
-
 	refreshForConnectionIssue(): void {
 		this.refreshIfStale();
 	}

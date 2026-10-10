@@ -1468,9 +1468,6 @@ importers:
       eventemitter3:
         specifier: 'catalog:'
         version: 5.0.4
-      fast-png:
-        specifier: ^8.0.0
-        version: 8.0.0
       favico.js:
         specifier: 'catalog:'
         version: 0.3.10
@@ -1489,9 +1486,6 @@ importers:
       idna-uts46-hx:
         specifier: 'catalog:'
         version: 6.2.1
-      jpeg-js:
-        specifier: ^0.4.4
-        version: 0.4.4
       katex:
         specifier: 'catalog:'
         version: 0.18.7
@@ -1805,9 +1799,6 @@ importers:
       '@fluxer/linux-portals':
         specifier: file:./native/linux-portals
         version: file:fluxer_desktop/native/linux-portals
-      '@fluxer/linux-screen-capture':
-        specifier: file:./native/linux-screen-capture
-        version: file:fluxer_desktop/native/linux-screen-capture
       '@fluxer/mac-app-audio':
         specifier: file:./native/mac-app-audio
         version: file:fluxer_desktop/native/mac-app-audio
@@ -2160,9 +2151,6 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.14
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../constants
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.1
@@ -2172,9 +2160,6 @@ importers:
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   packages/schema:
     dependencies:
@@ -4511,11 +4496,6 @@ packages:
 
   '@fluxer/linux-portals@file:fluxer_desktop/native/linux-portals':
     resolution: {directory: fluxer_desktop/native/linux-portals, type: directory}
-    cpu: [x64, arm64]
-    os: [linux]
-
-  '@fluxer/linux-screen-capture@file:fluxer_desktop/native/linux-screen-capture':
-    resolution: {directory: fluxer_desktop/native/linux-screen-capture, type: directory}
     cpu: [x64, arm64]
     os: [linux]
 
@@ -7925,9 +7905,6 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-png@8.0.0:
-    resolution: {integrity: sha512-gCysNasJ8KEMgfdYIKd/wTDo6ENK1PWT0RJO7O+0pgmuHPw2O6tA1WvdxFRJoLf9V8yFYpG0FA1YgI8X97OhJA==}
-
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
@@ -8334,9 +8311,6 @@ packages:
   inline-style-parser@0.2.7:
     resolution: {integrity: sha512-Nb2ctOyNR8DqQoR0OwRG95uNWIC0C1lCgf5Naz5H6Ji72KZ8OcFZLz2P5sNgwlyoJ8Yif11oMuYs5pBQa86csA==}
 
-  iobuffer@6.0.1:
-    resolution: {integrity: sha512-SZWYkWNfjIXIBYSDpXDYIgshqtbOPsi4lviawAEceR1Kqk+sHDlcQjWrzNQsii80AyBY0q5c8HCTNjqo74ul+Q==}
-
   ioredis@6.0.0:
     resolution: {integrity: sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==}
     engines: {node: '>=20.0.0'}
@@ -8475,9 +8449,6 @@ packages:
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
-
-  jpeg-js@0.4.4:
-    resolution: {integrity: sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==}
 
   js-binary-schema-parser@2.0.3:
     resolution: {integrity: sha512-xezGJmOb4lk/M1ZZLTR/jaBHQ4gG/lqQnJqdIv4721DMggsa1bDVlHXNeHYogaIEHD9vCRv0fcL4hMA+Coarkg==}
@@ -13592,9 +13563,6 @@ snapshots:
   '@fluxer/linux-portals@file:fluxer_desktop/native/linux-portals':
     optional: true
 
-  '@fluxer/linux-screen-capture@file:fluxer_desktop/native/linux-screen-capture':
-    optional: true
-
   '@fluxer/mac-app-audio@file:fluxer_desktop/native/mac-app-audio':
     optional: true
 
@@ -16930,11 +16898,6 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-png@8.0.0:
-    dependencies:
-      fflate: 0.8.3
-      iobuffer: 6.0.1
-
   fast-safe-stringify@2.1.1: {}
 
   fast-string-truncated-width@3.0.3: {}
@@ -17476,8 +17439,6 @@ snapshots:
 
   inline-style-parser@0.2.7: {}
 
-  iobuffer@6.0.1: {}
-
   ioredis@6.0.0(supports-color@7.2.0):
     dependencies:
       '@ioredis/commands': 2.0.0
@@ -17582,8 +17543,6 @@ snapshots:
   jose@6.2.12: {}
 
   joycon@3.1.1: {}
-
-  jpeg-js@0.4.4: {}
 
   js-binary-schema-parser@2.0.3: {}
 

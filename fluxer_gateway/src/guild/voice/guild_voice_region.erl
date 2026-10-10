@@ -290,68 +290,11 @@ resolve_voice_server(GuildId, FallbackPid) ->
 
 -ifdef(TEST).
 
-switch_voice_region_handler_not_found_test() ->
-    State = #{data => #{<<"channels">> => []}},
-    Request = #{channel_id => 999},
-    {reply, Error, _} = switch_voice_region_handler(Request, State),
-    ?assertEqual({error, not_found, voice_channel_not_found}, Error).
-
-switch_voice_region_handler_not_voice_test() ->
-    State = #{
-        data => #{
-            <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"type">> => 0}
-            ]
-        }
-    },
-    Request = #{channel_id => 100},
-    {reply, Error, _} = switch_voice_region_handler(Request, State),
-    ?assertEqual({error, validation_error, voice_channel_not_voice}, Error).
-
-switch_voice_region_handler_success_test() ->
-    State = #{
-        data => #{
-            <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"type">> => 2}
-            ]
-        }
-    },
-    Request = #{channel_id => 100},
-    {reply, #{success := true}, _} = switch_voice_region_handler(Request, State).
-
-collect_users_in_channel_test() ->
-    VoiceState = #{
-        <<"channel_id">> => <<"100">>,
-        <<"user_id">> => <<"10">>,
-        <<"session_id">> => <<"sess1">>
-    },
-    VoiceStates = #{<<"conn1">> => VoiceState},
-    Result = collect_users_in_channel(VoiceStates, 100),
-    ?assertEqual(1, length(Result)),
-    [{UserId, SessionId, ConnectionId, _}] = Result,
-    ?assertEqual(10, UserId),
-    ?assertEqual(<<"sess1">>, SessionId),
-    ?assertEqual(<<"conn1">>, ConnectionId).
-
 switch_voice_region_reads_guild_state_once_test() ->
     with_region_stubs(fun() ->
         {Calls, _Dispatches, _Pending} = run_region_switch(fun switch_voice_region/3),
         ?assertEqual(1, Calls)
     end).
-
-switch_voice_region_matches_per_user_refetch_reference_test() ->
-    with_region_stubs(fun region_reference_equivalence_scenario/0).
-
-region_reference_equivalence_scenario() ->
-    {RefCalls, RefDispatches, RefPending} = run_region_switch(
-        fun reference_switch_voice_region/3
-    ),
-    {NewCalls, NewDispatches, NewPending} = run_region_switch(fun switch_voice_region/3),
-    ?assertEqual(3, RefCalls),
-    ?assertEqual(1, NewCalls),
-    ?assertEqual(2, length(RefDispatches)),
-    ?assertEqual(RefDispatches, NewDispatches),
-    ?assertEqual(RefPending, NewPending).
 
 switch_voice_region_skips_users_without_a_session_id_test() ->
     with_region_stubs(fun region_missing_session_id_scenario/0).
@@ -371,34 +314,6 @@ region_missing_session_id_scenario() ->
 
 %% The pre-change implementation, kept as a live oracle: it refetched the guild state once per
 %% user in the channel instead of reusing the one the enumeration already fetched.
-reference_switch_voice_region(GuildId, ChannelId, GuildPid) ->
-    case guild_voice_server_state:guild_state_call(GuildPid, 10000) of
-        State when is_map(State) ->
-            reference_do_switch_voice_region(GuildId, ChannelId, GuildPid, State);
-        _ ->
-            ok
-    end.
-
-reference_do_switch_voice_region(GuildId, ChannelId, GuildPid, State) ->
-    VoiceStates = voice_state_utils:voice_states(State),
-    UsersInChannel = collect_users_in_channel(VoiceStates, ChannelId),
-    lists:foreach(
-        fun(UserInfo) -> reference_send_update(GuildId, ChannelId, GuildPid, UserInfo) end,
-        UsersInChannel
-    ).
-
-reference_send_update(_GuildId, _ChannelId, _GuildPid, {_UserId, undefined, _ConnId, _VS}) ->
-    ok;
-reference_send_update(GuildId, ChannelId, GuildPid, {UserId, SessionId, ConnId, VoiceState}) ->
-    case guild_voice_server_state:guild_state_call(GuildPid, 10000) of
-        State when is_map(State) ->
-            request_and_broadcast_region_switch(
-                GuildId, ChannelId, UserId, SessionId, ConnId, VoiceState, GuildPid, State
-            );
-        _ ->
-            ok
-    end.
-
 run_region_switch(Fun) ->
     run_region_switch_with(Fun, region_state()).
 

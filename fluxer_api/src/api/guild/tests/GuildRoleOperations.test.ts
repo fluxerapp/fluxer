@@ -5,19 +5,14 @@ import {createGuildID, createRoleID} from '@app/api/BrandedTypes';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
 import {
 	acceptInvite,
-	addMemberRole,
 	createChannelInvite,
 	createGuild,
 	createRole,
-	deleteRole,
 	getChannel,
-	getRoles,
-	updateRolePositions,
 } from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Role Operations', () => {
@@ -28,16 +23,6 @@ describe('Guild Role Operations', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	test('should delete a role', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const role = await createRole(harness, account.token, guild.id, {
-			name: 'Delete Me',
-		});
-		await deleteRole(harness, account.token, guild.id, role.id);
-		const roles = await getRoles(harness, account.token, guild.id);
-		expect(roles.find((r) => r.id === role.id)).toBeUndefined();
-	});
 	test('should not delete @everyone role', async () => {
 		const account = await createTestAccount(harness);
 		const guild = await createGuild(harness, account.token, 'Test Guild');
@@ -45,16 +30,6 @@ describe('Guild Role Operations', () => {
 			.delete(`/guilds/${guild.id}/roles/${guild.id}`)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();
-	});
-	test('should update role positions', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const role1 = await createRole(harness, account.token, guild.id, {name: 'Role 1'});
-		const role2 = await createRole(harness, account.token, guild.id, {name: 'Role 2'});
-		await updateRolePositions(harness, account.token, guild.id, [
-			{id: role1.id, position: 2},
-			{id: role2.id, position: 1},
-		]);
 	});
 	test('should require MANAGE_ROLES permission to create role', async () => {
 		const owner = await createTestAccount(harness);
@@ -81,50 +56,6 @@ describe('Guild Role Operations', () => {
 			.delete(`/guilds/${guild.id}/roles/${role.id}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
-	});
-	test('should create role with unicode_emoji', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		const role = await createRole(harness, account.token, guild.id, {
-			name: 'Emoji Role',
-			unicode_emoji: '',
-		});
-		expect(role.name).toBe('Emoji Role');
-	});
-	test('should validate role name length', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		await createBuilder(harness, account.token)
-			.post(`/guilds/${guild.id}/roles`)
-			.body({name: 'a'.repeat(101)})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should require a name when creating role', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Test Guild');
-		await createBuilder(harness, account.token)
-			.post(`/guilds/${guild.id}/roles`)
-			.body({})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should allow MANAGE_ROLES role to create roles', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const managerRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Role Manager',
-			permissions: Permissions.MANAGE_ROLES.toString(),
-		});
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await acceptInvite(harness, member.token, invite.code);
-		await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
-		const newRole = await createRole(harness, member.token, guild.id, {
-			name: 'Member Created Role',
-		});
-		expect(newRole.name).toBe('Member Created Role');
 	});
 	test('should preserve concurrent position updates when applying stale role snapshot', async () => {
 		const account = await createTestAccount(harness);

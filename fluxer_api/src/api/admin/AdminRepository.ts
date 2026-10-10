@@ -60,25 +60,10 @@ function getEmailBlocklistKeys(email: string): Array<string> {
 	}
 	return keys;
 }
-const IS_PHRASE_BANNED_QUERY = BannedPhrases.select({
-	where: BannedPhrases.where.eq('phrase'),
-});
 const LOAD_ALL_BANNED_PHRASES_QUERY = BannedPhrases.select();
-const IS_URL_BANNED_QUERY = BannedUrls.select({
-	where: BannedUrls.where.eq('url_canonical'),
-});
 const LOAD_ALL_BANNED_URLS_QUERY = BannedUrls.select();
-const IS_URL_DOMAIN_BANNED_QUERY = BannedUrlDomains.select({
-	where: BannedUrlDomains.where.eq('domain'),
-});
 const LOAD_ALL_BANNED_URL_DOMAINS_QUERY = BannedUrlDomains.select();
-const IS_FILE_SHA_BANNED_QUERY = BannedFileShas.select({
-	where: BannedFileShas.where.eq('sha256_hex'),
-});
 const LOAD_ALL_BANNED_FILE_SHAS_QUERY = BannedFileShas.select();
-const IS_AVATAR_HASH_BANNED_QUERY = BannedAvatarHashes.select({
-	where: BannedAvatarHashes.where.eq('hash_short'),
-});
 const LOAD_ALL_BANNED_AVATAR_HASHES_QUERY = BannedAvatarHashes.select();
 const LOAD_ALL_BANNED_PROFILE_SUBSTRINGS_QUERY = BannedProfileSubstrings.select();
 const createListAllAuditLogsPaginatedQuery = (limit: number) =>
@@ -274,14 +259,6 @@ export class AdminRepository implements IAdminRepository {
 		return rows.map((row) => row.email_lower);
 	}
 
-	async isPhraseBanned(phrase: string): Promise<boolean> {
-		const phraseLower = canonicalizeStoredPhrase(phrase);
-		const result = await fetchOne<{
-			phrase: string;
-		}>(IS_PHRASE_BANNED_QUERY.bind({phrase: phraseLower}));
-		return !!result;
-	}
-
 	async banPhrase(phrase: string): Promise<void> {
 		const phraseLower = canonicalizeStoredPhrase(phrase);
 		await upsertOne(BannedPhrases.insert({phrase: phraseLower}));
@@ -299,14 +276,6 @@ export class AdminRepository implements IAdminRepository {
 		return rows.map((row) => row.phrase);
 	}
 
-	async isUrlBanned(url: string): Promise<boolean> {
-		const canonical = url.toLowerCase();
-		const result = await fetchOne<{
-			url_canonical: string;
-		}>(IS_URL_BANNED_QUERY.bind({url_canonical: canonical}));
-		return !!result;
-	}
-
 	async banUrl(row: BannedUrlRow): Promise<void> {
 		await upsertOne(BannedUrls.insert({...row, url_canonical: row.url_canonical.toLowerCase()}));
 	}
@@ -319,14 +288,6 @@ export class AdminRepository implements IAdminRepository {
 		return fetchMany<BannedUrlRow>(LOAD_ALL_BANNED_URLS_QUERY.bind({}));
 	}
 
-	async isUrlDomainBanned(domain: string): Promise<boolean> {
-		const d = domain.toLowerCase();
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_URL_DOMAIN_BANNED_QUERY.bind({domain: d}));
-		return !!result;
-	}
-
 	async banUrlDomain(row: BannedUrlDomainRow): Promise<void> {
 		await upsertOne(BannedUrlDomains.insert({...row, domain: row.domain.toLowerCase()}));
 	}
@@ -337,14 +298,6 @@ export class AdminRepository implements IAdminRepository {
 
 	async loadAllBannedUrlDomains(): Promise<Array<BannedUrlDomainRow>> {
 		return fetchMany<BannedUrlDomainRow>(LOAD_ALL_BANNED_URL_DOMAINS_QUERY.bind({}));
-	}
-
-	async isFileShaBanned(sha256Hex: string): Promise<boolean> {
-		const h = sha256Hex.toLowerCase();
-		const result = await fetchOne<{
-			sha256_hex: string;
-		}>(IS_FILE_SHA_BANNED_QUERY.bind({sha256_hex: h}));
-		return !!result;
 	}
 
 	async banFileSha(row: BannedFileShaRow): Promise<void> {
@@ -366,14 +319,6 @@ export class AdminRepository implements IAdminRepository {
 
 	async loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>> {
 		return fetchMany<BannedFileShaRow>(LOAD_ALL_BANNED_FILE_SHAS_QUERY.bind({}));
-	}
-
-	async isAvatarHashBanned(hashShort: string): Promise<boolean> {
-		const h = hashShort.toLowerCase();
-		const result = await fetchOne<{
-			hash_short: string;
-		}>(IS_AVATAR_HASH_BANNED_QUERY.bind({hash_short: h}));
-		return !!result;
 	}
 
 	async banAvatarHash(row: BannedAvatarHashRow): Promise<void> {

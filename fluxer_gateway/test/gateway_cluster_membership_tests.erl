@@ -9,13 +9,6 @@
 -define(ROLE_MEMBERS_KEY, {gateway_cluster_membership, members_by_role}).
 -define(NODE_POD_NAMES_KEY, {gateway_cluster_membership, node_pod_names}).
 
-members_defaults_to_self_test() ->
-    with_clean_cluster_terms(fun() ->
-        ?assertEqual([node()], gateway_cluster_membership:members()),
-        ?assertEqual(1, gateway_cluster_membership:alive_count()),
-        ?assert(gateway_cluster_membership:is_member(node()))
-    end).
-
 init_records_self_under_current_role_test() ->
     with_clean_cluster_terms(fun() ->
         persistent_term:put(
@@ -80,14 +73,6 @@ nodeup_for_discovered_peer_adds_it_test() ->
         State0 = (base_state(#{}))#{discovered := ['peer@a']},
         State1 = gateway_cluster_membership:maybe_add_member('peer@a', State0),
         ?assert(lists:member('peer@a', maps:get(members, State1)))
-    end).
-
-update_members_skips_persistent_term_when_unchanged_test() ->
-    with_clean_cluster_terms(fun() ->
-        State0 = base_state(#{members => [node()]}),
-        State1 = gateway_cluster_membership:update_members([node()], State0),
-        ?assertEqual(State0, State1),
-        ?assertEqual([node()], persistent_term:get(?MEMBERS_KEY, [node()]))
     end).
 
 subscriber_receives_initial_state_then_transitions_test() ->

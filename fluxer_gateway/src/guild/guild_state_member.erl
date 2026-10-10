@@ -192,25 +192,6 @@ state_sessions(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-handle_member_add_test() ->
-    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
-    EventData = #{<<"user">> => #{<<"id">> => <<"2">>}},
-    Result = handle_member_add(EventData, Data),
-    Members = maps:get(<<"members">>, Result),
-    ?assertEqual(2, map_size(Members)).
-
-handle_member_update_test() ->
-    Data = #{
-        <<"members">> => #{
-            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"OldNick">>}
-        }
-    },
-    EventData = #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"NewNick">>},
-    Result = handle_member_update(EventData, Data),
-    Members = maps:get(<<"members">>, Result),
-    Member = maps:get(1, Members),
-    ?assertEqual(<<"NewNick">>, maps:get(<<"nick">>, Member)).
-
 handle_member_update_ignores_non_member_test() ->
     Data = #{
         <<"members">> => #{

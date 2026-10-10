@@ -29,10 +29,6 @@ impl RouterService for MessagesRouter {
 
     fn route_key(req: &MessageRequest) -> String {
         match req {
-            MessageRequest::GetById { channel_id, .. } => channel_id.to_string(),
-            MessageRequest::GetLatest { channel_id, .. } => channel_id.to_string(),
-            MessageRequest::GetBefore { channel_id, .. } => channel_id.to_string(),
-            MessageRequest::GetAfter { channel_id, .. } => channel_id.to_string(),
             MessageRequest::GetResponseById { channel_id, .. } => channel_id.to_string(),
             MessageRequest::BuildResponse { message, .. } => message.channel_id.to_string(),
             MessageRequest::BuildResponses { messages, .. } => messages
@@ -46,23 +42,6 @@ impl RouterService for MessagesRouter {
 
     fn coalesce_key(req: &MessageRequest) -> Option<String> {
         match req {
-            MessageRequest::GetById {
-                channel_id,
-                message_id,
-            } => Some(format!("get:{channel_id}:{message_id}")),
-            MessageRequest::GetLatest { channel_id, limit } => {
-                Some(format!("latest:{channel_id}:{limit}"))
-            }
-            MessageRequest::GetBefore {
-                channel_id,
-                before_id,
-                limit,
-            } => Some(format!("before:{channel_id}:{before_id}:{limit}")),
-            MessageRequest::GetAfter {
-                channel_id,
-                after_id,
-                limit,
-            } => Some(format!("after:{channel_id}:{after_id}:{limit}")),
             MessageRequest::GetResponseById {
                 channel_id,
                 message_id,
@@ -109,23 +88,6 @@ impl RouterService for MessagesRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn coalesce_key_includes_message_query_shape() {
-        let latest = MessageRequest::GetLatest {
-            channel_id: 42,
-            limit: 50,
-        };
-        let before = MessageRequest::GetBefore {
-            channel_id: 42,
-            before_id: 100,
-            limit: 50,
-        };
-        assert_ne!(
-            MessagesRouter::coalesce_key(&latest),
-            MessagesRouter::coalesce_key(&before)
-        );
-    }
 
     fn list_request(threads_mask: bool, exclude_types: Vec<i32>) -> MessageRequest {
         MessageRequest::ListResponses {

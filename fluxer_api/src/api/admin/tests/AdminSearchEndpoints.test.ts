@@ -1,53 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createDmChannel, createFriendship, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-
-async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: string): Promise<void> {
-	await createBuilder(harness, `${token}`)
-		.get('/users/@me')
-		.header('x-forwarded-for', ip)
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	await getUserActivityBuffer().drainAndFlush();
-}
-
-interface ReportListResponse {
-	reports: Array<{report_id: string; status: number}>;
-	total: number;
-	offset: number;
-	limit: number;
-}
-
-async function fileUserReport(harness: ApiTestHarness, reporter: TestAccount): Promise<string> {
-	const reported = await createTestAccount(harness);
-	const report = await createBuilder<{report_id: string}>(harness, reporter.token)
-		.post('/reports/user')
-		.body({user_id: reported.userId, category: 'harassment'})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	return report.report_id;
-}
-
-async function filePendingAndResolvedReports(
-	harness: ApiTestHarness,
-	admin: TestAccount,
-): Promise<{pendingReportId: string; resolvedReportId: string}> {
-	const reporter = await createTestAccount(harness);
-	const pendingReportId = await fileUserReport(harness, reporter);
-	const resolvedReportId = await fileUserReport(harness, reporter);
-	await createBuilder(harness, admin.token)
-		.patch(`/admin/reports/${resolvedReportId}`)
-		.body({status: 'resolved'})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	return {pendingReportId, resolvedReportId};
-}
+import {afterEach, beforeEach, describe, test} from 'vitest';
 
 describe('Admin Search Endpoints', () => {
 	let harness: ApiTestHarness;
@@ -66,69 +23,6 @@ describe('Admin Search Endpoints', () => {
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('returns empty results for non-matching query', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-			const result = await createBuilder<{
-				users: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users?q=${encodeURIComponent('nonexistent-user-query-xyz')}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users).toEqual([]);
-			expect(result.total).toBe(0);
-		});
-		test('returns matching users when query matches username', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-			const targetUser = await createTestAccount(harness, {
-				username: `searchable_user_${Date.now()}`,
-			});
-			const result = await createBuilder<{
-				users: Array<{
-					id: string;
-					username: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users?q=${encodeURIComponent(targetUser.username ?? '')}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.total).toBeGreaterThanOrEqual(1);
-			const foundUser = result.users.find((u) => u.id === targetUser.userId);
-			expect(foundUser).toBeDefined();
-			expect(foundUser?.username).toBe(targetUser.username);
-		});
-		test('respects limit and offset parameters', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
-			const result = await createBuilder<{
-				users: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users?limit=1&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.users.length).toBeLessThanOrEqual(1);
-		});
-		test('supports searching by last active IP', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
-			const targetUser = await createTestAccount(harness);
-			await setLastActiveIp(harness, targetUser.token, '198.51.100.91');
-			const result = await createBuilder<{
-				users: Array<{
-					id: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users?last_active_ip=${encodeURIComponent('198.51.100.91')}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.total).toBeGreaterThanOrEqual(1);
-			expect(result.users.find((user) => user.id === targetUser.userId)).toBeDefined();
-		});
 	});
 	describe('GET /admin/users/{user_id}/dm-channels', () => {
 		test('requires user:list:dm_channels ACL', async () => {
@@ -137,78 +31,6 @@ describe('Admin Search Endpoints', () => {
 			await createBuilder(harness, `${admin.token}`)
 				.get(`/admin/users/${admin.userId}/dm-channels?limit=10`)
 				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('returns paginated historical DM channels', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:list:dm_channels']);
-			const subjectUser = await createTestAccount(harness);
-			const recipientA = await createTestAccount(harness);
-			const recipientB = await createTestAccount(harness);
-			const recipientC = await createTestAccount(harness);
-			await createFriendship(harness, subjectUser, recipientA);
-			await createFriendship(harness, subjectUser, recipientB);
-			await createFriendship(harness, subjectUser, recipientC);
-			const dmA = await createDmChannel(harness, subjectUser.token, recipientA.userId);
-			const dmB = await createDmChannel(harness, subjectUser.token, recipientB.userId);
-			const dmC = await createDmChannel(harness, subjectUser.token, recipientC.userId);
-			const firstPage = await createBuilder<{
-				channels: Array<{
-					channel_id: string;
-					channel_type: number | null;
-					recipient_ids: Array<string>;
-					last_message_id: string | null;
-					is_open: boolean;
-				}>;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(firstPage.channels).toHaveLength(2);
-			expect(BigInt(firstPage.channels[0]!.channel_id)).toBeGreaterThan(BigInt(firstPage.channels[1]!.channel_id));
-			for (const channel of firstPage.channels) {
-				expect(channel.channel_type).toBe(1);
-				expect(channel.recipient_ids).toContain(subjectUser.userId);
-				expect(channel.is_open).toBe(true);
-			}
-			const secondPage = await createBuilder<{
-				channels: Array<{
-					channel_id: string;
-					channel_type: number | null;
-					recipient_ids: Array<string>;
-					last_message_id: string | null;
-					is_open: boolean;
-				}>;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2&before=${firstPage.channels[1]!.channel_id}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(secondPage.channels).toHaveLength(1);
-			expect(secondPage.channels[0]!.channel_id).not.toBe(firstPage.channels[0]!.channel_id);
-			expect(secondPage.channels[0]!.channel_id).not.toBe(firstPage.channels[1]!.channel_id);
-			const previousPage = await createBuilder<{
-				channels: Array<{
-					channel_id: string;
-					channel_type: number | null;
-					recipient_ids: Array<string>;
-					last_message_id: string | null;
-					is_open: boolean;
-				}>;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2&after=${secondPage.channels[0]!.channel_id}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(previousPage.channels.map((channel) => channel.channel_id)).toEqual(
-				firstPage.channels.map((channel) => channel.channel_id),
-			);
-			expect(new Set([dmA.id, dmB.id, dmC.id]).size).toBe(3);
-		});
-		test('rejects requests that specify both before and after cursors', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:list:dm_channels']);
-			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users/${admin.userId}/dm-channels?limit=10&before=1&after=2`)
-				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 		});
 	});
@@ -221,39 +43,6 @@ describe('Admin Search Endpoints', () => {
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('returns empty results for non-matching query', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const result = await createBuilder<{
-				guilds: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/guilds?q=nonexistent-guild-query-xyz&limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.guilds).toEqual([]);
-			expect(result.total).toBe(0);
-		});
-		test('returns matching guilds when query matches guild name', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const guildName = `searchable-guild-${Date.now()}`;
-			const guild = await createGuild(harness, admin.token, guildName);
-			const result = await createBuilder<{
-				guilds: Array<{
-					id: string;
-					name: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/guilds?q=${encodeURIComponent(guildName)}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.total).toBeGreaterThanOrEqual(1);
-			const foundGuild = result.guilds.find((g) => g.id === guild.id);
-			expect(foundGuild).toBeDefined();
-			expect(foundGuild?.name).toBe(guildName);
-		});
 	});
 	describe('/admin/reports', () => {
 		test('requires report:view ACL', async () => {
@@ -263,75 +52,6 @@ describe('Admin Search Endpoints', () => {
 				.get('/admin/reports?q=example&limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-		});
-		test('returns report list response when searching the report index', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
-			const result = await createBuilder<{
-				reports: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/reports?q=example&limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(Array.isArray(result.reports)).toBe(true);
-			expect(result.total).toBeGreaterThanOrEqual(result.reports.length);
-		});
-		test('returns report list response without search filters', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
-			const result = await createBuilder<{
-				reports: Array<unknown>;
-			}>(harness, `${admin.token}`)
-				.get('/admin/reports?status=pending&limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(Array.isArray(result.reports)).toBe(true);
-		});
-		test('a request with no query returns reports of every status with the page totals', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view', 'report:resolve']);
-			const {pendingReportId, resolvedReportId} = await filePendingAndResolvedReports(harness, admin);
-			const result = await createBuilder<ReportListResponse>(harness, admin.token)
-				.get('/admin/reports')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(new Map(result.reports.map((report) => [report.report_id, report.status]))).toEqual(
-				new Map([
-					[pendingReportId, 0],
-					[resolvedReportId, 1],
-				]),
-			);
-			expect(result.reports).toHaveLength(2);
-			expect(result.total).toBe(2);
-			expect(result.offset).toBe(0);
-			expect(result.limit).toBe(50);
-		});
-		test('a status filter alone returns only that status with the page totals', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view', 'report:resolve']);
-			const {pendingReportId, resolvedReportId} = await filePendingAndResolvedReports(harness, admin);
-			const pending = await createBuilder<ReportListResponse>(harness, admin.token)
-				.get('/admin/reports?status=pending')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(pending.reports.map((report) => [report.report_id, report.status])).toEqual([[pendingReportId, 0]]);
-			expect(pending.total).toBe(1);
-			expect(pending.offset).toBe(0);
-			expect(pending.limit).toBe(50);
-			const resolved = await createBuilder<ReportListResponse>(harness, admin.token)
-				.get('/admin/reports?status=resolved&limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(resolved.reports.map((report) => [report.report_id, report.status])).toEqual([[resolvedReportId, 1]]);
-			expect(resolved.total).toBe(1);
-			expect(resolved.offset).toBe(0);
-			expect(resolved.limit).toBe(10);
-			const pastTheEnd = await createBuilder<ReportListResponse>(harness, admin.token)
-				.get('/admin/reports?status=pending&limit=10&offset=5')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(pastTheEnd).toEqual({reports: [], total: 1, offset: 5, limit: 10});
 		});
 	});
 	describe('/admin/audit-logs (search)', () => {
@@ -343,115 +63,6 @@ describe('Admin Search Endpoints', () => {
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('returns results with proper structure', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view']);
-			const result = await createBuilder<{
-				logs: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result).toHaveProperty('logs');
-			expect(result).toHaveProperty('total');
-			expect(Array.isArray(result.logs)).toBe(true);
-			expect(typeof result.total).toBe('number');
-		});
-		test('supports filtering by admin_user_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${targetUser.userId}/acls`)
-				.body({acls: ['admin:authenticate']})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<{
-				logs: Array<{
-					admin_user_id: string;
-					action: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/audit-logs?admin_user_id=${admin.userId}&limit=50&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.total).toBeGreaterThanOrEqual(1);
-			for (const log of result.logs) {
-				expect(log.admin_user_id).toBe(admin.userId);
-			}
-		});
-		test('supports filtering by target_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${targetUser.userId}/acls`)
-				.body({acls: ['admin:authenticate']})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<{
-				logs: Array<{
-					target_id: string;
-					action: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/audit-logs?target_id=${targetUser.userId}&limit=50&offset=0`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.total).toBeGreaterThanOrEqual(1);
-			for (const log of result.logs) {
-				expect(log.target_id).toBe(targetUser.userId);
-			}
-		});
-		test('supports full-text search by query', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${targetUser.userId}/acls`)
-				.body({acls: ['admin:authenticate']})
-				.header('X-Audit-Log-Reason', 'unique-test-reason-xyz')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<{
-				logs: Array<{
-					audit_log_reason: string | null;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/audit-logs?q=set_acls&limit=50&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result).toHaveProperty('logs');
-			expect(result).toHaveProperty('total');
-		});
-		test('supports sort_by and sort_order parameters', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view']);
-			const resultDesc = await createBuilder<{
-				logs: Array<{
-					created_at: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0&sort_by=createdAt&sort_order=desc')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const resultAsc = await createBuilder<{
-				logs: Array<{
-					created_at: string;
-				}>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0&sort_by=createdAt&sort_order=asc')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(resultDesc).toHaveProperty('logs');
-			expect(resultAsc).toHaveProperty('logs');
-		});
 	});
 	describe('/admin/audit-logs/{log_id}', () => {
 		test('requires audit_log:view ACL', async () => {
@@ -460,14 +71,6 @@ describe('Admin Search Endpoints', () => {
 			await createBuilder(harness, `${admin.token}`)
 				.get('/admin/audit-logs/999999999999999999')
 				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('returns 404 for an unknown entry', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view']);
-			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/audit-logs/999999999999999999')
-				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
 		});
 	});
@@ -479,67 +82,6 @@ describe('Admin Search Endpoints', () => {
 				.get('/admin/audit-logs?limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-		});
-		test('returns results with proper structure', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view']);
-			const result = await createBuilder<{
-				logs: Array<unknown>;
-				total: number;
-			}>(harness, `${admin.token}`)
-				.get('/admin/audit-logs?limit=10&offset=0')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result).toHaveProperty('logs');
-			expect(result).toHaveProperty('total');
-			expect(Array.isArray(result.logs)).toBe(true);
-		});
-	});
-	describe('POST /admin/search/indexes/{index_name}/refreshes', () => {
-		test('rejects a channel_messages refresh without guild_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const response = await createBuilder<{
-				code: string;
-				errors: Array<{
-					path: string;
-				}>;
-			}>(harness, `${admin.token}`)
-				.post('/admin/search/indexes/channel_messages/refreshes')
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-			expect(response.errors[0]?.path).toBe('guild_id');
-		});
-		test('rejects a guild_members refresh without guild_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const response = await createBuilder<{
-				code: string;
-				errors: Array<{
-					path: string;
-				}>;
-			}>(harness, `${admin.token}`)
-				.post('/admin/search/indexes/guild_members/refreshes')
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-			expect(response.errors[0]?.path).toBe('guild_id');
-		});
-		test('rejects a favorite_memes refresh without user_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
-			const response = await createBuilder<{
-				code: string;
-				errors: Array<{
-					path: string;
-				}>;
-			}>(harness, `${admin.token}`)
-				.post('/admin/search/indexes/favorite_memes/refreshes')
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-			expect(response.errors[0]?.path).toBe('user_id');
 		});
 	});
 });

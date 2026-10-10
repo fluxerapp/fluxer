@@ -455,7 +455,7 @@ export const CHANNEL_RTC_P2P_SETTING_DESCRIPTION_DESCRIPTOR = msg({
 		'Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.',
 });
 
-export const SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR = msg({
+const SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR = msg({
 	message: 'Source',
 	comment:
 		'Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.',
@@ -465,7 +465,7 @@ const RESOLUTION_LABEL_HEIGHTS = [480, 720, 1080, 1440, 2160];
 const RESOLUTION_LABEL_ASPECT = 16 / 9;
 const RESOLUTION_LABEL_ASPECT_TOLERANCE = 0.01;
 
-export function formatScreenShareResolutionLabel(width: number, height: number): string {
+function formatScreenShareResolutionLabel(width: number, height: number): string {
 	const matchesAspect = Math.abs(width / height / RESOLUTION_LABEL_ASPECT - 1) <= RESOLUTION_LABEL_ASPECT_TOLERANCE;
 	if (matchesAspect && RESOLUTION_LABEL_HEIGHTS.includes(height)) {
 		return `${height}p`;

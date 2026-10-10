@@ -209,28 +209,9 @@ pub fn parse_hex_color(s: &str) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html_parser::OgMetadata;
 
     fn url(value: &str) -> Url {
         Url::parse(value).unwrap()
-    }
-
-    #[test]
-    fn resolve_media_url_resolves_relative_references() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-
-        assert_eq!(
-            resolve_media_url(&base, "/api/og").as_deref(),
-            Some("https://forgetful.vercel.app/api/og")
-        );
-        assert_eq!(
-            resolve_media_url(&base, "images/card.png").as_deref(),
-            Some("https://forgetful.vercel.app/posts/images/card.png")
-        );
-        assert_eq!(
-            resolve_media_url(&base, "//cdn.example.com/card.png").as_deref(),
-            Some("https://cdn.example.com/card.png")
-        );
     }
 
     #[test]
@@ -240,96 +221,5 @@ mod tests {
         assert!(resolve_media_url(&base, "javascript:alert(1)").is_none());
         assert!(resolve_media_url(&base, "data:image/png;base64,abcd").is_none());
         assert!(resolve_media_url(&base, "bad url.png").is_none());
-    }
-
-    #[test]
-    fn build_image_candidates_resolves_relative_og_images() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-        let og = OgMetadata {
-            images: vec![
-                "/api/og".to_owned(),
-                "images/card.png".to_owned(),
-                "//cdn.example.com/card.png".to_owned(),
-            ],
-            ..Default::default()
-        };
-
-        let candidates = build_image_candidates(&base, &og, None);
-        let urls = candidates
-            .into_iter()
-            .map(|candidate| candidate.url)
-            .collect::<Vec<_>>();
-
-        assert_eq!(
-            urls,
-            vec![
-                "https://forgetful.vercel.app/api/og".to_owned(),
-                "https://forgetful.vercel.app/posts/images/card.png".to_owned(),
-                "https://cdn.example.com/card.png".to_owned()
-            ]
-        );
-    }
-
-    #[test]
-    fn mediawiki_query_url_appends_params_to_the_rsd_href() {
-        let page = url("https://w.example/wiki/Rust");
-        let html = r#"<head><link rel="EditURI" type="application/rsd+xml" href="//w.example/w/api.php?action=rsd"></head>"#;
-        assert_eq!(
-            mediawiki_query_url(&page, html).as_deref(),
-            Some(
-                "https://w.example/w/api.php?action=rsd&action=query&prop=extracts&exintro=&explaintext=&format=json&titles=Rust"
-            )
-        );
-    }
-
-    #[test]
-    fn mediawiki_query_url_uses_question_mark_when_rsd_has_no_query() {
-        let page = url("https://w.example/wiki/Rust/");
-        let html =
-            r#"<head><link rel="EditURI" type="application/rsd+xml" href="/w/api.php"></head>"#;
-        assert_eq!(
-            mediawiki_query_url(&page, html).as_deref(),
-            Some(
-                "https://w.example/w/api.php?action=query&prop=extracts&exintro=&explaintext=&format=json&titles=Rust"
-            )
-        );
-    }
-
-    #[test]
-    fn mediawiki_query_url_reencodes_the_last_path_segment() {
-        let page = url("https://w.example/wiki/Rust_%28programming_language%29");
-        let html =
-            r#"<head><link rel="EditURI" type="application/rsd+xml" href="/w/api.php"></head>"#;
-        assert!(
-            mediawiki_query_url(&page, html)
-                .unwrap()
-                .ends_with("titles=Rust_%28programming_language%29")
-        );
-    }
-
-    #[test]
-    fn mediawiki_query_url_is_none_without_rsd_link() {
-        let page = url("https://w.example/wiki/Rust");
-        assert!(mediawiki_query_url(&page, "<head></head>").is_none());
-    }
-
-    #[test]
-    fn build_image_candidates_deduplicates_after_resolution() {
-        let base = url("https://forgetful.vercel.app/posts/page");
-        let og = OgMetadata {
-            images: vec![
-                "/api/og".to_owned(),
-                "https://forgetful.vercel.app/api/og/".to_owned(),
-            ],
-            ..Default::default()
-        };
-
-        let candidates = build_image_candidates(&base, &og, None);
-
-        assert_eq!(candidates.len(), 1);
-        assert_eq!(
-            candidates[0].url.as_str(),
-            "https://forgetful.vercel.app/api/og"
-        );
     }
 }

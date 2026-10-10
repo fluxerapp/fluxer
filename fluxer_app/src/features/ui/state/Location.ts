@@ -28,23 +28,10 @@ class Location {
 		return this.lastLocation;
 	}
 
-	getLastMobileLayoutState(): MobileLayoutState | null {
-		return this.lastMobileLayoutState;
-	}
-
 	saveLocation(location: string): void {
 		if (location && location !== this.lastLocation) {
 			this.lastLocation = location;
 		}
-	}
-
-	saveMobileLayoutState(mobileLayoutState: MobileLayoutState): void {
-		this.lastMobileLayoutState = mobileLayoutState;
-	}
-
-	saveLocationAndMobileState(location: string, mobileLayoutState: MobileLayoutState): void {
-		this.lastLocation = location;
-		this.lastMobileLayoutState = mobileLayoutState;
 	}
 
 	clearLastLocation(): void {

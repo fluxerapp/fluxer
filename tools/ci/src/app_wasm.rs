@@ -13,8 +13,9 @@ use tempfile::TempDir;
 
 const LIBFLUXCORE_WASM_BINDGEN_VERSION: &str = "0.2.128";
 const LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES: u64 = 300 * 1024;
-const LIBFLUXCORE_WRAPPER_JS: &str = include_str!("../templates/libfluxcore_wrapper.js");
-const LIBFLUXCORE_WRAPPER_DTS: &str = include_str!("../templates/libfluxcore_wrapper.d.ts");
+const LIBFLUXCORE_INDEX: &str = "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
+export * from './libfluxcore_bindgen.js';\n\
+export {default} from './libfluxcore_bindgen.js';\n";
 const LIBFLUXWEBP_SIMD_WASM_SIZE_BUDGET_BYTES: u64 = 672 * 1024;
 const LIBFLUXWEBP_SCALAR_WASM_SIZE_BUDGET_BYTES: u64 = 288 * 1024;
 const LIBFLUXWEBP_WASM_IMPORT_MODULE: &str = "./libfluxwebp_bg.js";
@@ -27,22 +28,11 @@ pub struct BuildAppWasmArgs {
     app_dir: Option<PathBuf>,
 }
 
-#[derive(Debug, Args, Clone)]
-pub struct BuildMarkdownParserWasmArgs {
-    #[arg(long)]
-    app_dir: Option<PathBuf>,
-}
-
 pub fn run_build_app_wasm(args: BuildAppWasmArgs) -> Result<()> {
     let app_dir = resolve_app_dir(args.app_dir)?;
     build_markdown_parser_wasm(&app_dir)?;
     build_libfluxcore_wasm(&app_dir)?;
     build_libfluxwebp_wasm(&app_dir)
-}
-
-pub fn run_build_markdown_parser_wasm(args: BuildMarkdownParserWasmArgs) -> Result<()> {
-    let app_dir = resolve_app_dir(args.app_dir)?;
-    build_markdown_parser_wasm(&app_dir)
 }
 
 const WASM_CC_ENV: &str = "CC_wasm32_unknown_unknown";
@@ -255,21 +245,13 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     )
     .with_context(|| format!("Failed to copy {}", bindgen_wasm_dts_path.display()))?;
 
-    fs::write(
-        out_dir.join("libfluxcore.js"),
-        libfluxcore_index_js_content(),
-    )
-    .with_context(|| {
+    fs::write(out_dir.join("libfluxcore.js"), LIBFLUXCORE_INDEX).with_context(|| {
         format!(
             "Failed to write {}",
             out_dir.join("libfluxcore.js").display()
         )
     })?;
-    fs::write(
-        out_dir.join("libfluxcore.d.ts"),
-        libfluxcore_index_dts_content(),
-    )
-    .with_context(|| {
+    fs::write(out_dir.join("libfluxcore.d.ts"), LIBFLUXCORE_INDEX).with_context(|| {
         format!(
             "Failed to write {}",
             out_dir.join("libfluxcore.d.ts").display()
@@ -680,25 +662,6 @@ fn write_with_spdx(path: &Path, content: &str) -> Result<()> {
     .with_context(|| format!("Failed to write {}", path.display()))
 }
 
-fn libfluxcore_index_js_content() -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-import {{crop_rotate_rgba_raw}} from './libfluxcore_bindgen.js';\n\
-{LIBFLUXCORE_WRAPPER_JS}\n\
-export * from './libfluxcore_bindgen.js';\n\
-export {{default}} from './libfluxcore_bindgen.js';\n"
-    )
-}
-
-fn libfluxcore_index_dts_content() -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export * from './libfluxcore_bindgen.js';\n\
-export {{default}} from './libfluxcore_bindgen.js';\n\n\
-{LIBFLUXCORE_WRAPPER_DTS}"
-    )
-}
-
 fn libfluxcore_package_json_content() -> String {
     let manifest = serde_json::json!({
         "name": "libfluxcore",
@@ -733,7 +696,7 @@ fn libfluxcore_package_json_content() -> String {
 fn libfluxcore_readme_content() -> &'static str {
     "<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->\n\
 # libfluxcore\n\n\
-Rust WebAssembly helpers and JavaScript codec wrappers for Fluxer media processing.\n"
+Rust WebAssembly helpers for Fluxer media processing.\n"
 }
 
 fn markdown_wasm_bytes_content(wasm: &[u8]) -> String {
@@ -780,16 +743,6 @@ mod tests {
     }
 
     #[test]
-    fn markdown_wasm_bytes_content_matches_legacy_node_output() {
-        assert_eq!(
-            markdown_wasm_bytes_content(b"hello"),
-            "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export const MARKDOWN_PARSER_WASM_BASE64 =\n\
-\t'aGVsbG8=';\n"
-        );
-    }
-
-    #[test]
     fn libfluxcore_build_keeps_its_output_in_the_crate_target_dir() {
         let package_dir = Path::new("/repo/fluxer_app/rust/libfluxcore");
         let target_dir = package_dir.join("target");
@@ -815,14 +768,6 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
                 "/repo/fluxer_app/rust/libfluxcore/target/wasm32-unknown-unknown/release/libfluxcore.wasm"
             )
         );
-    }
-
-    #[test]
-    fn libfluxcore_index_reexports_bindgen_module() {
-        let content = libfluxcore_index_js_content();
-        assert!(content.contains("import {crop_rotate_rgba_raw} from './libfluxcore_bindgen.js';"));
-        assert!(content.contains("export * from './libfluxcore_bindgen.js';"));
-        assert!(content.contains("export function crop_rotate_rgba("));
     }
 
     #[test]

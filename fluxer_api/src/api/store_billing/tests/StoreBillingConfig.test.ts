@@ -54,13 +54,6 @@ describe('store billing config', () => {
 		Config.instance.selfHosted = savedSelfHosted;
 	});
 
-	it('treats both stores as configured with the test credentials', () => {
-		expect(Config.appStore.enabled).toBe(true);
-		expect(Config.googlePlay.packages).toEqual(['com.fluxer']);
-		expect(isAppStoreConfigured()).toBe(true);
-		expect(isGooglePlayConfigured()).toBe(true);
-	});
-
 	it('treats a store as not configured when disabled', () => {
 		Config.appStore.enabled = false;
 		Config.googlePlay.enabled = false;

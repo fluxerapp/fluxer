@@ -492,65 +492,13 @@ dispatch_ready_data_includes_shard_metadata_test() ->
         ?assert(false, ready_not_dispatched)
     end.
 
-dispatch_ready_data_includes_gateway_timings_test() ->
-    drain_mailbox(),
-    GwTimings = gateway_timings:record(
-        test_gateway_step, gateway_timings:start() - 10, gateway_timings:new()
-    ),
-    State0 = (base_ready_state(
-        <<"session-ready-gateway-timings-test">>,
-        48,
-        false,
-        #{},
-        []
-    ))#{
-        gw_timings => GwTimings,
-        is_staff => true
-    },
-    {noreply, _State1} = session_ready:dispatch_ready_data(State0),
-    receive
-        {dispatch, ready, ReadyData, _ReadySeq} ->
-            Timings = maps:get(<<"_timings_gw">>, ReadyData),
-            ?assertEqual(<<"microseconds">>, maps:get(<<"unit">>, Timings)),
-            ?assert(is_binary(maps:get(<<"pod_name">>, Timings))),
-            ?assertNot(maps:is_key(<<"node_name">>, Timings)),
-            ?assertNot(maps:is_key(<<"erlang_node_name">>, Timings)),
-            Trace = maps:get(<<"trace">>, Timings),
-            TraceNames = [maps:get(<<"name">>, Span) || Span <- Trace],
-            ?assert(lists:member(<<"test_gateway_step">>, TraceNames)),
-            ReadySpan = find_trace_span(
-                <<"session_ready_dispatch:dispatch_ready_to_socket/1">>, Trace
-            ),
-            ReadyChildren = maps:get(<<"children">>, ReadySpan),
-            ReadyChildNames = [maps:get(<<"name">>, Span) || Span <- ReadyChildren],
-            ?assert(
-                lists:member(
-                    <<"session_ready_collect:collect_ready_presences/2">>, ReadyChildNames
-                )
-            ),
-            ?assert(
-                lists:member(
-                    <<"session_ready_collect:collect_ready_users/2">>, ReadyChildNames
-                )
-            ),
-            ?assert(
-                lists:member(
-                    <<"session_ready_dispatch:build_final_ready_data/9">>, ReadyChildNames
-                )
-            ),
-            ?assertNot(maps:is_key(<<"role">>, Timings)),
-            ?assertNot(maps:is_key(<<"steps">>, Timings)),
-            ?assertNot(maps:is_key(<<"nodes">>, Timings));
-        OtherReady ->
-            ?assert(false, {unexpected_ready_message, OtherReady})
-    after 1000 ->
-        ?assert(false, ready_not_dispatched)
-    end.
-
 dispatch_ready_data_omits_timings_for_non_staff_test() ->
     drain_mailbox(),
-    GwTimings = gateway_timings:record(
-        test_gateway_step, gateway_timings:start() - 10, gateway_timings:new()
+    GwTimings = gateway_timings:record_function(
+        test_gateway_step,
+        test_gateway_step,
+        gateway_timings:start() - 10,
+        gateway_timings:new()
     ),
     ApiTimings = #{
         <<"unit">> => <<"microseconds">>,
@@ -578,13 +526,6 @@ dispatch_ready_data_omits_timings_for_non_staff_test() ->
             ?assert(false, {unexpected_ready_message, OtherReady})
     after 1000 ->
         ?assert(false, ready_not_dispatched)
-    end.
-
--spec find_trace_span(binary(), [map()]) -> map().
-find_trace_span(Name, Trace) ->
-    case [Span || Span <- Trace, maps:get(<<"name">>, Span, undefined) =:= Name] of
-        [Span | _] -> Span;
-        [] -> error({trace_span_not_found, Name})
     end.
 
 -spec drain_mailbox() -> ok.

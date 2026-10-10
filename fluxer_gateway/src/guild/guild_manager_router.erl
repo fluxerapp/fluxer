@@ -148,8 +148,6 @@ owner_check_for({start_or_lookup, _GuildId}, GuildId) ->
     ensure_local_owner(GuildId);
 owner_check_for({lookup, _GuildId}, GuildId) ->
     ensure_local_owner(GuildId);
-owner_check_for({ensure_started, _GuildId}, GuildId) ->
-    ensure_local_owner(GuildId);
 owner_check_for(_Request, _GuildId) ->
     ok.
 

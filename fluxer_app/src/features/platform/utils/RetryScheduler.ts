@@ -56,12 +56,4 @@ export class ExponentialBackoff {
 	reset(): void {
 		this.attempts = 0;
 	}
-
-	static create(minDelay: number, maxDelay: number, maxAttempts?: number): ExponentialBackoff {
-		return new ExponentialBackoff({
-			minDelay,
-			maxDelay,
-			maxNumOfAttempts: maxAttempts,
-		});
-	}
 }

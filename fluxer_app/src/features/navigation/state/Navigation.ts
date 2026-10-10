@@ -58,14 +58,6 @@ class Navigation {
 		return this.currentLocation?.pathname ?? '';
 	}
 
-	get search(): string {
-		return this.currentLocation?.search ?? '';
-	}
-
-	get hash(): string {
-		return this.currentLocation?.hash ?? '';
-	}
-
 	get context(): 'dm' | 'favorites' | 'guild' {
 		const guildId = this.guildId;
 		if (!guildId || guildId === ME) return 'dm';

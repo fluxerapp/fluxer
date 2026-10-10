@@ -12,8 +12,6 @@ export abstract class IGuildContentRepository {
 
 	abstract listEmojis(guildId: GuildID): Promise<Array<GuildEmoji>>;
 
-	abstract countEmojis(guildId: GuildID): Promise<number>;
-
 	abstract upsertEmoji(data: GuildEmojiRow): Promise<GuildEmoji>;
 
 	abstract deleteEmoji(guildId: GuildID, emojiId: EmojiID): Promise<void>;
@@ -23,8 +21,6 @@ export abstract class IGuildContentRepository {
 	abstract getStickerById(stickerId: StickerID): Promise<GuildSticker | null>;
 
 	abstract listStickers(guildId: GuildID): Promise<Array<GuildSticker>>;
-
-	abstract countStickers(guildId: GuildID): Promise<number>;
 
 	abstract upsertSticker(data: GuildStickerRow): Promise<GuildSticker>;
 

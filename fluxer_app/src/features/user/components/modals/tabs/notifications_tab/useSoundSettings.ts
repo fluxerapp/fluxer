@@ -74,22 +74,6 @@ export function useSoundSettings() {
 	const handleToggleSound = (soundType: SoundType, enabled: boolean) => {
 		SoundCommands.updateSoundSettings({soundType, enabled});
 	};
-	const handleEnableAllSounds = () => {
-		Object.keys(soundTypeLabels).forEach((soundType) => {
-			SoundCommands.updateSoundSettings({
-				soundType: soundType as SoundType,
-				enabled: true,
-			});
-		});
-	};
-	const handleDisableAllSounds = () => {
-		Object.keys(soundTypeLabels).forEach((soundType) => {
-			SoundCommands.updateSoundSettings({
-				soundType: soundType as SoundType,
-				enabled: false,
-			});
-		});
-	};
 	const handlePreviewSound = useCallback((soundType: SoundType) => {
 		SoundCommands.stopAllSounds();
 		SoundCommands.previewSound(soundType);
@@ -177,8 +161,6 @@ export function useSoundSettings() {
 		customSounds,
 		handleToggleAllSounds,
 		handleToggleSound,
-		handleEnableAllSounds,
-		handleDisableAllSounds,
 		handlePreviewSound,
 		handleUploadClick,
 		handleCustomSoundDelete,

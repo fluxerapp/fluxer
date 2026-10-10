@@ -76,18 +76,6 @@ interface VoicePermissions {
 	canVideo: boolean;
 }
 
-interface UpdateVoiceStateParams {
-	guildId?: GuildID;
-	channelId: ChannelID;
-	userId: UserID;
-	connectionId: string;
-	mute?: boolean;
-	deaf?: boolean;
-	canSpeak?: boolean;
-	canStream?: boolean;
-	canVideo?: boolean;
-}
-
 export class VoiceService {
 	constructor(
 		private liveKitService: LiveKitService,
@@ -402,27 +390,6 @@ export class VoiceService {
 		serverId: string;
 	}): Promise<ListParticipantsResult> {
 		return await this.liveKitService.listParticipants(params);
-	}
-
-	async updateVoiceState(params: UpdateVoiceStateParams): Promise<void> {
-		const {guildId, channelId, userId, connectionId, mute, deaf} = params;
-		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
-		if (!pinnedServer) {
-			return;
-		}
-		await this.liveKitService.updateParticipant({
-			userId,
-			guildId,
-			channelId,
-			connectionId,
-			regionId: pinnedServer.regionId,
-			serverId: pinnedServer.serverId,
-			mute,
-			deaf,
-			canSpeak: params.canSpeak,
-			canStream: params.canStream,
-			canVideo: params.canVideo,
-		});
 	}
 
 	async updateParticipant(params: {

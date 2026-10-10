@@ -468,23 +468,6 @@ no_session_holds_push_test() ->
         })
     ).
 
-custom_status_comparator_test() ->
-    Expected = #{
-        <<"text">> => <<"hello">>,
-        <<"expires_at">> => null,
-        <<"emoji_id">> => null,
-        <<"emoji_name">> => null
-    },
-    ?assertEqual(null, custom_status_comparator(null)),
-    ?assertEqual(Expected, custom_status_comparator(#{<<"text">> => <<"hello">>})).
-
-normalize_state_custom_status_test() ->
-    ?assertEqual(null, normalize_state_custom_status(null)),
-    ?assertEqual(
-        #{<<"text">> => <<"hi">>}, normalize_state_custom_status(#{<<"text">> => <<"hi">>})
-    ),
-    ?assertEqual(null, normalize_state_custom_status(<<"invalid">>)).
-
 handle_user_settings_update_forces_invisible_status_test() ->
     State = #{
         custom_status => null,

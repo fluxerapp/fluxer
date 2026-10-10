@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {Message} from '@app/api/models/Message';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {
@@ -59,20 +59,12 @@ export class ElasticsearchMessageSearchService
 		await this.updateDocument(convertToSearchableMessage(message, authorIsBot));
 	}
 
-	async deleteMessage(messageId: MessageID): Promise<void> {
-		await this.deleteDocument(messageId.toString());
-	}
-
 	async deleteMessages(messageIds: Array<MessageID>): Promise<void> {
 		await this.deleteDocuments(messageIds.map((id) => id.toString()));
 	}
 
 	async deleteChannelMessages(channelId: ChannelID): Promise<void> {
 		await this.adapter.deleteByQuery({term: {channelId: channelId.toString()}});
-	}
-
-	async deleteGuildMessages(guildId: GuildID): Promise<void> {
-		await this.adapter.deleteByQuery({term: {guildId: guildId.toString()}});
 	}
 
 	searchMessages(

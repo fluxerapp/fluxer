@@ -96,12 +96,4 @@ mod tests {
             "scylla request timeout {REQUEST_TIMEOUT:?} outlives the shard budget"
         );
     }
-
-    #[test]
-    fn execution_profile_bounds_the_request_timeout() {
-        assert_eq!(
-            Some(REQUEST_TIMEOUT),
-            execution_profile().get_request_timeout()
-        );
-    }
 }

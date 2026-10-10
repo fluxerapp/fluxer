@@ -194,11 +194,6 @@ class EntranceSoundPlaybackEngine {
 	async fetchBuffer(url: string, hash: string): Promise<AudioBuffer | null> {
 		return this.fetchAndDecode(url, hash);
 	}
-
-	clear(): void {
-		for (const timer of this.speakingTimers.values()) clearTimeout(timer);
-		this.speakingTimers.clear();
-	}
 }
 
 const instance = new EntranceSoundPlaybackEngine();

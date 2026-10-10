@@ -156,7 +156,6 @@ export class AuthSessionManager {
 				send: actionBound,
 				setToken: actionBound,
 				setUserId: actionBound,
-				setError: actionBound,
 				transitionGate: false,
 				validateToken: false,
 			},
@@ -174,10 +173,6 @@ export class AuthSessionManager {
 
 	get userId(): string | null {
 		return this._snapshot.context.userId;
-	}
-
-	get error(): Error | null {
-		return this._snapshot.context.error;
 	}
 
 	get isAuthenticated(): boolean {
@@ -366,13 +361,6 @@ export class AuthSessionManager {
 		void this.deps.credentialMirror
 			.persist(this.activeSessionPointer() ?? emptyStoredSessionMirror())
 			.catch((error) => logger.error('Failed to persist the session user ID mirror', error));
-	}
-
-	async setError(error: Error | null): Promise<void> {
-		if (error) {
-			await this.deps.deactivateRuntime();
-			this.send({type: 'initialize.failed', error});
-		}
 	}
 
 	private activeSessionPointer(): StoredSessionMirror | null {

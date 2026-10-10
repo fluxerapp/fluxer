@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
 export type FavoriteMemeWire = Readonly<{
 	id: string;
@@ -66,58 +65,6 @@ export class FavoriteMeme {
 		this.gifProvider = meme.gif_provider;
 		this.media = meme.media;
 		this.placeholder = meme.placeholder ?? null;
-	}
-
-	get createdAtTimestamp(): number {
-		return SnowflakeUtils.extractTimestamp(this.id);
-	}
-
-	get createdAt(): Date {
-		return new Date(this.createdAtTimestamp);
-	}
-
-	isImage(): boolean {
-		return this.contentType.startsWith('image/');
-	}
-
-	isVideo(): boolean {
-		return this.contentType.startsWith('video/');
-	}
-
-	isAudio(): boolean {
-		return this.contentType.startsWith('audio/');
-	}
-
-	getMediaType(): 'image' | 'gifv' | 'video' | 'audio' | 'unknown' {
-		if (this.isGifv) return 'gifv';
-		if (this.isImage()) return 'image';
-		if (this.isVideo()) return 'video';
-		if (this.isAudio()) return 'audio';
-		return 'unknown';
-	}
-
-	equals(other: FavoriteMeme): boolean {
-		return (
-			this.id === other.id &&
-			this.userId === other.userId &&
-			this.name === other.name &&
-			this.altText === other.altText &&
-			JSON.stringify(this.tags) === JSON.stringify(other.tags) &&
-			this.attachmentId === other.attachmentId &&
-			this.filename === other.filename &&
-			this.contentType === other.contentType &&
-			this.contentHash === other.contentHash &&
-			this.size === other.size &&
-			this.width === other.width &&
-			this.height === other.height &&
-			this.duration === other.duration &&
-			this.isGifv === other.isGifv &&
-			this.url === other.url &&
-			this.gifSlug === other.gifSlug &&
-			this.gifProvider === other.gifProvider &&
-			JSON.stringify(this.media) === JSON.stringify(other.media) &&
-			this.placeholder === other.placeholder
-		);
 	}
 
 	toJSON(): FavoriteMemeWire {

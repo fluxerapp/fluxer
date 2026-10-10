@@ -2,7 +2,6 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 
 export const ThreadPermissionFlags = {
 	MANAGE_THREADS: 1n << 34n,
@@ -87,10 +86,6 @@ export function threadViewPermissions(parentPerms: bigint): bigint {
 	return has(perms, ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS)
 		? withoutSend | Permissions.SEND_MESSAGES
 		: withoutSend;
-}
-
-export function messageSendPermissionFor(type: number): bigint {
-	return THREAD_CHANNEL_TYPES.has(type) ? ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS : Permissions.SEND_MESSAGES;
 }
 
 export function canViewThread(ctx: ThreadActorContext): ThreadDenial | null {

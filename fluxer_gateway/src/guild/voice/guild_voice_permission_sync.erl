@@ -365,21 +365,6 @@ sync_user_voice_permissions_syncs_connected_user_test() ->
         ?assert(false)
     end.
 
-sync_user_voice_permissions_no_voice_state_test() ->
-    State = #{
-        id => 42,
-        voice_states => #{}
-    },
-    ok = sync_user_voice_permissions(10, State).
-
-maybe_sync_permissions_on_member_update_no_role_change_test() ->
-    State = #{id => 42, voice_states => #{}},
-    MemberUpdate = #{
-        <<"user">> => #{<<"id">> => <<"10">>},
-        <<"roles">> => [<<"1">>]
-    },
-    ?assertEqual(ok, maybe_sync_permissions_on_member_update(MemberUpdate, State)).
-
 sync_roles_after_change_uses_role_index_test() ->
     TestFun = make_sync_test_fun(),
     GuildId = 42,

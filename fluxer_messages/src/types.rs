@@ -71,24 +71,6 @@ mod serde_id {
 #[serde(tag = "op")]
 #[allow(clippy::enum_variant_names, clippy::large_enum_variant)]
 pub enum MessageRequest {
-    GetById {
-        channel_id: i64,
-        message_id: i64,
-    },
-    GetLatest {
-        channel_id: i64,
-        limit: u32,
-    },
-    GetBefore {
-        channel_id: i64,
-        before_id: i64,
-        limit: u32,
-    },
-    GetAfter {
-        channel_id: i64,
-        after_id: i64,
-        limit: u32,
-    },
     GetResponseById {
         channel_id: String,
         message_id: String,
@@ -172,8 +154,6 @@ pub enum MessageRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum MessageResponse {
-    Found(Message),
-    FoundMany(Vec<Message>),
     FoundApi(ApiMessageResponse),
     FoundApiMany(Vec<ApiMessageResponse>),
     FoundMentions(Vec<ExtractedMentionsResponse>),

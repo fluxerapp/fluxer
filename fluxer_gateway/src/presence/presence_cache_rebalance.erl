@@ -5,10 +5,8 @@
 
 -export([
     rebalance_ownership/1,
-    handoff_all_to_target/2,
     evict_local/2,
     perform_anti_entropy/1,
-    handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
     merge_anti_entropy_entries/2,
     schedule_anti_entropy/0,
@@ -41,17 +39,6 @@ rebalance_ownership(State) ->
         false -> rebalance_ownership_inner(State)
     end.
 
--spec handoff_all_to_target(node(), state()) -> state().
-handoff_all_to_target(TargetNode, State) ->
-    Snapshot = presence_cache:local_snapshot(State),
-    maps:fold(
-        fun(UserId, Presence, AccState) ->
-            handoff_entry_to_target(TargetNode, UserId, Presence, AccState)
-        end,
-        State,
-        Snapshot
-    ).
-
 -spec schedule_anti_entropy() -> reference().
 schedule_anti_entropy() ->
     presence_cache_anti_entropy:schedule_anti_entropy().
@@ -63,12 +50,6 @@ cancel_anti_entropy_timer(State) ->
 -spec perform_anti_entropy(state()) -> state().
 perform_anti_entropy(State) ->
     presence_cache_anti_entropy:perform_anti_entropy(State).
-
--spec handle_anti_entropy_request(node(), non_neg_integer(), state()) -> {noreply, state()}.
-handle_anti_entropy_request(FromNode, RemoteGeneration, State) ->
-    presence_cache_anti_entropy:handle_anti_entropy_request(
-        FromNode, RemoteGeneration, State
-    ).
 
 -spec handle_anti_entropy_digest_request(node(), binary(), state()) -> {noreply, state()}.
 handle_anti_entropy_digest_request(FromNode, RemoteDigest, State) ->
@@ -234,17 +215,6 @@ apply_op_to_node(TargetNode, UserId, delete, State) ->
             {ok, NewState};
         false ->
             remote_apply_op(TargetNode, {delete_local, UserId}, State)
-    end.
-
--spec handoff_entry_to_target(node(), integer(), map(), state()) -> state().
-handoff_entry_to_target(TargetNode, _UserId, _Presence, State) when TargetNode =:= node() ->
-    State;
-handoff_entry_to_target(TargetNode, UserId, Presence, State) ->
-    case remote_apply_op(TargetNode, {put_local, UserId, Presence}, State) of
-        {ok, State1} ->
-            evict_local(UserId, State1);
-        {error, State1} ->
-            State1
     end.
 
 -spec remote_apply_op(node(), term(), state()) -> {ok | error, state()}.

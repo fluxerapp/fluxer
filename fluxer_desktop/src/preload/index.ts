@@ -35,18 +35,11 @@ import type {
 	NativeAudioAvailability,
 	NativeAudioEndMessage,
 	NativeAudioFrameMessage,
-	NativeAudioRoutingGraphResult,
 	NativeAudioStartOptions,
 	NativeAudioStartResult,
-	NativeScreenCaptureAvailability,
-	NativeScreenCaptureDiagnostics,
-	NativeScreenCaptureEndMessage,
 	NativeScreenCaptureLifecycleEventKind,
 	NativeScreenCaptureLifecycleMessage,
 	NativeScreenCaptureLifecycleSource,
-	NativeScreenCaptureSource,
-	NativeScreenCaptureStartOptions,
-	NativeScreenCaptureStartResult,
 	NotificationOptions,
 	NotificationResult,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
@@ -63,7 +56,6 @@ import type {
 	UpdaterEvent,
 	VirtmicAvailability,
 	VirtmicNode,
-	VirtmicRoutingGraphResult,
 } from '@electron/common/Types';
 import {createBrowserHandoffPreloadAPI} from '@electron/preload/BrowserHandoffPreload';
 import {createDesktopStoragePreloadAPI} from '@electron/preload/DesktopStoragePreload';
@@ -778,7 +770,6 @@ const api: ElectronAPI = {
 			targets?: Array<VirtmicNode>;
 			availability: VirtmicAvailability;
 		}> => ipcRenderer.invoke('virtmic:list', options),
-		getRoutingGraph: (): Promise<VirtmicRoutingGraphResult> => ipcRenderer.invoke('virtmic:get-routing-graph'),
 		stop: (): Promise<void> => ipcRenderer.invoke('virtmic:stop'),
 	},
 	nativeAudio: {
@@ -792,8 +783,6 @@ const api: ElectronAPI = {
 		setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean> =>
 			ipcRenderer.invoke('native-audio:set-rule', captureId, linuxRule),
 		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-audio:stop', captureId),
-		getRoutingGraph: (captureId?: string): Promise<NativeAudioRoutingGraphResult> =>
-			ipcRenderer.invoke('native-audio:get-routing-graph', captureId),
 		onFrame: (callback: (message: NativeAudioFrameMessage) => void): (() => void) => {
 			const handler = (_event: Electron.IpcRendererEvent, message: NativeAudioFrameMessage): void => {
 				callback(message);
@@ -810,22 +799,6 @@ const api: ElectronAPI = {
 		},
 	},
 	nativeScreenCapture: {
-		getAvailability: (): Promise<NativeScreenCaptureAvailability> =>
-			ipcRenderer.invoke('native-screen-capture:get-availability'),
-		listSources: (): Promise<Array<NativeScreenCaptureSource>> =>
-			ipcRenderer.invoke('native-screen-capture:list-sources'),
-		start: (options: NativeScreenCaptureStartOptions): Promise<NativeScreenCaptureStartResult> =>
-			ipcRenderer.invoke('native-screen-capture:start', options),
-		getDiagnostics: (captureId: string): Promise<NativeScreenCaptureDiagnostics | null> =>
-			ipcRenderer.invoke('native-screen-capture:get-diagnostics', captureId),
-		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-screen-capture:stop', captureId),
-		onEnd: (callback: (message: NativeScreenCaptureEndMessage) => void): (() => void) => {
-			const handler = (_event: Electron.IpcRendererEvent, message: NativeScreenCaptureEndMessage): void => {
-				callback(message);
-			};
-			ipcRenderer.on('native-screen-capture:end', handler);
-			return () => ipcRenderer.removeListener('native-screen-capture:end', handler);
-		},
 		onLifecycleEvent: (callback: (message: NativeScreenCaptureLifecycleMessage) => void): (() => void) => {
 			const handler = (_event: Electron.IpcRendererEvent, message: unknown): void => {
 				const validated = validateNativeScreenCaptureLifecycleMessage(message);

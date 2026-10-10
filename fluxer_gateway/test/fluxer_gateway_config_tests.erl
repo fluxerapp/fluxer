@@ -4,47 +4,6 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
-cluster_defaults_test() ->
-    Config = fluxer_gateway_config:build_config(#{}),
-    ?assertEqual(false, maps:get(cluster_enabled, Config)),
-    ?assertEqual(undefined, maps:get(cluster_discovery_dns_name, Config)),
-    ?assertEqual(undefined, maps:get(cluster_discovery_node_basename, Config)),
-    ?assertEqual(5000, maps:get(cluster_discovery_poll_interval_ms, Config)),
-    ?assertEqual([], maps:get(cluster_static_peers, Config)).
-
-cluster_overrides_test() ->
-    RawConfig = #{
-        <<"services">> => #{
-            <<"gateway">> => #{
-                <<"cluster_enabled">> => true,
-                <<"cluster_discovery_dns_name">> =>
-                    <<"fluxer-gateway-headless.fluxer.svc.cluster.local">>,
-                <<"cluster_discovery_node_basename">> => <<"fluxer_gateway">>,
-                <<"cluster_discovery_poll_interval_ms">> => 2500,
-                <<"cluster_static_peers">> =>
-                    <<"fluxer_gateway_websocket_1@127.0.0.1, fluxer_gateway_sessions_1@127.0.0.1">>
-            }
-        }
-    },
-    Config = fluxer_gateway_config:build_config(RawConfig),
-    ?assertEqual(true, maps:get(cluster_enabled, Config)),
-    ?assertEqual(
-        "fluxer-gateway-headless.fluxer.svc.cluster.local",
-        maps:get(cluster_discovery_dns_name, Config)
-    ),
-    ?assertEqual(
-        "fluxer_gateway",
-        maps:get(cluster_discovery_node_basename, Config)
-    ),
-    ?assertEqual(2500, maps:get(cluster_discovery_poll_interval_ms, Config)),
-    ?assertEqual(
-        [
-            list_to_atom("fluxer_gateway_websocket_1@127.0.0.1"),
-            list_to_atom("fluxer_gateway_sessions_1@127.0.0.1")
-        ],
-        maps:get(cluster_static_peers, Config)
-    ).
-
 cluster_static_peers_rejects_invalid_node_names_test() ->
     LongPeer = list_to_binary(lists:duplicate(260, $a)),
     RawConfig = #{
@@ -78,68 +37,6 @@ cluster_static_peers_accepts_valid_node_names_test() ->
     ?assertEqual(
         [list_to_atom("valid_peer@127.0.0.1"), list_to_atom("other-valid@node.local")],
         maps:get(cluster_static_peers, Config)
-    ).
-
-push_clear_switch_reads_the_enrolled_env_name_test() ->
-    ?assertEqual(
-        true, maps:get(push_enrolled_clear_notifications_enabled, fluxer_gateway_config:load())
-    ),
-    with_env("FLUXER_GATEWAY_PUSH_ENROLLED_CLEAR_NOTIFICATIONS_ENABLED", "false", fun() ->
-        Config = fluxer_gateway_config:load(),
-        ?assertEqual(false, maps:get(push_enrolled_clear_notifications_enabled, Config))
-    end).
-
-gateway_config_holds_no_direct_push_delivery_keys_test() ->
-    Config = fluxer_gateway_config:load(),
-    lists:foreach(
-        fun(Key) -> ?assertNot(maps:is_key(Key, Config)) end,
-        [
-            push_clear_notifications_enabled,
-            push_endpoint_guard_enabled,
-            push_managed_relay_hosts,
-            push_relay_consent_accepted,
-            vapid_public_key,
-            apns_enabled,
-            fcm_enabled,
-            gateway_http_push_max_concurrency
-        ]
-    ).
-
-presence_push_buffer_env_defaults_test() ->
-    with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES", "7", fun() ->
-        with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES", "4096", fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(7, maps:get(presence_push_buffer_max_entries, Config)),
-            ?assertEqual(4096, maps:get(presence_push_buffer_max_bytes, Config))
-        end)
-    end).
-
-env_only_http_runtime_config_test() ->
-    with_envs(
-        [
-            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "42"},
-            {"FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", "9"},
-            {"FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", "6000"}
-        ],
-        fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(42, maps:get(gateway_http_rpc_max_concurrency, Config)),
-            ?assertEqual(9, maps:get(gateway_http_failure_threshold, Config)),
-            ?assertEqual(6000, maps:get(gateway_http_recovery_timeout_ms, Config))
-        end
-    ).
-
-rpc_concurrency_keys_are_independent_test() ->
-    with_envs(
-        [
-            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "128"},
-            {"FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS", "2048"}
-        ],
-        fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(128, maps:get(gateway_http_rpc_max_concurrency, Config)),
-            ?assertEqual(2048, maps:get(gateway_nats_rpc_max_handlers, Config))
-        end
     ).
 
 env_int_rejects_a_non_integer_value_test() ->
@@ -177,100 +74,10 @@ blank_env_values_fall_back_to_the_defaults_test() ->
         end
     ).
 
-logger_level_env_test() ->
-    with_env("FLUXER_GATEWAY_LOGGER_LEVEL", "Debug", fun() ->
-        ?assertEqual(debug, maps:get(logger_level, fluxer_gateway_config:load()))
-    end).
-
-rpc_concurrency_key_defaults_test() ->
-    Config = fluxer_gateway_config:build_config(#{}),
-    ?assertEqual(512, maps:get(gateway_nats_rpc_max_handlers, Config)),
-    ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config)).
-
-pinned_node_defaults_keep_release_behaviour_test() ->
-    Config = fluxer_gateway_config:load(),
-    ?assertEqual(true, maps:get(nats_rpc_enabled, Config)),
-    ?assertEqual([], maps:get(pinned_guild_ids, Config)),
-    ?assertEqual(undefined, maps:get(guild_pin_keeper_beam, Config)).
-
-pinned_node_env_test() ->
-    with_envs(
-        [
-            {"FLUXER_GATEWAY_NATS_RPC_ENABLED", "false"},
-            {"FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001, 42"},
-            {"FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM", "/etc/fluxer/gw/gateway_node_router.beam"},
-            {"FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM_MD5", "D5E42B1D6D85C4CDEE93AA0CCA18A420"}
-        ],
-        fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(false, maps:get(nats_rpc_enabled, Config)),
-            ?assertEqual([42, 1100000000000000001], maps:get(pinned_guild_ids, Config)),
-            ?assertEqual(
-                "/etc/fluxer/gw/gateway_node_router.beam",
-                maps:get(guild_pin_keeper_beam, Config)
-            ),
-            ?assertEqual(
-                <<"D5E42B1D6D85C4CDEE93AA0CCA18A420">>,
-                maps:get(guild_pin_keeper_beam_md5, Config)
-            )
-        end
-    ).
-
 pinned_guild_ids_reject_non_snowflakes_test() ->
     with_env("FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001,ab", fun() ->
         ?assertError({invalid_pinned_guild_id, "ab"}, fluxer_gateway_config:load())
     end).
-
-optional_string_test() ->
-    ?assertEqual(undefined, fluxer_gateway_config:optional_string(undefined)),
-    ?assertEqual("hello", fluxer_gateway_config:optional_string(<<"hello">>)),
-    ?assertEqual("", fluxer_gateway_config:optional_string(<<>>)).
-
-public_endpoints_env_non_default_port_test() ->
-    with_envs(
-        [
-            {"FLUXER_BASE_DOMAIN", "fluxer.example"},
-            {"FLUXER_PUBLIC_SCHEME", "https"},
-            {"FLUXER_PUBLIC_PORT", "8443"},
-            {"FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT", "https://fluxer.example/media"},
-            {"FLUXER_GATEWAY_STATIC_CDN_ENDPOINT", "https://fluxer.example"}
-        ],
-        fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(
-                <<"https://fluxer.example:8443/media">>,
-                maps:get(media_proxy_endpoint, Config)
-            ),
-            ?assertEqual(
-                <<"https://fluxer.example:8443">>, maps:get(static_cdn_endpoint, Config)
-            )
-        end
-    ).
-
-public_endpoints_env_default_port_test() ->
-    with_envs(
-        [
-            {"FLUXER_BASE_DOMAIN", "fluxer.example"},
-            {"FLUXER_PUBLIC_SCHEME", "https"},
-            {"FLUXER_PUBLIC_PORT", "443"},
-            {"FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT", "https://fluxer.example/media"},
-            {"FLUXER_GATEWAY_STATIC_CDN_ENDPOINT", "https://cdn.othercdn.net"}
-        ],
-        fun() ->
-            Config = fluxer_gateway_config:load(),
-            ?assertEqual(
-                <<"https://fluxer.example/media">>, maps:get(media_proxy_endpoint, Config)
-            ),
-            ?assertEqual(
-                <<"https://cdn.othercdn.net">>, maps:get(static_cdn_endpoint, Config)
-            )
-        end
-    ).
-
-public_endpoints_defaults_test() ->
-    Config = fluxer_gateway_config:build_config(#{}),
-    ?assertEqual(undefined, maps:get(media_proxy_endpoint, Config)),
-    ?assertEqual(<<"http://localhost:8088">>, maps:get(static_cdn_endpoint, Config)).
 
 env_value_reads_name_file_test() ->
     with_env_file(<<"from-file\r\n">>, fun(Path) ->

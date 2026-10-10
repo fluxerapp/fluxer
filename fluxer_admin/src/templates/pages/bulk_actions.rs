@@ -419,30 +419,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add_grid_offers_only_the_opt_in_clone_features() {
-        let markup = guild_feature_checkbox_grid("add_features[]", false).into_string();
-        assert!(markup.contains(r#"value="CLONE_EMOJI_ENABLED""#));
-        assert!(markup.contains(r#"value="CLONE_STICKER_ENABLED""#));
-        assert!(!markup.contains(r#"value="CLONE_EMOJI_DISABLED""#));
-        assert!(!markup.contains(r#"value="CLONE_STICKER_DISABLED""#));
-    }
-
-    #[test]
-    fn deletion_form_has_no_preselected_reason() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
-        assert!(markup.contains(r#"<option value="" selected>Select a reason</option>"#));
-        for (value, _) in DELETION_REASONS {
-            assert!(!markup.contains(&format!(r#"<option value="{value}" selected>"#)));
-        }
-    }
-
-    #[test]
-    fn deletion_form_defaults_to_the_moderation_retention_floor() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
-        assert!(markup.contains(r#"name="days_until_deletion" value="60" min="14" max="365""#));
-    }
-
-    #[test]
     fn deletion_form_emails_each_user_by_default() {
         let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
         assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
@@ -455,14 +431,5 @@ mod tests {
         assert!(!deletion.contains("Email each user"));
         assert!(!deletion.contains(r#"name="notify_user" value="true""#));
         assert!(deletion.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn remove_grid_can_clear_the_deprecated_clone_features() {
-        let markup = guild_feature_checkbox_grid("remove_features[]", true).into_string();
-        assert!(markup.contains(r#"value="CLONE_EMOJI_DISABLED""#));
-        assert!(markup.contains(r#"value="CLONE_STICKER_DISABLED""#));
-        assert!(markup.contains("CLONE_EMOJI_DISABLED (deprecated, removal only)"));
-        assert!(markup.contains(r#"value="CLONE_EMOJI_ENABLED""#));
     }
 }

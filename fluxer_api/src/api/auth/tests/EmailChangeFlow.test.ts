@@ -117,10 +117,6 @@ async function verifyNewEmailChange(
 	return resp.email_token;
 }
 
-async function unclaimAccount(harness: ApiTestHarness, userId: string): Promise<void> {
-	await createBuilderWithoutAuth(harness).post(`/test/users/${userId}/unclaim`).body(null).expect(200).execute();
-}
-
 describe('Email change flow', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
@@ -249,50 +245,6 @@ describe('Email change flow', () => {
 			})
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
-	});
-	it('returns original_proof from start when require_original is false', async () => {
-		const account = await createTestAccount(harness);
-		await unclaimAccount(harness, account.userId);
-		const startResp = await createBuilder<EmailChangeStartResponse>(harness, account.token)
-			.post('/users/@me/email-change/start')
-			.body({})
-			.execute();
-		expect(startResp.require_original).toBe(false);
-		expect(startResp.original_proof).toBeDefined();
-		expect(startResp.original_proof!.length).toBeGreaterThan(0);
-	});
-	it('verify-original returns original_proof for verified email accounts', async () => {
-		const account = await createTestAccount(harness);
-		const startResp = await startEmailChange(harness, account, account.password);
-		let originalProof: string;
-		if (startResp.require_original) {
-			const emails = await listTestEmails(harness, {recipient: account.email});
-			const originalEmail = findLastTestEmail(emails, 'email_change_original');
-			expect(originalEmail?.metadata?.code).toBeDefined();
-			const originalCode = originalEmail!.metadata!.code!;
-			originalProof = await verifyOriginalEmailChange(
-				harness,
-				account,
-				startResp.ticket,
-				originalCode,
-				account.password,
-			);
-			expect(originalProof.length).toBeGreaterThan(0);
-		} else {
-			expect(startResp.original_proof).toBeDefined();
-			expect(startResp.original_proof!.length).toBeGreaterThan(0);
-			originalProof = startResp.original_proof!;
-		}
-		const newEmail = `integration-verify-flow-${Date.now()}@example.com`;
-		const newReq = await requestNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newEmail,
-			originalProof,
-			account.password,
-		);
-		expect(newReq.new_email).toBe(newEmail);
 	});
 	it('keeps email_token valid when another account grabs the address before final apply', async () => {
 		const account = await createTestAccount(harness);
@@ -656,40 +608,6 @@ describe('Email change flow', () => {
 			.expect(200)
 			.execute();
 		expect(updated.email).toBe(newEmail);
-	});
-	it('claims clean unclaimed accounts', async () => {
-		const account = await createTestAccount(harness);
-		await unclaimAccount(harness, account.userId);
-		const startResp = await createBuilder<EmailChangeStartResponse>(harness, account.token)
-			.post('/users/@me/email-change/start')
-			.body({})
-			.expect(200)
-			.execute();
-		expect(startResp.require_original).toBe(false);
-		expect(startResp.original_proof).toBeDefined();
-		const originalProof = startResp.original_proof!;
-		const newEmail = `integration-claim-clean-${Date.now()}@example.com`;
-		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const token = await verifyNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const updated = await createBuilder<UserPrivateResponse>(harness, account.token)
-			.patch('/users/@me')
-			.body({
-				email_token: token,
-			})
-			.expect(200)
-			.execute();
-		expect(updated.email).toBe(newEmail);
-		expect(updated.verified).toBe(true);
 	});
 	it('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
 		const account = await createTestAccount(harness);

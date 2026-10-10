@@ -103,25 +103,6 @@ export async function listRelationships(
 	return {response, json};
 }
 
-export async function updateFriendNickname(
-	harness: ApiTestHarness,
-	token: string,
-	targetId: string,
-	nickname: string | null,
-): Promise<{
-	response: Response;
-	json: RelationshipResponse;
-}> {
-	const {response, json} = await createBuilder<RelationshipResponse>(harness, token)
-		.patch(`/users/@me/relationships/${targetId}`)
-		.body({nickname})
-		.executeWithResponse();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}`);
-	}
-	return {response, json};
-}
-
 export function assertRelationshipType(relationship: RelationshipResponse, expectedType: number): void {
 	expect(relationship.type).toBe(expectedType);
 }

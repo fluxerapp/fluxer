@@ -140,16 +140,6 @@ disconnect_voice_user_if_in_channel_ignored_test() ->
     {reply, #{ignored := true}, _} =
         disconnect_voice_user_if_in_channel(#{user_id => 5, expected_channel_id => 99}, State).
 
-recently_disconnected_test() ->
-    ?assertEqual(#{}, recently_disconnected_voice_states(#{})),
-    Cache = #{<<"conn">> => #{voice_state => #{}, disconnected_at => 1000}},
-    ?assertEqual(
-        Cache,
-        recently_disconnected_voice_states(
-            #{recently_disconnected_voice_states => Cache}
-        )
-    ).
-
 cache_and_clear_recently_disconnected_test() ->
     VS = voice_state_fixture(5, 10, 20),
     S1 = guild_voice_disconnect_broadcast:cache_recently_disconnected(#{<<"conn">> => VS}, #{}),
@@ -202,17 +192,6 @@ disconnect_all_voice_users_in_channel_test() ->
     Remaining = maps:get(voice_states, NewState),
     ?assert(maps:is_key(<<"c">>, Remaining)),
     ?assertNot(maps:is_key(<<"a">>, Remaining)).
-
-pending_connection_tests_test() ->
-    Pending = #{
-        <<"conn1">> => #{user_id => 5, channel_id => 100},
-        <<"conn2">> => #{user_id => 6, channel_id => 100}
-    },
-    State = #{pending_voice_connections => Pending, voice_states => #{}},
-    S1 = guild_voice_disconnect_broadcast:clear_pending_voice_connection(<<"conn1">>, State),
-    ?assertNot(maps:is_key(<<"conn1">>, maps:get(pending_voice_connections, S1))),
-    S2 = guild_voice_disconnect_broadcast:clear_pending_voice_connection(<<"missing">>, State),
-    ?assertEqual(State, S2).
 
 disconnect_voice_user_cleans_pending_test() ->
     Pending = #{

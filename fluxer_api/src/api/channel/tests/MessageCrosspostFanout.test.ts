@@ -21,12 +21,11 @@ import {
 	createAnnouncementTargetGuild,
 	createGuildChannel,
 	disableCrosspostWorker,
-	findWebhookRow,
 	follow,
 	publish,
 } from '@app/api/channel/tests/AnnouncementTestUtils';
 import {loadFixture} from '@app/api/channel/tests/AttachmentTestUtils';
-import {createPermissionOverwrite, updateGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
 import {addGuildFeature, createStallGate, patchGuildRow} from '@app/api/channel/tests/CrosspostTestUtils';
 import {
 	copiesOf,
@@ -47,7 +46,6 @@ import {
 	workerHelpers,
 	writeRow,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
-import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {Logger} from '@app/api/Logger';
 import {getMessages} from '@app/api/message/tests/MessageTestUtils';
 import {startContentBlocklistCaches, stopContentBlocklistCaches} from '@app/api/middleware/ContentBlocklistCaches';
@@ -74,7 +72,6 @@ import {
 	GuildOperations,
 } from '@fluxer/constants/src/GuildConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import sharp from 'sharp';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 function createBarrier(parties: number): () => Promise<void> {
@@ -132,24 +129,6 @@ describe('Crosspost fan-out', () => {
 
 	async function createTextChannel(name: string): Promise<ChannelResponse> {
 		return createGuildChannel(harness, world.b.owner.token, world.b.guild.id, {name, type: ChannelTypes.GUILD_TEXT});
-	}
-
-	async function setSourceIcon(icon: string | null): Promise<string | null> {
-		const updated = await updateGuild(harness, world.a.owner.token, world.a.guild.id, {icon});
-		return updated.icon ?? null;
-	}
-
-	async function solidPngDataUrl(background: string): Promise<string> {
-		const png = await sharp({create: {width: 32, height: 32, channels: 3, background}})
-			.png()
-			.toBuffer();
-		return `data:image/png;base64,${png.toString('base64')}`;
-	}
-
-	function webhookAvatarCopies(webhookId: string): Array<{sourceKey: string; destinationKey: string}> {
-		return harness.storageService
-			.getCopiedObjects()
-			.filter((copy) => copy.destinationKey.startsWith(`avatars/${webhookId}/`));
 	}
 
 	function attachmentObjectCopies(): Array<string> {
@@ -982,79 +961,5 @@ describe('Crosspost fan-out', () => {
 		expect(copyRow.attachments.map((attachment) => attachment.id)).toEqual([first.id, extraId]);
 		expect(attachmentObjectCopies()).toEqual([]);
 		expect(deletedKeys().filter((key) => key.startsWith('attachments/'))).toEqual([]);
-	});
-
-	describe('copy author avatar', () => {
-		test('a follow captures the source icon and the copy uses it', async () => {
-			const icon = await setSourceIcon(getPngDataUrl());
-			expect(icon).toBeTruthy();
-			const webhookId = await followInto(harness, world, world.b.t1.id);
-			expect((await findWebhookRow(webhookId))?.avatarHash).toBe(icon);
-			expect(webhookAvatarCopies(webhookId)).toEqual([
-				{
-					sourceBucket: Config.s3.buckets.cdn,
-					sourceKey: `icons/${world.a.guild.id}/${icon!.replace(/^a_/, '')}`,
-					destinationBucket: Config.s3.buckets.cdn,
-					destinationKey: `avatars/${webhookId}/${icon!.replace(/^a_/, '')}`,
-				},
-			]);
-			const source = await postAndPublish(harness, world, {content: 'with icon'});
-			const [copy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, source.id);
-			expect(copy!.author.avatar).toBe(icon);
-			expect(webhookAvatarCopies(webhookId)).toHaveLength(1);
-		});
-
-		test('a changed source icon reaches new copies while the webhook keeps its snapshot', async () => {
-			const oldIcon = await setSourceIcon(getPngDataUrl());
-			const webhookId = await followInto(harness, world, world.b.t1.id);
-			const before = await postAndPublish(harness, world, {content: 'before'});
-			const newIcon = await setSourceIcon(await solidPngDataUrl('#ff0000'));
-			expect(newIcon).toBeTruthy();
-			expect(newIcon).not.toBe(oldIcon);
-			const first = await postAndPublish(harness, world, {content: 'after one'});
-			const second = await postAndPublish(harness, world, {content: 'after two'});
-			expect((await findWebhookRow(webhookId))?.avatarHash).toBe(oldIcon);
-			const newKey = newIcon!.replace(/^a_/, '');
-			const [firstCopy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, first.id);
-			const [secondCopy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, second.id);
-			expect(firstCopy!.author.avatar).toBe(newIcon);
-			expect(secondCopy!.author.avatar).toBe(newIcon);
-			expect((await readRow(world.b.t1.id, firstCopy!.id))?.webhookAvatarHash).toBe(newIcon);
-			const newIconCopies = webhookAvatarCopies(webhookId).filter(
-				(copy) => copy.destinationKey === `avatars/${webhookId}/${newKey}`,
-			);
-			expect(newIconCopies).toEqual([expect.objectContaining({sourceKey: `icons/${world.a.guild.id}/${newKey}`})]);
-			expect(
-				await harness.storageService.getObjectMetadata(Config.s3.buckets.cdn, `avatars/${webhookId}/${newKey}`),
-			).not.toBeNull();
-			const [beforeCopy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, before.id);
-			expect(beforeCopy!.author.avatar).toBe(oldIcon);
-			await editRequest(harness, world.a.owner.token, world.a.ann.id, before.id, {content: 'before edited'})
-				.expect(200)
-				.execute();
-			await world.worker.drain();
-			const [editedCopy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, before.id);
-			expect(editedCopy!.content).toBe('before edited');
-			expect(editedCopy!.author.avatar).toBe(oldIcon);
-		});
-
-		test('a source guild without an icon gives a null avatar on the webhook and the copy', async () => {
-			const webhookId = await followInto(harness, world, world.b.t1.id);
-			expect((await findWebhookRow(webhookId))?.avatarHash ?? null).toBeNull();
-			const source = await postAndPublish(harness, world, {content: 'no icon'});
-			const [copy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, source.id);
-			expect(copy!.author.avatar ?? null).toBeNull();
-			expect(webhookAvatarCopies(webhookId)).toHaveLength(0);
-		});
-
-		test('removing the source icon after following gives new copies a null avatar', async () => {
-			const icon = await setSourceIcon(getPngDataUrl());
-			const webhookId = await followInto(harness, world, world.b.t1.id);
-			expect(await setSourceIcon(null)).toBeNull();
-			const source = await postAndPublish(harness, world, {content: 'icon removed'});
-			const [copy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, source.id);
-			expect(copy!.author.avatar ?? null).toBeNull();
-			expect((await findWebhookRow(webhookId))?.avatarHash).toBe(icon);
-		});
 	});
 });

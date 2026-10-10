@@ -12,7 +12,6 @@ import {
 	callCallerRpcParams,
 	type GatewayChannelMention,
 	type GatewayGuildMemoryStats,
-	type GatewayMentionSources,
 	type GatewayMentionSourcesPage,
 	type GatewayNodeStats,
 	type GatewayVoiceStateCounts,
@@ -153,26 +152,6 @@ interface ChannelCountParams {
 	guildId: GuildID;
 }
 
-interface UsersToMentionByRolesParams {
-	guildId: GuildID;
-	channelId: ChannelID;
-	roleIds: Array<RoleID>;
-	authorId: UserID;
-}
-
-interface UsersToMentionByUserIdsParams {
-	guildId: GuildID;
-	channelId: ChannelID;
-	userIds: Array<UserID>;
-	authorId: UserID;
-}
-
-interface AllUsersToMentionParams {
-	guildId: GuildID;
-	channelId: ChannelID;
-	authorId: UserID;
-}
-
 interface ResolveAllMentionsParams {
 	guildId: GuildID;
 	channelId: ChannelID;
@@ -217,12 +196,6 @@ interface UpdateMemberVoiceParams {
 	userId: UserID;
 	mute: boolean;
 	deaf: boolean;
-}
-
-interface DisconnectVoiceUserParams {
-	guildId: GuildID;
-	userId: UserID;
-	connectionId: string | null;
 }
 
 interface MoveMemberParams {
@@ -1212,103 +1185,6 @@ export class GatewayService {
 		return result.channel_ids.map((id: string) => createChannelID(BigInt(id)));
 	}
 
-	async getUsersToMentionByRoles({
-		guildId,
-		channelId,
-		roleIds,
-		authorId,
-	}: UsersToMentionByRolesParams): Promise<Array<UserID>> {
-		const result = await this.call<{
-			user_ids: Array<string>;
-		}>('guild.get_users_to_mention_by_roles', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-			role_ids: roleIds.map((id) => id.toString()),
-			author_id: authorId.toString(),
-		});
-		return result.user_ids.map((id: string) => createUserID(BigInt(id)));
-	}
-
-	async getUsersToMentionByUserIds({
-		guildId,
-		channelId,
-		userIds,
-		authorId,
-	}: UsersToMentionByUserIdsParams): Promise<Array<UserID>> {
-		const result = await this.call<{
-			user_ids: Array<string>;
-		}>('guild.get_users_to_mention_by_user_ids', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-			user_ids: userIds.map((id) => id.toString()),
-			author_id: authorId.toString(),
-		});
-		return result.user_ids.map((id: string) => createUserID(BigInt(id)));
-	}
-
-	async getAllUsersToMention({guildId, channelId, authorId}: AllUsersToMentionParams): Promise<Array<UserID>> {
-		const result = await this.call<{
-			user_ids: Array<string>;
-		}>('guild.get_all_users_to_mention', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-			author_id: authorId.toString(),
-		});
-		return result.user_ids.map((id: string) => createUserID(BigInt(id)));
-	}
-
-	async resolveAllMentions({
-		guildId,
-		channelId,
-		authorId,
-		mentionEveryone,
-		mentionHere,
-		roleIds,
-		userIds,
-	}: ResolveAllMentionsParams): Promise<Array<UserID>> {
-		const result = await this.call<{
-			user_ids: Array<string>;
-		}>('guild.resolve_all_mentions', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-			author_id: authorId.toString(),
-			mention_everyone: mentionEveryone,
-			mention_here: mentionHere,
-			role_ids: roleIds.map((id) => id.toString()),
-			user_ids: userIds.map((id) => id.toString()),
-		});
-		return result.user_ids.map((id: string) => createUserID(BigInt(id)));
-	}
-
-	async resolveMentionSources({
-		guildId,
-		channelId,
-		authorId,
-		mentionEveryone,
-		mentionHere,
-		roleIds,
-		userIds,
-	}: ResolveAllMentionsParams): Promise<GatewayMentionSources> {
-		const result = await this.call<{
-			direct_user_ids: Array<string>;
-			role_user_ids: Array<string>;
-			everyone_user_ids: Array<string>;
-		}>('guild.resolve_mention_sources', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-			author_id: authorId.toString(),
-			mention_everyone: mentionEveryone,
-			mention_here: mentionHere,
-			role_ids: roleIds.map((id) => id.toString()),
-			user_ids: userIds.map((id) => id.toString()),
-		});
-		return {
-			directUserIds: result.direct_user_ids.map((id: string) => createUserID(BigInt(id))),
-			roleUserIds: result.role_user_ids.map((id: string) => createUserID(BigInt(id))),
-			everyoneUserIds: result.everyone_user_ids.map((id: string) => createUserID(BigInt(id))),
-		};
-	}
-
 	async resolveMentionSourcesPage({
 		guildId,
 		channelId,
@@ -1366,15 +1242,6 @@ export class GatewayService {
 		return result.channels ?? [];
 	}
 
-	async getVanityUrlChannel(guildId: GuildID): Promise<ChannelID | null> {
-		const result = await this.call<{
-			channel_id: string | null;
-		}>('guild.get_vanity_url_channel', {
-			guild_id: guildId.toString(),
-		});
-		return result.channel_id ? createChannelID(BigInt(result.channel_id)) : null;
-	}
-
 	async getFirstViewableTextChannel(guildId: GuildID): Promise<ChannelID | null> {
 		const result = await this.call<{
 			channel_id: string | null;
@@ -1423,14 +1290,6 @@ export class GatewayService {
 			deaf,
 		});
 		return {success: result.success};
-	}
-
-	async disconnectVoiceUser({guildId, userId, connectionId}: DisconnectVoiceUserParams): Promise<void> {
-		await this.call('guild.disconnect_voice_user', {
-			guild_id: guildId.toString(),
-			user_id: userId.toString(),
-			connection_id: connectionId,
-		});
 	}
 
 	async disconnectVoiceUserIfInChannel({
@@ -1556,23 +1415,6 @@ export class GatewayService {
 		});
 	}
 
-	async disconnectAllVoiceUsersInChannel({guildId, channelId}: {guildId: GuildID; channelId: ChannelID}): Promise<{
-		success: boolean;
-		disconnectedCount: number;
-	}> {
-		const result = await this.call<{
-			success: boolean;
-			disconnected_count: number;
-		}>('guild.disconnect_all_voice_users_in_channel', {
-			guild_id: guildId.toString(),
-			channel_id: channelId.toString(),
-		});
-		return {
-			success: result.success,
-			disconnectedCount: result.disconnected_count,
-		};
-	}
-
 	async confirmVoiceConnection({
 		guildId,
 		channelId,
@@ -1634,36 +1476,6 @@ export class GatewayService {
 		};
 	}
 
-	async getPendingJoinsForChannel({guildId, channelId}: {guildId?: GuildID; channelId: ChannelID}): Promise<{
-		pendingJoins: Array<{
-			connectionId: string;
-			userId: string;
-			tokenNonce: string;
-			expiresAt: number;
-		}>;
-	}> {
-		const params: Record<string, string> = {channel_id: channelId.toString()};
-		if (guildId !== undefined) {
-			params['guild_id'] = guildId.toString();
-		}
-		const result = await this.call<{
-			pending_joins: Array<{
-				connection_id: string;
-				user_id: string;
-				token_nonce: string;
-				expires_at: number;
-			}>;
-		}>('voice.get_pending_joins_for_channel', params);
-		return {
-			pendingJoins: (result.pending_joins ?? []).map((pj) => ({
-				connectionId: pj.connection_id,
-				userId: pj.user_id,
-				tokenNonce: pj.token_nonce,
-				expiresAt: pj.expires_at,
-			})),
-		};
-	}
-
 	async getCall(channelId: ChannelID): Promise<CallData | null> {
 		return this.call<CallData | null>('call.get', {channel_id: channelId.toString()});
 	}
@@ -1700,26 +1512,6 @@ export class GatewayService {
 
 	async stopRingingCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean> {
 		return this.call<boolean>('call.stop_ringing', {channel_id: channelId.toString(), recipients});
-	}
-
-	async deleteCall(channelId: ChannelID): Promise<boolean> {
-		return this.call<boolean>('call.delete', {channel_id: channelId.toString()});
-	}
-
-	async getDiscoveryOnlineCounts(guildIds: Array<GuildID>): Promise<Map<GuildID, number>> {
-		const result = await this.call<{
-			online_counts: Array<{
-				guild_id: string;
-				online_count: number;
-			}>;
-		}>('guild.get_online_counts_batch', {
-			guild_ids: guildIds.map(String),
-		});
-		const counts = new Map<GuildID, number>();
-		for (const entry of result.online_counts) {
-			counts.set(BigInt(entry.guild_id) as GuildID, entry.online_count);
-		}
-		return counts;
 	}
 
 	async getDiscoveryGuildCounts(guildIds: Array<GuildID>): Promise<

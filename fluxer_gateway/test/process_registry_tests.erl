@@ -6,57 +6,6 @@
 
 -define(REGISTRY_TABLE, process_registry_table).
 
-build_process_key_integer_atom_test() ->
-    ?assertEqual({guild, 123456}, process_registry:build_process_key(guild, 123456)),
-    ?assertEqual({channel, 0}, process_registry:build_process_key(channel, 0)),
-    ?assertEqual({voice, 999}, process_registry:build_process_key(voice, 999)).
-
-build_process_key_integer_string_test() ->
-    ?assertEqual({channel, 999}, process_registry:build_process_key("channel", 999)),
-    ?assertEqual({guild, 12345}, process_registry:build_process_key("guild", 12345)),
-    ?assertEqual({voice, 0}, process_registry:build_process_key("voice", 0)).
-
-build_process_key_binary_atom_test() ->
-    ?assertEqual(
-        {guild, <<"123456">>}, process_registry:build_process_key(guild, <<"123456">>)
-    ),
-    ?assertEqual({voice, <<"789">>}, process_registry:build_process_key(voice, <<"789">>)),
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key(channel, <<"abc">>)).
-
-build_process_key_binary_string_test() ->
-    ?assertEqual({voice, <<"789">>}, process_registry:build_process_key("voice", <<"789">>)),
-    ?assertEqual({guild, <<"test">>}, process_registry:build_process_key("guild", <<"test">>)),
-    ?assertEqual(
-        {channel, <<"123">>}, process_registry:build_process_key("channel", <<"123">>)
-    ).
-
-build_process_key_string_atom_test() ->
-    ?assertEqual({guild, <<"123456">>}, process_registry:build_process_key(guild, "123456")),
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key(channel, "abc")),
-    ?assertEqual({voice, <<"xyz">>}, process_registry:build_process_key(voice, "xyz")).
-
-build_process_key_string_string_test() ->
-    ?assertEqual({channel, <<"abc">>}, process_registry:build_process_key("channel", "abc")),
-    ?assertEqual({guild, <<"test">>}, process_registry:build_process_key("guild", "test")),
-    ?assertEqual({voice, <<"123">>}, process_registry:build_process_key("voice", "123")).
-
-build_process_key_special_chars_test() ->
-    ?assertEqual({guild, <<"123_456">>}, process_registry:build_process_key(guild, "123_456")),
-    ?assertEqual(
-        {channel, <<"test-channel">>},
-        process_registry:build_process_key(channel, "test-channel")
-    ).
-
-build_process_name_is_alias_test() ->
-    ?assertEqual(
-        process_registry:build_process_key(guild, 123),
-        process_registry:build_process_name(guild, 123)
-    ),
-    ?assertEqual(
-        process_registry:build_process_key(session, <<"abc">>),
-        process_registry:build_process_name(session, <<"abc">>)
-    ).
-
 register_and_monitor_success_test() ->
     process_registry:init(),
     Key = {test_reg, 1001},

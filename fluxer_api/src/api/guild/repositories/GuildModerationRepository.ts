@@ -2,17 +2,14 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {BatchBuilder, executeGroupedBatches, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
-import {Db, type DbOp, type QueryTemplate, type WhereExpr} from '@app/api/database/CassandraTypes';
-import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {QueryTemplate, WhereExpr} from '@app/api/database/CassandraTypes';
 import type {
 	GuildAuditLogRow,
 	GuildBanByEmailRow,
 	GuildBanByUserIdRow,
 	GuildBanRow,
-	GuildRow,
 } from '@app/api/database/types/GuildTypes';
 import {IGuildModerationRepository} from '@app/api/guild/repositories/IGuildModerationRepository';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import {GuildBan} from '@app/api/models/GuildBan';
 import {
@@ -23,7 +20,6 @@ import {
 	GuildBans,
 	GuildBansByEmail,
 	GuildBansByUserId,
-	Guilds,
 } from '@app/api/Tables';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {seconds} from 'itty-time';
@@ -43,10 +39,6 @@ const FETCH_GUILD_BANS_BY_USER_ID_QUERY = GuildBansByUserId.selectCql({
 	where: GuildBansByUserId.where.eq('user_id'),
 });
 const AUDIT_LOG_TTL_SECONDS = seconds('45 days');
-const FETCH_GUILD_BY_ID_QUERY = Guilds.selectCql({
-	where: Guilds.where.eq('guild_id'),
-	limit: 1,
-});
 const FETCH_GUILD_AUDIT_LOG_QUERY = GuildAuditLogs.selectCql({
 	where: [GuildAuditLogs.where.eq('guild_id'), GuildAuditLogs.where.eq('log_id')],
 	limit: 1,
@@ -56,10 +48,6 @@ const FETCH_GUILD_AUDIT_LOGS_BY_IDS_QUERY = GuildAuditLogs.selectCql({
 });
 
 export class GuildModerationRepository extends IGuildModerationRepository {
-	constructor(private readonly requestCache?: RequestCache) {
-		super();
-	}
-
 	async getBan(guildId: GuildID, userId: UserID): Promise<GuildBan | null> {
 		const ban = await fetchOne<GuildBanRow>(FETCH_GUILD_BAN_BY_GUILD_AND_USER_ID_QUERY, {
 			guild_id: guildId,
@@ -279,26 +267,6 @@ export class GuildModerationRepository extends IGuildModerationRepository {
 		batch.addPrepared(GuildAuditLogsByUserAction.insertWithTtl(payload, AUDIT_LOG_TTL_SECONDS));
 		await batch.execute();
 		return this.mapRowToGuildAuditLog(payload);
-	}
-
-	async updateAuditLogsIndexedAt(guildId: GuildID, indexedAt: Date | null): Promise<void> {
-		this.requestCache?.guilds.delete(guildId);
-		await executeVersionedUpdate<GuildRow, 'guild_id'>(
-			() => fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId}),
-			(current) => {
-				const patch: Record<string, DbOp<unknown>> = {};
-				if (indexedAt !== null) {
-					patch['audit_logs_indexed_at'] = Db.set(indexedAt);
-				} else if (current?.audit_logs_indexed_at !== null && current?.audit_logs_indexed_at !== undefined) {
-					patch['audit_logs_indexed_at'] = Db.clear();
-				}
-				return {
-					pk: {guild_id: guildId},
-					patch,
-				};
-			},
-			Guilds,
-		);
 	}
 
 	private mapRowToGuildAuditLog(row: GuildAuditLogRow): GuildAuditLog {

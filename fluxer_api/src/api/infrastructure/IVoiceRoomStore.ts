@@ -21,12 +21,4 @@ export abstract class IVoiceRoomStore {
 	} | null>;
 
 	abstract deleteRoomServer(guildId: GuildID | undefined, channelId: ChannelID): Promise<void>;
-
-	abstract getRegionOccupancy(regionId: string): Promise<Array<string>>;
-
-	abstract getServerOccupancy(regionId: string, serverId: string): Promise<Array<string>>;
-
-	async listPinnedRooms(): Promise<Array<{guildId?: GuildID; channelId: ChannelID}>> {
-		return [];
-	}
 }

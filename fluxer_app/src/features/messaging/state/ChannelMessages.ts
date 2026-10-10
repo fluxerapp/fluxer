@@ -327,10 +327,6 @@ export class ChannelMessages {
 		return ChannelMessages.channelCache.get(channelId);
 	}
 
-	static hasNewestMessages(channelId: string): boolean {
-		return ChannelMessages.get(channelId)?.hasNewestMessages() ?? false;
-	}
-
 	static getOrCreate(channelId: string): ChannelMessages {
 		let instance = ChannelMessages.channelCache.get(channelId);
 		if (!instance) {
@@ -367,10 +363,6 @@ export class ChannelMessages {
 		ChannelMessages.channelCache.set(instance.channelId, instance);
 		ChannelMessages.markTouched(instance.channelId);
 		return instance;
-	}
-
-	static save(instance: ChannelMessages): void {
-		ChannelMessages.channelCache.set(instance.channelId, instance);
 	}
 
 	private static markTouched(channelId: string): void {
@@ -450,10 +442,6 @@ export class ChannelMessages {
 			return;
 		}
 		this.messageList.forEach(callback, thisArg);
-	}
-
-	reduce<T>(reducer: (memo: T, message: Message, index: number, array: Array<Message>) => T, initial: T): T {
-		return this.messageList.reduce(reducer, initial);
 	}
 
 	forEachBuffered(callback: (m: Message, idx: number, arr: Array<Message>) => void, thisArg?: unknown): void {

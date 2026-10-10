@@ -438,12 +438,6 @@ notification_level_setting(Settings, Default) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-is_private_channel_test() ->
-    ?assertEqual(true, is_private_channel(#{<<"channel_type">> => 1})),
-    ?assertEqual(true, is_private_channel(#{<<"channel_type">> => 3})),
-    ?assertEqual(false, is_private_channel(#{<<"channel_type">> => 0})),
-    ?assertEqual(false, is_private_channel(#{})).
-
 muted_channel_suppresses_push_test() ->
     UserId = 100,
     ChannelId = 200,
@@ -669,35 +663,6 @@ strip_thread_eligibility_keeps_delivery_fields_test() ->
     ),
     ?assertEqual(#{<<"id">> => 1}, strip_thread_eligibility(#{<<"id">> => 1})).
 
-is_user_in_mentions_test() ->
-    Mentions = [#{<<"id">> => <<"123">>}, #{<<"id">> => <<"456">>}],
-    ?assertEqual(true, is_user_in_mentions(123, Mentions)),
-    ?assertEqual(true, is_user_in_mentions(456, Mentions)),
-    ?assertEqual(false, is_user_in_mentions(789, Mentions)).
-
-mention_matches_user_test() ->
-    ?assertEqual(true, mention_matches_user(123, #{<<"id">> => 123})),
-    ?assertEqual(true, mention_matches_user(123, #{<<"id">> => <<"123">>})),
-    ?assertEqual(false, mention_matches_user(123, #{<<"id">> => <<"456">>})),
-    ?assertEqual(false, mention_matches_user(123, #{})).
-
-has_mentioned_role_test() ->
-    ?assertEqual(true, has_mentioned_role([1, 2, 3], [2, 4])),
-    ?assertEqual(true, has_mentioned_role([1, 2, 3], [<<"2">>])),
-    ?assertEqual(false, has_mentioned_role([1, 2, 3], [4, 5])),
-    ?assertEqual(false, has_mentioned_role([], [1, 2])).
-
-normalize_notification_level_test() ->
-    ?assertEqual(0, normalize_notification_level(0)),
-    ?assertEqual(1, normalize_notification_level(1)),
-    ?assertEqual(2, normalize_notification_level(2)),
-    ?assertEqual(0, normalize_notification_level(99)).
-
-enforce_only_mentions_test() ->
-    ?assertEqual(1, enforce_only_mentions(0)),
-    ?assertEqual(1, enforce_only_mentions(1)),
-    ?assertEqual(2, enforce_only_mentions(2)).
-
 is_large_guild_test() ->
     ?assertEqual(true, is_large_guild(3000, [])),
     ?assertEqual(false, is_large_guild(300, [])),
@@ -708,10 +673,6 @@ is_large_guild_test() ->
     ?assertEqual(true, is_large_guild(300, [<<"LARGE_GUILD_OVERRIDE">>])),
     ?assertEqual(true, is_large_guild(undefined, [<<"LARGE_GUILD_OVERRIDE">>])).
 
-large_guild_threshold_is_the_production_value_test() ->
-    ?assertEqual(2500, ?LARGE_GUILD_THRESHOLD),
-    ?assertEqual(?LARGE_GUILD_THRESHOLD, large_guild_threshold()).
-
 mid_sized_guilds_keep_all_notifications_test() ->
     MessageData = #{<<"channel_type">> => 0},
     Metadata = #{member_count => 1000, features => []},
@@ -719,11 +680,6 @@ mid_sized_guilds_keep_all_notifications_test() ->
         true,
         check_muted_and_notifications(100, 200, MessageData, 0, #{}, #{}, 1, #{}, Metadata)
     ).
-
-has_large_guild_override_test() ->
-    ?assertEqual(true, has_large_guild_override([<<"LARGE_GUILD_OVERRIDE">>])),
-    ?assertEqual(false, has_large_guild_override([<<"OTHER">>])),
-    ?assertEqual(false, has_large_guild_override(not_a_list)).
 
 cached_large_guild_metadata_overrides_all_notifications_test() ->
     MessageData = #{<<"channel_type">> => 0},

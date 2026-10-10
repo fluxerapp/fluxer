@@ -2,7 +2,7 @@
 
 import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
 import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
-import {GuildMemberProfileFlags, type JoinSourceType} from '@fluxer/constants/src/GuildConstants';
+import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 
 export class GuildMember {
@@ -54,14 +54,6 @@ export class GuildMember {
 
 	hasProfileFlag(flag: number): boolean {
 		return (this.profileFlags & flag) === flag;
-	}
-
-	isAvatarUnset(): boolean {
-		return this.hasProfileFlag(GuildMemberProfileFlags.AVATAR_UNSET);
-	}
-
-	isBannerUnset(): boolean {
-		return this.hasProfileFlag(GuildMemberProfileFlags.BANNER_UNSET);
 	}
 
 	toRow(): GuildMemberRow {

@@ -79,10 +79,7 @@ import {
 	showVoiceChannelFullModal,
 	syncVoiceStateToServer,
 } from '@app/features/voice/engine/VoiceChannelConnector';
-import type {
-	VoiceConnectionFailureReason,
-	VoiceConnectionLocalDisconnectReason,
-} from '@app/features/voice/engine/VoiceConnectionStateMachine';
+import type {VoiceConnectionLocalDisconnectReason} from '@app/features/voice/engine/VoiceConnectionStateMachine';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
@@ -447,10 +444,6 @@ class MediaEngineFacade extends Store {
 		logger.debug('MediaEngineFacade initialized');
 	}
 
-	setI18n(instance: I18n): void {
-		this.i18n = instance;
-	}
-
 	private createSourceLifecycleBridge(): VoiceEngineV2AppSourceLifecycleBridge | null {
 		const api = getElectronAPI()?.nativeScreenCapture;
 		if (!api || typeof api.onLifecycleEvent !== 'function') return null;
@@ -663,10 +656,6 @@ class MediaEngineFacade extends Store {
 		return voiceEngineV2AppConnectionHostAdapter.connectFailed;
 	}
 
-	get connectFailureReason(): VoiceConnectionFailureReason {
-		return voiceEngineV2AppConnectionHostAdapter.connectFailureReason;
-	}
-
 	get localDisconnectReason(): VoiceConnectionLocalDisconnectReason {
 		return voiceEngineV2AppConnectionHostAdapter.localDisconnectReason;
 	}
@@ -736,15 +725,6 @@ class MediaEngineFacade extends Store {
 
 	get reconnectionCount(): number {
 		return this.statsHostAdapter.reconnectionCount;
-	}
-
-	get estimatedLatency(): number | null {
-		return this.statsHostAdapter.estimatedLatency;
-	}
-
-	get displayLatency(): number | null {
-		const measured = this.currentLatency;
-		return measured !== null ? measured : this.estimatedLatency;
 	}
 
 	refreshCameraBackgroundFromSettings(): void {
@@ -1946,10 +1926,6 @@ class MediaEngineFacade extends Store {
 		}
 	}
 
-	handleGatewayVoiceStateDelete(guildId: string, userId: string): void {
-		voiceEngineV2AppVoiceStateAdapter.handleGatewayVoiceStateDelete(guildId, userId);
-	}
-
 	getCurrentUserVoiceState(guildId?: string | null): NormalizedVoiceState | null {
 		return voiceEngineV2AppVoiceStateAdapter.getCurrentUserVoiceState(
 			guildId,
@@ -2351,10 +2327,6 @@ class MediaEngineFacade extends Store {
 		await this.setCameraEnabled(!current, {deviceId: VoiceSettings.getVideoDeviceId()});
 	}
 
-	async toggleScreenShareFromKeybind(): Promise<void> {
-		await voiceEngineV2AppScreenShareExecutionAdapter.toggleScreenShareFromKeybind(this.room);
-	}
-
 	private startTracking(roomOverride?: Room | null): void {
 		const room = roomOverride ?? voiceEngineV2AppConnectionHostAdapter.room;
 		if (!room) {
@@ -2585,27 +2557,6 @@ class MediaEngineFacade extends Store {
 		sendVoiceStateDisconnect(guildId, connectionId);
 	}
 
-	disconnectAllRemoteDevices(
-		devices: ReadonlyArray<{
-			guildId: string;
-			connectionId: string;
-		}>,
-	): void {
-		let shouldDisconnectCurrentDevice = false;
-		const currentConnectionId = voiceEngineV2AppConnectionHostAdapter.connectionId;
-		for (const device of devices) {
-			if (device.connectionId === currentConnectionId) {
-				shouldDisconnectCurrentDevice = true;
-				continue;
-			}
-			this.discardVoiceConnection(device.connectionId);
-			sendVoiceStateDisconnect(device.guildId, device.connectionId);
-		}
-		if (shouldDisconnectCurrentDevice) {
-			void this.disconnectFromVoiceChannel('user');
-		}
-	}
-
 	async moveToAfkChannel(): Promise<void> {
 		const {guildId, channelId, connected} = voiceEngineV2AppConnectionHostAdapter.connectionState;
 		if (!connected || !guildId || !channelId) return;
@@ -2743,21 +2694,6 @@ class MediaEngineFacade extends Store {
 		this.voiceEngineV2Participants.clear();
 		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('cleanup');
 		this.transitionFacadeState({type: 'cleanup.complete'});
-	}
-
-	reset(): void {
-		this.terminalUnloadVoiceDisconnectSent = false;
-		this.cancelPendingServerDisconnect();
-		this.clearViewerStreamKeys();
-		this.statsHostAdapter.reset();
-		this.transitionFacadeState({type: 'cleanup.reset'});
-		voiceEngineV2AppConnectionHostAdapter.resetConnectionState();
-		voiceEngineV2AppConnectionHostAdapter.resetReconnectState();
-		VoiceEngineV2AppRemoteSpeakingAdapter.clear();
-		VoiceEngineV2AppPermissionAdapter.reset();
-		this.resetLocalMediaAndScreenShareTracking();
-		this.voiceEngineV2Participants.clear();
-		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('cleanup');
 	}
 
 	private async reapplyVideoQualityLimits(room: Room): Promise<void> {

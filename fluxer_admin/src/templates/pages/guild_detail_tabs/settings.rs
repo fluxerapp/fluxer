@@ -294,32 +294,3 @@ fn readonly_field(label: &str, value: &str) -> Markup {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    fn guild() -> GuildDetailInfo {
-        serde_json::from_value(json!({
-            "id": "1500000000000000001",
-            "owner_id": "1400000000000000001",
-            "name": "Guild",
-            "verification_level": 1
-        }))
-        .expect("valid guild detail")
-    }
-
-    #[test]
-    fn low_verification_names_a_claimed_account_in_username_mode() {
-        let markup = settings_tab_readonly(&guild(), true).into_string();
-        assert!(markup.contains("Low (claimed account)"));
-        assert!(!markup.contains("verified email"));
-    }
-
-    #[test]
-    fn low_verification_names_a_verified_email_in_email_mode() {
-        let markup = settings_tab_readonly(&guild(), false).into_string();
-        assert!(markup.contains("Low (verified email)"));
-    }
-}

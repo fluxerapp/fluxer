@@ -64,8 +64,6 @@ export abstract class ICacheService {
 
 	abstract extendLock(key: string, token: string, ttlSeconds: number): Promise<boolean>;
 
-	abstract getAndRenewTtl<T>(key: string, newTtlSeconds: number): Promise<T | null>;
-
 	abstract publish(channel: string, message: string): Promise<void>;
 
 	abstract sadd(key: string, member: string, ttlSeconds?: number): Promise<void>;

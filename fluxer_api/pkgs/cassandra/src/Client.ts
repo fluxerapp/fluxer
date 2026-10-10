@@ -37,14 +37,12 @@ interface CassandraBatchOptions {
 interface ICassandraClient {
 	connect(): Promise<void>;
 	shutdown(): Promise<void>;
-	isConnected(): boolean;
 	execute<P extends CassandraParams>(
 		query: PreparedQuery<P>,
 		options?: CassandraExecuteOptions,
 	): Promise<cassandra.types.ResultSet>;
 	batch(queries: Array<PreparedQuery>, options?: CassandraBatchOptions): Promise<void>;
 	getNativeClient(): cassandra.Client;
-	setLogger(logger: Logger): void;
 }
 
 interface DefaultClientState {
@@ -131,10 +129,6 @@ class CassandraClient implements ICassandraClient {
 		this.logger.info({}, 'Cassandra connection closed');
 	}
 
-	public isConnected(): boolean {
-		return this.client !== null;
-	}
-
 	public async execute<P extends CassandraParams>(
 		query: PreparedQuery<P>,
 		options: CassandraExecuteOptions = {},
@@ -159,10 +153,6 @@ class CassandraClient implements ICassandraClient {
 			throw new Error('Cassandra client is not connected. Call connect() first.');
 		}
 		return this.client;
-	}
-
-	public setLogger(logger: Logger): void {
-		this.logger = logger;
 	}
 }
 

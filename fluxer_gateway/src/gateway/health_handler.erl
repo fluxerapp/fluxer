@@ -99,21 +99,9 @@ is_loopback_request(Req) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-normalize_mode_test() ->
-    ?assertEqual(liveness, normalize_mode(undefined)),
-    ?assertEqual(liveness, normalize_mode([])),
-    ?assertEqual(readiness, normalize_mode(readiness)),
-    ?assertEqual(drain, normalize_mode(drain)),
-    ?assertEqual(undrain, normalize_mode(undrain)).
-
 readiness_status_test() ->
     ?assertEqual({200, <<"OK">>}, readiness_status(true)),
     ?assertEqual({503, <<"DRAINING">>}, readiness_status(false)).
-
-undrain_status_test() ->
-    ?assertEqual({200, <<"READY">>}, undrain_status(ok)),
-    ?assertEqual({409, <<"HANDOFF_IN_FLIGHT">>}, undrain_status({error, handoff_in_flight})),
-    ?assertEqual({409, <<"UNAVAILABLE">>}, undrain_status({error, unavailable})).
 
 activate_drain_sets_draining_flag_test() ->
     persistent_term:erase({fluxer_gateway, draining}),

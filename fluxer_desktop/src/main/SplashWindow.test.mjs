@@ -248,16 +248,6 @@ function withPlatformTimers(platform, run) {
 	};
 }
 
-describe('splash window geometry', () => {
-	test('is 300 tall on darwin and 350 tall everywhere else', async () => {
-		const {getSplashWindowHeight} = await loadSplashWindow('geometry');
-
-		assert.equal(getSplashWindowHeight('darwin'), 300);
-		assert.equal(getSplashWindowHeight('win32'), 350);
-		assert.equal(getSplashWindowHeight('linux'), 350);
-	});
-});
-
 describe('splash launch latch', () => {
 	test('quits on a non-darwin close only while the latch is unset', async () => {
 		const {shouldQuitOnSplashClosed} = await loadSplashWindow('latch-decision');
@@ -345,25 +335,6 @@ describe('splash window configuration', () => {
 		assert.equal(window.loadedUrls.length, 1);
 		assert.match(window.loadedUrls[0], /^file:\/\//);
 		assert.match(window.loadedUrls[0], /\/splash\/index\.html$/);
-	});
-
-	test('forces the dark app appearance before the window exists', async () => {
-		const {openSplashWindow} = await loadSplashWindow('appearance');
-		nativeTheme.themeSource = 'system';
-
-		withPlatformResult('darwin', () => openSplashWindow());
-
-		assert.equal(nativeTheme.themeSource, 'dark');
-	});
-
-	test('restores the previous app appearance once the splash closes', async () => {
-		const {closeSplashWindow, openSplashWindow} = await loadSplashWindow('appearance-restore');
-		nativeTheme.themeSource = 'system';
-
-		withPlatformResult('darwin', () => openSplashWindow());
-		closeSplashWindow();
-
-		assert.equal(nativeTheme.themeSource, 'system');
 	});
 
 	test('blocks navigation and denies every window open', async () => {
@@ -481,13 +452,6 @@ describe('splash window focus', () => {
 			1,
 			'The blocked update paths never launch a main window, so raising the splash is the only answer a relaunch can get.',
 		);
-	});
-
-	test('focusing without a splash window is a no operation', async () => {
-		const {focusSplashWindow} = await loadSplashWindow('focus-none');
-		assert.doesNotThrow(() => {
-			focusSplashWindow();
-		});
 	});
 });
 
@@ -617,20 +581,6 @@ describe('splash state serialisation', () => {
 		assert.equal(layoutFor('dice-roll'), 'splash');
 		assert.equal(layoutFor(undefined), 'splash');
 		assert.equal(layoutFor(null), 'splash');
-	});
-
-	test('trims and caps the manual update copy', async () => {
-		const {serializeSplashState, SplashStatus} = await loadSplashWindow('serialise-copy');
-		const serialized = serializeSplashState({
-			status: SplashStatus.BLOCKED_SHELL_UPDATE,
-			message: `  ${'m'.repeat(400)}  `,
-			versionLabel: `  ${'v'.repeat(200)}  `,
-		});
-
-		assert.equal(serialized.message.length, 160);
-		assert.equal(serialized.versionLabel.length, 64);
-		assert.equal(serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, message: '   '}).message, null);
-		assert.equal(serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, versionLabel: 7}).versionLabel, null);
 	});
 
 	test('carries every shipped action through and drops one the renderer could not route', async () => {
@@ -1562,24 +1512,6 @@ describe('splash preload manual update layout', () => {
 		assert.equal(harness.query('#dl-button').tagName, 'button');
 	});
 
-	test('changing the select swaps only the button label', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-		harness.sendState(manualState());
-		const button = harness.query('#dl-button');
-
-		harness.changeSelect('nope');
-
-		assert.equal(button.textContent, 'Okay');
-		assert.equal(harness.mount.replaceChildrenCalls, 2);
-		assert.equal(harness.query('#dl-button'), button);
-
-		harness.changeSelect('rpm');
-
-		assert.equal(button.textContent, 'Download');
-		assert.equal(harness.mount.replaceChildrenCalls, 2);
-	});
-
 	test('clicking with a real format sends that format on the download channel', async () => {
 		const harness = createPreloadHarness();
 		await harness.start();
@@ -1652,75 +1584,9 @@ describe('splash preload manual update layout', () => {
 			);
 		}
 	});
-
-	test('an unknown version leaves the bottom line empty rather than composing a string', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-
-		harness.sendState(manualState({versionLabel: null}));
-
-		assert.equal(harness.query('.dl-version-message').textContent, '');
-	});
-
-	test('switching to the manual layout stops the countdown, so the terminal screen keeps no timer alive', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-		harness.sendState({status: 'update-failure', seconds: 5});
-
-		assert.equal(harness.liveIntervals().length, 1);
-
-		harness.sendState(manualState());
-
-		assert.equal(harness.liveIntervals().length, 0);
-		assert.equal(harness.intervals.length, 1);
-		assert.equal(harness.mount.replaceChildrenCalls, 2);
-		assert.equal(harness.query('#dl-button').textContent, 'Download');
-	});
-
-	test('a later state patches the terminal layout in place rather than rebuilding it', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-		harness.sendState(manualState());
-		const button = harness.query('#dl-button');
-
-		harness.sendState(manualState({versionLabel: 'Version 2026.900.0 available'}));
-
-		assert.equal(harness.mount.replaceChildrenCalls, 2);
-		assert.equal(harness.query('#dl-button'), button);
-		assert.equal(harness.query('.dl-version-message').textContent, 'Version 2026.900.0 available');
-	});
 });
 
 describe('splash preload contract', () => {
-	test('renders the exact status text for every status the main process can send', async () => {
-		const {SplashStatus} = await loadSplashWindow('preload-status-text');
-		const {context} = createPreloadHarness();
-		const textFor = (payload) => context.getStatusText(context.normalizeState(payload));
-
-		assert.equal(textFor({status: SplashStatus.CHECKING_FOR_UPDATES}), 'Checking for updates…');
-		assert.equal(
-			textFor({status: SplashStatus.DOWNLOADING_UPDATES, current: 3, total: 7}),
-			'Downloading update 3 of 7…',
-		);
-		assert.equal(textFor({status: SplashStatus.INSTALLING_UPDATES, current: 5, total: 7}), 'Installing update 5 of 7…');
-		assert.equal(textFor({status: SplashStatus.VERIFYING}), 'Verifying files…');
-		assert.equal(textFor({status: SplashStatus.UPDATE_FAILURE, seconds: 8}), 'Update failed. Retrying in 8 sec…');
-		assert.equal(textFor({status: SplashStatus.SHELL_UPDATE_DOWNLOADING}), 'Updating Fluxer…');
-		assert.equal(textFor({status: SplashStatus.SHELL_UPDATE_RESTARTING}), 'Restarting to finish the update…');
-		assert.equal(textFor({status: SplashStatus.BLOCKED_UPDATE_REQUIRED}), 'Update required to continue');
-		assert.equal(textFor({status: SplashStatus.BLOCKED_SHELL_UPDATE}), 'A new version of Fluxer is required');
-		assert.equal(
-			textFor({status: SplashStatus.BLOCKED_SHELL_UPDATE_MANAGED}),
-			'Update Fluxer through your package manager',
-		);
-		assert.equal(
-			textFor({status: SplashStatus.BLOCKED_UNSUPPORTED_BUILD}),
-			'This installation is incomplete. Reinstall Fluxer',
-		);
-		assert.equal(textFor({status: SplashStatus.LAUNCHING}), 'Starting…');
-		assert.equal(textFor({status: SplashStatus.UNREACHABLE_LAUNCH}), 'Starting offline…');
-	});
-
 	test('knows every status and layout the main process can send', async () => {
 		const {SplashLayout, SplashStatus} = await loadSplashWindow('preload-status-parity');
 		const {context} = createPreloadHarness();

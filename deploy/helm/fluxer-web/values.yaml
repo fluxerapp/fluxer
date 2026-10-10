@@ -56,7 +56,6 @@ workloads:
       name: fluxer-admin
     replicas: 1
     env:
-      FLUXER_ENV: production
       FLUXER_API_ENDPOINT: https://api.example.com
       FLUXER_ADMIN_ENDPOINT: https://admin.example.com
       FLUXER_MEDIA_ENDPOINT: https://media.example.com
@@ -73,8 +72,6 @@ workloads:
     replicas: 1
     env:
       RELEASE_CHANNEL: stable
-      PUBLIC_BOOTSTRAP_API_ENDPOINT: /api
-      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: https://web.example.com/api
     resources:
       requests:
         cpu: 50m

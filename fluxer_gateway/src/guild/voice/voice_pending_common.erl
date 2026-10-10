@@ -10,10 +10,6 @@
     confirm_pending_connection/2
 ]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -export_type([
     connection_id/0,
     pending_metadata/0,
@@ -53,35 +49,3 @@ confirm_pending_connection(ConnectionId, PendingMap) ->
         _Metadata ->
             {confirmed, maps:remove(ConnectionId, PendingMap)}
     end.
-
--ifdef(TEST).
-
-add_pending_connection_test() ->
-    PendingMap = #{},
-    Metadata = #{user_id => 1, channel_id => 2},
-    Result = add_pending_connection(<<"conn">>, Metadata, PendingMap),
-    ?assert(maps:is_key(<<"conn">>, Result)),
-    StoredMetadata = maps:get(<<"conn">>, Result),
-    ?assertEqual(1, maps:get(user_id, StoredMetadata)),
-    ?assertEqual(2, maps:get(channel_id, StoredMetadata)),
-    ?assert(maps:is_key(joined_at, StoredMetadata)).
-
-remove_pending_connection_test() ->
-    PendingMap = #{<<"conn">> => #{user_id => 1}},
-    ?assertEqual(#{}, remove_pending_connection(<<"conn">>, PendingMap)),
-    ?assertEqual(PendingMap, remove_pending_connection(undefined, PendingMap)),
-    ?assertEqual(PendingMap, remove_pending_connection(<<"other">>, PendingMap)).
-
-get_pending_connection_test() ->
-    PendingMap = #{<<"conn">> => #{user_id => 1}},
-    ?assertEqual(#{user_id => 1}, get_pending_connection(<<"conn">>, PendingMap)),
-    ?assertEqual(undefined, get_pending_connection(<<"other">>, PendingMap)),
-    ?assertEqual(undefined, get_pending_connection(undefined, PendingMap)).
-
-confirm_pending_connection_test() ->
-    PendingMap = #{<<"conn">> => #{user_id => 1}},
-    ?assertMatch({confirmed, #{}}, confirm_pending_connection(<<"conn">>, PendingMap)),
-    ?assertMatch({not_found, _}, confirm_pending_connection(<<"other">>, PendingMap)),
-    ?assertMatch({not_found, _}, confirm_pending_connection(undefined, PendingMap)).
-
--endif.

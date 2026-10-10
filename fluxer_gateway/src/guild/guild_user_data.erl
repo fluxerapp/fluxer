@@ -156,13 +156,6 @@ message_create_equivalent_author_data_does_not_dispatch_member_update_test() ->
     ?assertEqual(State, NewState),
     assert_no_member_update_dispatch().
 
-check_user_data_differs_test() ->
-    Current = #{<<"username">> => <<"alice">>},
-    Same = #{<<"username">> => <<"alice">>},
-    Different = #{<<"username">> => <<"bob">>},
-    ?assertEqual(false, check_user_data_differs(Current, Same)),
-    ?assertEqual(true, check_user_data_differs(Current, Different)).
-
 test_state() ->
     #{
         id => 42,

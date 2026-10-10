@@ -7,7 +7,7 @@
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
 -export([start_link/0, local_call_ids/0, handoff_to_topology/1]).
--export([lookup/1, create/2, get_or_create/2, terminate_call/1]).
+-export([lookup/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -ifdef(TEST).
@@ -21,7 +21,6 @@
 -type call_request() ::
     {create, channel_id(), call_data()}
     | {lookup, channel_id()}
-    | {get_or_create, channel_id(), call_data()}
     | {terminate_call, channel_id()}
     | {start_transferred, channel_id(), map()}
     | {stop_call, channel_id(), term()}
@@ -57,26 +56,6 @@ handoff_to_topology(TargetNodes) ->
 lookup(ChannelId) ->
     decode_lookup_result(route_request({lookup, ChannelId}, ChannelId, ?CALL_LOOKUP_TIMEOUT)).
 
--spec create(channel_id(), call_data()) ->
-    {ok, pid()} | {error, already_exists | timeout | unavailable | term()}.
-create(ChannelId, CallData) ->
-    decode_create_result(
-        route_request({create, ChannelId, CallData}, ChannelId, ?CALL_CREATE_TIMEOUT)
-    ).
-
--spec get_or_create(channel_id(), call_data()) ->
-    {ok, pid()} | {error, timeout | unavailable | term()}.
-get_or_create(ChannelId, CallData) ->
-    decode_create_result(
-        route_request({get_or_create, ChannelId, CallData}, ChannelId, ?CALL_CREATE_TIMEOUT)
-    ).
-
--spec terminate_call(channel_id()) -> ok | {error, not_found | timeout | unavailable}.
-terminate_call(ChannelId) ->
-    decode_terminate_result(
-        route_request({terminate_call, ChannelId}, ChannelId, ?CALL_LOOKUP_TIMEOUT)
-    ).
-
 -spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
 normalize_start_link({ok, Pid}) ->
     {ok, Pid};
@@ -107,26 +86,6 @@ decode_lookup_result({error, unavailable}) ->
 decode_lookup_result(_Result) ->
     {error, unavailable}.
 
--spec decode_create_result(term()) -> {ok, pid()} | {error, term()}.
-decode_create_result({ok, Pid}) when is_pid(Pid) ->
-    {ok, Pid};
-decode_create_result({error, Reason}) ->
-    {error, Reason};
-decode_create_result(_Result) ->
-    {error, unavailable}.
-
--spec decode_terminate_result(term()) -> ok | {error, not_found | timeout | unavailable}.
-decode_terminate_result(ok) ->
-    ok;
-decode_terminate_result({error, not_found}) ->
-    {error, not_found};
-decode_terminate_result({error, timeout}) ->
-    {error, timeout};
-decode_terminate_result({error, unavailable}) ->
-    {error, unavailable};
-decode_terminate_result(_Result) ->
-    {error, unavailable}.
-
 -spec decode_call_request(term()) -> {ok, call_request()} | error.
 decode_call_request({create, ChannelId, CallData}) when
     is_integer(ChannelId), is_map(CallData)
@@ -134,10 +93,6 @@ decode_call_request({create, ChannelId, CallData}) when
     {ok, {create, ChannelId, CallData}};
 decode_call_request({lookup, ChannelId}) when is_integer(ChannelId) ->
     {ok, {lookup, ChannelId}};
-decode_call_request({get_or_create, ChannelId, CallData}) when
-    is_integer(ChannelId), is_map(CallData)
-->
-    {ok, {get_or_create, ChannelId, CallData}};
 decode_call_request({terminate_call, ChannelId}) when is_integer(ChannelId) ->
     {ok, {terminate_call, ChannelId}};
 decode_call_request({start_transferred, ChannelId, TransferState}) when
@@ -249,15 +204,6 @@ handle_call_request({lookup, ChannelId} = Request, From, State) ->
         From,
         ?CALL_LOOKUP_TIMEOUT,
         fun() -> call_manager_ops:do_lookup_call(ChannelId, State) end,
-        State
-    );
-handle_call_request({get_or_create, ChannelId, CallData} = Request, From, State) ->
-    handle_owner_call(
-        ChannelId,
-        Request,
-        From,
-        ?CALL_CREATE_TIMEOUT,
-        fun() -> call_manager_ops:do_get_or_create_call(ChannelId, CallData, State) end,
         State
     );
 handle_call_request({terminate_call, ChannelId} = Request, From, State) ->
@@ -390,10 +336,6 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 -ifdef(TEST).
-
-state_operations_test() ->
-    State = #{calls => #{}},
-    ?assertEqual(#{}, maps:get(calls, State)).
 
 owner_scope_uses_local_node_when_single_member_test() ->
     persistent_term:erase({gateway_cluster_membership, members}),

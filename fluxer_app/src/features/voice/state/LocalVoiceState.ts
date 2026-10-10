@@ -294,11 +294,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		});
 	}
 
-	dispose(): void {
-		this._disposers.forEach((disposer) => disposer());
-		this._disposers = [];
-	}
-
 	private async initializePermissionSync(): Promise<void> {
 		try {
 			let defaultMuteInitialized = false;
@@ -475,14 +470,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		runInAction(() => {
 			this.transitionLocalState({type: 'deaf.toggle', activeConnectionId: this.getActiveConnectionId()});
 			logger.debug('User toggled self deaf', {newSelfDeaf: this.getSelfDeaf(), hasUserSetDeaf: true});
-		});
-	}
-
-	clearUserSetMute(): void {
-		runInAction(() => {
-			if (!this.getActiveStateForRead().hasUserSetMute) return;
-			this.transitionLocalState({type: 'mute.clearUserSet', activeConnectionId: this.getActiveConnectionId()});
-			logger.debug('Cleared hasUserSetMute flag');
 		});
 	}
 

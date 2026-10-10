@@ -261,7 +261,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		liveKitService,
 		voiceAvailabilityService,
 	});
-	const billingRepository = new BillingRepository(snowflakeService, kvClient);
+	const billingRepository = new BillingRepository(kvClient);
 	const storeEntitlementService = createStoreEntitlementService({
 		userRepository,
 		userCacheService,

@@ -37,7 +37,6 @@ pub(crate) enum GatewayStep {
     Eqwalizer,
     Typecheck,
     Eunit,
-    Bench,
     AllChecks,
     Clean,
 }
@@ -112,7 +111,6 @@ pub(crate) fn run_gateway_step(
         GatewayStep::Eqwalizer => run_eqwalizer(gateway_dir, eqwalizer_profile),
         GatewayStep::Typecheck => run_eqwalizer(gateway_dir, eqwalizer_profile),
         GatewayStep::Eunit => run_rebar(gateway_dir, ["as", "test", "eunit"]),
-        GatewayStep::Bench => run_rebar(gateway_dir, ["eunit", "--module=guild_member_list_bench"]),
         GatewayStep::AllChecks => {
             run_gateway_check_step("Step 1/5: Format check (erlfmt)", || {
                 run_gateway_step(gateway_dir, GatewayStep::FmtCheck, eqwalizer_profile)
@@ -433,30 +431,6 @@ mod tests {
         assert_eq!(
             NifBuildProfile::from_env_value(Some("dev")),
             NifBuildProfile::Debug
-        );
-    }
-
-    #[test]
-    fn gateway_nif_build_plan_matches_legacy_artifact_layout() {
-        let gateway_dir = Path::new("/repo/fluxer_gateway");
-        let builds = gateway_nif_builds(gateway_dir, NifBuildProfile::Release, "lib", "so");
-
-        assert_eq!(builds.len(), 2);
-        assert_eq!(
-            builds[0],
-            GatewayNifBuild {
-                crate_name: "push_markdown_plaintext_nif".to_string(),
-                native_dir: PathBuf::from(
-                    "/repo/fluxer_gateway/native/push_markdown_plaintext_nif"
-                ),
-                cargo_args: vec![OsString::from("build"), OsString::from("--release")],
-                artifact_path: PathBuf::from(
-                    "/repo/fluxer_gateway/native/push_markdown_plaintext_nif/target/release/libpush_markdown_plaintext_nif.so"
-                ),
-                output_path: PathBuf::from(
-                    "/repo/fluxer_gateway/priv/push_markdown_plaintext_nif.so"
-                ),
-            }
         );
     }
 

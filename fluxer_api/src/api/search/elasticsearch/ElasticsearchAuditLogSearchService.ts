@@ -30,18 +30,6 @@ export class ElasticsearchAuditLogSearchService
 		await this.indexDocuments(logs.map(convertToSearchableAuditLog));
 	}
 
-	async updateAuditLog(log: AdminAuditLog): Promise<void> {
-		await this.updateDocument(convertToSearchableAuditLog(log));
-	}
-
-	async deleteAuditLog(logId: bigint): Promise<void> {
-		await this.deleteDocument(logId.toString());
-	}
-
-	async deleteAuditLogs(logIds: Array<bigint>): Promise<void> {
-		await this.deleteDocuments(logIds.map((id) => id.toString()));
-	}
-
 	searchAuditLogs(
 		query: string,
 		filters: AuditLogSearchFilters,

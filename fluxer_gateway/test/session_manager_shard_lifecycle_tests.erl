@@ -129,7 +129,7 @@ malformed_identify_payload_returns_error_test() ->
     ?assertEqual(
         Expected,
         session_manager_shard_lifecycle:build_and_start_session(
-            #{}, #{}, 1, self(), <<"bad">>, #{}, State0
+            #{}, #{}, 1, self(), <<"bad">>, #{}, State0, gateway_timings:new()
         )
     ).
 

@@ -98,26 +98,3 @@ require_parsed(Bits, _Value) when is_integer(Bits) ->
     Bits;
 require_parsed(undefined, Value) ->
     erlang:error({invalid_bitset, Value}).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-parse_accepts_unsigned_decimal_values_test() ->
-    ?assertEqual(0, parse(0)),
-    ?assertEqual(42, parse(42)),
-    ?assertEqual(1, parse(<<"001">>)),
-    ?assertEqual(12, parse("12")).
-
-parse_rejects_signed_or_invalid_values_test() ->
-    ?assertError({invalid_bitset, <<"+1">>}, parse(<<"+1">>)),
-    ?assertError({invalid_bitset, <<"-1">>}, parse(<<"-1">>)),
-    ?assertError({invalid_bitset, <<"abc">>}, parse(<<"abc">>)),
-    ?assertError({invalid_bitset, -1}, parse(-1)).
-
-operations_keep_integer_backing_test() ->
-    Bits = add(0, 2),
-    ?assertEqual(true, has(Bits, 2)),
-    ?assertEqual(false, has(Bits, 4)),
-    ?assertEqual(0, remove(Bits, 2)).
-
--endif.

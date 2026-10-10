@@ -305,10 +305,6 @@ class InMemoryMessageSearchService
 		await this.updateDocument(convertToSearchableMessage(message, authorIsBot));
 	}
 
-	async deleteMessage(messageId: MessageID): Promise<void> {
-		await this.deleteDocument(messageId.toString());
-	}
-
 	async deleteMessages(messageIds: Array<MessageID>): Promise<void> {
 		await this.deleteDocuments(messageIds.map((id) => id.toString()));
 	}
@@ -319,11 +315,6 @@ class InMemoryMessageSearchService
 
 	async deleteChannelMessages(channelId: ChannelID): Promise<void> {
 		const result = await this.search('', {channelId: channelId.toString()}, {limit: Number.MAX_SAFE_INTEGER});
-		await this.deleteDocuments(result.hits.map((hit) => hit.id));
-	}
-
-	async deleteGuildMessages(guildId: GuildID): Promise<void> {
-		const result = await this.search('', {guildId: guildId.toString()}, {limit: Number.MAX_SAFE_INTEGER});
 		await this.deleteDocuments(result.hits.map((hit) => hit.id));
 	}
 
@@ -404,14 +395,6 @@ class InMemoryUserSearchService
 		await this.updateDocument(convertToSearchableUser(user));
 	}
 
-	async deleteUser(userId: UserID): Promise<void> {
-		await this.deleteDocument(userId.toString());
-	}
-
-	async deleteUsers(userIds: Array<UserID>): Promise<void> {
-		await this.deleteDocuments(userIds.map((id) => id.toString()));
-	}
-
 	searchUsers(query: string, filters: UserSearchFilters, options?: {limit?: number; offset?: number}) {
 		return this.search(query, filters, options);
 	}
@@ -474,10 +457,6 @@ class InMemoryGuildSearchService
 
 	async deleteGuild(guildId: GuildID): Promise<void> {
 		await this.deleteDocument(guildId.toString());
-	}
-
-	async deleteGuilds(guildIds: Array<GuildID>): Promise<void> {
-		await this.deleteDocuments(guildIds.map((id) => id.toString()));
 	}
 
 	searchGuilds(query: string, filters: GuildSearchFilters, options?: SearchOptions) {
@@ -545,10 +524,6 @@ class InMemoryReportSearchService
 		await this.deleteDocument(reportId.toString());
 	}
 
-	async deleteReports(reportIds: Array<ReportID>): Promise<void> {
-		await this.deleteDocuments(reportIds.map((id) => id.toString()));
-	}
-
 	searchReports(query: string, filters: ReportSearchFilters, options?: {limit?: number; offset?: number}) {
 		return this.search(query, filters, options);
 	}
@@ -590,18 +565,6 @@ class InMemoryAuditLogSearchService
 
 	async indexAuditLogs(logs: Array<AdminAuditLog>): Promise<void> {
 		await this.indexDocuments(logs.map(convertToSearchableAuditLog));
-	}
-
-	async updateAuditLog(log: AdminAuditLog): Promise<void> {
-		await this.updateDocument(convertToSearchableAuditLog(log));
-	}
-
-	async deleteAuditLog(logId: bigint): Promise<void> {
-		await this.deleteDocument(logId.toString());
-	}
-
-	async deleteAuditLogs(logIds: Array<bigint>): Promise<void> {
-		await this.deleteDocuments(logIds.map((id) => id.toString()));
 	}
 
 	searchAuditLogs(query: string, filters: AuditLogSearchFilters, options?: {limit?: number; offset?: number}) {

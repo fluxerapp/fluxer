@@ -134,12 +134,4 @@ describe('WebhookRepository source channel index', () => {
 		]);
 		expect(await repository.countBySourceChannel(SOURCE_CHANNEL)).toEqual({channelCount: 1, guildCount: 1});
 	});
-
-	it('finds many webhooks by id', async () => {
-		await createFollower(createWebhookID(101n), createGuildID(2n), createChannelID(20n));
-		await createFollower(createWebhookID(102n), createGuildID(3n), createChannelID(30n));
-		const found = await repository.findManyByIds([createWebhookID(101n), createWebhookID(102n), createWebhookID(999n)]);
-		expect(found.map((webhook) => webhook.id).sort()).toEqual([101n, 102n]);
-		expect(await repository.findManyByIds([])).toEqual([]);
-	});
 });

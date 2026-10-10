@@ -543,10 +543,6 @@ export function isVoiceConnectionFailed(snapshot: VoiceConnectionSnapshot): bool
 	return snapshot.value === 'failed';
 }
 
-export function getVoiceConnectionFailureReason(snapshot: VoiceConnectionSnapshot): VoiceConnectionFailureReason {
-	return snapshot.context.failureReason;
-}
-
 export function getVoiceConnectionFailedTarget(
 	snapshot: VoiceConnectionSnapshot,
 ): {guildId: string | null; channelId: string} | null {

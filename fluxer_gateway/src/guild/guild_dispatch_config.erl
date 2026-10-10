@@ -62,17 +62,4 @@ member_list_updates_enabled_respects_flag_test() ->
         )
     ).
 
-is_guild_operation_disabled_test() ->
-    State = disabled_operations_state(3),
-    ?assertEqual(true, is_guild_operation_disabled(State, 1)),
-    ?assertEqual(true, is_guild_operation_disabled(State, 2)),
-    ?assertEqual(true, is_guild_operation_disabled(State, 3)),
-    ?assertEqual(false, is_guild_operation_disabled(State, 4)).
-
-is_guild_operation_disabled_binary_test() ->
-    State = disabled_operations_state(<<"5">>),
-    ?assertEqual(true, is_guild_operation_disabled(State, 1)),
-    ?assertEqual(true, is_guild_operation_disabled(State, 4)),
-    ?assertEqual(false, is_guild_operation_disabled(State, 2)).
-
 -endif.

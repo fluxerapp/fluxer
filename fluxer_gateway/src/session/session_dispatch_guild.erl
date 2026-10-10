@@ -393,24 +393,6 @@ upsert_relationship(Data, State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-add_unique_id_test() ->
-    ?assertEqual([1, 2, 3], add_unique_id(1, [2, 3])),
-    ?assertEqual([1, 2, 3], add_unique_id(1, [1, 2, 3])),
-    ?assertEqual([<<"1">>, 2, 3], add_unique_id(1, [<<"1">>, 2, 3])),
-    ok.
-
-channel_create_inserts_test() ->
-    State = #{channels => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
-
-channel_create_updates_existing_test() ->
-    State = #{channels => #{100 => #{<<"type">> => 0}}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
-
 channel_update_preserves_dm_recipients_when_payload_is_partial_test() ->
     Existing = #{
         <<"id">> => <<"100">>,
@@ -453,12 +435,6 @@ channel_update_recipient_ids_replace_stale_recipient_maps_test() ->
     Channel = maps:get(100, maps:get(channels, State1)),
     ?assertNot(maps:is_key(<<"recipients">>, Channel)),
     ?assertEqual([<<"3">>], maps:get(<<"recipient_ids">>, Channel)).
-
-relationship_add_inserts_test() ->
-    State = #{relationships => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_relationships_map(relationship_add, Data, State),
-    ?assertEqual(1, map_size(maps:get(relationships, State1))).
 
 relationship_add_updates_type_test() ->
     State = #{relationships => #{100 => 1}},

@@ -28,7 +28,6 @@ services:
       FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_ADMIN_OAUTH_REDIRECT_URI: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/admin/oauth2_callback"
       FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: "http://localhost,http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
-      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api"
     volumes:
       - ..:/workspaces/fluxer:cached
       - type: volume
@@ -164,11 +163,6 @@ services:
       - type: volume
         source: fluxer-api-http-client-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/http_client/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: fluxer-api-initialization-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/initialization/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -371,7 +365,6 @@ volumes:
   fluxer-api-email-node-modules:
   fluxer-api-geoip-node-modules:
   fluxer-api-http-client-node-modules:
-  fluxer-api-initialization-node-modules:
   fluxer-api-kv-client-node-modules:
   fluxer-api-locale-node-modules:
   fluxer-api-media-proxy-utils-node-modules:

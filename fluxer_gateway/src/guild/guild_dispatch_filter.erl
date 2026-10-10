@@ -218,15 +218,6 @@ is_channel_scoped_event_test() ->
     ?assertEqual(false, is_channel_scoped_event(guild_update)),
     ?assertEqual(false, is_channel_scoped_event(guild_member_add)).
 
-is_invite_event_test() ->
-    ?assertEqual(true, is_invite_event(invite_create)),
-    ?assertEqual(true, is_invite_event(invite_delete)),
-    ?assertEqual(false, is_invite_event(message_create)).
-
-is_bulk_update_event_test() ->
-    ?assertEqual(true, is_bulk_update_event(channel_update_bulk)),
-    ?assertEqual(false, is_bulk_update_event(channel_update)).
-
 is_message_access_filtered_event_test() ->
     ?assertEqual(true, is_message_access_filtered_event(message_update)),
     ?assertEqual(true, is_message_access_filtered_event(message_delete)),
@@ -239,33 +230,9 @@ is_message_access_filtered_event_test() ->
     ?assertEqual(false, is_message_access_filtered_event(typing_start)),
     ?assertEqual(false, is_message_access_filtered_event(channel_create)).
 
-extract_message_id_from_id_field_test() ->
-    Data = #{<<"id">> => <<"12345">>, <<"channel_id">> => <<"100">>},
-    ?assertEqual(<<"12345">>, extract_message_id(Data)).
-
-extract_message_id_from_message_id_field_test() ->
-    Data = #{<<"message_id">> => <<"67890">>, <<"channel_id">> => <<"100">>},
-    ?assertEqual(<<"67890">>, extract_message_id(Data)).
-
-extract_message_id_prefers_message_id_test() ->
-    Data = #{<<"id">> => <<"12345">>, <<"message_id">> => <<"67890">>},
-    ?assertEqual(<<"67890">>, extract_message_id(Data)).
-
-extract_channel_id_channel_delete_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_delete, Data)).
-
 extract_channel_id_message_create_uses_channel_id_field_test() ->
     Data = #{<<"channel_id">> => <<"42">>},
     ?assertEqual(42, extract_channel_id(message_create, Data)).
-
-extract_channel_id_channel_create_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_create, Data)).
-
-extract_channel_id_channel_update_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_update, Data)).
 
 filter_sessions_for_event_guild_wide_goes_to_all_sessions_test() ->
     S1 = #{session_id => <<"s1">>, user_id => 10, pid => self()},

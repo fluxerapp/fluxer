@@ -41,8 +41,6 @@ handle_call({start_or_lookup, GuildId}, From, State) ->
     guild_manager_shard_lookup:do_start_or_lookup(require_guild_id(GuildId), From, State);
 handle_call({lookup, GuildId}, _From, State) ->
     guild_manager_shard_lookup:do_lookup(require_guild_id(GuildId), State);
-handle_call({ensure_started, GuildId}, _From, State) ->
-    guild_manager_shard_lookup:do_ensure_started(require_guild_id(GuildId), State);
 handle_call({start_transferred, GuildId, TransferState}, _From, State) ->
     guild_manager_shard_lifecycle:do_start_transferred(
         require_guild_id(GuildId), require_map(TransferState), State

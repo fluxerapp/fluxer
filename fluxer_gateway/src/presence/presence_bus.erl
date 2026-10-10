@@ -7,7 +7,7 @@
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
 -export([
-    start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0, publish_cross_node/2
+    start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([select_shard/2, find_shard_by_ref/2, find_shard_by_pid/2]).
@@ -39,11 +39,6 @@ diagnostic_info() ->
         Info when is_map(Info) -> sanitize_diagnostic_info(Info);
         _ -> #{}
     end.
-
--spec publish_cross_node(integer(), term()) -> ok.
-publish_cross_node(UserId, Payload) when is_integer(UserId) ->
-    safe_gen_server_cast(?MODULE, {publish_cross_node, UserId, Payload}),
-    ok.
 
 -spec init(list()) -> {ok, state(), hibernate}.
 init([]) ->
@@ -92,17 +87,8 @@ merge_shard_diagnostic(Pid, Acc) ->
     end.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({publish_cross_node, UserId, Payload}, State) when is_integer(UserId) ->
-    {noreply, forward_publish(UserId, Payload, State)};
-handle_cast({remote_publish, UserId, Payload}, State) when is_integer(UserId) ->
-    {noreply, forward_publish(UserId, Payload, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
-
--spec forward_publish(integer(), term(), state()) -> state().
-forward_publish(UserId, Payload, State) ->
-    {_Reply, NewState} = forward_call(UserId, {publish, UserId, Payload}, State),
-    NewState.
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
@@ -280,15 +266,6 @@ safe_gen_server_call(Server, Request, Timeout) ->
     catch
         error:Reason -> {gen_server_call_failed, error, Reason};
         exit:Reason -> {gen_server_call_failed, exit, Reason}
-    end.
-
--spec safe_gen_server_cast(pid() | atom(), term()) -> ok.
-safe_gen_server_cast(Server, Request) ->
-    try gen_server:cast(Server, Request) of
-        _ -> ok
-    catch
-        error:_Reason -> ok;
-        exit:_Reason -> ok
     end.
 
 -spec safe_gen_server_stop(pid()) -> ok.

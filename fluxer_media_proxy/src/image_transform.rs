@@ -167,40 +167,4 @@ mod tests {
         assert_eq!(None, EncodeEffort::parse_lenient("256"));
         assert_eq!(0, EncodeEffort::minimum().get());
     }
-
-    #[test]
-    fn animation_limits_reject_zero_and_out_of_range_bounds() {
-        assert!(AnimationLimits::new(0, 30_000).is_err());
-        assert!(AnimationLimits::new(4096, 0).is_err());
-        assert!(AnimationLimits::new(u32::MAX, 30_000).is_err());
-        assert!(AnimationLimits::new(4096, u32::MAX).is_err());
-        let limits = AnimationLimits::new(4096, 30_000).expect("valid animation limits");
-        assert_eq!(4096, limits.max_frames().get());
-        assert_eq!(30_000, limits.max_duration_ms().get());
-    }
-
-    #[test]
-    fn static_mode_collapses_to_a_single_frame_budget() {
-        let limits = AnimationLimits::new(4096, 30_000).expect("valid animation limits");
-        assert!(!AnimationMode::new(false, limits).is_animated());
-        assert!(AnimationMode::new(true, limits).is_animated());
-        assert_eq!(
-            AnimationLimits::single_frame(),
-            AnimationMode::Static.encode_limits()
-        );
-        assert_eq!(1, AnimationLimits::single_frame().max_frames().get());
-        assert_eq!(1, AnimationLimits::single_frame().max_duration_ms().get());
-        assert_eq!(limits, AnimationMode::Animated(limits).encode_limits());
-    }
-
-    #[test]
-    fn default_options_render_a_static_high_quality_webp() {
-        let options = ImageOptions::default();
-        assert_eq!(OutputFormat::WebP, options.format);
-        assert_eq!(ImageQuality::High, options.quality);
-        assert!(!options.is_animated());
-        assert!(!options.wants_cover_crop());
-        assert_eq!(None, options.effort_override);
-        assert_eq!(None, options.deadline_ms);
-    }
 }

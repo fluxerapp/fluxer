@@ -231,11 +231,6 @@ class ProcessLoopback extends EventEmitter {
 	}
 }
 
-function __setBindingForTests(nextBinding, nextLoadError = null) {
-	binding = nextBinding;
-	loadError = nextLoadError;
-}
-
 module.exports = {
 	isSupported,
 	getBackendInfo,
@@ -245,5 +240,4 @@ module.exports = {
 	get loadError() {
 		return loadError;
 	},
-	__setBindingForTests,
 };

@@ -201,13 +201,4 @@ parse_channels_response_carries_the_thread_gate_test() ->
         parse_channels_response({ok, Response})
     ).
 
-maybe_put_after_test() ->
-    BaseRequest = #{
-        <<"type">> => <<"guild_collection">>,
-        <<"collection">> => <<"members">>
-    },
-    ?assertEqual(BaseRequest, maybe_put_after(undefined, BaseRequest)),
-    WithCursor = maybe_put_after(<<"100">>, BaseRequest),
-    ?assertEqual(<<"100">>, maps:get(<<"after_user_id">>, WithCursor)).
-
 -endif.

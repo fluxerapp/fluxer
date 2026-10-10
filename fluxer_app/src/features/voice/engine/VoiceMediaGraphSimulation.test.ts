@@ -2,7 +2,6 @@
 
 import {
 	createVoiceMediaGraphSnapshot,
-	selectVoiceMediaGraphStatsEntry,
 	selectVoiceMediaGraphSubscriptionEntry,
 	transitionVoiceMediaGraph,
 	type VoiceMediaGraphEvent,
@@ -619,12 +618,6 @@ function assertSimulationStats(snapshot: VoiceMediaGraphSnapshot, message: strin
 	}
 	for (const [key, entry] of snapshot.statsByTrackKey) {
 		expect(entry.connectionId, `${message}: stats entry ${key} for cleared connection`).toBe(
-			snapshot.statsConnectionId,
-		);
-	}
-	const probe = selectVoiceMediaGraphStatsEntry(snapshot, {direction: 'recv', kind: 'video'});
-	if (probe) {
-		expect(probe.connectionId, `${message}: stats selector returned a cleared connection`).toBe(
 			snapshot.statsConnectionId,
 		);
 	}

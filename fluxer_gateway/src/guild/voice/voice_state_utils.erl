@@ -22,7 +22,6 @@
     broadcast_disconnects/2,
     voice_flags_from_context/1,
     parse_stream_key/1,
-    build_stream_key/3,
     normalize_session_id/1
 ]).
 
@@ -242,26 +241,6 @@ build_stream_key_result({guild, GuildId}, ChannelId, ConnId) ->
         connection_id => ConnId
     }}.
 
--spec build_stream_key(integer() | undefined, integer(), binary()) -> binary().
-build_stream_key(undefined, ChannelId, ConnectionId) when
-    is_integer(ChannelId), ChannelId > 0, is_binary(ConnectionId)
-->
-    <<"dm:", (integer_to_binary(ChannelId))/binary, ":", ConnectionId/binary>>;
-build_stream_key(GuildId, ChannelId, ConnectionId) when
-    is_integer(GuildId),
-    GuildId > 0,
-    is_integer(ChannelId),
-    ChannelId > 0,
-    is_binary(ConnectionId)
-->
-    <<
-        (integer_to_binary(GuildId))/binary,
-        ":",
-        (integer_to_binary(ChannelId))/binary,
-        ":",
-        ConnectionId/binary
-    >>.
-
 -spec positive_integer(term()) -> integer() | undefined.
 positive_integer(Value) ->
     guild_voice_connection_normalize:normalize_positive_snowflake(Value).
@@ -281,66 +260,6 @@ normalize_session_id(Value) ->
     guild_voice_connection_normalize:normalize_session_id(Value).
 
 -ifdef(TEST).
-
-voice_states_returns_map_test() ->
-    State = #{voice_states => #{<<"a">> => #{}}},
-    ?assertEqual(#{<<"a">> => #{}}, voice_states(State)),
-    ?assertEqual(#{}, voice_states(#{})),
-    ?assertEqual(#{}, voice_states(#{voice_states => not_a_map})).
-
-ensure_voice_states_test() ->
-    ?assertEqual(#{<<"a">> => #{}}, ensure_voice_states(#{<<"a">> => #{}})),
-    ?assertEqual(#{}, ensure_voice_states(#{a => #{}})),
-    ?assertEqual(#{}, ensure_voice_states(#{<<"a">> => 1})),
-    ?assertEqual(#{}, ensure_voice_states(not_a_map)).
-
-voice_state_user_id_test() ->
-    ?assertEqual(123, voice_state_user_id(#{<<"user_id">> => <<"123">>})),
-    ?assertEqual(undefined, voice_state_user_id(#{<<"user_id">> => <<"001">>})),
-    ?assertEqual(undefined, voice_state_user_id(#{})).
-
-voice_state_channel_id_test() ->
-    ?assertEqual(456, voice_state_channel_id(#{<<"channel_id">> => <<"456">>})),
-    ?assertEqual(undefined, voice_state_channel_id(#{<<"channel_id">> => <<"001">>})),
-    ?assertEqual(undefined, voice_state_channel_id(#{})).
-
-voice_state_guild_id_test() ->
-    ?assertEqual(789, voice_state_guild_id(#{<<"guild_id">> => <<"789">>})),
-    ?assertEqual(undefined, voice_state_guild_id(#{<<"guild_id">> => <<"001">>})),
-    ?assertEqual(undefined, voice_state_guild_id(#{})).
-
-filter_voice_states_test() ->
-    VoiceStates = #{
-        <<"a">> => #{<<"user_id">> => <<"1">>},
-        <<"b">> => #{<<"user_id">> => <<"2">>}
-    },
-    Filtered = filter_voice_states(VoiceStates, fun(_, V) ->
-        maps:get(<<"user_id">>, V) =:= <<"1">>
-    end),
-    ?assertEqual(#{<<"a">> => #{<<"user_id">> => <<"1">>}}, Filtered).
-
-drop_voice_states_test() ->
-    VoiceStates = #{<<"a">> => #{}, <<"b">> => #{}, <<"c">> => #{}},
-    ToDrop = #{<<"a">> => #{}, <<"c">> => #{}},
-    Result = drop_voice_states(ToDrop, VoiceStates),
-    ?assertEqual(#{<<"b">> => #{}}, Result).
-
-voice_flags_from_context_test() ->
-    Context = #{
-        self_mute => true,
-        self_deaf => false,
-        self_video => true,
-        self_stream => false,
-        is_mobile => true,
-        suppress => true
-    },
-    Flags = voice_flags_from_context(Context),
-    ?assertEqual(true, maps:get(self_mute, Flags)),
-    ?assertEqual(false, maps:get(self_deaf, Flags)),
-    ?assertEqual(true, maps:get(self_video, Flags)),
-    ?assertEqual(false, maps:get(self_stream, Flags)),
-    ?assertEqual(true, maps:get(is_mobile, Flags)),
-    ?assertEqual(true, maps:get(suppress, Flags)).
 
 parse_stream_key_dm_test() ->
     Result = parse_stream_key(<<"dm:123:conn-id">>),
@@ -363,59 +282,6 @@ parse_stream_key_invalid_test() ->
     ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"dm:001:conn">>)),
     ?assertEqual({error, invalid_stream_key}, parse_stream_key(<<"001:123:conn">>)),
     ?assertEqual({error, invalid_stream_key}, parse_stream_key(123)).
-
-build_stream_key_dm_test() ->
-    Result = build_stream_key(undefined, 123, <<"conn">>),
-    ?assertEqual(<<"dm:123:conn">>, Result).
-
-build_stream_key_guild_test() ->
-    Result = build_stream_key(999, 123, <<"conn">>),
-    ?assertEqual(<<"999:123:conn">>, Result).
-
-normalize_session_id_test() ->
-    ?assertEqual(undefined, normalize_session_id(undefined)),
-    ?assertEqual(undefined, normalize_session_id(null)),
-    ?assertEqual(<<"abc">>, normalize_session_id(<<"abc">>)),
-    ?assertEqual(<<"42">>, normalize_session_id(42)),
-    ?assertEqual(<<"hello">>, normalize_session_id("hello")),
-    ?assertEqual(undefined, normalize_session_id(#{})).
-
-complete_voice_state_fills_missing_fields_test() ->
-    Completed = complete_voice_state(#{<<"user_id">> => <<"1">>}),
-    ?assertEqual(<<"1">>, maps:get(<<"user_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"guild_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"channel_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"connection_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"session_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"member">>, Completed)),
-    ?assertEqual(false, maps:get(<<"mute">>, Completed)),
-    ?assertEqual(false, maps:get(<<"deaf">>, Completed)),
-    ?assertEqual(false, maps:get(<<"self_mute">>, Completed)),
-    ?assertEqual(false, maps:get(<<"self_deaf">>, Completed)),
-    ?assertEqual(false, maps:get(<<"self_video">>, Completed)),
-    ?assertEqual(false, maps:get(<<"self_stream">>, Completed)),
-    ?assertEqual(false, maps:get(<<"is_mobile">>, Completed)),
-    ?assertEqual(false, maps:get(<<"suppress">>, Completed)),
-    ?assertEqual([], maps:get(<<"viewer_stream_keys">>, Completed)),
-    ?assertEqual(false, maps:get(<<"e2ee_capable">>, Completed)),
-    ?assertEqual(false, maps:get(<<"p2p">>, Completed)),
-    ?assertEqual(null, maps:get(<<"region_id">>, Completed)),
-    ?assertEqual(null, maps:get(<<"server_id">>, Completed)),
-    ?assertEqual(0, maps:get(<<"version">>, Completed)).
-
-complete_voice_state_preserves_existing_fields_test() ->
-    VoiceState = #{
-        <<"user_id">> => <<"1">>,
-        <<"channel_id">> => <<"2">>,
-        <<"self_mute">> => true,
-        <<"member">> => #{<<"nick">> => <<"x">>},
-        <<"version">> => 7
-    },
-    Completed = complete_voice_state(VoiceState),
-    ?assertEqual(<<"2">>, maps:get(<<"channel_id">>, Completed)),
-    ?assertEqual(true, maps:get(<<"self_mute">>, Completed)),
-    ?assertEqual(#{<<"nick">> => <<"x">>}, maps:get(<<"member">>, Completed)),
-    ?assertEqual(7, maps:get(<<"version">>, Completed)).
 
 sanitize_voice_state_for_broadcast_test() ->
     VoiceState = #{

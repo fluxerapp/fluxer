@@ -43,26 +43,6 @@ class Sticker {
 		return allStickers;
 	}
 
-	search(guildId: string | null, searchTerm: string): ReadonlyArray<GuildSticker> {
-		let stickers: ReadonlyArray<GuildSticker>;
-		if (guildId) {
-			stickers = this.getGuildStickers(guildId);
-		} else {
-			stickers = this.getAllStickers();
-		}
-		if (!searchTerm || searchTerm.trim() === '') {
-			return stickers;
-		}
-		const term = searchTerm.toLowerCase();
-		const filtered = stickers.filter((sticker) => {
-			const nameMatch = sticker.name.toLowerCase().includes(term);
-			const descMatch = sticker.description?.toLowerCase().includes(term);
-			const tagMatch = sticker.tags.some((tag) => tag.toLowerCase().includes(term));
-			return nameMatch || descMatch || tagMatch;
-		});
-		return this.sortByFrecency(filtered);
-	}
-
 	searchWithChannel(channel: Channel | null, searchTerm: string): ReadonlyArray<GuildSticker> {
 		const stickers = this.getAllStickers();
 		const guildId = channel?.guildId;

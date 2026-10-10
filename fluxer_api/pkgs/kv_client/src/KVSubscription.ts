@@ -258,15 +258,6 @@ export class KVSubscription implements IKVSubscription {
 		}
 		client.disconnect(false);
 	}
-
-	removeAllListeners(event?: 'message' | 'error'): void {
-		if (!event || event === 'message') {
-			this.messageCallbacks.clear();
-		}
-		if (!event || event === 'error') {
-			this.errorCallbacks.clear();
-		}
-	}
 }
 
 function createRetryStrategy(): (times: number) => number {

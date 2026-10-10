@@ -36,7 +36,14 @@ bot_identify_data(GuildCount) ->
 
 start_session(Data, IdentifyData) ->
     session_manager_shard_start:build_and_start_session(
-        Data, IdentifyData, 1, self(), <<"session-id">>, #{}, build_test_state()
+        Data,
+        IdentifyData,
+        1,
+        self(),
+        <<"session-id">>,
+        #{},
+        build_test_state(),
+        gateway_timings:new()
     ).
 
 build_and_start_session_rejects_oversized_bot_with_sharding_required_test() ->

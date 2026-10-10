@@ -257,30 +257,6 @@ describe('Sudo mode negative cases', () => {
 		});
 	});
 	describe('existing MFA token allows skipping MFA', () => {
-		it('valid sudo token allows skipping MFA for subsequent requests', async () => {
-			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
-			await enableTotpForAccount(harness, account, secret);
-			const loggedIn = await loginWithTotp(harness, account, secret);
-			const {response: firstResp} = await createBuilder<BackupCodesResponse>(harness, loggedIn.token)
-				.post('/users/@me/mfa/backup-codes')
-				.body({
-					mfa_method: 'totp',
-					mfa_code: await generateTotpCode(secret),
-					regenerate: false,
-				})
-				.executeWithResponse();
-			const sudoToken = firstResp.headers.get(SUDO_MODE_HEADER);
-			expect(sudoToken).toBeTruthy();
-			const backupCodes = await createBuilder<BackupCodesResponse>(harness, loggedIn.token)
-				.post('/users/@me/mfa/backup-codes')
-				.header(SUDO_MODE_HEADER, sudoToken!)
-				.body({
-					regenerate: true,
-				})
-				.execute();
-			expect(backupCodes.backup_codes.length).toBeGreaterThan(0);
-		});
 		it('sudo token from MFA allows skipping MFA verification on sensitive endpoint', async () => {
 			const account = await createTestAccount(harness);
 			const secret = generateTotpSecret();

@@ -139,14 +139,6 @@ handle_voice_disconnect(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-init_voice_queue_test() ->
-    Result = init_voice_queue(),
-    ?assert(maps:is_key(voice_queue, Result)),
-    ?assert(maps:is_key(voice_queue_timer, Result)),
-    ?assertEqual(undefined, maps:get(voice_queue_timer, Result)),
-    ?assert(queue:is_empty(maps:get(voice_queue, Result))),
-    ok.
-
 report_rejection_sends_p2p_rejections_to_the_socket_test() ->
     State = #{socket_pid => self()},
     ok = report_rejection(voice_p2p_consent_required, State),
@@ -222,11 +214,5 @@ voice_signal_drops_unroutable_frames_test() ->
     after 50 ->
         ok
     end.
-
-process_voice_queue_empty_test() ->
-    State = #{voice_queue => queue:new()},
-    Result = process_voice_queue(State),
-    ?assertEqual(State, Result),
-    ok.
 
 -endif.

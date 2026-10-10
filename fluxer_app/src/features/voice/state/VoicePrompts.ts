@@ -15,7 +15,6 @@ class VoicePrompts {
 			this,
 			{
 				getSkipHideOwnCameraConfirm: false,
-				getSkipHideOwnScreenShareConfirm: false,
 				getSkipP2pJoinConfirm: false,
 			},
 			{autoBind: true},
@@ -47,14 +46,6 @@ class VoicePrompts {
 
 	setSkipHideOwnCameraConfirm(value: boolean): void {
 		this.skipHideOwnCameraConfirm = value;
-	}
-
-	getSkipHideOwnScreenShareConfirm(): boolean {
-		return this.skipHideOwnScreenShareConfirm;
-	}
-
-	setSkipHideOwnScreenShareConfirm(value: boolean): void {
-		this.skipHideOwnScreenShareConfirm = value;
 	}
 
 	getSkipP2pJoinConfirm(): boolean {

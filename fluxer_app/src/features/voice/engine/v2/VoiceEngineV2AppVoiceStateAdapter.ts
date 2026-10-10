@@ -82,10 +82,6 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 		this.send({type: 'voiceState.update', guildId, voiceState});
 	}
 
-	handleGatewayVoiceStateDelete(guildId: string, userId: string): void {
-		this.send({type: 'voiceState.delete', guildId, userId});
-	}
-
 	removeVoiceStateConnection(connectionId: string): void {
 		this.ignoredConnectionIds.add(connectionId);
 		this.send({type: 'voiceState.removeConnection', connectionId});

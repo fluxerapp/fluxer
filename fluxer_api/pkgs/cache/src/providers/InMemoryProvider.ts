@@ -226,15 +226,6 @@ export class InMemoryProvider extends ICacheService {
 		return true;
 	}
 
-	async getAndRenewTtl<T>(key: string, newTtlSeconds: number): Promise<T | null> {
-		const entry = this.getValueEntry(key);
-		if (!entry) {
-			return null;
-		}
-		entry.expiresAt = Date.now() + newTtlSeconds * 1000;
-		return entry.value as T;
-	}
-
 	async publish(_channel: string, _message: string): Promise<void> {
 		return;
 	}

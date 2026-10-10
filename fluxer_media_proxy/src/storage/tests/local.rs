@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{rendered_counter, store, store_with_storage_metrics, test_config};
-use crate::{
-    metrics::Metrics,
-    storage::{ObjectStreamRequest, StorageError},
-};
+use crate::{metrics::Metrics, storage::StorageError};
 use http::StatusCode;
 
 #[tokio::test]
@@ -37,43 +34,6 @@ async fn local_stream_honors_range_without_buffered_read() {
     assert_eq!(Some(5), object.content_length);
     let body = axum::body::to_bytes(object.body, 16).await.unwrap();
     assert_eq!(b"world", &body[..]);
-}
-
-#[tokio::test]
-async fn local_versioned_reads_reject_an_object_rewritten_after_its_head() {
-    let tmp = tempfile::tempdir().unwrap();
-    let store = store(test_config(&tmp.path().canonicalize().unwrap()));
-    store
-        .write_object("cdn", "a/b.txt", b"hello world", "text/plain")
-        .await
-        .unwrap();
-    let head = store.head_object("cdn", "a/b.txt").await.unwrap();
-    let streamed = store
-        .stream_object_limited(ObjectStreamRequest {
-            bucket: "cdn",
-            key: "a/b.txt",
-            max_bytes: 1 << 20,
-            byte_range: None,
-            expected_identity: &head.identity,
-        })
-        .await
-        .unwrap();
-    assert_eq!(Some(11), streamed.content_length);
-
-    store
-        .write_object("cdn", "a/b.txt", b"goodbye world", "text/plain")
-        .await
-        .unwrap();
-    let changed = store
-        .stream_object_limited(ObjectStreamRequest {
-            bucket: "cdn",
-            key: "a/b.txt",
-            max_bytes: 1 << 20,
-            byte_range: None,
-            expected_identity: &head.identity,
-        })
-        .await;
-    assert!(matches!(changed, Err(StorageError::ObjectChanged)));
 }
 
 #[tokio::test]

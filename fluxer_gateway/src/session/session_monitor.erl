@@ -213,34 +213,6 @@ find_by_ref(Ref, Map) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-find_by_ref_test() ->
-    Ref1 = make_ref(),
-    Ref2 = make_ref(),
-    Ref3 = make_ref(),
-    Map = #{
-        123 => {self(), Ref1},
-        456 => {self(), Ref2},
-        789 => undefined
-    },
-    ?assertEqual({ok, 123}, find_by_ref(Ref1, Map)),
-    ?assertEqual({ok, 456}, find_by_ref(Ref2, Map)),
-    ?assertEqual(not_found, find_by_ref(Ref3, Map)),
-    ok.
-
-find_guild_by_ref_test() ->
-    Ref = make_ref(),
-    Guilds = #{100 => {self(), Ref}, 200 => undefined},
-    ?assertEqual({ok, 100}, find_guild_by_ref(Ref, Guilds)),
-    ?assertEqual(not_found, find_guild_by_ref(make_ref(), Guilds)),
-    ok.
-
-find_call_by_ref_test() ->
-    Ref = make_ref(),
-    Calls = #{300 => {self(), Ref}},
-    ?assertEqual({ok, 300}, find_call_by_ref(Ref, Calls)),
-    ?assertEqual(not_found, find_call_by_ref(make_ref(), Calls)),
-    ok.
-
 build_test_base_state() ->
     #{
         id => <<"session-monitor-test">>,

@@ -469,26 +469,6 @@ guild_id(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-is_engine_list_test() ->
-    Any = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertNot(is_engine_list(<<"0">>, Any)),
-    ?assert(is_engine_list(<<"123">>, Any)),
-    ?assertNot(is_engine_list(<<"notasnowflake">>, Any)).
-
-ref_reads_engine_map_test() ->
-    R = make_ref(),
-    State = #{
-        data => #{<<"guild">> => #{<<"features">> => []}},
-        channel_member_list_engines => #{<<"123">> => R}
-    },
-    ?assertEqual(R, ref(<<"123">>, State)),
-    ?assertEqual(undefined, ref(<<"456">>, State)).
-
-sync_online_noop_without_engines_test() ->
-    ?assertEqual(
-        ok, sync_online(1, true, #{data => #{<<"guild">> => #{<<"features">> => []}}})
-    ).
-
 memo_channel_state() ->
     #{
         data => #{

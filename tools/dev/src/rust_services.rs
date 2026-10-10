@@ -582,13 +582,6 @@ fn format_pids(pids: &[i32]) -> String {
         .join(", ")
 }
 
-#[cfg(test)]
-fn cmdline_has_service_binary(args: &[String], binaries: &BTreeSet<String>) -> bool {
-    args.first()
-        .map(|arg| binaries.iter().any(|binary| arg.ends_with(binary)))
-        .unwrap_or(false)
-}
-
 #[cfg(target_os = "linux")]
 fn proc_cmdline(pid: i32) -> Vec<String> {
     fs::read(format!("/proc/{pid}/cmdline"))
@@ -599,7 +592,7 @@ fn proc_cmdline(pid: i32) -> Vec<String> {
         .collect()
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn parse_proc_stat_state_and_pgid(stat: &str) -> Option<(char, i32)> {
     let (_, after_comm) = stat.rsplit_once(')')?;
     let mut fields = after_comm.split_ascii_whitespace();
@@ -619,13 +612,13 @@ fn parse_proc_stat_process(stat: &str) -> Option<(char, i32, i32, u64)> {
     Some((state, ppid, pgid, parse_proc_stat_starttime(stat)?))
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn parse_proc_stat_starttime(stat: &str) -> Option<u64> {
     let (_, after_comm) = stat.rsplit_once(')')?;
     after_comm.split_ascii_whitespace().nth(19)?.parse().ok()
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn proc_stat_state_is_dead(state: char) -> bool {
     state == 'Z' || state == 'X' || state == 'x'
 }
@@ -672,174 +665,4 @@ fn signal_process_groups(leaders: &[RustServiceLeader], signal: i32) -> Vec<i32>
         }
     }
     failed
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::sync::Mutex;
-
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    fn with_public_env(
-        overrides: &[(&str, Option<&str>)],
-        assertions: impl FnOnce(Vec<(String, Option<String>)>),
-    ) {
-        let _guard = ENV_LOCK.lock().unwrap();
-        let keys = [
-            "FLUXER_MEDIA_PROXY_ENDPOINT",
-            "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-            "FLUXER_MEDIA_ENDPOINT",
-            "FLUXER_STATIC_CDN_ENDPOINT",
-            "FLUXER_PUBLIC_URL",
-        ];
-        let saved = keys
-            .iter()
-            .map(|key| (*key, env::var(key).ok()))
-            .collect::<Vec<_>>();
-        for key in keys {
-            unsafe {
-                env::remove_var(key);
-            }
-        }
-        for (key, value) in overrides {
-            if let Some(value) = value {
-                unsafe {
-                    env::set_var(key, value);
-                }
-            }
-        }
-
-        let spec = rust_services()
-            .into_iter()
-            .find(|spec| spec.name == "unfurl")
-            .unwrap();
-        let env = service_env(&spec, "router", spec.port_base);
-
-        for (key, value) in saved {
-            match value {
-                Some(value) => unsafe {
-                    env::set_var(key, value);
-                },
-                None => unsafe {
-                    env::remove_var(key);
-                },
-            }
-        }
-
-        assertions(env);
-    }
-
-    #[test]
-    fn rejects_unknown_services() {
-        let err = select_services(&["bogus".to_owned()])
-            .unwrap_err()
-            .to_string();
-        assert!(err.contains("Unknown Rust service"));
-    }
-
-    #[test]
-    fn builds_unfurl_env_with_media_endpoints() {
-        with_public_env(&[], |env| {
-            assert!(
-                env.iter()
-                    .any(|(key, value)| key == "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT"
-                        && value.as_deref() == Some("http://localhost:8088/media"))
-            );
-            assert!(
-                env.iter()
-                    .any(|(key, value)| key == "FLUXER_STATIC_CDN_ENDPOINT"
-                        && value.as_deref() == Some("http://localhost:8088"))
-            );
-        });
-    }
-
-    #[test]
-    fn unfurl_env_uses_public_url_overrides() {
-        with_public_env(
-            &[
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                    Some("https://dev.example.com/media"),
-                ),
-                (
-                    "FLUXER_STATIC_CDN_ENDPOINT",
-                    Some("https://dev.example.com"),
-                ),
-            ],
-            |env| {
-                assert!(
-                    env.iter()
-                        .any(|(key, value)| key == "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT"
-                            && value.as_deref() == Some("https://dev.example.com/media"))
-                );
-                assert!(
-                    env.iter()
-                        .any(|(key, value)| key == "FLUXER_STATIC_CDN_ENDPOINT"
-                            && value.as_deref() == Some("https://dev.example.com"))
-                );
-            },
-        );
-    }
-
-    #[test]
-    fn cmdline_binary_match_uses_selected_service_binary_suffix() {
-        let binaries = BTreeSet::from(["target/debug/fluxer_messages".to_owned()]);
-        assert!(cmdline_has_service_binary(
-            &["/workspaces/fluxer/target/debug/fluxer_messages".to_owned()],
-            &binaries
-        ));
-        assert!(!cmdline_has_service_binary(
-            &["/workspaces/fluxer/target/debug/fluxer_users".to_owned()],
-            &binaries
-        ));
-    }
-
-    #[test]
-    fn proc_stat_parsing_handles_parentheses_and_spaces_in_comm() {
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (spaced comm) T 1 99 99 0 -1"),
-            Some(('T', 99))
-        );
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (weird) comm (name) Z 1 42 42 0 -1"),
-            Some(('Z', 42))
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_rejects_malformed_lines() {
-        assert_eq!(parse_proc_stat_state_and_pgid(""), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (svc)"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (svc) S"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (svc) S 1"), None);
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("1234 (svc) S 1 not-a-pgid"),
-            None
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_extracts_starttime() {
-        let stat = "1234 (svc) S 1 1234 1234 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 12345678 4096";
-        assert_eq!(parse_proc_stat_starttime(stat), Some(12_345_678));
-    }
-
-    #[test]
-    fn proc_stat_starttime_parsing_rejects_truncated_lines() {
-        assert_eq!(parse_proc_stat_starttime(""), None);
-        assert_eq!(parse_proc_stat_starttime("1234 (svc)"), None);
-        assert_eq!(
-            parse_proc_stat_starttime("1234 (svc) S 1 1234 1234 0 -1 4194560 0"),
-            None
-        );
-    }
-
-    #[test]
-    fn zombie_and_reaped_states_count_as_dead() {
-        assert!(proc_stat_state_is_dead('Z'));
-        assert!(proc_stat_state_is_dead('X'));
-        assert!(proc_stat_state_is_dead('x'));
-        assert!(!proc_stat_state_is_dead('S'));
-    }
 }

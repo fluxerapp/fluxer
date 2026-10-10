@@ -107,22 +107,6 @@ export class SnapshotChannelReducer {
 		private readonly users: SnapshotChannelUserAuthority,
 	) {}
 
-	get channelCount(): number {
-		return this.channels.size;
-	}
-
-	get readStateCount(): number {
-		return this.readStates.size;
-	}
-
-	get channelRows(): ReadonlyMap<string, WireChannel> {
-		return this.channels;
-	}
-
-	get readStateRows(): ReadonlyMap<string, SnapshotReadStateRow> {
-		return this.readStates;
-	}
-
 	load(entries: StateSnapshotEntries): void {
 		this.channels.clear();
 		for (const [key, value] of parseSnapshotEntity(entries, 'channel')) {

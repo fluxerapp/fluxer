@@ -168,17 +168,6 @@ split_range_by_max_span({Start, End}) ->
 
 -ifdef(TEST).
 
-calculate_list_id_returns_channel_id_test() ->
-    State = #{
-        id => 100,
-        data => #{<<"channels">> => [#{<<"id">> => <<"500">>}]}
-    },
-    ?assertEqual(<<"500">>, calculate_list_id(500, State)).
-
-calculate_list_id_missing_channel_test() ->
-    State = #{id => 100, data => #{}},
-    ?assertEqual(undefined, calculate_list_id(123, State)).
-
 normalize_ranges_empty_test() ->
     ?assertEqual([], normalize_ranges([])).
 

@@ -56,8 +56,6 @@ function toFlatUnicodeEmoji(unicodeEmoji: UnicodeEmoji): FlatEmoji {
 	};
 }
 
-const EMOJI_CATEGORIES: ReadonlyArray<string> = Object.freeze(['custom', ...UnicodeEmojis.getCategories()]);
-
 type BaseUnicodeEmojiIndex = Readonly<{
 	emojis: ReadonlyArray<FlatEmoji>;
 	byUsageName: ReadonlyMap<string, FlatEmoji>;
@@ -147,10 +145,6 @@ class EmojiGuildRegistry {
 			this.customEmojisByLowerNameByGuild.delete(guildId);
 		}
 		return didDeleteGuild || previousIds !== undefined || previousNames !== undefined;
-	}
-
-	get(guildId: string): GuildEmojiContext | undefined {
-		return this.guilds.get(guildId);
 	}
 
 	updateGuild(guildId: string, guildEmojis?: ReadonlyArray<WireGuildEmoji>): void {
@@ -340,10 +334,6 @@ class Emoji {
 			},
 		});
 		UnicodeEmojis.setDefaultSkinTone(this.skinTone);
-	}
-
-	get categories(): ReadonlyArray<string> {
-		return EMOJI_CATEGORIES;
 	}
 
 	getGuildEmoji(guildId: string): ReadonlyArray<GuildEmoji> {

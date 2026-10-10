@@ -73,12 +73,6 @@ class VoiceMediaGraphStore extends Store {
 		});
 	}
 
-	reset(): void {
-		this.update(() => {
-			this.graph = createVoiceMediaGraphSnapshot();
-		});
-	}
-
 	private checkInvariants(): void {
 		if (!IS_DEV) return;
 		const violations = checkVoiceMediaGraphInvariants(this.graph);

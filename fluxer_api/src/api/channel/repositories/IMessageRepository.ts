@@ -51,15 +51,7 @@ export abstract class IMessageRepository {
 		}>
 	>;
 
-	abstract deleteMessagesByAuthor(
-		authorId: UserID,
-		channelIds?: Array<ChannelID>,
-		messageIds?: Array<MessageID>,
-	): Promise<void>;
-
 	abstract anonymizeMessage(channelId: ChannelID, messageId: MessageID, newAuthorId: UserID): Promise<void>;
-
-	abstract authorHasMessage(authorId: UserID, channelId: ChannelID, messageId: MessageID): Promise<boolean>;
 
 	abstract lookupAttachmentByChannelAndFilename(
 		channelId: ChannelID,

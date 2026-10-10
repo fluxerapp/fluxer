@@ -46,21 +46,6 @@ class Toast {
 	error(message: string): string {
 		return this.createToast({type: 'error', children: message, timeout: 5000});
 	}
-
-	getCurrentToast() {
-		return this.currentToast;
-	}
-
-	hasToast(id: string): boolean {
-		return this.currentToast?.id === id;
-	}
-
-	getToast(id: string): ToastProps | undefined {
-		if (this.currentToast?.id === id) {
-			return this.currentToast.data;
-		}
-		return undefined;
-	}
 }
 
 export default new Toast();

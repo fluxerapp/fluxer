@@ -125,17 +125,6 @@ log_worker_crash(Class, Reason, Stack) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-init_counter_test() ->
-    cleanup_test_counter(),
-    ?assertEqual(ok, init_counter()),
-    ?assertEqual(0, active_count()),
-    ?assertEqual(ok, init_counter()),
-    cleanup_test_counter().
-
-active_count_returns_zero_when_no_table_test() ->
-    cleanup_test_counter(),
-    ?assertEqual(0, active_count()).
-
 maybe_spawn_initializes_missing_counter_and_tracks_worker_test() ->
     run_maybe_spawn_counter_test(fun() -> ok end).
 
@@ -157,20 +146,6 @@ run_maybe_spawn_counter_test(Setup) ->
     after
         cleanup_test_counter()
     end.
-
-utilization_pct_zero_when_idle_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ?assertEqual(0, utilization_pct()),
-    cleanup_test_counter().
-
-maybe_spawn_increments_counter_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ok = maybe_spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual(0, active_count()),
-    cleanup_test_counter().
 
 maybe_spawn_drops_when_full_test() ->
     cleanup_test_counter(),

@@ -139,15 +139,6 @@ class GeoIP {
 		});
 	}
 
-	isBlocked(): boolean {
-		if (!this.countryCode) return false;
-		return this.ageBlockedGeos.some((geo) => {
-			if (geo.countryCode !== this.countryCode) return false;
-			if (geo.regionCode === null) return true;
-			return geo.regionCode === this.regionCode;
-		});
-	}
-
 	private adoptRuntime(runtime: ActiveRuntimeContext | null): void {
 		const instanceKey = runtime?.instanceKey ?? null;
 		const transportApiEndpoint = runtime?.transportApiEndpoint ?? null;

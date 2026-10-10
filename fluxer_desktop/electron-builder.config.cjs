@@ -148,7 +148,6 @@ const fluxerNativePackages = [
 	'@fluxer/windows-input-hook',
 	'@fluxer/linux-audio-capture',
 	'@fluxer/linux-portals',
-	'@fluxer/linux-screen-capture',
 	'@fluxer/linux-notifications',
 	'@fluxer/linux-evdev',
 	'@fluxer/linux-input-hook',
@@ -186,7 +185,6 @@ const fluxerNativePackagesByPlatform = {
 	linux: [
 		'@fluxer/linux-audio-capture',
 		'@fluxer/linux-portals',
-		'@fluxer/linux-screen-capture',
 		'@fluxer/linux-notifications',
 		'@fluxer/linux-evdev',
 		'@fluxer/linux-input-hook',
@@ -254,12 +252,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/linux-portals/index.js',
 	'node_modules/@fluxer/linux-portals/loader-diagnostics.cjs',
 	'node_modules/@fluxer/linux-portals/*.node',
-	'node_modules/@fluxer/linux-screen-capture/package.json',
-	'node_modules/@fluxer/linux-screen-capture/index.js',
-	'node_modules/@fluxer/linux-screen-capture/loader-diagnostics.cjs',
-	'node_modules/@fluxer/linux-screen-capture/*.node',
-	'node_modules/@fluxer/linux-screen-capture/THIRD_PARTY_OBS_VKCAPTURE.md',
-	'node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 	'node_modules/@fluxer/linux-notifications/package.json',
 	'node_modules/@fluxer/linux-notifications/index.js',
 	'node_modules/@fluxer/linux-notifications/loader-diagnostics.cjs',
@@ -322,9 +314,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 	'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 	'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/*.node',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/THIRD_PARTY_OBS_VKCAPTURE.md',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 	'node_modules/.pnpm/@fluxer+linux-notifications@*/node_modules/@fluxer/linux-notifications/*.node',
 	'node_modules/.pnpm/@fluxer+linux-evdev@*/node_modules/@fluxer/linux-evdev/*.node',
 	'node_modules/.pnpm/@fluxer+linux-input-hook@*/node_modules/@fluxer/linux-input-hook/*.node',
@@ -598,10 +587,6 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			packageName: '@fluxer/linux-portals',
 			relativePath: `linux-portals.${tag}.node`,
-		});
-		artifacts.push({
-			packageName: '@fluxer/linux-screen-capture',
-			relativePath: `linux-screen-capture.${tag}.node`,
 		});
 		artifacts.push({
 			packageName: '@fluxer/linux-notifications',
@@ -1685,8 +1670,6 @@ module.exports = {
 			'node_modules/@fluxer/win-shell/*.node',
 			'node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/@fluxer/linux-portals/*.node',
-			'node_modules/@fluxer/linux-screen-capture/*.node',
-			'node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 			'node_modules/@fluxer/linux-notifications/*.node',
 			'node_modules/@fluxer/linux-evdev/*.node',
 			'node_modules/@fluxer/system-hunspell/*.node',
@@ -1713,8 +1696,6 @@ module.exports = {
 			'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 			'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
-			'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/*.node',
-			'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 			'node_modules/.pnpm/@fluxer+linux-notifications@*/node_modules/@fluxer/linux-notifications/*.node',
 			'node_modules/.pnpm/@fluxer+linux-evdev@*/node_modules/@fluxer/linux-evdev/*.node',
 			'node_modules/.pnpm/@fluxer+linux-input-hook@*/node_modules/@fluxer/linux-input-hook/*.node',

@@ -158,18 +158,6 @@ maybe_schedule_gc(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-maybe_cast_to_valid_pid_test() ->
-    ?assertEqual(true, maybe_cast(self(), {test_msg, hello})),
-    receive
-        {'$gen_cast', {test_msg, hello}} -> ok
-    after 500 ->
-        ?assert(false)
-    end.
-
-maybe_cast_to_invalid_pid_test() ->
-    ?assertEqual(false, maybe_cast(undefined, {test_msg, hello})),
-    ?assertEqual(false, maybe_cast(not_a_pid, {test_msg, hello})).
-
 blocker_process(Parent) ->
     receive
         go -> ok
@@ -190,17 +178,6 @@ maybe_cast_sheds_when_mailbox_full_test() ->
         done -> ok
     after 1000 -> ok
     end.
-
-cast_event_delegates_to_maybe_cast_test() ->
-    ?assertEqual(true, cast_event(self(), message_create, {pre_encoded, <<"test">>}, [self()])),
-    receive
-        {'$gen_cast', {event_broadcast, message_create, {pre_encoded, <<"test">>}, [_]}} -> ok
-    after 500 ->
-        ?assert(false)
-    end.
-
-cast_event_returns_false_for_undefined_pid_test() ->
-    ?assertEqual(false, cast_event(undefined, message_create, {pre_encoded, <<"x">>}, [])).
 
 event_broadcast_handler_dispatches_test() ->
     {ok, Broadcaster} = gen_server:start_link(

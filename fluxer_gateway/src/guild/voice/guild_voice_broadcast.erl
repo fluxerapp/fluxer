@@ -6,10 +6,6 @@
 -export([broadcast_voice_state_update/3]).
 -export([broadcast_voice_server_update_to_session/7]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -export_type([
     guild_state/0,
     voice_state/0
@@ -157,12 +153,3 @@ maybe_sync_guild_voice_state(VoiceState, OldChannelIdBin, State) ->
         _ ->
             ok
     end.
-
--ifdef(TEST).
-
-broadcast_voice_state_update_missing_connection_id_test() ->
-    VoiceState = #{<<"user_id">> => <<"1">>},
-    State = #{sessions => #{}},
-    ?assertEqual(ok, broadcast_voice_state_update(VoiceState, State, null)).
-
--endif.

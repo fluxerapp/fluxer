@@ -2,7 +2,6 @@
 
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ReactionRecord {
 	emoji: ReactionEmoji;
@@ -13,16 +12,6 @@ export interface ReactionRecord {
 }
 
 export type ReactionMap = ReadonlyMap<string, ReactionRecord>;
-
-interface ReactionMachineContext {
-	map: ReactionMap;
-	currentUserId: string | null;
-}
-
-interface ReactionMachineInput {
-	map?: ReactionMap;
-	currentUserId?: string | null;
-}
 
 export type ReactionMachineEvent =
 	| {
@@ -265,118 +254,6 @@ function untrackReactorInMap(map: ReactionMap, emoji: ReactionEmoji, userId: str
 	return withRecord(map, key, {...existing, knownReactors: reactors});
 }
 
-const reactionStateMachine = setup({
-	types: {} as {
-		context: ReactionMachineContext;
-		events: ReactionMachineEvent;
-		input: ReactionMachineInput;
-	},
-	actions: {
-		applyHydration: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.hydrate'
-					? hydrateMap(context.map, event.reactions, event.currentUserId ?? context.currentUserId)
-					: context.map,
-			currentUserId: ({context, event}) =>
-				event.type === 'reaction.hydrate' ? (event.currentUserId ?? context.currentUserId) : context.currentUserId,
-		}),
-		applyAdd: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.add'
-					? addToMap(context.map, event.emoji, event.userId, event.isCurrentUser)
-					: context.map,
-		}),
-		applyRemove: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.remove'
-					? removeFromMap(context.map, event.emoji, event.userId, event.isCurrentUser)
-					: context.map,
-		}),
-		applyRemoveAll: assign({
-			map: ({context}) => removeAllFromMap(context.map),
-		}),
-		applyRemoveEmoji: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.removeEmoji' ? removeEmojiFromMap(context.map, event.emoji) : context.map,
-		}),
-		applyTrackReactor: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.trackReactor'
-					? trackReactorInMap(context.map, event.emoji, event.userId)
-					: context.map,
-		}),
-		applyTrackReactors: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.trackReactors'
-					? trackReactorsInMap(context.map, event.emoji, event.userIds)
-					: context.map,
-		}),
-		applyUntrackReactor: assign({
-			map: ({context, event}) =>
-				event.type === 'reaction.untrackReactor'
-					? untrackReactorInMap(context.map, event.emoji, event.userId)
-					: context.map,
-		}),
-	},
-	guards: {
-		hasReactions: ({context}) => context.map.size > 0,
-	},
-}).createMachine({
-	id: 'messageReactionAggregate',
-	context: ({input}) => ({
-		map: input.map ?? emptyMap(),
-		currentUserId: input.currentUserId ?? null,
-	}),
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [{guard: 'hasReactions', target: 'active'}, {target: 'empty'}],
-		},
-		empty: {
-			on: {
-				'reaction.hydrate': {target: 'routing', actions: 'applyHydration'},
-				'reaction.add': {target: 'routing', actions: 'applyAdd'},
-				'reaction.remove': {target: 'routing', actions: 'applyRemove'},
-				'reaction.removeAll': {target: 'routing', actions: 'applyRemoveAll'},
-				'reaction.removeEmoji': {target: 'routing', actions: 'applyRemoveEmoji'},
-				'reaction.trackReactor': {target: 'routing', actions: 'applyTrackReactor'},
-				'reaction.trackReactors': {target: 'routing', actions: 'applyTrackReactors'},
-				'reaction.untrackReactor': {target: 'routing', actions: 'applyUntrackReactor'},
-			},
-		},
-		active: {
-			on: {
-				'reaction.hydrate': {target: 'routing', actions: 'applyHydration'},
-				'reaction.add': {target: 'routing', actions: 'applyAdd'},
-				'reaction.remove': {target: 'routing', actions: 'applyRemove'},
-				'reaction.removeAll': {target: 'routing', actions: 'applyRemoveAll'},
-				'reaction.removeEmoji': {target: 'routing', actions: 'applyRemoveEmoji'},
-				'reaction.trackReactor': {target: 'routing', actions: 'applyTrackReactor'},
-				'reaction.trackReactors': {target: 'routing', actions: 'applyTrackReactors'},
-				'reaction.untrackReactor': {target: 'routing', actions: 'applyUntrackReactor'},
-			},
-		},
-	},
-});
-
-export type ReactionMachineSnapshot = SnapshotFrom<typeof reactionStateMachine>;
-export type ReactionMachineStateValue = 'empty' | 'active';
-
-export function createReactionMachineSnapshot(
-	map: ReactionMap = emptyMap(),
-	currentUserId?: string | null,
-): ReactionMachineSnapshot {
-	return initialTransition(reactionStateMachine, {map, currentUserId})[0];
-}
-
-export function transitionReactionSnapshot(
-	snapshot: ReactionMachineSnapshot,
-	event: ReactionMachineEvent,
-): ReactionMachineSnapshot {
-	if (isSnapshotNoop(snapshot, event)) return snapshot;
-	return transition(reactionStateMachine, snapshot, event)[0] as ReactionMachineSnapshot;
-}
-
 export function transitionReactionMap(
 	map: ReactionMap,
 	event: ReactionMachineEvent,
@@ -400,10 +277,6 @@ export function transitionReactionMap(
 		case 'reaction.untrackReactor':
 			return untrackReactorInMap(map, event.emoji, event.userId);
 	}
-}
-
-export function getReactionStateValue(snapshot: ReactionMachineSnapshot): ReactionMachineStateValue {
-	return snapshot.value === 'active' ? 'active' : 'empty';
 }
 
 export function applyAdd(map: ReactionMap, emoji: ReactionEmoji, userId: string, isCurrentUser: boolean): ReactionMap {
@@ -439,34 +312,8 @@ export function trackReactor(map: ReactionMap, emoji: ReactionEmoji, userId: str
 	return transitionReactionMap(map, {type: 'reaction.trackReactor', emoji, userId});
 }
 
-export function trackReactors(map: ReactionMap, emoji: ReactionEmoji, userIds: ReadonlyArray<string>): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.trackReactors', emoji, userIds});
-}
-
 export function untrackReactor(map: ReactionMap, emoji: ReactionEmoji, userId: string): ReactionMap {
 	return transitionReactionMap(map, {type: 'reaction.untrackReactor', emoji, userId});
-}
-
-function isSnapshotNoop(snapshot: ReactionMachineSnapshot, event: ReactionMachineEvent): boolean {
-	const map = snapshot.context.map;
-	switch (event.type) {
-		case 'reaction.hydrate':
-			return (
-				(event.reactions == null || event.reactions.length === 0) &&
-				map.size === 0 &&
-				(event.currentUserId == null || event.currentUserId === snapshot.context.currentUserId)
-			);
-		case 'reaction.removeAll':
-			return map.size === 0;
-		case 'reaction.remove':
-		case 'reaction.removeEmoji':
-		case 'reaction.trackReactor':
-		case 'reaction.trackReactors':
-		case 'reaction.untrackReactor':
-			return map.size === 0 || !map.has(getEmojiKey(event.emoji));
-		case 'reaction.add':
-			return false;
-	}
 }
 
 function mapsEqual(a: ReactionMap, b: ReactionMap): boolean {
@@ -485,19 +332,6 @@ function mapsEqual(a: ReactionMap, b: ReactionMap): boolean {
 		for (const id of left.removedReactors) {
 			if (!right.removedReactors.has(id)) return false;
 		}
-	}
-	return true;
-}
-
-export function reactionsEqual(a: ReadonlyArray<MessageReaction>, b: ReadonlyArray<MessageReaction>): boolean {
-	if (a === b) return true;
-	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) {
-		const left = a[i];
-		const right = b[i];
-		if (left.count !== right.count) return false;
-		if (Boolean(left.me) !== Boolean(right.me)) return false;
-		if (!sameEmoji(left.emoji, right.emoji)) return false;
 	}
 	return true;
 }

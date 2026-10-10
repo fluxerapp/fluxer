@@ -40,7 +40,6 @@ import {
 	shutdownInstanceConfigRepository,
 	shutdownServiceSingletons,
 } from '@app/api/middleware/ServiceSingletons';
-import {ensureApnsSigningKey} from '@app/api/push/ApnsPushService';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
 import {warmupAdminSearchIndexes} from '@app/api/search/SearchWarmup';
 import {VisionarySlotInitializer} from '@app/api/stripe/VisionarySlotInitializer';
@@ -100,7 +99,6 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 	return async (): Promise<void> => {
 		try {
 			logger.info('Initializing API service...');
-			await ensureApnsSigningKey();
 			const geoipStartupResult = await ensureGeoipDatabaseOnStartup({
 				geoip: config.geoip,
 				s3Config: {

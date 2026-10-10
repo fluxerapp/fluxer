@@ -31,10 +31,6 @@ class RuntimeCrash {
 		logger.fatal('Triggering fatal runtime crash', normalizedError);
 		return normalizedError;
 	}
-
-	reset(): void {
-		this.fatalError = null;
-	}
 }
 
 export default new RuntimeCrash();

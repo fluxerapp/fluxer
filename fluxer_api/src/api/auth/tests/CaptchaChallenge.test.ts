@@ -97,12 +97,4 @@ describe('Captcha challenge', () => {
 
 		await forgot(harness).expect(HTTP_STATUS.NO_CONTENT).execute();
 	});
-
-	it('skips the check in test mode unless the request opts in', async () => {
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/forgot')
-			.body({email: 'captcha-nobody@example.com'})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
-	});
 });

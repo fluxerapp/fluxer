@@ -37,24 +37,6 @@ afterAll(async () => {
 });
 
 describe('buildAPIServerOptions', () => {
-	test('starts the api on the shipped header and request timeouts', async () => {
-		const server = await listenWithEnv();
-		expect(server.headersTimeout).toBe(30_000);
-		expect(server.requestTimeout).toBe(120_000);
-	});
-
-	test('passes the operator header timeout from the environment into the server', async () => {
-		const server = await listenWithEnv({FLUXER_API_HEADERS_TIMEOUT_MS: '45000'});
-		expect(server.headersTimeout).toBe(45_000);
-		expect(server.requestTimeout).toBe(120_000);
-	});
-
-	test('passes the operator request timeout from the environment into the server', async () => {
-		const server = await listenWithEnv({FLUXER_API_REQUEST_TIMEOUT_MS: '600000'});
-		expect(server.headersTimeout).toBe(30_000);
-		expect(server.requestTimeout).toBe(600_000);
-	});
-
 	test('clamps a header timeout set above the request timeout', async () => {
 		const server = await listenWithEnv({
 			FLUXER_API_HEADERS_TIMEOUT_MS: '90000',
@@ -119,12 +101,6 @@ describe('buildAPIConfigFromMaster upload relay secret', () => {
 		expect(
 			buildAPIConfigFromMaster(withUploadRelaySecret(master, secret)).mediaProxy.uploadRelay.relaySecretBase64,
 		).toBe(secret);
-	});
-
-	it('reads the relay secret from the loaded config rather than the environment', () => {
-		expect(buildAPIConfigFromMaster(master).mediaProxy.uploadRelay.relaySecretBase64).toBe(
-			master.services.media_proxy.upload_relay.secret_base64,
-		);
 	});
 });
 

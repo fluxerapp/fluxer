@@ -232,10 +232,6 @@ export function getModuleStoreRoot(userDataPath: string): string {
 	return path.join(userDataPath, MODULE_STORE_DIRECTORY_NAME);
 }
 
-export function getModuleStoreTreeRoot(userDataPath: string): string {
-	return path.join(getModuleStoreRoot(userDataPath), MODULE_STORE_TREE_DIRECTORY_NAME);
-}
-
 function assertModuleName(moduleName: string): void {
 	if (!isDesktopModuleName(moduleName)) {
 		throw new ModuleStoreError(`unsupported module name: ${moduleName}`);

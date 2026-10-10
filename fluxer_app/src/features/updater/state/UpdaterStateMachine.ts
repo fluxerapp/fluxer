@@ -3,8 +3,6 @@
 import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type UpdaterState = 'idle' | 'checking' | 'available';
-
 interface NativeUpdateInfo {
 	available: boolean;
 	version: string | null;
@@ -56,8 +54,7 @@ export type UpdaterMachineEvent =
 			now: number;
 	  }
 	| {type: 'manualDownload.started'}
-	| {type: 'manualDownload.finished'}
-	| {type: 'reset'};
+	| {type: 'manualDownload.finished'};
 
 const EMPTY_DOWNLOAD_OPTIONS: ReadonlyArray<UpdaterDownloadOption> = Object.freeze([]);
 
@@ -110,7 +107,6 @@ const updaterStateMachine = setup({
 		events: UpdaterMachineEvent;
 	},
 	actions: {
-		reset: assign(() => createInitialUpdaterContext()),
 		markChecking: assign(() => ({
 			isChecking: true,
 			nativeCheckFailed: false,
@@ -199,7 +195,6 @@ const updaterStateMachine = setup({
 		'native.unsupported': {actions: 'applyNativeUnsupported'},
 		'manualDownload.started': {actions: 'startManualDownload'},
 		'manualDownload.finished': {actions: 'finishManualDownload'},
-		reset: {actions: 'reset'},
 	},
 	states: {
 		idle: {
@@ -234,17 +229,6 @@ export function transitionUpdaterMachineSnapshot(
 	event: UpdaterMachineEvent,
 ): UpdaterMachineSnapshot {
 	return transition(updaterStateMachine, snapshot, event)[0] as UpdaterMachineSnapshot;
-}
-
-export function getUpdaterMachineStateValue(snapshot: UpdaterMachineSnapshot): UpdaterState {
-	switch (snapshot.value) {
-		case 'checking':
-			return 'checking';
-		case 'available':
-			return 'available';
-		default:
-			return 'idle';
-	}
 }
 
 export function hasManualNativeDownload(snapshot: UpdaterMachineSnapshot): boolean {

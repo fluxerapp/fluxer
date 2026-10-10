@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{
-    HeadResult, ObjectStreamPlan, ObjectStreamRequest, StorageError, Store, StreamObject,
-    StreamRange, record_storage_outcome,
+    HeadResult, ObjectStreamPlan, StorageError, Store, StreamObject, StreamRange,
+    record_storage_outcome,
 };
 use crate::{config::StorageBackend, constants};
 
@@ -38,24 +38,6 @@ impl Store {
                 Some(header) => StreamRange::Header(header),
                 None => StreamRange::Full,
             },
-            expected_identity: None,
-        })
-        .await
-    }
-
-    pub async fn stream_object_limited(
-        &self,
-        request: ObjectStreamRequest<'_>,
-    ) -> Result<StreamObject, StorageError> {
-        self.stream_object_inner(ObjectStreamPlan {
-            bucket: request.bucket,
-            key: request.key,
-            max_bytes: request.max_bytes,
-            range: match request.byte_range {
-                Some(byte_range) => StreamRange::Bytes(byte_range),
-                None => StreamRange::Full,
-            },
-            expected_identity: Some(request.expected_identity),
         })
         .await
     }

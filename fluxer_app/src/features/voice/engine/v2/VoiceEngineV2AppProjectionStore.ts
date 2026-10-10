@@ -9,14 +9,13 @@ import {isVoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/runtime
 const FRAME_NOTIFY_FLUSH_INTERVAL_MS = 1000;
 
 export class VoiceEngineV2AppProjectionStore extends Store {
-	private readonly unsubscribeHost: () => void;
 	private frameFlushTimer: ReturnType<typeof setTimeout> | null = null;
 	private notifyFlushScheduled = false;
 	private disposed = false;
 
 	constructor(private readonly host: VoiceEngineV2AppControllerHost) {
 		super();
-		this.unsubscribeHost = host.subscribe(({event}) => {
+		host.subscribe(({event}) => {
 			if (isVoiceEngineV2FrameReceivedEvent(event)) {
 				this.scheduleFrameFlush();
 				return;
@@ -54,16 +53,6 @@ export class VoiceEngineV2AppProjectionStore extends Store {
 
 	get model(): VoiceEngineV2Model {
 		return this.host.model;
-	}
-
-	dispose(): void {
-		this.disposed = true;
-		this.notifyFlushScheduled = false;
-		if (this.frameFlushTimer !== null) {
-			clearTimeout(this.frameFlushTimer);
-			this.frameFlushTimer = null;
-		}
-		this.unsubscribeHost();
 	}
 }
 

@@ -23,12 +23,11 @@ function roomFinished(name: string): WebhookEvent {
 
 function harness(pinnedServerId: string | null) {
 	const deleteRoomServer = vi.fn(async () => {});
-	const disconnectAllVoiceUsersInChannel = vi.fn(async () => ({disconnectedCount: 0}));
 	const voiceRoomStore = {
 		getPinnedRoomServer: vi.fn(async () => (pinnedServerId ? {regionId: 'eu', serverId: pinnedServerId} : null)),
 		deleteRoomServer,
 	} as unknown as IVoiceRoomStore;
-	const gatewayService = {disconnectAllVoiceUsersInChannel} as unknown as IGatewayService;
+	const gatewayService = {} as unknown as IGatewayService;
 	const liveKitService = {} as unknown as ILiveKitService;
 	const service = new LiveKitWebhookService(
 		voiceRoomStore,
@@ -36,35 +35,32 @@ function harness(pinnedServerId: string | null) {
 		liveKitService,
 		new VoiceTopology({} as unknown as IVoiceRepository, null),
 	);
-	return {service, deleteRoomServer, disconnectAllVoiceUsersInChannel};
+	return {service, deleteRoomServer};
 }
 
 describe('LiveKitWebhookService room_finished', () => {
 	it('clears the guild pin without disconnecting anybody', async () => {
-		const {service, deleteRoomServer, disconnectAllVoiceUsersInChannel} = harness('eu-1');
+		const {service, deleteRoomServer} = harness('eu-1');
 
 		await service.handleRoomFinished(roomFinished(`guild_${GUILD_ID}_channel_${CHANNEL_ID}`), 'unknown-key');
 
 		expect(deleteRoomServer).toHaveBeenCalledTimes(1);
-		expect(disconnectAllVoiceUsersInChannel).not.toHaveBeenCalled();
 	});
 
 	it('clears the pin even when no server is pinned, and still disconnects nobody', async () => {
-		const {service, deleteRoomServer, disconnectAllVoiceUsersInChannel} = harness(null);
+		const {service, deleteRoomServer} = harness(null);
 
 		await service.handleRoomFinished(roomFinished(`guild_${GUILD_ID}_channel_${CHANNEL_ID}`), 'unknown-key');
 
 		expect(deleteRoomServer).toHaveBeenCalledTimes(1);
-		expect(disconnectAllVoiceUsersInChannel).not.toHaveBeenCalled();
 	});
 
 	it('ignores a room name it cannot parse', async () => {
-		const {service, deleteRoomServer, disconnectAllVoiceUsersInChannel} = harness('eu-1');
+		const {service, deleteRoomServer} = harness('eu-1');
 
 		await service.handleRoomFinished(roomFinished('not_a_voice_room'), 'unknown-key');
 
 		expect(deleteRoomServer).not.toHaveBeenCalled();
-		expect(disconnectAllVoiceUsersInChannel).not.toHaveBeenCalled();
 	});
 });
 

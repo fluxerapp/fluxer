@@ -4,7 +4,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
 import Users from '@app/features/user/state/Users';
-import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {ChannelOverwrite, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -28,15 +28,6 @@ export class ChannelOverwriteRecord {
 		this.type = overwrite.type;
 		this.allow = BigInt(overwrite.allow);
 		this.deny = BigInt(overwrite.deny);
-	}
-
-	withUpdates(overwrite: Partial<ChannelOverwrite>): ChannelOverwriteRecord {
-		return new ChannelOverwriteRecord({
-			id: this.id,
-			type: overwrite.type ?? this.type,
-			allow: overwrite.allow ?? this.allow.toString(),
-			deny: overwrite.deny ?? this.deny.toString(),
-		});
 	}
 
 	equals(other: ChannelOverwriteRecord): boolean {
@@ -229,28 +220,12 @@ export class Channel {
 		return this.type === ChannelTypes.DM_PERSONAL_NOTES;
 	}
 
-	isGuildText(): boolean {
-		return this.type === ChannelTypes.GUILD_TEXT;
-	}
-
-	isGuildAnnouncement(): boolean {
-		return this.type === ChannelTypes.GUILD_ANNOUNCEMENT;
-	}
-
-	isGuildVoice(): boolean {
-		return this.type === ChannelTypes.GUILD_VOICE;
-	}
-
 	isGuildCategory(): boolean {
 		return this.type === ChannelTypes.GUILD_CATEGORY;
 	}
 
 	isVoice(): boolean {
 		return this.type === ChannelTypes.GUILD_VOICE;
-	}
-
-	isText(): boolean {
-		return GUILD_TEXT_BASED_CHANNEL_TYPES.has(this.type);
 	}
 
 	isMature(): boolean {
@@ -313,21 +288,6 @@ export class Channel {
 		return this.threadFields?.default_thread_rate_limit_per_user ?? 0;
 	}
 
-	isRoleRequired(): boolean {
-		if (
-			this.guildId == null ||
-			(this.type !== ChannelTypes.GUILD_TEXT &&
-				this.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
-				this.type !== ChannelTypes.GUILD_VOICE &&
-				this.type !== ChannelTypes.GUILD_LINK)
-		) {
-			return false;
-		}
-		const flag = this.type === ChannelTypes.GUILD_VOICE ? Permissions.CONNECT : Permissions.VIEW_CHANNEL;
-		const overwrite = this.permissionOverwrites[this.guildId];
-		return overwrite != null && (overwrite.deny & flag) === flag;
-	}
-
 	getRecipientId(): string | undefined {
 		if (this.type !== ChannelTypes.DM) return undefined;
 		return this.recipientIds[0];
@@ -386,22 +346,6 @@ export class Channel {
 				rate_limit_per_user: updates.rate_limit_per_user ?? this.rateLimitPerUser,
 				nicks: updates.nicks ?? this.nicks,
 				...pickThreadFields(updates, this.threadFields),
-			},
-			{instanceId: this.instanceId},
-		);
-	}
-
-	withOverwrite(overwrite: ChannelOverwriteRecord): Channel {
-		if (this.isPrivate()) {
-			return this;
-		}
-		return new Channel(
-			{
-				...this.toJSON(),
-				permission_overwrites: Object.values({
-					...this.permissionOverwrites,
-					[overwrite.id]: overwrite,
-				}).map((o) => o.toJSON()),
 			},
 			{instanceId: this.instanceId},
 		);

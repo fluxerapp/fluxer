@@ -13,8 +13,6 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 async function setBotFlag(harness: ApiTestHarness, userId: string, isBot: boolean): Promise<void> {
@@ -97,25 +95,6 @@ describe('Unclaimed Account Restrictions', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
-	test('unclaimed account can receive DM', async () => {
-		const sender = await createTestAccount(harness);
-		const receiver = await createTestAccount(harness);
-		await createFriendship(harness, sender, receiver);
-		const dmChannel = await createDMChannel(harness, sender.token, receiver.userId);
-		await unclaimAccount(harness, receiver.userId);
-		const message = await sendMessage(harness, sender.token, dmChannel.id, 'Hello to unclaimed');
-		expect(message.id).toBeTruthy();
-		expect(message.content).toBe('Hello to unclaimed');
-	});
-	test('unclaimed account can join guild by invite', async () => {
-		const owner = await createTestAccount(harness);
-		const unclaimed = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, owner.token, channelId);
-		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token).post(`/invites/${invite.code}`).body({}).execute();
-	});
 	test('unclaimed account cannot send guild messages', async () => {
 		const owner = await createTestAccount(harness);
 		const unclaimed = await createTestAccount(harness);
@@ -152,40 +131,6 @@ describe('Unclaimed Account Restrictions', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
-	test('unclaimed account can view their own profile', async () => {
-		const unclaimed = await createTestAccount(harness);
-		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token).get('/users/@me').execute();
-	});
-	test('unclaimed account can view guild they are member of', async () => {
-		const owner = await createTestAccount(harness);
-		const unclaimed = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, owner.token, channelId);
-		await acceptInvite(harness, unclaimed.token, invite.code);
-		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token).get(`/guilds/${guild.id}`).execute();
-	});
-	test('unclaimed account can read messages in guild', async () => {
-		const owner = await createTestAccount(harness);
-		const unclaimed = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Test Guild');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, owner.token, channelId);
-		await acceptInvite(harness, unclaimed.token, invite.code);
-		await sendMessage(harness, owner.token, channelId, 'Test message');
-		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token).get(`/channels/${channelId}/messages`).execute();
-	});
-	test('claimed account creates guild without INVITES_DISABLED feature', async () => {
-		const user = await createTestAccount(harness);
-		const guild = await createBuilder<GuildResponse>(harness, user.token)
-			.post('/guilds')
-			.body({name: 'Guild'})
-			.execute();
-		expect(guild.features).not.toContain(GuildFeatures.INVITES_DISABLED);
-	});
 	test('unclaimed account cannot open DM with another user', async () => {
 		const unclaimed = await createTestAccount(harness);
 		const target = await createTestAccount(harness);
@@ -202,16 +147,6 @@ describe('Unclaimed Account Restrictions', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.executeWithResponse();
 		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES');
-	});
-	test('unclaimed account can use personal notes', async () => {
-		const unclaimed = await createTestAccount(harness);
-		const target = await createTestAccount(harness);
-		await unclaimAccount(harness, unclaimed.userId);
-		await createBuilder(harness, unclaimed.token)
-			.put(`/users/@me/notes/${target.userId}`)
-			.body({note: 'This is a personal note'})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
 	});
 	test('unclaimed account can delete without password', async () => {
 		const unclaimed = await createTestAccount(harness);

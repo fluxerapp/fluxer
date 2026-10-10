@@ -6,11 +6,8 @@
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
 -export([
-    perform_handoff_for_drain/1,
-    perform_handoff_to_target/2,
     perform_handoff_to_topology/2,
     merge_handoff_results/2,
-    collect_local_guild_ids/1,
     handoff_guild_ids/5,
     resolve_handoff_target/3
 ]).
@@ -29,14 +26,6 @@
         handoff_result(), state()
     }
 ).
-
--spec perform_handoff_for_drain(state()) -> {handoff_result(), state()}.
-perform_handoff_for_drain(State) ->
-    perform_handoff_for_drain(State, 0, empty_result()).
-
--spec perform_handoff_to_target(node(), state()) -> {handoff_result(), state()}.
-perform_handoff_to_target(TargetNode, State) ->
-    perform_handoff_to_target(TargetNode, State, 0, empty_result()).
 
 -spec perform_handoff_to_topology([node()], state()) -> {handoff_result(), state()}.
 perform_handoff_to_topology(TargetNodes, State) ->
@@ -85,26 +74,6 @@ resolve_handoff_target(GuildId, LocalNode, OwnerResolver) ->
             skip
     end.
 
--spec perform_handoff_for_drain(state(), non_neg_integer(), handoff_result()) ->
-    {handoff_result(), state()}.
-perform_handoff_for_drain(State, Iteration, AccResult) when
-    Iteration >= ?MAX_DRAIN_HANDOFF_ITERATIONS
-->
-    {AccResult, State};
-perform_handoff_for_drain(State, Iteration, AccResult) ->
-    GuildIds = collect_local_guild_ids(State),
-    continue_handoff_for_drain(GuildIds, State, Iteration, AccResult).
-
--spec perform_handoff_to_target(node(), state(), non_neg_integer(), handoff_result()) ->
-    {handoff_result(), state()}.
-perform_handoff_to_target(_TargetNode, State, Iteration, AccResult) when
-    Iteration >= ?MAX_DRAIN_HANDOFF_ITERATIONS
-->
-    {AccResult, State};
-perform_handoff_to_target(TargetNode, State, Iteration, AccResult) ->
-    GuildIds = collect_local_guild_ids(State),
-    continue_handoff_to_target(TargetNode, GuildIds, State, Iteration, AccResult).
-
 -spec perform_handoff_to_topology([node()], state(), non_neg_integer(), handoff_result()) ->
     {handoff_result(), state()}.
 perform_handoff_to_topology(_TargetNodes, State, Iteration, AccResult) when
@@ -114,36 +83,6 @@ perform_handoff_to_topology(_TargetNodes, State, Iteration, AccResult) when
 perform_handoff_to_topology(TargetNodes, State, Iteration, AccResult) ->
     GuildIds = collect_local_guild_ids(State),
     continue_handoff_to_topology(TargetNodes, GuildIds, State, Iteration, AccResult).
-
--spec continue_handoff_for_drain([guild_id()], state(), non_neg_integer(), handoff_result()) ->
-    {handoff_result(), state()}.
-continue_handoff_for_drain([], State, _Iteration, AccResult) ->
-    {AccResult, State};
-continue_handoff_for_drain(GuildIds, State, Iteration, AccResult) ->
-    Resolver = fun(GId) ->
-        gateway_node_router:owner_node_result(GId, guilds)
-    end,
-    run_and_continue(
-        GuildIds, Resolver, AccResult, State, fun maybe_continue_drain/4, Iteration
-    ).
-
--spec continue_handoff_to_target(
-    node(), [guild_id()], state(), non_neg_integer(), handoff_result()
-) -> {handoff_result(), state()}.
-continue_handoff_to_target(_TargetNode, [], State, _Iteration, AccResult) ->
-    {AccResult, State};
-continue_handoff_to_target(TargetNode, GuildIds, State, Iteration, AccResult) ->
-    Resolver = fun(_GId) -> TargetNode end,
-    run_and_continue(
-        GuildIds,
-        Resolver,
-        AccResult,
-        State,
-        fun(S1, I, M, B) ->
-            maybe_continue_target(TargetNode, S1, I, M, B)
-        end,
-        Iteration
-    ).
 
 -spec continue_handoff_to_topology(
     [node()], [guild_id()], state(), non_neg_integer(), handoff_result()
@@ -183,21 +122,6 @@ run_and_continue(GuildIds, Resolver, AccResult, State, ContinueFun, Iteration) -
     ),
     Merged = merge_handoff_results(AccResult, BatchResult),
     ContinueFun(State1, Iteration, Merged, BatchResult).
-
--spec maybe_continue_drain(state(), non_neg_integer(), handoff_result(), handoff_result()) ->
-    {handoff_result(), state()}.
-maybe_continue_drain(State, Iteration, AccResult, BatchResult) ->
-    maybe_retry(BatchResult, AccResult, State, fun() ->
-        perform_handoff_for_drain(State, Iteration + 1, AccResult)
-    end).
-
--spec maybe_continue_target(
-    node(), state(), non_neg_integer(), handoff_result(), handoff_result()
-) -> {handoff_result(), state()}.
-maybe_continue_target(TargetNode, State, Iteration, AccResult, BatchResult) ->
-    maybe_retry(BatchResult, AccResult, State, fun() ->
-        perform_handoff_to_target(TargetNode, State, Iteration + 1, AccResult)
-    end).
 
 -spec maybe_continue_topology(
     [node()],

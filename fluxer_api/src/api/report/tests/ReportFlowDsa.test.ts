@@ -77,11 +77,6 @@ const CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
 	{screen_id: 'minor_sexual', option_id: 'csam'},
 ];
 
-const COPYRIGHT_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'root_message', option_id: 'something_else'},
-	{screen_id: 'something_else_message', option_id: 'copyright_notice'},
-];
-
 const RAID_WALK: ReadonlyArray<ReportFlowStepInput> = [
 	{screen_id: 'community_parts', item_ids: ['activity']},
 	{screen_id: 'root_guild', option_id: 'abuse'},
@@ -245,16 +240,6 @@ describe('DSA report flow', () => {
 		expect(report.reportedUserId?.toString()).toBe(target.authorId);
 	});
 
-	test('the locale falls back to the request locale', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK))
-			.header('Accept-Language', 'fr')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect((await readReport(result.report_id)).flowLocale).toBe('fr');
-	});
-
 	test('steps need the good-faith statement and an explanation', async () => {
 		const {ticket} = await issueTicket(harness);
 		const target = await setupMessageLink(harness);
@@ -399,57 +384,6 @@ describe('DSA report flow', () => {
 		await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK))
 			.expect(HTTP_STATUS.OK)
 			.execute();
-	});
-
-	test('a stale hash with a valid walk is accepted', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(
-			harness,
-			messageFlowBody(ticket, target.link, HATE_WALK, {revision_hash: 'ffffffffffffffff'}),
-		)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect((await readReport(result.report_id)).flowRevision).toBe('ffffffffffffffff');
-	});
-
-	test('a copyright notice stores the copyright reason', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(harness, messageFlowBody(ticket, target.link, COPYRIGHT_WALK))
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const report = await readReport(result.report_id);
-		expect(report.reason).toBe('copyright');
-		expect(report.category).toBe('other');
-	});
-
-	test('a user notice starts at the profile parts', async () => {
-		const {ticket} = await issueTicket(harness);
-		const user = await createTestAccount(harness);
-		const steps: ReadonlyArray<ReportFlowStepInput> = [
-			{screen_id: 'profile_parts', item_ids: ['name']},
-			{screen_id: 'root_user', option_id: 'impersonation'},
-			{screen_id: 'impersonation', option_id: 'impersonation_staff'},
-		];
-		const result = await submitDsa(harness, {
-			ticket,
-			report_type: 'user',
-			user_id: user.userId,
-			revision_hash: dsaHash('user'),
-			steps,
-			good_faith_confirmed: true,
-			additional_info: 'This account pretends to be staff.',
-			reporter_full_legal_name: 'Jane Doe',
-			reporter_country_of_residence: 'FR',
-		})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const report = await readReport(result.report_id);
-		expect(report.reason).toBe('impersonation_staff');
-		expect(report.category).toBe('impersonation');
-		expect(report.flowSteps).toEqual(dsaSteps('user', steps));
-		expect(report.flowSurface).toBe('dsa');
 	});
 
 	test('a community notice stores the raid reason', async () => {

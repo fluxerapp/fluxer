@@ -5,7 +5,6 @@ import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/Ca
 import type {VisionarySlotRow} from '@app/api/database/types/PaymentTypes';
 import {VisionarySlot} from '@app/api/models/VisionarySlot';
 import {VisionarySlots} from '@app/api/Tables';
-import {CannotShrinkReservedSlotsError} from '@fluxer/errors/src/domains/core/CannotShrinkReservedSlotsError';
 
 const FETCH_ALL_VISIONARY_SLOTS_QUERY = VisionarySlots.selectCql();
 const FETCH_VISIONARY_SLOT_QUERY = VisionarySlots.selectCql({
@@ -31,22 +30,6 @@ export class VisionarySlotRepository {
 					user_id: null,
 				}),
 			);
-		}
-		await batch.execute();
-	}
-
-	async shrinkVisionarySlots(toCount: number): Promise<void> {
-		const existingSlots = await this.listVisionarySlots();
-		if (existingSlots.length <= toCount) return;
-		const sortedSlots = existingSlots.sort((a, b) => b.slotIndex - a.slotIndex);
-		const slotsToRemove = sortedSlots.slice(0, existingSlots.length - toCount);
-		const reservedSlots = slotsToRemove.filter((slot) => slot.userId !== null);
-		if (reservedSlots.length > 0) {
-			throw new CannotShrinkReservedSlotsError(reservedSlots.map((s) => s.slotIndex));
-		}
-		const batch = new BatchBuilder();
-		for (const slot of slotsToRemove) {
-			batch.addPrepared(VisionarySlots.deleteByPk({slot_index: slot.slotIndex}));
 		}
 		await batch.execute();
 	}

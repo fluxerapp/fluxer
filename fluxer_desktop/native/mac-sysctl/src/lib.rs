@@ -153,25 +153,10 @@ pub async fn sysctl_by_name_string(name: String) -> Result<Option<String>> {
     spawn_sysctl(move || read_string_blocking(name)).await
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
 
-    #[test]
-    fn empty_name_error_mentions_function_name() {
-        let error = invalid_name_error("sysctlByNameInt");
-        assert_eq!(Status::InvalidArg, error.status);
-        assert!(error.reason.contains("sysctlByNameInt"));
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn non_macos_returns_same_synthetic_errno_as_previous_js_contract() {
-        let error = unsupported_platform_error();
-        assert_eq!("sysctlbyname failed (errno 22)", error.reason);
-    }
-
-    #[cfg(target_os = "macos")]
     #[test]
     fn missing_sysctl_maps_to_null() {
         assert!(

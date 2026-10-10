@@ -5,13 +5,8 @@
 
 -export([
     disconnect_user/4,
-    disconnect_user_if_in_channel/5,
     disconnect_user_if_in_channel/6
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     user_id/0,
@@ -72,17 +67,6 @@ sessions_for_user(UserId, Sessions) ->
     ).
 
 -spec disconnect_user_if_in_channel(
-    user_id(), integer(), voice_states_map(), sessions_map(), cleanup_fun()
-) ->
-    {ok, voice_states_map(), sessions_map()}
-    | {not_found, voice_states_map(), sessions_map()}
-    | {channel_mismatch, voice_states_map(), sessions_map()}.
-disconnect_user_if_in_channel(UserId, ExpectedChannelId, VoiceStates, Sessions, CleanupFun) ->
-    disconnect_user_if_in_channel(
-        UserId, ExpectedChannelId, undefined, VoiceStates, Sessions, CleanupFun
-    ).
-
--spec disconnect_user_if_in_channel(
     user_id(),
     integer(),
     binary() | undefined,
@@ -139,27 +123,3 @@ disconnect_matching_channel(
         false -> {channel_mismatch, VoiceStates, Sessions};
         true -> disconnect_user(UserId, VoiceStates, Sessions, CleanupFun)
     end.
-
--ifdef(TEST).
-
-disconnect_user_not_found_test() ->
-    VoiceStates = #{},
-    Sessions = #{},
-    CleanupFun = fun(_, _) -> ok end,
-    ?assertMatch({not_found, _, _}, disconnect_user(100, VoiceStates, Sessions, CleanupFun)).
-
-disconnect_user_if_in_channel_mismatch_test() ->
-    VoiceStates = #{100 => #{<<"channel_id">> => <<"999">>}},
-    Sessions = #{},
-    CleanupFun = fun(_, _) -> ok end,
-    Result = disconnect_user_if_in_channel(100, 123, VoiceStates, Sessions, CleanupFun),
-    ?assertMatch({channel_mismatch, _, _}, Result).
-
-disconnect_user_if_in_channel_not_found_test() ->
-    VoiceStates = #{},
-    Sessions = #{},
-    CleanupFun = fun(_, _) -> ok end,
-    Result = disconnect_user_if_in_channel(100, 123, VoiceStates, Sessions, CleanupFun),
-    ?assertMatch({not_found, _, _}, Result).
-
--endif.

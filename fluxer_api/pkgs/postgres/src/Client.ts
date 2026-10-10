@@ -46,7 +46,6 @@ export interface PostgresQueryable {
 export interface IPostgresClient extends PostgresQueryable {
 	connect(): Promise<void>;
 	shutdown(): Promise<void>;
-	isConnected(): boolean;
 	transaction<T>(fn: (client: PostgresQueryable) => Promise<T>): Promise<T>;
 	kvTable(): string;
 }
@@ -213,10 +212,6 @@ class PostgresClient implements IPostgresClient {
 		if (pool === null) return;
 		this.pool = null;
 		await pool.end();
-	}
-
-	isConnected(): boolean {
-		return this.pool !== null && this.disconnection === null;
 	}
 
 	async query<T extends QueryResultRow = QueryResultRow>(

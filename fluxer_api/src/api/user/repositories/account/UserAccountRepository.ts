@@ -53,10 +53,6 @@ export class UserAccountRepository {
 		return this.dataRepo.findUniqueAssert(userId);
 	}
 
-	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {
-		return this.dataRepo.listAllUsersPaginated(limit, lastUserId);
-	}
-
 	async scanAllUsersPage(
 		limit: number,
 		pageState?: string | null,

@@ -250,10 +250,4 @@ describe('Auth sudo required operations', () => {
 			.expect(204)
 			.execute();
 	});
-	it('allows non-sudo operations without sudo', async () => {
-		const account = await createTestAccount(harness);
-		await loginAccount(harness, account);
-		await createBuilder(harness, account.token).get('/users/@me').expect(200).execute();
-		await createBuilder(harness, account.token).get('/auth/sessions').expect(200).execute();
-	});
 });

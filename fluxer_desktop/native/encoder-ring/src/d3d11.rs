@@ -411,31 +411,3 @@ impl KeyedMutexBackend for D3D11KeyedMutexBackend {
     #[cfg(not(target_os = "windows"))]
     fn mark_consumed(&mut self, _slot: &D3D11SharedHandle) {}
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[cfg(not(target_os = "windows"))]
-    fn instance_creation_fails_on_non_windows() {
-        let err = D3D11KeyedMutexBackend::new().err();
-        assert!(matches!(
-            err,
-            Some(BackendError::PlatformUnsupported { .. })
-        ));
-    }
-
-    #[test]
-    fn handle_clones_preserve_index() {
-        let h = D3D11SharedHandle {
-            raw_handle: 0xdead,
-            slot_index: 3,
-            width: 1920,
-            height: 1080,
-        };
-        let h2 = h.clone();
-        assert_eq!(h2.slot_index, 3);
-        assert_eq!(h2.raw_handle, 0xdead);
-    }
-}

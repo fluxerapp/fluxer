@@ -64,17 +64,9 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:message:crosspost_source::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	CHANNEL_SEARCH: {
-		bucket: 'channel:search::channel_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	CHANNEL_ATTACHMENT_UPLOAD: {
 		bucket: 'channel:attachment:upload::channel_id',
 		config: {limit: 10, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	ATTACHMENT_DELETE: {
-		bucket: 'attachment:delete',
-		config: {limit: 40, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	ATTACHMENT_URLS_REFRESH: {
 		bucket: 'attachment:refresh_urls',

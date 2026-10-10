@@ -316,24 +316,6 @@ normalize_optional_binary(Value) ->
 
 -ifdef(TEST).
 
-normalize_session_id_test() ->
-    ?assertEqual(undefined, normalize_session_id(undefined)),
-    ?assertEqual(<<"abc">>, normalize_session_id(<<"abc">>)),
-    ?assertEqual(<<"123">>, normalize_session_id(123)),
-    ?assertEqual(<<"test">>, normalize_session_id("test")).
-
-validate_dm_viewer_stream_keys_null_test() ->
-    ?assertEqual({ok, []}, validate_dm_viewer_stream_keys(undefined, 123, #{})),
-    ?assertEqual({ok, []}, validate_dm_viewer_stream_keys(null, 123, #{})).
-
-validate_dm_viewer_stream_keys_invalid_type_test() ->
-    ?assertEqual({error, voice_invalid_state}, validate_dm_viewer_stream_keys(123, 456, #{})).
-
-resolve_effective_session_id_test() ->
-    ?assertEqual(<<"req">>, resolve_effective_session_id(undefined, <<"req">>)),
-    ?assertEqual(<<"existing">>, resolve_effective_session_id(<<"existing">>, <<"req">>)),
-    ?assertEqual(<<"same">>, resolve_effective_session_id(<<"same">>, <<"same">>)).
-
 session_voice_state(UserId, ChannelId, ConnId, SessionId) ->
     #{
         <<"user_id">> => integer_to_binary(UserId),

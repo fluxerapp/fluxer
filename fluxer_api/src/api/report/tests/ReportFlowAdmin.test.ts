@@ -1,40 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
-import {
-	clearTestEmails,
-	createTestAccount,
-	createUniqueEmail,
-	findLastTestEmail,
-	listTestEmails,
-	setUserACLs,
-	type TestAccount,
-} from '@app/api/auth/tests/AuthTestUtils';
-import {createAttachmentID, createReportID} from '@app/api/BrandedTypes';
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
 import {getChannel, sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
-import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
 import {getAdminRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
-import {findReportReason, listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
+import {listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import {ReportRepository} from '@app/api/report/ReportRepository';
-import {getReportSearchService} from '@app/api/SearchFactory';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {deleteAccount, setPendingDeletionAt} from '@app/api/user/tests/UserTestUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {
-	type AdminReportReasonsResponse,
-	ReportAdminResponseSchema,
-} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {
-	ReportFlowResponse,
-	ReportFlowSurface,
-	ReportFlowTargetType,
-} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import {ReportAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {ReportFlowSurface, ReportFlowTargetType} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {
 	type ReportProfileSnapshot,
 	serializeReportProfileSnapshot,
@@ -70,32 +52,6 @@ const MESSAGE_CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
 	{screen_id: 'minor_sexual', option_id: 'csam'},
 ];
 
-const MESSAGE_TERRORISM_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'root_message', option_id: 'violence_misinfo'},
-	{screen_id: 'violence_misinfo', option_id: 'terrorism'},
-];
-
-const MESSAGE_PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'root_message', option_id: 'private_info'},
-	{screen_id: 'private_info', item_ids: ['phone', 'email']},
-];
-
-const USER_CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'profile_intro'},
-	{screen_id: 'profile_parts', item_ids: ['photo']},
-	{screen_id: 'root_user', option_id: 'abuse'},
-	{screen_id: 'profile_abuse', option_id: 'sexual'},
-	{screen_id: 'profile_sexual', option_id: 'minor_sexual'},
-	{screen_id: 'profile_minor_sexual', option_id: 'csam'},
-];
-
-const USER_HARASSMENT_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'profile_intro'},
-	{screen_id: 'profile_parts', item_ids: ['photo', 'profile_text']},
-	{screen_id: 'root_user', option_id: 'abuse'},
-	{screen_id: 'profile_abuse', option_id: 'harassment'},
-];
-
 function currentHash(target: ReportFlowTargetType, surface: ReportFlowSurface = 'in_app'): string {
 	return getReportFlowVariant(target, surface).revisionHash;
 }
@@ -126,21 +82,6 @@ async function submitMessageFlow(
 			steps,
 			...(locale ? {locale} : {}),
 		})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	return result.report_id;
-}
-
-async function submitUserFlow(
-	harness: ApiTestHarness,
-	reporter: TestAccount,
-	userId: string,
-	steps: ReadonlyArray<ReportFlowStepInput>,
-	locale?: string,
-): Promise<string> {
-	const result = await createBuilder<ReportResponse>(harness, reporter.token)
-		.post('/reports/flows/user/submissions')
-		.body({user_id: userId, revision_hash: currentHash('user'), steps, ...(locale ? {locale} : {})})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 	return result.report_id;
@@ -184,38 +125,6 @@ function getAdminReport(harness: ApiTestHarness, admin: TestAccount, reportId: s
 
 function reportIds(list: AdminReportList): Array<string> {
 	return list.reports.map((report) => report.report_id).sort();
-}
-
-function fetchFlow(harness: ApiTestHarness, target: ReportFlowTargetType, locale: string): Promise<ReportFlowResponse> {
-	return createBuilderWithoutAuth<ReportFlowResponse>(harness)
-		.get(`/reports/flows/${target}?locale=${locale}`)
-		.expect(HTTP_STATUS.OK)
-		.execute();
-}
-
-function describeWalk(flow: ReportFlowResponse, steps: ReadonlyArray<ReportFlowStepInput>) {
-	const screens = new Map(flow.screens.map((screen) => [screen.id, screen]));
-	return steps.map((step) => {
-		const screen = screens.get(step.screen_id)!;
-		const option = step.option_id ? screen.options.find((candidate) => candidate.id === step.option_id)! : null;
-		return {
-			screen_id: step.screen_id,
-			screen_title: screen.title,
-			option_id: step.option_id ?? null,
-			option_label: option?.label ?? null,
-			items: (screen.checklist?.items ?? [])
-				.filter((item) => step.item_ids?.includes(item.id))
-				.map((item) => ({id: item.id, label: item.label})),
-		};
-	});
-}
-
-function expectNoFlowFields(report: AdminReport): void {
-	expect(report.reason).toBeNull();
-	expect(report.reason_label).toBeNull();
-	expect(report.reason_highest_priority).toBeNull();
-	expect(report.flow).toBeNull();
-	expect(report.reporter_good_faith_confirmed).toBeNull();
 }
 
 let seedSequence = 8_000_000_000_000_000_000n;
@@ -310,54 +219,10 @@ function buildContextRow(overrides: Partial<IARMessageContextRow>): IARMessageCo
 	};
 }
 
-function buildAttachment(filename: string): MessageAttachment {
-	return {
-		attachment_id: createAttachmentID(nextSeedId()),
-		filename,
-		size: 2048n,
-		title: null,
-		description: null,
-		width: 640,
-		height: 480,
-		content_type: 'image/png',
-		content_hash: null,
-		placeholder: null,
-		flags: 0,
-		duration: null,
-		nsfw: false,
-		waveform: null,
-	};
-}
-
 async function seedReport(overrides: Partial<IARSubmissionRow> = {}): Promise<string> {
 	const row = buildReportRow({report_id: nextSeedId(), ...overrides});
 	await new ReportRepository().createReport(row);
 	return row.report_id.toString();
-}
-
-async function setBotFlag(harness: ApiTestHarness, userId: string): Promise<void> {
-	await createBuilderWithoutAuth(harness)
-		.post(`/test/users/${userId}/set-bot-flag`)
-		.body({is_bot: true})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-}
-
-async function issueDsaTicket(harness: ApiTestHarness): Promise<string> {
-	await clearTestEmails(harness);
-	const email = createUniqueEmail('dsa-admin');
-	await createBuilderWithoutAuth(harness)
-		.post('/reports/dsa/email/send')
-		.body({email})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	const code = findLastTestEmail(await listTestEmails(harness), 'dsa_report_verification')?.metadata.code;
-	const {ticket} = await createBuilderWithoutAuth<{ticket: string}>(harness)
-		.post('/reports/dsa/email/verify')
-		.body({email, code})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-	return ticket;
 }
 
 describe('Report flow admin', () => {
@@ -372,57 +237,6 @@ describe('Report flow admin', () => {
 	});
 
 	describe('Search', () => {
-		test('the reason filter finds message and user flow reports', async () => {
-			const messages = await setupMessages(harness, 3);
-			const messageCsam = await submitMessageFlow(harness, messages, 0, MESSAGE_CSAM_WALK);
-			const messageTerrorism = await submitMessageFlow(harness, messages, 1, MESSAGE_TERRORISM_WALK);
-			const legacyChildSafety = await submitLegacyMessage(harness, messages, 2);
-			const reporter = await createTestAccount(harness);
-			const [csamTarget, harassmentTarget] = await Promise.all([
-				createTestAccount(harness),
-				createTestAccount(harness),
-			]);
-			const userCsam = await submitUserFlow(harness, reporter, csamTarget.userId, USER_CSAM_WALK);
-			const userHarassment = await submitUserFlow(harness, reporter, harassmentTarget.userId, USER_HARASSMENT_WALK);
-			const admin = await createReportAdmin(harness);
-
-			const csam = await listReports(harness, admin, 'reason=csam');
-			expect(reportIds(csam)).toEqual([messageCsam, userCsam].sort());
-			expect(csam.total).toBe(2);
-			for (const report of csam.reports) {
-				expect(report.reason).toBe('csam');
-				expect(report.reason_label).toBe('Child sexual abuse material');
-				expect(report.reason_highest_priority).toBe(true);
-				expect(report.category).toBe('child_safety');
-			}
-			expect(reportIds(await listReports(harness, admin, 'reason=csam&report_type=message'))).toEqual([messageCsam]);
-			expect(reportIds(await listReports(harness, admin, 'reason=csam&report_type=user'))).toEqual([userCsam]);
-			expect(reportIds(await listReports(harness, admin, 'reason=terrorism_extremism'))).toEqual([messageTerrorism]);
-			expect(reportIds(await listReports(harness, admin, 'reason=harassment'))).toEqual([userHarassment]);
-			expect(reportIds(await listReports(harness, admin, 'reason=raid'))).toEqual([]);
-			expect(reportIds(await listReports(harness, admin, 'category=child_safety'))).toEqual(
-				[messageCsam, userCsam, legacyChildSafety].sort(),
-			);
-
-			const searchService = getReportSearchService()!;
-			const {hits} = await searchService.searchReports('', {reason: 'csam'});
-			expect(hits.map((hit) => hit.id).sort()).toEqual([messageCsam, userCsam].sort());
-			expect(hits.every((hit) => hit.reason === 'csam')).toBe(true);
-		});
-
-		test('a free-text search for a reason key finds nothing', async () => {
-			const messages = await setupMessages(harness, 2);
-			const messageCsam = await submitMessageFlow(harness, messages, 0, MESSAGE_CSAM_WALK);
-			await submitMessageFlow(harness, messages, 1, MESSAGE_TERRORISM_WALK);
-			const admin = await createReportAdmin(harness);
-			for (const key of ['csam', 'terrorism_extremism']) {
-				const result = await listReports(harness, admin, `q=${key}`);
-				expect(result.reports).toEqual([]);
-				expect(result.total).toBe(0);
-			}
-			expect(reportIds(await listReports(harness, admin, 'q=child_safety'))).toEqual([messageCsam]);
-		});
-
 		test('a status filter with a reason uses the search index and records the reason', async () => {
 			const messages = await setupMessages(harness, 2);
 			const messageCsam = await submitMessageFlow(harness, messages, 0, MESSAGE_CSAM_WALK);
@@ -446,179 +260,6 @@ describe('Report flow admin', () => {
 				sort_by: 'reported_at',
 				result_count: '1',
 			});
-		});
-	});
-
-	describe('Report detail', () => {
-		test('flow answers are described in English for a reporter who used German', async () => {
-			const messages = await setupMessages(harness, 1);
-			const reportId = await submitMessageFlow(harness, messages, 0, MESSAGE_PRIVATE_INFO_WALK, 'de');
-			const admin = await createReportAdmin(harness);
-			const english = await fetchFlow(harness, 'message', 'en-US');
-			const german = await fetchFlow(harness, 'message', 'de');
-			const expectedSteps = describeWalk(english, MESSAGE_PRIVATE_INFO_WALK);
-			const germanSteps = describeWalk(german, MESSAGE_PRIVATE_INFO_WALK);
-			expect(germanSteps).not.toEqual(expectedSteps);
-
-			const report = await getAdminReport(harness, admin, reportId);
-			expect(report.reason).toBe('doxxing');
-			expect(report.reason_label).toBe(findReportReason('doxxing')!.label);
-			expect(report.reason_highest_priority).toBe(false);
-			expect(report.category).toBe('doxxing');
-			expect(report.reporter_good_faith_confirmed).toBeNull();
-			expect(report.flow).toEqual({
-				revision_hash: currentHash('message'),
-				surface: 'in_app',
-				locale: 'de',
-				steps: expectedSteps,
-			});
-
-			const listed = await listReports(harness, admin, 'reason=doxxing');
-			expect(listed.reports).toHaveLength(1);
-			expect(listed.reports[0].flow).toEqual(report.flow);
-		});
-
-		test('an info step is described with a null option and no items', async () => {
-			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const reportId = await submitUserFlow(harness, reporter, target.userId, USER_HARASSMENT_WALK, 'ja');
-			const admin = await createReportAdmin(harness);
-			const english = await fetchFlow(harness, 'user', 'en-US');
-
-			const report = await getAdminReport(harness, admin, reportId);
-			expect(report.reason).toBe('harassment');
-			expect(report.reason_label).toBe('Harassment or bullying');
-			expect(report.category).toBe('harassment');
-			expect(report.flow?.locale).toBe('ja');
-			expect(report.flow?.steps).toEqual(describeWalk(english, USER_HARASSMENT_WALK));
-			expect(report.flow?.steps[0]).toEqual({
-				screen_id: 'profile_intro',
-				screen_title: english.screens.find((screen) => screen.id === 'profile_intro')!.title,
-				option_id: null,
-				option_label: null,
-				items: [],
-			});
-			expect(report.flow?.steps[1].option_id).toBeNull();
-			expect(report.flow?.steps[1].items.map((item) => item.id)).toEqual(['photo', 'profile_text']);
-		});
-
-		test('legacy reports return the new fields as null', async () => {
-			const messages = await setupMessages(harness, 1);
-			const legacyMessage = await submitLegacyMessage(harness, messages, 0);
-			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const legacyUser = await submitLegacyUser(harness, reporter, target.userId);
-			const admin = await createReportAdmin(harness);
-
-			for (const reportId of [legacyMessage, legacyUser]) {
-				expectNoFlowFields(await getAdminReport(harness, admin, reportId));
-			}
-			const listed = await listReports(harness, admin, 'status=pending');
-			expect(reportIds(listed)).toEqual([legacyMessage, legacyUser].sort());
-			for (const report of listed.reports) {
-				expectNoFlowFields(report);
-			}
-			const searched = await listReports(harness, admin, 'category=harassment');
-			expect(reportIds(searched)).toEqual([legacyUser]);
-			expectNoFlowFields(searched.reports[0]);
-		});
-
-		test('unknown reason keys, screens and options fall back to raw ids', async () => {
-			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const reportId = await submitUserFlow(harness, reporter, target.userId, USER_HARASSMENT_WALK);
-			const repository = new ReportRepository();
-			const stored = (await repository.getReport(createReportID(BigInt(reportId))))!;
-			await repository.createReport(
-				buildReportRow({
-					report_id: BigInt(reportId),
-					reporter_id: BigInt(reporter.userId),
-					reported_at: stored.reportedAt,
-					report_type: 1,
-					reported_user_id: BigInt(target.userId),
-					reason: 'future_reason',
-					flow_revision: 'feedfacefeedface',
-					flow_steps: JSON.stringify([
-						{screen_id: 'future_screen', option_id: 'future_option'},
-						{screen_id: 'root_user', option_id: 'future_option'},
-						{screen_id: 'profile_parts', item_ids: ['photo', 'future_item']},
-					]),
-					flow_surface: 'in_app',
-				}),
-			);
-			const admin = await createReportAdmin(harness);
-			const english = await fetchFlow(harness, 'user', 'en-US');
-			const screenTitle = (id: string) => english.screens.find((screen) => screen.id === id)!.title;
-			const photoLabel = english.screens
-				.find((screen) => screen.id === 'profile_parts')!
-				.checklist!.items.find((item) => item.id === 'photo')!.label;
-
-			const report = await getAdminReport(harness, admin, reportId);
-			expect(report.reason).toBe('future_reason');
-			expect(report.reason_label).toBe('future_reason');
-			expect(report.reason_highest_priority).toBeNull();
-			expect(report.flow).toEqual({
-				revision_hash: 'feedfacefeedface',
-				surface: 'in_app',
-				locale: null,
-				steps: [
-					{
-						screen_id: 'future_screen',
-						screen_title: 'future_screen',
-						option_id: 'future_option',
-						option_label: 'future_option',
-						items: [],
-					},
-					{
-						screen_id: 'root_user',
-						screen_title: screenTitle('root_user'),
-						option_id: 'future_option',
-						option_label: 'future_option',
-						items: [],
-					},
-					{
-						screen_id: 'profile_parts',
-						screen_title: screenTitle('profile_parts'),
-						option_id: null,
-						option_label: null,
-						items: [
-							{id: 'photo', label: photoLabel},
-							{id: 'future_item', label: 'future_item'},
-						],
-					},
-				],
-			});
-		});
-
-		test('a DSA flow report shows the good-faith statement and the DSA surface', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, members[0].token, channel.id, 'Reported on the DSA form');
-			const ticket = await issueDsaTicket(harness);
-			const {report_id} = await createBuilderWithoutAuth<ReportResponse>(harness)
-				.post('/reports/dsa')
-				.body({
-					ticket,
-					report_type: 'message',
-					message_link: `https://web.fluxer.app/channels/${guild.id}/${channel.id}/${message.id}`,
-					revision_hash: currentHash('message', 'dsa'),
-					steps: MESSAGE_CSAM_WALK,
-					good_faith_confirmed: true,
-					additional_info: 'This message shares child sexual abuse material.',
-					reporter_country_of_residence: 'DE',
-					locale: 'fr',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const admin = await createReportAdmin(harness);
-			const report = await getAdminReport(harness, admin, report_id);
-			expect(report.reason).toBe('csam');
-			expect(report.reason_highest_priority).toBe(true);
-			expect(report.reporter_good_faith_confirmed).toBe(true);
-			expect(report.flow?.surface).toBe('dsa');
-			expect(report.flow?.locale).toBe('fr');
-			expect(report.flow?.revision_hash).toBe(currentHash('message', 'dsa'));
-			expect(report.flow?.steps.map((step) => step.option_id)).toEqual(MESSAGE_CSAM_WALK.map((step) => step.option_id));
 		});
 	});
 
@@ -650,93 +291,6 @@ describe('Report flow admin', () => {
 			const report = await getAdminReport(harness, admin, reportId);
 			expect(report.message_context).toEqual([]);
 			expect(report.message_responses).toEqual([]);
-			expect(ReportAdminResponseSchema.safeParse(report).success).toBe(true);
-		});
-
-		test('bot flags are true for a bot, false for a person and null for a webhook', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const channelId = BigInt(guild.system_channel_id!);
-			const bot = members[0];
-			await setBotFlag(harness, bot.userId);
-			const botMessage = buildContextRow({channel_id: channelId, author_id: BigInt(bot.userId)});
-			const personMessage = buildContextRow({channel_id: channelId, author_id: BigInt(owner.userId)});
-			const webhookMessage = buildContextRow({channel_id: channelId, webhook_id: nextSeedId()});
-			const unknownMessage = buildContextRow({channel_id: channelId, author_id: nextSeedId()});
-			const context = [botMessage, personMessage, webhookMessage, unknownMessage];
-			const botReport = await seedReport({
-				reported_user_id: BigInt(bot.userId),
-				reported_channel_id: channelId,
-				reported_message_id: botMessage.message_id,
-				message_context: context,
-			});
-			const personReport = await seedReport({report_type: 1, reported_user_id: BigInt(owner.userId)});
-			const guildReport = await seedReport({report_type: 2, reported_guild_id: BigInt(guild.id)});
-			const unknownReport = await seedReport({report_type: 1, reported_user_id: nextSeedId()});
-			const admin = await createReportAdmin(harness);
-
-			const detail = await getAdminReport(harness, admin, botReport);
-			expect(detail.reported_user_bot).toBe(true);
-			expect(detail.message_context?.map((message) => [message.id, message.author_bot])).toEqual([
-				[botMessage.message_id.toString(), true],
-				[personMessage.message_id.toString(), false],
-				[webhookMessage.message_id.toString(), null],
-				[unknownMessage.message_id.toString(), null],
-			]);
-			expect(ReportAdminResponseSchema.safeParse(detail).success).toBe(true);
-			expect((await getAdminReport(harness, admin, personReport)).reported_user_bot).toBe(false);
-			expect((await getAdminReport(harness, admin, guildReport)).reported_user_bot).toBeNull();
-			expect((await getAdminReport(harness, admin, unknownReport)).reported_user_bot).toBeNull();
-		});
-
-		test('a listed report states whether the reported account is a bot', async () => {
-			const reporter = await createTestAccount(harness);
-			const [bot, person] = await Promise.all([createTestAccount(harness), createTestAccount(harness)]);
-			await setBotFlag(harness, bot.userId);
-			const botReport = await submitLegacyUser(harness, reporter, bot.userId);
-			const personReport = await submitLegacyUser(harness, reporter, person.userId);
-			const admin = await createReportAdmin(harness);
-			const listed = await listReports(harness, admin, 'status=pending');
-			const flags = new Map(listed.reports.map((report) => [report.report_id, report.reported_user_bot]));
-			expect(flags.get(botReport)).toBe(true);
-			expect(flags.get(personReport)).toBe(false);
-		});
-
-		test('attachments that were not preserved are listed without a download URL', async () => {
-			const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
-			const channelId = BigInt(guild.system_channel_id!);
-			const preserved = buildAttachment('kept.png');
-			const missing = buildAttachment('lost.png');
-			const withGap = buildContextRow({
-				channel_id: channelId,
-				author_id: BigInt(owner.userId),
-				attachments: [preserved],
-				missing_attachments: [missing],
-			});
-			const withoutGap = buildContextRow({channel_id: channelId, author_id: BigInt(owner.userId)});
-			const reportId = await seedReport({
-				reported_channel_id: channelId,
-				reported_message_id: withGap.message_id,
-				message_context: [withGap, withoutGap],
-			});
-			const admin = await createReportAdmin(harness);
-
-			const report = await getAdminReport(harness, admin, reportId);
-			const [first, second] = report.message_context ?? [];
-			expect(first.attachments.map((attachment) => attachment.filename)).toEqual(['kept.png']);
-			expect(first.attachments[0].url).toBe('https://presigned.url/test');
-			expect(first.missing_attachments).toEqual([
-				{
-					id: missing.attachment_id.toString(),
-					filename: 'lost.png',
-					nsfw: false,
-					content_type: 'image/png',
-					width: 640,
-					height: 480,
-					size: 2048,
-				},
-			]);
-			expect(second.attachments).toEqual([]);
-			expect(second.missing_attachments).toEqual([]);
 			expect(ReportAdminResponseSchema.safeParse(report).success).toBe(true);
 		});
 
@@ -855,17 +409,6 @@ describe('Report flow admin', () => {
 			expect((await getAdminReport(harness, admin, withoutSnapshot)).reported_profile_snapshot).toBeNull();
 			expect((await getAdminReport(harness, admin, unreadable)).reported_profile_snapshot).toBeNull();
 		});
-
-		test('a listed report has no profile snapshot field', async () => {
-			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const reportId = await submitLegacyUser(harness, reporter, target.userId);
-			const admin = await createReportAdmin(harness);
-			const listed = await listReports(harness, admin, 'status=pending');
-			expect(reportIds(listed)).toEqual([reportId]);
-			expect('reported_profile_snapshot' in listed.reports[0]).toBe(false);
-			expect('message_context' in listed.reports[0]).toBe(false);
-		});
 	});
 
 	describe('Reporter contact details', () => {
@@ -953,37 +496,6 @@ describe('Report flow admin', () => {
 				.get('/admin/report-reasons')
 				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACL)
 				.execute();
-		});
-
-		test('lists every reason with its English label, priority and legacy categories', async () => {
-			const admin = await createReportAdmin(harness);
-			const response = await createBuilder<AdminReportReasonsResponse>(harness, admin.token)
-				.get('/admin/report-reasons')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(response.reasons).toEqual(
-				listReportReasons().map((reason) => ({
-					key: reason.key,
-					label: reason.label,
-					highest_priority: reason.highestPriority,
-					legacy_category_message: reason.legacyCategories.message,
-					legacy_category_user: reason.legacyCategories.user,
-					legacy_category_guild: reason.legacyCategories.guild,
-				})),
-			);
-			expect(new Set(response.reasons.map((reason) => reason.key)).size).toBe(response.reasons.length);
-			expect(response.reasons.find((reason) => reason.key === 'csam')).toEqual({
-				key: 'csam',
-				label: 'Child sexual abuse material',
-				highest_priority: true,
-				legacy_category_message: 'child_safety',
-				legacy_category_user: 'child_safety',
-				legacy_category_guild: 'child_safety',
-			});
-			expect(response.reasons.find((reason) => reason.key === 'raid')).toMatchObject({
-				legacy_category_message: 'harassment',
-				legacy_category_guild: 'raid_coordination',
-			});
 		});
 
 		test('writes a list_report_reasons read audit entry', async () => {

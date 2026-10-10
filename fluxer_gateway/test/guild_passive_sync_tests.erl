@@ -34,14 +34,6 @@ compute_delta_ignores_removed_channels_test() ->
     Delta = guild_passive_sync:compute_delta(Current, Previous),
     ?assertEqual(#{}, Delta).
 
-compute_channel_diffs_detects_created_updated_deleted_test() ->
-    Current = #{<<"1">> => 2, <<"2">> => 1},
-    Previous = #{<<"1">> => 1, <<"3">> => 9},
-    {Created, Updated, Deleted} = guild_passive_sync:compute_channel_diffs(Current, Previous),
-    ?assertEqual([<<"2">>], lists:sort(Created)),
-    ?assertEqual([<<"1">>], lists:sort(Updated)),
-    ?assertEqual([<<"3">>], lists:sort(Deleted)).
-
 send_passive_updates_uses_permission_capable_state_test() ->
     passive_sync_registry:init(),
     GuildId = 1427764661718740994,

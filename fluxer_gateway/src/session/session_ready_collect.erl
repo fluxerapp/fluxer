@@ -259,9 +259,6 @@ ensure_relationship_id(Rel, UserId) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-presence_user_id_rejects_malformed_id_test() ->
-    ?assertEqual(undefined, presence_user_id(#{<<"user">> => #{<<"id">> => <<"001">>}})).
-
 collect_presence_targets_deduplicates_before_fetch_test() ->
     State = #{
         user_id => 1,
@@ -304,30 +301,5 @@ collect_ready_users_skips_invalid_dm_recipient_ids_test() ->
     },
     Users = collect_ready_users(State, []),
     ?assertEqual([10], lists:sort([maps:get(<<"id">>, U) || U <- Users])).
-
-strip_user_from_member_test() ->
-    Member = #{
-        <<"user">> => #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-        <<"nick">> => <<"nickname">>
-    },
-    Stripped = strip_user_from_member(Member),
-    ?assertEqual(#{<<"id">> => 123}, maps:get(<<"user">>, Stripped)),
-    ?assertEqual(<<"nickname">>, maps:get(<<"nick">>, Stripped)),
-    ok.
-
-strip_user_from_member_keeps_bad_user_unchanged_test() ->
-    Member = #{<<"user">> => #{<<"id">> => <<"bad">>, <<"username">> => <<"test">>}},
-    ?assertEqual(Member, strip_user_from_member(Member)).
-
-strip_user_from_relationship_test() ->
-    Rel = #{
-        <<"user">> => #{<<"id">> => <<"100">>, <<"username">> => <<"friend">>},
-        <<"type">> => 1
-    },
-    Stripped = strip_user_from_relationship(Rel),
-    ?assertEqual(undefined, maps:get(<<"user">>, Stripped, undefined)),
-    ?assertEqual(100, maps:get(<<"id">>, Stripped)),
-    ?assertEqual(1, maps:get(<<"type">>, Stripped)),
-    ok.
 
 -endif.

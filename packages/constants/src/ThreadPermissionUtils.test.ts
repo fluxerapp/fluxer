@@ -15,7 +15,6 @@ import {
 	canViewThread,
 	DEFAULT_THREAD_PERMISSIONS,
 	isThreadModerator,
-	messageSendPermissionFor,
 	THREAD_AWARE_ALL_PERMISSIONS,
 	THREAD_PERMISSIONS,
 	type ThreadActorContext,
@@ -155,16 +154,5 @@ describe('thread permission bits', () => {
 		expect(threadViewPermissions(Permissions.ADMINISTRATOR) & Permissions.SEND_MESSAGES).toBe(
 			Permissions.SEND_MESSAGES,
 		);
-	});
-
-	it('picks the send bit by channel type', () => {
-		expect(messageSendPermissionFor(ChannelTypes.ANNOUNCEMENT_THREAD)).toBe(
-			ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS,
-		);
-		expect(messageSendPermissionFor(ChannelTypes.PUBLIC_THREAD)).toBe(ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS);
-		expect(messageSendPermissionFor(ChannelTypes.PRIVATE_THREAD)).toBe(ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS);
-		expect(messageSendPermissionFor(ChannelTypes.GUILD_TEXT)).toBe(Permissions.SEND_MESSAGES);
-		expect(messageSendPermissionFor(ChannelTypes.GUILD_ANNOUNCEMENT)).toBe(Permissions.SEND_MESSAGES);
-		expect(messageSendPermissionFor(ChannelTypes.GUILD_FORUM)).toBe(Permissions.SEND_MESSAGES);
 	});
 });

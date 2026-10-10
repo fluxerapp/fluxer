@@ -125,10 +125,6 @@ export class VideoSubscriptionManager extends Store {
 		});
 	}
 
-	isSubscribed(participantIdentity: string): boolean {
-		return this.getSubscriptionEntry(participantIdentity)?.subscribed ?? false;
-	}
-
 	private findCameraPublication(participant: RemoteParticipant | null | undefined): RemoteTrackPublication | undefined {
 		if (!participant) return undefined;
 		for (const pub of participant.videoTrackPublications.values()) {

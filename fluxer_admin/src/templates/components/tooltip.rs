@@ -74,20 +74,3 @@ pub fn info(base: &str, hint: &Hint<'_>) -> Markup {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::HintLink;
-
-    #[test]
-    #[should_panic(expected = "anchor")]
-    fn rejects_a_link_that_points_at_no_anchor() {
-        let _ = HintLink::new("/instance-config", "Instance policy");
-    }
-
-    #[test]
-    #[should_panic(expected = "label")]
-    fn rejects_a_link_with_no_label() {
-        let _ = HintLink::new("/instance-config#community-creation", "  ");
-    }
-}

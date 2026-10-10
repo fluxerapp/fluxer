@@ -33,16 +33,6 @@ bulk_get_across_shards_test() ->
     ?assertEqual(2, length(Results)),
     ?assertEqual(ok, gen_server:stop(Pid)).
 
-select_shard_test() ->
-    ?assert(presence_cache_bulk:select_shard(100, 4) >= 0),
-    ?assert(presence_cache_bulk:select_shard(100, 4) < 4).
-
-find_shard_by_ref_test() ->
-    Ref1 = make_ref(),
-    Shards = #{0 => #{pid => self(), ref => Ref1}},
-    ?assertEqual({ok, 0}, presence_cache_shards:find_by_ref(Ref1, Shards)),
-    ?assertEqual(not_found, presence_cache_shards:find_by_ref(make_ref(), Shards)).
-
 put_pending_operation_overwrites_test() ->
     Pending0 = #{100 => delete},
     Pending1 = Pending0#{100 => {put, #{<<"status">> => <<"online">>}}},
@@ -98,16 +88,6 @@ nodedown_grace_expiry_clears_pending_cleanup_test() ->
     ?assertEqual(#{}, maps:get(pending_nodedown_cleanups, sys:get_state(Pid))),
     ?assertEqual(ok, gen_server:stop(Pid)).
 
-anti_entropy_no_op_when_in_sync_test() ->
-    {ok, Pid} = maybe_start_for_test(),
-    State = cache_state(sys:get_state(Pid)),
-    Gen = maps:get(generation, State, 0),
-    {noreply, State1} = presence_cache_rebalance:handle_anti_entropy_request(
-        node(), Gen, State
-    ),
-    ?assertEqual(Gen, maps:get(generation, State1, 0)),
-    ?assertEqual(ok, gen_server:stop(Pid)).
-
 generation_increments_on_write_test() ->
     {ok, Pid} = maybe_start_for_test(),
     Gen0 = presence_cache:generation(),
@@ -149,20 +129,6 @@ rebalance_keeps_pending_put_when_remote_owner_unreachable_test() ->
     RemoteNode = 'missing_presence_rebalance@127.0.0.1',
     with_presence_members(RemoteNode, fun() ->
         with_presence_cache(fun(Pid) -> assert_rebalance_keeps_pending_put(RemoteNode, Pid) end)
-    end).
-
-handoff_to_unreachable_target_keeps_local_entry_test() ->
-    RemoteNode = 'missing_presence_handoff@127.0.0.1',
-    UserId = 33001,
-    Presence = #{
-        <<"status">> => <<"online">>,
-        <<"user">> => #{<<"id">> => integer_to_binary(UserId)}
-    },
-    with_presence_cache(fun(Pid) ->
-        State0 = cache_state(sys:get_state(Pid)),
-        {_Reply, State1} = presence_cache:put_local(UserId, Presence, State0),
-        State2 = presence_cache_rebalance:handoff_all_to_target(RemoteNode, State1),
-        ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State2))
     end).
 
 content_digest_changes_on_write_test() ->
@@ -297,9 +263,6 @@ rebalance_drop_does_not_suppress_repair_test() ->
     RemoteNode = 'moved_presence_rebalance@127.0.0.1',
     with_presence_cache(fun(Pid) -> assert_rebalance_drop_repairs(RemoteNode, Pid) end).
 
-handoff_drop_does_not_suppress_repair_test() ->
-    with_local_presence_cache(fun(Pid) -> assert_handoff_drop_repairs(Pid) end).
-
 rebalance_delete_still_tombstones_test() ->
     RemoteNode = 'deleted_presence_rebalance@127.0.0.1',
     with_presence_cache(fun(Pid) -> assert_rebalance_delete_tombstones(RemoteNode, Pid) end).
@@ -325,19 +288,6 @@ assert_rebalance_drop_repairs(RemoteNode, Pid) ->
         ),
         ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3))
     end),
-    ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State2))).
-
-assert_handoff_drop_repairs(Pid) ->
-    UserId = 77005,
-    Presence = anti_entropy_presence(UserId),
-    State0 = cache_state(sys:get_state(Pid)),
-    {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
-    State2 = with_reachable_remote(fun() ->
-        presence_cache_rebalance:handoff_all_to_target('handoff_target@127.0.0.1', State1)
-    end),
-    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
-    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
-    ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3)),
     ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State2))).
 
 assert_rebalance_delete_tombstones(RemoteNode, Pid) ->

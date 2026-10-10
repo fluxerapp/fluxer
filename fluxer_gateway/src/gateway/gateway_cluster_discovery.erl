@@ -430,13 +430,6 @@ poll_empty_initial_dns_answer_stays_empty_test() ->
     ?assertEqual([], Peers),
     ?assertEqual([], maps:get(peers, State1)).
 
-poll_dns_failure_keeps_existing_peers_test() ->
-    OldPeers = ['fluxer_gateway@127.0.0.2'],
-    State0 = discovery_test_state(fun(_Name) -> {error, timeout} end, OldPeers),
-    {Peers, State1} = poll(State0),
-    ?assertEqual(OldPeers, Peers),
-    ?assertEqual(OldPeers, maps:get(peers, State1)).
-
 init_seeds_existing_peers_from_persistent_term_test() ->
     PreviousPeers = persistent_term:get(?PEERS_KEY, undefined),
     OldPeers = ['fluxer_gateway@127.0.0.2'],

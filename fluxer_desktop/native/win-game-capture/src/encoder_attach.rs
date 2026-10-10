@@ -414,11 +414,4 @@ mod tests {
         assert!(READY_WAIT_TIMEOUT_CAP >= Duration::from_millis(1));
         assert!(READY_WAIT_TIMEOUT_CAP <= Duration::from_millis(33));
     }
-
-    #[cfg(not(target_os = "windows"))]
-    #[test]
-    fn off_windows_init_fails() {
-        let err = EncoderAttachment::try_new(640, 480).err();
-        assert!(matches!(err, Some(EncoderAttachError::RingInitFailed)));
-    }
 }

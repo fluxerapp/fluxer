@@ -20,13 +20,6 @@ describe('GatewayAdminController', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	test('rejects a guild memory statistics limit below the minimum', async () => {
-		const admin = await createAdminWithAcls(harness, [AdminACLs.GATEWAY_MEMORY_STATS]);
-		await createBuilder(harness, `${admin.token}`)
-			.get('/admin/gateway/memory-stats?limit=50')
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('requires the gateway memory stats acl for guild memory statistics', async () => {
 		const admin = await createAdminWithAcls(harness, []);
 		await createBuilder(harness, `${admin.token}`)

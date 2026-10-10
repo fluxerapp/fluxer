@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::config::{self as cfg, GeoipS3Config, GeoipSourceConfig};
+use fluxer_common::config as cfg;
 use reqwest::Url;
 use std::env;
 use std::fmt;
-
-const DEFAULT_DISCOVERY_UPSTREAM_URL: &str = "http://localhost:8088/api/.well-known/fluxer";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InvalidAppProxyEnvironmentError {
@@ -346,17 +344,9 @@ pub struct AppProxyConfig {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
-    pub discovery_upstream_url: String,
-    pub discovery_refresh_interval_ms: u64,
     pub release_channel: ReleaseChannel,
     pub build_version: String,
-    pub bootstrap_api_endpoint: String,
-    pub bootstrap_api_public_endpoint: Option<String>,
     pub csp: CspConfig,
-    pub geoip_source: GeoipSourceConfig,
-    pub geoip_s3_config: Option<GeoipS3Config>,
-    pub trust_client_ip_header: bool,
-    pub client_ip_header_name: String,
     pub same_origin_hosts: Vec<String>,
     pub manifest_scope_extensions: Vec<String>,
     pub self_hosted: bool,
@@ -442,9 +432,6 @@ impl AppProxyConfig {
     pub fn from_env() -> Self {
         let release_channel =
             ReleaseChannel::from_env_value(&cfg::read_env("RELEASE_CHANNEL", "stable"));
-        let geoip_source =
-            cfg::parse_geoip_source_config(&cfg::read_env("FLUXER_GEOIP_DB_PATH", ""), "app_proxy");
-        let geoip_s3_config = cfg::read_geoip_s3_config_from_env(&geoip_source);
 
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
@@ -480,26 +467,12 @@ impl AppProxyConfig {
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
-            discovery_upstream_url: resolve_discovery_upstream_url_from_env(),
-            discovery_refresh_interval_ms: parse_env_or_warn(
-                "DISCOVERY_REFRESH_INTERVAL_MS",
-                &cfg::read_env("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
-                60_000u64,
-            ),
             release_channel,
             build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
-            bootstrap_api_endpoint: cfg::read_env("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api"),
-            bootstrap_api_public_endpoint: resolve_bootstrap_api_public_endpoint_from_env(),
             csp: CspConfig::from_env(),
-            geoip_source,
-            geoip_s3_config,
-            trust_client_ip_header: cfg::read_bool_env("FLUXER_TRUST_CLIENT_IP_HEADER", false),
-            client_ip_header_name: cfg::read_env("FLUXER_CLIENT_IP_HEADER_NAME", "x-forwarded-for")
-                .trim()
-                .to_ascii_lowercase(),
             same_origin_hosts: parse_same_origin_hosts(
                 "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
                 &cfg::read_env("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
@@ -596,194 +569,9 @@ fn parse_same_origin_host(
     Ok(host)
 }
 
-fn resolve_discovery_upstream_url_from_env() -> String {
-    resolve_discovery_upstream_url(cfg::env_value)
-}
-
-fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
-    resolve_bootstrap_api_public_endpoint(cfg::env_value).unwrap_or_else(|error| panic!("{error}"))
-}
-
-fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> anyhow::Result<Option<String>>
-where
-    F: FnMut(&str) -> Option<String>,
-{
-    let (base_domain, public_port) = cfg::resolve_public_domain_and_port(&mut read_var)?;
-    let Some(endpoint) = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
-        .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())
-    else {
-        return Ok(None);
-    };
-
-    Ok(Some(cfg::normalize_public_endpoint(
-        &endpoint,
-        &base_domain,
-        public_port,
-    )))
-}
-
-fn resolve_discovery_upstream_url<F>(mut read_var: F) -> String
-where
-    F: FnMut(&str) -> Option<String>,
-{
-    if let Some(value) = read_var("DISCOVERY_UPSTREAM_URL")
-        .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())
-    {
-        return value;
-    }
-
-    [
-        "FLUXER_API_ENDPOINT",
-        "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-        "PUBLIC_BOOTSTRAP_API_ENDPOINT",
-        "FLUXER_INTERNAL_API_ENDPOINT",
-    ]
-    .into_iter()
-    .find_map(|name| {
-        read_var(name)
-            .as_deref()
-            .and_then(discovery_url_from_api_endpoint)
-    })
-    .unwrap_or_else(|| DEFAULT_DISCOVERY_UPSTREAM_URL.to_owned())
-}
-
-fn discovery_url_from_api_endpoint(value: &str) -> Option<String> {
-    let endpoint = value.trim().trim_end_matches('/');
-    if endpoint.starts_with("http://") || endpoint.starts_with("https://") {
-        Some(format!("{endpoint}/.well-known/fluxer"))
-    } else {
-        None
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
-
-    fn resolve_discovery_from_pairs(pairs: &[(&str, &str)]) -> String {
-        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
-        resolve_discovery_upstream_url(|name| env.get(name).map(|value| value.to_string()))
-    }
-
-    fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
-        try_resolve_bootstrap_endpoint_from_pairs(pairs).expect("the boot html endpoint resolves")
-    }
-
-    fn try_resolve_bootstrap_endpoint_from_pairs(
-        pairs: &[(&str, &str)],
-    ) -> anyhow::Result<Option<String>> {
-        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
-        resolve_bootstrap_api_public_endpoint(|name| env.get(name).map(|value| value.to_string()))
-    }
-
-    #[test]
-    fn a_non_default_public_port_reaches_the_boot_html_api_endpoint() {
-        assert_eq!(
-            resolve_bootstrap_endpoint_from_pairs(&[
-                (
-                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                    "http://fluxer.example/api",
-                ),
-                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-                ("FLUXER_PUBLIC_PORT", "19080"),
-            ]),
-            Some("http://fluxer.example:19080/api".to_owned())
-        );
-    }
-
-    #[test]
-    fn a_default_public_port_leaves_the_boot_html_api_endpoint_alone() {
-        assert_eq!(
-            resolve_bootstrap_endpoint_from_pairs(&[
-                (
-                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                    "https://fluxer.example/api",
-                ),
-                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-                ("FLUXER_PUBLIC_PORT", "443"),
-            ]),
-            Some("https://fluxer.example/api".to_owned())
-        );
-    }
-
-    #[test]
-    fn the_boot_html_api_endpoint_keeps_a_port_it_already_has() {
-        assert_eq!(
-            resolve_bootstrap_endpoint_from_pairs(&[
-                (
-                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                    "http://fluxer.example:19080/api",
-                ),
-                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-                ("FLUXER_PUBLIC_PORT", "19080"),
-            ]),
-            Some("http://fluxer.example:19080/api".to_owned())
-        );
-    }
-
-    #[test]
-    fn the_boot_html_api_endpoint_is_untouched_without_a_base_domain_and_port() {
-        assert_eq!(
-            resolve_bootstrap_endpoint_from_pairs(&[(
-                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                "http://fluxer.example/api",
-            )]),
-            Some("http://fluxer.example/api".to_owned())
-        );
-        assert_eq!(resolve_bootstrap_endpoint_from_pairs(&[]), None);
-    }
-
-    #[test]
-    fn the_public_origin_supplies_the_boot_html_port() {
-        assert_eq!(
-            resolve_bootstrap_endpoint_from_pairs(&[
-                (
-                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                    "https://fluxer.example/api",
-                ),
-                ("FLUXER_PUBLIC_ORIGIN", "https://fluxer.example:19080"),
-                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-                ("FLUXER_PUBLIC_PORT", "443"),
-            ]),
-            Some("https://fluxer.example:19080/api".to_owned())
-        );
-    }
-
-    #[test]
-    fn a_malformed_public_port_is_loud() {
-        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
-            (
-                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                "http://fluxer.example/api",
-            ),
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "not-a-port"),
-        ])
-        .expect_err("a malformed port is refused");
-        assert!(error.to_string().contains("FLUXER_PUBLIC_PORT"));
-    }
-
-    #[test]
-    fn a_malformed_public_origin_is_loud() {
-        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
-            (
-                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                "http://fluxer.example/api",
-            ),
-            ("FLUXER_PUBLIC_ORIGIN", "fluxer.example:19080"),
-        ])
-        .expect_err("a malformed origin is refused");
-        assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
-    }
-
-    #[test]
-    fn same_origin_hosts_default_to_none() {
-        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", "").is_empty());
-        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", " , ").is_empty());
-    }
 
     #[test]
     fn same_origin_hosts_are_normalised_and_deduplicated() {
@@ -808,12 +596,6 @@ mod tests {
     }
 
     #[test]
-    fn manifest_scope_extensions_default_to_none() {
-        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", "").is_empty());
-        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", " , ").is_empty());
-    }
-
-    #[test]
     fn manifest_scope_extensions_are_normalised_and_deduplicated() {
         assert_eq!(
             parse_manifest_scope_extensions(
@@ -835,93 +617,6 @@ mod tests {
                 "fluxer.com,http://fluxer.com,https://fluxer.com/app,https://fluxer.com/?a=1,https://user@fluxer.com,https://canary.fluxer.com"
             ),
             vec!["https://canary.fluxer.com".to_owned()]
-        );
-    }
-
-    #[test]
-    fn csp_config_default_has_no_extra_sources() {
-        let c = CspConfig::default();
-        assert!(
-            c.extra_default_src.is_empty()
-                && c.extra_script_src.is_empty()
-                && c.report_uri.is_none()
-        );
-    }
-
-    #[test]
-    fn release_channel_stable_is_default() {
-        assert_eq!(
-            ReleaseChannel::from_env_value("stable"),
-            ReleaseChannel::Stable
-        );
-        assert_eq!(
-            ReleaseChannel::from_env_value("unknown"),
-            ReleaseChannel::Stable
-        );
-    }
-
-    #[test]
-    fn release_channel_canary_case_insensitive() {
-        assert_eq!(
-            ReleaseChannel::from_env_value("canary"),
-            ReleaseChannel::Canary
-        );
-        assert_eq!(
-            ReleaseChannel::from_env_value("CANARY"),
-            ReleaseChannel::Canary
-        );
-    }
-
-    #[test]
-    fn release_channel_as_str() {
-        assert_eq!(ReleaseChannel::Stable.as_str(), "stable");
-        assert_eq!(ReleaseChannel::Canary.as_str(), "canary");
-    }
-
-    #[test]
-    fn explicit_discovery_upstream_url_wins() {
-        assert_eq!(
-            resolve_discovery_from_pairs(&[
-                (
-                    "DISCOVERY_UPSTREAM_URL",
-                    "https://web.canary.fluxer.app/api/.well-known/fluxer",
-                ),
-                ("FLUXER_API_ENDPOINT", "https://api.canary.fluxer.app"),
-            ]),
-            "https://web.canary.fluxer.app/api/.well-known/fluxer"
-        );
-    }
-
-    #[test]
-    fn discovery_upstream_url_derives_from_existing_api_endpoint() {
-        assert_eq!(
-            resolve_discovery_from_pairs(&[(
-                "FLUXER_API_ENDPOINT",
-                "https://api.canary.fluxer.app/"
-            )]),
-            "https://api.canary.fluxer.app/.well-known/fluxer"
-        );
-    }
-
-    #[test]
-    fn discovery_upstream_url_skips_relative_bootstrap_endpoint() {
-        assert_eq!(
-            resolve_discovery_from_pairs(&[
-                ("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api"),
-                (
-                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-                    "https://api.canary.fluxer.app",
-                ),
-            ]),
-            "https://api.canary.fluxer.app/.well-known/fluxer"
-        );
-    }
-
-    #[test]
-    fn discovery_upstream_url_falls_back_to_local_default() {
-        assert_eq!(
-            resolve_discovery_from_pairs(&[("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api")]),
-            DEFAULT_DISCOVERY_UPSTREAM_URL
         );
     }
 }

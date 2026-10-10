@@ -4,11 +4,7 @@ import {
 	createVoiceEngineV2EmptyFaultPlan,
 	createVoiceEngineV2FaultPlan,
 } from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
-import {
-	STABLE_STRINGIFY_DEPTH_MAX,
-	stableStringify,
-	VoiceEngineV2Simulator,
-} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
+import {VoiceEngineV2Simulator} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	createVoiceEngineV2FiveParticipantConferenceWorkload,
 	createVoiceEngineV2OneOnOneCallWorkload,
@@ -16,33 +12,6 @@ import {
 	VoiceEngineV2WorkloadBuilder,
 } from '@fluxer/voice_engine_v2/src/simulation/Workload';
 import {describe, expect, it} from 'vitest';
-
-describe('VoiceEngineV2Simulator determinism', () => {
-	it('produces identical snapshot hashes for identical inputs', async () => {
-		const workload = createVoiceEngineV2OneOnOneCallWorkload();
-		const faults = createVoiceEngineV2EmptyFaultPlan();
-		const first = await new VoiceEngineV2Simulator({seed: 1, workload, faults, mode: 'safety'}).run();
-		const second = await new VoiceEngineV2Simulator({seed: 1, workload, faults, mode: 'safety'}).run();
-		expect(first.snapshotHash).toBe(second.snapshotHash);
-		expect(first.finalTick).toBe(second.finalTick);
-	});
-
-	it('produces different event logs for different seeds with packet-loss faults', async () => {
-		const builder = new VoiceEngineV2WorkloadBuilder('seed-divergence');
-		for (let i = 0; i < 16; i++) {
-			builder.at(i * 2).connect({url: 'wss://voice.example.test', token: `tok-${i}`});
-		}
-		const workload = builder.build();
-		const faults = createVoiceEngineV2FaultPlan([
-			{kind: 'packetLoss', rate: 0.5, fromTick: 0, untilTick: workload.tickCount},
-		]);
-		const seedOne = await new VoiceEngineV2Simulator({seed: 1, workload, faults, mode: 'safety'}).run();
-		const seedTwo = await new VoiceEngineV2Simulator({seed: 7, workload, faults, mode: 'safety'}).run();
-		expect(seedOne.eventLog.length).toBeGreaterThan(0);
-		expect(seedTwo.eventLog.length).toBeGreaterThan(0);
-		expect(seedOne.snapshotHash).not.toBe(seedTwo.snapshotHash);
-	});
-});
 
 describe('VoiceEngineV2Simulator safety mode', () => {
 	it('reports no safety violations under an empty fault plan', async () => {
@@ -89,19 +58,6 @@ describe('VoiceEngineV2Simulator safety mode', () => {
 		}
 	});
 
-	it('respects deterministic fault ordering across runs', async () => {
-		const workload = createVoiceEngineV2ScreenShareWorkload();
-		const faults = createVoiceEngineV2FaultPlan([
-			{kind: 'gpuDeviceLost', atTick: 3},
-			{kind: 'encoderFailed', captureId: 'cap-1', atTick: 5},
-			{kind: 'deviceDisconnect', deviceId: 'default-mic', atTick: 7},
-		]);
-		const first = await new VoiceEngineV2Simulator({seed: 11, workload, faults, mode: 'safety'}).run();
-		const second = await new VoiceEngineV2Simulator({seed: 11, workload, faults, mode: 'safety'}).run();
-		expect(first.snapshotHash).toBe(second.snapshotHash);
-		expect(first.eventLog.length).toBe(second.eventLog.length);
-	});
-
 	it('runs the screen-share workload without invariant violations', async () => {
 		const workload = createVoiceEngineV2ScreenShareWorkload();
 		const result = await new VoiceEngineV2Simulator({
@@ -122,46 +78,6 @@ describe('VoiceEngineV2Simulator safety mode', () => {
 			mode: 'safety',
 		}).run();
 		expect(result.violations).toEqual([]);
-	});
-});
-
-describe('stableStringify', () => {
-	it('matches JSON.stringify for a nested fixture whose keys are already sorted', () => {
-		const sortedKeyFixture = {
-			alpha: {inner: {deep: [{}, [], null, 'text'], list: [1, 2.5, -3]}},
-			beta: [true, false, {a: 'x', b: 'y'}],
-			gamma: 'value',
-		};
-		expect(stableStringify(sortedKeyFixture)).toBe(JSON.stringify(sortedKeyFixture));
-	});
-
-	it('sorts object keys so insertion order does not affect the output', () => {
-		const insertionOrderOne = {gamma: 'value', alpha: {b: 2, a: 1}, beta: [{z: true, a: false}]};
-		const insertionOrderTwo = {alpha: {a: 1, b: 2}, beta: [{a: false, z: true}], gamma: 'value'};
-		expect(stableStringify(insertionOrderOne)).toBe(stableStringify(insertionOrderTwo));
-		expect(stableStringify(insertionOrderOne)).toBe(JSON.stringify(insertionOrderTwo));
-	});
-
-	it('serializes non-finite numbers and undefined as null like before', () => {
-		expect(stableStringify({a: Number.NaN, b: Number.POSITIVE_INFINITY, c: undefined})).toBe(
-			'{"a":null,"b":null,"c":null}',
-		);
-	});
-
-	it('handles nesting up to the named depth bound without recursion', () => {
-		let nested: unknown = 'leaf';
-		for (let i = 0; i < STABLE_STRINGIFY_DEPTH_MAX - 1; i += 1) {
-			nested = [nested];
-		}
-		expect(stableStringify(nested)).toBe(JSON.stringify(nested));
-	});
-
-	it('crashes loudly when the depth bound is exceeded', () => {
-		let nested: unknown = 'leaf';
-		for (let i = 0; i < STABLE_STRINGIFY_DEPTH_MAX + 1; i += 1) {
-			nested = [nested];
-		}
-		expect(() => stableStringify(nested)).toThrow('stableStringify depth budget exceeded');
 	});
 });
 

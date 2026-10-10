@@ -39,16 +39,5 @@ validate_session_guild_count_uses_filtered_shard_count_test() ->
     ),
     ?assertEqual(ok, gateway_sharding:validate_session_guild_count(GuildIds, {1, 2})).
 
-ready_shard_metadata_is_wire_array_test() ->
-    ?assertEqual([2, 9], gateway_sharding:shard_to_wire({2, 9})),
-    ?assertEqual(
-        #{<<"v">> => 9, <<"shard">> => [2, 9]},
-        gateway_sharding:maybe_put_ready_shard(#{<<"v">> => 9}, {2, 9})
-    ),
-    ?assertEqual(
-        #{<<"v">> => 9},
-        gateway_sharding:maybe_put_ready_shard(#{<<"v">> => 9}, undefined)
-    ).
-
 guild_id_for_shard(ShardId, NumShards, Offset) ->
     ((Offset * NumShards + ShardId) bsl 22) + 1.
