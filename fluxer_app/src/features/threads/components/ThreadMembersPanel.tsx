@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {OutlineFrame} from '@app/features/app/components/layout/OutlineFrame';
+import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/ChannelMembers.module.css';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
 import {MemberListItem} from '@app/features/channel/components/MemberListItem';
@@ -10,11 +11,13 @@ import Guilds from '@app/features/guild/state/Guilds';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import LocalPresence from '@app/features/presence/state/LocalPresence';
 import ThreadRoster, {type ThreadRosterMember} from '@app/features/threads/state/ThreadRoster';
 import type {User} from '@app/features/user/models/User';
+import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
+import {isOfflineStatus, type StatusType} from '@fluxer/constants/src/StatusConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useEffect} from 'react';
@@ -28,10 +31,16 @@ export function useThreadRosterSubscription(thread: Channel | undefined): void {
 	}, [guildId, threadId]);
 }
 
+interface RosterRow {
+	user: User;
+	status: StatusType;
+	customStatus: CustomStatus | null;
+}
+
 interface RosterGroupProps {
 	id: string;
 	label: string;
-	members: ReadonlyArray<{user: User; online: boolean}>;
+	members: ReadonlyArray<RosterRow>;
 	thread: Channel;
 	ownerId: string | null;
 }
@@ -57,14 +66,15 @@ const RosterGroup = observer(({id, label, members, thread, ownerId}: RosterGroup
 				</span>
 			</div>
 			<div className={styles.membersList} data-flx="threads.thread-members-panel.roster-group.members-list">
-				{members.map(({user, online}) => (
+				{members.map(({user, status, customStatus}) => (
 					<MemberListItem
 						key={user.id}
 						user={user}
 						channelId={thread.id}
 						guildId={thread.guildId}
 						guildMember={thread.guildId ? (GuildMembers.getMember(thread.guildId, user.id) ?? undefined) : undefined}
-						status={online ? undefined : StatusTypes.OFFLINE}
+						status={status}
+						customStatus={customStatus}
 						isOwner={user.id === ownerId}
 						disableBackdrop={true}
 						data-flx="threads.thread-members-panel.roster-group.member-list-item"
@@ -76,14 +86,17 @@ const RosterGroup = observer(({id, label, members, thread, ownerId}: RosterGroup
 	);
 });
 
-function resolveMembers(
-	guildId: string | undefined,
-	roster: ReadonlyArray<ThreadRosterMember>,
-): Array<{user: User; online: boolean}> {
-	const members: Array<{user: User; online: boolean}> = [];
+function resolveMembers(guildId: string | undefined, roster: ReadonlyArray<ThreadRosterMember>): Array<RosterRow> {
+	const members: Array<RosterRow> = [];
 	for (const entry of roster) {
 		const user = Users.getUser(entry.userId);
-		if (user) members.push({user, online: entry.online});
+		if (!user) continue;
+		if (user.id === Authentication.currentUserId) {
+			const status = LocalPresence.getStatus();
+			members.push({user, status, customStatus: isOfflineStatus(status) ? null : LocalPresence.customStatus});
+		} else {
+			members.push({user, status: entry.status, customStatus: entry.customStatus});
+		}
 	}
 	members.sort((a, b) =>
 		NicknameUtils.getNickname(a.user, guildId).localeCompare(NicknameUtils.getNickname(b.user, guildId)),
@@ -110,7 +123,7 @@ export const ThreadMembersList = observer(({thread}: {thread: Channel}) => {
 			<RosterGroup
 				id="online"
 				label={i18n._(ONLINE_DESCRIPTOR)}
-				members={members.filter((member) => member.online)}
+				members={members.filter((member) => !isOfflineStatus(member.status))}
 				thread={thread}
 				ownerId={ownerId}
 				data-flx="threads.thread-members-panel.thread-members-list.roster-group.online"
@@ -118,7 +131,7 @@ export const ThreadMembersList = observer(({thread}: {thread: Channel}) => {
 			<RosterGroup
 				id="offline"
 				label={i18n._(OFFLINE_DESCRIPTOR)}
-				members={members.filter((member) => !member.online)}
+				members={members.filter((member) => isOfflineStatus(member.status))}
 				thread={thread}
 				ownerId={ownerId}
 				data-flx="threads.thread-members-panel.thread-members-list.roster-group.offline"

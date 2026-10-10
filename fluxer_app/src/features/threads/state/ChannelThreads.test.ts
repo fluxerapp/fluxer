@@ -18,6 +18,10 @@ const selectedGuild = observable({selectedGuildId: null as string | null});
 const updateGuildSubscriptions = vi.fn();
 const gateway = observable({isReady: false, socket: {isConnected: () => true, updateGuildSubscriptions}});
 
+vi.mock('@lingui/core/macro', () => ({
+	msg: (descriptor: unknown) => descriptor,
+	t: (descriptor: unknown) => descriptor,
+}));
 vi.mock('@app/features/app/state/RuntimeConfig', () => ({default: {localInstanceDomain: 'fluxer.test'}}));
 vi.mock('@app/features/user/state/Users', () => ({
 	default: {getUser: () => undefined, cacheUsers: () => {}, getCurrentUser: () => ({id: 'me', mfaEnabled: true})},
@@ -416,12 +420,13 @@ describe('control arm', () => {
 		expect(vi.mocked(http.get)).not.toHaveBeenCalled();
 		expect(vi.mocked(http.post)).not.toHaveBeenCalled();
 		ThreadGuilds.handleGuild(guildObject([]));
+		await Promise.resolve();
 		expect(updateGuildSubscriptions).toHaveBeenCalledWith({
 			subscriptions: {[GUILD]: {threads: true, thread_member_lists: []}},
 		});
 	});
 
-	it('sends thread member lists only for subscribed threads of the active guild', () => {
+	it('sends thread member lists only for subscribed threads of the active guild', async () => {
 		ThreadGuilds.handleGuild(guildObject([]));
 		runInAction(() => {
 			selectedGuild.selectedGuildId = GUILD;
@@ -429,10 +434,59 @@ describe('control arm', () => {
 		});
 		ThreadSubscriptions.handleConnectionReady();
 		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
+		await Promise.resolve();
 		expect(updateGuildSubscriptions).toHaveBeenLastCalledWith({
 			subscriptions: {[GUILD]: {threads: true, thread_member_lists: [THREAD_A]}},
 		});
 		release();
+		await Promise.resolve();
+	});
+
+	it('switches thread member lists in a single request', async () => {
+		ThreadGuilds.handleGuild(guildObject([]));
+		runInAction(() => {
+			selectedGuild.selectedGuildId = GUILD;
+			gateway.isReady = true;
+		});
+		ThreadSubscriptions.handleConnectionReady();
+		const releaseA = ThreadRoster.subscribe(GUILD, THREAD_A);
+		await Promise.resolve();
+		updateGuildSubscriptions.mockClear();
+		releaseA();
+		const releaseB = ThreadRoster.subscribe(GUILD, THREAD_B);
+		await Promise.resolve();
+		expect(updateGuildSubscriptions).toHaveBeenCalledTimes(1);
+		expect(updateGuildSubscriptions).toHaveBeenCalledWith({
+			subscriptions: {[GUILD]: {threads: true, thread_member_lists: [THREAD_B]}},
+		});
+		releaseB();
+		await Promise.resolve();
+	});
+
+	it('clears the previous guild thread member lists when the selected guild changes', async () => {
+		const otherGuild = '1500000000000000099';
+		ThreadGuilds.handleGuild(guildObject([]));
+		ThreadGuilds.handleGuild({...guildObject([]), id: otherGuild});
+		runInAction(() => {
+			selectedGuild.selectedGuildId = GUILD;
+			gateway.isReady = true;
+		});
+		ThreadSubscriptions.handleConnectionReady();
+		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
+		await Promise.resolve();
+		updateGuildSubscriptions.mockClear();
+		runInAction(() => {
+			selectedGuild.selectedGuildId = otherGuild;
+		});
+		await Promise.resolve();
+		expect(updateGuildSubscriptions).toHaveBeenCalledWith({
+			subscriptions: {
+				[GUILD]: {thread_member_lists: []},
+				[otherGuild]: {threads: true, thread_member_lists: []},
+			},
+		});
+		release();
+		await Promise.resolve();
 	});
 
 	it('serializes a control channel without any new keys', () => {
@@ -508,6 +562,101 @@ describe('control arm', () => {
 		expect(isSyncExcludedChannelId(FORUM)).toBe(true);
 		expect(isSyncExcludedChannelId(PARENT)).toBe(false);
 		expect(isSyncExcludedChannelId('1500000000000000999')).toBe(false);
+	});
+
+	it('clears the previous guild thread member lists after a guild switch during a reconnect', async () => {
+		const otherGuild = '1500000000000000099';
+		ThreadGuilds.handleGuild(guildObject([]));
+		ThreadGuilds.handleGuild({...guildObject([]), id: otherGuild});
+		runInAction(() => {
+			selectedGuild.selectedGuildId = GUILD;
+			gateway.isReady = true;
+		});
+		ThreadSubscriptions.handleConnectionReady();
+		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
+		await Promise.resolve();
+		runInAction(() => {
+			gateway.isReady = false;
+		});
+		release();
+		runInAction(() => {
+			selectedGuild.selectedGuildId = otherGuild;
+		});
+		await Promise.resolve();
+		updateGuildSubscriptions.mockClear();
+		runInAction(() => {
+			gateway.isReady = true;
+		});
+		ThreadSubscriptions.handleConnectionReady();
+		await Promise.resolve();
+		expect(updateGuildSubscriptions).toHaveBeenCalledTimes(1);
+		expect(updateGuildSubscriptions).toHaveBeenCalledWith({
+			subscriptions: {
+				[GUILD]: {thread_member_lists: []},
+				[otherGuild]: {threads: true, thread_member_lists: []},
+			},
+		});
+	});
+});
+
+describe('thread roster', () => {
+	const ONLINE = '1600000000000000001';
+	const IDLE = '1600000000000000002';
+	const OFFLINE = '1600000000000000003';
+
+	function listUpdate(members: Array<{user_id: string; presence: Record<string, unknown>}>) {
+		return {
+			guild_id: GUILD,
+			thread_id: THREAD_A,
+			members: members.map((entry) => ({...entry, join_timestamp: null, flags: 0, member: null})),
+		};
+	}
+
+	it('keeps each member status and custom status from the list update', () => {
+		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
+		ThreadRoster.handleListUpdate(
+			listUpdate([
+				{user_id: ONLINE, presence: {status: 'online', afk: false, mobile: false, custom_status: null}},
+				{
+					user_id: IDLE,
+					presence: {
+						status: 'idle',
+						afk: true,
+						mobile: false,
+						custom_status: {emoji_id: '1471401583408697449', emoji_name: 'nahua_smug', text: 'im spooky goop'},
+					},
+				},
+				{user_id: OFFLINE, presence: {status: 'offline', afk: false, mobile: false}},
+			]),
+		);
+		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
+			{userId: ONLINE, joinTimestamp: null, status: 'online', customStatus: null},
+			{
+				userId: IDLE,
+				joinTimestamp: null,
+				status: 'idle',
+				customStatus: expect.objectContaining({text: 'im spooky goop', emojiName: 'nahua_smug'}),
+			},
+			{userId: OFFLINE, joinTimestamp: null, status: 'offline', customStatus: null},
+		]);
+		release();
+	});
+
+	it('replaces the roster on every list update and ignores updates after release', () => {
+		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
+		ThreadRoster.handleListUpdate(
+			listUpdate([
+				{user_id: ONLINE, presence: {status: 'online'}},
+				{user_id: IDLE, presence: {status: 'idle'}},
+			]),
+		);
+		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'dnd'}}]));
+		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
+			{userId: ONLINE, joinTimestamp: null, status: 'dnd', customStatus: null},
+		]);
+		release();
+		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'online'}}]));
+		expect(ThreadRoster.getMembers(THREAD_A)).toBeUndefined();
 	});
 });
 
