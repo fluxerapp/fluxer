@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {useEffect} from 'react';
 
 type TitlePart = string | null | undefined;

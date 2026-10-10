@@ -11,6 +11,7 @@ import {
 	ONE_MONTH_DURATION_DESCRIPTOR,
 	ONE_WEEK_DURATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatList, formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -21,8 +22,6 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {PhoneIcon} from '@phosphor-icons/react';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -134,7 +133,7 @@ const formatCallDuration = (i18n: I18n, durationSeconds: number): string => {
 		return i18n._(A_MINUTE_DESCRIPTOR);
 	}
 	const locale = getCurrentLocale();
-	return formatListWithConfig(parts, {locale, style: 'long', type: 'conjunction'});
+	return formatList(parts, {locale, style: 'long', type: 'conjunction'});
 };
 export const CallMessage = observer(({message}: {message: Message}) => {
 	const {i18n} = useLingui();

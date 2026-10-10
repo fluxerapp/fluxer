@@ -6511,8 +6511,7 @@ msgstr "Beli hadiah {premiumProductName} dari tab {premiumProductName} untuk dib
 msgid "Buy gift"
 msgstr "Beli hadiah"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Dengan membuat komunitas, kamu setuju untuk mengikuti dan menjunjung tinggi <0>panduan komunitas {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Ubah nama panggilan grup"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Klaim hadiah"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Klaim akunmu"
@@ -9067,8 +9066,7 @@ msgstr "DM komunitas"
 msgid "Community filter"
 msgstr "Filter komunitas"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Ikon komunitas"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Kontrol gulir mulus bawaan untuk roda mouse dan keyboard di aplikasi desktop"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Kontrol perintah ucapan dan narasi untuk konten masuk."
 
@@ -11735,7 +11733,6 @@ msgstr "Tanggal dan waktu"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Pengaturan grup"
 msgid "Group typing states"
 msgstr "Status mengetik grup"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grup diperbarui"
 
@@ -21548,7 +21544,6 @@ msgstr "Sebut semua orang atau peran apa pun di saluran ini (meskipun peran ters
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Daftarkan akun"
 msgid "Registration"
 msgstr "Pendaftaran"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Pendaftaran saat ini ditutup. Gunakan tautan pendaftaran dari admin untuk membuat akun."
@@ -28007,8 +28001,7 @@ msgstr "Hapus dari GIF favorit khusus URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Hapus ikon"
 
@@ -34467,7 +34460,6 @@ msgstr "Teks ke suara tidak didukung"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Notifikasi teks ke suara"
@@ -37943,8 +37935,7 @@ msgstr "Unggah file dan media di saluran ini."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Unggah ikon"
@@ -41063,8 +41054,7 @@ msgstr "Kamu memerlukan izin \"{permissionLabel}\" untuk menggunakan emoji dari 
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Kamu memerlukan izin \"{permissionLabel}\" untuk menggunakan stiker dari komunitas lain di sini."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Kamu perlu mengklaim akunmu sebelum bisa membuat komunitas."
 
@@ -41081,8 +41071,7 @@ msgstr "Kamu perlu mengklaim akunmu untuk mengirim pesan langsung."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Kamu perlu mengklaim akunmu untuk mengirim pesan di komunitas ini."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Kamu perlu memverifikasi alamat emailmu sebelum bisa membuat komunitas."
 
@@ -41483,7 +41472,6 @@ msgstr "Akunmu belum diklaim. Tanpa email dan kata sandi, kamu tidak bisa masuk 
 msgid "Your account is too new to send messages in this community."
 msgstr "Akunmu terlalu baru untuk mengirim pesan di komunitas ini."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Permintaan akunmu menunggu persetujuan. Kamu dapat masuk setelah admin menyetujuinya."

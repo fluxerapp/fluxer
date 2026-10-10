@@ -7,13 +7,13 @@ import {
 	HdrTabContent,
 	shouldShowHdrSettings,
 } from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab';
-import styles from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.module.css';
 import {ChannelListTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/ChannelListTab';
 import {InterfaceTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/InterfaceTab';
 import {MessagesTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/MessagesTab';
 import {AppZoomLevelTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/ScalingTab';
 import {StreamerModeTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/StreamerModeTab';
 import {ThemeTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {shouldShowAppZoomLevel} from '@app/features/user/components/settings_utils/AppZoomLevelUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';

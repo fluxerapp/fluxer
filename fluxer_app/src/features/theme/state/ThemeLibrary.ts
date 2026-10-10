@@ -28,6 +28,7 @@ import {
 	updateThemeLibraryThemes,
 } from '@app/features/theme/utils/ThemeLibraryDb';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import type {ThemeLinkedFileError} from '@app/types/electron.d';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -106,15 +107,6 @@ function getFallbackThemeName(fileName: string): string {
 		.trim()
 		.replace(/\s+/g, ' ')
 		.replace(/^./, (letter) => letter.toUpperCase());
-}
-
-function readFileText(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onerror = () => reject(reader.error ?? new Error(`Failed to read ${file.name}`));
-		reader.onload = () => resolve(String(reader.result ?? ''));
-		reader.readAsText(file);
-	});
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -8,6 +8,7 @@ import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiIm
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
+import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
@@ -19,16 +20,6 @@ const REACTED_BY_DESCRIPTOR = msg({
 	comment:
 		'Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.',
 });
-const listFormatterCache = new Map<string, Intl.ListFormat>();
-
-function getReactorListFormatter(locale: string): Intl.ListFormat {
-	let formatter = listFormatterCache.get(locale);
-	if (!formatter) {
-		formatter = new Intl.ListFormat(locale, {type: 'conjunction', style: 'long'});
-		listFormatterCache.set(locale, formatter);
-	}
-	return formatter;
-}
 
 export interface ReactionEmoji {
 	id?: string | null;
@@ -53,7 +44,7 @@ export function getReactionTooltip(message: Message, emoji: ReactionEmoji) {
 	if (othersCount > 0) {
 		parts.push(plural({count: othersCount}, {one: '# other', other: '# others'}));
 	}
-	const reactors = getReactorListFormatter(getCurrentLocale()).format(parts);
+	const reactors = getCachedListFormat(getCurrentLocale(), {type: 'conjunction', style: 'long'}).format(parts);
 	return i18n._(REACTED_BY_DESCRIPTOR, {emojiName, reactors, reactorCount});
 }
 

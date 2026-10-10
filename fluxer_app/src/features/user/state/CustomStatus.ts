@@ -121,3 +121,17 @@ export function customStatusToKey(status: CustomStatus | null | undefined): stri
 export function getCustomStatusText(status: CustomStatus | null | undefined): string | null {
 	return trimToNonEmpty(status?.text);
 }
+
+export const buildDraftStatus = (params: {
+	text: string;
+	emojiId: string | null;
+	emojiName: string | null;
+	expiresAt: string | null;
+}): CustomStatus | null => {
+	return normalizeCustomStatus({
+		text: params.text || null,
+		emojiId: params.emojiId,
+		emojiName: params.emojiName,
+		expiresAt: params.expiresAt,
+	});
+};

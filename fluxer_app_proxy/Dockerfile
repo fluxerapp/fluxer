@@ -43,8 +43,6 @@ COPY packages/limits/package.json ./packages/limits/
 COPY packages/schema/package.json ./packages/schema/
 COPY packages/snowflake/package.json ./packages/snowflake/
 COPY packages/voice_engine_v2/package.json ./packages/voice_engine_v2/
-COPY fluxer_app/pkgs/list_utils/package.json ./fluxer_app/pkgs/list_utils/
-COPY fluxer_app/pkgs/number_utils/package.json ./fluxer_app/pkgs/number_utils/
 COPY fluxer_app/pkgs/livekit-client/package.json ./fluxer_app/pkgs/livekit-client/
 
 RUN pnpm install --frozen-lockfile --filter fluxer_app...
@@ -68,8 +66,6 @@ COPY packages/markdown_parser/rust/benches/parser.rs ./packages/markdown_parser/
 COPY packages/markdown_parser/rust/src/ ./packages/markdown_parser/rust/src/
 COPY tools/ci/ ./tools/ci/
 COPY fluxer_app/index.html fluxer_app/lingui.config.js fluxer_app/package.json fluxer_app/postcss.config.js fluxer_app/rspack.config.mjs fluxer_app/tsconfig.base.json fluxer_app/tsconfig.json ./fluxer_app/
-COPY fluxer_app/pkgs/list_utils/ ./fluxer_app/pkgs/list_utils/
-COPY fluxer_app/pkgs/number_utils/ ./fluxer_app/pkgs/number_utils/
 COPY fluxer_app/pkgs/livekit-client/ ./fluxer_app/pkgs/livekit-client/
 COPY fluxer_app/rust/ ./fluxer_app/rust/
 COPY fluxer_app/scripts/ ./fluxer_app/scripts/

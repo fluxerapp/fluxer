@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
-import type {
-	GlobalKeyEvent,
-	GlobalShortcutCaptureEvent,
-	GlobalShortcutsApi,
-} from '@app/features/platform/types/Electron';
+import type {GlobalKeyEvent, GlobalShortcutCaptureEvent, GlobalShortcutsApi} from '@app/types/electron.d';
 
 const GLOBAL_KEY_NAME_ALIASES: Readonly<Record<string, string>> = {
 	Esc: 'Escape',

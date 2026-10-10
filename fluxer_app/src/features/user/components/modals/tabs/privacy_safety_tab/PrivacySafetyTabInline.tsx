@@ -7,9 +7,9 @@ import {CommunicationTabContent as CommunicationTab} from '@app/features/user/co
 import {ConnectionsTabContent as ConnectionsTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab';
 import {DataDeletionTabContent as DataDeletionTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataDeletionTab';
 import {DataExportTabContent as DataExportTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataExportTab';
-import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline.module.css';
 import {ProfilePrivacyTabContent as ProfilePrivacyTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab';
 import {SensitiveContentTabContent as SensitiveContentTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {useUserSettingsMutationController} from '@app/features/user/hooks/useUserSettingsMutationController';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';

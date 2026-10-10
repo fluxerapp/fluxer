@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import Config from '@app/features/app/config/Config';
 import {getCachedDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
-import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
@@ -20,6 +19,7 @@ import {
 	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
+import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
 import {useEffect, useRef, useState} from 'react';
 
 export type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';

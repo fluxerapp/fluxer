@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AppMetricsSnapshot} from '@app/features/platform/types/Electron';
 import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
+import type {AppMetricsSnapshot} from '@app/types/electron.d';
 import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 import {renderToStaticMarkup} from 'react-dom/server';
 

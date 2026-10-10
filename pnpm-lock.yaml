@@ -1416,12 +1416,6 @@ importers:
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(patch_hash=9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@pkgs/list_utils':
-        specifier: workspace:*
-        version: link:pkgs/list_utils
-      '@pkgs/number_utils':
-        specifier: workspace:*
-        version: link:pkgs/number_utils
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.3.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1563,9 +1557,6 @@ importers:
       tiny-invariant:
         specifier: 'catalog:'
         version: 1.3.3
-      uint8array-extras:
-        specifier: 'catalog:'
-        version: 1.5.0
       unique-names-generator:
         specifier: 'catalog:'
         version: 4.7.1
@@ -1670,12 +1661,6 @@ importers:
         specifier: 'catalog:'
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
-  fluxer_app/pkgs/list_utils:
-    dependencies:
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../../../packages/constants
-
   fluxer_app/pkgs/livekit-client:
     dependencies:
       '@livekit/mutex':
@@ -1715,12 +1700,6 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@6.0.3))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
-
-  fluxer_app/pkgs/number_utils:
-    dependencies:
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../../../packages/constants
 
   fluxer_desktop:
     dependencies:

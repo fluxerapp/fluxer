@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron';
+import type {UpdaterDownloadOption} from '@app/types/electron.d';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 interface NativeUpdateInfo {

@@ -6511,8 +6511,7 @@ msgstr "Kupte dárkové předplatné {premiumProductName} na kartě {premiumProd
 msgid "Buy gift"
 msgstr "Koupit dárek"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Vytvořením komunity souhlasíte s dodržováním a prosazováním <0>pravidel komunity {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Změnit přezdívku skupiny"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Převzít dárek"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Dokončit registraci účtu"
@@ -9067,8 +9066,7 @@ msgstr "Přímé zprávy od členů komunity"
 msgid "Community filter"
 msgstr "Filtr komunit"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Ikona komunity"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Ovládejte plynulé posouvání kolečkem myši a klávesnicí v desktopové aplikaci"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Nastavte příkazy pro převod textu na řeč a předčítání příchozího obsahu."
 
@@ -11735,7 +11733,6 @@ msgstr "Datum a čas"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Nastavení skupiny"
 msgid "Group typing states"
 msgstr "Stavy psaní ve skupině"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Skupina aktualizována"
 
@@ -21548,7 +21544,6 @@ msgstr "Zmiňovat všechny nebo jakoukoli roli v tomto kanálu, i když u ní ne
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Zaregistrovat účet"
 msgid "Registration"
 msgstr "Registrace"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registrace je momentálně uzavřena. K vytvoření účtu použijte registrační odkaz od administrátora."
@@ -28007,8 +28001,7 @@ msgstr "Odebrat z oblíbených GIFů uložených pouze jako URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Odebrat ikonu"
 
@@ -34467,7 +34460,6 @@ msgstr "Převod textu na řeč není podporován"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Oznámení pomocí převodu textu na řeč"
@@ -37943,8 +37935,7 @@ msgstr "Nahrávat soubory a média v tomto kanálu."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Nahrát ikonu"
@@ -41063,8 +41054,7 @@ msgstr "K používání emoji z jiných komunit zde potřebujete oprávnění \"
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "K používání samolepek z jiných komunit zde potřebujete oprávnění „{permissionLabel}“."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Než budete moci vytvořit komunitu, musíte dokončit registraci svého účtu."
 
@@ -41081,8 +41071,7 @@ msgstr "Abyste mohli posílat soukromé zprávy, musíte dokončit registraci sv
 msgid "You need to claim your account to send messages in this community."
 msgstr "Abyste mohli v této komunitě posílat zprávy, musíte dokončit registraci svého účtu."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Než budete moct vytvořit komunitu, musíte si ověřit e-mailovou adresu."
 
@@ -41483,7 +41472,6 @@ msgstr "Registrace vašeho účtu zatím není dokončená. Bez e-mailu a hesla 
 msgid "Your account is too new to send messages in this community."
 msgstr "Váš účet je příliš nový na odesílání zpráv v této komunitě."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Žádost o váš účet čeká na schválení. Přihlásit se můžete, až ji administrátor schválí."

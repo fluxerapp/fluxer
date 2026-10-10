@@ -7,7 +7,7 @@ export type KeyboardShortcutEvent = Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'alt
 	Partial<Pick<KeyboardEvent, 'code'>>;
 export type KeyboardShortcutPressEvent = KeyboardShortcutEvent & Pick<KeyboardEvent, 'repeat'>;
 
-const normalizeKeyboardShortcutKey = (key: string): string => {
+export const normalizeKeyboardShortcutKey = (key: string): string => {
 	if (key === ' ') return 'space';
 	if (key === 'Break') return 'pause';
 	return key.toLowerCase();

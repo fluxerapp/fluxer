@@ -371,6 +371,9 @@ export interface DisplayMediaRequestInfo {
 
 export type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
 
+export type MediaAccessType = 'microphone' | 'camera' | 'screen' | 'audio-capture';
+export type MediaAccessStatus = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown';
+
 export interface UpdaterEvent {
 	type: 'checking' | 'available' | 'not-available' | 'downloaded' | 'progress' | 'error' | 'unsupported';
 	context?: 'user' | 'background' | 'focus';
@@ -557,12 +560,10 @@ export interface ElectronAPI {
 	requestInputMonitoringPermission?(): Promise<InputMonitoringPermissionStatus>;
 	getScreenRecordingPermissionStatus?(): Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?(): Promise<InputMonitoringPermissionStatus>;
-	checkMediaAccess(
-		type: 'screen' | 'camera' | 'microphone' | 'audio-capture',
-	): Promise<'granted' | 'denied' | 'restricted' | 'not-determined'>;
-	requestMediaAccess(type: 'screen' | 'camera' | 'microphone' | 'audio-capture'): Promise<boolean>;
+	checkMediaAccess(type: MediaAccessType): Promise<Exclude<MediaAccessStatus, 'unknown'>>;
+	requestMediaAccess(type: MediaAccessType): Promise<boolean>;
 	openInputMonitoringSettings(): Promise<void>;
-	openMediaAccessSettings(type: 'screen' | 'camera' | 'microphone' | 'audio-capture'): Promise<void>;
+	openMediaAccessSettings(type: MediaAccessType): Promise<void>;
 	onDisplayMediaRequested?(callback: (requestId: string, info: DisplayMediaRequestInfo) => void): () => void;
 	getAccessibilitySupportEnabled?(): Promise<boolean>;
 	onAccessibilitySupportChanged?(callback: (enabled: boolean) => void): () => void;
@@ -629,6 +630,7 @@ export interface ElectronAPI {
 	localAppUpload?: DesktopLocalAppUploadAPI;
 	localApp?: DesktopLocalAppInfo;
 	nativeGatewayTransport?: NativeGatewayTransportAPI;
+	setZoomFactor(factor: number): void;
 }
 
 export type VirtmicUnavailableReason =

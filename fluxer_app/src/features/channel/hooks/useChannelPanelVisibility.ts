@@ -3,7 +3,7 @@
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {useEffect, useRef} from 'react';
 
-export function useChannelSearchVisibility(channelId: string | null, visible: boolean): void {
+export function useChannelPanelVisibility(channelId: string | null, visible: boolean): void {
 	const previousVisibilityRef = useRef({channelId, visible});
 	useEffect(() => {
 		const previousVisibility = previousVisibilityRef.current;

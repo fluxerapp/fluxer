@@ -6511,8 +6511,7 @@ msgstr "Kjøp en {premiumProductName}-gave fra {premiumProductName}-fanen for å
 msgid "Buy gift"
 msgstr "Kjøp gave"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Ved å opprette et fellesskap godtar du å følge og overholde <0>retningslinjene for {PRODUCT_NAME}-fellesskapet</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Endre kallenavn i gruppen"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Hent gave"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Fullfør registreringen av kontoen din"
@@ -9067,8 +9066,7 @@ msgstr "Fellesskaps-DM"
 msgid "Community filter"
 msgstr "Fellesskapsfilter"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Fellesskapsikon"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Kontroller jevn rulling med hjul og tastatur i skrivebordsappen"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Styr talekommandoer og opplesing for innkommende innhold."
 
@@ -11735,7 +11733,6 @@ msgstr "Dato og tid"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Gruppeinnstillinger"
 msgid "Group typing states"
 msgstr "Gruppens skriveindikatorer"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Gruppe oppdatert"
 
@@ -21548,7 +21544,6 @@ msgstr "Omtal alle eller en hvilken som helst rolle i denne kanalen (selv om rol
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Registrer en konto"
 msgid "Registration"
 msgstr "Registrering"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registrering er stengt for øyeblikket. Bruk en registreringslenke fra en administrator for å opprette en konto."
@@ -28007,8 +28001,7 @@ msgstr "Fjern fra URL-baserte GIF-favoritter"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Fjern ikon"
 
@@ -34467,7 +34460,6 @@ msgstr "Tekst-til-tale støttes ikke"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Tekst-til-tale-varsler"
@@ -37943,8 +37935,7 @@ msgstr "Last opp filer og medier i denne kanalen."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Last opp ikon"
@@ -41063,8 +41054,7 @@ msgstr "Du trenger tillatelsen «{permissionLabel}» for å bruke emojier fra an
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Du trenger tillatelsen «{permissionLabel}» for å bruke klistremerker fra andre fellesskap her."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Du må fullføre registreringen av kontoen din før du kan opprette et fellesskap."
 
@@ -41081,8 +41071,7 @@ msgstr "Du må fullføre registreringen av kontoen din for å sende direktemeldi
 msgid "You need to claim your account to send messages in this community."
 msgstr "Du må fullføre registreringen av kontoen din for å sende meldinger i dette fellesskapet."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Du må bekrefte e-postadressen din før du kan opprette et fellesskap."
 
@@ -41483,7 +41472,6 @@ msgstr "Du har ikke fullført registreringen av kontoen din ennå. Uten e-postad
 msgid "Your account is too new to send messages in this community."
 msgstr "Kontoen din er for ny til å sende meldinger i dette fellesskapet."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Kontoforespørselen din venter på godkjenning. Du kan logge på når en administrator har godkjent den."

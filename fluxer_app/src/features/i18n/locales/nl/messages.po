@@ -6511,8 +6511,7 @@ msgstr "Koop een {premiumProductName}-cadeau via het tabblad {premiumProductName
 msgid "Buy gift"
 msgstr "Cadeau kopen"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Door een community aan te maken, ga je akkoord met het volgen en naleven van de <0>communityrichtlijnen van {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Groepsbijnaam wijzigen"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Cadeau inwisselen"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Voltooi de registratie van je account"
@@ -9067,8 +9066,7 @@ msgstr "Community-DM"
 msgid "Community filter"
 msgstr "Communityfilter"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Communitypictogram"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Regel vloeiend scrollen met het muiswiel en toetsenbord via de ingebouwde browserfunctie in de desktopapp"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Beheer spraakopdrachten en het voorlezen van binnenkomende inhoud."
 
@@ -11735,7 +11733,6 @@ msgstr "Datum en tijd"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Groepsinstellingen"
 msgid "Group typing states"
 msgstr "Typestatussen in groepen"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Groep bijgewerkt"
 
@@ -21548,7 +21544,6 @@ msgstr "Vermeld iedereen of een rol in dit kanaal (zelfs als de rol niet als ver
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Registreer een account"
 msgid "Registration"
 msgstr "Registratie"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registratie is momenteel gesloten. Gebruik een registratielink van een beheerder om een account aan te maken."
@@ -28007,8 +28001,7 @@ msgstr "Verwijderen uit URL-gebaseerde GIF-favorieten"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Pictogram verwijderen"
 
@@ -34467,7 +34460,6 @@ msgstr "Tekst-naar-spraak niet ondersteund"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Tekst-naar-spraakmeldingen"
@@ -37943,8 +37935,7 @@ msgstr "Upload bestanden en media in dit kanaal."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Pictogram uploaden"
@@ -41063,8 +41054,7 @@ msgstr "Je hebt de machtiging \"{permissionLabel}\" nodig om hier emoji uit ande
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Je hebt de \"{permissionLabel}\"-machtiging nodig om hier stickers van andere communities te gebruiken."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Je moet de registratie van je account voltooien voordat je een community kunt aanmaken."
 
@@ -41081,8 +41071,7 @@ msgstr "Je moet de registratie van je account voltooien om privéberichten te ku
 msgid "You need to claim your account to send messages in this community."
 msgstr "Je moet de registratie van je account voltooien om berichten in deze community te kunnen versturen."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Je moet je e-mailadres verifiëren voordat je een community kunt aanmaken."
 
@@ -41483,7 +41472,6 @@ msgstr "De registratie van je account is nog niet voltooid. Zonder e-mailadres e
 msgid "Your account is too new to send messages in this community."
 msgstr "Je account is te nieuw om berichten te versturen in deze community."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Je accountaanvraag wacht op goedkeuring. Je kunt inloggen nadat een beheerder deze heeft goedgekeurd."

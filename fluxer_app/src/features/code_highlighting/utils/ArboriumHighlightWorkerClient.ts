@@ -52,7 +52,7 @@ function clearIdleTimeout(): void {
 	idleTimeout = null;
 }
 
-function isSignalAborted(signal: AbortSignal | undefined): boolean {
+export function isSignalAborted(signal: AbortSignal | undefined): boolean {
 	if (signal === undefined) {
 		return false;
 	}

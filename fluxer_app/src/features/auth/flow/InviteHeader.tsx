@@ -3,6 +3,7 @@
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -10,7 +11,6 @@ import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {GroupDmInvite, GuildInvite, Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {Plural, Trans} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useState} from 'react';
 

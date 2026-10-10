@@ -6511,8 +6511,7 @@ msgstr "Compre um presente {premiumProductName} na aba {premiumProductName} para
 msgid "Buy gift"
 msgstr "Comprar presente"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Ao criar uma comunidade, você concorda em seguir e fazer cumprir as <0>diretrizes da comunidade do {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Alterar apelido do grupo"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Resgatar presente"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Reivindique sua conta"
@@ -9067,8 +9066,7 @@ msgstr "Mensagem direta da comunidade"
 msgid "Community filter"
 msgstr "Filtro da comunidade"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Ícone da comunidade"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Controla a rolagem suave nativa com a roda do mouse e o teclado no aplicativo para computador"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Controle os comandos de voz e a narração para o conteúdo recebido."
 
@@ -11735,7 +11733,6 @@ msgstr "Data e hora"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Configurações do grupo"
 msgid "Group typing states"
 msgstr "Status de digitação do grupo"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grupo atualizado"
 
@@ -21548,7 +21544,6 @@ msgstr "Mencionar todos ou qualquer cargo neste canal (mesmo que o cargo não es
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Registrar uma conta"
 msgid "Registration"
 msgstr "Cadastro"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "O cadastro está fechado no momento. Use um link de cadastro de um administrador para criar uma conta."
@@ -28007,8 +28001,7 @@ msgstr "Remover dos GIFs favoritos salvos por URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Remover ícone"
 
@@ -34467,7 +34460,6 @@ msgstr "Conversão de texto em fala não é compatível"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Notificações de conversão de texto em fala"
@@ -37943,8 +37935,7 @@ msgstr "Envie arquivos e mídias neste canal."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Enviar ícone"
@@ -41063,8 +41054,7 @@ msgstr "Você precisa da permissão \"{permissionLabel}\" para usar emojis de ou
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Você precisa da permissão \"{permissionLabel}\" para usar figurinhas de outras comunidades aqui."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Você precisa reivindicar sua conta antes de criar uma comunidade."
 
@@ -41081,8 +41071,7 @@ msgstr "Você precisa reivindicar sua conta para enviar mensagens diretas."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Você precisa reivindicar sua conta para enviar mensagens nesta comunidade."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Você precisa verificar seu endereço de e-mail antes de criar uma comunidade."
 
@@ -41483,7 +41472,6 @@ msgstr "Sua conta ainda não foi reivindicada. Sem um e-mail e senha, você não
 msgid "Your account is too new to send messages in this community."
 msgstr "Sua conta é muito nova para enviar mensagens nesta comunidade."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Sua solicitação de conta está aguardando aprovação. Você poderá entrar depois que um administrador aprová-la."

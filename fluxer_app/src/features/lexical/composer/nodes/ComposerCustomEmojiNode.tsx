@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ComposerAtomicPresentation} from '@app/features/lexical/composer/nodes/ComposerAtomicPresentation';
+import {ComposerAtomicTokenNode} from '@app/features/lexical/composer/nodes/ComposerAtomicTokenNode';
 import {ComposerCustomEmoji} from '@app/features/lexical/composer/nodes/ComposerCustomEmoji';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
-import {
-	DecoratorNode,
-	type DOMExportOutput,
-	type EditorConfig,
-	type LexicalNode,
-	type NodeKey,
-	type SerializedLexicalNode,
-	type Spread,
-} from 'lexical';
+import type {DOMExportOutput, EditorConfig, LexicalNode, NodeKey, SerializedLexicalNode, Spread} from 'lexical';
 import type {JSX} from 'react';
 
 export type SerializedComposerCustomEmojiNode = Spread<
@@ -26,10 +19,9 @@ export type SerializedComposerCustomEmojiNode = Spread<
 	SerializedLexicalNode
 >;
 
-export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
+export class ComposerCustomEmojiNode extends ComposerAtomicTokenNode {
 	__emojiId: string;
 	__animated: boolean;
-	__display: string;
 	__wire: string;
 
 	static override getType(): string {
@@ -59,9 +51,6 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 		);
 	}
 
-	__literal: boolean;
-	__spoiler: boolean;
-
 	constructor(
 		emojiId: string,
 		animated: boolean,
@@ -71,13 +60,10 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 		spoiler = false,
 		key?: NodeKey,
 	) {
-		super(key);
+		super(display, literal, spoiler, key);
 		this.__emojiId = emojiId;
 		this.__animated = animated;
-		this.__display = display;
 		this.__wire = wire;
-		this.__literal = literal;
-		this.__spoiler = spoiler;
 	}
 
 	override exportJSON(): SerializedComposerCustomEmojiNode {
@@ -103,18 +89,10 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 		return span;
 	}
 
-	override updateDOM(): boolean {
-		return false;
-	}
-
 	override exportDOM(): DOMExportOutput {
 		const element = document.createElement('span');
 		element.textContent = this.__wire;
 		return {element};
-	}
-
-	override getTextContent(): string {
-		return this.getLatest().__display;
 	}
 
 	getWireText(): string {
@@ -123,32 +101,6 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 
 	getEmojiId(): string {
 		return this.getLatest().__emojiId;
-	}
-
-	isLiteral(): boolean {
-		return this.getLatest().__literal;
-	}
-
-	setLiteral(literal: boolean): this {
-		this.getWritable().__literal = literal;
-		return this;
-	}
-
-	isSpoiler(): boolean {
-		return this.getLatest().__spoiler;
-	}
-
-	setSpoiler(spoiler: boolean): this {
-		this.getWritable().__spoiler = spoiler;
-		return this;
-	}
-
-	override isInline(): true {
-		return true;
-	}
-
-	override isKeyboardSelectable(): false {
-		return false;
 	}
 
 	override decorate(): JSX.Element {

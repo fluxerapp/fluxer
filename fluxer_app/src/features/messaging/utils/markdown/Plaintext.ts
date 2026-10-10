@@ -287,7 +287,7 @@ function renderTableCellToPlaintext(cell: TableCellNode, options: PlaintextRende
 		.trim();
 }
 
-function normaliseUrlForComparison(value?: string | null): string | null {
+export function normaliseUrlForComparison(value?: string | null): string | null {
 	if (!value) {
 		return null;
 	}

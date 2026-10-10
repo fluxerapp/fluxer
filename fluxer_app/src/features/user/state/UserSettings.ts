@@ -29,9 +29,6 @@ import {
 import {setSyncedFieldUserSettings} from '@app/features/user/state/SyncedField';
 import {
 	changedSyncedPreferenceFields,
-	createEmptySyncedPreferences,
-	decodeSyncedPreferencesLenient,
-	encodeSyncedPreferences,
 	isSyncedPreferencesField,
 	mergeIncomingSyncedPreferences as mergeIncomingSyncedPreferencesWithEngine,
 	preferencesFromBytes,
@@ -54,6 +51,11 @@ import {
 	ThemeTypes,
 	TimeFormatTypes,
 } from '@fluxer/constants/src/UserConstants';
+import {
+	createEmptySyncedPreferences,
+	decodeSyncedPreferencesLenient,
+	encodeSyncedPreferences,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';

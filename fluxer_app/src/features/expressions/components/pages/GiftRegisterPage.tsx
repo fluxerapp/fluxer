@@ -6,8 +6,8 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
-import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
 import {AuthRuntimeTargetResetAction} from '@app/features/auth/flow/AuthRuntimeTargetResetAction';
 import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
@@ -144,7 +144,8 @@ const GiftRegisterPageContent = observer(function GiftRegisterPageContent({
 			/>
 			<GiftHeader gift={gift} variant="register" data-flx="expressions.gift-register-page.gift-header" />
 			<div className={sharedStyles.container} data-flx="expressions.gift-register-page.div">
-				<AuthMinimalRegisterFormCore
+				<AuthRegisterFormCore
+					fields={{showUsername: false}}
 					submitLabel={<Trans>Create account to claim gift</Trans>}
 					redirectPath="/"
 					onRegister={handleRegisterComplete}

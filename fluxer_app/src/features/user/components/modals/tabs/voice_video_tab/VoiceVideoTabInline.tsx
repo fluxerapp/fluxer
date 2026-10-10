@@ -3,9 +3,9 @@
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {AUDIO_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {VideoTab} from '@app/features/user/components/modals/tabs/UserVideoTab';
 import {VoiceTab} from '@app/features/user/components/modals/tabs/UserVoiceTab';
-import styles from '@app/features/user/components/modals/tabs/voice_video_tab/VoiceVideoTabInline.module.css';
 import Users from '@app/features/user/state/Users';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {MediaDeviceRefreshType, refreshMediaDeviceLists} from '@app/features/voice/utils/MediaDeviceRefresh';

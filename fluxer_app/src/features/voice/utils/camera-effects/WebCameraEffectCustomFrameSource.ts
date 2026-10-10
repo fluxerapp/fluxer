@@ -476,7 +476,7 @@ function closeFrameImages(images: ReadonlyArray<WebCameraEffectCustomFrameImage>
 	return failures;
 }
 
-function throwCleanupFailures(failures: ReadonlyArray<unknown>, message: string): void {
+export function throwCleanupFailures(failures: ReadonlyArray<unknown>, message: string): void {
 	if (failures.length === 0) return;
 	if (failures.length === 1) throw failures[0];
 	throw new AggregateError(failures, message);
@@ -496,7 +496,7 @@ async function settledFailures(promises: ReadonlyArray<Promise<unknown>>): Promi
 	return failures;
 }
 
-function waitForAbortablePromise<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+export function waitForAbortablePromise<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
 	if (signal.aborted) return Promise.reject(signal.reason);
 	return new Promise<T>((resolve, reject) => {
 		const handleAbort = (): void => reject(signal.reason);

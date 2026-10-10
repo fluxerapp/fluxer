@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {highlightCodeInWorker} from '@app/features/code_highlighting/utils/ArboriumHighlightWorkerClient';
+import {
+	highlightCodeInWorker,
+	isSignalAborted,
+} from '@app/features/code_highlighting/utils/ArboriumHighlightWorkerClient';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {MAX_CODE_HIGHLIGHT_SOURCE_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {useEffect, useMemo, useState} from 'react';
@@ -312,13 +315,6 @@ function subscribeToHighlightCacheEntry(cacheKey: string, entry: HighlightCacheE
 		}
 	}
 	void entry.promise.then(release, release);
-}
-
-function isSignalAborted(signal: AbortSignal | undefined): boolean {
-	if (signal === undefined) {
-		return false;
-	}
-	return signal.aborted;
 }
 
 function loadHighlightedHtml(language: string, source: string, signal?: AbortSignal): Promise<string | null> {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MediaAccessStatus, MediaAccessType} from '@app/features/platform/types/Electron';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import type {MediaAccessStatus, MediaAccessType} from '@app/types/electron.d';
 import {
 	createVoiceEngineV2PermissionResult,
 	type PermissionPort,

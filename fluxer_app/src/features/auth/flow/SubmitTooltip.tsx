@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/auth/flow/SubmitTooltip.module.css';
+import {formatList} from '@app/features/i18n/utils/IntlCache';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import type {ReactNode} from 'react';
 
 const YOU_MUST_AGREE_TO_THE_TERMS_OF_SERVICE_DESCRIPTOR = msg({
@@ -60,7 +60,7 @@ function getTooltipContentDescriptor(
 		return getConsentRequiredDescriptor(legalConsentRequirement);
 	}
 	if (missingFields.length > 0) {
-		const fieldList = formatListWithConfig(
+		const fieldList = formatList(
 			missingFields.map((f) => f.label),
 			{locale, style: 'long', type: 'conjunction'},
 		);

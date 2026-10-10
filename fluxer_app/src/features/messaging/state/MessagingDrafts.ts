@@ -30,7 +30,7 @@ function normalizeDraftSegments(
 		.sort((a, b) => a.start - b.start);
 }
 
-function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
+export function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
 	if (a.length !== b.length) return false;
 	for (let i = 0; i < a.length; i++) {
 		const left = a[i];

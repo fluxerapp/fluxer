@@ -6511,8 +6511,7 @@ msgstr "اشترِ هدية {premiumProductName} من علامة تبويب {pre
 msgid "Buy gift"
 msgstr "شراء هدية"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "بإنشائك مجتمعًا، فإنك توافق على اتباع <0>إرشادات مجتمع {PRODUCT_NAME}</0> والالتزام بها."
 
@@ -7088,6 +7087,7 @@ msgstr "تغيير الاسم المستعار في المجموعة"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "استلام الهدية"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "المطالبة بحسابك"
@@ -9067,8 +9066,7 @@ msgstr "رسائل المجتمع المباشرة"
 msgid "Community filter"
 msgstr "تصفية المجتمعات"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "أيقونة المجتمع"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "التحكم في التمرير السلس الأصلي بالعجلة ولوحة المفاتيح في تطبيق سطح المكتب"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "التحكم في أوامر تحويل النص إلى كلام وقراءة المحتوى الوارد بصوت عالٍ."
 
@@ -11735,7 +11733,6 @@ msgstr "التاريخ والوقت"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "إعدادات المجموعة"
 msgid "Group typing states"
 msgstr "حالات الكتابة في المجموعة"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "تم تحديث المجموعة"
 
@@ -21548,7 +21544,6 @@ msgstr "الإشارة إلى الجميع أو أي دور في هذه القن
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "تسجيل حساب"
 msgid "Registration"
 msgstr "التسجيل"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "التسجيل مغلق حاليًا. استخدم رابط تسجيل من أحد المسؤولين لإنشاء حساب."
@@ -28007,8 +28001,7 @@ msgstr "إزالة من صور GIF المفضلة (بالرابط فقط)"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "إزالة الأيقونة"
 
@@ -34467,7 +34460,6 @@ msgstr "تحويل النص إلى كلام غير مدعوم"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "إشعارات تحويل النص إلى كلام"
@@ -37943,8 +37935,7 @@ msgstr "تحميل الملفات والوسائط في هذه القناة."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "تحميل أيقونة"
@@ -41063,8 +41054,7 @@ msgstr "أنت بحاجة إلى إذن \"{permissionLabel}\" لاستخدام �
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "أنت بحاجة إلى إذن \"{permissionLabel}\" لاستخدام الملصقات من المجتمعات الأخرى هنا."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "يجب عليك المطالبة بحسابك قبل أن تتمكن من إنشاء مجتمع."
 
@@ -41081,8 +41071,7 @@ msgstr "يجب المطالبة بحسابك لإرسال رسائل مباشر�
 msgid "You need to claim your account to send messages in this community."
 msgstr "يجب المطالبة بحسابك لإرسال الرسائل في هذا المجتمع."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "يجب عليك التحقق من عنوان بريدك الإلكتروني قبل أن تتمكن من إنشاء مجتمع."
 
@@ -41483,7 +41472,6 @@ msgstr "لم تتم المطالبة بحسابك بعد. بدون بريد إل
 msgid "Your account is too new to send messages in this community."
 msgstr "حسابك جديد جدًا ولا يمكنه إرسال رسائل في هذا المجتمع."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "طلب حسابك بانتظار الموافقة. يمكنك تسجيل الدخول بعد أن يوافق عليه أحد المسؤولين."

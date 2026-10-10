@@ -6511,8 +6511,7 @@ msgstr "Cumpără un cadou {premiumProductName} din fila {premiumProductName} pe
 msgid "Buy gift"
 msgstr "Cumpără cadou"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Prin crearea unei comunități, ești de acord să respecți și să susții <0>regulile comunității {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Schimbă pseudonimul în grup"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Revendică cadoul"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Revendică-ți contul"
@@ -9067,8 +9066,7 @@ msgstr "DM comunitate"
 msgid "Community filter"
 msgstr "Filtru de comunități"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Pictogramă comunitate"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Controlează derularea lină nativă cu rotița mouse-ului și tastatura în aplicația desktop"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Controlează comenzile vocale și nararea pentru conținutul primit."
 
@@ -11735,7 +11733,6 @@ msgstr "Data și ora"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Setări grup"
 msgid "Group typing states"
 msgstr "Stări de tastare în grup"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grup actualizat"
 
@@ -21548,7 +21544,6 @@ msgstr "Menționează pe toată lumea sau orice rol din acest canal (chiar dacă
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Înregistrează un cont"
 msgid "Registration"
 msgstr "Înregistrare"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Înregistrarea este închisă momentan. Folosește un link de înregistrare de la un administrator pentru a crea un cont."
@@ -28007,8 +28001,7 @@ msgstr "Elimină din favoritele GIF salvate doar prin URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Elimină pictograma"
 
@@ -34467,7 +34460,6 @@ msgstr "Text în vorbire neacceptat"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Notificări text în vorbire"
@@ -37943,8 +37935,7 @@ msgstr "Încarcă fișiere și media în acest canal."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Încarcă pictogramă"
@@ -41063,8 +41054,7 @@ msgstr "Ai nevoie de permisiunea „{permissionLabel}” pentru a folosi emoji d
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Ai nevoie de permisiunea „{permissionLabel}” pentru a folosi stickere din alte comunități aici."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Trebuie să-ți revendici contul înainte de a putea crea o comunitate."
 
@@ -41081,8 +41071,7 @@ msgstr "Trebuie să-ți revendici contul pentru a trimite mesaje directe."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Trebuie să-ți revendici contul pentru a trimite mesaje în această comunitate."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Trebuie să-ți verifici adresa de e-mail înainte de a putea crea o comunitate."
 
@@ -41483,7 +41472,6 @@ msgstr "Contul tău nu a fost revendicat încă. Fără o adresă de e-mail și 
 msgid "Your account is too new to send messages in this community."
 msgstr "Contul tău este prea nou pentru a trimite mesaje în această comunitate."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Solicitarea ta de cont așteaptă aprobare. Te poți conecta după ce un administrator o aprobă."

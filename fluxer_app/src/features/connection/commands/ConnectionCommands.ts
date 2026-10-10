@@ -12,6 +12,7 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
+import type {BlueskyAuthorizeResponse} from '@fluxer/schema/src/domains/connection/BlueskyOAuthSchemas';
 import type {
 	ConnectionListResponse,
 	ConnectionResponse,
@@ -54,10 +55,6 @@ const CONNECTIONS_REORDERED_DESCRIPTOR = msg({
 	comment: 'Short label in the connection connection commands.',
 });
 const logger = new Logger('Connections');
-
-interface BlueskyAuthorizeResponse {
-	authorize_url: string;
-}
 
 function connectionCreateRequest(type: ConnectionType, identifier: string): CreateConnectionRequest {
 	return {

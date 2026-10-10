@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {
 	isScreenShareAudioPublicationLike,
 	type VoiceTrackPublicationSourceLike,
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
 import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
 import {
 	classifyVoiceEngineV2TrackStats,
 	selectVoiceEngineV2StatsPresentationProjection,

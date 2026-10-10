@@ -4,7 +4,6 @@ import Config from '@app/features/app/config/Config';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {WORKER_NAVIGATION_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
 import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWebStorage';
-import type {UpdaterContext, UpdaterDownloadOption, UpdaterEvent} from '@app/features/platform/types/Electron';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getClientInfo} from '@app/features/platform/utils/ClientInfo';
 import {flushPendingPersistWrites} from '@app/features/platform/utils/MobXPersistence';
@@ -27,8 +26,41 @@ import {
 	type UpdaterMachineSnapshot,
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
-import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
+import type {UpdaterEvent as NativeUpdaterEvent, UpdaterDownloadOption} from '@app/types/electron.d';
 import {makeAutoObservable, runInAction} from 'mobx';
+
+type UpdaterContext = NonNullable<NativeUpdaterEvent['context']>;
+type UpdaterEvent =
+	| {
+			type: 'checking';
+			context: UpdaterContext;
+	  }
+	| {
+			type: 'available';
+			context: UpdaterContext;
+			version: string | null;
+			downloadUrl?: string;
+			downloadOptions?: Array<UpdaterDownloadOption>;
+	  }
+	| {
+			type: 'not-available';
+			context: UpdaterContext;
+	  }
+	| {
+			type: 'downloaded';
+			context: UpdaterContext;
+	  }
+	| {
+			type: 'error';
+			context: UpdaterContext;
+			message: string;
+	  }
+	| {
+			type: 'unsupported';
+			context: UpdaterContext;
+			reason: 'platform' | 'unpackaged' | 'managed-package';
+			downloadUrl?: string;
+	  };
 
 const logger = new Logger('Updater');
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;

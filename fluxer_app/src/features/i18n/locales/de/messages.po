@@ -6511,8 +6511,7 @@ msgstr "Kaufe ein {premiumProductName}-Geschenk im Tab „{premiumProductName}�
 msgid "Buy gift"
 msgstr "Geschenk kaufen"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Durch das Erstellen einer Community stimmst du zu, die <0>Community-Richtlinien von {PRODUCT_NAME}</0> zu befolgen und einzuhalten."
 
@@ -7088,6 +7087,7 @@ msgstr "Spitznamen in der Gruppe ändern"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Geschenk einlösen"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Deinen Account beanspruchen"
@@ -9067,8 +9066,7 @@ msgstr "Community-DM"
 msgid "Community filter"
 msgstr "Community-Filter"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Community-Icon"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Steuert natives sanftes Scrollen mit Mausrad und Tastatur in der Desktop-App"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Vorlesebefehle und Sprachausgabe für eingehende Inhalte steuern."
 
@@ -11735,7 +11733,6 @@ msgstr "Datum und Uhrzeit"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Gruppeneinstellungen"
 msgid "Group typing states"
 msgstr "Gruppen-Tippstatus"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Gruppe aktualisiert"
 
@@ -21548,7 +21544,6 @@ msgstr "Alle oder jede Rolle in diesem Kanal erwähnen (auch wenn die Rolle nich
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Ein Konto registrieren"
 msgid "Registration"
 msgstr "Registrierung"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Die Registrierung ist derzeit geschlossen. Verwende einen Registrierungslink von einem Admin, um einen Account zu erstellen."
@@ -28007,8 +28001,7 @@ msgstr "Aus der Liste der per URL gespeicherten GIFs entfernen"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Symbol entfernen"
 
@@ -34467,7 +34460,6 @@ msgstr "Text-to-Speech wird nicht unterstützt"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Text-to-Speech-Benachrichtigungen"
@@ -37943,8 +37935,7 @@ msgstr "Dateien und Medien in diesem Kanal hochladen."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Symbol hochladen"
@@ -41063,8 +41054,7 @@ msgstr "Du benötigst die Berechtigung \"{permissionLabel}\", um hier Emojis aus
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Du benötigst die Berechtigung \"{permissionLabel}\", um hier Sticker aus anderen Communitys zu verwenden."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Du musst zuerst deinen Account beanspruchen, bevor du eine Community erstellen kannst."
 
@@ -41081,8 +41071,7 @@ msgstr "Du musst deinen Account beanspruchen, um Direktnachrichten senden zu kö
 msgid "You need to claim your account to send messages in this community."
 msgstr "Du musst deinen Account beanspruchen, um Nachrichten in dieser Community senden zu können."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Du musst deine E-Mail-Adresse bestätigen, bevor du eine Community erstellen kannst."
 
@@ -41483,7 +41472,6 @@ msgstr "Dein Account ist noch nicht beansprucht. Ohne E-Mail-Adresse und Passwor
 msgid "Your account is too new to send messages in this community."
 msgstr "Dein Account ist zu neu, um Nachrichten in dieser Community zu senden."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Deine Accountanfrage wartet auf Genehmigung. Du kannst dich anmelden, nachdem ein Admin sie genehmigt hat."

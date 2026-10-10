@@ -6,11 +6,11 @@ import {
 	AccessibilityScreenReaderTabContent,
 	AccessibilityTtsTabContent,
 } from '@app/features/user/components/modals/tabs/AccessibilityTab';
-import styles from '@app/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.module.css';
 import {AnimationTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/AnimationTab';
 import {KeyboardTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/KeyboardTab';
 import {MotionTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/MotionTab';
 import {VisualTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/VisualTab';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';

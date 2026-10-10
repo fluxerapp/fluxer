@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {formatList} from '@app/features/i18n/utils/IntlCache';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
@@ -13,7 +14,6 @@ import {
 	VOICE_P2P_SWITCH_TO_STANDARD_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import {observer} from 'mobx-react-lite';
 
 export interface VoiceP2pPeerFailedModalProps {
@@ -26,7 +26,7 @@ export interface VoiceP2pPeerFailedModalProps {
 export const VoiceP2pPeerFailedModal = observer(
 	({names, allowSwitch, onLeave, onSwitch}: VoiceP2pPeerFailedModalProps) => {
 		const {i18n} = useLingui();
-		const formattedNames = formatListWithConfig(names, {
+		const formattedNames = formatList(names, {
 			locale: getCurrentLocale(),
 			style: 'long',
 			type: 'conjunction',

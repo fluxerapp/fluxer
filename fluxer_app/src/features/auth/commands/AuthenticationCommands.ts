@@ -16,10 +16,13 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {
 	AuthRegistrationPendingApprovalResponse,
+	DesktopHandoffReturnMethod,
 	RegisterRequest,
 	SsoCompleteResponse,
 	SsoStartRequest,
 	SsoStartResponse,
+	UsernameAvailabilityResponse,
+	UsernameSuggestionsResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
@@ -130,8 +133,6 @@ interface RecoveryKitIssued {
 }
 
 export type RecoverAccountResponse = (AuthTokenResponse | MfaLoginResponse) & RecoveryKitIssued;
-
-export type DesktopHandoffReturnMethod = 'deep_link' | 'code';
 
 interface DesktopHandoffInitiateResponse {
 	code: string;
@@ -443,10 +444,6 @@ export async function register(data: RegisterRequest, target: AuthRequestTarget)
 	}
 }
 
-interface UsernameSuggestionsResponse {
-	suggestions: Array<string>;
-}
-
 export async function getUsernameSuggestions(globalName: string, target: InstanceHTTPTarget): Promise<Array<string>> {
 	try {
 		const response = await instanceRequest<UsernameSuggestionsResponse>({
@@ -463,10 +460,6 @@ export async function getUsernameSuggestions(globalName: string, target: Instanc
 		logger.error('Failed to fetch username suggestions', error);
 		throw error;
 	}
-}
-
-interface UsernameAvailabilityResponse {
-	available: boolean;
 }
 
 export async function checkUsernameAvailability(

@@ -7,6 +7,11 @@ import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAut
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import memeStyles from '@app/features/channel/components/MemesPicker.module.css';
+import {
+	filterMemesByContentType,
+	formatDuration,
+	getFileExtension,
+} from '@app/features/channel/components/pickers/memes/MediaFormat';
 import {PickerEmptyState} from '@app/features/channel/components/shared/PickerEmptyState';
 import {PickerSearchInput} from '@app/features/channel/components/shared/PickerSearchInput';
 import * as FavoriteMemeCommands from '@app/features/expressions/commands/FavoriteMemeCommands';
@@ -29,7 +34,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {MenuBottomSheet, type MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {formatDuration as formatDurationBase} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GifIcon, ImageIcon, MusicNoteIcon, SmileySadIcon, VideoCameraIcon} from '@phosphor-icons/react';
@@ -106,18 +110,6 @@ interface FilterOption {
 	icon?: React.ReactNode;
 }
 
-const formatDuration = (seconds: number | null | undefined, locale: string): string => {
-	if (!seconds || seconds <= 0) return formatDurationBase(0, locale);
-	return formatDurationBase(seconds, locale);
-};
-const getFileExtension = (filename: string, contentType: string): string => {
-	const extension = filename.split('.').pop()?.toUpperCase();
-	if (extension && extension.length <= 4) {
-		return extension;
-	}
-	const typeMatch = contentType.match(/\/([^;]+)/);
-	return typeMatch?.[1]?.toUpperCase() || 'FILE';
-};
 const GifIndicator = observer(() => (
 	<div className={memeStyles.gifBadge} aria-hidden="true" data-flx="channel.mobile-memes-picker.gif-indicator.div">
 		GIF
@@ -191,24 +183,7 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 		scrollerRef.current?.scrollTo({to: 0, animate: false});
 	}, []);
 	const filteredMemes = useMemo(() => {
-		let memes = [...favoriteMemes];
-		if (state.selectedFilter !== 'all') {
-			memes = memes.filter((meme) => {
-				const contentType = meme.contentType.toLowerCase();
-				switch (state.selectedFilter) {
-					case 'image':
-						return contentType.startsWith('image/') && !contentType.includes('gif') && !meme.isGifv;
-					case 'video':
-						return contentType.startsWith('video/') && !meme.isGifv;
-					case 'audio':
-						return contentType.startsWith('audio/');
-					case 'gif':
-						return contentType.includes('gif') || meme.isGifv;
-					default:
-						return true;
-				}
-			});
-		}
+		let memes = filterMemesByContentType(favoriteMemes, state.selectedFilter);
 		if (state.searchTerm) {
 			memes = matchSorter(memes, state.searchTerm, {
 				keys: ['name', 'altText', 'filename', 'tags'],

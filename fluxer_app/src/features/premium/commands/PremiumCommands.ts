@@ -12,14 +12,11 @@ import type {
 	PriceIdsResponse,
 	SelfServeRefundResponse,
 	SwitchToListPriceResponse,
+	UrlResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 
 const logger = new Logger('Premium');
 export type PriceIds = PriceIdsResponse;
-
-interface UrlResponse {
-	url: string;
-}
 
 interface PremiumPerksDisabledRequest {
 	disabled: boolean;

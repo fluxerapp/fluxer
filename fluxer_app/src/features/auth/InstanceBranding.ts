@@ -9,7 +9,7 @@ type BrandingSnapshot = Pick<
 
 const ASSET_PROTOCOLS: ReadonlySet<string> = new Set(['https:', 'http:']);
 
-function originOf(value: string | null | undefined): string | null {
+export function originOf(value: string | null | undefined): string | null {
 	if (value == null || value.length === 0) {
 		return null;
 	}

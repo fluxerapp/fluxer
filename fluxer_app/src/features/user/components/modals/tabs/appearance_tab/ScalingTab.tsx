@@ -8,7 +8,7 @@ import Accessibility, {
 } from '@app/features/accessibility/state/Accessibility';
 import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
+import {type ComboboxOption, resolveNearestNumericOption} from '@app/features/ui/components/form/FormCombobox';
 import {Slider} from '@app/features/ui/components/Slider';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {formatRoundedPercentage, roundPercentage} from '@app/features/ui/utils/PercentageFormatting';
@@ -52,19 +52,6 @@ const getNearestFontSize = (value: number): number => {
 	return nearest;
 };
 
-const resolveFontSizeInput = (
-	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined => {
-	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	return options.reduce((nearest, option) =>
-		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
-	).value;
-};
-
 function canResetFontSize(): boolean {
 	return canResetSliderValue(Accessibility.fontSize, DEFAULT_FONT_SIZE);
 }
@@ -104,7 +91,7 @@ export const FontSizeTabContent: React.FC = observer(() => {
 			value={selectedFontSize}
 			options={options}
 			onChange={(value) => AccessibilityCommands.update({fontSize: value})}
-			autoSelectValueFromInput={resolveFontSizeInput}
+			autoSelectValueFromInput={resolveNearestNumericOption}
 			controlWidth="small"
 			menuMinWidth={128}
 			aria-label={i18n._(CHAT_FONT_SIZE_DESCRIPTOR)}

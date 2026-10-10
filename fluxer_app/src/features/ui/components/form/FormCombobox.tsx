@@ -23,6 +23,19 @@ export interface ComboboxOption<V extends Primitive = string> {
 	isDisabled?: boolean;
 }
 
+export function resolveNearestNumericOption(
+	inputValue: string,
+	options: ReadonlyArray<ComboboxOption<number>>,
+): number | undefined {
+	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
+	if (!numericMatch) return undefined;
+	const parsedValue = Number(numericMatch[1]);
+	if (!Number.isFinite(parsedValue)) return undefined;
+	return options.reduce((nearest, option) =>
+		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
+	).value;
+}
+
 export interface ComboboxFilterOption<O> {
 	label: string;
 	value: string;

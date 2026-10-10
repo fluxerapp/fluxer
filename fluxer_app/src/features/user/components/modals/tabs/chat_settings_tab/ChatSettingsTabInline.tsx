@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import styles from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.module.css';
 import {InputTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
 import {DisplayTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/DisplayTab';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';

@@ -90,7 +90,7 @@ function getCodecLabel(mimeType: string | undefined): string | null {
 	return mimeType.replace(/^video\//i, '').toUpperCase();
 }
 
-function getVideoCodecFromMimeType(mimeType: string | undefined): VideoCodec | null {
+export function getVideoCodecFromMimeType(mimeType: string | undefined): VideoCodec | null {
 	const lower = mimeType?.toLowerCase();
 	if (!lower?.startsWith('video/')) return null;
 	const codec = lower.slice('video/'.length);

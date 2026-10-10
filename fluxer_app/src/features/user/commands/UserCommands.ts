@@ -18,7 +18,11 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
 	BackupCode,
+	EmailChangeRequestNewResponse,
+	EmailChangeVerifyOriginalResponse,
 	PasswordChangeCompleteResponse,
+	PasswordChangeStartResponse,
+	PasswordChangeVerifyResponse,
 	UserPasswordUpdateResponse,
 	UserPrivate,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -53,29 +57,8 @@ interface EmailChangeStartResponse {
 	resend_available_at?: string | null;
 }
 
-interface EmailChangeVerifyOriginalResponse {
-	original_proof: string;
-}
-
-interface EmailChangeRequestNewResponse {
-	ticket: string;
-	new_email: string;
-	new_code_expires_at: string;
-	resend_available_at: string | null;
-}
-
 interface EmailChangeVerifyNewResponse {
 	email_token: string;
-}
-
-interface PasswordChangeStartResponse {
-	ticket: string;
-	code_expires_at: string;
-	resend_available_at: string | null;
-}
-
-interface PasswordChangeVerifyResponse {
-	verification_proof: string;
 }
 
 type UserUpdatePayload = Partial<UserPrivate> & {
