@@ -1169,6 +1169,43 @@ pub async fn limit_config_post(
             );
             return redirect_back_with_flash(base, "/limit-config", flash, secure_cookies);
         }
+        "reset" => {
+            let rule = aq
+                .rule
+                .as_deref()
+                .and_then(clean_string)
+                .and_then(|rule_id| {
+                    limit_config
+                        .rules
+                        .iter_mut()
+                        .find(|rule| rule.id == rule_id)
+                });
+            let Some(rule) = rule else {
+                return redirect_back_with_flash(
+                    base,
+                    "/limit-config",
+                    FlashData::error("Rule not found"),
+                    secure_cookies,
+                );
+            };
+            let Some(defaults) = current.defaults.get(&rule.id) else {
+                return redirect_back_with_flash(
+                    base,
+                    "/limit-config",
+                    FlashData::error("This rule has no defaults to reset to"),
+                    secure_cookies,
+                );
+            };
+            rule.limits = defaults.clone();
+            let request = LimitConfigUpdateRequest { limit_config };
+            let result = client.update_limit_config(&request).await;
+            let flash = limit_config_result(
+                result,
+                "Limit rule reset to defaults",
+                "Failed to reset limit rule",
+            );
+            return redirect_back_with_flash(base, "/limit-config", flash, secure_cookies);
+        }
         "delete" => {
             let rule_id = match aq.rule.as_deref().and_then(clean_string) {
                 Some(rule_id) => rule_id,

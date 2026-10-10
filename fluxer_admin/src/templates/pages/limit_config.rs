@@ -8,7 +8,10 @@ use crate::{
     middleware::auth::AuthContext,
     templates::{
         components::{
-            form::{FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, submit_button},
+            form::{
+                FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, secondary_button,
+                submit_button,
+            },
             page_container::{card_with_header, page_header},
             tooltip,
         },
@@ -81,7 +84,7 @@ fn render_limit_page(
         div class="space-y-6" {
             (rule_tabs(config, &rules, active_rule_id, can_update))
             @if let Some(rule) = active_rule {
-                (rule_header(config, csrf_token, rule, can_update))
+                (rule_header(&config.base_path, csrf_token, rule, can_update, response.defaults.contains_key(&rule.id)))
                 (rule_editor(config, csrf_token, response, rule, can_update))
             } @else {
                 div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm" {
@@ -151,11 +154,18 @@ fn rule_tabs(
 }
 
 fn rule_header(
-    config: &AdminConfig,
+    base: &str,
     csrf_token: &str,
     rule: &LimitRule,
     can_update: bool,
+    has_defaults: bool,
 ) -> Markup {
+    let can_reset = can_update
+        && has_defaults
+        && rule
+            .modified_fields
+            .as_ref()
+            .is_some_and(|fields| !fields.is_empty());
     card_with_header(
         "",
         html! {
@@ -176,11 +186,20 @@ fn rule_header(
                         }
                     }
                 }
-                @if can_update && rule.id != "default" {
-                    form method="post"
-                        action={(config.base_path) "/limit-config?action=delete&rule=" (rule.id)} {
-                        (csrf_input(csrf_token))
-                        (danger_button("Delete Rule"))
+                div class="flex flex-wrap gap-2" {
+                    @if can_reset {
+                        form method="post"
+                            action={(base) "/limit-config?action=reset&rule=" (rule.id)} {
+                            (csrf_input(csrf_token))
+                            (secondary_button("Reset to Defaults"))
+                        }
+                    }
+                    @if can_update && rule.id != "default" {
+                        form method="post"
+                            action={(base) "/limit-config?action=delete&rule=" (rule.id)} {
+                            (csrf_input(csrf_token))
+                            (danger_button("Delete Rule"))
+                        }
                     }
                 }
             }

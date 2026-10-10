@@ -151,6 +151,10 @@ pub fn danger_button(label: &str) -> Markup {
     button_markup(label, "submit", DANGER_BUTTON_CLASS)
 }
 
+pub fn secondary_button(label: &str) -> Markup {
+    button_markup(label, "submit", SECONDARY_BUTTON_CLASS)
+}
+
 pub fn form_field_group(
     label: &str,
     name: &str,

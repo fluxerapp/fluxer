@@ -226,6 +226,60 @@ async fn instance_config_legal_form_round_trips_the_guidelines_url() {
 }
 
 #[tokio::test]
+async fn limit_rule_reset_form_sends_the_rule_defaults() {
+    let updates = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = updates.clone();
+    let edited = || {
+        let mut config = limit_config();
+        config["limit_config"]["rules"][0]["limits"]["maxGuilds"] = json!(150);
+        config["limit_config"]["rules"][0]["modifiedFields"] = json!(["maxGuilds"]);
+        config
+    };
+    let api = Router::new()
+        .route(
+            "/admin/limit-config",
+            routing::get(move || async move { json_response(edited()) }).put(
+                move |Json(body): Json<Value>| {
+                    let sink = sink.clone();
+                    async move {
+                        sink.lock().unwrap().push(body);
+                        json_response(limit_config())
+                    }
+                },
+            ),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/limit-config", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("limit config page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(
+        &page,
+        "/limit-config?action=reset&amp;rule=default",
+        &csrf_token,
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let (status, _, body) = post_form_with_headers(
+        &app,
+        "/limit-config?action=reset&rule=default",
+        &[("Cookie", &cookie)],
+        &format!("_csrf={csrf_token}"),
+    )
+    .await;
+    assert!(
+        status.is_redirection() || status.is_success(),
+        "{status} {body}"
+    );
+    assert_eq!(
+        *updates.lock().unwrap(),
+        vec![json!({"limit_config": {
+            "traitDefinitions": [],
+            "rules": [{"id": "default", "limits": {"maxGuilds": 100}}]
+        }})]
+    );
+}
+
+#[tokio::test]
 async fn report_resolve_form_sends_the_chosen_resolution_and_refuses_none() {
     let received = Arc::new(Mutex::new(Vec::<Value>::new()));
     let sink = received.clone();
