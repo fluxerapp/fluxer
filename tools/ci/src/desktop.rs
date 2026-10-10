@@ -2150,6 +2150,13 @@ fn desktop_dictionary_source_root() -> PathBuf {
 }
 
 fn desktop_dictionary_sources() -> Result<Vec<(String, PathBuf)>> {
+    run_command(
+        CommandSpec::new("sh").arg(
+            workdir()
+                .join("fluxer_static")
+                .join("fetch-spellcheck-dictionaries.sh"),
+        ),
+    )?;
     let source_root = desktop_dictionary_source_root();
     ensure!(
         source_root.is_dir(),
