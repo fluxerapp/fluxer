@@ -18,6 +18,7 @@ const RICH_CONTENT = [
 	'```',
 	'- first item',
 	'- second item with <#1500157798955385456>',
+	'- [x] third item',
 	'| name | value |',
 	'| --- | ---: |',
 	'| one | 1 |',

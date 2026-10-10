@@ -20,6 +20,7 @@ export const ParserFlags = {
 	ALLOW_TABLES: 1 << 14,
 	ALLOW_ALERTS: 1 << 15,
 	ALLOW_AUTOLINKS: 1 << 16,
+	ALLOW_CHECKBOX: 1 << 17,
 } as const;
 
 export type ParserFlags = ValueOf<typeof ParserFlags>;

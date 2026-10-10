@@ -47,6 +47,7 @@ export interface ListNode extends BaseNode {
 export interface ListItem {
 	children: Array<Node>;
 	ordinal?: number;
+	checked?: boolean;
 }
 
 export interface CodeBlockNode extends BaseNode {

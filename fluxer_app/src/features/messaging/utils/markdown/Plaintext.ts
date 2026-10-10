@@ -173,12 +173,20 @@ function renderNodeToPlaintext(node: Node, options: PlaintextRenderOptions): str
 			return listNode.items
 				.map((item: ListItem, index: number) => {
 					const content = renderNodesToPlaintext(item.children, options).trim();
+					let checkbox = '';
+					if (item.checked !== undefined) {
+						if (item.checked) {
+							checkbox = '[x] ';
+						} else {
+							checkbox = '[ ] ';
+						}
+					}
 					if (listNode.ordered) {
 						const prefix = `${startOrdinal + index}. `;
-						return `${prefix}${indentContinuationLines(content, prefix.length)}`;
+						return `${prefix}${checkbox}${indentContinuationLines(content, prefix.length)}`;
 					}
 					const prefix = options.preserveMarkdown ? '- ' : '• ';
-					return `${prefix}${indentContinuationLines(content, prefix.length)}`;
+					return `${prefix}${checkbox}${indentContinuationLines(content, prefix.length)}`;
 				})
 				.join('\n');
 		}

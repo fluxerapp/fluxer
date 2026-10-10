@@ -215,8 +215,17 @@ fn render_list(ordered: bool, items: &[ListItem], options: &PlaintextOptions) ->
             } else {
                 "\u{2022} ".to_owned()
             };
+            let checkbox = if let Some(checked) = item.checked {
+                if checked {
+                    "[x] "
+                } else {
+                    "[ ] "
+                }
+            } else {
+                ""
+            };
             format!(
-                "{prefix}{}",
+                "{prefix}{checkbox}{}",
                 indent_continuation_lines(&content, prefix.len())
             )
         })

@@ -51,6 +51,7 @@ interface CheckboxBaseProps {
 	'aria-label'?: string;
 	'aria-describedby'?: string;
 	'aria-hidden'?: boolean;
+	taskList?: true;
 }
 
 type CheckboxWithLabelProps = CheckboxBaseProps & {
@@ -64,7 +65,10 @@ type CheckboxHiddenProps = CheckboxBaseProps & {
 	children?: undefined;
 	'aria-hidden': true;
 };
-type CheckboxProps = CheckboxWithLabelProps | CheckboxAccessibleProps | CheckboxHiddenProps;
+type CheckboxTaskList = CheckboxHiddenProps & {
+	taskList: true;
+}
+type CheckboxProps = CheckboxWithLabelProps | CheckboxAccessibleProps | CheckboxHiddenProps | CheckboxTaskList;
 
 export const Checkbox: React.FC<CheckboxProps> = observer(
 	({
@@ -85,6 +89,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 		'aria-label': ariaLabel,
 		'aria-describedby': ariaDescribedBy,
 		'aria-hidden': ariaHidden,
+		taskList
 	}) => {
 		const rootRef = useRef<React.ComponentRef<typeof CheckboxPrimitive.Root>>(null);
 		const checkboxRef = useRef<HTMLLabelElement>(null);
@@ -181,7 +186,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 			return (
 				<span
 					className={clsx(
-						styles.checkboxWrapper,
+						taskList ? styles.taskListCheck : styles.checkboxWrapper,
 						disabled && (variant === 'menu' ? styles.menuDisabled : styles.disabled),
 						className,
 					)}
