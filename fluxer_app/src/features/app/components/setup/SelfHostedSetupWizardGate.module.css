@@ -35,8 +35,13 @@
 	padding: 1.25rem;
 }
 
+.contentScroller > .contentFrame {
+	flex: 1 0 auto;
+}
+
 .content {
 	display: flex;
+	flex: 1 0 auto;
 	flex-direction: column;
 	justify-content: center;
 	min-height: min(33rem, calc(100svh - 12.5rem));

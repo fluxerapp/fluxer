@@ -1004,7 +1004,11 @@ export const SelfHostedSetupWizardGate = observer(() => {
 									hideCloseButton
 									data-flx="app.self-hosted-setup-wizard-gate.header"
 								/>
-								<Modal.Content className={styles.contentScroller} data-flx="app.self-hosted-setup-wizard-gate.content">
+								<Modal.Content
+									className={styles.contentScroller}
+									contentClassName={styles.contentFrame}
+									data-flx="app.self-hosted-setup-wizard-gate.content"
+								>
 									<div className={styles.content} data-flx="app.self-hosted-setup-wizard-gate.content-inner">
 										{loadError ? (
 											<div className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.load-error-wrap">
