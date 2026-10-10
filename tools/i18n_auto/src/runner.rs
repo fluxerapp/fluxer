@@ -15,8 +15,8 @@ use crate::config::{
     DEFAULT_OPENROUTER_BASE_URL, DEFAULT_OPENROUTER_FALLBACK_MODELS,
     DEFAULT_OPENROUTER_HTTP_REFERER, DEFAULT_OPENROUTER_MODEL, DEFAULT_OPENROUTER_PROVIDER_SORT,
     DEFAULT_PROGRESS_INTERVAL_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS, DEFAULT_STRING_CONCURRENCY,
-    EnvOverlay, SOURCE_LOCALE, default_app_dir, env_value, is_auto_i18n_unchanged_comment,
-    locales_dir, positive_float_env, positive_int_env, trim_trailing_slash,
+    EnvOverlay, SOURCE_LOCALE, default_app_dir, env_value, locales_dir, positive_float_env,
+    positive_int_env, trim_trailing_slash,
 };
 use crate::json_catalog::{
     StaticJsonCatalogConfig, read_static_json_entries, rebuild_static_json_allow_replacing,
@@ -594,10 +594,6 @@ fn should_translate_entry_with_reviewed_unchanged(
     if args.refresh_source_equal
         && refreshes_source_equal_locale(locale, args)
         && entry.msgstr == entry.msgid
-        && !entry
-            .comments
-            .iter()
-            .any(|comment| is_auto_i18n_unchanged_comment(comment))
         && !reviewed_unchanged
     {
         return !should_keep_unchanged(&entry.msgid, locale);

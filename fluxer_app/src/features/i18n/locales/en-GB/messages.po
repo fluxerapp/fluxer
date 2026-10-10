@@ -914,7 +914,6 @@ msgstr "{altText} — light theme preview"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline on installs that cannot update themselves. {version} is the new version number.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} {version} is available."
@@ -945,13 +944,11 @@ msgstr "{appName} could not load its app files. Quit and open it again."
 msgid "{appName} could not read one of its app files. Quit and open it again."
 msgstr "{appName} could not read one of its app files. Quit and open it again."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline when a manual update check could not reach the update server.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} couldn't check for updates."
 msgstr "{appName} couldn't check for updates."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline when a desktop update the user started did not complete.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} couldn't finish updating."
@@ -962,19 +959,16 @@ msgstr "{appName} couldn't finish updating."
 msgid "{appName} failed to start"
 msgstr "{appName} failed to start"
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline after a manual update check found nothing newer.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} is up to date."
 msgstr "{appName} is up to date."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} will close, install the update and open again."
 msgstr "{appName} will close, install the update and open again."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} will reload to finish updating."
@@ -1125,7 +1119,6 @@ msgstr "{count, plural, one {# channel follows} other {# channels follow}} this 
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# community found} other {# communities found}}"
 
-# auto-i18n: reviewed unchanged
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
@@ -1198,7 +1191,6 @@ msgstr "{count, plural, one {# other} other {# others}}"
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# participant in call} other {# participants in call}}"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "{count, plural, one {# passkey} other {# passkeys}}"
@@ -2712,7 +2704,6 @@ msgstr "A default emoji. You can use it anywhere on {productName}."
 msgid "A description is required."
 msgstr "A description is required."
 
-# auto-i18n: reviewed unchanged
 #. Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "A direct connection couldn't be made. You can't hear or see each other."
@@ -2792,7 +2783,6 @@ msgstr "a rich embed or link preview (not an uploaded file)"
 msgid "A separate profile for each community"
 msgstr "A separate profile for each community"
 
-# auto-i18n: reviewed unchanged
 #. Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "A standard call goes through a server and works for everyone."
@@ -3547,12 +3537,10 @@ msgstr "Add your own search engines with a custom URL pattern. Use <0>{query}</0
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Added {createdDate}, last used {lastUsedDate}"
 msgstr "Added {createdDate}, last used {lastUsedDate}"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Added {createdDate}, never used"
 msgstr "Added {createdDate}, never used"
@@ -4103,7 +4091,6 @@ msgstr "Allowed redirects"
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
 msgstr "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
 
-# auto-i18n: reviewed unchanged
 #. Description under the mature content switch in the edit group settings. Only the group owner sees it.
 #: src/features/channel/components/modals/GroupMatureContentSwitch.tsx
 msgid "Allows media flagged as sensitive in this group. Everyone in the group must be 18 or older. Each member still sees it according to their own sensitive content settings."
@@ -4169,7 +4156,6 @@ msgstr "Already redeemed"
 msgid "Already set to cancel"
 msgstr "Already set to cancel"
 
-# auto-i18n: reviewed unchanged
 #. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Also change the communities below to match"
@@ -4313,7 +4299,6 @@ msgstr "An unexpected error occurred"
 msgid "An unexpected error occurred. Try again."
 msgstr "An unexpected error occurred. Try again."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog headline after a manual update check found an update.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "An update for {appName} is available."
@@ -4634,13 +4619,11 @@ msgstr "Anyone can request an account, but an administrator must approve it."
 msgid "Anyone in my communities"
 msgstr "Anyone in my communities"
 
-# auto-i18n: reviewed unchanged
 #. Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
 msgstr "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
 msgstr "Anyone who finds you can send a request. Turn this off to pick groups below."
@@ -4791,12 +4774,10 @@ msgstr "Applications & bots"
 msgid "Applies to"
 msgstr "Applies to"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Applies to bots in communities you join from now on. You can also change it for each community."
 msgstr "Applies to bots in communities you join from now on. You can also change it for each community."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Applies to communities you join from now on. You can also change it for each community."
 msgstr "Applies to communities you join from now on. You can also change it for each community."
@@ -4838,7 +4819,6 @@ msgstr "Approved"
 msgid "Apps"
 msgstr "Apps"
 
-# auto-i18n: reviewed unchanged
 #. Security settings card title for third-party app access and signed-in devices.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Apps and devices"
@@ -4993,7 +4973,6 @@ msgstr "Ask before starting calls"
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Ask for a passkey after your password when you sign in"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: description under the two-factor authentication card title.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Ask for a second step after your password when you sign in."
@@ -5126,13 +5105,11 @@ msgstr "Audio"
 msgid "Audio & video"
 msgstr "Audio & video"
 
-# auto-i18n: reviewed unchanged
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
 msgstr "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
 
-# auto-i18n: reviewed unchanged
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants."
@@ -6639,7 +6616,6 @@ msgstr "Call privacy"
 msgid "Calls"
 msgstr "Calls"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx
 msgid "Calls you allow still come through, but they don't ring."
 msgstr "Calls you allow still come through, but they don't ring."
@@ -6755,7 +6731,6 @@ msgstr "Cameras and virtual capture devices are selected here in {productName}, 
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Cameras are off above {voiceChannelCameraUserLimit} participants"
 
-# auto-i18n: reviewed unchanged
 #. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Can message you"
@@ -7792,7 +7767,6 @@ msgstr "Check your inbox at {emailAddress} for the authorisation link."
 msgid "Check your inbox for a verification email."
 msgstr "Check your inbox for a verification email."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body under the headline saying the update check failed.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Check your internet connection and try again."
@@ -8079,7 +8053,6 @@ msgstr "Choose what {clientLabel} can do in your community. Uncheck any permissi
 msgid "Choose what friends see in their active now panel"
 msgstr "Choose what friends see in their active now panel"
 
-# auto-i18n: reviewed unchanged
 #. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
 msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
@@ -8116,7 +8089,6 @@ msgstr "Choose where {PRODUCT_NAME} should send images for reverse image search.
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 
-# auto-i18n: reviewed unchanged
 #. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
@@ -8147,7 +8119,6 @@ msgstr "Choose which search engine is used by default when searching selected te
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Choose which translator is used by default when translating selected text."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx
 msgid "Choose who can add you to a group chat without asking first."
 msgstr "Choose who can add you to a group chat without asking first."
@@ -8161,12 +8132,10 @@ msgstr "Choose who can see this connection on your profile."
 msgid "Choose who can see your profile details"
 msgstr "Choose who can see your profile details"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Choose who can send you a friend request."
 msgstr "Choose who can send you a friend request."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx
 msgid "Choose who can start a call with you."
 msgstr "Choose who can start a call with you."
@@ -8822,7 +8791,6 @@ msgstr "Codec"
 msgid "Codes"
 msgstr "Codes"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Codes from your authenticator app are your second step when you sign in."
 msgstr "Codes from your authenticator app are your second step when you sign in."
@@ -9027,13 +8995,11 @@ msgstr "Communities you can join"
 msgid "Communities you join from now on will use this, and the communities below change to match."
 msgstr "Communities you join from now on will use this, and the communities below will change to match."
 
-# auto-i18n: reviewed unchanged
 #. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Communities you join from now on will use this."
 msgstr "Communities you join from now on will use this."
 
-# auto-i18n: reviewed unchanged
 #. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Communities you join from now on will use this. Your current communities keep their settings."
@@ -10381,7 +10347,6 @@ msgstr "Couldn't complete sign-in. Try again."
 msgid "Couldn't connect to {domain}. Try again."
 msgstr "Couldn't connect to {domain}. Try again."
 
-# auto-i18n: reviewed unchanged
 #. Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Couldn't connect to {names}"
@@ -10519,7 +10484,6 @@ msgstr "Couldn't ignore the friend request. Try again."
 msgid "Couldn't join community"
 msgstr "Couldn't join community"
 
-# auto-i18n: reviewed unchanged
 #. Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Couldn't join the P2P call. Try again."
@@ -11307,7 +11271,6 @@ msgstr "Ctrl"
 msgid "Currency"
 msgstr "Currency"
 
-# auto-i18n: reviewed unchanged
 #. Small tag next to the privacy setup option that matches the current setting.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Current"
@@ -12242,7 +12205,6 @@ msgstr "Delete other members' messages. Pinning is controlled separately."
 msgid "Delete passkey"
 msgstr "Delete passkey"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Delete passkey {passkeyName}"
@@ -12759,7 +12721,6 @@ msgstr "Different sizes & member counts"
 msgid "Dim strikethrough text"
 msgstr "Dim strikethrough text"
 
-# auto-i18n: reviewed unchanged
 #. Tooltip on the P2P indicator of a peer-to-peer call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Direct connection. Media is encrypted between participants."
@@ -12904,7 +12865,6 @@ msgstr "Disable hardware acceleration?"
 msgid "Disable mobile push notifications"
 msgstr "Disable mobile push notifications"
 
-# auto-i18n: reviewed unchanged
 #. Accessible name for the group of disable and delete account actions in account settings.
 #: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx
 msgid "Disable or delete your account"
@@ -13560,7 +13520,6 @@ msgstr "Download source maps"
 msgid "Download source maps so stack traces and the developer tools point at real source"
 msgstr "Download source maps so stack traces and the developer tools point at real source"
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body under the headline announcing a new version that must be downloaded by hand.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Download the new version to update {appName}."
@@ -15057,7 +15016,6 @@ msgstr "Every community that follows this channel gets a copy. If you edit or de
 msgid "Everyone"
 msgstr "Everyone"
 
-# auto-i18n: reviewed unchanged
 #. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
@@ -16604,13 +16562,11 @@ msgstr "Friends and selected groups can call you"
 msgid "Friends and small communities only"
 msgstr "Friends and small communities only"
 
-# auto-i18n: reviewed unchanged
 #. Reassurance in the privacy setup modal that friends can always send direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Friends can always message you."
 msgstr "Friends can always message you."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Friends can always message you. These settings cover people and bots you only share a community with."
@@ -16633,7 +16589,6 @@ msgstr "Friends only"
 msgid "Friends sections"
 msgstr "Friends sections"
 
-# auto-i18n: reviewed unchanged
 #. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx
 msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
@@ -17462,7 +17417,6 @@ msgstr "Group chat adds: friends only"
 msgid "Group chat adds: nobody"
 msgstr "Group chat adds: nobody"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx
 msgid "Group chats"
 msgstr "Group chats"
@@ -19445,7 +19399,6 @@ msgstr "Jitter:"
 msgid "Join"
 msgstr "Join"
 
-# auto-i18n: reviewed unchanged
 #. Primary button in the dialog shown before joining a peer-to-peer call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgctxt "voice-p2p-consent"
@@ -19476,7 +19429,6 @@ msgstr "Join a community"
 msgid "Join a community to unlock stickers."
 msgstr "Join a community to unlock stickers."
 
-# auto-i18n: reviewed unchanged
 #. Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Join a P2P call?"
@@ -19520,7 +19472,6 @@ msgstr "Join method"
 msgid "Join on this device"
 msgstr "Join on this device"
 
-# auto-i18n: reviewed unchanged
 #. Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Join P2P calls without asking"
@@ -19759,7 +19710,6 @@ msgstr "Keep free and premium tiers. You can customise the tiers, sell premium t
 msgid "Keep grace period"
 msgstr "Keep grace period"
 
-# auto-i18n: reviewed unchanged
 #. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Keep my current settings"
@@ -20764,7 +20714,6 @@ msgstr "Louisiana"
 msgid "Low"
 msgstr "Low"
 
-# auto-i18n: reviewed unchanged
 #. Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Lower latency."
@@ -20904,7 +20853,6 @@ msgstr "Manage community"
 msgid "Manage community features"
 msgstr "Manage community features"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: accessible name for the button that opens the signed-in devices list.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Manage devices"
@@ -21349,13 +21297,11 @@ msgstr "Media display"
 msgid "Media filter"
 msgstr "Media filter"
 
-# auto-i18n: reviewed unchanged
 #. Helper text under "Messages in community channels" in the sensitive content settings.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
 msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
 msgstr "Media in channels that are not marked 18+. Channels marked 18+ always show it."
 
-# auto-i18n: reviewed unchanged
 #. Helper text under "Direct messages from others" in the sensitive content settings.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
 msgid "Media in group chats and in direct messages from people who aren't your friends."
@@ -21413,7 +21359,6 @@ msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "Media stop"
 
-# auto-i18n: reviewed unchanged
 #. Helper text under "Direct messages from friends" in the sensitive content settings.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
 msgid "Media your friends send you in direct messages."
@@ -23695,7 +23640,6 @@ msgstr "No optional services are available on this instance. You can skip this s
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "No part of {query} could be applied. Fix the underlined value or add something to search for."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
 msgstr "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
@@ -24188,7 +24132,6 @@ msgstr "Nothing to refund"
 msgid "Nothing to search for"
 msgstr "Nothing to search for"
 
-# auto-i18n: reviewed unchanged
 #. Summary in the privacy setup modal when the user keeps the current setting.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Nothing will change. This just confirms your settings."
@@ -25315,13 +25258,11 @@ msgstr "Other active threads"
 msgid "Other devices"
 msgstr "Other devices"
 
-# auto-i18n: reviewed unchanged
 #. Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Other participants can see your IP address."
 msgstr "Other participants can see your IP address."
 
-# auto-i18n: reviewed unchanged
 #. Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Other participants in a P2P call can see your IP address."
@@ -25442,19 +25383,16 @@ msgstr "Ownership could not be transferred to <0>{username}</0> at this time."
 msgid "Ownership transferred"
 msgstr "Ownership transferred"
 
-# auto-i18n: reviewed unchanged
 #. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P"
 msgstr "P2P"
 
-# auto-i18n: reviewed unchanged
 #. Error shown when the server refuses to start or join a peer-to-peer call.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P calls are unavailable right now."
 msgstr "P2P calls are unavailable right now."
 
-# auto-i18n: reviewed unchanged
 #. Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "P2P calls only"
@@ -25789,13 +25727,11 @@ msgstr "Pennsylvania"
 msgid "People"
 msgstr "People"
 
-# auto-i18n: reviewed unchanged
 #. Describes the current setting in the privacy setup modal when community members can send direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "People in your communities can message you without being friends."
 msgstr "People in your communities can message you without being friends."
 
-# auto-i18n: reviewed unchanged
 #. Describes the current setting in the privacy setup modal when only friends can send direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "People in your communities need to be your friend before they can message you."
@@ -25821,12 +25757,10 @@ msgstr "People sign in with an email address and password. Password resets and v
 msgid "People who share a community with you can message you directly."
 msgstr "People who share a community with you can message you directly."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "People who share a community with you."
 msgstr "People who share a community with you."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "People who share at least one friend with you."
 msgstr "People who share at least one friend with you."
@@ -27489,7 +27423,6 @@ msgstr "Reason: {0}"
 msgid "Receipt"
 msgstr "Receipt"
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx
 msgid "Receive calls silently"
 msgstr "Receive calls silently"
@@ -28404,7 +28337,6 @@ msgstr "Rename channel form"
 msgid "Rename emoji"
 msgstr "Rename emoji"
 
-# auto-i18n: reviewed unchanged
 #. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Rename passkey {passkeyName}"
@@ -29212,7 +29144,6 @@ msgstr "Review and confirm"
 msgid "Review apps that can access your account."
 msgstr "Review apps that can access your account."
 
-# auto-i18n: reviewed unchanged
 #. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "Review needed"
@@ -29252,7 +29183,6 @@ msgstr "Review these files and try again with smaller or simpler images."
 msgid "Review what this app is asking for before you continue."
 msgstr "Review what this app is asking for before you continue."
 
-# auto-i18n: reviewed unchanged
 #. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Review who can message you"
@@ -29363,7 +29293,6 @@ msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Right mouse button"
 
-# auto-i18n: reviewed unchanged
 #. Heading of the box in the privacy setup modal that describes the current direct message setting.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Right now"
@@ -30455,7 +30384,6 @@ msgstr "See this channel. Denying it for {everyoneMention} makes the channel pri
 msgid "Seek preview"
 msgstr "Seek preview"
 
-# auto-i18n: reviewed unchanged
 #. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
 msgid "Segoe UI"
@@ -31884,7 +31812,6 @@ msgstr "Show suppress embeds button"
 msgid "Show system tray icon"
 msgstr "Show system tray icon"
 
-# auto-i18n: reviewed unchanged
 #. Settings search entry description. One-line summary of what the setting controls. Fluxer Sans is a font name and must not be translated.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
@@ -32114,7 +32041,6 @@ msgstr "Sign-in flow"
 msgid "Sign-in method"
 msgstr "Sign-in method"
 
-# auto-i18n: reviewed unchanged
 #. Accessible name for the group of email, password and recovery kit rows in account settings.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
 msgid "Sign-in methods"
@@ -33141,13 +33067,11 @@ msgstr "Start date must be earlier than end date."
 msgid "Start drag and drop"
 msgstr "Start drag and drop"
 
-# auto-i18n: reviewed unchanged
 #. Primary button in the dialog offering to start a call in peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Start in P2P mode"
 msgstr "Start in P2P mode"
 
-# auto-i18n: reviewed unchanged
 #. Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Start in P2P mode?"
@@ -33177,7 +33101,6 @@ msgstr "Start minimised"
 msgid "Start over"
 msgstr "Start over"
 
-# auto-i18n: reviewed unchanged
 #. Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Start P2P call"
@@ -33197,7 +33120,6 @@ msgstr "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>
 msgid "Start speaking"
 msgstr "Start speaking"
 
-# auto-i18n: reviewed unchanged
 #. Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Start standard call"
@@ -33274,7 +33196,6 @@ msgstr "Status slate"
 msgid "Status:"
 msgstr "Status:"
 
-# auto-i18n: reviewed unchanged
 #. Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Stay"
@@ -33891,7 +33812,6 @@ msgstr "Switch account"
 msgid "Switch accounts"
 msgstr "Switch accounts"
 
-# auto-i18n: reviewed unchanged
 #. Nagbar button that opens the setting for switching the app font back to Fluxer Sans. Fluxer Sans is a font name and must not be translated.
 #: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx
 msgid "Switch back to Fluxer Sans"
@@ -33998,7 +33918,6 @@ msgstr "Switch to previous community or DMs"
 msgid "Switch to single column"
 msgstr "Switch to single column"
 
-# auto-i18n: reviewed unchanged
 #. Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Switch to standard call"
@@ -34294,7 +34213,6 @@ msgstr "Tags help people find posts. You can add up to {count} tags."
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Tags must be 2 to {maxLength} characters and alphanumeric."
 
-# auto-i18n: reviewed unchanged
 #. Explanation at the top of the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
@@ -34500,7 +34418,6 @@ msgstr "Text formatting"
 msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
 msgstr "Text is rendered with greyscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
 
-# auto-i18n: reviewed unchanged
 #. Nagbar message shown once to existing Windows users after the default app font changed to the Windows system font. Fluxer Sans is a font name and must not be translated.
 #: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx
 msgid "Text on Windows now uses the system font. You can switch back to Fluxer Sans in settings."
@@ -34911,7 +34828,6 @@ msgstr "The system removed the role {role} from {target}"
 msgid "The update did not download or install. Try again or download it yourself."
 msgstr "The update didn't download or install. Try again or download it yourself."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body shown when the update download is slow and still running in the background.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update is still downloading. Try again in a few minutes."
@@ -36745,7 +36661,6 @@ msgstr "Turn off anything you're not comfortable with. Some features may stop wo
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Turn off audio sharing for this source or try again in a moment."
 
-# auto-i18n: reviewed unchanged
 #. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "Turn off authenticator app"
@@ -37805,7 +37720,6 @@ msgstr "Unverified email"
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 
-# auto-i18n: reviewed unchanged
 #. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
@@ -37826,7 +37740,6 @@ msgstr "Up to 4K/60fps"
 msgid "Up to 720p at 30 FPS"
 msgstr "Up to 720p at 30 FPS"
 
-# auto-i18n: reviewed unchanged
 #. Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Update {appName} now"
@@ -37918,7 +37831,6 @@ msgstr "Updates from this channel will stop arriving here. Messages already deli
 msgid "Updating favorites…"
 msgstr "Updating favourites…"
 
-# auto-i18n: reviewed unchanged
 #. Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is downloading. The app reloads by itself when it is done.
 #: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
 msgid "Updating…"
@@ -38349,7 +38261,6 @@ msgstr "Use external stickers"
 msgid "Use filters or enter keywords to find messages"
 msgstr "Use filters or enter keywords to find messages"
 
-# auto-i18n: reviewed unchanged
 #. Toggle label and settings search entry for showing app text in the Fluxer Sans font instead of the Windows system font. Fluxer Sans is a font name and must not be translated.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Use Fluxer Sans on Windows"
@@ -38608,7 +38519,6 @@ msgstr "User record"
 msgid "User settings"
 msgstr "User settings"
 
-# auto-i18n: reviewed unchanged
 #. Accessible label for the user settings button while the user has not yet reviewed who can message them.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "User settings, privacy review needed"
@@ -41045,7 +40955,6 @@ msgstr "You have unsaved changes."
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "You have unsaved changes. Save or reset before leaving."
 
-# auto-i18n: reviewed unchanged
 #. Native desktop dialog body under the up to date headline. {version} is the installed version number.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "You have version {version}."
@@ -41200,7 +41109,6 @@ msgstr "You need to verify your email to send messages in this community."
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 
-# auto-i18n: reviewed unchanged
 #. Label in the mature content rejected modal for one-to-one direct messages. Preserve {sensitiveContentSettingsPath}; it is a user settings path inserted by code.
 #: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx
 msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
