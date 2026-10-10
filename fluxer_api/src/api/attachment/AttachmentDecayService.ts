@@ -117,7 +117,10 @@ export class AttachmentDecayService {
 		}
 	}
 
-	async reconcile(attachments: Array<AttachmentDecayPayload>): Promise<number> {
+	async reconcile(
+		attachments: Array<AttachmentDecayPayload>,
+		fileExists: (attachment: AttachmentDecayPayload) => Promise<boolean>,
+	): Promise<number> {
 		if (attachments.length === 0) return 0;
 		const config = await this.resolveConfig();
 		if (!config.enabled) return 0;
@@ -145,6 +148,7 @@ export class AttachmentDecayService {
 				continue;
 			}
 			const stillPending = existing != null && existing.expires_at.getTime() > now.getTime();
+			if (!stillPending && !(await fileExists(attachment))) continue;
 			const floor =
 				stillPending && existing.expires_at.getTime() < windowEnd.getTime() ? existing.expires_at : windowEnd;
 			const expiresAt = extendExpiry(floor, decay.expiresAt);

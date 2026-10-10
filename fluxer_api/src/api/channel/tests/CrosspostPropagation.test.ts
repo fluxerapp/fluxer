@@ -713,6 +713,7 @@ describe('Crosspost propagation', () => {
 						queued.push(item);
 					},
 				} as unknown as IAssetDeletionQueue,
+				kvClient: harness.kvProvider,
 				instanceConfigRepository: {
 					async getEffectiveAttachmentDecayConfig() {
 						return {enabled: true};

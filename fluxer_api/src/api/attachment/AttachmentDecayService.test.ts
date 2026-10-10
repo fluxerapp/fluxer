@@ -54,6 +54,14 @@ function createService(config: InstanceAttachmentDecayEffectiveConfig = CONFIG) 
 	return {rows, service: new AttachmentDecayService(repo, async () => config)};
 }
 
+async function fileExists(): Promise<boolean> {
+	return true;
+}
+
+async function fileMissing(): Promise<boolean> {
+	return false;
+}
+
 function seed(rows: Map<AttachmentID, AttachmentDecayRow>, uploadedAt: Date, expiresAt: Date): void {
 	rows.set(ATTACHMENT_ID, {
 		attachment_id: ATTACHMENT_ID,
@@ -83,21 +91,21 @@ describe('AttachmentDecayService.reconcile', () => {
 	it('writes nothing while expiry is off', async () => {
 		const {rows, service} = createService({...CONFIG, enabled: false});
 
-		expect(await service.reconcile([payload(daysFromNow(-10))])).toBe(0);
+		expect(await service.reconcile([payload(daysFromNow(-10))], fileExists)).toBe(0);
 		expect(rows.size).toBe(0);
 	});
 
 	it('gives an untracked attachment the expiry its upload date implies', async () => {
 		const {rows, service} = createService();
 
-		expect(await service.reconcile([payload(daysFromNow(-100))])).toBe(1);
+		expect(await service.reconcile([payload(daysFromNow(-100))], fileExists)).toBe(1);
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(265));
 	});
 
 	it('gives an untracked attachment that is already overdue the renew window', async () => {
 		const {rows, service} = createService();
 
-		await service.reconcile([payload(daysFromNow(-1000))]);
+		await service.reconcile([payload(daysFromNow(-1000))], fileExists);
 
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(30));
 	});
@@ -106,16 +114,40 @@ describe('AttachmentDecayService.reconcile', () => {
 		const {rows, service} = createService();
 		seed(rows, daysFromNow(-1000), daysFromNow(-200));
 
-		await service.reconcile([payload(daysFromNow(-1000))]);
+		await service.reconcile([payload(daysFromNow(-1000))], fileExists);
 
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(30));
+	});
+
+	it('leaves an untracked attachment alone when its file is gone', async () => {
+		const {rows, service} = createService();
+
+		expect(await service.reconcile([payload(daysFromNow(-100))], fileMissing)).toBe(0);
+		expect(rows.size).toBe(0);
+	});
+
+	it('keeps a passed expiry when the file is gone', async () => {
+		const {rows, service} = createService();
+		seed(rows, daysFromNow(-1000), daysFromNow(-200));
+
+		expect(await service.reconcile([payload(daysFromNow(-1000))], fileMissing)).toBe(0);
+		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(-200));
+	});
+
+	it('does not look for the file of an attachment that is still pending', async () => {
+		const {rows, service} = createService({...CONFIG, max_lifetime_days: 730});
+		seed(rows, daysFromNow(-100), daysFromNow(265));
+
+		await service.reconcile([payload(daysFromNow(-100))], fileMissing);
+
+		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(630));
 	});
 
 	it('extends a tracked attachment when the lifetime grows', async () => {
 		const {rows, service} = createService({...CONFIG, max_lifetime_days: 730});
 		seed(rows, daysFromNow(-100), daysFromNow(265));
 
-		await service.reconcile([payload(daysFromNow(-100))]);
+		await service.reconcile([payload(daysFromNow(-100))], fileExists);
 
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(630));
 	});
@@ -124,7 +156,7 @@ describe('AttachmentDecayService.reconcile', () => {
 		const {rows, service} = createService({...CONFIG, max_lifetime_days: 60});
 		seed(rows, daysFromNow(-100), daysFromNow(265));
 
-		await service.reconcile([payload(daysFromNow(-100))]);
+		await service.reconcile([payload(daysFromNow(-100))], fileExists);
 
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(30));
 	});
@@ -133,7 +165,7 @@ describe('AttachmentDecayService.reconcile', () => {
 		const {rows, service} = createService({...CONFIG, max_lifetime_days: 60});
 		seed(rows, daysFromNow(-100), daysFromNow(12));
 
-		expect(await service.reconcile([payload(daysFromNow(-100))])).toBe(0);
+		expect(await service.reconcile([payload(daysFromNow(-100))], fileExists)).toBe(0);
 		expect(rows.get(ATTACHMENT_ID)?.expires_at).toEqual(daysFromNow(12));
 	});
 
@@ -141,14 +173,14 @@ describe('AttachmentDecayService.reconcile', () => {
 		const {rows, service} = createService({...CONFIG, max_eligible_size_mb: 1});
 		seed(rows, daysFromNow(-100), daysFromNow(265));
 
-		expect(await service.reconcile([payload(daysFromNow(-100), 2n * 1024n * 1024n)])).toBe(1);
+		expect(await service.reconcile([payload(daysFromNow(-100), 2n * 1024n * 1024n)], fileExists)).toBe(1);
 		expect(rows.size).toBe(0);
 	});
 
 	it('settles after one pass', async () => {
 		const {service} = createService({...CONFIG, max_lifetime_days: 60});
 
-		expect(await service.reconcile([payload(daysFromNow(-100))])).toBe(1);
-		expect(await service.reconcile([payload(daysFromNow(-100))])).toBe(0);
+		expect(await service.reconcile([payload(daysFromNow(-100))], fileExists)).toBe(1);
+		expect(await service.reconcile([payload(daysFromNow(-100))], fileExists)).toBe(0);
 	});
 });

@@ -950,6 +950,32 @@ function decodeInstanceMediaConfig(value: unknown): InstanceMediaConfig {
 	return validateStoredConfig(StoredInstanceMediaSchema, value, 'media');
 }
 
+function resolveEffectiveAttachmentDecayConfig(media: InstanceMediaConfig): InstanceAttachmentDecayEffectiveConfig {
+	const attachmentDecay = media.attachment_decay;
+	const minSizeMb = attachmentDecay.min_size_mb ?? DEFAULT_DECAY_CONSTANTS.MIN_MB;
+	const configuredMaxSizeMb = attachmentDecay.max_size_mb ?? DEFAULT_DECAY_CONSTANTS.MAX_MB;
+	const maxSizeMb = computeAttachmentDecayMaxSize(minSizeMb, configuredMaxSizeMb);
+	const configuredMaxEligibleSizeMb = attachmentDecay.max_eligible_size_mb ?? DEFAULT_DECAY_CONSTANTS.PLAN_MB;
+	const maxEligibleSizeMb = Math.max(maxSizeMb, configuredMaxEligibleSizeMb);
+	const minLifetimeDays = attachmentDecay.min_lifetime_days ?? DEFAULT_DECAY_CONSTANTS.MIN_DAYS;
+	const configuredMaxLifetimeDays = attachmentDecay.max_lifetime_days ?? DEFAULT_DECAY_CONSTANTS.MAX_DAYS;
+	const maxLifetimeDays =
+		configuredMaxLifetimeDays >= minLifetimeDays
+			? configuredMaxLifetimeDays
+			: Math.max(DEFAULT_DECAY_CONSTANTS.MAX_DAYS, minLifetimeDays);
+	return {
+		enabled: attachmentDecay.enabled ?? Config.attachmentDecayEnabled,
+		min_size_mb: minSizeMb,
+		max_size_mb: maxSizeMb,
+		max_eligible_size_mb: maxEligibleSizeMb,
+		min_lifetime_days: minLifetimeDays,
+		max_lifetime_days: maxLifetimeDays,
+		curve: attachmentDecay.curve ?? DEFAULT_DECAY_CONSTANTS.CURVE,
+		renew_threshold_days: attachmentDecay.renew_threshold_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_THRESHOLD_DAYS,
+		renew_window_days: attachmentDecay.renew_window_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_WINDOW_DAYS,
+	};
+}
+
 function parseStoredInstanceMediaConfig(raw: string | null): InstanceMediaConfig {
 	return decodeInstanceMediaConfig(parseStoredConfigValue(raw, 'media'));
 }
@@ -1881,30 +1907,12 @@ export class InstanceConfigRepository {
 	}
 
 	async getEffectiveAttachmentDecayConfig(): Promise<InstanceAttachmentDecayEffectiveConfig> {
-		const media = await this.getInstanceMediaConfig();
-		const attachmentDecay = media.attachment_decay;
-		const minSizeMb = attachmentDecay.min_size_mb ?? DEFAULT_DECAY_CONSTANTS.MIN_MB;
-		const configuredMaxSizeMb = attachmentDecay.max_size_mb ?? DEFAULT_DECAY_CONSTANTS.MAX_MB;
-		const maxSizeMb = computeAttachmentDecayMaxSize(minSizeMb, configuredMaxSizeMb);
-		const configuredMaxEligibleSizeMb = attachmentDecay.max_eligible_size_mb ?? DEFAULT_DECAY_CONSTANTS.PLAN_MB;
-		const maxEligibleSizeMb = Math.max(maxSizeMb, configuredMaxEligibleSizeMb);
-		const minLifetimeDays = attachmentDecay.min_lifetime_days ?? DEFAULT_DECAY_CONSTANTS.MIN_DAYS;
-		const configuredMaxLifetimeDays = attachmentDecay.max_lifetime_days ?? DEFAULT_DECAY_CONSTANTS.MAX_DAYS;
-		const maxLifetimeDays =
-			configuredMaxLifetimeDays >= minLifetimeDays
-				? configuredMaxLifetimeDays
-				: Math.max(DEFAULT_DECAY_CONSTANTS.MAX_DAYS, minLifetimeDays);
-		return {
-			enabled: attachmentDecay.enabled ?? Config.attachmentDecayEnabled,
-			min_size_mb: minSizeMb,
-			max_size_mb: maxSizeMb,
-			max_eligible_size_mb: maxEligibleSizeMb,
-			min_lifetime_days: minLifetimeDays,
-			max_lifetime_days: maxLifetimeDays,
-			curve: attachmentDecay.curve ?? DEFAULT_DECAY_CONSTANTS.CURVE,
-			renew_threshold_days: attachmentDecay.renew_threshold_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_THRESHOLD_DAYS,
-			renew_window_days: attachmentDecay.renew_window_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_WINDOW_DAYS,
-		};
+		return resolveEffectiveAttachmentDecayConfig(await this.getInstanceMediaConfig());
+	}
+
+	async fetchStoredEffectiveAttachmentDecayConfig(): Promise<InstanceAttachmentDecayEffectiveConfig> {
+		const raw = await this.fetchConfigFromDatabase(INSTANCE_MEDIA_CONFIG_KEY);
+		return resolveEffectiveAttachmentDecayConfig(parseStoredInstanceMediaConfig(raw));
 	}
 
 	async getInstanceMediaAdminConfig(): Promise<InstanceMediaAdminConfig> {

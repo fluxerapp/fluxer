@@ -4,6 +4,7 @@ import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepo
 import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
 import type {IAssetDeletionQueue, QueuedAssetDeletion} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
@@ -31,6 +32,7 @@ function createQueue(): {queue: IAssetDeletionQueue; queued: Array<QueuedAssetDe
 function installDependencies(queue: IAssetDeletionQueue): void {
 	setWorkerDependenciesForTest({
 		assetDeletionQueue: queue,
+		kvClient: new MockKVProvider(),
 		instanceConfigRepository: {
 			async getEffectiveAttachmentDecayConfig() {
 				return {enabled: true};

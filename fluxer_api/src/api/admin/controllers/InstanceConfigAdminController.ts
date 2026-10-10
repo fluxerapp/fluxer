@@ -2,6 +2,7 @@
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {startAttachmentDecayReconcile} from '@app/api/attachment/AttachmentDecayReconcileRun';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
@@ -14,7 +15,7 @@ import {deriveSsoRedirectUri, normalizeAndValidateSsoConfig} from '@app/api/inst
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
-import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {getKVClient, getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getGatewayRolloutConfigPublisher,
 	getInstanceConfigRepository,
@@ -592,7 +593,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				});
 				const attachmentDecay = await instanceConfigRepository.getEffectiveAttachmentDecayConfig();
 				if (attachmentDecay.enabled && attachmentExpiryRulesChanged(previousAttachmentDecay, attachmentDecay)) {
-					await getWorkerService().addJob('reconcileAttachmentDecay', {});
+					await startAttachmentDecayReconcile(getKVClient(), getWorkerService());
 				}
 			}
 			if (data.policy) {
