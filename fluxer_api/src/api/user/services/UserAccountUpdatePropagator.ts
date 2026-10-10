@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {propagatePartialUserChange} from '@app/api/user/services/PartialUserChangePropagation';
 import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
@@ -18,8 +18,8 @@ interface UserAccountUpdatePropagatorDeps {
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	mediaService: IMediaService;
-	userRepository: IUserAccountRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 }
 
 export class UserAccountUpdatePropagator extends BaseUserUpdatePropagator {

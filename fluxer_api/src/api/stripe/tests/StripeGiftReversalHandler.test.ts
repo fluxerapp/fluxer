@@ -8,7 +8,7 @@ import {getPremiumStateReconciliationQueueService, getUserRepository} from '@app
 import {findUser} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {ms} from 'itty-time';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -28,7 +28,7 @@ describe('StripeGiftReversalHandler', () => {
 		await harness.resetData();
 	});
 
-	function createHandler(users: IUserRepository = getUserRepository()): StripeGiftReversalHandler {
+	function createHandler(users: UserRepository = getUserRepository()): StripeGiftReversalHandler {
 		return new StripeGiftReversalHandler(users, getGatewayService(), getPremiumStateReconciliationQueueService());
 	}
 

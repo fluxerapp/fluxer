@@ -6,7 +6,7 @@ import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -18,7 +18,7 @@ import {
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -28,9 +28,9 @@ import type Stripe from 'stripe';
 
 export class StripePremiumService {
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
-		private guildRepository: IGuildRepositoryAggregate,
+		private guildRepository: GuildRepository,
 		private guildService: GuildService,
 	) {}
 

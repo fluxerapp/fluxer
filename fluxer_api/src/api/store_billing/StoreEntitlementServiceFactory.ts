@@ -11,11 +11,11 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface StoreEntitlementServiceFactoryParams {
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	kvClient: IKVProvider;

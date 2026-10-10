@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type LocaleCode, Locales} from '@fluxer/constants/src/Locales';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 import {describe, expect, it} from 'vitest';
 
 interface AcceptLanguageCase {

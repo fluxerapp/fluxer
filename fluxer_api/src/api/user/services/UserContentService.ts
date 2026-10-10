@@ -5,7 +5,7 @@ import type {Readable} from 'node:stream';
 import type {ApiContext} from '@app/api/ApiContext';
 import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {
@@ -33,8 +33,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {PushSubscription} from '@app/api/models/PushSubscription';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import type {IUserContentRepository} from '@app/api/user/repositories/IUserContentRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
@@ -103,8 +102,6 @@ interface UnregisterMobileDeviceParams {
 	userId: UserID;
 	device: UnregisterMobileDeviceRequest;
 }
-
-interface UserContentRepository extends IUserAccountRepository, IUserContentRepository {}
 
 const WEB_PUSH_PLATFORM = 'web_push' as const;
 const DEFAULT_MOBILE_APP_ID = 'stable';
@@ -192,7 +189,7 @@ const isUnreachableEntityError = (error: unknown): boolean =>
 
 export class UserContentService {
 	private readonly updatePropagator: BaseUserUpdatePropagator;
-	private readonly userRepository: UserContentRepository;
+	private readonly userRepository: UserRepository;
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
 	private readonly snowflakeService: ISnowflakeService;
@@ -202,7 +199,7 @@ export class UserContentService {
 		apiContext: ApiContext,
 		userCacheService: UserCacheService,
 		private channelService: ChannelService,
-		private channelRepository: IChannelRepository,
+		private channelRepository: ChannelRepository,
 		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		private limitConfigService: LimitConfigService,
 	) {
@@ -405,7 +402,7 @@ export class UserContentService {
 			.filter(([, messages]) => messages === null)
 			.map(([channelId]) => createChannelID(BigInt(channelId)));
 		if (unreachable.length === 0) return new Set();
-		const channels = await this.channelRepository.listChannels(unreachable);
+		const channels = await this.channelRepository.channelData.listChannels(unreachable);
 		return new Set(
 			channels
 				.filter(
@@ -886,7 +883,7 @@ export class UserContentService {
 		const channels = new Set<string>();
 		let messageCount = 0;
 		while (true) {
-			const messageRefs = await this.channelRepository.listMessagesByAuthor(userId, CHUNK_SIZE, lastMessageId);
+			const messageRefs = await this.channelRepository.messages.listMessagesByAuthor(userId, CHUNK_SIZE, lastMessageId);
 			if (messageRefs.length === 0) {
 				break;
 			}
@@ -969,7 +966,7 @@ export class UserContentService {
 	): Promise<{responses: Array<MessageResponse>; channelById: Map<string, Channel>}> {
 		if (messages.length === 0) return {responses: [], channelById: new Map()};
 		const channelIds = Array.from(new Set(messages.map((message) => message.channelId.toString())));
-		const channels = await this.channelRepository.listChannels(
+		const channels = await this.channelRepository.channelData.listChannels(
 			channelIds.map((channelId) => createChannelID(BigInt(channelId))),
 		);
 		const channelById = new Map(channels.map((channel) => [channel.id.toString(), channel] as const));

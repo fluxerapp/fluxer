@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Guild} from '@app/api/models/Guild';
 import type {Relationship} from '@app/api/models/Relationship';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {FriendSourceFlags, GroupDmAddPermissionFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {FriendRequestBlockedError} from '@fluxer/errors/src/domains/user/FriendRequestBlockedError';
 
-type UserPermissionRepository = Pick<IUserRepository, 'findSettings' | 'listRelationships' | 'getRelationship'>;
-type GuildPermissionRepository = Pick<IGuildRepositoryAggregate, 'listUserGuilds'>;
+type UserPermissionRepository = Pick<UserRepository, 'findSettings' | 'listRelationships' | 'getRelationship'>;
+type GuildPermissionRepository = Pick<GuildRepository, 'listUserGuilds'>;
 
 export class UserPermissionUtils {
 	constructor(

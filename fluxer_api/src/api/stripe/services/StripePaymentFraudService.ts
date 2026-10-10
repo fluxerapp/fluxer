@@ -4,7 +4,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
 import type {UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -13,7 +13,7 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {extractId} from '@app/api/stripe/StripeUtils';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -29,12 +29,12 @@ type RadarValueListItemType = RadarValueListCreateParams['item_type'];
 
 interface StripePaymentFraudServiceDeps {
 	stripe: Stripe | null;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	sessionTerminator: ISessionTerminator;
 	emailService: IEmailService;
 	gatewayService: IGatewayService;
-	donationRepository: IDonationRepository;
+	donationRepository: DonationRepository;
 	cacheService: ICacheService;
 	auditService: AdminAuditService;
 	kvDeletionQueue: KVAccountDeletionQueueService;

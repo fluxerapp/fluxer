@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel, AuthenticatedThread} from '@app/api/channel/services/AuthenticatedChannel';
 import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
 import {
@@ -26,13 +26,13 @@ import {
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
 import {isGuildMemberTimedOut} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import type {GuildChannelAuthContext, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -80,9 +80,9 @@ export abstract class BaseChannelAuthService {
 	protected dmPermissionValidator: DMPermissionValidator;
 
 	constructor(
-		protected channelRepository: IChannelRepositoryAggregate,
-		protected userRepository: IUserRepository,
-		protected guildRepository: IGuildRepositoryAggregate,
+		protected channelRepository: ChannelRepository,
+		protected userRepository: UserRepository,
+		protected guildRepository: GuildRepository,
 		protected gatewayService: IGatewayService,
 	) {
 		this.dmPermissionValidator = new DMPermissionValidator({

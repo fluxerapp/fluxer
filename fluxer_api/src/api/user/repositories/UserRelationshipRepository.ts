@@ -8,7 +8,6 @@ import type {NoteRow, RelationshipRow} from '@app/api/database/types/UserTypes';
 import {Relationship} from '@app/api/models/Relationship';
 import {UserNote} from '@app/api/models/UserNote';
 import {Notes, Relationships, RelationshipsByTarget} from '@app/api/Tables';
-import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 
 const FETCH_ALL_NOTES_CQL = Notes.selectCql({
@@ -41,7 +40,7 @@ const FETCH_ALL_NOTES_FOR_DELETE_QUERY = Notes.selectCql({
 	limit: 10000,
 });
 
-export class UserRelationshipRepository implements IUserRelationshipRepository {
+export class UserRelationshipRepository {
 	async clearUserNote(sourceUserId: UserID, targetUserId: UserID): Promise<void> {
 		await deleteOneOrMany(
 			Notes.deleteByPk({

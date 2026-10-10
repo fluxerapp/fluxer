@@ -3,7 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import {applicationIdToUserId} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ApplicationRow} from '@app/api/database/types/OAuth2Types';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
@@ -17,7 +17,7 @@ import type {User} from '@app/api/models/User';
 import {remapAuthorMessagesToDeletedUser} from '@app/api/oauth/ApplicationMessageAuthorAnonymization';
 import type {BotAuthService} from '@app/api/oauth/BotAuthService';
 import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {enforceFluxerTagChangeRateLimit} from '@app/api/user/FluxerTagChangeRateLimit';
 import {hasPartialUserFieldsChanged, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {runAllInOrder} from '@app/api/utils/ConcurrencyUtils';
@@ -43,8 +43,8 @@ import type {BotProfileUpdateRequest} from '@fluxer/schema/src/domains/oauth/OAu
 
 interface ApplicationServiceDeps {
 	discriminatorService: DiscriminatorService;
-	channelRepository: IChannelRepository;
-	applicationRepository: IApplicationRepository;
+	channelRepository: ChannelRepository;
+	applicationRepository: ApplicationRepository;
 	botAuthService: BotAuthService;
 	entityAssetService: EntityAssetService;
 	userCacheService: UserCacheService;

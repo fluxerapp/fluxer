@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
@@ -36,7 +36,7 @@ import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/Admi
 
 interface AdminBanManagementServiceDeps {
 	apiContext: ApiContext;
-	adminRepository: IAdminRepository;
+	adminRepository: AdminRepository;
 	auditService: AdminAuditService;
 }
 

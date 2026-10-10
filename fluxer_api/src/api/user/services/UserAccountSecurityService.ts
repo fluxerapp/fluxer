@@ -18,7 +18,7 @@ import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons
 import type {AuthSession as AuthSessionModel} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {enforceFluxerTagChangeRateLimit} from '@app/api/user/FluxerTagChangeRateLimit';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {assertNoDiscriminatorChange, reserveUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
@@ -40,7 +40,7 @@ type UserFieldUpdates = Partial<UserRow>;
 
 interface UserAccountSecurityServiceDeps {
 	apiContext: ApiContext;
-	userAccountRepository: IUserAccountRepository;
+	userAccountRepository: UserRepository;
 	discriminatorService: IDiscriminatorService;
 	rateLimitService: IRateLimitService;
 	limitConfigService: LimitConfigService;

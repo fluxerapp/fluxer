@@ -3,7 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
 import {mapGiftCodeDurationToMonths} from '@app/api/models/GiftCode';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 
 const CODE_LENGTH = 32;
@@ -19,7 +19,7 @@ interface GenerateGiftCodesOptions {
 }
 
 export class AdminCodeGenerationService {
-	constructor(private readonly userRepository: IUserRepository) {}
+	constructor(private readonly userRepository: UserRepository) {}
 
 	async generateGiftCodes(options: GenerateGiftCodesOptions): Promise<Array<string>> {
 		const {count, durationType, durationQuantity, createdByUserId} = this.validateOptions(options);

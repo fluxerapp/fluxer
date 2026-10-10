@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {mapThreadMemberToRpcResponse, mapThreadToRpcResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {mapThreadParentFields} from '@app/api/channel/services/thread/ThreadParentSettings';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
@@ -49,10 +49,7 @@ function mapParentSettingsToRpc(
 	return {channel_id: parent.id.toString(), ...mapThreadParentFields(parent.type, config)};
 }
 
-async function listAllMembers(
-	repository: IChannelRepositoryAggregate,
-	threadId: ChannelID,
-): Promise<Array<ThreadMember>> {
+async function listAllMembers(repository: ChannelRepository, threadId: ChannelID): Promise<Array<ThreadMember>> {
 	const members: Array<ThreadMember> = [];
 	let after: UserID | undefined;
 	while (members.length < MAX_THREAD_MEMBERS * 2) {
@@ -65,7 +62,7 @@ async function listAllMembers(
 }
 
 export async function loadThreadCollectionRpcData(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	guildId: GuildID,
 	parents: ReadonlyArray<Channel>,
 	{members: includeMembers}: {members: boolean},
@@ -92,7 +89,7 @@ export async function loadThreadCollectionRpcData(
 }
 
 export async function loadActiveThreadMemberships(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	guildId: GuildID,
 	userId: UserID,
 ): Promise<Array<ThreadMemberRpcResponse>> {
@@ -105,7 +102,7 @@ export async function loadActiveThreadMemberships(
 }
 
 export async function listThreadMembersPage(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	params: {guildId: GuildID; threadIds: Array<ChannelID>; limit: number; after?: UserID},
 ): Promise<{
 	members: Array<ThreadMemberRpcResponse>;
@@ -149,7 +146,7 @@ export interface ForumUnreadRpcEntry {
 }
 
 export async function loadForumUnreads(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	params: {
 		guildId: GuildID;
 		channelId: ChannelID;

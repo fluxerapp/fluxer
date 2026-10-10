@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	createHash,
-	createHmac,
-	createPrivateKey,
-	createPublicKey,
-	createSign,
-	generateKeyPairSync,
-	randomBytes,
-} from 'node:crypto';
+import {createHash, createPrivateKey, createPublicKey, createSign, generateKeyPairSync, randomBytes} from 'node:crypto';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
+
+export {createTotpSecret, generateTotpCode} from '@app/api/auth/tests/AuthTestUtils';
 
 export interface WebAuthnDevice {
 	privateKey: string;
@@ -101,30 +94,6 @@ interface WebAuthnAuthenticationResponse {
 	type: string;
 	clientExtensionResults: Record<string, unknown>;
 	response: AuthenticatorAssertionResponse;
-}
-
-export function createTotpSecret(): string {
-	const buf = randomBytes(20);
-	return base32Encode(buf).replace(/=/g, '');
-}
-
-export function generateTotpCode(secret: string, time = Date.now()): string {
-	const key = Buffer.from(base32Decode.asBytes(secret.toUpperCase()));
-	const epoch = Math.floor(time / 1000);
-	const counter = Math.floor(epoch / 30);
-	const counterBuf = Buffer.alloc(8);
-	counterBuf.writeBigUInt64BE(BigInt(counter));
-	const hmac = createHmac('sha1', key);
-	hmac.update(counterBuf);
-	const hash = hmac.digest();
-	const offset = hash[hash.length - 1] & 0x0f;
-	const binary =
-		((hash[offset] & 0x7f) << 24) |
-		((hash[offset + 1] & 0xff) << 16) |
-		((hash[offset + 2] & 0xff) << 8) |
-		(hash[offset + 3] & 0xff);
-	const otp = binary % 1000000;
-	return otp.toString().padStart(6, '0');
 }
 
 function resolveWebAuthnOrigin(): {

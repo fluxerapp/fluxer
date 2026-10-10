@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
 import {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
 import {
@@ -220,12 +220,19 @@ describe('webhooks on forum and media channels', () => {
 			.post(`/channels/${guild.system_channel_id}/webhooks`)
 			.body({name: 'control'})
 			.execute();
-		const findUnique = vi.spyOn(ChannelRepository.prototype, 'findUnique');
-		const listChannels = vi.spyOn(ChannelRepository.prototype, 'listChannels');
+		const readChannelIds: Array<string> = [];
+		const readChannel = ChannelDataRepository.prototype.findUnique;
+		const findUnique = vi.spyOn(ChannelDataRepository.prototype, 'findUnique').mockImplementation(function (
+			this: ChannelDataRepository,
+			channelId,
+		) {
+			if (!new Error().stack?.includes('NoopGatewayService')) readChannelIds.push(channelId.toString());
+			return readChannel.call(this, channelId);
+		});
+		const listChannels = vi.spyOn(ChannelDataRepository.prototype, 'listChannels');
 		await createBuilderWithoutAuth(harness).get(`/webhooks/${hook.id}/${hook.token}`).execute();
 		await threadsRequest(harness, owner.token).get(`/guilds/${guild.id}/webhooks`).execute();
 		await threadsRequest(harness, owner.token).get(`/webhooks/${hook.id}`).execute();
-		const readChannelIds = findUnique.mock.calls.map(([channelId]) => channelId.toString());
 		const listCalls = listChannels.mock.calls.length;
 		findUnique.mockRestore();
 		listChannels.mockRestore();

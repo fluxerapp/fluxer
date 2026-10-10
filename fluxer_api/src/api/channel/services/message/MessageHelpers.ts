@@ -3,7 +3,7 @@
 import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {forEachEmbedMedia} from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import type {
 	MessageSnapshot as CassandraMessageSnapshot,
@@ -479,7 +479,7 @@ export function countedThreadMessages(channel: Channel, messageIds: Array<Messag
 }
 
 export async function decrementThreadMessageCount(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	channel: Channel | null,
 	messageIds: Array<MessageID>,
 ): Promise<void> {

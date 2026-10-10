@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {Channel} from '@app/api/models/Channel';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildExplicitContentFilterTypes, GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
@@ -20,8 +20,8 @@ export interface DmNsfwContext {
 
 export class MessageContentService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private limitConfigService: LimitConfigService,
 	) {}
 

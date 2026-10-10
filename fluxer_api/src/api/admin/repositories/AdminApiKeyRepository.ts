@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	CreateAdminApiKeyData,
-	IAdminApiKeyRepository,
-	UpdateAdminApiKeyData,
-} from '@app/api/admin/repositories/IAdminApiKeyRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
@@ -19,12 +14,23 @@ import {AdminApiKey} from '@app/api/models/AdminApiKey';
 import {AdminApiKeys, AdminApiKeysByCreator} from '@app/api/Tables';
 import {hashPassword} from '@app/api/utils/PasswordUtils';
 
+export interface CreateAdminApiKeyData {
+	name: string;
+	expiresAt: Date | null;
+	acls: Set<string>;
+}
+
+export interface UpdateAdminApiKeyData {
+	name?: string;
+	acls?: Set<string>;
+}
+
 function computeTtlSeconds(expiresAt: Date): number {
 	const diffSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
 	return Math.max(diffSeconds, 1);
 }
 
-export class AdminApiKeyRepository implements IAdminApiKeyRepository {
+export class AdminApiKeyRepository {
 	async create(data: CreateAdminApiKeyData, createdBy: UserID, keyId: bigint, rawKey: string): Promise<AdminApiKey> {
 		const keyHash = await hashPassword(rawKey);
 		const createdAt = new Date();

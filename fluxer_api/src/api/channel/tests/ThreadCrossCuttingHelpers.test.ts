@@ -5,10 +5,10 @@ import {MessageContentService} from '@app/api/channel/services/message/MessageCo
 import {maskThreadArtifacts} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {Channel} from '@app/api/models/Channel';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {GuildExplicitContentFilterTypes} from '@fluxer/constants/src/GuildConstants';
 import {ServerMessageFlags} from '@fluxer/constants/src/ThreadConstants';
@@ -77,8 +77,8 @@ function message(overrides: Partial<MessageResponse>): MessageResponse {
 
 describe('thread NSFW scope', () => {
 	const contentService = new MessageContentService(
-		{} as IUserRepository,
-		{} as IGuildRepositoryAggregate,
+		{} as UserRepository,
+		{} as GuildRepository,
 		{} as LimitConfigService,
 	);
 	const guild = {

@@ -3,7 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {SYSTEM_THREAD_VIEWER, syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
@@ -125,8 +125,10 @@ function createUserContentService({
 		(stored ?? readable).map((entry) => `${entry.channelId.toString()}:${entry.messageId.toString()}`),
 	);
 	const channelRepository = {
-		listChannels: async (channelIds: Array<ChannelID>) =>
-			channels.filter((channel) => channelIds.some((channelId) => channelId === channel.id)),
+		channelData: {
+			listChannels: async (channelIds: Array<ChannelID>) =>
+				channels.filter((channel) => channelIds.some((channelId) => channelId === channel.id)),
+		},
 		messages: {
 			getMessage: async (channelId: ChannelID, messageId: MessageID) =>
 				storedKeys.has(`${channelId.toString()}:${messageId.toString()}`) ? makeMessage(channelId, messageId) : null,
@@ -136,7 +138,7 @@ function createUserContentService({
 		{services: {users: userRepository, gateway: {}, worker: {}, snowflake: {}}} as unknown as ApiContext,
 		{} as unknown as UserCacheService,
 		channelService as unknown as ChannelService,
-		channelRepository as unknown as IChannelRepository,
+		channelRepository as unknown as ChannelRepository,
 		{} as unknown as KVBulkMessageDeletionQueueService,
 		{} as unknown as LimitConfigService,
 	);
@@ -552,7 +554,7 @@ describe('gateway dispatches after the write', () => {
 			} as unknown as ApiContext,
 			{} as unknown as UserCacheService,
 			channelService as unknown as ChannelService,
-			{} as unknown as IChannelRepository,
+			{} as unknown as ChannelRepository,
 			{} as unknown as KVBulkMessageDeletionQueueService,
 			{getConfigSnapshot: () => null} as unknown as LimitConfigService,
 		);
@@ -787,7 +789,7 @@ describe('bookmark ceiling', () => {
 			} as unknown as ApiContext,
 			{} as unknown as UserCacheService,
 			channelService as unknown as ChannelService,
-			{} as unknown as IChannelRepository,
+			{} as unknown as ChannelRepository,
 			{} as unknown as KVBulkMessageDeletionQueueService,
 			{getConfigSnapshot: () => snapshot} as unknown as LimitConfigService,
 		);

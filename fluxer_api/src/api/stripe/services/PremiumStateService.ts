@@ -29,7 +29,7 @@ import {
 	SELF_SERVE_REFUND_COOLDOWN_DAYS,
 	SELF_SERVE_REFUND_WINDOW_DAYS,
 } from '@app/api/stripe/services/StripeRefundService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {checkHasActivePaidPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {
@@ -235,7 +235,7 @@ export class PremiumStateService {
 	private readonly productRegistry = getProductRegistry();
 
 	constructor(
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly billingRepository: BillingRepository,
 		private readonly stripe: Stripe | null = null,

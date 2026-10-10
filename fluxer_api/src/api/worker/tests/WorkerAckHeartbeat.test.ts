@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
@@ -32,7 +32,7 @@ function createRunner(task: () => Promise<void>): TestWorkerRunner {
 		queue: queueStub,
 		consumerName: 'workers_batch',
 		laneName: 'batch',
-		ledger: {} as IJobLedgerRepository,
+		ledger: {} as JobLedgerRepository,
 		concurrency: 12,
 		maxDeliver: LANE_MAX_DELIVER,
 		ackWaitMs: LANE_ACK_WAIT_MS,
@@ -149,7 +149,7 @@ describe('Worker ack heartbeat', () => {
 			queue: queueStub,
 			consumerName: 'workers_batch',
 			laneName: 'batch',
-			ledger: {} as IJobLedgerRepository,
+			ledger: {} as JobLedgerRepository,
 			concurrency: 12,
 			maxDeliver: LANE_MAX_DELIVER,
 			ackWaitMs: LANE_ACK_WAIT_MS,

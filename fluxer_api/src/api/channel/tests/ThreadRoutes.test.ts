@@ -288,7 +288,7 @@ describe('thread routes', () => {
 			expect(announced).toHaveLength(1);
 			expect(announced[0]).toMatchObject({channel_id: s.channelId, content: 'old news'});
 			expect(announced[0]!.message_reference?.channel_id).toBe(pushedUp.id);
-			const parent = await repository.findUnique(createChannelID(BigInt(s.channelId)));
+			const parent = await repository.channelData.findUnique(createChannelID(BigInt(s.channelId)));
 			expect(parent?.lastMessageId?.toString()).toBe(latest.id);
 		});
 
@@ -985,7 +985,7 @@ describe('thread routes', () => {
 			await createBuilder(harness, admin.token).delete(`/admin/channels/${s.channelId}`).expect(400).execute();
 			await createBuilder(harness, admin.token).delete(`/admin/channels/${open.id}`).expect(204).execute();
 			expect(await repository.threads.getState(createChannelID(BigInt(open.id)))).toBeNull();
-			expect(await repository.findUnique(createChannelID(BigInt(open.id)))).toBeNull();
+			expect(await repository.channelData.findUnique(createChannelID(BigInt(open.id)))).toBeNull();
 			const after = await createBuilder<{threads: Array<ThreadChannelResponse>}>(harness, admin.token)
 				.get(`/admin/guilds/${s.guildId}/threads`)
 				.execute();

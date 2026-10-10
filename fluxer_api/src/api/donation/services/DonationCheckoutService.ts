@@ -2,7 +2,7 @@
 
 import {Config} from '@app/api/Config';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
@@ -97,7 +97,7 @@ function getDonationProductData(interval: 'month' | 'year' | null, locale: strin
 export class DonationCheckoutService {
 	constructor(
 		private stripe: Stripe | null,
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 		private emailDnsValidationService: IEmailDnsValidationService,
 	) {}
 

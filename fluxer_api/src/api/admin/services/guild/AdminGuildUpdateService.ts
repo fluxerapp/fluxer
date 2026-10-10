@@ -5,7 +5,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
 import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import {Logger} from '@app/api/Logger';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -17,7 +17,7 @@ import type {
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 
 interface AdminGuildUpdateServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
 	updatePropagator: AdminGuildUpdatePropagator;

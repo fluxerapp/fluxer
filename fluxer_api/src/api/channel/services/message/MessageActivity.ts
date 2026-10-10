@@ -8,7 +8,7 @@ import {getGuildRepository, getInviteRepository} from '@app/api/middleware/Servi
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {findInvites} from '@app/api/utils/InviteUtils';
 import {extractLinkHosts} from '@app/api/utils/UrlNormalizer';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -67,7 +67,7 @@ export interface MessageCreatedActivity {
 	dmRecipientId: UserID | null;
 	channelHadMessages: boolean;
 	delivered: boolean;
-	userRepository: Pick<IUserRepository, 'getRelationship'>;
+	userRepository: Pick<UserRepository, 'getRelationship'>;
 }
 
 function attachmentMeta(message: Message): Array<AttachmentMeta> {

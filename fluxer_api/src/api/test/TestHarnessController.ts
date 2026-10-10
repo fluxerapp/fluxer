@@ -42,8 +42,8 @@ import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepo
 import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '@app/api/Tables';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
+import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/account/UserAccountRepository';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
-import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import {UserChannelRepository} from '@app/api/user/repositories/UserChannelRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {processUserDeletion} from '@app/api/user/services/UserDeletionService';
@@ -76,7 +76,7 @@ import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 import {createSnowflakeFromTimestamp, snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
-import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
+import type {SentEmailRecord, TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {Context} from 'hono';
 import {seconds} from 'itty-time';
 
@@ -179,8 +179,8 @@ function ensureHarnessAccess(ctx: Context<HonoEnv>) {
 	}
 }
 
-function isTestEmailService(service: IEmailService): service is ITestEmailService {
-	return typeof (service as ITestEmailService).listSentEmails === 'function';
+function isTestEmailService(service: IEmailService): service is TestEmailService {
+	return typeof (service as TestEmailService).listSentEmails === 'function';
 }
 
 const serializeEmails = (emails: Array<SentEmailRecord>) =>
@@ -851,7 +851,12 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UnknownUserError();
 		}
 		const stripeService = ctx.get('stripeService');
-		await stripeService.extendSubscriptionWithGiftTrialDuration(user, durationType, durationQuantity, idempotencyKey);
+		await stripeService.subscriptions.extendSubscriptionWithGiftTrialDuration(
+			user,
+			durationType,
+			durationQuantity,
+			idempotencyKey,
+		);
 		return ctx.body(null, 204);
 	});
 	app.post('/test/users/:userId/private-channels', async (ctx) => {
@@ -940,7 +945,7 @@ export function TestHarnessController(app: HonoApp) {
 				indexed_at: null,
 				version: 1,
 			};
-			await channelRepository.upsert(channelRow);
+			await channelRepository.channelData.upsert(channelRow);
 			await userRepository.openDmForUser(userId, channelId);
 			dmChannels.push({
 				channel_id: channelId.toString(),
@@ -983,7 +988,7 @@ export function TestHarnessController(app: HonoApp) {
 					indexed_at: null,
 					version: 1,
 				};
-				await channelRepository.upsert(channelRow);
+				await channelRepository.channelData.upsert(channelRow);
 				await userRepository.openDmForUser(userId, channelId);
 				groupDmChannels.push({
 					channel_id: channelId.toString(),
@@ -1160,7 +1165,7 @@ export function TestHarnessController(app: HonoApp) {
 		}
 		const userId = createUserID(BigInt(userIdParam));
 		const channelRepository = new ChannelRepository();
-		const messages = await channelRepository.listMessagesByAuthor(userId);
+		const messages = await channelRepository.messages.listMessagesByAuthor(userId);
 		return ctx.json({count: messages.length}, 200);
 	});
 	app.post('/test/worker/process-pending-deletions', async (ctx) => {
@@ -1701,7 +1706,7 @@ export function TestHarnessController(app: HonoApp) {
 		const channelId = createChannelID(BigInt(channelIdParam));
 		const channelRepository = new ChannelRepository();
 		const userRepository = new UserRepository();
-		const channel = await channelRepository.findUnique(channelId);
+		const channel = await channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			return ctx.json({error: 'Channel not found'}, 404);
 		}
@@ -1713,7 +1718,7 @@ export function TestHarnessController(app: HonoApp) {
 			let lastMessageId: MessageID | undefined;
 			let hasMore = true;
 			while (hasMore) {
-				const messages = await channelRepository.listMessages(channelId, lastMessageId, BATCH_SIZE);
+				const messages = await channelRepository.messages.listMessages(channelId, lastMessageId, BATCH_SIZE);
 				if (messages.length === 0) {
 					hasMore = false;
 					break;
@@ -1735,7 +1740,7 @@ export function TestHarnessController(app: HonoApp) {
 				}
 			}
 		}
-		await channelRepository.upsert({
+		await channelRepository.channelData.upsert({
 			...channel.toRow(),
 			indexed_at: new Date(),
 		});

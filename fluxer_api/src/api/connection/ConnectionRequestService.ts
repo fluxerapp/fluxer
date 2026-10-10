@@ -4,8 +4,8 @@ import {createHmac} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import {signInitiationToken, verifyInitiationToken} from '@app/api/connection/ConnectionInitiationToken';
 import {mapConnectionToResponse} from '@app/api/connection/ConnectionMappers';
+import type {ConnectionService} from '@app/api/connection/ConnectionService';
 import {ConnectionInitiationTokenInvalidError} from '@app/api/connection/errors/ConnectionInitiationTokenInvalidError';
-import type {IConnectionService} from '@app/api/connection/IConnectionService';
 import {
 	CONNECTION_INITIATION_TOKEN_EXPIRY_MS,
 	CONNECTION_VERIFICATION_TOKEN_LENGTH,
@@ -22,7 +22,7 @@ import type {
 
 export class ConnectionRequestService {
 	constructor(
-		private readonly connectionService: IConnectionService,
+		private readonly connectionService: ConnectionService,
 		private readonly connectionInitiationSecret: string,
 	) {}
 

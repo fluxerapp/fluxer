@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminRepository} from '@app/api/admin/AdminRepository';
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import {type AdminAuditLog, AdminRepository} from '@app/api/admin/AdminRepository';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -29,7 +28,7 @@ import {
 	getUserPermissionUtils,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
-import {ReportStatus} from '@app/api/report/IReportRepository';
+import {ReportStatus} from '@app/api/report/ReportModels';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';

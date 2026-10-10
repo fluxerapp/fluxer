@@ -4,7 +4,8 @@ import type {ReportID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import type {IARSubmission, IReportRepository} from '@app/api/report/IReportRepository';
+import type {IARSubmission} from '@app/api/report/ReportModels';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import {ReportUnderLegalHoldError} from '@fluxer/errors/src/domains/moderation/ReportUnderLegalHoldError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
@@ -13,7 +14,7 @@ import {listReportProfileSnapshotAssets} from '@fluxer/schema/src/domains/report
 const SCAN_PAGE_SIZE = 500;
 
 export interface ReportDeletionDeps {
-	reportRepository: IReportRepository;
+	reportRepository: ReportRepository;
 	storageService: IStorageService;
 	reportSearchService: IReportSearchService | null;
 }
@@ -51,7 +52,7 @@ export function referencedObjectKeys(report: IARSubmission): Array<string> {
 }
 
 export async function forEachStoredReport(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	visit: (report: IARSubmission) => void,
 	pageSize = SCAN_PAGE_SIZE,
 ): Promise<void> {
@@ -112,7 +113,7 @@ export async function deleteReportWithEvidence(
 }
 
 async function loadDeletableReport(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	reportId: ReportID,
 	now: Date,
 ): Promise<IARSubmission> {

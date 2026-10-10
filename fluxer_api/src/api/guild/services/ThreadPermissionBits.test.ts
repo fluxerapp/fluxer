@@ -14,7 +14,7 @@ import {
 	resolveThreadPermissionMode,
 	shouldMaskThreadPermissionBits,
 } from '@app/api/guild/services/ThreadPermissionBits';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	applyProtectedOverwriteBits,
 	applyProtectedRolePermissions,
@@ -212,7 +212,7 @@ describe('guild MFA enforcement', () => {
 	it('treats MANAGE_THREADS as elevated', async () => {
 		const userRepository = {
 			findUnique: async () => ({authenticatorTypes: new Set()}),
-		} as unknown as IUserRepository;
+		} as unknown as UserRepository;
 		const enforce = await createGuildMfaEnforcer({
 			userRepository,
 			guildData: {mfa_level: GuildMFALevel.ELEVATED, owner_id: '1'},

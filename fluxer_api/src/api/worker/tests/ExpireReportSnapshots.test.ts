@@ -9,8 +9,8 @@ import {
 	type IARMessageContextRow,
 	type IARSubmissionRow,
 } from '@app/api/database/types/ReportTypes';
-import type {IARSubmission} from '@app/api/report/IReportRepository';
 import type {ReportDeletionDeps} from '@app/api/report/ReportDeletion';
+import type {IARSubmission} from '@app/api/report/ReportModels';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import {MockStorageService} from '@app/api/test/mocks/MockStorageService';

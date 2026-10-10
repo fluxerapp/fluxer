@@ -40,7 +40,7 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 	let totalIndexed = 0;
 	try {
 		while (true) {
-			const messages = await channelRepository.listMessages(channelId, cursor, BULK_BATCH_SIZE);
+			const messages = await channelRepository.messages.listMessages(channelId, cursor, BULK_BATCH_SIZE);
 			if (messages.length === 0) {
 				break;
 			}
@@ -81,11 +81,11 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 				Logger.info({completionKey: validated.completionKey}, 'All channels indexed');
 			}
 		}
-		const channel = await channelRepository.findUnique(channelId);
+		const channel = await channelRepository.channelData.findUnique(channelId);
 		if (channel?.isThread()) {
 			await channelRepository.channelData.patchIndexedAt(channelId, new Date());
 		} else if (channel) {
-			await channelRepository.upsert({...channel.toRow(), indexed_at: new Date()});
+			await channelRepository.channelData.upsert({...channel.toRow(), indexed_at: new Date()});
 		}
 		Logger.info({channelId: channelId.toString(), totalIndexed}, 'Bulk channel indexing complete');
 	} catch (error) {

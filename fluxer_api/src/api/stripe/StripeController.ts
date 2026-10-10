@@ -187,7 +187,7 @@ export function StripeController(app: HonoApp) {
 		Validator('param', GiftCodeParam),
 		async (ctx) => {
 			const {code} = ctx.req.valid('param');
-			const giftCode = await ctx.get('stripeService').getGiftCode(code);
+			const giftCode = await ctx.get('stripeService').gifts.getGiftCode(code);
 			const response = await mapGiftCodeToResponse({
 				giftCode,
 				userCacheService: ctx.get('userCacheService'),
@@ -217,7 +217,7 @@ export function StripeController(app: HonoApp) {
 		async (ctx) => {
 			const {code} = ctx.req.valid('param');
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').redeemGiftCode(userId, code);
+			await ctx.get('stripeService').gifts.redeemGiftCode(userId, code);
 			return ctx.body(null, 204);
 		},
 	);
@@ -238,7 +238,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const gifts = await ctx.get('stripeService').getUserGifts(userId);
+			const gifts = await ctx.get('stripeService').gifts.getUserGifts(userId);
 			const responses = await Promise.all(
 				gifts.map((gift) =>
 					mapGiftCodeToMetadataResponse({
@@ -290,7 +290,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const price = await ctx.get('stripeService').getCurrentSubscriptionPrice(userId);
+			const price = await ctx.get('stripeService').subscriptions.getCurrentSubscriptionPrice(userId);
 			return ctx.json(price);
 		},
 	);
@@ -334,7 +334,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').endPremiumGracePeriod(userId);
+			await ctx.get('stripeService').premium.endGracePeriod(userId);
 			return ctx.json({success: true as const});
 		},
 	);
@@ -382,7 +382,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const eligibility = await ctx.get('stripeService').getSelfServeRefundEligibility(userId);
+			const eligibility = await ctx.get('stripeService').refunds.getEligibility(userId);
 			return ctx.json(eligibility);
 		},
 	);
@@ -404,7 +404,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const result = await ctx.get('stripeService').refundLatestPurchase(userId);
+			const result = await ctx.get('stripeService').refunds.refundLatestPurchase(userId);
 			return ctx.json(result);
 		},
 	);
@@ -425,7 +425,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').cancelSubscriptionAtPeriodEnd(userId);
+			await ctx.get('stripeService').subscriptions.cancelSubscriptionAtPeriodEnd(userId);
 			return ctx.body(null, 204);
 		},
 	);
@@ -446,7 +446,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').reactivateSubscription(userId);
+			await ctx.get('stripeService').subscriptions.reactivateSubscription(userId);
 			return ctx.body(null, 204);
 		},
 	);
@@ -470,7 +470,7 @@ export function StripeController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const {billing_cycle, effective_at} = ctx.req.valid('json');
-			await ctx.get('stripeService').changeSubscriptionBillingCycle(userId, billing_cycle, effective_at);
+			await ctx.get('stripeService').subscriptions.changeBillingCycle(userId, billing_cycle, effective_at);
 			return ctx.body(null, 204);
 		},
 	);
@@ -492,7 +492,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const result = await ctx.get('stripeService').switchSubscriptionToCurrentListPrice(userId);
+			const result = await ctx.get('stripeService').subscriptions.switchToCurrentListPrice(userId);
 			return ctx.json(result);
 		},
 	);
@@ -514,7 +514,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').cancelPendingSubscriptionChange(userId);
+			await ctx.get('stripeService').subscriptions.cancelPendingSubscriptionChange(userId);
 			return ctx.body(null, 204);
 		},
 	);
@@ -535,7 +535,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			await ctx.get('stripeService').rejoinVisionariesGuild(userId);
+			await ctx.get('stripeService').premium.rejoinVisionariesGuild(userId);
 			return ctx.body(null, 204);
 		},
 	);

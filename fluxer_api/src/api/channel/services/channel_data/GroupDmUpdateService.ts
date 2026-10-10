@@ -2,7 +2,7 @@
 
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
@@ -11,7 +11,7 @@ import {contentModerationService} from '@app/api/infrastructure/ContentModeratio
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {GroupDmMatureContentIneligibleError} from '@fluxer/errors/src/domains/channel/GroupDmMatureContentIneligibleError';
@@ -24,8 +24,8 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 
 export class GroupDmUpdateService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private avatarService: AvatarService,
 		private snowflakeService: ISnowflakeService,
 		private channelUtilsService: ChannelUtilsService,

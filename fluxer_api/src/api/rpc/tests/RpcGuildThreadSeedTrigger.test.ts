@@ -84,9 +84,14 @@ describe('RpcService guild load thread permission seeding', () => {
 		const guildId = createGuildID(BigInt(guild.id));
 		await insertGuildThreadMarker(guildId, null);
 		const channelRepository = getChannelRepository();
-		const source = (await channelRepository.findUnique(createChannelID(BigInt(guild.system_channel_id!))))!;
+		const source = (await channelRepository.channelData.findUnique(createChannelID(BigInt(guild.system_channel_id!))))!;
 		const forumId = createChannelID(BigInt(source.id) + 1n);
-		await channelRepository.upsert({...source.toRow(), channel_id: forumId, type: ChannelTypes.GUILD_FORUM, name: 'f'});
+		await channelRepository.channelData.upsert({
+			...source.toRow(),
+			channel_id: forumId,
+			type: ChannelTypes.GUILD_FORUM,
+			name: 'f',
+		});
 		const guildRepository = new GuildRepository();
 		const stored = (await guildRepository.findUnique(guildId))!;
 		const missingId = createChannelID(BigInt(source.id) + 2n);

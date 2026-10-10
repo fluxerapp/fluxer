@@ -3,7 +3,7 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {maskThreadArtifactsByChannel} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {mapThreadMemberToResponse, mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
@@ -29,7 +29,7 @@ const CHANNEL_LOOKUP_CONCURRENCY = 16;
 
 export class MessageSearchResponseMapper {
 	constructor(
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 	) {}
 
@@ -46,7 +46,7 @@ export class MessageSearchResponseMapper {
 	}> {
 		const orderedChannelIds = Array.from(new Set(messages.map((message) => message.channelId.toString())));
 		const channels = await mapWithConcurrency(orderedChannelIds, CHANNEL_LOOKUP_CONCURRENCY, (channelId) =>
-			this.channelRepository.findUnique(createChannelID(BigInt(channelId))),
+			this.channelRepository.channelData.findUnique(createChannelID(BigInt(channelId))),
 		);
 		const channelById = new Map(
 			channels

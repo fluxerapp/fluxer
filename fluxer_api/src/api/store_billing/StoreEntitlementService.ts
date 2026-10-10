@@ -60,7 +60,7 @@ import {
 	scheduleStorePurchaseRefresh,
 } from '@app/api/store_billing/StorePurchaseRefresh';
 import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
 import {StoreBillingUnavailableError} from '@fluxer/errors/src/domains/payment/StoreBillingUnavailableError';
@@ -79,7 +79,7 @@ const FAMILY_SHARED_OWNERSHIP = 'FAMILY_SHARED';
 
 interface StoreEntitlementServiceDeps {
 	repository: StoreBillingRepository;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	kvClient: IKVProvider;

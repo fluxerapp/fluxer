@@ -2,8 +2,7 @@
 
 import {upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {JobByIdRow, JobStatus} from '@app/api/database/types/JobLedgerTypes';
-import type {ListJobsCursor, ListJobsFilters} from '@app/api/jobs/IJobLedgerRepository';
-import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {JobLedgerRepository, type ListJobsCursor, type ListJobsFilters} from '@app/api/jobs/JobLedgerRepository';
 import {JobsByDayBucket, JobsById} from '@app/api/Tables';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 

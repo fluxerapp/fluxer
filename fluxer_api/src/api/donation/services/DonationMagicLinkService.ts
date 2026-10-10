@@ -2,7 +2,7 @@
 
 import {randomBytes} from 'node:crypto';
 import {Config} from '@app/api/Config';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
@@ -16,7 +16,7 @@ import type {IEmailService} from '@pkgs/email/src/IEmailService';
 
 export class DonationMagicLinkService {
 	constructor(
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 		private emailService: IEmailService,
 		private emailDnsValidationService: IEmailDnsValidationService,
 	) {}

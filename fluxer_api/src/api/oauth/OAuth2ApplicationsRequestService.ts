@@ -10,7 +10,7 @@ import type {User} from '@app/api/models/User';
 import type {ApplicationService} from '@app/api/oauth/ApplicationService';
 import {ApplicationNotOwnedError} from '@app/api/oauth/ApplicationService';
 import {mapApplicationToResponse, mapBotProfileToResponse} from '@app/api/oauth/OAuth2Mappers';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {MAX_APPLICATIONS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {BotUserNotFoundError} from '@fluxer/errors/src/domains/oauth/BotUserNotFoundError';
@@ -29,7 +29,7 @@ export class OAuth2ApplicationsRequestService {
 	constructor(
 		private readonly apiContext: ApiContext,
 		private readonly applicationService: ApplicationService,
-		private readonly applicationRepository: IApplicationRepository,
+		private readonly applicationRepository: ApplicationRepository,
 	) {}
 
 	async listApplications(userId: UserID) {

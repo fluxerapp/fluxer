@@ -10,7 +10,7 @@ import {
 	resolveReportFlowAnswers,
 	resolveReportFlowLocale,
 } from '@app/api/report/flows/ReportFlowRegistry';
-import {type ReportStatus, reportStatusToString} from '@app/api/report/IReportRepository';
+import {type ReportStatus, reportStatusToString} from '@app/api/report/ReportModels';
 import type {ReportFlowRecord, ReportService} from '@app/api/report/ReportService';
 import {UnclaimedAccountCannotSubmitReportsError} from '@fluxer/errors/src/domains/moderation/UnclaimedAccountCannotSubmitReportsError';
 import type {

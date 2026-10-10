@@ -3,7 +3,7 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {createGuild, createRole, getMember} from '@app/api/guild/tests/GuildTestUtils';
 import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
@@ -79,7 +79,7 @@ describe('StripePremiumService', () => {
 			const premiumService = new StripePremiumService(
 				new UserRepository(),
 				new NoopGatewayService(),
-				{} as IGuildRepositoryAggregate,
+				{} as GuildRepository,
 				{} as GuildService,
 			);
 			await premiumService.setPremiumFromSubscriptionPeriod(

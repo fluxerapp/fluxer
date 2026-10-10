@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
-import type {IAdminApiKeyRepository} from '@app/api/admin/repositories/IAdminApiKeyRepository';
+import type {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {AdminApiKey} from '@app/api/models/AdminApiKey';
@@ -39,7 +39,7 @@ export interface AdminApiKeyView {
 
 export class AdminApiKeyService {
 	constructor(
-		private readonly adminApiKeyRepository: IAdminApiKeyRepository,
+		private readonly adminApiKeyRepository: AdminApiKeyRepository,
 		private readonly snowflakeService: ISnowflakeService,
 	) {}
 

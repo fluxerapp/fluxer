@@ -203,7 +203,7 @@ async function readMessageForExpectedContent(
 ): Promise<Message | null> {
 	let lastMessage: Message | null = null;
 	for (let attempt = 0; attempt < MESSAGE_READ_RETRY_ATTEMPTS; attempt++) {
-		const message = await channelRepository.getMessage(channelId, messageId);
+		const message = await channelRepository.messages.getMessage(channelId, messageId);
 		if (message && messageMatchesExpectedContent(message, expectedContentHash)) {
 			return message;
 		}
@@ -383,7 +383,7 @@ async function updateMessageEmbeds(
 		...freshMessage.toRow(),
 		embeds: nextEmbeds.length > 0 ? nextEmbeds : null,
 	});
-	await channelRepository.updateEmbeds(messageWithEmbeds);
+	await channelRepository.messages.updateEmbeds(messageWithEmbeds);
 	return messageWithEmbeds;
 }
 
@@ -438,7 +438,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 		Logger.info({messageId: messageId.toString()}, 'Skipping extractEmbeds: message not found or no content');
 		return;
 	}
-	const channel = await channelRepository.findUnique(channelId);
+	const channel = await channelRepository.channelData.findUnique(channelId);
 	if (!channel) {
 		Logger.info({channelId: channelId.toString()}, 'Skipping extractEmbeds: channel not found');
 		return;
@@ -465,7 +465,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 		const orderedEmbeds = buildOrderedEmbeds(urls, unfurledEmbedsByUrl);
 		let propagated: Message | null = null;
 		const handled = await withMessageWriteLock(cacheService, channelId, messageId, async () => {
-			const latestExpectedMessage = await channelRepository.getMessage(channelId, messageId);
+			const latestExpectedMessage = await channelRepository.messages.getMessage(channelId, messageId);
 			if (!latestExpectedMessage) {
 				Logger.debug({messageId: messageId.toString()}, 'Message no longer exists, skipping embed update');
 				return false;
@@ -494,7 +494,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 						},
 						'Content moderation blocked embed unfurl, deleting parent message',
 					);
-					await channelRepository.deleteMessage(
+					await channelRepository.messages.deleteMessage(
 						channelId,
 						messageId,
 						latestExpectedMessage.authorId || createUserID(0n),

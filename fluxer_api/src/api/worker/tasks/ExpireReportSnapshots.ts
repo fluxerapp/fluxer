@@ -3,7 +3,6 @@
 import type {ReportID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
-import {type IARSubmission, ReportStatus} from '@app/api/report/IReportRepository';
 import {
 	deleteReportWithEvidence,
 	forEachStoredReport,
@@ -11,6 +10,7 @@ import {
 	type ReportDeletionDeps,
 	referencedObjectKeys,
 } from '@app/api/report/ReportDeletion';
+import {type IARSubmission, ReportStatus} from '@app/api/report/ReportModels';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';

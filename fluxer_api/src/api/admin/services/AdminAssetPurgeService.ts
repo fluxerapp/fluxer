@@ -3,7 +3,7 @@
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createEmojiID, createStickerID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {mapGuildEmojiToResponse, mapGuildStickerToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -15,7 +15,7 @@ import type {
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
 interface AdminAssetPurgeServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	gatewayService: IGatewayService;
 	assetDeletionQueue: IAssetDeletionQueue;
 	auditService: AdminAuditService;

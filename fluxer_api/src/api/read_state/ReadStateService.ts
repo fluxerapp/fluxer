@@ -4,12 +4,12 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {ReadState} from '@app/api/models/ReadState';
+import {type ReadStateChannelHint, resolveReadStateMarker} from '@app/api/read_state/ReadStateChannelMeta';
 import type {
-	IReadStateRepository,
 	ReadStateMarker,
 	ReadStateMentionUpdate,
-} from '@app/api/read_state/IReadStateRepository';
-import {type ReadStateChannelHint, resolveReadStateMarker} from '@app/api/read_state/ReadStateChannelMeta';
+	ReadStateRepository,
+} from '@app/api/read_state/ReadStateRepository';
 import {visibleReadStates} from '@app/api/read_state/ReadStateVisibility';
 
 function threadScope(readState: ReadState | null | undefined): Record<string, unknown> {
@@ -30,7 +30,7 @@ function hadUnreadThrough(previous: ReadState | null, messageId: MessageID, unre
 
 export class ReadStateService {
 	constructor(
-		private repository: IReadStateRepository,
+		private repository: ReadStateRepository,
 		private gatewayService: IGatewayService,
 	) {}
 

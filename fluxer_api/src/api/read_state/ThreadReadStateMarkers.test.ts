@@ -9,12 +9,11 @@ import {
 	syncChannelThreadsConfig,
 } from '@app/api/experiment/ChannelThreadsGate';
 import {ReadState} from '@app/api/models/ReadState';
-import type {ReadStateMarker} from '@app/api/read_state/IReadStateRepository';
 import {
 	clearReadStateChannelMetaCacheForTesting,
 	resolveReadStateMarker,
 } from '@app/api/read_state/ReadStateChannelMeta';
-import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import {type ReadStateMarker, ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import {mapReadStateResponse} from '@app/api/read_state/ReadStateResponseMapper';
 import {badgeReadStates, visibleReadStates} from '@app/api/read_state/ReadStateVisibility';
 import {ReadStates} from '@app/api/Tables';

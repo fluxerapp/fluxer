@@ -97,7 +97,10 @@ describe('announcement threads', () => {
 
 	async function storedType(threadId: string): Promise<{state?: number; channel?: number}> {
 		const id = createChannelID(BigInt(threadId));
-		const [state, channel] = await Promise.all([repository.threads.getState(id), repository.findUnique(id)]);
+		const [state, channel] = await Promise.all([
+			repository.threads.getState(id),
+			repository.channelData.findUnique(id),
+		]);
 		return {state: state?.type, channel: channel?.type};
 	}
 
@@ -306,7 +309,9 @@ describe('announcement threads', () => {
 				state: ChannelTypes.PRIVATE_THREAD,
 				channel: ChannelTypes.PRIVATE_THREAD,
 			});
-			expect((await repository.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(ChannelTypes.GUILD_TEXT);
+			expect((await repository.channelData.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(
+				ChannelTypes.GUILD_TEXT,
+			);
 		});
 
 		it('rolls back a failed retype and leaves the parent unconverted so a retry converges', async () => {
@@ -323,7 +328,9 @@ describe('announcement threads', () => {
 				.body({type: ChannelTypes.GUILD_ANNOUNCEMENT})
 				.expect(503)
 				.execute();
-			expect((await repository.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(ChannelTypes.GUILD_TEXT);
+			expect((await repository.channelData.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(
+				ChannelTypes.GUILD_TEXT,
+			);
 			expect(update.mock.calls.filter(([params]) => params.event === 'CHANNEL_UPDATE')).toEqual([]);
 			vi.restoreAllMocks();
 			for (const thread of threads) {
@@ -360,7 +367,9 @@ describe('announcement threads', () => {
 				.body({type: ChannelTypes.GUILD_ANNOUNCEMENT})
 				.expect(400, APIErrorCodes.CHANNEL_HAS_THREADS)
 				.execute();
-			expect((await repository.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(ChannelTypes.GUILD_TEXT);
+			expect((await repository.channelData.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(
+				ChannelTypes.GUILD_TEXT,
+			);
 			expect(await storedType(secret.id)).toEqual({
 				state: ChannelTypes.PRIVATE_THREAD,
 				channel: ChannelTypes.PRIVATE_THREAD,

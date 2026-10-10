@@ -3,7 +3,7 @@
 import {randomInt} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {DELETED_USER_USERNAME, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -11,7 +11,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {ms} from 'itty-time';
 
-type UsernameLookup = Pick<IUserRepository, 'findUsersByUsername'>;
+type UsernameLookup = Pick<UserRepository, 'findUsersByUsername'>;
 
 interface UniqueUsernameDeps {
 	users: UsernameLookup;

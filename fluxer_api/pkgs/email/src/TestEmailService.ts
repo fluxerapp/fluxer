@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
-import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
+import type {IEmailService} from '@pkgs/email/src/IEmailService';
+
+export interface SentEmailRecord {
+	to: string;
+	type: string;
+	timestamp: Date;
+	metadata: Record<string, string>;
+}
 
 function maskToken(token: string): string {
 	if (token.length <= 8) {
@@ -12,7 +19,7 @@ function maskToken(token: string): string {
 
 const noopLogger = {info: (_message: string) => {}};
 
-export class TestEmailService implements ITestEmailService {
+export class TestEmailService implements IEmailService {
 	private readonly sentEmails: Array<SentEmailRecord> = [];
 	private readonly logger: {
 		info: (message: string) => void;

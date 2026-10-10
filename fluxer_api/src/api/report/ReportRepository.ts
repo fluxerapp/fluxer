@@ -25,10 +25,9 @@ import {
 	type IARMessageContextRow,
 	type IARSubmission,
 	type IARSubmissionRow,
-	type IReportRepository,
 	ReportStatus,
 	ReportType,
-} from '@app/api/report/IReportRepository';
+} from '@app/api/report/ReportModels';
 import {
 	DSAReportEmailVerifications,
 	DSAReportTickets,
@@ -63,7 +62,7 @@ function createFetchAllReportsFirstPageQuery(limit: number) {
 	return IARSubmissions.select({limit});
 }
 
-export class ReportRepository implements IReportRepository {
+export class ReportRepository {
 	async createReport(data: IARSubmissionRow): Promise<IARSubmission> {
 		const row: IARSubmissionRow = {
 			...data,

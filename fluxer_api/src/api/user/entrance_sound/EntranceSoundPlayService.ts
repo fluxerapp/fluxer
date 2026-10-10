@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createUserID, type EntranceSoundID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {EntranceSoundService} from '@app/api/user/entrance_sound/EntranceSoundService';
@@ -18,12 +18,12 @@ export class EntranceSoundPlayService {
 	constructor(
 		private readonly entranceSoundService: EntranceSoundService,
 		private readonly gatewayService: IGatewayService,
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 	) {}
 
 	async play(params: PlayEntranceSoundParams): Promise<void> {
 		const {userId, channelId, soundId} = params;
-		const channel = await this.channelRepository.findUnique(channelId);
+		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		const guildId = channel?.guildId ?? undefined;
 		const voiceStates = channel
 			? (await this.gatewayService.getVoiceStatesForChannel({guildId, channelId})).voiceStates

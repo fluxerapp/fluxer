@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest} from '@app/api/channel/MessageTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {BaseChannelAuthService} from '@app/api/channel/services/BaseChannelAuthService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
@@ -11,7 +11,7 @@ import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {isGuildMemberTimedOut} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {KVThreadAutoArchiveQueueService} from '@app/api/infrastructure/KVThreadAutoArchiveQueueService';
@@ -21,7 +21,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {ThreadActor} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -29,9 +29,9 @@ import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 export interface ThreadServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
-	guildRepository: IGuildRepositoryAggregate;
-	userRepository: IUserRepository;
+	channelRepository: ChannelRepository;
+	guildRepository: GuildRepository;
+	userRepository: UserRepository;
 	channelAuth: BaseChannelAuthService;
 	gatewayService: IGatewayService;
 	snowflakeService: ISnowflakeService;
@@ -58,9 +58,9 @@ export interface ForumStarterParams {
 }
 
 export class ThreadServiceContext {
-	readonly channelRepository: IChannelRepositoryAggregate;
-	readonly guildRepository: IGuildRepositoryAggregate;
-	readonly userRepository: IUserRepository;
+	readonly channelRepository: ChannelRepository;
+	readonly guildRepository: GuildRepository;
+	readonly userRepository: UserRepository;
 	readonly channelAuth: BaseChannelAuthService;
 	readonly gatewayService: IGatewayService;
 	readonly snowflakeService: ISnowflakeService;

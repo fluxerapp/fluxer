@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createLogger} from '@fluxer/logger/src/Logger';
-import type {IEmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailConfig, IEmailProvider, UserBouncedEmailChecker} from '@pkgs/email/src/EmailProviderTypes';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import type {
 	EmailLegalLinks,
 	EmailTemplateVariables,
@@ -37,18 +37,15 @@ function legalLinkVariables(config: EmailConfig): {
 
 export class EmailService implements IEmailService {
 	private readonly config: EmailConfig;
-	private readonly emailI18n: IEmailI18nService;
 	private readonly provider: IEmailProvider | null;
 	private readonly bouncedEmailChecker: UserBouncedEmailChecker | null;
 
 	constructor(
 		config: EmailConfig,
-		emailI18n: IEmailI18nService,
 		provider: IEmailProvider | null = null,
 		bouncedEmailChecker: UserBouncedEmailChecker | null = null,
 	) {
 		this.config = config;
-		this.emailI18n = emailI18n;
 		this.provider = provider;
 		this.bouncedEmailChecker = bouncedEmailChecker;
 	}
@@ -394,7 +391,7 @@ export class EmailService implements IEmailService {
 		locale: string | null,
 		variables: EmailTemplateVariables[T],
 	): Promise<boolean> {
-		const result = this.emailI18n.getTemplate(templateKey, locale, variables, this.config.productName);
+		const result = getEmailTemplate(templateKey, locale, variables, this.config.productName);
 		if (!result.ok) {
 			logger.error({key: templateKey, locale: result.locale, error: result.error}, 'Failed to resolve email template');
 			return false;

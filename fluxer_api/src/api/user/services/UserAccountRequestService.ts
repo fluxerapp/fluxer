@@ -15,8 +15,8 @@ import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {isProfileHidden} from '@app/api/user/ProfileVisibility';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {EmailChangeService} from '@app/api/user/services/EmailChangeService';
 import type {UserAccountService} from '@app/api/user/services/UserAccountService';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
@@ -99,7 +99,7 @@ export class UserAccountRequestService {
 		private readonly emailChangeService: EmailChangeService,
 		private readonly userAccountService: UserAccountService,
 		private readonly userChannelService: UserChannelService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly userCacheService: UserCacheService,
 	) {}
 

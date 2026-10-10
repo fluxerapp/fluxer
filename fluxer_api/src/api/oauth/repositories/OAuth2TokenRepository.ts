@@ -20,7 +20,6 @@ import {OAuth2AccessToken} from '@app/api/models/OAuth2AccessToken';
 import {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
 import {OAuth2RefreshToken} from '@app/api/models/OAuth2RefreshToken';
 import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
-import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
 import {
 	OAuth2AccessTokens,
 	OAuth2AccessTokensByUser,
@@ -57,7 +56,7 @@ const SELECT_REFRESH_TOKENS_BY_USER = OAuth2RefreshTokensByUser.selectCql({
 	where: OAuth2RefreshTokensByUser.where.eq('user_id'),
 });
 
-export class OAuth2TokenRepository implements IOAuth2TokenRepository {
+export class OAuth2TokenRepository {
 	async createAuthorizationCode(data: OAuth2AuthorizationCodeRow): Promise<OAuth2AuthorizationCode> {
 		await upsertOne(OAuth2AuthorizationCodes.insertWithTtl(data, AUTHORIZATION_CODE_TTL_SECONDS));
 		return new OAuth2AuthorizationCode(data);

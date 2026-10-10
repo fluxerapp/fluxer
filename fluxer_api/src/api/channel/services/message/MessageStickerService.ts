@@ -2,11 +2,11 @@
 
 import type {GuildID, StickerID, UserID} from '@app/api/BrandedTypes';
 import type {MessageStickerItem} from '@app/api/database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -14,8 +14,8 @@ import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPe
 
 export class MessageStickerService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 

@@ -205,7 +205,7 @@ const refreshChannelMessages: IndexHandler = async (payload, helpers, kvClient, 
 	const {channelRepository} = getWorkerDependencies();
 	const guildId = createGuildID(BigInt(payload.guild_id!));
 	const searchService = requireSearchService<IMessageSearchService>(getMessageSearchService());
-	const guildChannels = await channelRepository.listGuildChannels(guildId, 'complete');
+	const guildChannels = await channelRepository.channelData.listGuildChannels(guildId, 'complete');
 	const threadIds = await channelRepository.threads.listGuildThreadIds(guildId, {parents: guildChannels});
 	const channels = [...guildChannels.map((channel) => ({id: channel.id})), ...threadIds.map((id) => ({id}))];
 	if (channels.length === 0) {

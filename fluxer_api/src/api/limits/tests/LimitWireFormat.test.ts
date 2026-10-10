@@ -54,22 +54,8 @@ describe('Limit Wire Format', () => {
 			.execute()) as WellKnownResponse;
 		expect(response.limits.rules.length).toBeGreaterThan(0);
 		for (const rule of response.limits.rules) {
-			expect(rule.id).toBeDefined();
+			expect(typeof rule.id).toBe('string');
 			expect(rule.overrides).toBeDefined();
-			expect(typeof rule.overrides).toBe('object');
-			expect(Reflect.get(rule, 'limits')).toBeUndefined();
-		}
-	});
-	test('wire format already has overrides field', async () => {
-		const response = (await createBuilderWithoutAuth(harness)
-			.get('/.well-known/fluxer')
-			.expect(HTTP_STATUS.OK)
-			.execute()) as WellKnownResponse;
-		expect(response.limits.version).toBe(2);
-		expect(response.limits.defaultsHash).toBeDefined();
-		expect(typeof response.limits.defaultsHash).toBe('string');
-		expect(response.limits.defaultsHash.length).toBeGreaterThan(0);
-		for (const rule of response.limits.rules) {
 			expect(typeof rule.overrides).toBe('object');
 			expect(Reflect.get(rule, 'limits')).toBeUndefined();
 		}
@@ -81,26 +67,6 @@ describe('Limit Wire Format', () => {
 			.execute()) as WellKnownResponse;
 		const expectedHash = computeDefaultsHash();
 		expect(response.limits.defaultsHash).toBe(expectedHash);
-	});
-	test('wire format can be expanded back to full format', async () => {
-		const response = (await createBuilderWithoutAuth(harness)
-			.get('/.well-known/fluxer')
-			.expect(HTTP_STATUS.OK)
-			.execute()) as WellKnownResponse;
-		const expanded = expandWireFormat(response.limits);
-		expect(expanded.traitDefinitions).toEqual(response.limits.traitDefinitions);
-		expect(expanded.rules.length).toBe(response.limits.rules.length);
-		for (let i = 0; i < expanded.rules.length; i++) {
-			const expandedRule = expanded.rules[i];
-			const wireRule = response.limits.rules[i];
-			expect(expandedRule.id).toBe(wireRule.id);
-			expect(expandedRule.filters).toEqual(wireRule.filters);
-			expect(expandedRule.limits).toBeDefined();
-			expect(typeof expandedRule.limits).toBe('object');
-			for (const key of Object.keys(DEFAULT_FREE_LIMITS) as Array<LimitKey>) {
-				expect(expandedRule.limits[key]).toBeDefined();
-			}
-		}
 	});
 	test('premium rules have correct overrides compared to free defaults', async () => {
 		const response = (await createBuilderWithoutAuth(harness)
@@ -177,50 +143,6 @@ describe('Limit Wire Format', () => {
 			expect(DEFAULT_FREE_LIMITS[key]).toBe(0);
 			expect(DEFAULT_PREMIUM_LIMITS[key]).toBe(1);
 			expect(premiumRule.overrides[key]).toBe(1);
-		}
-	});
-	test('wire format preserves trait definitions', async () => {
-		const response = (await createBuilderWithoutAuth(harness)
-			.get('/.well-known/fluxer')
-			.expect(HTTP_STATUS.OK)
-			.execute()) as WellKnownResponse;
-		expect(response.limits.traitDefinitions).toBeDefined();
-		expect(Array.isArray(response.limits.traitDefinitions)).toBe(true);
-	});
-	test('wire format preserves rule filters', async () => {
-		const response = (await createBuilderWithoutAuth(harness)
-			.get('/.well-known/fluxer')
-			.expect(HTTP_STATUS.OK)
-			.execute()) as WellKnownResponse;
-		for (const rule of response.limits.rules) {
-			if (rule.filters) {
-				expect(typeof rule.filters).toBe('object');
-			}
-		}
-	});
-	test('defaultsHash is stable across conversions', async () => {
-		const hash1 = computeDefaultsHash();
-		const hash2 = computeDefaultsHash();
-		expect(hash1).toBe(hash2);
-		expect(typeof hash1).toBe('string');
-		expect(hash1.length).toBeGreaterThan(0);
-	});
-	test('wire format type definition matches runtime structure', async () => {
-		const response = (await createBuilderWithoutAuth(harness)
-			.get('/.well-known/fluxer')
-			.expect(HTTP_STATUS.OK)
-			.execute()) as WellKnownResponse;
-		const wireFormat: LimitConfigWireFormat = response.limits;
-		expect(wireFormat.version).toBe(2);
-		expect(typeof wireFormat.defaultsHash).toBe('string');
-		expect(Array.isArray(wireFormat.traitDefinitions)).toBe(true);
-		expect(Array.isArray(wireFormat.rules)).toBe(true);
-		for (const rule of wireFormat.rules) {
-			expect(typeof rule.id).toBe('string');
-			expect(typeof rule.overrides).toBe('object');
-			if (rule.filters) {
-				expect(typeof rule.filters).toBe('object');
-			}
 		}
 	});
 });

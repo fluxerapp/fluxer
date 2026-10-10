@@ -3,7 +3,7 @@
 import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
 import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {getDmChannelIdsForScope} from '@app/api/channel/services/message/DmScopeUtils';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
@@ -29,7 +29,7 @@ import {getMessageSearchService} from '@app/api/SearchFactory';
 import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
 import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
 import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
@@ -39,12 +39,12 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 export class MessageRetrievalService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
+		private channelRepository: ChannelRepository,
 		private userCacheService: UserCacheService,
 		private channelAuthService: MessageChannelAuthService,
 		private processingService: MessageProcessingService,
 		private searchService: MessageSearchService,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private attachmentDecayService: AttachmentDecayService = new AttachmentDecayService(),
 	) {}
 

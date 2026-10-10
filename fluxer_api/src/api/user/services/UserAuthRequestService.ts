@@ -6,7 +6,7 @@ import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
 import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import type {
@@ -53,7 +53,7 @@ interface UserAuthWebAuthnDeleteRequest {
 export class UserAuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 	) {}
 
 	async enableTotp({

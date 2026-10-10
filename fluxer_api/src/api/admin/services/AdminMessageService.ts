@@ -11,7 +11,7 @@ import {
 	type MessageID,
 	type UserID,
 } from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {withThreadContext} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	enqueueCrosspostFamilyPurgeFromCopies,
@@ -25,7 +25,7 @@ import {
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {getPurgeQueue, getStorageService} from '@app/api/middleware/ServiceSingletons';
 import {getMessageSearchService} from '@app/api/SearchFactory';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
@@ -44,8 +44,8 @@ import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageRe
 
 interface AdminMessageServiceDeps {
 	apiContext: ApiContext;
-	channelRepository: IChannelRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	channelRepository: ChannelRepository;
+	guildRepository: GuildRepository;
 	auditService: AdminAuditService;
 }
 
@@ -84,7 +84,7 @@ export class AdminMessageService {
 	async lookupMessageByAttachment(data: LookupMessageByAttachmentRequest) {
 		const channelId = createChannelID(data.channel_id);
 		const attachmentId = createAttachmentID(data.attachment_id);
-		const messageId = await this.deps.channelRepository.lookupAttachmentByChannelAndFilename(
+		const messageId = await this.deps.channelRepository.messages.lookupAttachmentByChannelAndFilename(
 			channelId,
 			attachmentId,
 			data.filename,
@@ -113,11 +113,11 @@ export class AdminMessageService {
 		const {gateway: gatewayService, worker: workerService} = this.deps.apiContext.services;
 		const channelId = createChannelID(data.channel_id);
 		const messageId = createMessageID(data.message_id);
-		const channel = await channelRepository.findUnique(channelId);
-		const message = await channelRepository.getMessage(channelId, messageId);
+		const channel = await channelRepository.channelData.findUnique(channelId);
+		const message = await channelRepository.messages.getMessage(channelId, messageId);
 		if (message) {
 			await purgeMessageAttachments(message, getStorageService(), getPurgeQueue());
-			await channelRepository.deleteMessage(
+			await channelRepository.messages.deleteMessage(
 				channelId,
 				messageId,
 				message.authorId || createUserID(0n),
@@ -227,7 +227,7 @@ export class AdminMessageService {
 	}
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
 		return {...access, includeHidden: true};
 	}
@@ -283,7 +283,7 @@ export class AdminMessageService {
 
 	private async getChannelNsfwContext(channelId: ChannelID): Promise<ChannelNsfwContext> {
 		const {channelRepository, guildRepository} = this.deps;
-		const channel = await channelRepository.findUnique(channelId);
+		const channel = await channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			return {
 				channelNsfw: null,
@@ -304,7 +304,7 @@ export class AdminMessageService {
 		}
 		const [guild, scope] = await Promise.all([
 			guildRepository.findUnique(channel.guildId),
-			resolveNsfwScopeChannel(channel, (id) => channelRepository.findUnique(id)),
+			resolveNsfwScopeChannel(channel, (id) => channelRepository.channelData.findUnique(id)),
 		]);
 		return {
 			channelNsfw: scope.isNsfw,

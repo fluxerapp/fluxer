@@ -11,7 +11,6 @@ import {
 } from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {InviteRow} from '@app/api/database/types/ChannelTypes';
-import {IInviteRepository} from '@app/api/invite/IInviteRepository';
 import {Invite} from '@app/api/models/Invite';
 import {Invites, InvitesByChannel, InvitesByGuild} from '@app/api/Tables';
 
@@ -31,7 +30,7 @@ const FETCH_INVITES_BY_GUILD_CQL = InvitesByGuild.selectCql({
 interface CreateInviteParams {
 	code: InviteCode;
 	type: number;
-	guild_id: GuildID;
+	guild_id: GuildID | null;
 	channel_id?: ChannelID | null;
 	inviter_id?: UserID | null;
 	uses: number;
@@ -40,7 +39,7 @@ interface CreateInviteParams {
 	temporary?: boolean;
 }
 
-export class InviteRepository extends IInviteRepository {
+export class InviteRepository {
 	async findUnique(code: InviteCode): Promise<Invite | null> {
 		const invite = await fetchOne<InviteRow>(FETCH_INVITE_BY_CODE_CQL, {code});
 		return invite ? new Invite(invite) : null;

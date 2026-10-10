@@ -2,7 +2,7 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import type {Channel} from '@app/api/models/Channel';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 export type DmSearchScope = 'all_dms' | 'open_dms';
@@ -10,7 +10,7 @@ export type DmSearchScope = 'all_dms' | 'open_dms';
 interface DmScopeOptions {
 	scope: DmSearchScope;
 	userId: UserID;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	includeChannel?: Channel | null;
 }
 

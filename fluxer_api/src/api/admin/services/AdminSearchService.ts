@@ -7,7 +7,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isSyntheticUserId} from '@app/api/constants/Core';
 import {channelThreadsEnabled} from '@app/api/experiment/ChannelThreadsGate';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Logger} from '@app/api/Logger';
 import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -36,7 +36,7 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 
 interface AdminSearchServiceDeps {
 	apiContext: ApiContext;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	auditService: AdminAuditService;
 }
 

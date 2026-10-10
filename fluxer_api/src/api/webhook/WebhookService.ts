@@ -4,7 +4,7 @@ import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createUserID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
@@ -40,9 +40,9 @@ import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
 import {instatusDeliveryKey, transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	CHANNEL_FOLLOW_TARGET_TYPES,
@@ -170,10 +170,10 @@ export class WebhookService {
 	}
 
 	constructor(
-		private repository: IWebhookRepository,
+		private repository: WebhookRepository,
 		private guildService: GuildService,
 		private channelService: ChannelService,
-		private channelRepository: IChannelRepository,
+		private channelRepository: ChannelRepository,
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
 		private avatarService: AvatarService,
@@ -353,7 +353,7 @@ export class WebhookService {
 		const moveChannelId = followerMoveChannelId;
 		const updatedWebhook = moveChannelId
 			? await withChannelFollowLock(this.cacheService, moveChannelId, async () => {
-					const current = await this.channelRepository.findUnique(moveChannelId);
+					const current = await this.channelRepository.channelData.findUnique(moveChannelId);
 					if (!current || !CHANNEL_FOLLOW_TARGET_TYPES.has(current.type)) {
 						throw new InvalidFollowTargetChannelError();
 					}
@@ -557,7 +557,7 @@ export class WebhookService {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		if (!webhook.channelId) throw new UnknownChannelError();
 		const thread = await this.resolveWebhookThread(webhook, threadId);
-		const message = await this.channelRepository.getMessage(thread?.id ?? webhook.channelId, messageId);
+		const message = await this.channelRepository.messages.getMessage(thread?.id ?? webhook.channelId, messageId);
 		if (!message) throw new UnknownMessageError();
 		if (message.webhookId !== webhook.id) throw new MissingPermissionsError();
 		return message;
@@ -708,7 +708,7 @@ export class WebhookService {
 
 	private async resolveParentContentView(channel: Channel): Promise<ContentWarningChannelLike | null> {
 		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) return null;
-		const parent = await this.channelRepository.findUnique(channel.parentId);
+		const parent = await this.channelRepository.channelData.findUnique(channel.parentId);
 		return parent ? channelToContentWarningView(parent) : null;
 	}
 
@@ -724,7 +724,7 @@ export class WebhookService {
 		userId: UserID;
 	}): Promise<void> {
 		if (!webhook.sourceChannelId || !webhook.sourceGuildId) return;
-		const sourceChannel = await this.channelRepository.findUnique(webhook.sourceChannelId);
+		const sourceChannel = await this.channelRepository.channelData.findUnique(webhook.sourceChannelId);
 		if (!sourceChannel) return;
 		const sourceGuild = await this.gatewayService
 			.getGuildData({guildId: webhook.sourceGuildId, userId, skipMembershipCheck: true})
@@ -768,7 +768,7 @@ export class WebhookService {
 	private async isDormantForumWebhook(webhook: Webhook): Promise<boolean> {
 		if (!everEnabled() || !webhook.guildId || !webhook.channelId || guildActive(webhook.guildId)) return false;
 		if (!(await isTainted(webhook.guildId))) return false;
-		const channel = await this.channelRepository.findUnique(webhook.channelId);
+		const channel = await this.channelRepository.channelData.findUnique(webhook.channelId);
 		return channel?.isThreadOnly() ?? false;
 	}
 
@@ -781,7 +781,7 @@ export class WebhookService {
 		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
 		if (channelIds.length === 0) return webhooks;
 		const forumIds = new Set(
-			(await this.channelRepository.listChannels(channelIds))
+			(await this.channelRepository.channelData.listChannels(channelIds))
 				.filter((channel) => channel.isThreadOnly())
 				.map((channel) => channel.id),
 		);
@@ -802,7 +802,7 @@ export class WebhookService {
 			throw new UnknownChannelError();
 		}
 		if (!/^\d{1,20}$/.test(threadId)) throw new UnknownChannelError();
-		const thread = await this.channelRepository.findUnique(createChannelID(BigInt(threadId)));
+		const thread = await this.channelRepository.channelData.findUnique(createChannelID(BigInt(threadId)));
 		if (!thread?.isThread() || thread.parentId !== webhook.channelId || thread.guildId !== webhook.guildId) {
 			throw new UnknownChannelError();
 		}
@@ -816,7 +816,7 @@ export class WebhookService {
 		const webhook = await this.repository.findByToken(webhookId, token);
 		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
 		if (!webhook.channelId) throw new UnknownChannelError();
-		const channel = await this.channelRepository.findUnique(webhook.channelId);
+		const channel = await this.channelRepository.channelData.findUnique(webhook.channelId);
 		if (!channel) throw new UnknownChannelError();
 		if (channel.isThreadOnly() && webhook.guildId && !guildActive(webhook.guildId)) throw new UnknownWebhookError();
 		this.assertWebhookTargetChannel(channel);
@@ -849,7 +849,7 @@ export class WebhookService {
 				: webhook.avatarHash;
 		let channelId = webhook.channelId;
 		if (data.channel_id !== undefined && data.channel_id !== webhook.channelId) {
-			const channel = await this.channelRepository.findUnique(createChannelID(data.channel_id));
+			const channel = await this.channelRepository.channelData.findUnique(createChannelID(data.channel_id));
 			if (!channel) {
 				throw new UnknownChannelError();
 			}

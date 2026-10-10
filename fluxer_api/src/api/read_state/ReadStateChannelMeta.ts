@@ -10,7 +10,7 @@ import {
 	viewerActive,
 	viewerFromCtx,
 } from '@app/api/experiment/ChannelThreadsGate';
-import type {ReadStateMarker} from '@app/api/read_state/IReadStateRepository';
+import type {ReadStateMarker} from '@app/api/read_state/ReadStateRepository';
 import {Channels} from '@app/api/Tables';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';

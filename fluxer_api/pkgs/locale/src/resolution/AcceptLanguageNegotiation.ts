@@ -17,7 +17,7 @@ interface AcceptLanguagePreference {
 const TRADITIONAL_CHINESE_SUBTAGS: ReadonlySet<string> = new Set(['hant', 'tw', 'hk', 'mo']);
 const SIMPLIFIED_CHINESE_SUBTAGS: ReadonlySet<string> = new Set(['hans', 'cn', 'sg']);
 
-export function resolveLocaleFromAcceptLanguageHeader(acceptLanguageHeader: string | null | undefined): LocaleCode {
+export function parseAcceptLanguage(acceptLanguageHeader: string | null | undefined): LocaleCode {
 	if (!acceptLanguageHeader) {
 		return DEFAULT_LOCALE;
 	}

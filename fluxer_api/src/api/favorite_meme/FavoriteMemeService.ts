@@ -9,7 +9,7 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {attachmentStorageChannelId, makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import {
 	isOptionalGifProviderError,
 	type ResolvedGifProviderSlug,
@@ -96,7 +96,7 @@ function resolveFavoriteMemeAnimationFlag(
 export class FavoriteMemeService {
 	constructor(
 		private readonly apiContext: ApiContext,
-		private readonly favoriteMemeRepository: IFavoriteMemeRepository,
+		private readonly favoriteMemeRepository: FavoriteMemeRepository,
 		private readonly channelService: ChannelService,
 		private readonly storageService: IStorageService,
 		private readonly unfurlerService: IUnfurlerService,

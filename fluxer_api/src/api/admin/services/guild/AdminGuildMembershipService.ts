@@ -4,7 +4,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -15,7 +15,7 @@ import type {
 import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 interface AdminGuildMembershipServiceDeps {
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	guildService: GuildService;
 	auditService: AdminAuditService;
 }

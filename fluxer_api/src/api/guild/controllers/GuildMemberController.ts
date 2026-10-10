@@ -217,7 +217,7 @@ export function GuildMemberController(app: HonoApp) {
 			const newOwnerId = createUserID(new_owner_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			return ctx.json(
-				await ctx.get('guildService').data.transferOwnership({userId, guildId, newOwnerId}, auditLogReason),
+				await ctx.get('guildService').data.ownership.transferOwnership({userId, guildId, newOwnerId}, auditLogReason),
 			);
 		},
 	);

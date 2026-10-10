@@ -94,8 +94,8 @@ describe('seedThreadPermissions', () => {
 			})
 			.execute();
 		const channelRepository = getChannelRepository();
-		const stored = await channelRepository.findUnique(createChannelID(BigInt(channel.id)));
-		await channelRepository.upsert({
+		const stored = await channelRepository.channelData.findUnique(createChannelID(BigInt(channel.id)));
+		await channelRepository.channelData.upsert({
 			...stored!.toRow(),
 			permission_overwrites: new Map([
 				[
@@ -118,9 +118,9 @@ describe('seedThreadPermissions', () => {
 		await seedThreadPermissions({guildId: guild.id}, helpers());
 		const everyone = await getGuildRepository().getRole(createRoleID(BigInt(guild.id)), guildId);
 		expect(everyone?.permissions).toBe(DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS);
-		const seeded = (await channelRepository.findUnique(createChannelID(BigInt(channel.id))))!.permissionOverwrites.get(
-			createRoleID(BigInt(guild.id)),
-		);
+		const seeded = (await channelRepository.channelData.findUnique(
+			createChannelID(BigInt(channel.id)),
+		))!.permissionOverwrites.get(createRoleID(BigInt(guild.id)));
 		expect(seeded?.allow).toBe(0n);
 		expect(seeded?.deny).toBe(Permissions.SEND_MESSAGES | DEFAULT_THREAD_PERMISSIONS);
 		expect(dispatchGuild.mock.calls.map(([params]) => params.event)).toEqual([
@@ -166,7 +166,7 @@ describe('seedThreadPermissions', () => {
 		setConfig({...ALL_THREADS_ACTIVE, ever_enabled: true, enabled_guild_ids: [guild.id]});
 		await seedThreadPermissions({guildId: guild.id}, helpers());
 
-		const seeded = (await getChannelRepository().findUnique(
+		const seeded = (await getChannelRepository().channelData.findUnique(
 			createChannelID(BigInt(channel.id)),
 		))!.permissionOverwrites.get(createRoleID(BigInt(role.id)));
 		expect(seeded?.allow).toBe(Permissions.SEND_MESSAGES | DEFAULT_THREAD_PERMISSIONS);

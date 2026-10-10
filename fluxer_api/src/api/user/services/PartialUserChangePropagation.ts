@@ -2,7 +2,7 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -17,7 +17,7 @@ export interface PartialUserChangePropagationDeps {
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	userRepository: UserGuildIdReader;
-	guildRepository: Pick<IGuildRepositoryAggregate, 'getMember'>;
+	guildRepository: Pick<GuildRepository, 'getMember'>;
 }
 
 export async function propagatePartialUserChange(deps: PartialUserChangePropagationDeps, user: User): Promise<void> {

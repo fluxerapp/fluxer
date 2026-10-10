@@ -2,12 +2,12 @@
 
 import {type ChannelID, type GuildID, guildIdToRoleId, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -52,60 +52,6 @@ function resolveLanguage(language: string | null | undefined, fallback: string |
 	if (language && isValidDiscoveryLanguage(language)) return language;
 	if (fallback && isValidDiscoveryLanguage(fallback)) return fallback;
 	return DISCOVERY_DEFAULT_LANGUAGE;
-}
-
-export abstract class IGuildDiscoveryService {
-	abstract apply(params: {
-		guildId: GuildID;
-		userId: UserID;
-		description: string;
-		categoryId: number;
-		primaryLanguage?: string;
-		customTags?: ReadonlyArray<string>;
-	}): Promise<GuildDiscoveryRow>;
-
-	abstract editApplication(params: {
-		guildId: GuildID;
-		userId: UserID;
-		data: DiscoveryApplicationPatchRequest;
-	}): Promise<GuildDiscoveryRow>;
-
-	abstract withdraw(params: {guildId: GuildID; userId: UserID}): Promise<void>;
-
-	abstract getStatus(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
-
-	abstract approve(params: {guildId: GuildID; adminUserId: UserID; reason?: string}): Promise<GuildDiscoveryRow>;
-
-	abstract reject(params: {guildId: GuildID; adminUserId: UserID; reason: string}): Promise<GuildDiscoveryRow>;
-
-	abstract remove(params: {guildId: GuildID; adminUserId: UserID; reason: string}): Promise<GuildDiscoveryRow>;
-
-	abstract getEligibility(guildId: GuildID): Promise<{
-		eligible: boolean;
-		min_member_count: number;
-	}>;
-
-	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract getChannelPreview(
-		guildId: GuildID,
-		channelId: ChannelID,
-		viewer: ThreadViewer,
-	): Promise<DiscoveryChannelPreview>;
-
-	abstract searchDiscoverable(params: {
-		query?: string;
-		categoryId?: number;
-		primaryLanguage?: string;
-		tag?: string;
-		sortBy?: string;
-		limit: number;
-		offset: number;
-	}): Promise<{
-		guilds: Array<DiscoveryGuildResult>;
-		total: number;
-		category_counts: Array<DiscoveryCategoryCount>;
-	}>;
 }
 
 interface DiscoveryCategoryCount {
@@ -153,16 +99,14 @@ function toDiscoveryCategoryCounts(
 	return entries.sort((left, right) => left.category_type - right.category_type);
 }
 
-export class GuildDiscoveryService extends IGuildDiscoveryService {
+export class GuildDiscoveryService {
 	constructor(
-		private readonly discoveryRepository: IGuildDiscoveryRepository,
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly discoveryRepository: GuildDiscoveryRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly guildSearchService: IGuildSearchService | null,
-		private readonly channelDataRepository: IChannelDataRepository,
-	) {
-		super();
-	}
+		private readonly channelDataRepository: ChannelDataRepository,
+	) {}
 
 	async apply(params: {
 		guildId: GuildID;

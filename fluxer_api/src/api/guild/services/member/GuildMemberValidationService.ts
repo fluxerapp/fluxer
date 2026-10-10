@@ -3,9 +3,9 @@
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {guildIdToRoleId} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildMember} from '@app/api/models/GuildMember';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -24,8 +24,8 @@ function ensureNotEveryoneRole(roleId: RoleID, guildId: GuildID, path: string): 
 
 export class GuildMemberValidationService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly userRepository: IUserRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly userRepository: UserRepository,
 	) {}
 
 	async validateAndGetRoleIds(params: {

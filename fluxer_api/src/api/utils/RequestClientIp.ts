@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import type {APIConfig} from '@app/api/config/APIConfig';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import {extractClientIp, MissingClientIpError, resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
+import {
+	extractClientIp,
+	MissingClientIpError,
+	requireClientIp,
+	resolveClientIpHeaderName,
+} from '@fluxer/ip_utils/src/ClientIp';
 import type {Context} from 'hono';
 
 export interface ClientIpResolution {
@@ -32,11 +38,20 @@ export function resolveClientIpWithOptions(ctx: Context<HonoEnv>, options: Clien
 	return ip;
 }
 
+function proxyClientIpOptions(proxy: APIConfig['proxy']): ClientIpResolutionOptions {
+	return {trustClientIpHeader: proxy.trust_client_ip_header, clientIpHeaderName: proxy.client_ip_header};
+}
+
+export function extractConfiguredClientIp(request: Request): string | null {
+	return extractClientIp(request, proxyClientIpOptions(Config.proxy));
+}
+
+export function requireConfiguredClientIp(request: Request, proxy: APIConfig['proxy']): string {
+	return requireClientIp(request, proxyClientIpOptions(proxy));
+}
+
 export function getRequestClientIp(ctx: Context<HonoEnv>): string | null {
-	return resolveClientIpWithOptions(ctx, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
+	return resolveClientIpWithOptions(ctx, proxyClientIpOptions(Config.proxy));
 }
 
 export function requireRequestClientIp(ctx: Context<HonoEnv>): string {

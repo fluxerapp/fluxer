@@ -3,8 +3,8 @@
 import {createGuildID, type GuildID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import type {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {MessageFlags, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -45,8 +45,8 @@ function getCrosspostSourceGuildId(message: MessageResponse): GuildID | null {
 
 export class CrosspostSourceService {
 	constructor(
-		private readonly guildRepository: IGuildDataRepository,
-		private readonly discoveryRepository: IGuildDiscoveryRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly discoveryRepository: GuildDiscoveryRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly cacheService: ICacheService,
 	) {}

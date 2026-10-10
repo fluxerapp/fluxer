@@ -2,7 +2,7 @@
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
@@ -36,7 +36,7 @@ export function createWebhookSourceResolver({
 	gatewayService,
 	requestCache,
 }: {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	requestCache: RequestCache;
 }): WebhookSourceResolver {
@@ -74,14 +74,14 @@ async function resolveWebhookSource({
 	sourceChannelId,
 	creatorId,
 }: {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	sourceGuildId: GuildID;
 	sourceChannelId: ChannelID;
 	creatorId: UserID;
 }): Promise<WebhookSourceFields | null> {
 	try {
-		const channel = await channelRepository.findUnique(sourceChannelId);
+		const channel = await channelRepository.channelData.findUnique(sourceChannelId);
 		if (!channel || channel.guildId !== sourceGuildId) return null;
 		const canView = await gatewayService.checkPermission({
 			guildId: sourceGuildId,

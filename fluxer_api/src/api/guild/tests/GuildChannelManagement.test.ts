@@ -202,7 +202,7 @@ describe('Guild Channel Management', () => {
 					expect.objectContaining({path: 'rtc_p2p', code: ValidationErrorCodes.GUILD_FEATURE_NOT_TOGGLEABLE}),
 				);
 			}
-			const stored = await getChannelRepository().findUnique(createChannelID(BigInt(voiceChannel.id)));
+			const stored = await getChannelRepository().channelData.findUnique(createChannelID(BigInt(voiceChannel.id)));
 			expect(stored?.rtcP2p).toBe(false);
 			await setVoiceP2pConfig({enabled: true, included_user_ids: [account.userId]});
 			await createBuilder(harness, account.token)
@@ -225,7 +225,7 @@ describe('Guild Channel Management', () => {
 				.body({type: ChannelTypes.GUILD_TEXT, rtc_p2p: true})
 				.execute();
 			expect(data.rtc_p2p).toBeUndefined();
-			const stored = await getChannelRepository().findUnique(createChannelID(BigInt(textChannel.id)));
+			const stored = await getChannelRepository().channelData.findUnique(createChannelID(BigInt(textChannel.id)));
 			expect(stored?.rtcP2p).toBe(false);
 		});
 		test('should require MANAGE_CHANNELS to update rtc_p2p', async () => {
@@ -242,7 +242,7 @@ describe('Guild Channel Management', () => {
 				.body({type: ChannelTypes.GUILD_VOICE, rtc_p2p: true})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-			const stored = await getChannelRepository().findUnique(createChannelID(BigInt(voiceChannel.id)));
+			const stored = await getChannelRepository().channelData.findUnique(createChannelID(BigInt(voiceChannel.id)));
 			expect(stored?.rtcP2p).toBe(false);
 		});
 		test('should clamp bitrate to 96000 without an audio bitrate feature', async () => {

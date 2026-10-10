@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ADMIN_AUDIT_READ_ACTIONS, getAdminAuditAccess} from '@app/api/admin/AdminAuditActions';
-import type {AdminAuditLog, IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog, AdminRepository} from '@app/api/admin/AdminRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
 import type {Channel} from '@app/api/models/Channel';
 import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import {getAuditLogSearchService} from '@app/api/SearchFactory';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {AuditLogSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {
 	AdminAuditAccess,
@@ -34,7 +34,7 @@ interface CreateAdminAuditLogParams {
 
 export class AdminAuditService {
 	constructor(
-		private readonly adminRepository: IAdminRepository,
+		private readonly adminRepository: AdminRepository,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly enrichmentDeps: AuditLogEnrichmentDeps = {},
 	) {}
@@ -341,9 +341,9 @@ function accessFilters(access: AdminAuditAccess | undefined): AuditLogSearchFilt
 }
 
 interface AuditLogEnrichmentDeps {
-	userRepository?: Pick<IUserRepository, 'findUnique'>;
-	guildRepository?: Pick<IGuildRepositoryAggregate, 'findUnique'>;
-	channelRepository?: Pick<IChannelRepository, 'findUnique'>;
+	userRepository?: Pick<UserRepository, 'findUnique'>;
+	guildRepository?: Pick<GuildRepository, 'findUnique'>;
+	channelRepository?: Pick<ChannelDataRepository, 'findUnique'>;
 }
 
 interface AuditLogEnrichment {

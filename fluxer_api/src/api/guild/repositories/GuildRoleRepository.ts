@@ -5,7 +5,6 @@ import {deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQ
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {GuildRoleRow} from '@app/api/database/types/GuildTypes';
 import {GUILD_ROLE_COLUMNS} from '@app/api/database/types/GuildTypes';
-import {IGuildRoleRepository} from '@app/api/guild/repositories/IGuildRoleRepository';
 import {GuildRole} from '@app/api/models/GuildRole';
 import {GuildRoles} from '@app/api/Tables';
 
@@ -20,7 +19,7 @@ const FETCH_ROLES_BY_IDS_QUERY = GuildRoles.selectCql({
 	where: [GuildRoles.where.eq('guild_id'), GuildRoles.where.in('role_id', 'role_ids')],
 });
 
-export class GuildRoleRepository extends IGuildRoleRepository {
+export class GuildRoleRepository {
 	async getRole(roleId: RoleID, guildId: GuildID): Promise<GuildRole | null> {
 		const role = await fetchOne<GuildRoleRow>(FETCH_GUILD_ROLE_BY_ID_QUERY, {
 			guild_id: guildId,

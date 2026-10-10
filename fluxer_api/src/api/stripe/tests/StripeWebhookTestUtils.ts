@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import crypto from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -22,11 +23,13 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createMockWebhookPayload, type StripeWebhookEventData} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import Stripe from 'stripe';
 
 export async function createTestUserWithPremium(
@@ -136,4 +139,38 @@ export function restoreStripeWebhookSecret(): void {
 	).webhookSecret;
 }
 
-export {} from '@app/api/test/msw/handlers/StripeApiHandlers';
+export function signStripeWebhook(payload: string, timestamp: number, secret: string): string {
+	const signature = crypto.createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex');
+	return `t=${timestamp},v1=${signature}`;
+}
+
+function buildStripeWebhookRequest(harness: ApiTestHarness, eventData: StripeWebhookEventData, signature?: string) {
+	const {payload, timestamp} = createMockWebhookPayload(eventData);
+	return createBuilder<{received: boolean}>(harness, '')
+		.post('/stripe/webhook')
+		.header('stripe-signature', signature ?? signStripeWebhook(payload, timestamp, Config.stripe.webhookSecret!))
+		.header('content-type', 'application/json')
+		.body(payload);
+}
+
+export async function sendStripeWebhook(
+	harness: ApiTestHarness,
+	eventData: StripeWebhookEventData,
+): Promise<{received: boolean}> {
+	return buildStripeWebhookRequest(harness, eventData).execute();
+}
+
+export async function sendStripeWebhookRaw(
+	harness: ApiTestHarness,
+	eventData: StripeWebhookEventData,
+	signature?: string,
+): Promise<{response: Response; text: string}> {
+	return buildStripeWebhookRequest(harness, eventData, signature).executeRaw();
+}
+
+export async function sendStripeWebhookExpectStripeError(
+	harness: ApiTestHarness,
+	eventData: StripeWebhookEventData,
+): Promise<void> {
+	await buildStripeWebhookRequest(harness, eventData).expect(400, APIErrorCodes.STRIPE_ERROR).execute();
+}

@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomBytes} from 'node:crypto';
-import {createAuthHarness, createTestAccount, loginAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createAuthHarness,
+	createTestAccount,
+	createTotpSecret,
+	loginAccount,
+	loginWithTotp,
+	type TestAccount,
+	totpCodeNow,
+} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {TotpGenerator} from '@app/api/utils/TotpGenerator';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -23,65 +29,6 @@ interface OAuth2ApplicationResponse {
 		id: string;
 		token: string;
 	};
-}
-
-function generateTotpSecret(): string {
-	const buffer = randomBytes(20);
-	const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-	let result = '';
-	for (let i = 0; i < buffer.length; i += 5) {
-		const bytes = [buffer[i]!, buffer[i + 1]!, buffer[i + 2]!, buffer[i + 3]!, buffer[i + 4]!];
-		const n = (bytes[0]! << 24) | (bytes[1]! << 16) | (bytes[2]! << 8) | bytes[3]!;
-		const indices = [
-			(n >> 3) & 0x1f,
-			((n >> 11) | ((bytes[4]! << 4) & 0xf)) & 0x1f,
-			((n >> 19) | ((bytes[4]! << 2) & 0x3c)) & 0x1f,
-			(bytes[4]! >> 1) & 0x1f,
-		];
-		result += base32Chars[indices[0]!];
-		result += base32Chars[indices[1]!];
-		result += base32Chars[indices[2]!];
-		result += base32Chars[indices[3]!];
-	}
-	return result;
-}
-
-async function generateTotpCode(secret: string): Promise<string> {
-	const totp = new TotpGenerator(secret);
-	const codes = await totp.generateTotp();
-	return codes[0]!;
-}
-
-async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const loginResp = await createBuilderWithoutAuth<
-		| {
-				mfa: true;
-				ticket: string;
-		  }
-		| {
-				mfa: false;
-				token: string;
-		  }
-	>(harness)
-		.post('/auth/login')
-		.body({
-			email: account.email,
-			password: account.password,
-		})
-		.execute();
-	if (!loginResp.mfa) {
-		throw new Error('Expected MFA login');
-	}
-	const mfaLoginResp = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			ticket: loginResp.ticket,
-			code: await generateTotpCode(secret),
-		})
-		.execute();
-	return {...account, token: mfaLoginResp.token};
 }
 
 async function createOAuth2BotApplication(
@@ -177,8 +124,8 @@ describe('Auth sudo required operations', () => {
 	});
 	it('requires sudo for disable TOTP MFA', async () => {
 		let account = await createTestAccount(harness);
-		const secret = generateTotpSecret();
-		const code = await generateTotpCode(secret);
+		const secret = createTotpSecret();
+		const code = totpCodeNow(secret);
 		const enableResp = await createBuilder<BackupCodesResponse>(harness, account.token)
 			.post('/users/@me/mfa/totp/enable')
 			.body({
@@ -202,15 +149,15 @@ describe('Auth sudo required operations', () => {
 			.body({
 				code: backupCode,
 				mfa_method: 'totp',
-				mfa_code: await generateTotpCode(secret),
+				mfa_code: totpCodeNow(secret),
 			})
 			.expect(204)
 			.execute();
 	});
 	it('requires sudo for enable TOTP MFA', async () => {
 		const account = await createTestAccount(harness);
-		const secret = generateTotpSecret();
-		const code = await generateTotpCode(secret);
+		const secret = createTotpSecret();
+		const code = totpCodeNow(secret);
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/enable')
 			.body({

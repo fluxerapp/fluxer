@@ -4,9 +4,9 @@ import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
@@ -19,8 +19,8 @@ import {ms} from 'itty-time';
 
 interface UserAccountLifecycleServiceDeps {
 	apiContext: ApiContext;
-	userAccountRepository: IUserAccountRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userAccountRepository: UserRepository;
+	guildRepository: GuildRepository;
 	emailService: IEmailService;
 	updatePropagator: UserAccountUpdatePropagator;
 	kvDeletionQueue: KVAccountDeletionQueueService;

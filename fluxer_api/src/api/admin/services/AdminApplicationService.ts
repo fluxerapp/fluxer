@@ -3,9 +3,9 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {type ApplicationID, createApplicationID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Application} from '@app/api/models/Application';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownApplicationError} from '@fluxer/errors/src/domains/oauth/UnknownApplicationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -18,9 +18,9 @@ import type {
 
 interface AdminApplicationServiceDeps {
 	apiContext: ApiContext;
-	applicationRepository: IApplicationRepository;
+	applicationRepository: ApplicationRepository;
 	auditService: AdminAuditService;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 }
 
 interface UserDisplay {

@@ -233,12 +233,12 @@ const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 	const messageId = createMessageID(BigInt(validated.messageId));
 	const payloadGuildId = validated.guildId ? createGuildID(BigInt(validated.guildId)) : null;
 	const mentionHere = validated.mentionHere ?? false;
-	const message = await channelRepository.getMessage(channelId, messageId);
+	const message = await channelRepository.messages.getMessage(channelId, messageId);
 	if (!message) {
 		Logger.debug({messageId}, 'handleMentions: Message not found, skipping');
 		return;
 	}
-	const channel = await channelRepository.findUnique(channelId);
+	const channel = await channelRepository.channelData.findUnique(channelId);
 	if (!channel) {
 		Logger.debug({channelId}, 'handleMentions: Channel not found, skipping');
 		return;

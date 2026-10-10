@@ -12,7 +12,7 @@ import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {ThreadState} from '@app/api/models/ThreadState';
-import type {ReadStateMentionUpdate} from '@app/api/read_state/IReadStateRepository';
+import type {ReadStateMentionUpdate} from '@app/api/read_state/ReadStateRepository';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -118,8 +118,6 @@ function createHarness(params: {
 		type: params.channelType ?? ChannelTypes.PUBLIC_THREAD,
 	};
 	const channelRepository = {
-		getMessage: async () => message,
-		findUnique: async () => channel,
 		threads: {
 			getState: async () => state,
 			getMembers: async (_threadId: ChannelID, userIds: Array<UserID>) =>
@@ -135,11 +133,10 @@ function createHarness(params: {
 			getParentConfig: async () => ({availableTags: (params.forumTags?.live ?? []).map((id) => ({id}))}),
 		},
 		channelData: {
-			findUnique: async () => ({
-				id: PARENT,
-				type: parentType,
-				isThreadOnly: () => parentType === ChannelTypes.GUILD_FORUM,
-			}),
+			findUnique: async (channelId: ChannelID) =>
+				channelId === THREAD
+					? channel
+					: {id: PARENT, type: parentType, isThreadOnly: () => parentType === ChannelTypes.GUILD_FORUM},
 		},
 		messages: {
 			getMessage: async () => ({...message, toRow: () => ({flags: message.flags})}),

@@ -17,7 +17,6 @@ import {
 	DonorsByStripeCustomerId,
 	DonorsByStripeSubscriptionId,
 } from '@app/api/donation/DonationTables';
-import {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import {Donor} from '@app/api/donation/models/Donor';
 import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 
@@ -44,7 +43,7 @@ const FETCH_MAGIC_LINK_TOKENS_BY_EMAIL_QUERY = DonorMagicLinkTokensByEmail.selec
 	where: DonorMagicLinkTokensByEmail.where.eq('donor_email'),
 });
 
-export class DonationRepository extends IDonationRepository {
+export class DonationRepository {
 	async findDonorByEmail(email: string): Promise<Donor | null> {
 		const row = await fetchOne<DonorRow>(FETCH_DONOR_BY_EMAIL_QUERY, {email});
 		return row ? new Donor(row) : null;

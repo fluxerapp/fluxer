@@ -18,7 +18,6 @@ import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataReposito
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
 import {GuildModerationRepository} from '@app/api/guild/repositories/GuildModerationRepository';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
@@ -29,7 +28,7 @@ import type {GuildRole} from '@app/api/models/GuildRole';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 
-export class GuildRepository implements IGuildRepositoryAggregate {
+export class GuildRepository {
 	private dataRepo: GuildDataRepository;
 	private memberRepo: GuildMemberRepository;
 	private roleRepo: GuildRoleRepository;

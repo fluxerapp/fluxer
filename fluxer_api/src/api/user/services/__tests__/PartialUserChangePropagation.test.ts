@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {GuildMember} from '@app/api/models/GuildMember';
@@ -57,7 +57,7 @@ function createDeps(guildIds: Array<(typeof GUILD_IDS)[number]> = GUILD_IDS) {
 		} as unknown as UserCacheService,
 		gatewayService: {dispatchGuild} as unknown as IGatewayService,
 		userRepository: {getUserGuildIds},
-		guildRepository: {getMember} as unknown as IGuildRepositoryAggregate,
+		guildRepository: {getMember} as unknown as GuildRepository,
 	};
 	return {deps, dispatchGuild, setUserPartialResponseFromUser, getUserGuildIds, getMember};
 }

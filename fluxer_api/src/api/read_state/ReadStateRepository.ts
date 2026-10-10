@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {channelIdToMessageId, createMessageID} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
@@ -12,14 +12,25 @@ import {
 import {Db, type DbOp} from '@app/api/database/CassandraTypes';
 import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
 import {ReadState} from '@app/api/models/ReadState';
-import type {
-	IReadStateRepository,
-	ReadStateMarker,
-	ReadStateMentionUpdate,
-	ReadStateUpsert,
-} from '@app/api/read_state/IReadStateRepository';
 import {ReadStates} from '@app/api/Tables';
 import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';
+
+export interface ReadStateUpsert {
+	readState: ReadState;
+	previous: ReadState | null;
+}
+
+export interface ReadStateMarker {
+	flags: number;
+	guildId: GuildID;
+}
+
+export interface ReadStateMentionUpdate {
+	userId: UserID;
+	channelId: ChannelID;
+	messageId: MessageID;
+	marker?: ReadStateMarker | null;
+}
 
 const FETCH_READ_STATES_CQL = ReadStates.selectCql({
 	where: ReadStates.where.eq('user_id'),
@@ -67,7 +78,7 @@ function mentionBaseline(channelId: ChannelID, marker: ReadStateMarker | null | 
 	return baseline;
 }
 
-export class ReadStateRepository implements IReadStateRepository {
+export class ReadStateRepository {
 	async listReadStates(userId: UserID): Promise<Array<ReadState>> {
 		const rows = await fetchMany<ReadStateRow>(FETCH_READ_STATES_CQL, {user_id: userId});
 		return rows.map((row) => new ReadState(row));

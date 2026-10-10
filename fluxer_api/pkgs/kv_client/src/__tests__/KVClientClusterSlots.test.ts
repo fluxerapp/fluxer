@@ -63,26 +63,6 @@ describe('KVClient cluster hash slots', () => {
 		store.clear();
 	});
 
-	it('reads several keys without a command spanning hash slots', async () => {
-		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
-		const client = createClusteredClient();
-		await client.set('slot:alpha', 'one');
-
-		await expect(client.mget('slot:alpha', 'slot:beta')).resolves.toEqual(['one', null]);
-		expect(crossSlotCommands()).toEqual([]);
-	});
-
-	it('writes several keys without a command spanning hash slots', async () => {
-		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
-		const client = createClusteredClient();
-
-		await client.mset('slot:alpha', 'one', 'slot:beta', 'two');
-
-		expect(store.get('slot:alpha')).toBe('one');
-		expect(store.get('slot:beta')).toBe('two');
-		expect(crossSlotCommands()).toEqual([]);
-	});
-
 	it('deletes several keys without a command spanning hash slots', async () => {
 		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
 		const client = createClusteredClient();

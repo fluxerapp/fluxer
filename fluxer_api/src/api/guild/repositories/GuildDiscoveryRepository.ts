@@ -14,26 +14,7 @@ const FETCH_DISCOVERY_BY_STATUS = GuildDiscoveryByStatus.selectCql({
 	where: GuildDiscoveryByStatus.where.eq('status'),
 });
 
-export abstract class IGuildDiscoveryRepository {
-	abstract findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
-
-	abstract listByStatus(status: string): Promise<Array<GuildDiscoveryByStatusRow>>;
-
-	abstract listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract upsert(row: GuildDiscoveryRow): Promise<void>;
-
-	abstract deleteByGuildId(guildId: GuildID, status: string, appliedAt: Date): Promise<void>;
-
-	abstract updateStatus(
-		guildId: GuildID,
-		oldStatus: string,
-		oldAppliedAt: Date,
-		updatedRow: GuildDiscoveryRow,
-	): Promise<void>;
-}
-
-export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
+export class GuildDiscoveryRepository {
 	async findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null> {
 		const row = await fetchOne<GuildDiscoveryRow>(FETCH_DISCOVERY_BY_GUILD_ID, {
 			guild_id: guildId,

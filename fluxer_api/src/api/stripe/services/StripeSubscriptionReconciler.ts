@@ -7,7 +7,7 @@ import type {User} from '@app/api/models/User';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {getPrimarySubscriptionItem, getSubscriptionStartDate} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type Stripe from 'stripe';
@@ -21,7 +21,7 @@ interface InvoiceRenewalContext {
 export class StripeSubscriptionReconciler {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: ProductRegistry,
 	) {}
 

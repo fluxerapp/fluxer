@@ -3,7 +3,7 @@
 import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
 import {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
 import {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
@@ -18,7 +18,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -34,15 +34,15 @@ export class GuildMemberService {
 	private readonly operationsService: GuildMemberOperationsService;
 	private readonly roleService: GuildMemberRoleService;
 	private readonly searchIndexService: GuildMemberSearchIndexService;
-	private readonly userRepository: IUserRepository;
+	private readonly userRepository: UserRepository;
 
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		channelService: ChannelService,
 		userCacheService: UserCacheService,
 		gatewayService: IGatewayService,
 		entityAssetService: EntityAssetService,
-		userRepository: IUserRepository,
+		userRepository: UserRepository,
 		rateLimitService: IRateLimitService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,

@@ -30,7 +30,7 @@ import type {
 	ReportFlowSurface,
 	ReportFlowTargetType,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 
 export interface ReportFlowLibrary {
 	flows: Record<ReportFlowTargetType, ReportFlowDef>;

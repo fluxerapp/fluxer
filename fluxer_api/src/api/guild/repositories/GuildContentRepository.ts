@@ -9,7 +9,6 @@ import {
 	type GuildEmojiRow,
 	type GuildStickerRow,
 } from '@app/api/database/types/GuildTypes';
-import {IGuildContentRepository} from '@app/api/guild/repositories/IGuildContentRepository';
 import {GuildEmoji} from '@app/api/models/GuildEmoji';
 import {GuildSticker} from '@app/api/models/GuildSticker';
 import {GuildEmojis, GuildEmojisByEmojiId, GuildStickers, GuildStickersByStickerId} from '@app/api/Tables';
@@ -37,7 +36,7 @@ const FETCH_GUILD_STICKER_BY_STICKER_ID_ONLY_QUERY = GuildStickersByStickerId.se
 	limit: 1,
 });
 
-export class GuildContentRepository extends IGuildContentRepository {
+export class GuildContentRepository {
 	async getEmoji(emojiId: EmojiID, guildId: GuildID): Promise<GuildEmoji | null> {
 		const emoji = await fetchOne<GuildEmojiRow>(FETCH_GUILD_EMOJI_BY_ID_QUERY, {
 			guild_id: guildId,

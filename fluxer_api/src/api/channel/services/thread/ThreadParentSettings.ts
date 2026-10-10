@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createEmojiID, type GuildID} from '@app/api/BrandedTypes';
-import type {IThreadRepository, ThreadParentConfigPatch} from '@app/api/channel/repositories/IThreadRepository';
+import type {ThreadParentConfigPatch, ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import type {ForumTagUdt} from '@app/api/database/types/ThreadTypes';
 import {guildActive, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadParentConfig} from '@app/api/models/ThreadParentConfig';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -88,7 +88,7 @@ function assertSingleEmoji(
 }
 
 async function assertGuildEmoji(
-	guildRepository: IGuildRepositoryAggregate,
+	guildRepository: GuildRepository,
 	guildId: GuildID,
 	emojiId: bigint | null | undefined,
 ): Promise<void> {
@@ -101,7 +101,7 @@ async function buildTags(params: {
 	input: Array<ForumTagUpdateRequest>;
 	current: ReadonlyArray<ForumTagUdt>;
 	guildId: GuildID;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	generateId: () => Promise<bigint>;
 }): Promise<Array<ForumTagUdt>> {
 	if (params.input.length > MAX_FORUM_TAGS_PER_CHANNEL) throw new MaxForumTagsError(MAX_FORUM_TAGS_PER_CHANNEL);
@@ -135,7 +135,7 @@ export async function buildThreadParentPatch(params: {
 	guildId: GuildID;
 	input: ThreadParentSettingsInput;
 	current: ThreadParentConfig | null;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	generateId: () => Promise<bigint>;
 }): Promise<ThreadParentConfigPatch> {
 	const {input, current} = params;
@@ -235,7 +235,7 @@ function isThreadParentInGuild(channel: Channel): channel is Channel & {guildId:
 }
 
 export async function loadThreadParentConfig(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	channel: Channel,
 ): Promise<ThreadParentConfig | null> {
 	if (!isThreadParentInGuild(channel) || !guildActive(channel.guildId)) return null;
@@ -243,7 +243,7 @@ export async function loadThreadParentConfig(
 }
 
 export async function withThreadParentFields(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	channel: Channel,
 	response: ChannelResponse,
 	viewer?: ThreadViewer,
@@ -255,7 +255,7 @@ export async function withThreadParentFields(
 }
 
 export async function withThreadParentFieldsMany(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	guildId: GuildID,
 	channels: ReadonlyArray<Channel>,
 	responses: Array<ChannelResponse>,

@@ -286,7 +286,7 @@ describe('thread limits and timeouts', () => {
 				.body({name: 'renamed', rate_limit_per_user: 30})
 				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
 				.execute();
-			const stored = await repository.findUnique(threadId(thread.id));
+			const stored = await repository.channelData.findUnique(threadId(thread.id));
 			expect(stored?.name).toBe('topic');
 			expect(stored?.rateLimitPerUser ?? 0).toBe(thread.rate_limit_per_user ?? 0);
 		});

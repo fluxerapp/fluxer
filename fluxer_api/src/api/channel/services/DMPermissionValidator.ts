@@ -2,11 +2,11 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import type {UserSettings} from '@app/api/models/UserSettings';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isBugHunterBotUser} from '@app/api/user/UserHelpers';
 import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
 import {getMutualGuildsForDmAccess} from '@app/api/utils/MutualGuildDmAccess';
@@ -15,8 +15,8 @@ import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/
 import {UnclaimedAccountCannotSendDirectMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendDirectMessagesError';
 
 interface DMPermissionValidatorDeps {
-	userRepository: IUserRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 }
 
 export class DMPermissionValidator {

@@ -5,7 +5,7 @@ import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
@@ -37,7 +37,7 @@ interface AdminUserProfileServiceDeps {
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
 	updatePropagator: AdminUserUpdatePropagator;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 }
 
 export class AdminUserProfileService {

@@ -2,7 +2,7 @@
 
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {MessagePinService} from '@app/api/channel/services/interaction/MessagePinService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
@@ -69,7 +69,7 @@ function createPinService({canReadHistory, pins}: {canReadHistory: boolean; pins
 					.slice(0, limit);
 			},
 		},
-	} as unknown as IChannelRepositoryAggregate;
+	} as unknown as ChannelRepository;
 	const channel = {id: CHANNEL_ID, type: ChannelTypes.GUILD_TEXT, guildId: GUILD_ID};
 	const authChannel: AuthenticatedChannel = {
 		channel: channel as AuthenticatedChannel['channel'],

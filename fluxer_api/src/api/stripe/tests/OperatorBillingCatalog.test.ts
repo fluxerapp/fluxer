@@ -16,7 +16,7 @@ import {
 } from '@app/api/stripe/BillingConfigCache';
 import {getProductRegistry, ProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {setupSyncStripeWebhookWorker, signStripeWebhook} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
@@ -131,11 +131,6 @@ function useOperatorBilling(overrides: Partial<StoredBillingConfig> = {}): void 
 
 function sessionField(session: object | undefined, key: string): unknown {
 	return session ? (session as Record<string, unknown>)[key] : undefined;
-}
-
-function signWebhook(payload: string, timestamp: number, secret: string): string {
-	const signature = crypto.createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex');
-	return `t=${timestamp},v1=${signature}`;
 }
 
 describe('operator billing catalog', () => {
@@ -604,7 +599,7 @@ describe('operator billing catalog', () => {
 				type: 'customer.created',
 				data: {object: {id: `cus_operator_${crypto.randomBytes(4).toString('hex')}`}},
 			});
-			return {body: payload, signature: signWebhook(payload, timestamp, secret)};
+			return {body: payload, signature: signStripeWebhook(payload, timestamp, secret)};
 		}
 
 		test('accepts a queued event signed with the previous secret in the worker after a rotation', async () => {

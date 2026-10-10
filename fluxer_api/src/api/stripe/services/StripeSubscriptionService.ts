@@ -18,7 +18,7 @@ import {
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -111,7 +111,7 @@ function mapSchedulePhaseAddInvoiceItems(
 export class StripeSubscriptionService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: {
 			getRecurringSubscriptionPriceId: (billingCycle: RecurringBillingCycle, currency: string) => string | null;
 			getProduct: (priceId: string) => ProductInfo | null;

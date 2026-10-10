@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	DELETED_USER_DISCRIMINATOR,
 	DELETED_USER_GLOBAL_NAME,
@@ -16,13 +16,13 @@ import {
 
 interface RemapAuthorMessagesToDeletedUserParams {
 	originalAuthorId: UserID;
-	channelRepository: IChannelRepository;
-	userRepository: IUserRepository;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
 	snowflakeService: ISnowflakeService;
 }
 
 async function createDeletedMessageAuthorUser(params: {
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	snowflakeService: ISnowflakeService;
 }): Promise<UserID> {
 	const deletedUserId = createUserID(await params.snowflakeService.generate());
@@ -44,7 +44,7 @@ export async function remapAuthorMessagesToDeletedUser(
 	params: RemapAuthorMessagesToDeletedUserParams,
 ): Promise<UserID | null> {
 	const {originalAuthorId, channelRepository, userRepository, snowflakeService} = params;
-	const hasMessages = await channelRepository.listMessagesByAuthor(originalAuthorId, 1);
+	const hasMessages = await channelRepository.messages.listMessagesByAuthor(originalAuthorId, 1);
 	if (hasMessages.length === 0) {
 		return null;
 	}

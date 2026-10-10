@@ -12,8 +12,8 @@ import {AdminUserSecurityService} from '@app/api/admin/services/AdminUserSecurit
 import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
@@ -23,7 +23,7 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -38,8 +38,8 @@ import type Stripe from 'stripe';
 
 interface AdminUserServiceDeps {
 	apiContext: ApiContext;
-	guildRepository: IGuildRepositoryAggregate;
-	channelRepository: IChannelRepository;
+	guildRepository: GuildRepository;
+	channelRepository: ChannelRepository;
 	discriminatorService: IDiscriminatorService;
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
@@ -62,9 +62,9 @@ export class AdminUserService {
 	private readonly updatePropagator: AdminUserUpdatePropagator;
 	private readonly contactChangeLogService: UserContactChangeLogService;
 	private readonly auditService: AdminAuditService;
-	private readonly userRepository: IUserRepository;
-	private readonly guildRepository: IGuildRepositoryAggregate;
-	private readonly channelRepository: IChannelRepository;
+	private readonly userRepository: UserRepository;
+	private readonly guildRepository: GuildRepository;
+	private readonly channelRepository: ChannelRepository;
 	private readonly bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService;
 	private readonly cacheService: ICacheService;
 
@@ -132,7 +132,9 @@ export class AdminUserService {
 			beforeChannelId: data.before ? createChannelID(data.before) : undefined,
 			afterChannelId: data.after ? createChannelID(data.after) : undefined,
 		});
-		const channelModels = await this.channelRepository.listChannels(channels.map((channel) => channel.channelId));
+		const channelModels = await this.channelRepository.channelData.listChannels(
+			channels.map((channel) => channel.channelId),
+		);
 		const channelModelById = new Map(
 			channelModels.filter((c): c is NonNullable<typeof c> => c != null).map((c) => [c.id, c]),
 		);
@@ -234,7 +236,9 @@ export class AdminUserService {
 		if (groupDmSummaries.length === 0) {
 			return {channels: []};
 		}
-		const channelModels = await this.channelRepository.listChannels(groupDmSummaries.map((s) => s.channelId));
+		const channelModels = await this.channelRepository.channelData.listChannels(
+			groupDmSummaries.map((s) => s.channelId),
+		);
 		const allUserIds = new Set<UserID>();
 		for (const model of channelModels) {
 			if (model) {

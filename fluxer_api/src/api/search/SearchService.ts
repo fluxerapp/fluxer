@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
@@ -9,7 +9,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {GlobalSearchService} from '@app/api/search/GlobalSearchService';
 import {normalizeQuotedPhrases} from '@app/api/search/SearchQuotedPhrases';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -36,10 +36,10 @@ export class SearchService {
 	private readonly guildService: GuildService;
 
 	constructor(params: {
-		channelRepository: IChannelRepository;
+		channelRepository: ChannelRepository;
 		channelService: ChannelService;
 		guildService: GuildService;
-		userRepository: IUserRepository;
+		userRepository: UserRepository;
 		userCacheService: UserCacheService;
 		workerService: IWorkerService<WorkerTaskName>;
 	}) {

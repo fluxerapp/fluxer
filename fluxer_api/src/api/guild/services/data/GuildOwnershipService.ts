@@ -2,9 +2,9 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -17,8 +17,8 @@ const OWNERSHIP_AUDIT_KEYS: ReadonlySet<string> = new Set(['owner_id']);
 
 export class GuildOwnershipService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly userRepository: IUserRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly userRepository: UserRepository,
 		private readonly helpers: GuildDataHelpers,
 	) {}
 

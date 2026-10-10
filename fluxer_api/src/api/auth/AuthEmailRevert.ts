@@ -8,9 +8,9 @@ import {createEmailRevertToken} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 
 interface IssueEmailRevertTokenParams {
 	user: User;
@@ -80,13 +80,7 @@ export async function revertEmailChange(
 	await users.deleteAllWebAuthnCredentials(user.id);
 	await users.deleteAllAuthorizedIps(user.id);
 	await AuthSession.terminateAllUserSessions(ctx, user.id);
-	await users.createAuthorizedIp(
-		user.id,
-		requireClientIp(request, {
-			trustClientIpHeader: config.proxy.trust_client_ip_header,
-			clientIpHeaderName: config.proxy.client_ip_header,
-		}),
-	);
+	await users.createAuthorizedIp(user.id, requireConfiguredClientIp(request, config.proxy));
 	await gateway.dispatchPresence({
 		userId: updatedUser.id,
 		event: 'USER_UPDATE',

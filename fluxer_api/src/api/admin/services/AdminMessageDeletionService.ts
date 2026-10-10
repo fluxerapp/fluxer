@@ -4,7 +4,7 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import type {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {Logger} from '@app/api/Logger';
 import type {
 	DeleteAllUserMessagesRequest,
@@ -12,7 +12,7 @@ import type {
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 
 interface AdminMessageDeletionServiceDeps {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	messageShredService: AdminMessageShredService;
 	auditService: AdminAuditService;
 }
@@ -78,7 +78,7 @@ export class AdminMessageDeletionService {
 		let messageCount = 0;
 		let channelCount = 0;
 		while (true) {
-			const messageRefs = await this.deps.channelRepository.listMessagesByAuthor(
+			const messageRefs = await this.deps.channelRepository.messages.listMessagesByAuthor(
 				authorId,
 				FETCH_CHUNK_SIZE,
 				lastMessageId,

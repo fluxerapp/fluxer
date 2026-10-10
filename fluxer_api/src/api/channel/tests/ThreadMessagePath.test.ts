@@ -222,7 +222,7 @@ describe('thread message path', () => {
 		it('indexes thread messages for search while the parent is still unindexed', async () => {
 			const s = await setup();
 			const thread = await startThread(s.owner.token, s.channelId);
-			expect((await repository.findUnique(createChannelID(BigInt(s.channelId))))?.indexedAt).toBeNull();
+			expect((await repository.channelData.findUnique(createChannelID(BigInt(s.channelId))))?.indexedAt).toBeNull();
 			const indexMessage = vi.spyOn(MessageSearchService.prototype, 'indexMessage');
 			const message = await send(s.member.token, thread.id, 'searchable');
 			expect(indexMessage).toHaveBeenCalledWith(

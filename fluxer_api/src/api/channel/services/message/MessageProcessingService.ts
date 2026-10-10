@@ -2,8 +2,8 @@
 
 import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
@@ -17,7 +17,7 @@ import {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -42,8 +42,8 @@ function channelWithLastMessageId(channel: Channel, messageId: MessageID): Chann
 
 export class MessageProcessingService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private userCacheService: UserCacheService,
 		private gatewayService: IGatewayService,
 		private readStateService: ReadStateService,
