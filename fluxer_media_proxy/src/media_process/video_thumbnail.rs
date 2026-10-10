@@ -45,9 +45,6 @@ pub fn extract_video_thumbnail_with_options(
     options: VideoThumbnailOptions,
     media_limits: &MediaLimits,
 ) -> Result<ProcessedMedia, MediaError> {
-    if input.len() > media_limits.max_media_proxy_bytes() {
-        return Err(MediaError::StreamTooLong);
-    }
     let VideoThumbnailOptions {
         format,
         width,

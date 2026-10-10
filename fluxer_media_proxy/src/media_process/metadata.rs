@@ -137,15 +137,15 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<PreparedMet
         input,
         options,
     } = request;
-    if input.len() > constants::MAX_MEDIA_PROXY_BYTES {
-        return Err(MediaError::StreamTooLong);
-    }
     let sniffed = mime::sniff(input);
     if !mime::is_supported_media_mime(sniffed.mime) {
         return Err(MediaError::UnsupportedMediaType);
     }
     let initial_category = mime::category(sniffed.mime).ok_or(MediaError::UnsupportedMediaType)?;
     let is_image = initial_category == mime::Category::Image;
+    if is_image && input.len() > constants::MAX_MEDIA_PROXY_BYTES {
+        return Err(MediaError::StreamTooLong);
+    }
     let dims = if is_image {
         let dims = probe_image_dims(media_limits, input)?;
         validate_jxl_decode_pixels(sniffed.mime, dims)?;

@@ -33,6 +33,7 @@ http-body = "1.1.0"
 http-body-util = "0.1.5"
 hyper = {version = "1.11.1", default-features = false}
 libc = "0.2.189"
+memmap2 = "0.9.11"
 moka = {version = "0.12.16", features = ["sync"]}
 parking_lot = "0.12.5"
 percent-encoding = "2.3.2"

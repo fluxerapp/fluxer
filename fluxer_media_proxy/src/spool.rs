@@ -2,6 +2,7 @@
 
 use axum::body::Body;
 use http_body_util::BodyExt;
+use memmap2::Mmap;
 use std::{io::SeekFrom, path::Path};
 use thiserror::Error;
 use tokio::{
@@ -43,12 +44,29 @@ impl SpooledBody {
         (file, length)
     }
 
+    pub fn into_mapped(self) -> std::io::Result<MappedSpool> {
+        let file = self.file.as_ref().expect("SpooledBody already consumed");
+        let map = unsafe { Mmap::map(file)? };
+        Ok(MappedSpool { map, _spool: self })
+    }
+
     pub fn len(&self) -> u64 {
         self.length
     }
 
     pub fn is_empty(&self) -> bool {
         self.length == 0
+    }
+}
+
+pub struct MappedSpool {
+    map: Mmap,
+    _spool: SpooledBody,
+}
+
+impl AsRef<[u8]> for MappedSpool {
+    fn as_ref(&self) -> &[u8] {
+        &self.map
     }
 }
 

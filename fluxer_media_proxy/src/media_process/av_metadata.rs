@@ -120,9 +120,6 @@ pub fn probe_av_metadata(
     if input.is_empty() {
         return Err(MediaError::MediaDecodeFailed);
     }
-    if input.len() > media_limits.max_media_proxy_bytes() {
-        return Err(MediaError::StreamTooLong);
-    }
     if preview_max_dimension > NSFW_PREVIEW_MAX_DIMENSION {
         return Err(MediaError::InvalidImageDimensions);
     }

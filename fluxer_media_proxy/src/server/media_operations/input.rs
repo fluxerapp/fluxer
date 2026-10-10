@@ -10,7 +10,8 @@ use crate::{
         self_origin::{self, SelfOrigin},
         state::AppState,
     },
-    storage::StorageError,
+    spool::spool_to_temp,
+    storage::{self, StorageError},
 };
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
@@ -89,17 +90,20 @@ pub(in crate::server) async fn load_media_input(
             upload_filename,
             filename,
         } => {
-            let object = app
-                .store
-                .read_object(&app.cfg.storage.bucket_uploads, &upload_filename)
-                .await
-                .map_err(|err| {
-                    let failure = MediaFailure::MetadataUploadRead;
-                    warn!(reason = failure.code(), key = upload_filename.as_str(), %err);
-                    failure
-                })?;
+            let data = read_stored_input(
+                app,
+                &app.cfg.storage.bucket_uploads,
+                &upload_filename,
+                limit.decoded_bytes,
+            )
+            .await
+            .map_err(|err| {
+                let failure = MediaFailure::MetadataUploadRead;
+                warn!(reason = failure.code(), key = upload_filename.as_str(), %err);
+                failure
+            })?;
             Ok(LoadedMediaInput {
-                data: object.data,
+                data,
                 filename: filename.unwrap_or(upload_filename),
             })
         }
@@ -108,13 +112,15 @@ pub(in crate::server) async fn load_media_input(
             key,
             filename,
         } => {
-            let object = app.store.read_object(&bucket, &key).await.map_err(|err| {
-                let failure = MediaFailure::MetadataS3Read;
-                warn!(reason = failure.code(), bucket = bucket.as_str(), key = key.as_str(), %err);
-                failure
-            })?;
+            let data = read_stored_input(app, &bucket, &key, limit.decoded_bytes)
+                .await
+                .map_err(|err| {
+                    let failure = MediaFailure::MetadataS3Read;
+                    warn!(reason = failure.code(), bucket = bucket.as_str(), key = key.as_str(), %err);
+                    failure
+                })?;
             Ok(LoadedMediaInput {
-                data: object.data,
+                data,
                 filename: filename.unwrap_or(key),
             })
         }
@@ -160,6 +166,43 @@ async fn load_external_url(
     })
 }
 
+async fn read_stored_input(
+    app: &AppState,
+    bucket: &str,
+    key: &str,
+    buffer_limit: usize,
+) -> Result<Bytes, StorageError> {
+    let budget = storage::unversioned_read_budget(buffer_limit);
+    match app
+        .store
+        .read_object_limited(bucket, key, buffer_limit, &budget)
+        .await
+    {
+        Err(StorageError::StreamTooLong) => spool_stored_input(app, bucket, key).await,
+        other => Ok(other?.data.as_bytes().clone()),
+    }
+}
+
+async fn spool_stored_input(
+    app: &AppState,
+    bucket: &str,
+    key: &str,
+) -> Result<Bytes, StorageError> {
+    let object = app.store.stream_object(bucket, key, None).await?;
+    let relay = &app.cfg.upload_relay;
+    let spooled = spool_to_temp(
+        object.body,
+        object.content_length,
+        relay.spool_max_total_bytes,
+        &relay.spool_dir,
+        relay.spool_chunk_bytes,
+        relay.spool_max_total_bytes,
+    )
+    .await
+    .map_err(|err| StorageError::ObjectStorage(err.into()))?;
+    Ok(Bytes::from_owner(spooled.into_mapped()?))
+}
+
 async fn read_own_object(
     app: &AppState,
     bucket: &str,
@@ -181,4 +224,109 @@ async fn read_own_object(
 // reservation has to travel with the bytes instead of being dropped when the fetch returns.
 pub(super) fn retained_input_bytes(data: BudgetedBytes) -> Bytes {
     Bytes::from_owner(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+
+    const BUFFER_LIMIT: MediaInputLimit = MediaInputLimit {
+        encoded_bytes: 1024,
+        decoded_bytes: 1024,
+    };
+
+    fn local_storage_app(root: &std::path::Path) -> AppState {
+        let spool_dir = root.join("spool");
+        std::fs::create_dir(&spool_dir).unwrap();
+        let cfg = Config::load_from_iter([
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret".to_owned()),
+            ("FLUXER_MEDIA_PROXY_STORAGE_BACKEND", "local".to_owned()),
+            (
+                "FLUXER_MEDIA_PROXY_STORAGE_ROOT",
+                root.display().to_string(),
+            ),
+            (
+                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR",
+                spool_dir.display().to_string(),
+            ),
+        ])
+        .expect("test config");
+        AppState::for_tests(cfg)
+    }
+
+    #[tokio::test]
+    async fn a_stored_input_larger_than_the_buffer_limit_is_read_from_a_spooled_copy() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let app = local_storage_app(&root);
+        let uploads = app.cfg.storage.bucket_uploads.clone();
+        let cdn = app.cfg.storage.bucket_cdn.clone();
+        let mp4 = crate::test_fixtures::fixture_h264_mp4();
+        assert!(mp4.len() > BUFFER_LIMIT.decoded_bytes);
+        for bucket in [&uploads, &cdn] {
+            app.store
+                .write_object(bucket, "big.mp4", &mp4, "video/mp4")
+                .await
+                .unwrap();
+        }
+
+        let upload = load_media_input(
+            &app,
+            MediaInput::Upload {
+                upload_filename: "big.mp4".to_owned(),
+                filename: None,
+            },
+            BUFFER_LIMIT,
+        )
+        .await
+        .unwrap_or_else(|failure| panic!("upload input failed: {}", failure.code()));
+        let stored = load_media_input(
+            &app,
+            MediaInput::Storage {
+                bucket: cdn,
+                key: "big.mp4".to_owned(),
+                filename: Some("named.mp4".to_owned()),
+            },
+            BUFFER_LIMIT,
+        )
+        .await
+        .unwrap_or_else(|failure| panic!("stored input failed: {}", failure.code()));
+
+        assert_eq!(&mp4[..], &upload.data[..]);
+        assert_eq!("big.mp4", upload.filename);
+        assert_eq!(&mp4[..], &stored.data[..]);
+        assert_eq!("named.mp4", stored.filename);
+        let metadata =
+            crate::media_process::probe_av_metadata(&upload.data, 0, &app.media.limits(), None)
+                .unwrap();
+        assert!(metadata.probe.has_video);
+        assert!(
+            std::fs::read_dir(root.join("spool"))
+                .unwrap()
+                .next()
+                .is_none(),
+            "a spooled copy is never visible in the spool directory"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_missing_stored_input_is_reported_as_a_read_failure() {
+        let tmp = tempfile::tempdir().unwrap();
+        let app = local_storage_app(&tmp.path().canonicalize().unwrap());
+
+        let failure = load_media_input(
+            &app,
+            MediaInput::Upload {
+                upload_filename: "missing.mp4".to_owned(),
+                filename: None,
+            },
+            BUFFER_LIMIT,
+        )
+        .await
+        .err()
+        .expect("a missing upload cannot load");
+
+        assert_eq!("metadata_upload_read", failure.code());
+    }
 }

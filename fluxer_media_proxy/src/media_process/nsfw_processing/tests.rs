@@ -56,7 +56,6 @@ fn video_nsfw_frames_are_downscaled_to_the_frame_cap() {
         .probe
         .duration_seconds;
     let frames = extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
-        media_limits: &media_limits,
         input: &mp4,
         duration_seconds: duration,
         deadline_ms: None,
@@ -215,7 +214,6 @@ fn a_sample_beyond_the_packet_budget_keeps_the_frames_that_decoded() {
     };
     let media_limits = limits();
     let frames = extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
-        media_limits: &media_limits,
         input: &mp4,
         duration_seconds: Some(12.0),
         deadline_ms: None,

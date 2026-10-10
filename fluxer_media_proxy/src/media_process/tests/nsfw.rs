@@ -58,7 +58,6 @@ fn extract_video_frames_for_nsfw_returns_multiple_frames() {
         .probe
         .duration_seconds;
     let frames = extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
-        media_limits: &limits,
         input: &bytes,
         duration_seconds: duration,
         deadline_ms: None,

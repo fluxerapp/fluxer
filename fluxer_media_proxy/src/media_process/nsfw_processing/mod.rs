@@ -111,7 +111,6 @@ pub(super) async fn classify_nsfw_buffers(
 
 fn nsfw_video_scan_buffers(source: &NSFWScanSource<'_>) -> Result<Vec<Vec<u8>>, MediaError> {
     extract_video_frames_for_nsfw(VideoNSFWFramesRequest {
-        media_limits: source.media_limits,
         input: source.input,
         duration_seconds: source.duration_seconds,
         deadline_ms: source.deadline_ms,
@@ -363,7 +362,6 @@ pub(super) fn nsfw_frame_seed(input: &[u8]) -> u64 {
 }
 
 pub(super) struct VideoNSFWFramesRequest<'a> {
-    pub(super) media_limits: &'a MediaLimits,
     pub(super) input: &'a [u8],
     pub(super) duration_seconds: Option<f64>,
     pub(super) deadline_ms: Option<i64>,
@@ -374,12 +372,11 @@ pub(super) fn extract_video_frames_for_nsfw(
 ) -> Result<Vec<Vec<u8>>, MediaError> {
     use rand::SeedableRng as _;
     let VideoNSFWFramesRequest {
-        media_limits,
         input,
         duration_seconds,
         deadline_ms,
     } = request;
-    if input.is_empty() || input.len() > media_limits.max_media_proxy_bytes() {
+    if input.is_empty() {
         return Err(MediaError::StreamTooLong);
     }
     let runtime = vips_runtime()?;
