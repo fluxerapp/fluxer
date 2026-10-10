@@ -75,7 +75,6 @@ apply_threads_flag(_Other, Session) ->
 
 -spec apply_member_lists(term(), map(), guild_state()) -> {map(), [integer()]}.
 apply_member_lists(Ids, Session, State) when is_list(Ids) ->
-    Previous = maps:get(thread_member_lists, Session, []),
     Viewable = lists:sublist(
         [Id || Id <- lists:usort(Ids), viewable_thread(Session, Id, State)], ?MAX_MEMBER_LISTS
     ),
@@ -84,7 +83,7 @@ apply_member_lists(Ids, Session, State) when is_list(Ids) ->
             [] -> maps:remove(thread_member_lists, Session);
             _ -> Session#{thread_member_lists => Viewable}
         end,
-    {Updated, Viewable -- Previous};
+    {Updated, Viewable};
 apply_member_lists(_Other, Session, _State) ->
     {Session, []}.
 
