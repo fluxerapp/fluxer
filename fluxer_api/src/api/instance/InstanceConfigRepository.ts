@@ -414,7 +414,8 @@ function normalizeThemeColor(value: unknown): string | null {
 	const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(normalizeOptionalString(value) ?? '');
 	if (match === null) return null;
 	const digits = match[1].toLowerCase();
-	return `#${digits.length === 3 ? digits.replace(/./g, '$&$&') : digits}`;
+	const color = `#${digits.length === 3 ? digits.replace(/./g, '$&$&') : digits}`;
+	return color === '#000000' ? null : color;
 }
 
 function getDefaultPremiumProductName(): string {

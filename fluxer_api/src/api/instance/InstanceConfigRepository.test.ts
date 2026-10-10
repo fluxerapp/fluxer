@@ -234,6 +234,18 @@ describe('InstanceConfigRepository', () => {
 		expect((await repository.getAppPublicConfig()).branding.theme_color).toBeNull();
 	});
 
+	it('treats the black theme colour the setup wizard used to store as unset', async () => {
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		await repository.setConfig(APP_PUBLIC_CONFIG_KEY, JSON.stringify({branding: {theme_color: '#000000'}}));
+		expect((await repository.getAppPublicConfig()).branding.theme_color).toBeNull();
+		expect((await repository.setAppPublicConfig({branding: {theme_color: '#000'}})).branding.theme_color).toBeNull();
+		expect((await repository.setAppPublicConfig({branding: {theme_color: '#000001'}})).branding.theme_color).toBe(
+			'#000001',
+		);
+	});
+
 	it('stores uploaded branding assets as references and resolves them against the current media endpoint', async () => {
 		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
