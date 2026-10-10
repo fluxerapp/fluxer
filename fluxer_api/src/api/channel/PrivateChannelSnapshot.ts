@@ -100,6 +100,7 @@ export function channelRowFromPrivateChannelSnapshot(row: PrivateChannelRow): Ch
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: row.channel_last_message_id ?? null,
 		last_pin_timestamp: row.channel_last_pin_timestamp ?? null,
 		permission_overwrites: null,

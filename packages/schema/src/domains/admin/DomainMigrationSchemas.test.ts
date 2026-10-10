@@ -12,7 +12,7 @@ import {
 import {type ExperimentTargeting, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {describe, expect, test} from 'vitest';
 
-const NO_TARGETING: ExperimentTargeting = {memberGuildIds: new Set(), premium: false};
+const NO_TARGETING: ExperimentTargeting = {memberGuildIds: new Set(), premium: false, countryCode: null};
 
 const TARGETED_USER_ID = '1000000000000000001';
 const OTHER_USER_ID = '1000000000000000002';
@@ -246,6 +246,7 @@ describe('resolveDomainMigrationAssignment guild targeting', () => {
 	const MEMBER_GUILDS: ExperimentTargeting = {
 		memberGuildIds: new Set(['3000000000000000009', INCLUDED_GUILD_ID]),
 		premium: false,
+		countryCode: null,
 	};
 
 	test('serves members of an included guild at zero rollout', () => {
@@ -270,7 +271,7 @@ describe('resolveDomainMigrationAssignment guild targeting', () => {
 });
 
 describe('resolveDomainMigrationAssignment premium targeting', () => {
-	const PREMIUM: ExperimentTargeting = {memberGuildIds: new Set(), premium: true};
+	const PREMIUM: ExperimentTargeting = {memberGuildIds: new Set(), premium: true, countryCode: null};
 
 	test('serves premium users only when the switch is on', () => {
 		const on = createConfig({enabled: true, include_premium_users: true});
@@ -288,5 +289,62 @@ describe('resolveDomainMigrationAssignment premium targeting', () => {
 			excluded_user_ids: [TARGETED_USER_ID],
 		});
 		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, PREMIUM)).toEqual({enabled: false});
+	});
+});
+
+describe('resolveDomainMigrationAssignment country targeting', () => {
+	const IN_SWEDEN: ExperimentTargeting = {...NO_TARGETING, countryCode: 'SE'};
+	const IN_BRAZIL: ExperimentTargeting = {...NO_TARGETING, countryCode: 'BR'};
+
+	test('limits the percentage rollout to the listed countries', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 10000, rollout_country_codes: ['SE', 'NO']});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_SWEDEN)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: false});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: false});
+	});
+
+	test('ignores the country while the list is empty', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 10000});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: true});
+	});
+
+	test('still buckets users inside a listed country', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 2500, rollout_country_codes: ['SE']});
+		for (const userId of syntheticUserIds(200)) {
+			expect(resolveDomainMigrationAssignment(config, userId, IN_SWEDEN).enabled).toBe(
+				experimentBucket(userId, config.rollout_salt) < 2500,
+			);
+		}
+	});
+
+	test('keeps included users, included guilds and premium users outside the listed countries', () => {
+		const guildId = '3000000000000000001';
+		const config = createConfig({
+			enabled: true,
+			rollout_country_codes: ['SE'],
+			included_user_ids: [TARGETED_USER_ID],
+			included_guild_ids: [guildId],
+			include_premium_users: true,
+		});
+		const otherUserId = '1000000000000000007';
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: true});
+		expect(
+			resolveDomainMigrationAssignment(config, otherUserId, {...IN_BRAZIL, memberGuildIds: new Set([guildId])}),
+		).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, otherUserId, {...IN_BRAZIL, premium: true})).toEqual({
+			enabled: true,
+		});
+		expect(resolveDomainMigrationAssignment(config, otherUserId, IN_BRAZIL)).toEqual({enabled: false});
+	});
+
+	test('keeps exclusions ahead of a listed country', () => {
+		const config = createConfig({
+			enabled: true,
+			rollout_basis_points: 10000,
+			rollout_country_codes: ['SE'],
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_SWEDEN)).toEqual({enabled: false});
 	});
 });

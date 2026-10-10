@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import Channels from '@app/features/channel/state/Channels';
 import {
 	START_VIDEO_CALL_DESCRIPTOR,
 	START_VOICE_CALL_DESCRIPTOR,
@@ -11,6 +12,9 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
 import {CallNotRingableModal} from '@app/features/voice/components/alerts/CallNotRingableModal';
+import {VoiceP2pConsentModal} from '@app/features/voice/components/alerts/VoiceP2pConsentModal';
+import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
+import VoiceP2pRollout from '@app/features/voice/state/VoiceP2pRollout';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -66,12 +70,40 @@ async function checkAndStartCall(channelId: string): Promise<boolean> {
 	}
 }
 
+function canOfferP2pCall(channelId: string): boolean {
+	if (!VoiceP2pRollout.enabled) return false;
+	const channel = Channels.getChannel(channelId);
+	return channel != null && channel.recipientIds.length + 1 <= VoiceP2pRollout.maxParticipants;
+}
+
 export async function requestStartCall(
 	i18n: I18n,
 	channelId: string,
 	options: CallStartConfirmationOptions = {},
 ): Promise<void> {
 	const {bypassConfirm = false, kind = 'voice', showShiftBypassConfirmationTip = false} = options;
+	if (!bypassConfirm && canOfferP2pCall(channelId)) {
+		ModalCommands.push(
+			modal(() => (
+				<VoiceP2pConsentModal
+					intent="start"
+					allowStandard
+					onP2p={async () => {
+						VoiceP2pConsent.agree(channelId);
+						if (!(await checkAndStartCall(channelId))) VoiceP2pConsent.revoke(channelId);
+					}}
+					onStandard={() => {
+						VoiceP2pConsent.revoke(channelId);
+						void checkAndStartCall(channelId);
+					}}
+					onCancel={() => {}}
+					data-flx="voice.call-utils.request-start-call.voice-p2p-consent-modal"
+				/>
+			)),
+		);
+		return;
+	}
+	VoiceP2pConsent.revoke(channelId);
 	const shouldConfirm = Accessibility.confirmBeforeStartingCalls && !bypassConfirm;
 	if (!shouldConfirm) {
 		await checkAndStartCall(channelId);

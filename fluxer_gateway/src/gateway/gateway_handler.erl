@@ -125,6 +125,8 @@ websocket_info({dispatch, Event, {pre_encoded, Bin} = Data, Seq}, State) when
     is_integer(Seq), is_binary(Event), is_binary(Bin)
 ->
     gateway_handler_dispatch:handle_dispatch(Event, Data, Seq, State);
+websocket_info({gateway_error, ErrorAtom}, State) when is_atom(ErrorAtom) ->
+    gateway_handler_dispatch:handle_gateway_error(ErrorAtom, State);
 websocket_info(rollout_config_changed, State) ->
     gateway_handler_identify:handle_rollout_config_changed(State);
 websocket_info({retry_pending_identify, Token}, State) when is_reference(Token) ->

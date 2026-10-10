@@ -22247,6 +22247,60 @@
 				}
 			}
 		},
+		"/voice/p2p/connection-reports": {
+			"post": {
+				"operationId": "create_voice_p2p_connection_reports",
+				"summary": "Report peer-to-peer connection outcomes",
+				"tags": ["Voice"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Records how peer connections of a peer-to-peer voice call settled, one report for each remote peer. Fluxer adds the request address, its country and the client platform of the session.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoiceP2pConnectionReportsRequest"}}}
+				}
+			}
+		},
 		"/webhooks/{webhook_id}": {
 			"get": {
 				"operationId": "get_webhook",
@@ -24441,6 +24495,123 @@
 				},
 				"required": ["id", "guild_id", "channel_id", "name", "type", "user"],
 				"additionalProperties": false
+			},
+			"VoiceP2pConnectionReportsRequest": {
+				"type": "object",
+				"properties": {
+					"reports": {
+						"minItems": 1,
+						"maxItems": 8,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"channel_id": {
+									"description": "The voice channel or private channel of the call",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"guild_id": {
+									"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
+									"description": "The guild of the voice channel, null for a call"
+								},
+								"participant_count": {
+									"type": "integer",
+									"minimum": 2,
+									"maximum": 4,
+									"description": "Participants in the call when the peer connection settled"
+								},
+								"outcome": {
+									"description": "How the peer connection settled",
+									"x-enumNames": ["connected", "failed"],
+									"x-enumDescriptions": ["The peer connection reached connected", "The peer connection failed"],
+									"enum": ["connected", "failed"],
+									"type": "string"
+								},
+								"local_candidate_type": {
+									"anyOf": [
+										{
+											"description": "ICE candidate type of one end of the selected candidate pair",
+											"x-enumNames": ["host", "srflx", "prflx", "relay"],
+											"x-enumDescriptions": [
+												"A local interface address",
+												"A public address a STUN server reflected",
+												"A public address learned from a peer during checks",
+												"A relayed address"
+											],
+											"enum": ["host", "srflx", "prflx", "relay"],
+											"type": "string"
+										},
+										{"type": "null"}
+									],
+									"description": "Local candidate type, null without a selected pair"
+								},
+								"remote_candidate_type": {
+									"anyOf": [
+										{
+											"description": "ICE candidate type of one end of the selected candidate pair",
+											"x-enumNames": ["host", "srflx", "prflx", "relay"],
+											"x-enumDescriptions": [
+												"A local interface address",
+												"A public address a STUN server reflected",
+												"A public address learned from a peer during checks",
+												"A relayed address"
+											],
+											"enum": ["host", "srflx", "prflx", "relay"],
+											"type": "string"
+										},
+										{"type": "null"}
+									],
+									"description": "Remote candidate type, null without a selected pair"
+								},
+								"ip_family": {
+									"anyOf": [
+										{
+											"description": "Address family of the selected pair",
+											"x-enumNames": ["ipv4", "ipv6"],
+											"x-enumDescriptions": ["IPv4", "IPv6"],
+											"enum": ["ipv4", "ipv6"],
+											"type": "string"
+										},
+										{"type": "null"}
+									],
+									"description": "Address family of the selected pair, null without one"
+								},
+								"protocol": {
+									"anyOf": [
+										{
+											"description": "Transport protocol of the selected pair",
+											"x-enumNames": ["udp", "tcp"],
+											"x-enumDescriptions": ["UDP", "TCP"],
+											"enum": ["udp", "tcp"],
+											"type": "string"
+										},
+										{"type": "null"}
+									],
+									"description": "Transport protocol of the selected pair, null without one"
+								},
+								"setup_ms": {
+									"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+									"description": "Milliseconds from peer connection creation to first connected"
+								},
+								"ice_restarted": {"type": "boolean", "description": "Whether the peer connection ran an ICE restart"}
+							},
+							"required": [
+								"channel_id",
+								"guild_id",
+								"participant_count",
+								"outcome",
+								"local_candidate_type",
+								"remote_candidate_type",
+								"ip_family",
+								"protocol",
+								"setup_ms",
+								"ice_restarted"
+							]
+						},
+						"description": "One report for each remote peer that settled"
+					}
+				},
+				"required": ["reports"]
 			},
 			"EntranceSoundPlayRequest": {
 				"type": "object",
@@ -27199,6 +27370,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
 					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
+					"rtc_p2p": {
+						"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+						"type": "boolean"
+					},
 					"last_message_id": {
 						"description": "The ID of the last message sent in this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -30683,7 +30858,8 @@
 						"properties": {
 							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
 							"channel_threads": {"$ref": "#/components/schemas/ChannelThreadsAssignmentResponse"},
-							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"}
+							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"},
+							"voice_p2p": {"$ref": "#/components/schemas/VoiceP2pAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31005,6 +31181,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
 					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
+					"rtc_p2p": {
+						"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+						"type": "boolean"
+					},
 					"last_message_id": {
 						"description": "The ID of the last message sent in this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -31356,6 +31536,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
 					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
+					"rtc_p2p": {
+						"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+						"type": "boolean"
+					},
 					"last_message_id": {
 						"description": "The ID of the last message sent in this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -31946,97 +32130,9 @@
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "type": ["string", "null"]},
-							"type": {
-								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
-								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
-							}
-						}
-					},
-					{
-						"type": "object",
-						"properties": {
-							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
-							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
-							"parent_id": {
-								"description": "ID of the parent category for this channel",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"bitrate": {
-								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
-								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
-							},
-							"user_limit": {
-								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
-							},
-							"voice_connection_limit": {
-								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
-								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
-							},
-							"permission_overwrites": {
-								"description": "Permission overwrites for roles and members",
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"id": {
-											"description": "The ID of the role or user to overwrite permissions for",
-											"$ref": "#/components/schemas/SnowflakeType"
-										},
-										"type": {
-											"description": "The type of overwrite (0 = role, 1 = member)",
-											"x-enumNames": ["ROLE", "MEMBER"],
-											"enum": [0, 1],
-											"type": "integer"
-										},
-										"allow": {
-											"description": "Bitwise value of allowed permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										},
-										"deny": {
-											"description": "Bitwise value of denied permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										}
-									},
-									"required": ["id", "type"]
-								}
-							},
-							"rate_limit_per_user": {
-								"description": "Slowmode delay in seconds (0-21600)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
-							},
-							"nsfw": {
-								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
-								"type": ["boolean", "null"]
-							},
-							"nsfw_override": {
-								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"type": ["boolean", "null"]
-							},
-							"content_warning_level": {
-								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
-								"$ref": "#/components/schemas/ContentWarningLevelInput"
-							},
-							"content_warning_text": {
-								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
-								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
-							},
-							"icon": {
-								"description": "Base64-encoded icon image for group DM channels",
-								"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
-							},
-							"owner_id": {
-								"description": "ID of the new owner for group DM channels",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"nicks": {
-								"description": "Custom nicknames for users in this channel",
-								"$ref": "#/components/schemas/ChannelNicknameOverrides"
-							},
-							"rtc_region": {
-								"description": "Voice region ID for the voice channel (1-64 characters)",
-								"type": ["string", "null"]
+							"rtc_p2p": {
+								"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+								"type": "boolean"
 							},
 							"name": {"description": "The name of the channel", "type": ["string", "null"]},
 							"type": {
@@ -32129,6 +32225,106 @@
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
+							},
+							"rtc_p2p": {
+								"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+								"type": "boolean"
+							},
+							"name": {"description": "The name of the channel", "type": ["string", "null"]},
+							"type": {
+								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
+								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
+							}
+						}
+					},
+					{
+						"type": "object",
+						"properties": {
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+							"parent_id": {
+								"description": "ID of the parent category for this channel",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"bitrate": {
+								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+							},
+							"user_limit": {
+								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+							},
+							"voice_connection_limit": {
+								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+							},
+							"permission_overwrites": {
+								"description": "Permission overwrites for roles and members",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"description": "The ID of the role or user to overwrite permissions for",
+											"$ref": "#/components/schemas/SnowflakeType"
+										},
+										"type": {
+											"description": "The type of overwrite (0 = role, 1 = member)",
+											"x-enumNames": ["ROLE", "MEMBER"],
+											"enum": [0, 1],
+											"type": "integer"
+										},
+										"allow": {
+											"description": "Bitwise value of allowed permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										},
+										"deny": {
+											"description": "Bitwise value of denied permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										}
+									},
+									"required": ["id", "type"]
+								}
+							},
+							"rate_limit_per_user": {
+								"description": "Slowmode delay in seconds (0-21600)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+							},
+							"nsfw": {
+								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
+								"type": ["boolean", "null"]
+							},
+							"nsfw_override": {
+								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+								"type": ["boolean", "null"]
+							},
+							"content_warning_level": {
+								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+								"$ref": "#/components/schemas/ContentWarningLevelInput"
+							},
+							"content_warning_text": {
+								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+							},
+							"icon": {
+								"description": "Base64-encoded icon image for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+							},
+							"owner_id": {
+								"description": "ID of the new owner for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"nicks": {
+								"description": "Custom nicknames for users in this channel",
+								"$ref": "#/components/schemas/ChannelNicknameOverrides"
+							},
+							"rtc_region": {
+								"description": "Voice region ID for the voice channel (1-64 characters)",
+								"type": ["string", "null"]
+							},
+							"rtc_p2p": {
+								"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+								"type": "boolean"
 							},
 							"name": {"description": "The name of the channel", "type": ["string", "null"]}
 						}
@@ -32218,6 +32414,10 @@
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
 							},
+							"rtc_p2p": {
+								"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+								"type": "boolean"
+							},
 							"name": {"description": "The name of the category", "type": ["string", "null"]}
 						}
 					},
@@ -32305,6 +32505,10 @@
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
+							},
+							"rtc_p2p": {
+								"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+								"type": "boolean"
 							},
 							"name": {"description": "The name of the channel", "type": ["string", "null"]}
 						}
@@ -34009,6 +34213,10 @@
 						"description": "Voice region ID for the voice channel (1-64 characters)",
 						"type": ["string", "null"]
 					},
+					"rtc_p2p": {
+						"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+						"type": "boolean"
+					},
 					"name": {"description": "The name of the channel", "type": ["string", "null"]},
 					"default_auto_archive_duration": {
 						"description": "Default auto archive duration in minutes for new threads",
@@ -34117,6 +34325,10 @@
 					"rtc_region": {
 						"description": "Voice region ID for the voice channel (1-64 characters)",
 						"type": ["string", "null"]
+					},
+					"rtc_p2p": {
+						"description": "Whether calls in the voice channel connect participants directly instead of through a voice server",
+						"type": "boolean"
 					},
 					"name": {"description": "The name of the channel", "type": ["string", "null"]},
 					"default_auto_archive_duration": {
@@ -36155,6 +36367,15 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"VoiceP2pAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"max_participants": {"type": "integer", "minimum": 2, "maximum": 4}
+				},
+				"required": ["enabled", "max_participants"],
+				"additionalProperties": false
+			},
 			"PlutoniumPageAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},

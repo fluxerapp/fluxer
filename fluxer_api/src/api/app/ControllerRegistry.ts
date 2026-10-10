@@ -35,6 +35,7 @@ import {ThemeController} from '@app/api/theme/ThemeController';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {UnfurlController} from '@app/api/unfurl/UnfurlController';
 import {UserController} from '@app/api/user/controllers/UserController';
+import {VoiceP2pConnectionReportController} from '@app/api/voice/VoiceP2pConnectionReportController';
 import {WebhookController} from '@app/api/webhook/WebhookController';
 
 export function registerControllers(routes: HonoApp, config: APIConfig): void {
@@ -67,6 +68,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 		TestHarnessController(routes);
 	}
 	UserController(routes);
+	VoiceP2pConnectionReportController(routes);
 	StoreBillingController(routes);
 	WebhookController(routes);
 	OAuth2Controller(routes);

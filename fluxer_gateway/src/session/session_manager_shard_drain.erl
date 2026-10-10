@@ -199,6 +199,7 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         ),
         bot => map_utils:get_safe(UserDataMap, <<"bot">>, false),
         e2ee_capable => extract_e2ee_capable(Properties),
+        geoip_country_code => extract_geoip_country_code(Data),
         ignored_events => term_detach:detach(IgnoredEvents),
         initial_guild_id => map_utils:get_safe(IdentifyData, initial_guild_id, undefined),
         shard => Shard,
@@ -385,6 +386,13 @@ extract_e2ee_capable(Properties) when is_map(Properties) ->
     is_truthy(maps:get(<<"e2ee_capable">>, Properties, false));
 extract_e2ee_capable(_) ->
     false.
+
+-spec extract_geoip_country_code(map()) -> binary() | undefined.
+extract_geoip_country_code(Data) ->
+    case maps:get(<<"geoip_country_code">>, Data, null) of
+        CountryCode when is_binary(CountryCode), byte_size(CountryCode) > 0 -> CountryCode;
+        _ -> undefined
+    end.
 
 -spec fetch_rpc_data(map(), term()) -> {ok, map()} | {error, term()}.
 fetch_rpc_data(Request, PeerIP) ->

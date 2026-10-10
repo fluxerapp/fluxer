@@ -8,7 +8,7 @@ Every main Gateway connection has limits on what it sends, how long its session 
 
 ## Transport and encoding
 
-[Framing](/gateway/overview/#framing) owns the protocol version, the payload bound, and the compression contract. One inbound WebSocket message is limited to 4,096 bytes on the wire and to a further 4,096 bytes after decompression, and either bound closes with `4002` and reason `Payload too large`.
+[Framing](/gateway/overview/#framing) owns the protocol version, the payload bound, and the compression contract. One inbound WebSocket message is limited to 16,384 bytes on the wire and to a further 16,384 bytes after decompression, and either bound closes with `4002` and reason `Payload too large`.
 
 A compressed message that decompresses past 10 MiB closes with `4002` and reason `Decompression failed`. That message never closes with `Payload too large`.
 
@@ -49,6 +49,8 @@ Presence Update accepts five commands per WebSocket in a rolling 20-second windo
 [Request Forum Unreads](/gateway/threads/#request-forum-unreads) accepts five commands per WebSocket in a rolling 5-second window. A further command is discarded without closing the connection.
 
 Voice State Update processes the first two commands per session in a rolling one-second window immediately. Later updates enter a per-session queue that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
+
+Voice Signal accepts 240 commands per WebSocket in a rolling 10-second window, which leaves room for a burst of trickle ICE candidates. A further signal is discarded without closing the connection. Every signal, discarded or not, also counts toward the three payload budgets above.
 
 Request Guild Members has three command-specific budgets. Each account may send 12 requests in a rolling 10-second window, and each guild accepts 40 requests in a rolling 10-second window across all accounts. A request over either of these budgets is discarded without a result and without a close. A bot requesting a complete member list is limited to one accepted request per guild every 30 seconds, and a request inside that window produces [Rate Limited](/gateway/events/#rate-limited). The budget is keyed by the account and the guild together, so reconnecting does not reset it.
 
@@ -94,8 +96,10 @@ Identify accepts at most 256 `ignored_events` entries. A longer array closes wit
 
 ## Voice admission
 
-Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal produces no event and closes nothing.
+Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal closes nothing. It produces a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) for `VOICE_CHANNEL_FULL`, `VOICE_P2P_CONSENT_REQUIRED`, and `VOICE_P2P_UNAVAILABLE`, and no payload for every other code.
 
 A guild voice channel admits at most `user_limit` users, where `0` means unlimited. A channel in which any participant has a camera enabled also admits at most 25 users in total, whatever its `user_limit`. A channel that already holds 25 users with cameras enabled refuses a further camera with `VOICE_CAMERA_USER_LIMIT`. [Capacity](/voice/#capacity) states these bounds in full.
+
+A peer-to-peer mesh holds at most 4 participants, counted as connections in a guild voice channel and as users in a call. A join past that bound is refused with `VOICE_CHANNEL_FULL`, as [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) describes.
 
 One user holds at most `voice_connection_limit` simultaneous voice connections in one guild voice channel. The field is part of the [channel object](/http-api/channels/#channel-object), defaults to 5, and is accepted from 1 through 100. Pending connections that have not yet expired count against it.

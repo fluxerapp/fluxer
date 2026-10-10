@@ -144,6 +144,10 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 		.describe(
 			`Voice region ID for the voice channel (${RTC_REGION_ID_MIN_LENGTH}-${RTC_REGION_ID_MAX_LENGTH} characters)`,
 		),
+	rtc_p2p: z
+		.boolean()
+		.optional()
+		.describe('Whether calls in the voice channel connect participants directly instead of through a voice server'),
 });
 const ChannelCreateTextRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),

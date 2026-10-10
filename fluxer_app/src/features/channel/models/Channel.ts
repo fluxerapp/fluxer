@@ -141,6 +141,7 @@ export class Channel {
 	readonly userLimit: number | null;
 	readonly voiceConnectionLimit: number | null;
 	readonly rtcRegion: string | null;
+	readonly rtcP2p: boolean;
 	readonly lastMessageId: string | null;
 	readonly lastPinTimestamp: Date | null;
 	readonly permissionOverwrites: Readonly<Record<string, ChannelOverwriteRecord>>;
@@ -172,6 +173,7 @@ export class Channel {
 			channel.voice_connection_limit ??
 			(this.type === ChannelTypes.GUILD_VOICE ? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT : null);
 		this.rtcRegion = channel.rtc_region ?? null;
+		this.rtcP2p = channel.rtc_p2p ?? false;
 		this.lastMessageId = channel.last_message_id ?? null;
 		this.lastPinTimestamp = channel.last_pin_timestamp ? new Date(channel.last_pin_timestamp) : null;
 		this.nsfw = channel.nsfw ?? false;
@@ -368,6 +370,7 @@ export class Channel {
 				voice_connection_limit:
 					updates.voice_connection_limit !== undefined ? updates.voice_connection_limit : this.voiceConnectionLimit,
 				rtc_region: updates.rtc_region !== undefined ? updates.rtc_region : this.rtcRegion,
+				rtc_p2p: updates.rtc_p2p ?? this.rtcP2p,
 				last_message_id: updates.last_message_id !== undefined ? updates.last_message_id : this.lastMessageId,
 				last_pin_timestamp: updates.last_pin_timestamp ?? this.lastPinTimestamp?.toISOString() ?? undefined,
 				permission_overwrites: !this.isPrivate()
@@ -421,6 +424,7 @@ export class Channel {
 		if (this.userLimit !== other.userLimit) return false;
 		if (this.voiceConnectionLimit !== other.voiceConnectionLimit) return false;
 		if (this.rtcRegion !== other.rtcRegion) return false;
+		if (this.rtcP2p !== other.rtcP2p) return false;
 		if (this.lastMessageId !== other.lastMessageId) return false;
 		if (this.lastPinTimestamp?.getTime() !== other.lastPinTimestamp?.getTime()) return false;
 		if (this.nsfw !== other.nsfw) return false;
@@ -461,6 +465,7 @@ export class Channel {
 			user_limit: this.userLimit,
 			voice_connection_limit: this.voiceConnectionLimit,
 			rtc_region: this.rtcRegion,
+			rtc_p2p: this.rtcP2p,
 			last_message_id: this.lastMessageId,
 			last_pin_timestamp: this.lastPinTimestamp?.toISOString() ?? undefined,
 			permission_overwrites: Object.values(this.permissionOverwrites).map((o) => o.toJSON()),

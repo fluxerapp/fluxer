@@ -114,6 +114,7 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Channel Pins ACK](#channel-pins-ack) | The current user acknowledges a channel's pins | Current user |
 | [Voice State Update](#voice-state-update) | A guild or call participant's voice state changes | Channel visibility |
 | [Voice Server Update](#voice-server-update) | The session receives or replaces its own voice grant | Current session |
+| [Voice Signal](#voice-signal) | Another peer-to-peer voice connection sends this connection a signalling message | Current session |
 | [Entrance Sound Play](#entrance-sound-play) | A participant's entrance sound plays in a voice channel | Voice channel |
 | [Call Create](#call-create) | A private channel call begins or becomes visible | Call recipient |
 | [Call Update](#call-update) | The ringing set, participant roster, or region of a call changes | Call recipient |
@@ -985,6 +986,7 @@ A `channel_id` of null means the participant left.
 | suppress | boolean | Whether the participant is suppressed |
 | viewer_stream_keys | array[string] | Streams this connection is watching |
 | e2ee_capable | boolean | Whether the participant's client supports end-to-end encrypted voice |
+| p2p | boolean | Whether this connection exchanges media peer-to-peer and not through LiveKit |
 | version | integer | Monotonic version of this participant's voice state |
 
 <sup>1</sup> The participant's client reports this value. In a guild voice channel Fluxer sets it to false when the participant lacks `STREAM`
@@ -995,22 +997,121 @@ The broadcast form has no `region_id`, `server_id`, `latitude`, or `longitude`.
 
 The session received or replaced its own voice grant. Delivered to the requesting session alone.
 
+A grant has one of two structures. A LiveKit grant has `token` and `endpoint`. A peer-to-peer grant has `p2p: true` and `ice_servers`, and never has `token`, `endpoint`, or `e2ee_key`.
+
 | Field | Type | Description |
 | --- | --- | --- |
-| token | string | The LiveKit access token this connection presents |
-| endpoint | string | The LiveKit signalling URL to connect to, a `ws://` or `wss://` address |
+| token?<sup>1</sup> | string | The LiveKit access token this connection presents |
+| endpoint?<sup>1</sup> | string | The LiveKit signalling URL to connect to, a `ws://` or `wss://` address |
+| p2p?<sup>2</sup> | boolean | Always true when present. The connection exchanges media peer-to-peer |
+| ice_servers?<sup>2</sup> | array[[ICE server object](#ice-server-object)] | The STUN servers the connection uses for its peer connections, empty when the instance names none |
 | connection_id | string | The voice connection the grant covers |
 | channel_id | snowflake | The channel the grant covers |
-| guild_id?<sup>1</sup> | snowflake | The guild the channel belongs to |
-| e2ee_key?<sup>2</sup> | string | The key material the channel's end-to-end encryption uses |
+| guild_id?<sup>3</sup> | snowflake | The guild the channel belongs to |
+| e2ee_key?<sup>4</sup> | string | The key material the channel's end-to-end encryption uses |
 
-<sup>1</sup> Present for a guild voice channel and absent for a call, so a client reads the scope from this field
+<sup>1</sup> Present on a LiveKit grant
 
-<sup>2</sup> Present only when the channel is end-to-end encrypted
+<sup>2</sup> Present on a peer-to-peer grant, which only a session that sent `p2p: true` in its [Voice State Update](/gateway/commands/#voice-state-update) command receives
 
-Fluxer uses LiveKit for voice media. There is no second voice websocket, no voice opcode set, and no UDP discovery step. A client opens a LiveKit connection to `endpoint`, presents `token` there, and speaks the LiveKit protocol from that point on. [Voice](/voice/) states the room naming, the participant identity, and the track sources a grant admits.
+<sup>3</sup> Present for a guild voice channel and absent for a call, so a client reads the scope from this field
+
+<sup>4</sup> Present only on a LiveKit grant for an end-to-end encrypted channel
+
+#### ICE server object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| urls | array[string] | The `stun:` URLs of one server |
+
+Fluxer never hands out a TURN server, so a peer-to-peer connection never relays media. Peers that cannot reach each other directly fail to connect, and [Peer-to-peer voice](#peer-to-peer-voice) states what a client does then.
+
+```json
+{
+  "p2p": true,
+  "ice_servers": [
+    {"urls": ["stun:stun.example.com:3478"]}
+  ],
+  "connection_id": "b7f3c2a94e1d4c0f",
+  "channel_id": "1189375284394692610",
+  "guild_id": "1189375284394692608"
+}
+```
+
+Fluxer uses LiveKit for voice media unless the grant is peer-to-peer. There is no second voice websocket and no UDP discovery step. With a LiveKit grant a client opens a LiveKit connection to `endpoint`, presents `token` there, and speaks the LiveKit protocol from that point on. With a peer-to-peer grant a client follows [Peer-to-peer voice](#peer-to-peer-voice). [Voice](/voice/) states the room naming, the participant identity, and the track sources a grant admits.
 
 A grant is issued when a connection opens, when it moves to another channel, and when its region changes. Toggling `self_mute`, `self_video`, or `self_stream` produces no new grant. A call region change reissues one grant to each participant of the call.
+
+A LiveKit grant for a `connection_id` that holds a peer-to-peer grant means a participant or a region change converted the channel or call. The client closes its peer connections and connects to LiveKit with the new grant.
+
+#### Peer-to-peer voice
+
+A voice channel or call is peer-to-peer when it has at least one voice state and every voice state in it has `p2p: true`. The participants then form a full mesh of WebRTC peer connections, one for each pair of connections, and no media passes through LiveKit. The mesh roster is the set of voice states of the channel or call.
+
+Fluxer decides each new connection as follows.
+
+| Channel or call | The command sent `p2p: true` | Any other `p2p` value |
+| --- | --- | --- |
+| Peer-to-peer below the participant cap | Peer-to-peer join<sup>1</sup> | Refused with `VOICE_P2P_CONSENT_REQUIRED` |
+| Peer-to-peer at the participant cap | Refused with `VOICE_CHANNEL_FULL` | Refused with `VOICE_P2P_CONSENT_REQUIRED` |
+| Empty, with no join awaiting LiveKit confirmation | Peer-to-peer join, or a LiveKit join when Fluxer declines<sup>2</sup> | LiveKit join |
+| Every other state | LiveKit join | LiveKit join |
+
+<sup>1</sup> Refused with `VOICE_P2P_UNAVAILABLE` when Fluxer declines peer-to-peer for this join
+
+<sup>2</sup> The session then receives a LiveKit grant and the channel or call is not peer-to-peer
+
+Participants are counted as connections in a guild voice channel and as users in a call. The participant cap is `max_participants` of the [peer-to-peer voice configuration](/admin-api/instance/#peer-to-peer-voice-configuration-object), 2 through 4, and every account reads it from its [peer-to-peer voice assignment](/http-api/experiments/#peer-to-peer-voice-assignment-object). A lower cap never removes a participant from a running call. A bot session counts as not having sent `p2p: true`. A connection that moves into a guild voice channel with its own Voice State Update command is decided by the same table.
+
+Each refusal reaches the requesting session as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) payload, changes no voice state, and leaves the existing participants untouched. A client that receives `VOICE_P2P_CONSENT_REQUIRED` asks its user and, on agreement, sends the join again with `p2p: true`.
+
+Two joins can reach an empty call at the same moment with different `p2p` values. Fluxer admits the first and refuses the other with `VOICE_P2P_CONSENT_REQUIRED`. The refused session receives a [Voice State Update](#voice-state-update) with a null `channel_id` for the connection it had been granted.
+
+The voice state of a peer-to-peer join is published at once, with no LiveKit confirmation step. Peers exchange session descriptions and ICE candidates with the [Voice Signal](/gateway/commands/#voice-signal) command, which arrives as [Voice Signal](#voice-signal).
+
+Fluxer never converts a peer-to-peer channel or call to LiveKit by itself. Only two actions convert one.
+
+- A participant sends a Voice State Update command for its own connection with an explicit `p2p: false`.
+- The voice region changes. [Modify call region](/http-api/calls/#modify-call-region) converts a call whenever it supplies `region`, even with the current value. [Modify channel](/http-api/channels/#modify-channel) converts a guild voice channel when it stores a different `rtc_region`.
+
+A conversion sets `p2p` to false on every voice state of the channel or call, publishes each as a [Voice State Update](#voice-state-update), and sends each connected session a LiveKit grant for its existing `connection_id`. The conversion is one way. The channel or call can be peer-to-peer again only after it has emptied.
+
+A guild voice channel whose `rtc_p2p` is true stays peer-to-peer. Neither action converts it, and a change to `rtc_p2p` takes effect for the next call, after the channel has emptied. Fluxer does not ask for agreement before the first join of such a channel. A client whose [peer-to-peer voice assignment](/http-api/experiments/#peer-to-peer-voice-assignment-object) is enabled asks its user and sends `p2p: true` on agreement. Any other first join starts a LiveKit call.
+
+A failed peer connection converts nothing. The affected client reports the problem to its user, who can leave or send the explicit `p2p: false`. Each client reports how its peer connections settled with [Report connection outcomes](/http-api/peer-to-peer-voice/#report-connection-outcomes).
+
+A moderator cannot move a member into a peer-to-peer channel. [Modify guild member](/http-api/guild-members/#modify-guild-member) returns 400 `USER_NOT_IN_VOICE` and the member stays in its channel. A member moved out of a peer-to-peer channel receives a LiveKit grant for the target channel.
+
+Server mute and server deafen remain voice state flags in a peer-to-peer mesh, and each peer applies them to the media it sends and plays. A peer closes its peer connection to a connection whose voice state leaves the channel.
+
+### <span id="voice-signal"></span>VOICE_SIGNAL
+
+Another connection of a [peer-to-peer](#peer-to-peer-voice) voice channel or call sent this session a signalling message with the [Voice Signal](/gateway/commands/#voice-signal) command. Delivered to the session that owns the target connection alone.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id?<sup>1</sup> | snowflake | The guild the channel belongs to |
+| channel_id | snowflake | The voice channel or call channel |
+| from | string | The `connection_id` of the sending voice state |
+| user_id | snowflake | The user who owns the sending connection |
+| data | object | The signalling message exactly as the sender supplied it |
+
+<sup>1</sup> Present for a guild voice channel and absent for a call
+
+```json
+{
+  "guild_id": "1189375284394692608",
+  "channel_id": "1189375284394692610",
+  "from": "9a41d07c5be2f318",
+  "user_id": "1189375284394692700",
+  "data": {
+    "type": "answer",
+    "sdp": "v=0..."
+  }
+}
+```
+
+Fluxer authorises every signal against the current voice states, so `from` always names a connection with `p2p: true` in `channel_id`. A client discards a signal whose `from` it no longer has in its roster.
 
 ### <span id="entrance-sound-play"></span>ENTRANCE_SOUND_PLAY
 

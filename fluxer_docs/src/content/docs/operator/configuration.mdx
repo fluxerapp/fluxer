@@ -744,6 +744,16 @@ Moving a media port is one line in `.env` followed by `docker compose up -d live
 
 To rotate the key pair, set both names in `.env`, then run `docker compose up -d livekit api worker` to apply the change everywhere.
 
+### Peer-to-peer calls
+
+A peer-to-peer call sends media directly between its participants and not through LiveKit or any relay. It runs only while the `voice_p2p` experiment is enabled in the [instance configuration](/admin-api/instance/). The value below names the STUN servers Fluxer hands to each participant. It is optional and Compose forwards it from `.env`. The stack ships no STUN server.
+
+#### `FLUXER_VOICE_P2P_STUN_URLS`
+
+Default empty. A comma-separated list of `stun:` URLs. Participants use them to discover their public addresses.
+
+Unset, participants receive no ICE servers and connect only when they can already reach each other, as on one local network. Two participants that cannot reach each other directly fail to connect, and either one can switch the call to LiveKit. Participants in a peer-to-peer call can learn each other's IP addresses.
+
 The `Caddyfile` is a bind mount, so the edge reads the copy that sits on disk beside `docker-compose.yml`. Editing it takes `docker compose restart edge`, because `docker compose up -d` leaves a container alone when only a mounted file changed. An upgrade does that restart itself, which [What the script does](/operator/upgrading/#what-the-script-does) covers. A change to any LiveKit value in `.env` needs `docker compose up -d`, because `restart` reuses the existing container with its old environment.
 
 ## Email

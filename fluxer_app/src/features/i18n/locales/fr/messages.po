@@ -1102,7 +1102,7 @@ msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# message bloqué} other {# messages bloqués}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:112
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# canal suit} other {# canaux suivent}} ce canal. Le convertir en canal texte supprimera ces suivis."
 
@@ -2709,6 +2709,11 @@ msgstr "Un emoji par défaut. Vous pouvez l'utiliser n'importe où sur {productN
 msgid "A description is required."
 msgstr "Une description est requise."
 
+#. Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "A direct connection couldn't be made. You can't hear or see each other."
+msgstr "Une connexion directe n'a pas pu être établie. Vous ne pouvez pas vous entendre ni vous voir."
+
 #. Duration label component for a very short elapsed call.
 #: src/features/channel/components/CallMessage.tsx:63
 msgid "a few seconds"
@@ -2782,6 +2787,11 @@ msgstr "un contenu intégré enrichi ou un aperçu de lien (pas un fichier envoy
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "A separate profile for each community"
 msgstr "Un profil distinct pour chaque communauté"
+
+#. Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:424
+msgid "A standard call goes through a server and works for everyone."
+msgstr "Un appel standard passe par un serveur et fonctionne pour tout le monde."
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -3665,7 +3675,7 @@ msgstr "Les administrateurs ont suspendu les invitations. Vous ne pouvez pas rej
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:519
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:546
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:138
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
@@ -4617,6 +4627,11 @@ msgstr "Tout le monde peut demander un compte, mais un administrateur doit l'app
 msgid "Anyone in my communities"
 msgstr "Toute personne de mes communautés"
 
+#. Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:372
+msgid "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+msgstr "Toute personne ne pouvant pas se connecter directement ne pourra pas participer tant que quelqu'un n'aura pas basculé l'appel vers un appel standard."
+
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
 msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
 msgstr "Toute personne qui vous trouve peut envoyer une demande. Désactivez cette option pour choisir les groupes ci-dessous."
@@ -5101,6 +5116,16 @@ msgstr "Audio"
 msgid "Audio & video"
 msgstr "Audio et vidéo"
 
+#. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:451
+msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+msgstr "L’audio et la vidéo transitent directement entre les participants, jusqu’à {maxParticipants, plural, one {# personne} other {# personnes}}. Tout le monde donne son accord avant de rejoindre et peut voir l’adresse IP de chacun."
+
+#. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:350
+msgid "Audio and video go directly between participants."
+msgstr "L'audio et la vidéo transitent directement entre les participants."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:78
 msgid "Audio boost"
@@ -5408,7 +5433,7 @@ msgstr "Suggestion de saisie semi-automatique : {label}, {selectedOptionPosition
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
-#: src/features/voice/components/VoiceSettingsMenus.tsx:93
+#: src/features/voice/components/VoiceSettingsMenus.tsx:97
 msgid "Automatic"
 msgstr "Automatique"
 
@@ -6925,15 +6950,15 @@ msgstr "Impossible de supprimer le compte"
 msgid "Capture"
 msgstr "Capture"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Capture app audio"
 msgstr "Capturer le son de l’application"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:814
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:815
 msgid "Capture desktop audio"
 msgstr "Capturer le son de l’ordinateur"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture device audio"
 msgstr "Capturer l'audio de l'appareil"
 
@@ -7006,7 +7031,7 @@ msgstr "ID de catégorie copié"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Form field label for the name of a favorites category.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:77
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:20
 msgid "Category name"
 msgstr "Nom de la catégorie"
@@ -7543,7 +7568,7 @@ msgstr "Sections des détails du salon"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "ID du salon copié"
@@ -7561,7 +7586,7 @@ msgid "channel link"
 msgstr "lien de salon"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 msgid "Channel link copied"
 msgstr "Lien du salon copié"
 
@@ -7593,7 +7618,7 @@ msgstr "Gestion des salons"
 #. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
 #: src/features/forum/utils/ForumMessageDescriptors.ts:331
@@ -7640,7 +7665,7 @@ msgid "Channel synced with parent category"
 msgstr "Salon synchronisé avec la catégorie parente"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:68
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
 msgid "Channel topic is too long."
 msgstr "Le sujet du salon est trop long."
 
@@ -7657,8 +7682,8 @@ msgstr "Sélection du type de salon"
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #. Toast shown after forum channel settings are saved.
 #: src/features/app/config/AuditLogConstants.ts:14
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:295
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:338
 #: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "Salon mis à jour"
@@ -9410,7 +9435,7 @@ msgstr "Confirmer avant de rejoindre les salons vocaux"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the keyboard tab. Keep it concise.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:23
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:28
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:17
 msgid "Confirm before starting calls"
 msgstr "Confirmer avant de lancer des appels"
@@ -9811,7 +9836,7 @@ msgid "Conversations"
 msgstr "Conversations"
 
 #. Button in the confirmation that converts an announcement channel back into a text channel. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:123
 msgid "Convert"
 msgstr "Convertir"
 
@@ -9831,7 +9856,7 @@ msgid "Converted the channel to an announcement channel"
 msgstr "Converti le salon en salon d'annonces"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel, used when the number of following channels could not be loaded. Channels that follow it get copies of its published messages and stop getting them after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:113
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
 msgid "Converting this channel to a text channel removes every channel that follows it."
 msgstr "La conversion de cette chaîne en chaîne de texte supprimera toutes les chaînes qui la suivent."
 
@@ -9938,7 +9963,7 @@ msgstr "Copier l'identifiant du salon"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:213
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Copy channel link"
 msgstr "Copier le lien du salon"
 
@@ -10368,13 +10393,18 @@ msgstr "Impossible de terminer la connexion. Veuillez réessayer."
 msgid "Couldn't connect to {domain}. Try again."
 msgstr "Impossible de se connecter à {domain}. Réessayez."
 
+#. Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Couldn't connect to {names}"
+msgstr "Impossible de se connecter à {names}"
+
 #. Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.
 #: src/features/voice/engine/media_engine_facade/shared.ts:35
 msgid "Couldn't connect to voice. Please try again."
 msgstr "Impossible d’établir la connexion vocale. Veuillez réessayer."
 
 #. Title of the error dialog shown when converting a channel between a text channel and an announcement channel failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:122
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
 msgid "Couldn't convert this channel"
 msgstr "Impossible de convertir ce salon"
 
@@ -10471,7 +10501,7 @@ msgid "Couldn't download the desktop update"
 msgstr "Impossible de télécharger la mise à jour de l’application de bureau"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Couldn't duplicate this channel"
 msgstr "Impossible de dupliquer ce salon"
 
@@ -10499,6 +10529,11 @@ msgstr "Impossible d'ignorer la demande d'ami. Veuillez réessayer."
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
 msgstr "Impossible de rejoindre la communauté"
+
+#. Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:442
+msgid "Couldn't join the P2P call. Try again."
+msgstr "Impossible de rejoindre l'appel P2P. Réessayez."
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
@@ -10590,7 +10625,7 @@ msgid "Couldn't open the billing portal"
 msgstr "Impossible d'ouvrir le portail de facturation"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Couldn't pin this conversation"
 msgstr "Impossible d’épingler cette conversation"
 
@@ -10697,7 +10732,7 @@ msgid "Couldn't run that command: {detail}"
 msgstr "Impossible d'exécuter cette commande : {detail}"
 
 #. Title of the error dialog shown when saving the channel overview settings failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:132
 msgid "Couldn't save channel settings"
 msgstr "Impossible de sauvegarder les paramètres du canal"
 
@@ -10794,7 +10829,7 @@ msgid "Couldn't unfollow this channel"
 msgstr "Impossible de ne plus suivre ce canal"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Couldn't unpin this conversation"
 msgstr "Impossible de désépingler cette conversation"
 
@@ -11363,7 +11398,7 @@ msgstr "Personnalisé"
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
-#: src/features/voice/components/VoiceSettingsMenus.tsx:70
+#: src/features/voice/components/VoiceSettingsMenus.tsx:74
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "Personnalisé"
@@ -11927,7 +11962,7 @@ msgstr "Par défaut"
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:68
-#: src/features/voice/components/VoiceSettingsMenus.tsx:87
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
 msgid "Default"
@@ -12087,7 +12122,7 @@ msgstr "Supprimer « {stickerName} » ? Cette action est irréversible."
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:103
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "Supprimer {channelLabel} ? Cette action est irréversible."
 
@@ -12669,7 +12704,7 @@ msgid "Device audio ({deviceLabel})"
 msgstr "Audio de l'appareil ({deviceLabel})"
 
 #. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:869
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:50
 msgid "Device audio only"
 msgstr "Audio de l'appareil uniquement"
@@ -12683,7 +12718,7 @@ msgstr "Détails de l’appareil"
 msgid "Device revoked"
 msgstr "Appareil révoqué"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Device selection"
 msgstr "Sélection de l'appareil"
 
@@ -12746,6 +12781,11 @@ msgstr "Différentes tailles et nombres de membres"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "Atténuer le texte barré"
+
+#. Tooltip on the P2P indicator of a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:336
+msgid "Direct connection. Media is encrypted between participants."
+msgstr "Connexion directe. Les médias sont chiffrés entre les participants."
 
 #. Voice input processing profile with raw microphone audio.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:199
@@ -13271,6 +13311,11 @@ msgstr "Barre latérale des MP"
 msgid "DNS TXT record"
 msgstr "Enregistrement DNS TXT"
 
+#. Checkbox in the dialog shown before joining a peer-to-peer call. When checked, future joins skip the dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:391
+msgid "Do not ask again, always agree"
+msgstr "Ne plus demander, accepter toujours"
+
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
@@ -13680,7 +13725,7 @@ msgstr "Dupliquer"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 msgid "Duplicate channel"
 msgstr "Dupliquer le salon"
 
@@ -13814,7 +13859,7 @@ msgstr "Modifier la catégorie"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:153
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:154
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:160
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:72
 msgid "Edit channel"
 msgstr "Modifier le salon"
@@ -14993,7 +15038,7 @@ msgstr "Touche Échap"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:15
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:20
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:197
 msgid "Escape key exits keyboard mode"
 msgstr "La touche Échap quitte le mode clavier"
@@ -15035,6 +15080,11 @@ msgstr "Chaque communauté qui suit ce canal en recevra une copie. Si vous la mo
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Tout le monde"
+
+#. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:358
+msgid "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
+msgstr "Tous les participants à l'appel bénéficient gratuitement de la qualité de streaming Plutonium : jusqu'à 4K en résolution source et 60 ips."
 
 #. Premium model option that gives everyone the highest limits.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:428
@@ -17370,7 +17420,7 @@ msgstr "A accordé {permissions}"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Accorde toutes les permissions et contourne les restrictions des salons. Permission très sensible."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:993
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Granular selection"
 msgstr "Sélection granulaire"
 
@@ -17406,7 +17456,7 @@ msgstr "Grec"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:69
-#: src/features/voice/components/VoiceSettingsMenus.tsx:789
+#: src/features/voice/components/VoiceSettingsMenus.tsx:796
 msgid "Grid view"
 msgstr "Vue grille"
 
@@ -17898,7 +17948,7 @@ msgstr "Masquer les participants"
 msgid "Hide password"
 msgstr "Masquer le mot de passe"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:770
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:771
 msgid "Hide preview thumbnail"
 msgstr "Masquer la miniature d’aperçu"
 
@@ -18311,11 +18361,11 @@ msgstr "Ignorer"
 msgid "Ignore friend request"
 msgstr "Ignorer la demande d'ami"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:984
 msgid "Ignore hardware devices"
 msgstr "Ignorer les appareils matériels"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:959
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
 msgid "Ignore input media"
 msgstr "Ignorer les médias entrants"
 
@@ -18346,7 +18396,7 @@ msgstr "Ignorer la demande d'ami de {displayName} ?"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "Ignorer le délai du mode lent de ce salon."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:971
 msgid "Ignore virtual"
 msgstr "Ignorer le virtuel"
 
@@ -18842,7 +18892,7 @@ msgid "Input device"
 msgstr "Périphérique d'entrée"
 
 #. Read-only microphone input level shown in the voice device menu.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:102
+#: src/features/voice/components/VoiceSettingsMenus.tsx:106
 msgid "Input level"
 msgstr "Niveau d'entrée"
 
@@ -18854,7 +18904,7 @@ msgstr "Surveillance des entrées"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:134
-#: src/features/voice/components/VoiceSettingsMenus.tsx:75
+#: src/features/voice/components/VoiceSettingsMenus.tsx:79
 msgid "Input profile"
 msgstr "Profil d'entrée"
 
@@ -19420,6 +19470,12 @@ msgstr "Gigue :"
 msgid "Join"
 msgstr "Rejoindre"
 
+#. Primary button in the dialog shown before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:386
+msgctxt "voice-p2p-consent"
+msgid "Join"
+msgstr "Rejoindre"
+
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
@@ -19443,6 +19499,11 @@ msgstr "Rejoindre une communauté"
 #: src/features/channel/components/StickersPicker.tsx:54
 msgid "Join a community to unlock stickers."
 msgstr "Rejoignez une communauté pour débloquer des stickers."
+
+#. Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:345
+msgid "Join a P2P call?"
+msgstr "Rejoindre un appel P2P ?"
 
 #. Action label in the DM channel header pill that joins an ongoing call.
 #. Primary CTA button in the mobile direct-call lobby bottom sheet. Joins the active call.
@@ -19481,6 +19542,11 @@ msgstr "Méthode d'adhésion"
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:88
 msgid "Join on this device"
 msgstr "Rejoindre sur cet appareil"
+
+#. Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:396
+msgid "Join P2P calls without asking"
+msgstr "Rejoindre les appels P2P sans demander"
 
 #. Call-to-action button label on an in-progress call system message.
 #: src/features/channel/components/CallMessage.tsx:67
@@ -20012,8 +20078,10 @@ msgstr "Quitter {threadName} ? Il est privé, vous ne pourrez donc y revenir que
 msgid "Leave blank for a random username"
 msgstr "Laisser vide pour un nom d'utilisateur aléatoire"
 
+#. Button in the peer-to-peer connection failure dialog that leaves the call.
 #. Destructive button in the mobile direct-call lobby bottom sheet. Disconnects from the call.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:92
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:434
 msgid "Leave call"
 msgstr "Quitter l'appel"
 
@@ -20190,7 +20258,7 @@ msgid "Lets custom CSS reveal transparent window regions after restarting the de
 msgstr "Permet au CSS personnalisé de révéler les zones de fenêtre transparentes après le redémarrage de l'application de bureau."
 
 #. Description under the Announcement channel switch in channel settings. Turning it on converts a text channel into an announcement channel. Publishing a message sends a copy of it to every channel in other communities that follows this one.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
 msgid "Lets other communities follow this channel and get copies of what you publish."
 msgstr "Permet à d'autres communautés de suivre ce canal et de recevoir des copies de ce que vous publiez."
 
@@ -20717,6 +20785,11 @@ msgstr "Louisiane"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:57
 msgid "Low"
 msgstr "Faible"
+
+#. Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:354
+msgid "Lower latency."
+msgstr "Latence plus faible."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:92
@@ -21992,7 +22065,7 @@ msgstr "Michigan"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/permissions/system/components/useMacPermissionControl.ts:10
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:26
-#: src/features/voice/components/VoiceSettingsMenus.tsx:79
+#: src/features/voice/components/VoiceSettingsMenus.tsx:83
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:41
 #: src/features/voice/utils/SettingsDeviceOptions.ts:16
 msgid "Microphone"
@@ -22090,7 +22163,7 @@ msgstr "Minnesota"
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:114
+#: src/features/voice/components/VoiceSettingsMenus.tsx:118
 msgid "Mirror camera"
 msgstr "Afficher la caméra en miroir"
 
@@ -22812,7 +22885,7 @@ msgid "My awesome sticker"
 msgstr "Mon super sticker"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
 msgid "My category"
 msgstr "Ma catégorie"
 
@@ -24433,7 +24506,7 @@ msgstr "Continuez uniquement si vous avez commencé cette connexion sur un appar
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Seules les cartes de crédit sont acceptées. Les cartes de débit et prépayées ne peuvent pas servir à la vérification d’accès aux contenus pour adultes."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:949
 msgid "Only default speakers"
 msgstr "Haut-parleurs par défaut uniquement"
 
@@ -24511,7 +24584,7 @@ msgstr "Seuls les membres et rôles sélectionnés pourront voir ce salon."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Afficher les aperçus de message uniquement pour les MP non lus"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:938
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:939
 msgid "Only speakers"
 msgstr "Haut-parleurs seulement"
 
@@ -24748,7 +24821,7 @@ msgstr "Ouvrir les détails du salon {channelName}"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:129
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:158
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:164
 msgid "Open chat"
 msgstr "Ouvrir le chat"
 
@@ -24829,7 +24902,7 @@ msgstr "Ouvrir l'emoji dans le navigateur"
 msgid "Open emoji picker"
 msgstr "Ouvrir le sélecteur d'emojis"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:863
+#: src/features/voice/components/VoiceSettingsMenus.tsx:888
 msgid "Open event sink"
 msgstr "Ouvrir le flux d’événements"
 
@@ -25269,6 +25342,16 @@ msgstr "Autres fils actifs"
 msgid "Other devices"
 msgstr "Autres appareils"
 
+#. Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:363
+msgid "Other participants can see your IP address."
+msgstr "Les autres participants peuvent voir votre adresse IP."
+
+#. Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:401
+msgid "Other participants in a P2P call can see your IP address."
+msgstr "Les autres participants d'un appel P2P peuvent voir votre adresse IP."
+
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -25383,6 +25466,22 @@ msgstr "Le transfert de propriété à <0>{username}</0> n'a pas pu être effect
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "Propriété transférée"
+
+# auto-i18n: reviewed unchanged
+#. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:331
+msgid "P2P"
+msgstr "P2P"
+
+#. Error shown when the server refuses to start or join a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:438
+msgid "P2P calls are unavailable right now."
+msgstr "Les appels P2P sont indisponibles pour le moment."
+
+#. Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:446
+msgid "P2P calls only"
+msgstr "Appels P2P uniquement"
 
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
@@ -26085,7 +26184,7 @@ msgstr "Groupe épinglé"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "Conversation de groupe épinglée"
@@ -26525,7 +26624,7 @@ msgstr "Bouton d'aperçu"
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:58
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:61
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/VoiceSettingsMenus.tsx:621
 msgid "Preview camera"
 msgstr "Aperçu de la caméra"
 
@@ -27096,7 +27195,7 @@ msgstr "Touche \" Appuyer pour parler \""
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
-#: src/features/voice/components/VoiceSettingsMenus.tsx:422
+#: src/features/voice/components/VoiceSettingsMenus.tsx:426
 msgid "Push-to-talk"
 msgstr "Appuyer pour parler"
 
@@ -31377,7 +31476,7 @@ msgid "Shorten the message and try again."
 msgstr "Raccourcissez le message et réessayez."
 
 #. Body of the error modal shown when the channel topic exceeds the maximum length.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:78
 msgid "Shorten the topic and try again."
 msgstr "Raccourcissez le sujet et réessayez."
 
@@ -31477,7 +31576,7 @@ msgstr "Afficher les contrôles de volume de connexion"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:19
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:24
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:221
 msgid "Show context menu shortcuts"
 msgstr "Afficher les raccourcis du menu contextuel"
@@ -31562,7 +31661,7 @@ msgstr "Afficher moins d’effets sonores"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:11
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:16
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:245
 msgid "Show focus ring on chat text area"
 msgstr "Afficher le contour de focus dans la zone de texte du chat"
@@ -31690,7 +31789,7 @@ msgstr "Afficher les salons mis en sourdine"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:819
+#: src/features/voice/components/VoiceSettingsMenus.tsx:826
 msgid "Show my own camera"
 msgstr "Afficher ma propre caméra"
 
@@ -31731,7 +31830,7 @@ msgstr "Afficher les nouveaux messages comme non lus"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:103
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:77
-#: src/features/voice/components/VoiceSettingsMenus.tsx:833
+#: src/features/voice/components/VoiceSettingsMenus.tsx:840
 msgid "Show non-video participants"
 msgstr "Afficher les participants sans vidéo"
 
@@ -32133,7 +32232,7 @@ msgstr "Appel silencieux"
 msgid "Silent calls"
 msgstr "Appels silencieux"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:874
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:875
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "Silencieux lorsque l’appareil de capture n’a pas sa propre entrée audio"
 
@@ -32644,8 +32743,8 @@ msgstr "Une erreur est survenue."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:156
 msgid "Something went wrong. Please try again in a moment."
 msgstr "Une erreur est survenue. Veuillez réessayer dans un instant."
 
@@ -32739,7 +32838,7 @@ msgstr "Sons"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:332
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:458
 msgid "Source"
 msgstr "Source"
 
@@ -32848,7 +32947,7 @@ msgstr "Parlez maintenant. Appuyez sur Arrêter lorsque vous avez terminé. Vous
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:46
-#: src/features/voice/components/VoiceSettingsMenus.tsx:83
+#: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:20
 msgid "Speaker"
 msgstr "Haut-parleur"
@@ -33046,12 +33145,12 @@ msgid "Start a group DM"
 msgstr "Démarrer une conversation de groupe"
 
 #. Confirm dialog body before starting a 1:1 video call.
-#: src/features/voice/utils/CallUtils.tsx:17
+#: src/features/voice/utils/CallUtils.tsx:21
 msgid "Start a video call?"
 msgstr "Démarrer un appel vidéo ?"
 
 #. Confirm dialog body before starting a 1:1 voice call.
-#: src/features/voice/utils/CallUtils.tsx:21
+#: src/features/voice/utils/CallUtils.tsx:25
 msgid "Start a voice call?"
 msgstr "Démarrer un appel vocal ?"
 
@@ -33081,6 +33180,16 @@ msgstr "La date de début doit être antérieure à la date de fin."
 msgid "Start drag and drop"
 msgstr "Démarrer le glisser-déposer"
 
+#. Primary button in the dialog offering to start a call in peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:377
+msgid "Start in P2P mode"
+msgstr "Démarrer en mode P2P"
+
+#. Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:340
+msgid "Start in P2P mode?"
+msgstr "Démarrer en mode P2P ?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:231
 msgid "Start in the tray instead of opening the window when launched at login"
@@ -33106,6 +33215,11 @@ msgstr "Démarrer minimisé"
 msgid "Start over"
 msgstr "Recommencer"
 
+#. Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Start P2P call"
+msgstr "Démarrer un appel P2P"
+
 #. Button label shown before recording starts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:69
 msgid "Start recording"
@@ -33119,6 +33233,11 @@ msgstr "Commencez vos recherches avec <0>{peoplePrefix}</0> <1>{textChannelPrefi
 #: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "Commencer la lecture"
+
+#. Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:381
+msgid "Start standard call"
+msgstr "Démarrer un appel standard"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
@@ -33190,6 +33309,11 @@ msgstr "Panneau d’état"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:368
 msgid "Status:"
 msgstr "Statut :"
+
+#. Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:429
+msgid "Stay"
+msgstr "Rester"
 
 #. Empty state explanation in the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:198
@@ -33398,7 +33522,7 @@ msgid "Stop"
 msgstr "Arrêter"
 
 #. Title of the confirmation shown when a member turns off the Announcement channel switch in channel settings, which converts the channel back into a normal text channel.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
 msgid "Stop being an announcement channel?"
 msgstr "Arrêter d'être un canal d'annonces ?"
 
@@ -33909,6 +34033,11 @@ msgstr "Passer à la communauté ou aux messages privés précédents"
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:81
 msgid "Switch to single column"
 msgstr "Passer en mode colonne unique"
+
+#. Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "Switch to standard call"
+msgstr "Passer à l'appel standard"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
@@ -37557,7 +37686,7 @@ msgstr "Groupe désépinglé"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "MP de groupe désépinglé"
@@ -37715,6 +37844,11 @@ msgstr "E-mail non vérifié"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "Jusqu'à {DISCOVERY_MAX_TAGS} tags aident les gens à trouver votre communauté. Ils apparaissent dans la recherche Découverte."
+
+#. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
+msgstr "Jusqu'à {maxParticipants, plural, one {# personne} other {# personnes}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
@@ -38030,7 +38164,7 @@ msgstr "Envoi des emojis"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
@@ -39024,7 +39158,7 @@ msgstr "Envoi vidéo :"
 #. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:65
-#: src/features/voice/components/VoiceSettingsMenus.tsx:110
+#: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Video settings"
 msgstr "Paramètres vidéo"
 
@@ -39559,7 +39693,7 @@ msgstr "L'enregistrement vocal n'est pas pris en charge par ce navigateur."
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:98
+#: src/features/voice/components/VoiceSettingsMenus.tsx:102
 msgid "Voice region"
 msgstr "Région vocale"
 
@@ -39571,7 +39705,7 @@ msgstr "Barre de rappel de restauration de session vocale"
 #. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:53
-#: src/features/voice/components/VoiceSettingsMenus.tsx:106
+#: src/features/voice/components/VoiceSettingsMenus.tsx:110
 msgid "Voice settings"
 msgstr "Paramètres vocaux"
 

@@ -501,6 +501,10 @@ export class RpcService {
 					canStream: request.can_stream,
 					canVideo: request.can_video,
 					tokenNonce: request.token_nonce,
+					p2p: request.p2p,
+					p2pInitiator: request.p2p_initiator,
+					p2pParticipantCount: request.p2p_participant_count,
+					countryCode: request.country_code,
 				});
 				return {
 					type: 'voice_get_token',
@@ -1286,6 +1290,7 @@ export class RpcService {
 			),
 			pinned_dms: timeRpcStepSync(responseBuildSteps, 'map_pinned_dms', () => userData.pinnedDMs?.map(String) ?? []),
 			country_code: countryCode,
+			geoip_country_code: geoipCountryIso,
 			latitude: geoipLatitude,
 			longitude: geoipLongitude,
 			rtc_regions: rtcRegions,

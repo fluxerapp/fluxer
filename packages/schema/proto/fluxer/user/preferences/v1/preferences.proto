@@ -222,6 +222,7 @@ message InputMonitoringPromptsState {
 message VoicePromptsState {
   bool skip_hide_own_camera_confirm = 1;
   bool skip_hide_own_screenshare_confirm = 2;
+  bool skip_p2p_join_confirm = 3;
 }
 
 message AnnouncementPromptsState {

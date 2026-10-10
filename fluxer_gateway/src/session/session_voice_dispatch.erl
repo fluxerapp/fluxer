@@ -76,7 +76,8 @@ handle_guild_call_result({error, timeout}, Ctx, _SessionPid) ->
     log_voice_warning("voice_state_update_guild_call_timeout", Ctx);
 handle_guild_call_result({error, noproc}, Ctx, _SessionPid) ->
     log_voice_warning("voice_state_update_guild_call_noproc", Ctx);
-handle_guild_call_result({error, Cat, Err}, Ctx, _SessionPid) ->
+handle_guild_call_result({error, Cat, Err}, Ctx, SessionPid) ->
+    gen_server:cast(SessionPid, {voice_rejected, Err}),
     log_voice_warning_extra(Ctx, " category=~p error=~p", [Cat, Err]);
 handle_guild_call_result({error, Reason}, Ctx, _SessionPid) ->
     log_voice_warning_extra(Ctx, " reason=~p", [Reason]).
@@ -107,6 +108,15 @@ handle_guild_reply_ok(Reply, Ctx, SessionPid) ->
 -spec maybe_dispatch_voice_server_update(
     map(), guild_id(), channel_id() | null, pid()
 ) -> ok.
+maybe_dispatch_voice_server_update(
+    #{p2p := true, ice_servers := IceServers, connection_id := ConnId}, GId, ChId, SessionPid
+) when is_integer(ChId) ->
+    dispatch_to_session(
+        SessionPid,
+        voice_server_update,
+        voice_p2p:voice_server_update(ConnId, ChId, GId, IceServers),
+        GId
+    );
 maybe_dispatch_voice_server_update(Reply, GId, ChId, SessionPid) ->
     Token = maps:get(token, Reply, undefined),
     Endpoint = maps:get(endpoint, Reply, undefined),
@@ -370,6 +380,37 @@ join_reply_dispatches_voice_server_update_test() ->
     ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Payload)),
     ?assertEqual(<<"conn-1">>, maps:get(<<"connection_id">>, Payload)),
     ?assertNot(maps:is_key(<<"e2ee_key">>, Payload)).
+
+guild_rejection_is_cast_to_the_session_test() ->
+    ok = handle_guild_call_result(
+        {error, permission_denied, voice_p2p_consent_required}, test_voice_ctx(456), self()
+    ),
+    receive
+        {'$gen_cast', {voice_rejected, voice_p2p_consent_required}} -> ok
+    after 1000 ->
+        error(voice_rejection_not_cast)
+    end.
+
+p2p_join_reply_dispatches_ice_servers_without_a_token_test() ->
+    IceServers = [#{<<"urls">> => [<<"stun:stun.example:3478">>]}],
+    Reply = #{
+        success => true,
+        p2p => true,
+        ice_servers => IceServers,
+        connection_id => <<"conn-1">>,
+        voice_state => #{<<"channel_id">> => <<"456">>}
+    },
+    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
+    ?assertEqual(
+        #{
+            <<"p2p">> => true,
+            <<"ice_servers">> => IceServers,
+            <<"guild_id">> => <<"42">>,
+            <<"channel_id">> => <<"456">>,
+            <<"connection_id">> => <<"conn-1">>
+        },
+        receive_dispatch(voice_server_update)
+    ).
 
 join_reply_attaches_e2ee_key_test() ->
     Reply = #{

@@ -86,7 +86,7 @@ log_pending_found(ConnectionId, PendingData) ->
     ).
 
 -spec activate_pending(binary(), map(), map(), guild_state()) ->
-    {reply, map(), guild_state()}.
+    {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 activate_pending(ConnectionId, PendingData, PendingConnections, State) ->
     VoiceStates = voice_state_utils:voice_states(State),
     VoiceState = guild_voice_connection_pending:resolve_voice_state_from_pending(
@@ -102,14 +102,29 @@ activate_pending(ConnectionId, PendingData, PendingConnections, State) ->
     end.
 
 -spec finalize_activation(binary(), voice_state(), map(), guild_state()) ->
-    {reply, map(), guild_state()}.
+    {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 finalize_activation(ConnectionId, VoiceState, VoiceStates, State) ->
     UpdatedVoiceStates = VoiceStates#{ConnectionId => VoiceState},
-    S1 = State#{voice_states => UpdatedVoiceStates},
-    S2 = guild_voice_connection_util:clear_virtual_access_flags(VoiceState, S1),
-    ChannelIdBin = maps:get(<<"channel_id">>, VoiceState, null),
-    guild_voice_broadcast:broadcast_voice_state_update(VoiceState, S2, ChannelIdBin),
-    {reply, #{success => true}, S2}.
+    case channel_invariant_violation(VoiceState, UpdatedVoiceStates) of
+        ok ->
+            S1 = State#{voice_states => UpdatedVoiceStates},
+            S2 = guild_voice_connection_util:clear_virtual_access_flags(VoiceState, S1),
+            ChannelIdBin = maps:get(<<"channel_id">>, VoiceState, null),
+            guild_voice_broadcast:broadcast_voice_state_update(VoiceState, S2, ChannelIdBin),
+            {reply, #{success => true}, S2};
+        {error, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), State}
+    end.
+
+-spec channel_invariant_violation(voice_state(), map()) -> ok | {error, atom()}.
+channel_invariant_violation(VoiceState, VoiceStates) ->
+    voice_p2p:invariant_violation(
+        maps:values(
+            voice_state_utils:channel_voice_states(
+                voice_state_utils:voice_state_channel_id(VoiceState), VoiceStates
+            )
+        )
+    ).
 
 -spec try_restore_from_recently_disconnected(binary(), guild_state()) ->
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
@@ -126,10 +141,20 @@ try_restore_from_recently_disconnected(ConnectionId, State) ->
     end.
 
 -spec restore_recently_disconnected(binary(), voice_state(), map(), guild_state()) ->
-    {reply, map(), guild_state()}.
+    {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 restore_recently_disconnected(ConnectionId, VoiceState, Cache, State) ->
     VoiceStates = voice_state_utils:voice_states(State),
     UpdatedVoiceStates = VoiceStates#{ConnectionId => VoiceState},
+    case channel_invariant_violation(VoiceState, UpdatedVoiceStates) of
+        ok ->
+            finalize_restore(ConnectionId, VoiceState, UpdatedVoiceStates, Cache, State);
+        {error, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), State}
+    end.
+
+-spec finalize_restore(binary(), voice_state(), map(), map(), guild_state()) ->
+    {reply, map(), guild_state()}.
+finalize_restore(ConnectionId, VoiceState, UpdatedVoiceStates, Cache, State) ->
     NewCache = maps:remove(ConnectionId, Cache),
     S0 = State#{voice_states => UpdatedVoiceStates},
     S1 = S0#{recently_disconnected_voice_states => NewCache},

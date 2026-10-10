@@ -101,7 +101,25 @@ export interface GatewayVoiceStateUpdateParams {
 	self_stream: boolean;
 	viewer_stream_keys?: ReadonlyArray<string>;
 	connection_id: string | null;
+	p2p?: boolean;
 }
+
+export interface GatewayVoiceSignalParams {
+	guild_id: string | null;
+	channel_id: string;
+	to: string;
+	data: object;
+}
+
+export const VOICE_SIGNAL_MAX_JSON_BYTES = 16000;
+
+export const VoiceSignalSendResult = {
+	Sent: 'sent',
+	Oversized: 'oversized',
+	Unsent: 'unsent',
+} as const;
+
+export type VoiceSignalSendResult = ValueOf<typeof VoiceSignalSendResult>;
 
 export interface GatewaySocketOptions {
 	token: string;
@@ -157,7 +175,7 @@ function parseGatewayPayload(json: string): GatewayPayload {
 }
 
 function isGatewayErrorData(value: unknown): value is GatewayErrorData {
-	return isRecord(value) && typeof value.code === 'number' && typeof value.message === 'string';
+	return isRecord(value) && typeof value.code === 'string' && typeof value.message === 'string';
 }
 
 export interface GatewayDispatchReceipt {
@@ -591,6 +609,17 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 
 	updateVoiceStateExplicit(params: GatewayVoiceStateUpdateParams): boolean {
 		return this.sendPayload(this.buildVoiceStatePayload(params));
+	}
+
+	sendVoiceSignal(params: GatewayVoiceSignalParams): VoiceSignalSendResult {
+		if (!this.isConnected()) return VoiceSignalSendResult.Unsent;
+		const payload: GatewayPayload = {op: GatewayOpcodes.VOICE_SIGNAL, d: params};
+		const bytes = new TextEncoder().encode(JSON.stringify(payload)).byteLength;
+		if (bytes > VOICE_SIGNAL_MAX_JSON_BYTES) {
+			this.log.warn(`Refusing voice signal of ${bytes} bytes`);
+			return VoiceSignalSendResult.Oversized;
+		}
+		return this.sendPayload(payload) ? VoiceSignalSendResult.Sent : VoiceSignalSendResult.Unsent;
 	}
 
 	requestGuildMembers(params: {

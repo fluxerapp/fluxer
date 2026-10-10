@@ -338,6 +338,10 @@ import {
 	type UserSettingsRow,
 	type UsersPendingDeletionRow,
 } from '@app/api/database/types/UserTypes';
+import {
+	VOICE_P2P_CONNECTION_REPORT_COLUMNS,
+	type VoiceP2pConnectionReportRow,
+} from '@app/api/database/types/VoiceTypes';
 import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
 import {seconds} from 'itty-time';
 
@@ -1473,4 +1477,10 @@ export const BillingActionIntents = defineTable<BillingActionIntentRow, 'intent_
 	name: 'billing_action_intents',
 	columns: BILLING_ACTION_INTENT_COLUMNS,
 	primaryKey: ['intent_id'],
+});
+export const VoiceP2pConnectionReports = defineTable<VoiceP2pConnectionReportRow, 'user_id' | 'report_id'>({
+	name: 'voice_p2p_connection_reports',
+	columns: VOICE_P2P_CONNECTION_REPORT_COLUMNS,
+	primaryKey: ['user_id', 'report_id'],
+	defaultTtlSeconds: seconds('180 days'),
 });

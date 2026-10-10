@@ -24,6 +24,7 @@ const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_C
 
 const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/channel/tests/MessageCrosspostFanout.test.ts',
+	'src/api/experiment/tests/ExperimentController.test.ts',
 	'src/api/gif/GifRequestCountry.test.ts',
 	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
 	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
@@ -33,6 +34,7 @@ const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/worker/tests/HandleMentionsThread.test.ts',
 	'src/api/search/tests/GuildSearchThreadScope.test.ts',
 	'src/api/worker/tasks/HarvestUserData.test.ts',
+	'src/api/voice/tests/VoiceP2pConnectionReports.test.ts',
 ];
 
 const INSTANCE_POLICY_TEST_FILES = [

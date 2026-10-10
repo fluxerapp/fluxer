@@ -149,6 +149,7 @@ export class ChannelDataService {
 		requestCache,
 		auditLogReason,
 		typeConversion,
+		countryCode,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -158,6 +159,7 @@ export class ChannelDataService {
 		requestCache: RequestCache;
 		auditLogReason: string | null;
 		typeConversion?: ChannelTypeConversion | null;
+		countryCode?: string | null;
 	}): Promise<Channel> {
 		const authChannel = await this.auth.getChannelAuthenticated({userId, channelId, viewer, skipNsfwValidation: true});
 		const {channel} = authChannel;
@@ -227,6 +229,9 @@ export class ChannelDataService {
 		if (guildChannelData.rtc_region !== undefined) {
 			channelUpdateData.rtc_region = guildChannelData.rtc_region ?? null;
 		}
+		if (guildChannelData.rtc_p2p !== undefined) {
+			channelUpdateData.rtc_p2p = guildChannelData.rtc_p2p;
+		}
 		if (guildChannelData.icon !== undefined) {
 			channelUpdateData.icon = guildChannelData.icon ?? null;
 		}
@@ -246,6 +251,7 @@ export class ChannelDataService {
 			requestCache,
 			auditLogReason,
 			typeConversion,
+			countryCode,
 		});
 	}
 }

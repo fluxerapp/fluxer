@@ -15,8 +15,9 @@ Except for [Heartbeat](#heartbeat), [Identify](#identify), and [Resume](#resume)
 | 1 | Heartbeat | Opcode `11` Heartbeat ACK |
 | 2 | Identify | [Ready](/gateway/events/#ready), a close frame, or no response when Fluxer discards a rate-limited Identify or holds it to retry the session start |
 | 3 | Presence Update | No direct response |
-| 4 | Voice State Update | [Voice State Update](/gateway/events/#voice-state-update) and [Voice Server Update](/gateway/events/#voice-server-update) when state changes |
+| 4 | Voice State Update | [Voice State Update](/gateway/events/#voice-state-update) and [Voice Server Update](/gateway/events/#voice-server-update) when state changes, or [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) for a reported refusal |
 | 6 | Resume | Replayed Dispatches followed by [Resumed](/gateway/events/#resumed), Invalid Session, or a close frame |
+| 13 | Voice Signal | [Voice Signal](/gateway/events/#voice-signal) for the target connection's session, or no response |
 | 8 | Request Guild Members | One or more [Guild Members Chunk](/gateway/events/#guild-members-chunk) events |
 | 14 | Lazy Request | [Guild Sync](/gateway/events/#guild-sync), [Guild Member List Update](/gateway/events/#guild-member-list-update), [Thread List Sync](/gateway/threads/#thread-list-sync), and [Thread Member List Update](/gateway/threads/#thread-member-list-update) |
 | 15 | Request Guild Counts | [Guild Counts Update](/gateway/events/#guild-counts-update) |
@@ -267,6 +268,7 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 | viewer_stream_keys?<sup>3</sup> | ?array[string] | The stream keys this connection is watching, where an omitted key keeps the current list and null clears it |
 | latitude? | number or string | The client latitude, used to pick a voice region |
 | longitude? | number or string | The client longitude, used to pick a voice region |
+| p2p?<sup>5</sup> | boolean | Whether the client agrees to peer-to-peer media for a new connection, or leaves the mesh on an existing one |
 
 <sup>1</sup> A `channel_id` with no `connection_id` opens a new connection, and a `channel_id` with one updates or moves that connection. An update that leaves one guild, meaning a non-null `guild_id` with `channel_id: null`, requires a `connection_id`, and one that omits it is refused with `VOICE_MISSING_CONNECTION_ID`
 
@@ -275,6 +277,8 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 <sup>3</sup> Every entry is a stream key whose scope, guild, and channel match this update. An entry that fails that check, or a value that is not an array, refuses the update with `VOICE_INVALID_STATE`, and an entry naming a connection that does not exist refuses it with `VOICE_CONNECTION_NOT_FOUND`
 
 <sup>4</sup> Only `true` and the string `"true"` set it, and Fluxer publishes `false` when the member lacks `STREAM` in the channel. The screenshare track uses this same connection, so setting the flag issues no grant and sends no [Voice Server Update](/gateway/events/#voice-server-update)
+
+<sup>5</sup> Only the JSON Boolean `true` agrees and only the JSON Boolean `false` switches. On a new connection `true` states that the client supports peer-to-peer media and accepts it for this join. A bot session never agrees, whatever it sends. On an existing connection an explicit `false` converts the whole channel or call to LiveKit, and an omitted key or `true` changes nothing. [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) states when a join is peer-to-peer and when it is refused
 
 ```json
 {
@@ -298,9 +302,45 @@ Every field is optional. A non-null `guild_id` or `channel_id` is a canonical de
 
 The command has no `session_id` field. Fluxer identifies the voice membership by the Gateway session that sends the command.
 
-Joining or replacing a grant produces [Voice Server Update](/gateway/events/#voice-server-update) with the token and endpoint for the media connection, and [Voice State Update](/gateway/events/#voice-state-update) for every session that can see the channel.
+Joining or replacing a grant produces [Voice Server Update](/gateway/events/#voice-server-update) with the token and endpoint for the media connection, or with the ICE servers of a peer-to-peer grant, and [Voice State Update](/gateway/events/#voice-state-update) for every session that can see the channel.
+
+A refusal with `VOICE_P2P_CONSENT_REQUIRED`, `VOICE_P2P_UNAVAILABLE`, or `VOICE_CHANNEL_FULL` reaches the requesting session as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) payload. Every other refusal sends nothing.
 
 The first two updates in a rolling one-second window take effect immediately. Later updates can be delayed or replaced by newer updates for the same `guild_id` and `connection_id`. See [command rate limits](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) for the timing and capacity bounds.
+
+## Voice Signal
+
+Opcode `13` sends one signalling message to one other connection of a [peer-to-peer](/gateway/events/#peer-to-peer-voice) voice channel or call.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id? | ?snowflake | The guild containing the voice channel, where null or an omitted key selects the DM and group DM call context |
+| channel_id | snowflake | The voice channel or call channel both connections are in |
+| to | string | The `connection_id` of the voice state the signal is for |
+| data | object | The signalling message, which Fluxer relays unread |
+
+```json
+{
+  "op": 13,
+  "d": {
+    "guild_id": "1189375284394692608",
+    "channel_id": "1189375284394692610",
+    "to": "b7f3c2a94e1d4c0f",
+    "data": {
+      "type": "offer",
+      "sdp": "v=0..."
+    }
+  }
+}
+```
+
+Fluxer relays the signal when the sending session owns a voice state with `p2p: true` in that channel and `to` names another voice state with `p2p: true` in the same channel. The target connection's session alone receives [Voice Signal](/gateway/events/#voice-signal).
+
+Every other signal is dropped with no event and no close. That covers a channel or call that is not peer-to-peer, a `to` that names no connection there, a `to` that names the sender's own connection, a `data` that is not an object, and a session with no voice state in the channel.
+
+`data` is opaque to Fluxer. Clients agree on its contents among themselves, typically a session description or an ICE candidate. The whole frame stays within the [inbound payload bound](/gateway/overview/#framing).
+
+A client sends this command only after it has received a [Voice Server Update](/gateway/events/#voice-server-update) with `p2p: true` for the connection. [Command rate limits](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) states the Voice Signal budget.
 
 ## Request Guild Members
 

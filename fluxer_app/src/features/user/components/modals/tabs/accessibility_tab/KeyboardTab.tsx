@@ -3,6 +3,11 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import VoicePrompts from '@app/features/voice/state/VoicePrompts';
+import {
+	VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTION_DESCRIPTOR,
+	VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -30,6 +35,7 @@ export const KeyboardTabContent: React.FC = observer(() => {
 	const escapeExitsKeyboardMode = Accessibility.escapeExitsKeyboardMode;
 	const showContextMenuShortcuts = Accessibility.showContextMenuShortcuts;
 	const confirmBeforeStartingCalls = Accessibility.confirmBeforeStartingCalls;
+	const skipP2pJoinConfirm = VoicePrompts.skipP2pJoinConfirm;
 	return (
 		<>
 			<Switch
@@ -55,6 +61,13 @@ export const KeyboardTabContent: React.FC = observer(() => {
 				value={confirmBeforeStartingCalls}
 				onChange={(value) => AccessibilityCommands.update({confirmBeforeStartingCalls: value})}
 				data-flx="user.accessibility-tab.keyboard-tab.keyboard-tab-content.switch.update--4"
+			/>
+			<Switch
+				label={i18n._(VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTOR)}
+				description={i18n._(VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTION_DESCRIPTOR)}
+				value={skipP2pJoinConfirm}
+				onChange={(value) => VoicePrompts.setSkipP2pJoinConfirm(value)}
+				data-flx="user.accessibility-tab.keyboard-tab.keyboard-tab-content.switch.skip-p2p-join-confirm"
 			/>
 		</>
 	);

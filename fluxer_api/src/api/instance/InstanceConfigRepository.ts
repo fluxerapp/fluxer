@@ -88,6 +88,7 @@ import {
 	PushRelayConfigSchema,
 	toLegacyPushServiceDeliveryWire,
 } from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
+import {type VoiceP2pConfig, VoiceP2pConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {
 	type ExperimentDeliveryConfig,
 	ExperimentDeliveryConfigSchema,
@@ -109,6 +110,7 @@ import {z} from 'zod';
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
+const VOICE_P2P_CONFIG_KEY = 'voice_p2p_config';
 const CAPTCHA_CONFIG_KEY = 'captcha_config';
 const CHANNEL_THREADS_CONFIG_KEY = 'channel_threads_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
@@ -442,6 +444,7 @@ type StoredConfigSection =
 	| 'gateway rollout'
 	| 'push relay'
 	| 'domain migration'
+	| 'voice p2p'
 	| 'captcha'
 	| 'channel threads'
 	| 'experiment delivery'
@@ -659,6 +662,10 @@ function toPushRelayConfig(wire: LegacyPushServiceDeliveryWire): PushRelayConfig
 
 function parseStoredDomainMigrationConfig(raw: string | null): DomainMigrationConfig {
 	return parseStoredConfigOrDefault(DomainMigrationConfigSchema, raw, 'domain migration');
+}
+
+function parseStoredVoiceP2pConfig(raw: string | null): VoiceP2pConfig {
+	return parseStoredConfigOrDefault(VoiceP2pConfigSchema, raw, 'voice p2p');
 }
 
 function parseStoredCaptchaConfig(raw: string | null): CaptchaConfig {
@@ -1350,6 +1357,7 @@ export class InstanceConfigRepository {
 		);
 		parseStoredPushRelayConfig(snapshot.get(PUSH_RELAY_CONFIG_KEY) ?? null);
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
+		parseStoredVoiceP2pConfig(snapshot.get(VOICE_P2P_CONFIG_KEY) ?? null);
 		parseStoredCaptchaConfig(snapshot.get(CAPTCHA_CONFIG_KEY) ?? null);
 		syncChannelThreadsConfig(snapshot.get(CHANNEL_THREADS_CONFIG_KEY) ?? null, parseStoredChannelThreadsConfig);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
@@ -1592,6 +1600,21 @@ export class InstanceConfigRepository {
 				update(parseStoredDomainMigrationConfig(raw)),
 				'domain migration',
 			),
+		);
+	}
+
+	async getVoiceP2pConfig(): Promise<VoiceP2pConfig> {
+		const raw = await this.getConfig(VOICE_P2P_CONFIG_KEY);
+		return parseStoredVoiceP2pConfig(raw);
+	}
+
+	async setVoiceP2pConfig(config: VoiceP2pConfig): Promise<void> {
+		await this.updateVoiceP2pConfig(() => config);
+	}
+
+	updateVoiceP2pConfig(update: (current: VoiceP2pConfig) => VoiceP2pConfig): Promise<VoiceP2pConfig> {
+		return this.updateStoredConfig(VOICE_P2P_CONFIG_KEY, (raw) =>
+			validateStoredConfig(VoiceP2pConfigSchema, update(parseStoredVoiceP2pConfig(raw)), 'voice p2p'),
 		);
 	}
 

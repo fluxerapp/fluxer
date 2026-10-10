@@ -3615,6 +3615,10 @@
 				{
 					"name": "content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "rtc_p2p",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((channel_id, soft_deleted))",
@@ -8909,6 +8913,81 @@
 			],
 			"primary_key": "((region_id), server_id)",
 			"options": ""
+		},
+		{
+			"name": "voice_p2p_connection_reports",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "participant_count",
+					"type": "int"
+				},
+				{
+					"name": "outcome",
+					"type": "text"
+				},
+				{
+					"name": "local_candidate_type",
+					"type": "text"
+				},
+				{
+					"name": "remote_candidate_type",
+					"type": "text"
+				},
+				{
+					"name": "ip_family",
+					"type": "text"
+				},
+				{
+					"name": "protocol",
+					"type": "text"
+				},
+				{
+					"name": "setup_ms",
+					"type": "int"
+				},
+				{
+					"name": "ice_restarted",
+					"type": "boolean"
+				},
+				{
+					"name": "country",
+					"type": "text"
+				},
+				{
+					"name": "ip",
+					"type": "text"
+				},
+				{
+					"name": "client_platform",
+					"type": "text"
+				},
+				{
+					"name": "client_os",
+					"type": "text"
+				}
+			],
+			"primary_key": "((user_id), report_id)",
+			"options": "CLUSTERING ORDER BY (report_id DESC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
 		},
 		{
 			"name": "webauthn_credential_lookup",

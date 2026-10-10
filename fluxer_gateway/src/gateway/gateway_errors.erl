@@ -7,7 +7,8 @@
 
 -export([
     error/1,
-    error_category/1
+    error_category/1,
+    voice_error_info/1
 ]).
 -export_type([error_atom/0, error_category/0]).
 
@@ -37,6 +38,8 @@
     | voice_pending_expired
     | voice_camera_user_limit
     | voice_e2ee_required
+    | voice_p2p_consent_required
+    | voice_p2p_unavailable
     | dm_channel_not_found
     | dm_not_recipient
     | dm_invalid_channel_type
@@ -84,7 +87,8 @@ voice_error_category(ErrorAtom) ->
 
 -spec voice_error_info(error_atom()) -> voice_error_info() | undefined.
 voice_error_info(ErrorAtom) ->
-    maps:get(ErrorAtom, voice_error_infos(), undefined).
+    P2pInfo = maps:get(ErrorAtom, voice_p2p_error_infos(), undefined),
+    maps:get(ErrorAtom, voice_error_infos(), P2pInfo).
 
 -spec voice_error_infos() -> #{error_atom() => voice_error_info()}.
 voice_error_infos() ->
@@ -147,6 +151,18 @@ voice_error_infos() ->
                 permission_denied},
         voice_e2ee_required =>
             {<<"VOICE_E2EE_REQUIRED">>, voice_e2ee_required_message(), permission_denied}
+    }.
+
+-spec voice_p2p_error_infos() -> #{error_atom() => voice_error_info()}.
+voice_p2p_error_infos() ->
+    #{
+        voice_p2p_consent_required =>
+            {<<"VOICE_P2P_CONSENT_REQUIRED">>,
+                <<"This call is peer-to-peer and requires agreement to join">>,
+                permission_denied},
+        voice_p2p_unavailable =>
+            {<<"VOICE_P2P_UNAVAILABLE">>, <<"Peer-to-peer voice is unavailable for this join">>,
+                voice_error}
     }.
 
 -spec voice_e2ee_required_message() -> binary().

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
+import {
+	RTC_REGION_ID_MAX_LENGTH,
+	RTC_REGION_ID_MIN_LENGTH,
+	VOICE_P2P_MAX_PARTICIPANTS,
+} from '@fluxer/constants/src/LimitConstants';
 import {FORUM_UNREAD_COUNT_CAP, FORUM_UNREADS_MAX_THREADS} from '@fluxer/constants/src/ThreadConstants';
 import {ChannelThreadsConfigResponse} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
@@ -156,6 +160,20 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		can_stream: z.boolean().optional().describe('Whether the user can stream in the channel'),
 		can_video: z.boolean().optional().describe('Whether the user can use video in the channel'),
 		token_nonce: createStringType(1, 64).optional().describe('Token nonce for replay prevention'),
+		p2p: z.boolean().optional().describe('Whether the gateway asks for a peer-to-peer grant for this connection'),
+		p2p_initiator: z.boolean().optional().describe('Whether this connection would start the peer-to-peer call'),
+		p2p_participant_count: z
+			.number()
+			.int()
+			.min(1)
+			.max(VOICE_P2P_MAX_PARTICIPANTS)
+			.optional()
+			.describe('Peer-to-peer participants in the channel or call once this connection joins'),
+		country_code: z
+			.string()
+			.regex(/^[A-Z]{2}$/u)
+			.optional()
+			.describe('ISO 3166-1 alpha-2 country code of the session, omitted when unknown'),
 	}),
 	z.object({
 		type: z.literal('kick_temporary_member').describe('Request type for kicking temporary guild members'),
@@ -365,6 +383,10 @@ export const RpcResponseSessionData = z.object({
 	guilds: z.array(GuildReadyResponse).describe('Guilds the user is a member of'),
 	pinned_dms: z.array(SnowflakeStringType).describe('IDs of pinned DM channels'),
 	country_code: z.string().describe('Two-letter country code from IP geolocation'),
+	geoip_country_code: z
+		.string()
+		.nullable()
+		.describe('Two-letter country code from IP geolocation, null when the lookup found none'),
 	latitude: createStringType(1, 32).optional().describe('Latitude from IP geolocation'),
 	longitude: createStringType(1, 32).optional().describe('Longitude from IP geolocation'),
 	rtc_regions: z.array(RtcRegionResponse).describe('Available voice server regions'),
@@ -481,14 +503,35 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('voice_get_token').describe('Response type for voice connection token'),
 		data: z
-			.object({
-				token: z.string().describe('Voice server authentication token'),
-				endpoint: z.string().describe('Voice server endpoint URL'),
-				connectionId: z.string().describe('Unique connection identifier'),
-				tokenNonce: z.string().describe('Token nonce for webhook confirmation'),
-				regionId: createStringType(1, 64).optional().describe('Voice region selected for the connection'),
-				serverId: createStringType(1, 128).optional().describe('Voice server selected for the connection'),
-			})
+			.union([
+				z.object({
+					token: z.string().describe('Voice server authentication token'),
+					endpoint: z.string().describe('Voice server endpoint URL'),
+					connectionId: z.string().describe('Unique connection identifier'),
+					tokenNonce: z.string().describe('Token nonce for webhook confirmation'),
+					regionId: createStringType(1, 64).optional().describe('Voice region selected for the connection'),
+					serverId: createStringType(1, 128).optional().describe('Voice server selected for the connection'),
+				}),
+				z.object({
+					p2p: z.literal(true).describe('Marks a peer-to-peer grant'),
+					connectionId: z.string().describe('Unique connection identifier'),
+					iceServers: z
+						.array(z.object({urls: z.array(z.string()).describe('STUN URLs of the server')}))
+						.describe('ICE servers the connection uses for its peer connections'),
+					maxParticipants: z
+						.number()
+						.int()
+						.min(1)
+						.max(VOICE_P2P_MAX_PARTICIPANTS)
+						.describe('Configured peer-to-peer participant cap the call enforces on this join'),
+				}),
+				z.object({
+					p2p: z.literal(false).describe('Marks a declined peer-to-peer request'),
+					declineReason: z
+						.literal('channel_full')
+						.describe('The join would take the call past the configured peer-to-peer participant cap'),
+				}),
+			])
 			.describe('Voice connection credentials'),
 	}),
 	z.object({

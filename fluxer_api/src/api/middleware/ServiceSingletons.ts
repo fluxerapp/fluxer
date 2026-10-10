@@ -90,6 +90,7 @@ import {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
 import {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
+import {VoiceP2pConnectionReportRepository} from '@app/api/voice/VoiceP2pConnectionReportRepository';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
@@ -114,6 +115,7 @@ export const getReadStateRepository = singleton(() => new ReadStateRepository())
 export const getFavoriteMemeRepository = singleton(() => new FavoriteMemeRepository());
 export const getConnectionRepository = singleton(() => new ConnectionRepository());
 export const getReportRepository = singleton(() => new ReportRepository());
+export const getVoiceP2pConnectionReportRepository = singleton(() => new VoiceP2pConnectionReportRepository());
 export const getAdminRepository = singleton(() => new AdminRepository());
 export const getAdminArchiveRepository = singleton(() => new AdminArchiveRepository());
 export const getVoiceRepository = singleton(() => new VoiceRepository());

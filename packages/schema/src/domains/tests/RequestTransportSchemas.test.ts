@@ -116,7 +116,14 @@ describe('channel update request body', () => {
 	});
 
 	it('preserves guild-only fields in the documented body', () => {
-		const input = {topic: '  Topic  ', parent_id: '123', nsfw_override: false, bitrate: 64000, rtc_region: null};
+		const input = {
+			topic: '  Topic  ',
+			parent_id: '123',
+			nsfw_override: false,
+			bitrate: 64000,
+			rtc_region: null,
+			rtc_p2p: true,
+		};
 		expect(ChannelUpdateRequestBody.parse(input)).toEqual({...input, topic: 'Topic', parent_id: 123n});
 	});
 

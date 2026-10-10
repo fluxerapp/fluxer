@@ -453,6 +453,7 @@ export class ThreadCreationService {
 			user_limit: null,
 			voice_connection_limit: null,
 			rtc_region: null,
+			rtc_p2p: null,
 			last_message_id: null,
 			last_pin_timestamp: null,
 			permission_overwrites: null,

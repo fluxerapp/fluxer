@@ -28,6 +28,8 @@ Media never crosses the HTTP API. No route returns an audio or video track, the 
 
 Fluxer runs media over LiveKit and publishes no signalling protocol of its own. There is no voice websocket, no voice opcode set, no UDP discovery step, and no separate encryption handshake. A client connects to the `endpoint` the [Voice Server Update](/gateway/events/#voice-server-update) grant names, presents the grant `token`, and speaks the LiveKit protocol from there.
 
+A peer-to-peer grant is the one exception. It has ICE servers and no `endpoint` or `token`, and the peers signal through the Gateway as [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) describes.
+
 | Concept | Value |
 | --- | --- |
 | Room name, guild voice channel | `guild_{guild_id}_channel_{channel_id}` |
@@ -67,11 +69,11 @@ A grant is issued when a connection opens, when it moves to another channel, and
 
 The grant `token` is issued for the media server and consumed by the media connection alone. No route on this API accepts it.
 
-Fluxer reports a refusal by sending no Dispatch. A client observes a refused placement only as the absence of a grant.
+Fluxer reports a refusal by sending no Dispatch. A client observes most refused placements only as the absence of a grant. A refusal with `VOICE_CHANNEL_FULL`, `VOICE_P2P_CONSENT_REQUIRED`, or `VOICE_P2P_UNAVAILABLE` also sends the requesting session a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) payload.
 
 ## Guild voice channels
 
-A guild voice channel stores its `bitrate`, `user_limit`, `voice_connection_limit`, and `rtc_region` on the [channel object](/http-api/channels/#channel-object). It also has ordinary messages, pins, and slowmode, so its text history is read and written through the [Messages resource](/http-api/messages/).
+A guild voice channel stores its `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region`, and `rtc_p2p` on the [channel object](/http-api/channels/#channel-object). It also has ordinary messages, pins, and slowmode, so its text history is read and written through the [Messages resource](/http-api/messages/).
 
 A new voice channel stores a `bitrate` of 64000. The ceiling is 96000, and the `AUDIO_BITRATE_128_KBPS`, `AUDIO_BITRATE_256_KBPS`, and `AUDIO_BITRATE_384_KBPS` [guild features](/http-api/guilds/#guild-features) raise it to 128000, 256000, and 384000. A direct message and a group direct message call have no `bitrate` and always run at 64000.
 

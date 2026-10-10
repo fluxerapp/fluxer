@@ -61,6 +61,7 @@ export function serializeChannelForAudit(channel: Channel): Record<string, unkno
 		voice_connection_limit: channel.voiceConnectionLimit,
 		bitrate: channel.bitrate,
 		rtc_region: channel.rtcRegion ?? null,
+		rtc_p2p: channel.rtcP2p,
 	};
 }
 

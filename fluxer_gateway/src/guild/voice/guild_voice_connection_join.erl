@@ -4,7 +4,7 @@
 
 -typing([eqwalizer]).
 
--export([handle_new_connection/5]).
+-export([handle_new_connection/5, activate_p2p_voice_state/3]).
 
 -export_type([
     guild_state/0,
@@ -154,35 +154,80 @@ request_token_and_build(Context, Member, ParsedViewerStreamKey, State, GuildId, 
     TokenNonce = voice_utils:generate_token_nonce(),
     Latitude = maps:get(latitude, Context, undefined),
     Longitude = maps:get(longitude, Context, undefined),
+    Build = #{
+        context => Context,
+        member => Member,
+        viewer_stream_keys => ParsedViewerStreamKey,
+        state => State,
+        guild_id => GuildId,
+        guild_id_bin => GuildIdBin,
+        voice_permissions => VoicePermissions,
+        token_nonce => TokenNonce,
+        latitude => Latitude,
+        longitude => Longitude
+    },
     case
-        guild_voice_connection_token:request_voice_token(
-            GuildId,
-            ChannelIdValue,
-            UserId,
-            null,
-            VoicePermissions,
-            TokenNonce,
-            Latitude,
-            Longitude
+        voice_p2p:guild_join_decision(
+            guild_voice_connection_util:p2p_agreed(Context), ChannelIdValue, State
         )
     of
-        {ok, TokenData} ->
-            build_new_voice_state(#{
-                context => Context,
-                member => Member,
-                viewer_stream_keys => ParsedViewerStreamKey,
-                state => State,
-                guild_id => GuildId,
-                guild_id_bin => GuildIdBin,
-                token_data => TokenData,
-                voice_permissions => VoicePermissions,
-                token_nonce => TokenNonce,
-                latitude => Latitude,
-                longitude => Longitude
-            });
-        {error, _Reason} ->
-            {reply, gateway_errors:error(voice_token_failed), State}
+        {reject, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), State};
+        Decision ->
+            TokenResult = guild_voice_connection_token:request_voice_token(
+                GuildId,
+                ChannelIdValue,
+                UserId,
+                null,
+                VoicePermissions,
+                TokenNonce,
+                Latitude,
+                Longitude,
+                Decision,
+                maps:get(country_code, Context, undefined)
+            ),
+            build_join_reply(Decision, TokenResult, Build)
     end.
+
+-spec build_join_reply(voice_p2p:join_decision(), {ok, term()} | {error, term()}, map()) ->
+    {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
+build_join_reply(_Decision, {error, _Reason}, #{state := State}) ->
+    {reply, gateway_errors:error(voice_token_failed), State};
+build_join_reply(Decision, {ok, TokenData}, #{state := State} = Build) ->
+    case voice_p2p:admit(Decision, TokenData) of
+        {reject, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), State};
+        {p2p, ConnectionId, IceServers, _MaxParticipants} ->
+            VoiceBuild = voice_build_fields(Build#{token_data => #{}}),
+            activate_p2p_voice_state(
+                create_and_decorate_voice_state(VoiceBuild#{connection_id => ConnectionId}),
+                IceServers,
+                State
+            );
+        sfu ->
+            build_new_voice_state(Build#{token_data => TokenData})
+    end.
+
+-spec activate_p2p_voice_state(voice_state(), [map()], guild_state()) ->
+    {reply, map(), guild_state()}.
+activate_p2p_voice_state(VoiceState0, IceServers, State) ->
+    VoiceState = VoiceState0#{<<"p2p">> => true},
+    ConnectionId = maps:get(<<"connection_id">>, VoiceState),
+    VoiceStates = voice_state_utils:voice_states(State),
+    S1 = State#{voice_states => VoiceStates#{ConnectionId => VoiceState}},
+    S2 = guild_voice_connection_util:clear_virtual_access_flags(VoiceState, S1),
+    guild_voice_broadcast:broadcast_voice_state_update(
+        VoiceState, S2, maps:get(<<"channel_id">>, VoiceState)
+    ),
+    {reply,
+        #{
+            success => true,
+            p2p => true,
+            ice_servers => IceServers,
+            connection_id => ConnectionId,
+            voice_state => voice_state_utils:external_voice_state(VoiceState)
+        },
+        S2}.
 
 -spec build_new_voice_state(
     map()

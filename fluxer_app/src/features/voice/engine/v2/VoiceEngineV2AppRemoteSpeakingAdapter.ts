@@ -34,7 +34,7 @@ const logger = new Logger('VoiceEngineV2AppRemoteSpeakingAdapter');
 const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 50;
 const REMOTE_SPEAKING_ANALYSER_HANDLES_CAP = 256;
 
-function computeTimeDomainRms(samples: Float32Array): number {
+export function computeTimeDomainRms(samples: Float32Array): number {
 	if (samples.length === 0) return 0;
 	let sumSquares = 0;
 	for (let i = 0; i < samples.length; i++) {

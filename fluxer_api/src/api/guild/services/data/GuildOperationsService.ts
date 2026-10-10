@@ -881,6 +881,7 @@ export class GuildOperationsService {
 					user_limit: bitrate !== null ? 0 : null,
 					voice_connection_limit: bitrate !== null ? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT : null,
 					rtc_region: null,
+					rtc_p2p: null,
 					last_message_id: null,
 					last_pin_timestamp: null,
 					permission_overwrites: null,
@@ -1113,6 +1114,7 @@ export class GuildOperationsService {
 						? (channel.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT)
 						: null,
 					rtc_region: null,
+					rtc_p2p: null,
 					last_message_id: null,
 					last_pin_timestamp: null,
 					permission_overwrites: permissionOverwrites,
@@ -1163,6 +1165,7 @@ export class GuildOperationsService {
 					user_limit: null,
 					voice_connection_limit: null,
 					rtc_region: null,
+					rtc_p2p: null,
 					last_message_id: null,
 					last_pin_timestamp: null,
 					permission_overwrites: null,
