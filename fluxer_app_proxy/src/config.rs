@@ -5,6 +5,8 @@ use reqwest::Url;
 use std::env;
 use std::fmt;
 
+const DEFAULT_DISCOVERY_UPSTREAM_URL: &str = "http://localhost:8088/api/.well-known/fluxer";
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InvalidAppProxyEnvironmentError {
     InvalidValue {
@@ -102,6 +104,19 @@ impl HttpEndpoint {
             ));
         }
         Ok(Self { url, csp_origin })
+    }
+
+    pub fn origin_of(
+        name: &'static str,
+        value: &str,
+    ) -> Result<Self, InvalidAppProxyEnvironmentError> {
+        let url = Url::parse(value.trim())
+            .ok()
+            .filter(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some())
+            .ok_or_else(|| {
+                InvalidAppProxyEnvironmentError::new(name, value, "an absolute HTTP or HTTPS URL")
+            })?;
+        Self::parse(name, &url.origin().ascii_serialization())
     }
 
     pub fn with_host_prefix(
@@ -344,6 +359,9 @@ pub struct AppProxyConfig {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
+    pub branding_image_origins: Vec<HttpEndpoint>,
+    pub discovery_upstream_url: String,
+    pub discovery_refresh_interval_ms: u64,
     pub release_channel: ReleaseChannel,
     pub build_version: String,
     pub csp: CspConfig,
@@ -467,6 +485,18 @@ impl AppProxyConfig {
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
+            branding_image_origins: crate::branding_images::origins_from_environment(
+                cfg::env_value,
+            ),
+            discovery_upstream_url: cfg::read_env(
+                "DISCOVERY_UPSTREAM_URL",
+                DEFAULT_DISCOVERY_UPSTREAM_URL,
+            ),
+            discovery_refresh_interval_ms: parse_env_or_warn(
+                "DISCOVERY_REFRESH_INTERVAL_MS",
+                &cfg::read_env("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
+                60_000u64,
+            ),
             release_channel,
             build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],

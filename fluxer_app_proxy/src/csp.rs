@@ -205,6 +205,7 @@ impl CompiledCspPolicy {
             &config,
             &[InlineScriptHash::of("")],
             configured_sources,
+            &[],
         ))
         .map_err(CspCompileError::InvalidSpaPolicy)?;
         Ok(Self {
@@ -218,11 +219,16 @@ impl CompiledCspPolicy {
         self.asset.clone()
     }
 
-    pub fn spa_headers(&self, script_hashes: &[InlineScriptHash]) -> CspHeaderValues {
+    pub fn spa_headers(
+        &self,
+        script_hashes: &[InlineScriptHash],
+        branding_image_origins: &[HttpEndpoint],
+    ) -> CspHeaderValues {
         let enforced = HeaderValue::from_str(&build_csp(
             &self.config,
             script_hashes,
             &self.runtime_sources,
+            branding_image_origins,
         ))
         .expect(
             "every CSP source is a validated keyword, scheme, ASCII origin, or base64 hash, so a \
@@ -239,18 +245,26 @@ fn build_csp(
     config: &CspConfig,
     script_hashes: &[InlineScriptHash],
     runtime_sources: &RuntimeCspSources,
+    branding_image_origins: &[HttpEndpoint],
 ) -> String {
-    build_csp_directives(config, Some(script_hashes), runtime_sources).join("; ")
+    build_csp_directives(
+        config,
+        Some(script_hashes),
+        runtime_sources,
+        branding_image_origins,
+    )
+    .join("; ")
 }
 
 fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> String {
-    build_csp_directives(config, None, runtime_sources).join("; ")
+    build_csp_directives(config, None, runtime_sources, &[]).join("; ")
 }
 
 fn build_csp_directives(
     config: &CspConfig,
     script_hashes: Option<&[InlineScriptHash]>,
     runtime_sources: &RuntimeCspSources,
+    branding_image_origins: &[HttpEndpoint],
 ) -> Vec<String> {
     let mut directives = Vec::with_capacity(14);
 
@@ -278,6 +292,9 @@ fn build_csp_directives(
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut img, &config.extra_img_src, IMAGE_SOURCES);
     extend_runtime_sources(&mut img, runtime_sources, true, true);
+    for origin in branding_image_origins {
+        push_endpoint_source(&mut img, Some(origin));
+    }
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
@@ -431,7 +448,7 @@ mod tests {
     #[test]
     fn build_csp_includes_required_directives() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         assert!(csp.contains("default-src"));
         assert!(csp.contains("script-src"));
         assert!(csp.contains("style-src"));
@@ -450,7 +467,7 @@ mod tests {
     #[test]
     fn build_csp_allows_the_apex_domain_for_images_and_media() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         for name in ["img-src ", "media-src "] {
             let directive = csp
                 .split("; ")
@@ -468,7 +485,7 @@ mod tests {
     #[test]
     fn build_csp_allows_blob_connections_for_camera_background_media() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         let connect = csp
             .split("; ")
             .find(|directive| directive.starts_with("connect-src "))
@@ -502,6 +519,7 @@ mod tests {
             &config,
             &[hash_of("first()"), hash_of("second()")],
             &runtime_sources(),
+            &[],
         );
         let script = csp
             .split("; ")
@@ -529,6 +547,7 @@ mod tests {
             &default_csp_config(),
             &[hash_of("boot()")],
             &runtime_sources(),
+            &[],
         );
         assert!(!csp.contains("hcaptcha"));
         assert!(!csp.contains("challenges.cloudflare.com"));
@@ -537,7 +556,7 @@ mod tests {
     #[test]
     fn csp_no_double_spaces_or_trailing_semicolons() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         assert!(!csp.contains("  "), "CSP contains double spaces");
         assert!(!csp.ends_with(';'), "CSP ends with semicolon");
         assert!(!csp.ends_with("; "), "CSP ends with semicolon+space");
@@ -555,14 +574,14 @@ mod tests {
             ),
             ..Default::default()
         };
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         assert!(csp.contains("report-uri https://example.com/csp-report"));
     }
 
     #[test]
     fn build_csp_excludes_report_uri_when_none() {
         let config = default_csp_config();
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources(), &[]);
         assert!(!csp.contains("report-uri"));
     }
 
@@ -574,7 +593,7 @@ mod tests {
             media_endpoint: Some(endpoint("https://media.example.test")),
             ..Default::default()
         };
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources);
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources, &[]);
         assert!(csp.contains("style-src 'self' 'unsafe-inline'"));
         assert!(csp.contains("https://static.example.test"));
         assert!(csp.contains("https://media.example.test"));
@@ -616,7 +635,7 @@ mod tests {
             ..Default::default()
         };
 
-        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources);
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources, &[]);
 
         assert!(csp.contains("http://localhost:3900"));
         assert!(csp.contains("http://fluxer-uploads.localhost:3900"));
@@ -654,7 +673,7 @@ mod tests {
         };
         let policy = CompiledCspPolicy::compile(default_csp_config(), &configured).unwrap();
 
-        let headers = policy.spa_headers(&[hash_of("boot()")]);
+        let headers = policy.spa_headers(&[hash_of("boot()")], &[]);
         let header = headers.enforced.to_str().unwrap();
 
         assert!(header.contains(hash_of("boot()").as_source()));
@@ -670,7 +689,7 @@ mod tests {
         config.media_endpoint = Some(endpoint("https://media.configured.test/"));
         let policy = CompiledCspPolicy::from_config(&config).unwrap();
 
-        let headers = policy.spa_headers(&[hash_of("boot()")]);
+        let headers = policy.spa_headers(&[hash_of("boot()")], &[]);
         let header = headers.enforced.to_str().unwrap();
         for directive in [
             "img-src",
@@ -721,8 +740,69 @@ mod tests {
         );
         let hashes = [hash_of("boot()")];
         assert_eq!(
-            policy.spa_headers(&hashes).enforced.to_str().unwrap(),
-            build_csp(&config, &hashes, &sources)
+            policy.spa_headers(&hashes, &[]).enforced.to_str().unwrap(),
+            build_csp(&config, &hashes, &sources, &[])
+        );
+    }
+
+    #[test]
+    fn branding_image_origins_are_granted_to_images_and_nothing_else() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        let branding = [
+            endpoint("https://example.test"),
+            endpoint("http://assets.example.test:8443"),
+        ];
+
+        let headers = policy.spa_headers(&[hash_of("boot()")], &branding);
+        let header = headers.enforced.to_str().unwrap();
+
+        for directive in header.split("; ") {
+            let grants_branding = directive
+                .split(' ')
+                .any(|source| branding.iter().any(|origin| origin.csp_origin() == source));
+            assert_eq!(
+                grants_branding,
+                directive.starts_with("img-src "),
+                "unexpected branding grant in: {directive}"
+            );
+        }
+        let img = header
+            .split("; ")
+            .find(|directive| directive.starts_with("img-src "))
+            .unwrap();
+        assert!(img.ends_with(" https://example.test http://assets.example.test:8443"));
+        assert!(
+            !policy
+                .asset_header()
+                .to_str()
+                .unwrap()
+                .contains("example.test")
+        );
+    }
+
+    #[test]
+    fn a_branding_image_origin_the_policy_already_grants_is_not_repeated() {
+        let configured = RuntimeCspSources {
+            media_endpoint: Some(endpoint("https://media.example.test/media")),
+            ..Default::default()
+        };
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &configured).unwrap();
+
+        let headers = policy.spa_headers(
+            &[hash_of("boot()")],
+            &[endpoint("https://media.example.test")],
+        );
+        let header = headers.enforced.to_str().unwrap();
+        let img = header
+            .split("; ")
+            .find(|directive| directive.starts_with("img-src "))
+            .unwrap();
+
+        assert_eq!(
+            img.split(' ')
+                .filter(|source| *source == "https://media.example.test")
+                .count(),
+            1
         );
     }
 }

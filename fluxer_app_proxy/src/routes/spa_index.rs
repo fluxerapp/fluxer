@@ -204,7 +204,10 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
-    let csp = state.csp.spa_headers(&inline_script_hashes(&html));
+    let csp = state.csp.spa_headers(
+        &inline_script_hashes(&html),
+        &state.branding_image_origins.current(),
+    );
     build_spa_response(html.into_boxed_str(), &csp, should_bust_dev_assets)
 }
 
@@ -889,6 +892,60 @@ mod tests {
         assert!(served.contains(r#"<meta name="viewport""#));
     }
 
+    fn image_sources_of(policy: &str) -> Vec<String> {
+        policy
+            .split("; ")
+            .find(|directive| directive.starts_with("img-src "))
+            .expect("the content security policy has no img-src directive")
+            .split(' ')
+            .skip(1)
+            .map(str::to_owned)
+            .collect()
+    }
+
+    fn branding_origin() -> HttpEndpoint {
+        HttpEndpoint::origin_of("TEST_BRANDING_IMAGE", "https://example.test/logo.png")
+            .expect("the test branding image must have an origin")
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_allows_its_branding_image_origins() {
+        let mut state = assemble_spa_state(SpaIndexSource::bundled(SHIPPED_APP_SHELL), None, true);
+        let plain = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
+        let plain_images = image_sources_of(&policy_of(&plain));
+        let plain_document = read_document(plain).await;
+        assert!(!plain_images.contains(&"https://example.test".to_owned()));
+
+        state.branding_image_origins =
+            crate::branding_images::BrandingImageOrigins::new(vec![branding_origin()]);
+        let branded = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
+        let branded_policy = policy_of(&branded);
+        let branded_document = read_document(branded).await;
+
+        let mut expected_images = plain_images;
+        expected_images.push("https://example.test".to_owned());
+        assert_eq!(image_sources_of(&branded_policy), expected_images);
+        assert_eq!(branded_policy.matches("https://example.test").count(), 1);
+        assert_eq!(branded_document, plain_document);
+        assert!(!branded_document.contains("example.test"));
+    }
+
+    #[tokio::test]
+    async fn the_official_instance_allows_no_branding_image_origins() {
+        let mut config = AppProxyConfig::from_env();
+        config.self_hosted = false;
+        config.branding_image_origins = vec![branding_origin()];
+        let mut state = spa_state_serving(SHIPPED_APP_SHELL);
+        state.branding_image_origins =
+            crate::branding_images::BrandingImageOrigins::from_config(&config);
+
+        let response = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
+
+        assert!(
+            !image_sources_of(&policy_of(&response)).contains(&"https://example.test".to_owned())
+        );
+    }
+
     #[tokio::test]
     async fn the_official_instance_keeps_its_link_preview_metadata() {
         let state = spa_state_serving(SHIPPED_APP_SHELL);
@@ -1080,6 +1137,9 @@ mod tests {
             crate::local_files::LocalFileStore::load_blocking(std::path::Path::new("."), &budgets)
                 .expect("the test static directory must exist");
         AppState {
+            branding_image_origins: crate::branding_images::BrandingImageOrigins::from_config(
+                &config,
+            ),
             config: Arc::new(config),
             csp,
             http_client: reqwest::Client::new(),
