@@ -9,7 +9,7 @@ use crate::{
         ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
         InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
         InstanceRegistrationResponse, LimitConfigResponse, PendingRegistrationResponse,
-        PushRelayConfigResponse, RegistrationUrlResponse, SsoConfigResponse, TagStyle,
+        PremiumMode, PushRelayConfigResponse, RegistrationUrlResponse, SsoConfigResponse, TagStyle,
         VOICE_P2P_DEFAULT_SALT, VOICE_P2P_MAX_PARTICIPANTS_RANGE, VoiceP2pConfigResponse,
     },
     config::AdminConfig,
@@ -158,6 +158,7 @@ pub fn instance_config_page(
                                 csrf_token,
                                 &instance_config.policy,
                                 &instance_config.app_public.branding.premium_product_name,
+                                instance_config.billing.enabled == Some(true),
                             ))
                         },
                     ))
@@ -264,6 +265,7 @@ fn policy_config_section(
     csrf_token: &str,
     policy: &InstancePolicyResponse,
     premium_name: &str,
+    billing_enabled: bool,
 ) -> Markup {
     section_card_with_description(
         "Community & Policy",
@@ -274,7 +276,7 @@ fn policy_config_section(
             div class="space-y-8" {
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
-                (premium_mode_form(base, csrf_token, policy, premium_name))
+                (premium_mode_form(base, csrf_token, policy, premium_name, billing_enabled))
                 (community_creation_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
@@ -373,6 +375,7 @@ fn premium_mode_form(
     csrf_token: &str,
     policy: &InstancePolicyResponse,
     premium_name: &str,
+    billing_enabled: bool,
 ) -> Markup {
     let mirror_label = format!("Mirror (Free and {premium_name} tiers)");
     let everyone_label = format!("Everyone (every member gets {premium_name} limits)");
@@ -386,6 +389,16 @@ fn premium_mode_form(
                         ("mirror", mirror_label.as_str()),
                         ("everyone", everyone_label.as_str()),
                     ], policy.premium_mode.as_str()))
+                    p class="text-xs text-neutral-500" {
+                        "Limits you have not edited follow the model. Limits you changed under Limit \
+                         Config keep your values in both models."
+                    }
+                    @if billing_enabled && matches!(policy.premium_mode, PremiumMode::Mirror) {
+                        p class="text-sm text-amber-700" {
+                            "Billing is enabled. Disable it under Premium & billing before switching \
+                             the premium model to Everyone."
+                        }
+                    }
                     (form_actions(html! {
                         (submit_button("Save premium model"))
                     }))

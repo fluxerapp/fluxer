@@ -550,6 +550,10 @@ fn traits_form(
                         class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20" {
                         (custom_traits.join("\n"))
                     }
+                    p class="text-neutral-500 text-xs" {
+                        "The premium trait follows each member's subscription or gift and cannot be \
+                         assigned here."
+                    }
                 }
                 (form_actions(html! {
                     (submit_button("Save Traits"))
