@@ -17,56 +17,61 @@
 	--font-fallback-mono:
 		'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', var(--font-fallback-sans);
 
+	--font-sans-primary: 'Fluxer Sans';
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
+		var(--font-sans-primary), 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Segoe UI', 'Roboto', var(--font-fallback-sans), sans-serif;
 	--font-mono: 'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', var(--font-fallback-mono), monospace;
 }
 
+:root.platform-windows {
+	--font-sans-primary: 'Segoe UI Variable Text', 'Segoe UI';
+}
+
 :root:lang(ja) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans JP', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans JP', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo',
 		var(--font-fallback-sans), sans-serif;
 }
 :root:lang(ko) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans KR', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans KR', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Malgun Gothic', 'Apple SD Gothic Neo', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(zh-CN),
 :root:lang(zh-Hans) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans SC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans SC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans Thai Looped', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(zh-Hant-TW),
 :root:lang(zh-TW) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans TC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans TC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'PingFang TC', 'Microsoft JhengHei', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(zh-HK),
 :root:lang(zh-Hant-HK) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans TC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans TC', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans Thai Looped', 'Fluxer Sans SC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'PingFang HK', 'Microsoft JhengHei', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(ar) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
+		var(--font-sans-primary), 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Segoe UI', 'Geeza Pro', 'Arabic Typesetting', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(he) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans Hebrew', 'Fluxer Sans Arabic', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
+		var(--font-sans-primary), 'Fluxer Sans Hebrew', 'Fluxer Sans Arabic', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Segoe UI', 'Arial Hebrew', var(--font-fallback-sans), sans-serif;
 }
@@ -75,13 +80,13 @@
 :root:lang(ne),
 :root:lang(sa) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans Devanagari', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Thai Looped',
+		var(--font-sans-primary), 'Fluxer Sans Devanagari', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Thai Looped',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Nirmala UI', 'Noto Sans Devanagari', var(--font-fallback-sans), sans-serif;
 }
 :root:lang(th) {
 	--font-sans:
-		'Fluxer Sans', 'Fluxer Sans Thai Looped', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
+		var(--font-sans-primary), 'Fluxer Sans Thai Looped', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', system-ui, -apple-system,
 		BlinkMacSystemFont, 'Leelawadee UI', 'Thonburi', var(--font-fallback-sans), sans-serif;
 }
