@@ -25,19 +25,11 @@
 
 -spec determine_shard_count() -> {pos_integer(), configured | auto}.
 determine_shard_count() ->
-    case fluxer_gateway_env:get(guild_shards) of
-        Value when is_integer(Value), Value > 0 ->
-            {Value, configured};
-        _ ->
-            {default_shard_count(), auto}
-    end.
+    shard_utils:determine_shard_count(guild_shards).
 
 -spec default_shard_count() -> pos_integer().
 default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
+    clustered_ets_cache:default_shard_count().
 
 -spec start_shards(pos_integer()) -> #{non_neg_integer() => shard_map()}.
 start_shards(Count) ->
@@ -109,12 +101,12 @@ normalize_grouped_ids(Groups) ->
 -spec find_shard_by_ref(reference(), #{non_neg_integer() => shard_map()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_ref(Ref, Shards) ->
-    find_shard_by(fun(#{ref := R}) -> R =:= Ref end, Shards).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec find_shard_by_pid(pid(), #{non_neg_integer() => shard_map()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_pid(Pid, Shards) ->
-    find_shard_by(fun(#{pid := P}) -> P =:= Pid end, Shards).
+    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec start_shard_into_map(non_neg_integer(), #{non_neg_integer() => shard_map()}) ->
     #{non_neg_integer() => shard_map()}.
@@ -131,27 +123,4 @@ ensure_live_shard(Index, Pid, State) ->
             {Index, State};
         false ->
             restart_shard_or_fail(Index, State)
-    end.
-
--spec find_shard_by(fun((shard_map()) -> boolean()), #{non_neg_integer() => shard_map()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by(Pred, Shards) ->
-    maps:fold(
-        fun(Index, ShardMap, Acc) -> find_matching_shard(Pred, Index, ShardMap, Acc) end,
-        not_found,
-        Shards
-    ).
-
--spec find_matching_shard(
-    fun((shard_map()) -> boolean()),
-    non_neg_integer(),
-    shard_map(),
-    {ok, non_neg_integer()} | not_found
-) -> {ok, non_neg_integer()} | not_found.
-find_matching_shard(_Pred, _Index, _ShardMap, {ok, _Found} = Acc) ->
-    Acc;
-find_matching_shard(Pred, Index, ShardMap, not_found) ->
-    case Pred(ShardMap) of
-        true -> {ok, Index};
-        false -> not_found
     end.

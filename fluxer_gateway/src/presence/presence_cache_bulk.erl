@@ -193,7 +193,7 @@ add_user_to_owner_group(UserId, Acc) ->
 
 -spec local_shard_count() -> pos_integer().
 local_shard_count() ->
-    {Count, _Source} = determine_shard_count(presence_cache_shards),
+    {Count, _Source} = presence_cache_shards:determine_count(presence_cache_shards),
     Count.
 
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().
@@ -269,14 +269,6 @@ accumulate_ets_lookup(TableName, UserId, AccMap) ->
         _ -> AccMap
     catch
         error:badarg -> AccMap
-    end.
-
--spec determine_shard_count(atom()) -> {pos_integer(), configured | auto}.
-determine_shard_count(ConfigKey) ->
-    case clustered_ets_cache:determine_shard_count([ConfigKey]) of
-        {Count, ConfigKey} -> {Count, configured};
-        {Count, auto} -> {Count, auto};
-        {Count, _Source} -> {Count, configured}
     end.
 
 -spec normalize_shard_groups([{non_neg_integer(), [term()]}]) ->

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{
-    asset_size,
-    constants::{AssetExtension, AssetKind},
-};
+use crate::constants::{self, AssetExtension, AssetKind};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum OutputFormat {
@@ -97,7 +94,7 @@ pub fn select_url_variant(input: Input) -> OutputSelection {
         format: OutputFormat::coerce_from_extension(requested),
         size: input
             .requested_size
-            .map(|size| asset_size::clamp_size(size, input.kind)),
+            .map(|size| constants::clamp_size(size, input.kind)),
         reason: if is_output_format_supported(requested) {
             "url"
         } else {

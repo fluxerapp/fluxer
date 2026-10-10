@@ -5,6 +5,9 @@
 
 -export([
     max_positive/1,
+    determine_shard_count/1,
+    find_shard_by_ref/2,
+    find_shard_by_pid/2,
     safe_gen_call/3,
     safe_gen_call_detailed/3,
     safe_gen_call_remote/3,
@@ -14,9 +17,46 @@
     check_mailbox_pressure/1
 ]).
 
+-export_type([shard/0]).
+
+-type shard() :: #{pid := pid(), ref := reference()}.
+
 -spec max_positive(list()) -> pos_integer().
 max_positive(Candidates) ->
     lists:max([C || C <- Candidates, is_integer(C), C > 0] ++ [1]).
+
+-spec determine_shard_count(atom()) -> {pos_integer(), configured | auto}.
+determine_shard_count(ConfigKey) ->
+    case fluxer_gateway_env:get(ConfigKey) of
+        Value when is_integer(Value), Value > 0 ->
+            {Value, configured};
+        _ ->
+            {clustered_ets_cache:default_shard_count(), auto}
+    end.
+
+-spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_ref(Ref, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
+
+-spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_pid(Pid, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
 
 -spec safe_gen_call(pid() | atom(), term(), pos_integer()) -> term().
 safe_gen_call(Pid, Request, Timeout) ->

@@ -323,7 +323,7 @@ maybe_add_last_message_id(RawId, RawMsgId, UserId, Member, State, Acc) ->
     binary(), binary(), term(), integer(), map(), guild_state(), map()
 ) -> map().
 maybe_add_last_message_for_channel(IdBin, MsgIdBin, RawId, UserId, Member, State, Acc) ->
-    case parse_snowflake(<<"id">>, RawId) of
+    case guild_dispatch_decorate:parse_snowflake(<<"id">>, RawId) of
         ChId when is_integer(ChId) ->
             maybe_add_visible_last_message(IdBin, MsgIdBin, UserId, ChId, Member, State, Acc);
         undefined ->
@@ -344,13 +344,6 @@ maybe_add_visible_last_message(IdBin, MsgId, UserId, ChId, Member, State, Acc) -
 ) -> [voice_state()].
 compute_voice_state_updates(Current, Previous, GuildId) ->
     guild_passive_sync_voice:compute_voice_state_updates(Current, Previous, GuildId).
-
--spec parse_snowflake(binary(), term()) -> integer() | undefined.
-parse_snowflake(FieldName, Value) ->
-    case validation:validate_snowflake(FieldName, Value) of
-        {ok, Id} -> Id;
-        {error, _, _} -> undefined
-    end.
 
 -spec snowflake_binary(binary(), term()) -> binary() | undefined.
 snowflake_binary(FieldName, Value) ->

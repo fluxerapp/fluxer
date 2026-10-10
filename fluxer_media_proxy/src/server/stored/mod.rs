@@ -6,7 +6,6 @@ pub(in crate::server) mod response;
 mod tests;
 
 use crate::{
-    asset_size,
     coalescer::CoalescerError,
     config::PolicyMode,
     constants::{self, AssetExtension, AssetKind},
@@ -65,7 +64,7 @@ pub(in crate::server) async fn serve_asset_image(
     let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
     let requested_download = bool_param(params, "download", false);
     let asset_filename = asset_filename_hint(&asset);
-    let size = asset_size::parse_image_size(params.get("size").map(String::as_str));
+    let size = constants::parse_image_size(params.get("size").map(String::as_str));
     let requested_manual_format = asset_manual_format_override(params, asset.original_ext);
     let manual_format_override = asset.forced_output_format.or(requested_manual_format);
     let selected = output_format::select_url_variant(output_format::Input {

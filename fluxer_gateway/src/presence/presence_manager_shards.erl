@@ -36,10 +36,7 @@
 
 -spec determine_count() -> {pos_integer(), configured | auto}.
 determine_count() ->
-    case fluxer_gateway_env:get(presence_shards) of
-        Value when is_integer(Value), Value > 0 -> {Value, configured};
-        _ -> {default_count(), auto}
-    end.
+    shard_utils:determine_shard_count(presence_shards).
 
 -spec start(non_neg_integer()) -> {ok, shard()} | {error, term()}.
 start(Index) ->
@@ -157,33 +154,16 @@ pid_from_table(Key) ->
 -spec find_by_ref(reference(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec find_by_pid(pid(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec default_count() -> pos_integer().
 default_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
+    clustered_ets_cache:default_shard_count().
 
 -spec ensure_shard(user_id(), state()) -> {non_neg_integer(), state()}.
 ensure_shard(Key, State) ->

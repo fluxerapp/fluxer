@@ -70,7 +70,7 @@ fn test_transform_cache() -> crate::transform_cache::TransformCache {
 #[test]
 fn asset_size_query_is_clamped_by_kind() {
     let params = HashMap::from([("size".to_owned(), "4096".to_owned())]);
-    let size = asset_size::parse_image_size(params.get("size").map(String::as_str));
+    let size = constants::parse_image_size(params.get("size").map(String::as_str));
     let selected = output_format::select_url_variant(output_format::Input {
         kind: AssetKind::Avatar,
         original: AssetExtension::Webp,
@@ -339,7 +339,7 @@ async fn an_asset_image_source_that_vanishes_mid_request_is_not_found() {
 }
 
 fn avatar_cache_key_for_requested_size(raw: &str) -> String {
-    let size = asset_size::parse_image_size(Some(raw));
+    let size = constants::parse_image_size(Some(raw));
     let selected = output_format::select_url_variant(output_format::Input {
         kind: AssetKind::Avatar,
         original: AssetExtension::Webp,

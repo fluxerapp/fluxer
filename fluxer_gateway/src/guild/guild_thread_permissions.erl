@@ -150,7 +150,7 @@ moderator_rules_test() ->
     ).
 
 shared_case_table_test() ->
-    {ok, Contents} = file:read_file("test/thread_permission_cases.json"),
+    {ok, Contents} = file:read_file("../packages/constants/src/ThreadPermissionCases.json"),
     Cases = [
         Case
      || #{<<"fn">> := Fn} = Case <- json:decode(Contents),

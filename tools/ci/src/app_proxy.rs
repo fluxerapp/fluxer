@@ -6,7 +6,7 @@ use crate::common::{
     remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
     trim_option, upload_s3_plan_append_only,
 };
-use crate::functions::sha256_reader;
+use crate::functions::sha256_file;
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -15,7 +15,7 @@ use clap::{Args, ValueEnum};
 use serde_json::{Map, Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
-use std::fs::{self, File};
+use std::fs;
 use std::path::{Path, PathBuf};
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
@@ -495,11 +495,6 @@ fn asset_tree_digests(root: &Path) -> Result<BTreeMap<String, String>> {
             Ok((path_to_s3_key(relative), sha256_file(&path)?))
         })
         .collect()
-}
-
-fn sha256_file(path: &Path) -> Result<String> {
-    let file = File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
-    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
 }
 
 fn tree_differences(
