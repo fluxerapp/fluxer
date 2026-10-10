@@ -22,6 +22,7 @@ import {
 	type TagStyle,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {resolveSmtpTlsMode, type SmtpTlsMode, SmtpTlsModes} from '@fluxer/constants/src/SmtpConstants';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -1046,7 +1047,7 @@ export interface ServiceIntegrationDraft {
 	smtpPort: string;
 	smtpUsername: string;
 	smtpPassword: string;
-	smtpSecure: boolean;
+	smtpTlsMode: SmtpTlsModeChoice;
 	blueskyMode: IntegrationSetupMode;
 	blueskyEnabled: boolean;
 	blueskyClientName: string;
@@ -1123,9 +1124,49 @@ const SMTP_HOST_LABEL_DESCRIPTOR = msg({message: 'SMTP host', comment: 'Label fo
 const SMTP_PORT_LABEL_DESCRIPTOR = msg({message: 'Port', comment: 'Label for SMTP port input.'});
 const SMTP_USERNAME_LABEL_DESCRIPTOR = msg({message: 'Username', comment: 'Label for SMTP username input.'});
 const SMTP_PASSWORD_LABEL_DESCRIPTOR = msg({message: 'Password', comment: 'Label for SMTP password input.'});
-const SMTP_SECURE_LABEL_DESCRIPTOR = msg({
-	message: 'Use TLS',
-	comment: 'Label for SMTP TLS toggle.',
+const SMTP_TLS_MODE_LABEL_DESCRIPTOR = msg({
+	message: 'Encryption',
+	comment: 'Label for the choice of how the SMTP connection is encrypted.',
+});
+const SMTP_TLS_MODE_AUTO_NAME_DESCRIPTOR = msg({
+	message: 'Automatic',
+	comment: 'SMTP encryption option that picks the mode from the port.',
+});
+const SMTP_TLS_MODE_AUTO_DESC_DESCRIPTOR = msg({
+	message: 'Implicit TLS on port 465, required STARTTLS on any other port.',
+	comment: 'Description of the automatic SMTP encryption option.',
+});
+const SMTP_TLS_MODE_IMPLICIT_NAME_DESCRIPTOR = msg({
+	message: 'Implicit TLS',
+	comment: 'SMTP encryption option where the connection starts encrypted.',
+});
+const SMTP_TLS_MODE_IMPLICIT_DESC_DESCRIPTOR = msg({
+	message: 'The connection is encrypted from the start. Usually port 465.',
+	comment: 'Description of the implicit TLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_STARTTLS_NAME_DESCRIPTOR = msg({
+	message: 'STARTTLS',
+	comment: 'SMTP encryption option where a plain connection must upgrade with STARTTLS.',
+});
+const SMTP_TLS_MODE_STARTTLS_DESC_DESCRIPTOR = msg({
+	message: 'The connection must upgrade to TLS before signing in. Usually port 587.',
+	comment: 'Description of the required STARTTLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_OPPORTUNISTIC_NAME_DESCRIPTOR = msg({
+	message: 'STARTTLS when offered',
+	comment: 'SMTP encryption option where STARTTLS is used only if the server offers it.',
+});
+const SMTP_TLS_MODE_OPPORTUNISTIC_DESC_DESCRIPTOR = msg({
+	message: 'The connection upgrades to TLS only if the server offers it.',
+	comment: 'Description of the opportunistic STARTTLS SMTP encryption option.',
+});
+const SMTP_TLS_MODE_NONE_NAME_DESCRIPTOR = msg({
+	message: 'None',
+	comment: 'SMTP encryption option that never uses TLS.',
+});
+const SMTP_TLS_MODE_NONE_DESC_DESCRIPTOR = msg({
+	message: 'The connection is never encrypted. Only for a mail server on a network you trust.',
+	comment: 'Description of the SMTP encryption option that never uses TLS.',
 });
 const SMTP_TEST_DESCRIPTOR = msg({
 	message: 'Test SMTP',
@@ -1171,6 +1212,44 @@ const BLUESKY_PRIVATE_KEY_LABEL_DESCRIPTOR = msg({
 	message: 'Private key',
 	comment: 'Label for Bluesky OAuth private key input.',
 });
+
+export type SmtpTlsModeChoice = SmtpTlsMode | 'auto';
+
+export function toSmtpTlsMode(choice: SmtpTlsModeChoice, port: number): SmtpTlsMode {
+	return choice === 'auto' ? resolveSmtpTlsMode(null, port) : choice;
+}
+
+function buildSmtpTlsModeOptions(
+	i18n: ReturnType<typeof useLingui>['i18n'],
+): ReadonlyArray<RadioOption<SmtpTlsModeChoice>> {
+	return [
+		{
+			value: 'auto',
+			name: i18n._(SMTP_TLS_MODE_AUTO_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_AUTO_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.IMPLICIT,
+			name: i18n._(SMTP_TLS_MODE_IMPLICIT_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_IMPLICIT_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.STARTTLS,
+			name: i18n._(SMTP_TLS_MODE_STARTTLS_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_STARTTLS_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.OPPORTUNISTIC,
+			name: i18n._(SMTP_TLS_MODE_OPPORTUNISTIC_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_OPPORTUNISTIC_DESC_DESCRIPTOR),
+		},
+		{
+			value: SmtpTlsModes.NONE,
+			name: i18n._(SMTP_TLS_MODE_NONE_NAME_DESCRIPTOR),
+			desc: i18n._(SMTP_TLS_MODE_NONE_DESC_DESCRIPTOR),
+		},
+	];
+}
 
 function buildIntegrationModeOptions(
 	i18n: ReturnType<typeof useLingui>['i18n'],
@@ -1490,12 +1569,19 @@ export const IntegrationStep = observer(
 									disabled={disabled}
 									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password--2"
 								/>
-								<Switch
-									label={i18n._(SMTP_SECURE_LABEL_DESCRIPTOR)}
-									value={draft.smtpSecure}
-									onChange={(value) => onDraftChange({smtpSecure: value})}
+								<div
+									className={styles.fieldLabel}
+									data-flx="app.setup.setup-wizard-steps.integration-step.smtp-tls-mode-label"
+								>
+									{i18n._(SMTP_TLS_MODE_LABEL_DESCRIPTOR)}
+								</div>
+								<RadioGroup
+									options={buildSmtpTlsModeOptions(i18n)}
+									value={draft.smtpTlsMode}
+									onChange={(value) => onDraftChange({smtpTlsMode: value})}
 									disabled={disabled}
-									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change--2"
+									aria-label={i18n._(SMTP_TLS_MODE_LABEL_DESCRIPTOR)}
+									data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.smtp-tls-mode"
 								/>
 								<div
 									className={styles.integrationActionRow}

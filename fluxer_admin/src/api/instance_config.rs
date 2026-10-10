@@ -4,7 +4,7 @@ use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     AccountIdentitySettings, CreateRegistrationUrlRequest, CreateRegistrationUrlResponse,
     InstanceAccountIdentityDiscovery, InstanceConfigResponse, InstanceConfigUpdateRequest,
-    InstanceEmailSmtpTestRequest, InstanceEmailSmtpTestResponse, InstancePremiumDiscovery,
+    InstanceEmailSmtpTestResponse, InstancePremiumDiscovery,
 };
 
 impl AdminApiClient {
@@ -34,11 +34,10 @@ impl AdminApiClient {
             .await
     }
 
-    pub async fn test_instance_smtp_config(
+    pub async fn test_saved_instance_smtp_config(
         &self,
-        request: &InstanceEmailSmtpTestRequest,
     ) -> ApiResult<InstanceEmailSmtpTestResponse> {
-        self.post_typed("/admin/instance/config/smtp-tests", request)
+        self.post_typed("/admin/instance/config/smtp-tests", &serde_json::json!({}))
             .await
     }
 

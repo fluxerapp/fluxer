@@ -3,6 +3,7 @@
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {CachePurgeAdapterName, StoreProductSlotName} from '@fluxer/config/src/MasterConfig';
 import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountIdentityConstants';
+import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
@@ -163,7 +164,7 @@ export interface APIConfig {
 			port: number;
 			username: string;
 			password: string;
-			secure: boolean;
+			tlsMode: SmtpTlsMode | null;
 		};
 	};
 	blocklistFeeds: {

@@ -500,7 +500,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                     "port": 587,
                     "username": "fluxer",
                     "password_set": true,
-                    "secure": true
+                    "tls_mode": null,
+                    "effective_tls_mode": "starttls"
                 },
                 "disable_new_ip_authorization": false,
                 "effective_disable_new_ip_authorization": false

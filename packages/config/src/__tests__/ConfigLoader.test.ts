@@ -474,6 +474,25 @@ describe('ConfigLoader', () => {
 		expect(config.instance.tag_style).toBe(expected);
 	});
 
+	test.each([
+		['implicit', 'implicit'],
+		[' StartTLS ', 'starttls'],
+		['opportunistic', 'opportunistic'],
+		['none', 'none'],
+		['', undefined],
+	])('parses FLUXER_EMAIL_SMTP_TLS_MODE=%j', async (raw, expected) => {
+		stubMinimalEnv({FLUXER_EMAIL_SMTP_HOST: 'smtp.example.com', FLUXER_EMAIL_SMTP_TLS_MODE: raw});
+		const config = await loadConfig();
+		expect(config.integrations.email.smtp?.tls_mode).toBe(expected);
+	});
+
+	test.each(['tls', 'true'])('rejects the SMTP TLS mode %j', async (raw) => {
+		stubMinimalEnv({FLUXER_EMAIL_SMTP_TLS_MODE: raw});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_EMAIL_SMTP_TLS_MODE must be implicit, starttls, opportunistic or none',
+		);
+	});
+
 	test.each(['sequential', 'zero_first'])('rejects the tag style %j', async (raw) => {
 		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_TAG_STYLE must be none or random');

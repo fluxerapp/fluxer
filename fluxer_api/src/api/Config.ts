@@ -5,6 +5,7 @@ import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRate
 import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
+import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 
@@ -280,7 +281,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 						port: master.integrations.email.smtp.port,
 						username: master.integrations.email.smtp.username,
 						password: master.integrations.email.smtp.password,
-						secure: master.integrations.email.smtp.secure ?? true,
+						tlsMode:
+							master.integrations.email.smtp.tls_mode ?? smtpTlsModeFromSecure(master.integrations.email.smtp.secure),
 					}
 				: undefined,
 		},

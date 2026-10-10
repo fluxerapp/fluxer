@@ -12,6 +12,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@fluxer/constants": "workspace:*",
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
 		"itty-time": "catalog:",

@@ -41,6 +41,7 @@ import {
 	ServicesStep,
 	SignInMethodStep,
 	ThemeStep,
+	toSmtpTlsMode,
 	WelcomeStep,
 } from '@app/features/app/components/setup/SetupWizardSteps';
 import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding';
@@ -80,6 +81,7 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {MessageDescriptor} from '@lingui/core';
@@ -199,7 +201,7 @@ const DEFAULT_INTEGRATION_DRAFT: ServiceIntegrationDraft = {
 	smtpPort: '587',
 	smtpUsername: '',
 	smtpPassword: '',
-	smtpSecure: true,
+	smtpTlsMode: 'auto',
 	blueskyMode: 'later',
 	blueskyEnabled: true,
 	blueskyClientName: '',
@@ -345,7 +347,7 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft, accountIdentity:
 				port: number;
 				username: string;
 				password: string;
-				secure: boolean;
+				tls_mode: SmtpTlsMode;
 			};
 		};
 		bluesky?: {
@@ -365,6 +367,7 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft, accountIdentity:
 		integrations.youtube = {api_key: draft.youtubeApiKey.trim()};
 	}
 	if (draft.emailMode === 'configure' && accountIdentity === AccountIdentityModes.EMAIL) {
+		const smtpPort = parsePort(draft.smtpPort) ?? 587;
 		integrations.email = {
 			enabled: draft.emailEnabled,
 			provider: 'smtp',
@@ -372,10 +375,10 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft, accountIdentity:
 			from_name: draft.emailFromName.trim(),
 			smtp: {
 				host: draft.smtpHost.trim(),
-				port: parsePort(draft.smtpPort) ?? 587,
+				port: smtpPort,
 				username: draft.smtpUsername.trim(),
 				password: draft.smtpPassword.trim(),
-				secure: draft.smtpSecure,
+				tls_mode: toSmtpTlsMode(draft.smtpTlsMode, smtpPort),
 			},
 		};
 	}
@@ -599,7 +602,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 			smtpHost: next.integrations.email.smtp.host ?? current.smtpHost,
 			smtpPort: next.integrations.email.smtp.port ? String(next.integrations.email.smtp.port) : current.smtpPort,
 			smtpUsername: next.integrations.email.smtp.username ?? current.smtpUsername,
-			smtpSecure: next.integrations.email.smtp.secure ?? current.smtpSecure,
+			smtpTlsMode: next.integrations.email.smtp.tls_mode ?? current.smtpTlsMode,
 			blueskyEnabled: next.integrations.bluesky.effective_enabled || next.integrations.bluesky.enabled !== false,
 			blueskyClientName: next.integrations.bluesky.client_name ?? current.blueskyClientName,
 			blueskyClientUri: next.integrations.bluesky.client_uri ?? current.blueskyClientUri,
@@ -864,7 +867,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				port,
 				username: integrationDraft.smtpUsername.trim(),
 				password: integrationDraft.smtpPassword,
-				secure: integrationDraft.smtpSecure,
+				tls_mode: toSmtpTlsMode(integrationDraft.smtpTlsMode, port),
 			});
 			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'failed'));
 		} catch (error) {

@@ -4144,10 +4144,10 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Validates that an SMTP configuration can authenticate and accept a connection. Requires INSTANCE_CONFIG_UPDATE permission.",
+				"description": "Validates that an SMTP configuration can authenticate and accept a connection. Fields left out of the body come from the saved configuration, and the saved password is reused only for the saved host and username. An empty body tests what outgoing email uses and fails when email is off or incomplete. Requires INSTANCE_CONFIG_UPDATE permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
-					"required": true,
+					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/InstanceEmailSmtpTestRequest"}}}
 				}
 			}
@@ -11523,9 +11523,34 @@
 											"port": {"nullable": true, "type": "integer", "minimum": 1, "maximum": 65535},
 											"username": {"nullable": true, "type": "string"},
 											"password_set": {"type": "boolean"},
-											"secure": {"nullable": true, "type": "boolean"}
+											"tls_mode": {
+												"nullable": true,
+												"description": "Saved TLS mode, or null to pick one from the port",
+												"x-enumNames": ["IMPLICIT", "STARTTLS", "OPPORTUNISTIC", "NONE"],
+												"x-enumDescriptions": [
+													"TLS from the first byte, usually on port 465",
+													"Plain connection that must upgrade with STARTTLS, usually on port 587",
+													"Plain connection upgraded with STARTTLS when the server offers it",
+													"No TLS, even when the server offers STARTTLS"
+												],
+												"enum": ["implicit", "starttls", "opportunistic", "none"],
+												"type": "string"
+											},
+											"effective_tls_mode": {
+												"nullable": true,
+												"description": "How the SMTP connection is encrypted",
+												"x-enumNames": ["IMPLICIT", "STARTTLS", "OPPORTUNISTIC", "NONE"],
+												"x-enumDescriptions": [
+													"TLS from the first byte, usually on port 465",
+													"Plain connection that must upgrade with STARTTLS, usually on port 587",
+													"Plain connection upgraded with STARTTLS when the server offers it",
+													"No TLS, even when the server offers STARTTLS"
+												],
+												"enum": ["implicit", "starttls", "opportunistic", "none"],
+												"type": "string"
+											}
 										},
-										"required": ["host", "port", "username", "password_set", "secure"],
+										"required": ["host", "port", "username", "password_set", "tls_mode", "effective_tls_mode"],
 										"additionalProperties": false
 									},
 									"disable_new_ip_authorization": {"type": "boolean"},
@@ -11788,13 +11813,24 @@
 			"InstanceEmailSmtpTestRequest": {
 				"type": "object",
 				"properties": {
-					"host": {"type": "string", "minLength": 1, "maxLength": 255},
-					"port": {"type": "integer", "minimum": 1, "maximum": 65535},
-					"username": {"type": "string", "minLength": 1, "maxLength": 320},
-					"password": {"type": "string", "minLength": 1, "maxLength": 4096},
-					"secure": {"default": true, "type": "boolean"}
-				},
-				"required": ["host", "port", "username", "password"]
+					"host": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 255},
+					"port": {"nullable": true, "type": "integer", "minimum": 1, "maximum": 65535},
+					"username": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 320},
+					"password": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4096},
+					"tls_mode": {
+						"nullable": true,
+						"description": "How the SMTP connection is encrypted",
+						"x-enumNames": ["IMPLICIT", "STARTTLS", "OPPORTUNISTIC", "NONE"],
+						"x-enumDescriptions": [
+							"TLS from the first byte, usually on port 465",
+							"Plain connection that must upgrade with STARTTLS, usually on port 587",
+							"Plain connection upgraded with STARTTLS when the server offers it",
+							"No TLS, even when the server offers STARTTLS"
+						],
+						"enum": ["implicit", "starttls", "opportunistic", "none"],
+						"type": "string"
+					}
+				}
 			},
 			"InstanceEmailSmtpTestResponse": {
 				"type": "object",
@@ -11923,7 +11959,20 @@
 											"port": {"nullable": true, "type": "integer", "minimum": 1, "maximum": 65535},
 											"username": {"nullable": true, "type": "string", "maxLength": 320},
 											"password": {"nullable": true, "type": "string", "maxLength": 4096},
-											"secure": {"nullable": true, "type": "boolean"}
+											"tls_mode": {
+												"nullable": true,
+												"description": "How the SMTP connection is encrypted",
+												"x-enumNames": ["IMPLICIT", "STARTTLS", "OPPORTUNISTIC", "NONE"],
+												"x-enumDescriptions": [
+													"TLS from the first byte, usually on port 465",
+													"Plain connection that must upgrade with STARTTLS, usually on port 587",
+													"Plain connection upgraded with STARTTLS when the server offers it",
+													"No TLS, even when the server offers STARTTLS"
+												],
+												"enum": ["implicit", "starttls", "opportunistic", "none"],
+												"type": "string"
+											},
+											"secure": {"description": "Deprecated, use tls_mode", "nullable": true, "type": "boolean"}
 										}
 									},
 									"disable_new_ip_authorization": {"nullable": true, "type": "boolean"}

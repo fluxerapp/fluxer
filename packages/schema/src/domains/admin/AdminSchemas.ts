@@ -7,6 +7,7 @@ import {
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
 import {LIMIT_KEY_METADATA, LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {SmtpTlsModes} from '@fluxer/constants/src/SmtpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
 import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
@@ -627,6 +628,16 @@ const InstancePolicyResponse = z.object({
 
 const EmailProviderSchema = z.enum(['smtp', 'none']);
 
+const SmtpTlsModeSchema = createNamedStringLiteralUnion(
+	[
+		[SmtpTlsModes.IMPLICIT, 'IMPLICIT', 'TLS from the first byte, usually on port 465'],
+		[SmtpTlsModes.STARTTLS, 'STARTTLS', 'Plain connection that must upgrade with STARTTLS, usually on port 587'],
+		[SmtpTlsModes.OPPORTUNISTIC, 'OPPORTUNISTIC', 'Plain connection upgraded with STARTTLS when the server offers it'],
+		[SmtpTlsModes.NONE, 'NONE', 'No TLS, even when the server offers STARTTLS'],
+	],
+	'How the SMTP connection is encrypted',
+);
+
 const AttachmentDecayEffectiveResponse = z.object({
 	enabled: z.boolean(),
 	min_size_mb: z.number().positive(),
@@ -675,7 +686,8 @@ const InstanceIntegrationsResponse = z.object({
 			port: z.number().int().min(1).max(65535).nullable(),
 			username: z.string().nullable(),
 			password_set: z.boolean(),
-			secure: z.boolean().nullable(),
+			tls_mode: SmtpTlsModeSchema.nullable().describe('Saved TLS mode, or null to pick one from the port'),
+			effective_tls_mode: SmtpTlsModeSchema.nullable(),
 		}),
 		disable_new_ip_authorization: z.boolean(),
 		effective_disable_new_ip_authorization: z.boolean(),
@@ -789,8 +801,10 @@ export const InstanceConfigUpdateRequest = z.object({
 							port: z.number().int().min(1).max(65535).nullish(),
 							username: z.string().trim().max(320).nullish(),
 							password: z.string().trim().max(4096).nullish(),
-							secure: z.boolean().nullish(),
+							tls_mode: SmtpTlsModeSchema.nullish(),
+							secure: z.boolean().nullish().describe('Deprecated, use tls_mode'),
 						})
+						.register(schemaMetadata, {preserveNullFields: true})
 						.nullish(),
 					disable_new_ip_authorization: z.boolean().nullish(),
 				})
@@ -847,11 +861,11 @@ export const BrandingAssetUploadRequest = z.object({
 export type BrandingAssetUploadRequest = z.infer<typeof BrandingAssetUploadRequest>;
 
 export const InstanceEmailSmtpTestRequest = z.object({
-	host: z.string().trim().min(1).max(255),
-	port: z.number().int().min(1).max(65535),
-	username: z.string().trim().min(1).max(320),
-	password: z.string().trim().min(1).max(4096),
-	secure: z.boolean().default(true),
+	host: z.string().trim().min(1).max(255).nullish(),
+	port: z.number().int().min(1).max(65535).nullish(),
+	username: z.string().trim().min(1).max(320).nullish(),
+	password: z.string().trim().min(1).max(4096).nullish(),
+	tls_mode: SmtpTlsModeSchema.nullish(),
 });
 
 export type InstanceEmailSmtpTestRequest = z.infer<typeof InstanceEmailSmtpTestRequest>;

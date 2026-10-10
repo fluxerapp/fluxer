@@ -39,7 +39,6 @@
 				"emoji-regex",
 				"ioredis",
 				"maxmind",
-				"nodemailer",
 				"pg",
 				"pino",
 				"undici",

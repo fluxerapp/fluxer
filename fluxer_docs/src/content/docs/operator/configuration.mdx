@@ -804,9 +804,24 @@ Default empty. The address replies go to, sent as the `Reply-To` header on every
 
 `.env.example` empty. The SMTP password. Part of the completeness check. Compose forwards it from `.env`.
 
+#### `FLUXER_EMAIL_SMTP_TLS_MODE`
+
+`.env.example` empty. How the SMTP connection is encrypted. Anything other than the four values below fails startup. Compose forwards it from `.env`.
+
+| Value | Connection |
+| ----- | ---------- |
+| `implicit` | TLS from the first byte. Most providers serve this on port 465 |
+| `starttls` | A plain connection that must upgrade with STARTTLS before the login. Most providers serve this on port 587 |
+| `opportunistic` | A plain connection that upgrades with STARTTLS when the server offers it, and stays plain when it does not |
+| `none` | No TLS, even when the server offers STARTTLS. Only for a mail server on a network you trust |
+
+An empty value picks the mode from the port: `implicit` on port 465 and `starttls` on every other port. A mode saved in the admin dashboard wins over this variable, and choosing Automatic there hands the choice back to it. The dashboard shows the mode outgoing email ends up with. Automatic in the setup wizard saves the mode the port calls for, so it never follows this variable or `FLUXER_EMAIL_SMTP_SECURE`.
+
 #### `FLUXER_EMAIL_SMTP_SECURE`
 
-`.env.example` `true`. Implicit TLS. Defaults to `true` whenever the provider is `smtp`. Compose forwards it from `.env`.
+`.env.example` unset. The older switch, read only while `FLUXER_EMAIL_SMTP_TLS_MODE` is empty. `true` means `implicit` and `false` means `opportunistic`. Compose forwards it from `.env`, and `.env.example` lists it commented out. An older `.env` can hold `FLUXER_EMAIL_SMTP_SECURE=true` next to port 587, and that pair fails against a STARTTLS server with `wrong version number`. Remove the line or set `FLUXER_EMAIL_SMTP_TLS_MODE`.
+
+The Save and test button in the admin dashboard, and [Create SMTP test](/admin-api/instance/#create-smtp-test) with an empty body, connect with the saved settings, the same ones outgoing email uses, and fail with the reason when outgoing email is turned off or incomplete. A send that fails is logged by `api` or `worker` as `SMTP send failed` with the host, port and TLS mode.
 
 The API reads `FLUXER_EMAIL_WEBHOOK_SECRET` for inbound delivery webhooks. Compose forwards it from `.env`, and `.env.example` lists it commented out.
 

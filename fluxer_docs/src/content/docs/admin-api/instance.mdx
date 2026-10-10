@@ -398,11 +398,11 @@ Outbound email settings, and the provider resolved from them.
 | effective_provider | string | Provider in use, either `smtp` or `none` |
 | from_email | ?string | Envelope sender address |
 | from_name | ?string | Envelope sender name, or null when none is set and mail is sent under the instance product name |
-| smtp<sup>1</sup> | object | `host`, `port`, `username`, `secure`, and `password_set` |
+| smtp<sup>1</sup> | object | The SMTP server settings |
 | disable_new_ip_authorization | boolean | Whether new-IP authorisation email is suppressed by the stored setting |
 | effective_disable_new_ip_authorization<sup>2</sup> | boolean | Whether it is suppressed once outbound email state is taken into account |
 
-<sup>1</sup> `host`, `username`, and `secure` are nullable, `port` is a nullable integer from 1 to 65535, and `password_set` is a plain boolean
+<sup>1</sup> Holds `host`, `port`, `username`, `tls_mode`, `effective_tls_mode`, and `password_set`. `host` and `username` are nullable, `port` is a nullable integer from 1 to 65535, and `password_set` is a plain boolean. `tls_mode` is the saved [SMTP TLS mode](#smtp-tls-mode), or null when none is saved. `effective_tls_mode` is the mode outgoing email uses, or null while the provider is not `smtp`
 
 <sup>2</sup> True whenever the stored setting is true or outbound email is not in force
 
@@ -502,6 +502,19 @@ Fluxer clears `max_size_mb` when it is not above `min_size_mb`, clears `max_elig
 | logo | Writes `branding.logo_url` |
 | wordmark | Writes `branding.wordmark_url` |
 | favicon | Writes `branding.favicon_url` |
+
+## SMTP TLS mode
+
+How the connection to the SMTP server is encrypted.
+
+| Value | Description |
+| --- | --- |
+| implicit | TLS from the first byte, usually on port 465 |
+| starttls | A plain connection that must upgrade with STARTTLS, usually on port 587 |
+| opportunistic | A plain connection that upgrades with STARTTLS when the server offers it |
+| none | No TLS, even when the server offers STARTTLS |
+
+With no mode saved, Fluxer follows `FLUXER_EMAIL_SMTP_TLS_MODE`, then the older `FLUXER_EMAIL_SMTP_SECURE`. With neither set it uses `implicit` on port 465 and `starttls` on every other port.
 
 ## SMTP test result object
 
@@ -672,7 +685,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 `experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
-<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
+<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.email.smtp` takes `host`, `port`, `username`, `password`, and `tls_mode`, an [SMTP TLS mode](#smtp-tls-mode), and null clears a saved value so the environment applies again. The older boolean `secure` is still read when `tls_mode` is absent, with true as `implicit` and false as `opportunistic`. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
 <sup>4</sup> Accepted only on a self-hosted deployment. A hosted deployment rejects the section, and `app_public.branding.premium_product_name` and `premium_info_url`, with 400 `INVALID_FORM_BODY`. A Stripe secret, `enabled`, `automatic_tax`, `tax_id_collection` and `terms_consent_required` are written when supplied, cleared by null, and left alone when absent. A null `enabled` follows `FLUXER_STRIPE_ENABLED`. `prices`, `country_currencies`, and `legacy_prices` replace the stored value outright, a price slot left out is stored as null, and an empty `prices` object restores the deployment catalogue. A price ID is `price_` followed by letters and digits. A currency is three upper-case letters and a country code is two
 
@@ -763,7 +776,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="POST" path="/v1/admin/instance/config/smtp-tests" auditReason />
 
-Opens a connection to the supplied SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`, or a session credential until setup is marked complete.
+Opens a connection to an SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`, or a session credential until setup is marked complete.
 
 :::note[A rejected credential is still a successful test]
 A test that runs to completion answers 200 whether or not the server accepted the connection. The `ok` field is the verdict and `error` is the failure text.
@@ -773,11 +786,17 @@ A test that runs to completion answers 200 whether or not the server accepted th
 
 | Field | Type | Description |
 | --- | --- | --- |
-| host | string | SMTP host to connect to (1-255 characters after trimming) |
-| port | integer | SMTP port to connect to (1-65535) |
-| username | string | SMTP username to authenticate with (1-320 characters after trimming) |
-| password | string | SMTP password to authenticate with (1-4096 characters after trimming) |
-| secure? | boolean | Whether to connect with implicit TLS (default true) |
+| host? | ?string | SMTP host to connect to (1-255 characters after trimming) |
+| port? | ?integer | SMTP port to connect to (1-65535) |
+| username? | ?string | SMTP username to authenticate with (1-320 characters after trimming) |
+| password? | ?string | SMTP password to authenticate with (1-4096 characters after trimming) |
+| tls_mode?<sup>1</sup> | ?string | [SMTP TLS mode](#smtp-tls-mode) to connect with |
+
+Every field left out or sent as null is filled from the saved configuration, the one outgoing email uses. The saved password is filled in only while `host` and `username` are left out or match the saved ones. A test that names another host or username without a `password` fails before any connection is made.
+
+An empty body tests exactly what a send would use. It fails without connecting while outgoing email is not in force, which covers email turned off, a provider other than `smtp`, a missing from address, a missing host, username or password, and an instance that signs in with usernames. A test with fields in the body fails the same way when the host, username or password ends up empty.
+
+<sup>1</sup> Left out, the saved mode applies. Sent as null, the mode follows `FLUXER_EMAIL_SMTP_TLS_MODE`, then the port
 
 ### Response
 
@@ -789,7 +808,7 @@ A test that runs to completion answers 200 whether or not the server accepted th
 
 No configuration is written and the supplied credentials are discarded when the request completes. The connection, greeting, and socket each have a ten-second deadline.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `test_smtp_connection`, target type `instance_config`, target ID `0`, and metadata keys `port`, `secure`, and `ok`. The host, username, password, and failure text are not recorded.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `test_smtp_connection`, target type `instance_config`, target ID `0`, and metadata keys `port`, `tls_mode`, and `ok`. The host, username, password, and failure text are not recorded.
 
 ### Rate limit
 

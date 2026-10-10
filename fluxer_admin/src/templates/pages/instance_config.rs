@@ -546,6 +546,16 @@ fn password_input(name: &str, label: &str, helper: Option<&str>) -> Markup {
     )
 }
 
+fn smtp_tls_mode_summary(mode: &str) -> &str {
+    match mode {
+        "implicit" => "implicit TLS",
+        "starttls" => "required STARTTLS",
+        "opportunistic" => "STARTTLS when the server offers it",
+        "none" => "no encryption",
+        other => other,
+    }
+}
+
 fn account_identity_section(account_identity: &AccountIdentityConfigResponse) -> Markup {
     let description = match account_identity.mode {
         AccountIdentityMode::Username => {
@@ -689,14 +699,33 @@ fn integrations_config_section(
                                 ))
                                 (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                             }
-                            (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
+                            (select_input("integration_smtp_tls_mode", "SMTP encryption", &[
+                                ("", "Automatic"),
+                                ("implicit", "Implicit TLS"),
+                                ("starttls", "STARTTLS, required"),
+                                ("opportunistic", "STARTTLS, when the server offers it"),
+                                ("none", "None"),
+                            ], integrations.email.smtp.tls_mode.as_deref().unwrap_or("")))
+                            p class="text-xs text-neutral-500" {
+                                "Automatic follows FLUXER_EMAIL_SMTP_TLS_MODE when it is set, then the older FLUXER_EMAIL_SMTP_SECURE, where true means implicit TLS on any port. With neither set it uses implicit TLS on port 465 and requires STARTTLS on every other port."
+                            }
+                            @if let Some(mode) = integrations.email.smtp.effective_tls_mode.as_deref() {
+                                p class="text-xs text-neutral-500" {
+                                    "Outgoing email currently uses " (smtp_tls_mode_summary(mode))
+                                    @if let Some(port) = integrations.email.smtp.port { " on port " (port) }
+                                    "."
+                                }
+                            }
                             (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorization", integrations.email.disable_new_ip_authorization, true))
                             div class="flex flex-wrap gap-2" {
                                 button type="submit"
                                     formaction={(base) "/instance-config?action=test_smtp"}
                                     class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
-                                    span { "Test SMTP connection" }
+                                    span { "Save and test SMTP" }
                                 }
+                            }
+                            p class="text-xs text-neutral-500" {
+                                "The test saves this form first, then connects with the saved settings, the same ones outgoing email uses."
                             }
                         }
                     }

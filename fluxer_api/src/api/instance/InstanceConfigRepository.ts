@@ -51,11 +51,13 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {resolveSmtpTlsMode, type SmtpTlsMode, smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {
 	InstanceConfigResponse,
 	InstanceConfigUpdateRequest,
+	type InstanceEmailSmtpTestRequest,
 	type PendingRegistrationResponse,
 	type RegistrationUrlResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
@@ -229,6 +231,7 @@ interface InstanceEmailSmtpIntegrationConfig {
 	port: number | null;
 	username: string | null;
 	password: string | null;
+	tls_mode: SmtpTlsMode | null;
 	secure: boolean | null;
 }
 
@@ -290,7 +293,8 @@ interface InstanceIntegrationsAdminConfig {
 			port: number | null;
 			username: string | null;
 			password_set: boolean;
-			secure: boolean | null;
+			tls_mode: SmtpTlsMode | null;
+			effective_tls_mode: SmtpTlsMode | null;
 		};
 		disable_new_ip_authorization: boolean;
 		effective_disable_new_ip_authorization: boolean;
@@ -345,7 +349,7 @@ interface InstanceIntegrationsConfigPatch {
 	gif?: Partial<InstanceGifIntegrationConfig>;
 	youtube?: Partial<InstanceYoutubeIntegrationConfig>;
 	email?: Partial<Omit<InstanceEmailIntegrationConfig, 'smtp'>> & {
-		smtp?: Partial<InstanceEmailSmtpIntegrationConfig>;
+		smtp?: Partial<Omit<InstanceEmailSmtpIntegrationConfig, 'secure'>>;
 	};
 	bluesky?: Partial<Omit<InstanceBlueskyIntegrationConfig, 'keys'>> & {
 		keys?: Array<Partial<InstanceBlueskyKeyIntegrationConfig>>;
@@ -826,6 +830,7 @@ const StoredInstanceIntegrationsSchema = z.object({
 					port: SmtpIntegrationUpdateSchema.shape.port.default(null),
 					username: StoredIntegrationStringSchema,
 					password: StoredIntegrationStringSchema,
+					tls_mode: SmtpIntegrationUpdateSchema.shape.tls_mode.default(null),
 					secure: StoredNullableBooleanSchema,
 				})
 				.prefault({}),
@@ -980,15 +985,37 @@ function parseStoredInstanceMediaConfig(raw: string | null): InstanceMediaConfig
 	return decodeInstanceMediaConfig(parseStoredConfigValue(raw, 'media'));
 }
 
+type EffectiveSmtpConfig = NonNullable<APIConfig['email']['smtp']>;
+
+interface SmtpTestConfig {
+	smtp: EffectiveSmtpConfig;
+	problem: string | null;
+}
+
+function storedSmtpTlsMode(smtp: InstanceEmailSmtpIntegrationConfig): SmtpTlsMode | null {
+	return smtp.tls_mode ?? smtpTlsModeFromSecure(smtp.secure);
+}
+
+function resolveEffectiveSmtpConfig(smtp: InstanceEmailSmtpIntegrationConfig): EffectiveSmtpConfig {
+	return {
+		host: smtp.host ?? Config.email.smtp?.host ?? '',
+		port: smtp.port ?? Config.email.smtp?.port ?? 587,
+		username: smtp.username ?? Config.email.smtp?.username ?? '',
+		password: smtp.password ?? Config.email.smtp?.password ?? '',
+		tlsMode: storedSmtpTlsMode(smtp) ?? Config.email.smtp?.tlsMode ?? null,
+	};
+}
+
+function describeIncompleteSmtpConfig(smtp: EffectiveSmtpConfig): string | null {
+	if (!smtp.host.trim()) return 'No SMTP host is configured';
+	if (!smtp.port) return 'No SMTP port is configured';
+	if (!smtp.username.trim() || !smtp.password.trim()) return 'The SMTP username and password are both required';
+	return null;
+}
+
 function hasCompleteSmtpConfig(config: APIConfig['email']): boolean {
 	if (config.provider !== 'smtp' || !config.smtp) return false;
-	return Boolean(
-		config.fromEmail.trim() &&
-			config.smtp.host.trim() &&
-			config.smtp.port &&
-			config.smtp.username.trim() &&
-			config.smtp.password.trim(),
-	);
+	return Boolean(config.fromEmail.trim()) && describeIncompleteSmtpConfig(config.smtp) === null;
 }
 
 const StoredRegistrationConfigSchema = InstanceRegistrationSchema.extend({
@@ -1878,6 +1905,7 @@ export class InstanceConfigRepository {
 					smtp: {
 						...current.email.smtp,
 						...(config.email?.smtp ?? {}),
+						...(config.email?.smtp?.tls_mode === undefined ? {} : {secure: null}),
 					},
 				},
 				bluesky: {
@@ -1943,22 +1971,35 @@ export class InstanceConfigRepository {
 		return integrations.youtube.api_key ?? normalizeOptionalString(Config.youtube.apiKey);
 	}
 
-	async getEffectiveEmailConfig(): Promise<APIConfig['email']> {
+	async getSmtpTestConfig(draft: InstanceEmailSmtpTestRequest): Promise<SmtpTestConfig> {
+		const saved = (await this.getInstanceIntegrationsConfig()).email.smtp;
+		const current = resolveEffectiveSmtpConfig(saved);
+		if (Object.values(draft).every((value) => value === undefined)) {
+			return {smtp: current, problem: await this.getEmailSendBlocker()};
+		}
+		const retargeted =
+			(draft.host != null && draft.host.toLowerCase() !== current.host.toLowerCase()) ||
+			(draft.username != null && draft.username !== current.username);
+		const smtp: EffectiveSmtpConfig = {
+			host: draft.host ?? current.host,
+			port: draft.port ?? current.port,
+			username: draft.username ?? current.username,
+			password: draft.password ?? (retargeted ? '' : current.password),
+			tlsMode: draft.tls_mode === undefined ? current.tlsMode : (draft.tls_mode ?? Config.email.smtp?.tlsMode ?? null),
+		};
+		if (retargeted && !smtp.password) {
+			return {smtp, problem: 'Enter the SMTP password to test a different host or username'};
+		}
+		return {smtp, problem: describeIncompleteSmtpConfig(smtp)};
+	}
+
+	private async resolveEmailConfig(): Promise<{email: APIConfig['email']; usernameMode: boolean}> {
 		const integrations = await this.getInstanceIntegrationsConfig();
 		const provider = integrations.email.provider ?? Config.email.provider;
 		const fromEmail = integrations.email.from_email ?? Config.email.fromEmail;
 		const fromName = integrations.email.from_name ?? Config.email.fromName;
-		const smtp =
-			provider === 'smtp'
-				? {
-						host: integrations.email.smtp.host ?? Config.email.smtp?.host ?? '',
-						port: integrations.email.smtp.port ?? Config.email.smtp?.port ?? 587,
-						username: integrations.email.smtp.username ?? Config.email.smtp?.username ?? '',
-						password: integrations.email.smtp.password ?? Config.email.smtp?.password ?? '',
-						secure: integrations.email.smtp.secure ?? Config.email.smtp?.secure ?? true,
-					}
-				: undefined;
-		const next: APIConfig['email'] = {
+		const smtp = provider === 'smtp' ? resolveEffectiveSmtpConfig(integrations.email.smtp) : undefined;
+		const email: APIConfig['email'] = {
 			...Config.email,
 			enabled: integrations.email.enabled ?? Config.email.enabled,
 			provider,
@@ -1967,9 +2008,23 @@ export class InstanceConfigRepository {
 			smtp,
 		};
 		const usernameMode = (await this.getAccountIdentityMode()) === AccountIdentityModes.USERNAME;
+		return {email, usernameMode};
+	}
+
+	private async getEmailSendBlocker(): Promise<string | null> {
+		const {email, usernameMode} = await this.resolveEmailConfig();
+		if (usernameMode) return 'Email is off while accounts sign in with usernames';
+		if (!email.enabled) return 'Email is turned off';
+		if (email.provider !== 'smtp' || !email.smtp) return 'The email provider is not SMTP';
+		if (!email.fromEmail.trim()) return 'No from address is set';
+		return describeIncompleteSmtpConfig(email.smtp);
+	}
+
+	async getEffectiveEmailConfig(): Promise<APIConfig['email']> {
+		const {email, usernameMode} = await this.resolveEmailConfig();
 		return {
-			...next,
-			enabled: !usernameMode && next.enabled && hasCompleteSmtpConfig(next),
+			...email,
+			enabled: !usernameMode && email.enabled && hasCompleteSmtpConfig(email),
 		};
 	}
 
@@ -2034,7 +2089,8 @@ export class InstanceConfigRepository {
 					port: email.smtp?.port ?? null,
 					username: email.smtp?.username || null,
 					password_set: secretIsSet(integrations.email.smtp.password) || secretIsSet(Config.email.smtp?.password),
-					secure: email.smtp?.secure ?? null,
+					tls_mode: storedSmtpTlsMode(integrations.email.smtp),
+					effective_tls_mode: email.smtp ? resolveSmtpTlsMode(email.smtp.tlsMode, email.smtp.port) : null,
 				},
 				disable_new_ip_authorization: integrations.email.disable_new_ip_authorization ?? false,
 				effective_disable_new_ip_authorization: integrations.email.disable_new_ip_authorization || !email.enabled,

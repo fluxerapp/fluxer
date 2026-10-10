@@ -14,7 +14,7 @@ use crate::{
             InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
             InstanceBlueskyKeyIntegrationUpdateRequest, InstanceConfigUpdateRequest,
             InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
-            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
+            InstanceEmailSmtpTestResponse, InstanceGifIntegrationUpdateRequest,
             InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
             InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
             InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
@@ -233,21 +233,19 @@ pub async fn instance_config_post(
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
-        "test_smtp" => match build_smtp_test_request(&form) {
-            Ok(request) => match client.test_instance_smtp_config(&request).await {
-                Ok(response) if response.ok => FlashData::success("SMTP connection verified"),
-                Ok(response) => FlashData::error(
-                    response
-                        .error
-                        .unwrap_or_else(|| "SMTP validation failed".to_owned()),
-                ),
-                Err(error) => {
-                    tracing::warn!(%error, "admin API request failed: test SMTP config");
-                    FlashData::error("Failed to validate SMTP configuration")
-                }
-            },
-            Err(message) => FlashData::error(message),
-        },
+        "test_smtp" => {
+            let update = build_integrations_update(&form);
+            match client.update_instance_config(&update).await {
+                Ok(_) => match client.test_saved_instance_smtp_config().await {
+                    Ok(response) => smtp_test_flash(response),
+                    Err(error) => {
+                        tracing::warn!(%error, "admin API request failed: test SMTP config");
+                        FlashData::error("Settings saved, but the SMTP test could not run")
+                    }
+                },
+                Err(error) => instance_config_result(Err::<(), _>(error)),
+            }
+        }
         "disable_single_community" => {
             let update = build_single_community_update(false);
             instance_config_result(client.update_instance_config(&update).await)
@@ -418,6 +416,18 @@ fn instance_config_result<T>(result: Result<T, crate::api::client::ApiError>) ->
             }
         }
     }
+}
+
+fn smtp_test_flash(response: InstanceEmailSmtpTestResponse) -> FlashData {
+    if response.ok {
+        return FlashData::success("Settings saved and SMTP connection verified");
+    }
+    let reason = response
+        .error
+        .unwrap_or_else(|| "the server gave no reason".to_owned());
+    FlashData::error(format!(
+        "Settings saved, but the SMTP test failed: {reason}"
+    ))
 }
 
 fn build_sso_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
@@ -896,7 +906,9 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
                     port: smtp_port,
                     username: clean("integration_smtp_username"),
                     password: clean("integration_smtp_password"),
-                    secure: Some(form.bool_value("integration_smtp_secure")),
+                    tls_mode: form
+                        .first("integration_smtp_tls_mode")
+                        .map(|value| Some(value.trim().to_owned()).filter(|mode| !mode.is_empty())),
                 }),
                 disable_new_ip_authorization: Some(
                     form.bool_value("integration_email_disable_new_ip_authorization"),
@@ -937,29 +949,6 @@ fn build_media_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         }),
         ..Default::default()
     }
-}
-
-fn build_smtp_test_request(form: &MultiValueForm) -> Result<InstanceEmailSmtpTestRequest, String> {
-    let host = form
-        .clean("integration_smtp_host")
-        .ok_or_else(|| "SMTP host is required".to_owned())?;
-    let port = form
-        .first("integration_smtp_port")
-        .and_then(|value| value.trim().parse::<u16>().ok())
-        .ok_or_else(|| "SMTP port must be between 1 and 65535".to_owned())?;
-    let username = form
-        .clean("integration_smtp_username")
-        .ok_or_else(|| "SMTP username is required".to_owned())?;
-    let password = form
-        .clean("integration_smtp_password")
-        .ok_or_else(|| "SMTP password is required for validation".to_owned())?;
-    Ok(InstanceEmailSmtpTestRequest {
-        host,
-        port,
-        username,
-        password,
-        secure: form.bool_value("integration_smtp_secure"),
-    })
 }
 
 fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
@@ -1366,6 +1355,49 @@ mod tests {
         assert_eq!(
             email.smtp.and_then(|smtp| smtp.host).as_deref(),
             Some("smtp.example.com")
+        );
+    }
+
+    #[test]
+    fn build_integrations_update_sends_the_smtp_tls_mode_only_when_the_form_has_it() {
+        let smtp_update = |body: &[u8]| {
+            build_integrations_update(&MultiValueForm::parse(body))
+                .integrations
+                .and_then(|integrations| integrations.email)
+                .and_then(|email| email.smtp)
+                .expect("smtp update")
+        };
+        let body = |update| serde_json::to_value(update).expect("serialize smtp update");
+
+        let chosen = smtp_update(b"integration_email_present=1&integration_smtp_tls_mode=none");
+        assert_eq!(body(chosen), serde_json::json!({"tls_mode": "none"}));
+
+        let automatic = smtp_update(b"integration_email_present=1&integration_smtp_tls_mode=");
+        assert_eq!(body(automatic), serde_json::json!({"tls_mode": null}));
+
+        let from_an_older_page =
+            smtp_update(b"integration_email_present=1&integration_smtp_secure=true");
+        assert_eq!(body(from_an_older_page), serde_json::json!({}));
+    }
+
+    #[test]
+    fn smtp_test_flash_says_the_settings_were_saved_either_way() {
+        let passed = smtp_test_flash(InstanceEmailSmtpTestResponse {
+            ok: true,
+            error: None,
+        });
+        assert_eq!(
+            passed.message,
+            "Settings saved and SMTP connection verified"
+        );
+
+        let failed = smtp_test_flash(InstanceEmailSmtpTestResponse {
+            ok: false,
+            error: Some("wrong version number".to_owned()),
+        });
+        assert_eq!(
+            failed.message,
+            "Settings saved, but the SMTP test failed: wrong version number"
         );
     }
 

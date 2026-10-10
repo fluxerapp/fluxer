@@ -25,6 +25,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {resolveSmtpTlsMode, type SmtpTlsMode, smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InstancePolicyTransitionNotAllowedError} from '@fluxer/errors/src/domains/core/InstancePolicyTransitionNotAllowedError';
 import {
@@ -69,6 +70,16 @@ function attachmentExpiryRulesChanged(
 
 function readOptionalField<T extends object, K extends keyof T>(value: T, key: K): T[K] | undefined {
 	return Object.hasOwn(value, key) ? value[key] : undefined;
+}
+
+function readSmtpTlsModeUpdate(smtp: {
+	tls_mode?: SmtpTlsMode | null;
+	secure?: boolean | null;
+}): SmtpTlsMode | null | undefined {
+	const tlsMode = readOptionalField(smtp, 'tls_mode');
+	if (tlsMode !== undefined) return tlsMode;
+	const secure = readOptionalField(smtp, 'secure');
+	return secure === undefined ? undefined : smtpTlsModeFromSecure(secure);
 }
 
 function mergeOptionalField<T>(currentValue: T, nextValue: T | undefined): T {
@@ -554,7 +565,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 											port: readOptionalField(data.integrations.email.smtp, 'port'),
 											username: readOptionalField(data.integrations.email.smtp, 'username'),
 											password: readOptionalField(data.integrations.email.smtp, 'password'),
-											secure: readOptionalField(data.integrations.email.smtp, 'secure'),
+											tls_mode: readSmtpTlsModeUpdate(data.integrations.email.smtp),
 										})
 									: undefined,
 							}
@@ -689,22 +700,19 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			operationId: 'create_admin_instance_smtp_test',
 			summary: 'Run an SMTP configuration test',
 			description:
-				'Validates that an SMTP configuration can authenticate and accept a connection. Requires INSTANCE_CONFIG_UPDATE permission.',
+				'Validates that an SMTP configuration can authenticate and accept a connection. Fields left out of the body come from the saved configuration, and the saved password is reused only for the saved host and username. An empty body tests what outgoing email uses and fails when email is off or incomplete. Requires INSTANCE_CONFIG_UPDATE permission.',
 			responseSchema: InstanceEmailSmtpTestResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const data = ctx.req.valid('json');
+			const {smtp, problem} = await instanceConfigRepository.getSmtpTestConfig(ctx.req.valid('json'));
 			let result: InstanceEmailSmtpTestResponse;
 			try {
+				if (problem) throw new Error(problem);
 				const provider = new SmtpEmailProvider({
-					host: data.host,
-					port: data.port,
-					username: data.username,
-					password: data.password,
-					secure: data.secure,
+					...smtp,
 					connectionTimeoutMs: 10000,
 					greetingTimeoutMs: 10000,
 					socketTimeoutMs: 10000,
@@ -718,7 +726,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				targetType: 'instance_config',
 				targetId: 0n,
 				action: 'test_smtp_connection',
-				metadata: {port: data.port, secure: data.secure, ok: result.ok},
+				metadata: {port: smtp.port, tls_mode: resolveSmtpTlsMode(smtp.tlsMode, smtp.port), ok: result.ok},
 			});
 			return ctx.json(result);
 		},

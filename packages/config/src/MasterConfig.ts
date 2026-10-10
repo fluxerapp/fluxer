@@ -13,6 +13,7 @@ export const ACCOUNT_IDENTITY_MODE_NAMES = ['email', 'username'] as const;
 type AccountIdentityModeName = (typeof ACCOUNT_IDENTITY_MODE_NAMES)[number];
 export const TAG_STYLE_NAMES = ['none', 'random'] as const;
 type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
+type SmtpTlsModeName = 'implicit' | 'starttls' | 'opportunistic' | 'none';
 
 interface InstanceBrandingConfig {
 	product_name: string;
@@ -189,7 +190,8 @@ export interface MasterConfig {
 				port: number;
 				username: string;
 				password: string;
-				secure: boolean;
+				tls_mode?: SmtpTlsModeName;
+				secure?: boolean;
 			};
 		};
 		voice: {

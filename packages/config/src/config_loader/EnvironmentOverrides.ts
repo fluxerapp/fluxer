@@ -163,6 +163,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_EMAIL_SMTP_PORT: {path: ['integrations', 'email', 'smtp', 'port'], parse: parseInteger},
 	FLUXER_EMAIL_SMTP_USERNAME: {path: ['integrations', 'email', 'smtp', 'username']},
 	FLUXER_EMAIL_SMTP_PASSWORD: {path: ['integrations', 'email', 'smtp', 'password']},
+	FLUXER_EMAIL_SMTP_TLS_MODE: {path: ['integrations', 'email', 'smtp', 'tls_mode'], parse: parseSmtpTlsMode},
 	FLUXER_EMAIL_SMTP_SECURE: {path: ['integrations', 'email', 'smtp', 'secure'], parse: parseBoolean},
 	FLUXER_LIVEKIT_ENABLED: {path: ['integrations', 'voice', 'enabled'], parse: parseBoolean},
 	FLUXER_LIVEKIT_API_KEY: {path: ['integrations', 'voice', 'api_key']},
@@ -348,6 +349,12 @@ function parseTagStyle(raw: string): string {
 	const value = raw.trim().toLowerCase();
 	if (value === 'none' || value === 'random') return value;
 	throw new Error('must be none or random');
+}
+
+function parseSmtpTlsMode(raw: string): string {
+	const value = raw.trim().toLowerCase();
+	if (value === 'implicit' || value === 'starttls' || value === 'opportunistic' || value === 'none') return value;
+	throw new Error('must be implicit, starttls, opportunistic or none');
 }
 
 function parseJson(raw: string): unknown {

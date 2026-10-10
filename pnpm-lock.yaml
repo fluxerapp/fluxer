@@ -820,6 +820,9 @@ importers:
 
   fluxer_api/pkgs/email:
     dependencies:
+      '@fluxer/constants':
+        specifier: workspace:*
+        version: link:../../../packages/constants
       '@fluxer/i18n':
         specifier: workspace:*
         version: link:../../../packages/i18n

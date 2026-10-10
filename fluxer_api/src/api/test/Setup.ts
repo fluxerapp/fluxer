@@ -81,7 +81,7 @@ function setDefaultTestEnv(): void {
 		FLUXER_EMAIL_SMTP_PORT: '1025',
 		FLUXER_EMAIL_SMTP_USERNAME: 'test',
 		FLUXER_EMAIL_SMTP_PASSWORD: 'test',
-		FLUXER_EMAIL_SMTP_SECURE: 'false',
+		FLUXER_EMAIL_SMTP_TLS_MODE: 'none',
 		FLUXER_LIVEKIT_ENABLED: 'false',
 		FLUXER_STRIPE_ENABLED: 'true',
 		FLUXER_SEARCH_ENGINE: 'elasticsearch',

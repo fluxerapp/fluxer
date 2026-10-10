@@ -229,7 +229,8 @@ pub struct InstanceEmailSmtpIntegrationResponse {
     pub username: Option<String>,
     #[serde(default)]
     pub password_set: bool,
-    pub secure: Option<bool>,
+    pub tls_mode: Option<String>,
+    pub effective_tls_mode: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -873,7 +874,7 @@ pub struct InstanceEmailSmtpIntegrationUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub secure: Option<bool>,
+    pub tls_mode: Option<Option<String>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -926,15 +927,6 @@ pub struct InstanceAttachmentDecayUpdateRequest {
     pub renew_threshold_days: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub renew_window_days: Option<u32>,
-}
-
-#[derive(Clone, Debug, Default, Serialize)]
-pub struct InstanceEmailSmtpTestRequest {
-    pub host: String,
-    pub port: u16,
-    pub username: String,
-    pub password: String,
-    pub secure: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
