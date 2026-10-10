@@ -12,6 +12,7 @@
     member_lists_changed/2,
     resync_after_load/1,
     presence_changed/2,
+    member_changed/2,
     handle_list_flush/1,
     refresh_presence_users/1,
     export_handoff/1,
@@ -305,6 +306,10 @@ presence_changed(UserId, #{thread_presence_users := Users} = State) ->
     mark_dirty(maps:get(UserId, Users, []), State);
 presence_changed(_UserId, State) ->
     State.
+
+-spec member_changed(integer(), guild_state()) -> guild_state().
+member_changed(UserId, State) ->
+    presence_changed(UserId, State).
 
 -spec mark_dirty([integer()], guild_state()) -> guild_state().
 mark_dirty([], State) ->

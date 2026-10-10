@@ -20,7 +20,11 @@ export interface ThreadMemberListPayload {
 		join_timestamp: string | null;
 		flags: number;
 		member: GuildMemberData | null;
-		presence?: {status?: string | null; custom_status?: GatewayCustomStatusPayload | null} | null;
+		presence?: {
+			status?: string | null;
+			mobile?: boolean;
+			custom_status?: GatewayCustomStatusPayload | null;
+		} | null;
 	}>;
 }
 
@@ -28,6 +32,7 @@ export interface ThreadRosterMember {
 	readonly userId: string;
 	readonly joinTimestamp: string | null;
 	readonly status: StatusType;
+	readonly mobile: boolean;
 	readonly customStatus: CustomStatus | null;
 }
 
@@ -78,13 +83,14 @@ class ThreadRoster {
 		const members: Array<ThreadRosterMember> = [];
 		for (const entry of payload.members) {
 			if (entry.member) {
-				GuildMembers.hydrateIfMissing(payload.guild_id, entry.member);
+				GuildMembers.hydrateOrRefresh(payload.guild_id, entry.member);
 			}
 			const status = normalizeStatus(entry.presence?.status);
 			members.push({
 				userId: entry.user_id,
 				joinTimestamp: entry.join_timestamp,
 				status,
+				mobile: !isOfflineStatus(status) && entry.presence?.mobile === true,
 				customStatus: isOfflineStatus(status) ? null : fromGatewayCustomStatus(entry.presence?.custom_status),
 			});
 		}

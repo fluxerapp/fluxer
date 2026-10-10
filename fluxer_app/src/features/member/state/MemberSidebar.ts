@@ -58,6 +58,7 @@ interface MemberListState {
 	requestedRanges: NormalizedMemberListRanges;
 	subscribedRanges: NormalizedMemberListRanges;
 	presences: Map<string, StatusType>;
+	mobileUserIds: Set<string>;
 	customStatuses: Map<string, CustomStatus | null>;
 	knownCustomStatuses: Map<string, CustomStatus | null>;
 }
@@ -69,6 +70,7 @@ interface MemberListRow {
 	member?: GuildMemberData;
 	presence?: {
 		status?: string;
+		mobile?: boolean;
 		custom_status?: GatewayCustomStatusPayload | null;
 	} | null;
 }
@@ -76,6 +78,7 @@ interface MemberListRow {
 type MemberListOperationMember = GuildMemberData & {
 	presence?: {
 		status?: string;
+		mobile?: boolean;
 		custom_status?: GatewayCustomStatusPayload | null;
 	} | null;
 };
@@ -655,6 +658,7 @@ class MemberSidebar {
 		const newRows = new Map<number, MemberListRow>();
 		const newItems = new Map<number, MemberListItem>();
 		const newPresences = new Map<string, StatusType>();
+		const newMobileUserIds = new Set<string>();
 		const newCustomStatuses = new Map<string, CustomStatus | null>();
 		const newMembersByUserId = new Map<string, GuildMemberData>();
 		const nextKnownCustomStatuses = new Map(listState.knownCustomStatuses);
@@ -704,6 +708,9 @@ class MemberSidebar {
 			const presenceStatus = this.extractPresenceFromRow(row);
 			if (presenceStatus) {
 				newPresences.set(userId, presenceStatus);
+				if (presenceStatus !== StatusTypes.OFFLINE && row.presence?.mobile === true) {
+					newMobileUserIds.add(userId);
+				}
 			}
 			if (row.presence && Object.hasOwn(row.presence, 'custom_status')) {
 				const customStatus = fromGatewayCustomStatus(row.presence.custom_status ?? null);
@@ -757,6 +764,7 @@ class MemberSidebar {
 		listState.items = newItems;
 		listState.membersByUserId = newMembersByUserId;
 		listState.presences = newPresences;
+		listState.mobileUserIds = newMobileUserIds;
 		listState.customStatuses = newCustomStatuses;
 		listState.knownCustomStatuses = nextKnownCustomStatuses;
 		listState.subscribedRanges = getHydratedMemberListRangesFromNormalized(
@@ -1183,6 +1191,14 @@ class MemberSidebar {
 		return listState.presences.get(userId) ?? null;
 	}
 
+	isMobile(guildId: string, listId: string, userId: string): boolean | null {
+		const listState = this.getList(guildId, listId);
+		if (!listState?.presences.has(userId)) {
+			return null;
+		}
+		return listState.mobileUserIds.has(userId);
+	}
+
 	getCustomStatus(guildId: string, listId: string, userId: string): CustomStatus | null | undefined {
 		const listState = this.getList(guildId, listId);
 		if (!listState) {
@@ -1262,6 +1278,7 @@ class MemberSidebar {
 				items: new Map(),
 				membersByUserId: new Map(),
 				presences: new Map(),
+				mobileUserIds: new Set(),
 				customStatuses: new Map(),
 			};
 		}
@@ -1274,10 +1291,14 @@ class MemberSidebar {
 			prunedMembersByUserId.set(item.data.userId, item.data.member);
 		}
 		const prunedPresences = new Map<string, StatusType>();
+		const prunedMobileUserIds = new Set<string>();
 		const prunedCustomStatuses = new Map<string, CustomStatus | null>();
 		for (const [userId, status] of listState.presences) {
 			if (retainedUserIds.has(userId)) {
 				prunedPresences.set(userId, status);
+				if (listState.mobileUserIds.has(userId)) {
+					prunedMobileUserIds.add(userId);
+				}
 			}
 		}
 		for (const [userId, customStatus] of listState.customStatuses) {
@@ -1302,6 +1323,7 @@ class MemberSidebar {
 			items: prunedItems,
 			membersByUserId: prunedMembersByUserId,
 			presences: prunedPresences,
+			mobileUserIds: prunedMobileUserIds,
 			customStatuses: prunedCustomStatuses,
 		};
 	}
@@ -1350,6 +1372,7 @@ class MemberSidebar {
 			requestedRanges: normalizeMemberListRanges(requestedRanges),
 			subscribedRanges: EMPTY_MEMBER_LIST_RANGES,
 			presences: new Map(),
+			mobileUserIds: new Set(),
 			customStatuses: new Map(),
 			knownCustomStatuses: new Map(),
 		};

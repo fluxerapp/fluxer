@@ -53,7 +53,7 @@ vi.mock('@app/features/ui/commands/ContextMenuCommands', () => ({close: vi.fn()}
 vi.mock('@app/features/ui/commands/PopoutCommands', () => ({closeAll: vi.fn()}));
 vi.mock('@app/features/guild/state/Guilds', () => ({default: {getGuild: () => ({ownerId: 'owner', mfaLevel: 0})}}));
 vi.mock('@app/features/member/state/GuildMembers', () => ({
-	default: {getMember: () => null, hydrateIfMissing: () => {}},
+	default: {getMember: () => null, hydrateOrRefresh: () => {}},
 }));
 vi.mock('@app/features/permissions/state/Permission', () => ({
 	default: {
@@ -616,7 +616,7 @@ describe('thread roster', () => {
 		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
 		ThreadRoster.handleListUpdate(
 			listUpdate([
-				{user_id: ONLINE, presence: {status: 'online', afk: false, mobile: false, custom_status: null}},
+				{user_id: ONLINE, presence: {status: 'online', afk: false, mobile: true, custom_status: null}},
 				{
 					user_id: IDLE,
 					presence: {
@@ -630,14 +630,15 @@ describe('thread roster', () => {
 			]),
 		);
 		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
-			{userId: ONLINE, joinTimestamp: null, status: 'online', customStatus: null},
+			{userId: ONLINE, joinTimestamp: null, status: 'online', mobile: true, customStatus: null},
 			{
 				userId: IDLE,
 				joinTimestamp: null,
 				status: 'idle',
+				mobile: false,
 				customStatus: expect.objectContaining({text: 'im spooky goop', emojiName: 'nahua_smug'}),
 			},
-			{userId: OFFLINE, joinTimestamp: null, status: 'offline', customStatus: null},
+			{userId: OFFLINE, joinTimestamp: null, status: 'offline', mobile: false, customStatus: null},
 		]);
 		release();
 	});
@@ -652,7 +653,7 @@ describe('thread roster', () => {
 		);
 		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'dnd'}}]));
 		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
-			{userId: ONLINE, joinTimestamp: null, status: 'dnd', customStatus: null},
+			{userId: ONLINE, joinTimestamp: null, status: 'dnd', mobile: false, customStatus: null},
 		]);
 		release();
 		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'online'}}]));

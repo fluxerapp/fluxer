@@ -34,6 +34,7 @@ export function useThreadRosterSubscription(thread: Channel | undefined): void {
 interface RosterRow {
 	user: User;
 	status: StatusType;
+	mobile?: boolean;
 	customStatus: CustomStatus | null;
 }
 
@@ -66,7 +67,7 @@ const RosterGroup = observer(({id, label, members, thread, ownerId}: RosterGroup
 				</span>
 			</div>
 			<div className={styles.membersList} data-flx="threads.thread-members-panel.roster-group.members-list">
-				{members.map(({user, status, customStatus}) => (
+				{members.map(({user, status, mobile, customStatus}) => (
 					<MemberListItem
 						key={user.id}
 						user={user}
@@ -74,6 +75,7 @@ const RosterGroup = observer(({id, label, members, thread, ownerId}: RosterGroup
 						guildId={thread.guildId}
 						guildMember={thread.guildId ? (GuildMembers.getMember(thread.guildId, user.id) ?? undefined) : undefined}
 						status={status}
+						isMobile={mobile}
 						customStatus={customStatus}
 						isOwner={user.id === ownerId}
 						disableBackdrop={true}
@@ -95,7 +97,7 @@ function resolveMembers(guildId: string | undefined, roster: ReadonlyArray<Threa
 			const status = LocalPresence.getStatus();
 			members.push({user, status, customStatus: isOfflineStatus(status) ? null : LocalPresence.customStatus});
 		} else {
-			members.push({user, status: entry.status, customStatus: entry.customStatus});
+			members.push({user, status: entry.status, mobile: entry.mobile, customStatus: entry.customStatus});
 		}
 	}
 	members.sort((a, b) =>

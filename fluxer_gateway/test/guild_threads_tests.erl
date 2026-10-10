@@ -1486,6 +1486,35 @@ thread_member_list_follows_presence_changes_test() ->
         ?assertEqual(State, guild_thread_subscriptions:presence_changed(?A, State))
     end).
 
+thread_member_list_follows_member_updates_test() ->
+    with_guild(fun(State) ->
+        Subscribed = guild_thread_subscriptions:update(
+            <<"a">>, #{member_lists => [?T1]}, State
+        ),
+        [_] = received(a, thread_member_list_update, drain()),
+        Update = fun(UserId, Nick) ->
+            #{
+                <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                <<"roles">> => [],
+                <<"nick">> => Nick
+            }
+        end,
+        Changed = dispatch(guild_member_update, Update(?A, <<"renamed">>), Subscribed),
+        ?assertEqual([], received(a, thread_member_list_update, drain())),
+        _ = guild_thread_subscriptions:handle_list_flush(Changed),
+        [#{<<"members">> := Members}] = received(a, thread_member_list_update, drain()),
+        ?assertEqual(
+            [<<"renamed">>],
+            [
+                maps:get(<<"nick">>, Member)
+             || #{<<"user_id">> := Id, <<"member">> := Member} <- Members,
+                Id =:= integer_to_binary(?A)
+            ]
+        ),
+        Unlisted = dispatch(guild_member_update, Update(?C, <<"other">>), Subscribed),
+        ?assertNot(maps:is_key(thread_list_dirty, Unlisted))
+    end).
+
 handoff_through_an_old_node_round_trips_test() ->
     with_guild(fun(State) ->
         Exported = guild_handoff:export_handoff_state(State),
