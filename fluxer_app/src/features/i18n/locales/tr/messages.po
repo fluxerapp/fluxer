@@ -57,20 +57,20 @@ msgid "{0} personas imported successfully"
 msgstr "{0} persona başarıyla içe aktarıldı"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:19
-#: src/features/typing/rolling/RollingTypingText.tsx:54
+#: src/features/typing/rolling/RollingTypingText.tsx:21
+#: src/features/typing/rolling/RollingTypingText.tsx:61
 msgid "{a} and {b} are typing..."
 msgstr "{a} ve {b} yazıyor..."
 
 #. Screen reader announcement in the composer when one person is typing. {a} is their display name.
-#: src/features/typing/rolling/RollingTypingText.tsx:15
-#: src/features/typing/rolling/RollingTypingText.tsx:50
+#: src/features/typing/rolling/RollingTypingText.tsx:17
+#: src/features/typing/rolling/RollingTypingText.tsx:57
 msgid "{a} is typing..."
 msgstr "{a} yazıyor..."
 
 #. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:24
-#: src/features/typing/rolling/RollingTypingText.tsx:60
+#: src/features/typing/rolling/RollingTypingText.tsx:26
+#: src/features/typing/rolling/RollingTypingText.tsx:67
 msgid "{a}, {b} and {c} are typing..."
 msgstr "{a}, {b} ve {c} yazıyor..."
 
@@ -2653,12 +2653,12 @@ msgid "a sticker"
 msgstr "bir çıkartma"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:188
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "Bir tetikleyici, Persona'sını kullanarak bir mesaj gönderir, ancak aktif Persona değişmez."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:196
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "Bir tetikleyici, aktif Persona değişene kadar Persona'sını aktif olarak ayarlar. Buna ayrıca \"latching\" denilebilir."
 
@@ -2898,7 +2898,7 @@ msgid "Action"
 msgstr "Eylem"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:308
 msgid "Action bar"
 msgstr "İşlem çubuğu"
 
@@ -4262,7 +4262,7 @@ msgstr "Hareketli video"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:27
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:95
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:15
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:16
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:251
 msgid "Animation"
 msgstr "Animasyon"
@@ -4274,17 +4274,17 @@ msgid "Animation"
 msgstr "Animasyon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:36
 msgid "Animation behavior"
 msgstr "Animasyon davranışı"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:59
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:60
 msgid "Animation favorites"
 msgstr "Animasyon favorileri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:32
 msgid "Animation picker"
 msgstr "Animasyon seçici"
 
@@ -4294,7 +4294,7 @@ msgid "Animation playback"
 msgstr "Animasyon oynatma"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:71
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:72
 msgid "Animation saving"
 msgstr "Animasyon kaydetme"
 
@@ -4302,7 +4302,7 @@ msgstr "Animasyon kaydetme"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:301
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:19
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:20
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:279
 msgid "Animations"
 msgstr "Animasyonlar"
@@ -4586,7 +4586,7 @@ msgid "Apply theme"
 msgstr "Temayı uygula"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Apply to all communities"
 msgstr "Tüm topluluklara uygula"
 
@@ -4753,7 +4753,7 @@ msgid "As a gift"
 msgstr "Hediye olarak"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:376
 msgid "ASCII smileys"
 msgstr "ASCII emojileri"
 
@@ -4854,7 +4854,7 @@ msgid "Attachment thumbnails"
 msgstr "Ek küçük resimleri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:119
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:120
 msgid "Attachment upload"
 msgstr "Ek yükleme"
 
@@ -5260,7 +5260,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "Gönderdiğiniz mesajlardaki URL'lerden izleme parametrelerini (utm_source, fbclid, gclid gibi) otomatik olarak kaldırın. Bağlantıyı başkalarına ulaşmadan önce temizler."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:192
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "Gönderdiğiniz mesajlardaki URL'lerden izleme parametrelerini otomatik olarak kaldırın"
 
@@ -5269,24 +5269,24 @@ msgid "Automatically screen messages for explicit content in channels not marked
 msgstr "Yetişkinlere yönelik içerik olarak işaretlenmemiş kanallardaki mesajları müstehcen içeriğe karşı otomatik olarak tarar."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:23
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:24
 msgid "Automatically send animation"
 msgstr "Animasyonu otomatik gönder"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:27
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:28
 msgid "Automatically send animations"
 msgstr "Animasyonları otomatik gönder"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:44
 msgid "Automatically send GIFs from the picker without confirmation"
 msgstr "GIF'leri seçiciden onay almadan otomatik olarak gönderin"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF behavior preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:40
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:11
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:12
 msgid "Automatically send GIFs when selected"
 msgstr "Seçildiğinde GIF'leri otomatik gönder"
 
@@ -7760,7 +7760,7 @@ msgid "Choose friends to message."
 msgstr "Mesaj göndermek için arkadaş seçin."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:456
 msgid "Choose how chat moves after you send a message"
 msgstr "Bir mesaj gönderdikten sonra sohbetin nasıl ilerleyeceğini seçin"
 
@@ -7780,7 +7780,7 @@ msgid "Choose how people sign in"
 msgstr "Kişilerin nasıl oturum açacağını seçin"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:79
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:80
 msgid "Choose how starred GIF favorites are stored"
 msgstr "Yıldızlı GIF favorilerinin nasıl depolanacağını seçin"
 
@@ -7845,6 +7845,11 @@ msgstr "{clientLabel} uygulamasının topluluğunuzda neler yapabileceğini seç
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:293
 msgid "Choose what friends see in their active now panel"
 msgstr "Arkadaşlarınızın şu an aktif panelinde neler göreceğini seçin"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:516
+msgid "Choose what happens when you use a persona trigger"
+msgstr "Persona tetikleyicisini kullandığınızda neler olacağını seçin"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -8067,7 +8072,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "Başka biri, marka veya kuruluş gibi davranmak."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:176
 msgid "Clean link"
 msgstr "Bağlantıyı temizle"
 
@@ -8117,7 +8122,7 @@ msgstr "Ek mock'larını temizle"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:142
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:143
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Komutu temizle"
@@ -8141,7 +8146,7 @@ msgid "Clear friends search"
 msgstr "Arkadaş aramayı temizle"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:400
 msgid "Clear message text"
 msgstr "Mesaj metnini temizle"
 
@@ -8604,7 +8609,7 @@ msgstr "İki nokta üst üste"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:348
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:157
 msgid "Colon autocomplete"
 msgstr "İki nokta üst üste otomatik tamamlama"
@@ -9049,7 +9054,7 @@ msgstr "Yazma alanı düğmesi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:424
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:193
 msgid "Composer buttons"
 msgstr "Yazma alanı düğmeleri"
@@ -9066,7 +9071,7 @@ msgstr "Sıkıştırılıyor"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:172
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
 msgid "Configure"
 msgstr "Yapılandır"
@@ -9107,7 +9112,7 @@ msgid "Configure role settings and permissions"
 msgstr "Rol ayarlarını ve izinlerini yapılandırın"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:264
 msgid "Configure search engines used from selected text"
 msgstr "Seçili metinden kullanılacak arama motorlarını yapılandırın"
 
@@ -9117,7 +9122,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "Yazım denetimi, sözlükler ve kişisel kelimeleri yapılandırın"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:296
 msgid "Configure translator providers used from selected text"
 msgstr "Seçilen metinden kullanılan çeviri sağlayıcılarını yapılandırın"
 
@@ -9141,7 +9146,7 @@ msgstr "Profil rozetinizi yapılandırın"
 #: src/features/channel/components/MentionEveryonePopout.tsx:185
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:472
 msgid "Confirm"
 msgstr "Onayla"
 
@@ -9201,7 +9206,7 @@ msgid "Confirm voice join"
 msgstr "Sesli katılımı onayla"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:468
 msgid "Confirmation"
 msgstr "Onay"
 
@@ -10779,7 +10784,7 @@ msgstr "Yeni bağlantı oluştur"
 msgid "Create or join a community"
 msgstr "Topluluk oluştur veya topluluğa katıl"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:256
 msgid "Create Persona"
 msgstr "Persona oluştur"
 
@@ -11128,7 +11133,7 @@ msgid "Custom ringtone"
 msgstr "Özel zil sesi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:244
 msgid "Custom search engine"
 msgstr "Özel arama motoru"
 
@@ -11202,7 +11207,7 @@ msgid "Custom title bar"
 msgstr "Özel başlık çubuğu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:260
 msgid "Custom translator"
 msgstr "Özel çevirmen"
 
@@ -11261,7 +11266,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "Arayüz öğelerini ve davranışlarını özelleştirin."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:340
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "Mesajların üzerine gelindiğinde görünen işlem çubuğunu özelleştirin"
 
@@ -11271,7 +11276,7 @@ msgid "Customize the spacing and size"
 msgstr "Boşluk ve boyutu özelleştirin"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:103
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:104
 msgid "Customize which buttons and indicators appear on media attachments and embeds"
 msgstr "Medya eklerinde ve gömülü içeriklerde hangi düğmelerin ve göstergelerin görüneceğini özelleştirin"
 
@@ -11885,7 +11890,7 @@ msgid "Delete passkey"
 msgstr "Geçiş anahtarını sil"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:404
 msgid "Delete prompt"
 msgstr "Silme onayı"
 
@@ -13154,7 +13159,7 @@ msgid "Download audio"
 msgstr "Sesi indir"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:91
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:92
 msgid "Download button"
 msgstr "İndir düğmesi"
 
@@ -13454,7 +13459,7 @@ msgid "Early access to new features"
 msgstr "Yeni özelliklere erken erişim"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:115
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:116
 msgid "Early upload"
 msgstr "Erken yükleme"
 
@@ -13903,12 +13908,12 @@ msgid "Emoji and sticker cloning shortcuts"
 msgstr "Emoji ve çıkartma klonlama kısayolları"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:352
 msgid "Emoji autocomplete"
 msgstr "Emoji otomatik tamamlama"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:432
 msgid "Emoji button"
 msgstr "Emoji düğmesi"
 
@@ -13972,19 +13977,19 @@ msgid "Emojis"
 msgstr "Emojiler"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:372
 msgid "Emoticon"
 msgstr "Emotikon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:368
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:145
 msgid "Emoticons"
 msgstr "Emotikonlar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:396
 msgid "Empty edit"
 msgstr "Boş düzenleme"
 
@@ -14197,7 +14202,7 @@ msgid "Enable self-hosted mode client-side. Hides all premium and billing UI."
 msgstr "Kendi kendine barındırılan modu istemci tarafında etkinleştir. Tüm premium ve faturalandırma arayüzünü gizler."
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
 msgid "Enable Shift to expand"
 msgstr "Shift ile genişletmeyi etkinleştir"
 
@@ -14368,7 +14373,7 @@ msgid "Enhanced"
 msgstr "Gelişmiş"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:148
 msgid "Ensures file messages appear in the order you sent them"
 msgstr "Gönderdiğiniz dosya mesajlarının gönderilme sırasına göre görünmesini sağlar"
 
@@ -14815,7 +14820,7 @@ msgid "Expand"
 msgstr "Genişlet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:328
 msgid "Expand action bar"
 msgstr "İşlem çubuğunu genişlet"
 
@@ -14997,7 +15002,7 @@ msgstr "Temaları dışa aktar"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:344
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:161
 msgid "Expression autocomplete"
 msgstr "İfade otomatik tamamlama"
@@ -15027,7 +15032,7 @@ msgstr "Harici"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:18
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:216
 msgid "External link warning"
 msgstr "Harici bağlantı uyarısı"
 
@@ -15393,17 +15398,17 @@ msgid "Favicon"
 msgstr "Favicon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:52
 msgid "Favorite animation"
 msgstr "Favori animasyon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:55
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:56
 msgid "Favorite animations"
 msgstr "Favori animasyonlar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:95
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:96
 msgid "Favorite button"
 msgstr "Favori düğmesi"
 
@@ -15514,7 +15519,7 @@ msgid "File options"
 msgstr "Dosya seçenekleri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:136
 msgid "File ordering"
 msgstr "Dosya sıralaması"
 
@@ -15536,7 +15541,7 @@ msgstr "dosya yükleme"
 #. Label for the has:file option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/search/components/search/HasFilterSheet.tsx:49
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:123
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:124
 msgid "File upload"
 msgstr "Dosya yükleme"
 
@@ -15638,8 +15643,8 @@ msgstr "Rolü olmayan üyeleri filtrele"
 msgid "Filter mentions"
 msgstr "Bahsetmeleri filtrele"
 
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:158
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:159
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:177
 msgid "Filter personas"
 msgstr "Filtrele Personas"
 
@@ -16623,12 +16628,12 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:428
 msgid "GIF button"
 msgstr "GIF düğmesi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:99
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:100
 msgid "GIF indicator"
 msgstr "GIF göstergesi"
 
@@ -16997,7 +17002,7 @@ msgid "Go to third community"
 msgstr "Üçüncü topluluğa git"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:288
 msgid "Google Lens"
 msgstr "Google Lens"
 
@@ -17519,7 +17524,7 @@ msgid "Hide avatars"
 msgstr "Avatarları gizle"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:507
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:508
 msgid "Hide channels you've muted from community sidebars"
 msgstr "Sessize aldığınız kanalları topluluk kenar çubuklarından gizleyin"
 
@@ -17569,7 +17574,7 @@ msgid "Hide members"
 msgstr "Üyeleri gizle"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:499
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:500
 msgid "Hide muted"
 msgstr "Sessize alınmışları gizle"
 
@@ -17580,13 +17585,13 @@ msgstr "Sessize alınmış kanalları gizle"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:487
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:488
 msgid "Hide muted channels by default"
 msgstr "Sessize alınmış kanalları varsayılan olarak gizle"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Hide muted channels by default?"
 msgstr "Sessize alınmış kanallar varsayılan olarak gizlensin mi?"
 
@@ -17751,7 +17756,7 @@ msgid "Hotkeys"
 msgstr "Kısayol tuşları"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:316
 msgid "Hover buttons"
 msgstr "Üzerine gelince çıkan düğmeler"
 
@@ -18144,7 +18149,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "Görsel boyutları {min}x{min2} ile {max}x{max2} piksel arasında olmalıdır."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:284
 msgid "Image lookup"
 msgstr "Görsel arama"
 
@@ -18159,12 +18164,12 @@ msgid "Image preview"
 msgstr "Görsel önizlemesi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:276
 msgid "Image search"
 msgstr "Görsel arama"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:292
 msgid "Image search provider"
 msgstr "Görsel arama sağlayıcısı"
 
@@ -18287,7 +18292,7 @@ msgstr "Temaları içe aktar"
 msgid "Import unavailable"
 msgstr "İçe aktarılamıyor"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:231
 msgid "Import..."
 msgstr "İçe aktar..."
 
@@ -19455,14 +19460,14 @@ msgid "Keep animations, GIF playback, hover effects, and tooltips running while 
 msgstr "Pencere odak dışındayken animasyonların, GIF oynatmanın, fareyle üzerine gelme efektlerinin ve araç ipuçlarının çalışmaya devam etmesini sağla."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:412
 msgid "Keep attachments"
 msgstr "Ekleri sakla"
 
 #. Label for an advanced message editing preference.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:392
 msgid "Keep attachments when clearing an edit"
 msgstr "Bir düzenlemeyi temizlerken ekleri sakla"
 
@@ -19670,7 +19675,7 @@ msgid "Last used"
 msgstr "Son kullanım"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:192
 msgid "Last Used"
 msgstr "Son kullanım"
 
@@ -20131,7 +20136,7 @@ msgid "Link underline"
 msgstr "Bağlantı alt çizgisi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:220
 msgid "Link warnings"
 msgstr "Bağlantı uyarıları"
 
@@ -20490,12 +20495,12 @@ msgid "Make group owner"
 msgstr "Grup sahibi yap"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:32
 msgid "Make persona active"
 msgstr "Persona'yı etkinleştir"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:36
 msgid "Make persona not active"
 msgstr "Persona'yı devre dışı bırak"
 
@@ -20641,7 +20646,7 @@ msgid "Manage your subscription"
 msgstr "Aboneliğinizi yönetin"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:184
 msgid "Manual"
 msgstr "Manuel"
 
@@ -20653,7 +20658,7 @@ msgstr "Manuel masaüstü güncellemesi"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:464
 msgid "Mark all as read"
 msgstr "Tümünü okundu olarak işaretle"
 
@@ -20675,7 +20680,7 @@ msgid "Mark all inbox channels as read"
 msgstr "Tüm gelen kutusu kanallarını okundu olarak işaretle"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:483
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:484
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "Tüm okunmamış gelen kutusu kanallarını onay sormadan hemen okundu olarak işaretle"
 
@@ -20770,7 +20775,7 @@ msgid "Markers below slider"
 msgstr "Kaydırıcının altındaki işaretleyiciler"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:168
 msgid "Marketing parameters"
 msgstr "Pazarlama parametreleri"
 
@@ -21008,7 +21013,7 @@ msgid "Media"
 msgstr "Medya"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:87
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:88
 msgid "Media attachment buttons"
 msgstr "Medya ekleme düğmeleri"
 
@@ -21018,7 +21023,7 @@ msgid "Media button"
 msgstr "Medya düğmesi"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:84
 msgid "Media buttons"
 msgstr "Medya düğmeleri"
 
@@ -21386,7 +21391,7 @@ msgid "Message #{channelName}"
 msgstr "#{channelName} kanalına mesaj gönder"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:304
 msgid "Message action bar"
 msgstr "Mesaj işlem çubuğu"
 
@@ -21408,7 +21413,7 @@ msgid "Message badge"
 msgstr "Mesaj rozeti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:336
 msgid "Message buttons"
 msgstr "Mesaj düğmeleri"
 
@@ -21456,7 +21461,7 @@ msgid "Message display settings are only available on desktop."
 msgstr "Mesaj görüntüleme ayarları yalnızca masaüstünde kullanılabilir."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:408
 msgid "Message editing"
 msgstr "Mesaj düzenleme"
 
@@ -21489,7 +21494,7 @@ msgid "Message history threshold updated"
 msgstr "Mesaj geçmişi eşiği güncellendi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:312
 msgid "Message hover"
 msgstr "Mesajın üzerine gelindiğinde"
 
@@ -21502,7 +21507,7 @@ msgstr "Mesaj girişi"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:420
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:197
 msgid "Message input buttons"
 msgstr "Mesaj giriş düğmeleri"
@@ -22046,7 +22051,7 @@ msgid "More actions for {displayName}"
 msgstr "{displayName} için diğer işlemler"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:332
 msgid "More button"
 msgstr "Daha fazla düğmesi"
 
@@ -22246,7 +22251,7 @@ msgid "Multi-line"
 msgstr "Çok satırlı"
 
 #. Label in the composer typing row when the names of the people typing do not fit.
-#: src/features/typing/rolling/RollingTypingText.tsx:29
+#: src/features/typing/rolling/RollingTypingText.tsx:31
 msgid "Multiple people are typing..."
 msgstr "Birden fazla kişi yazıyor..."
 
@@ -22445,7 +22450,7 @@ msgstr "sessize alındı"
 #. Short label in the sidebar navigation guild list item.
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:492
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
@@ -22468,7 +22473,7 @@ msgstr "Moderatörler tarafından sesi kapatıldı"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:496
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Muted channels"
 msgstr "Sessize alınmış kanallar"
@@ -22591,7 +22596,7 @@ msgid "My group"
 msgstr "Grubum"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:44
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "Benim adım Darth Vader. Ben Vulcan gezegeninden gelen bir uzaylıyım!"
 
@@ -22684,7 +22689,7 @@ msgid "Names get a random tag, like alex#4821, so several people can share a nam
 msgstr "İsimlere rastgele bir etiket eklenir, örneğin alex#4821, böylece birden fazla kişi aynı ismi kullanabilir."
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:34
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:35
 msgid "Names, pronouns, or triggers"
 msgstr "Adlar, zamirler veya tetikleyiciler"
 
@@ -22869,20 +22874,20 @@ msgid "New category"
 msgstr "Yeni kategori"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 msgid "New communities only"
 msgstr "Yalnızca yeni topluluklar"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:650
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:734
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "Katıldığınız yeni topluluklarda sessize alınmış kanallar otomatik olarak gizlenecek. Bu ayarı mevcut tüm topluluklarınıza da uygulamak ister misiniz?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:681
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:765
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Katıldığınız yeni topluluklarda artık sessize alınmış kanallar otomatik olarak gizlenmeyecek. Mevcut tüm topluluklarınızdaki sessize alınmış kanalları da göstermek ister misiniz?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:503
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:504
 msgid "New community muted"
 msgstr "Yeni topluluk sessize alma"
 
@@ -23434,12 +23439,12 @@ msgid "No personal words yet."
 msgstr "Henüz kişisel kelime yok."
 
 #. Slate title that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:49
 msgid "No personas found"
 msgstr "Persona bulunamadı"
 
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:40
 msgid "No personas yet"
 msgstr "Henüz Personas yok"
 
@@ -24029,7 +24034,7 @@ msgstr "Nesneler"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:176
 msgid "Off"
 msgstr "Kapalı"
 
@@ -24620,7 +24625,7 @@ msgstr "{directMessageName} adlı kişinin profilini aç"
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:48
-#: src/features/ui/avatars/AvatarStack.tsx:23
+#: src/features/ui/avatars/AvatarStack.tsx:25
 msgid "Open profile for {displayName}"
 msgstr "{displayName} adlı kişinin profilini aç"
 
@@ -24852,7 +24857,7 @@ msgid "Ordered"
 msgstr "Sıralı"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:140
 msgid "Ordered upload"
 msgstr "Sıralı yükleme"
 
@@ -25497,6 +25502,11 @@ msgstr "Persona oluşturuldu"
 msgid "Persona deleted"
 msgstr "Persona silindi"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:512
+msgid "Persona trigger behavior"
+msgstr "Persona tetikleyici davranışı"
+
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
@@ -25526,7 +25536,7 @@ msgstr "Kişisel notlar zaten boştu"
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:214
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas, mesajlara ekleyebileceğiniz yeniden kullanılabilir profilerdir."
 
@@ -25606,12 +25616,12 @@ msgid "Pick the rule to review."
 msgstr "İncelenecek kuralı seçin."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:360
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "Mesaj giriş alanında iki nokta üst üste yazdığınızda neyin görünmesini istediğinizi seçin"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:440
 msgid "Pick which buttons show in the message input"
 msgstr "Mesaj girişinde hangi düğmelerin gösterileceğini seçin"
 
@@ -25949,7 +25959,7 @@ msgid "Power saving"
 msgstr "Güç tasarrufu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:112
 msgid "Pre-upload attachments"
 msgstr "Ekleri önceden yükle"
 
@@ -26523,7 +26533,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Kendine zarar vermeyi veya yeme bozukluklarını teşvik eden tanıtım veya talimatlar."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:476
 msgid "Prompt"
 msgstr "Sor"
 
@@ -26860,7 +26870,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "Hızlı CSS, {fileName} dosyasından değiştirildi."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:320
 msgid "Quick reactions"
 msgstr "Hızlı tepkiler"
 
@@ -27293,7 +27303,7 @@ msgid "Reference copied."
 msgstr "Referans kopyalandı."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:172
 msgid "Referral parameters"
 msgstr "Yönlendirme parametreleri"
 
@@ -28726,14 +28736,14 @@ msgid "Reveal spoiler"
 msgstr "Spoiler'ı göster"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:272
 msgid "Reverse image"
 msgstr "ters görsel"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:613
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:268
 msgid "Reverse image search"
 msgstr "Ters görsel arama"
 
@@ -28743,7 +28753,7 @@ msgid "Reverse image search provider"
 msgstr "Ters görsel arama sağlayıcısı"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:300
 msgid "Reverse image search providers"
 msgstr "Ters görsel arama sağlayıcıları"
 
@@ -29098,7 +29108,7 @@ msgid "Same time as you"
 msgstr "Sizinle aynı saat diliminde"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:180
 msgid "Sanitize link"
 msgstr "Bağlantıyı temizle"
 
@@ -29160,7 +29170,7 @@ msgid "Save a recovery kit"
 msgstr "Kurtarma kiti kaydet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:75
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:76
 msgid "Save animation"
 msgstr "Animasyonu kaydet"
 
@@ -29189,8 +29199,8 @@ msgstr "Favorilere kaydet"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF storage preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:48
 msgid "Save GIF favorites as saved media"
 msgstr "GIF favorilerini kayıtlı medya olarak kaydet"
 
@@ -29223,7 +29233,7 @@ msgstr "Kaydedildi"
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:56
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:64
 msgid "Saved media"
 msgstr "Kayıtlı medya"
 
@@ -29505,15 +29515,15 @@ msgstr "Scroll Lock"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:29
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:448
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:181
 msgid "Scroll to bottom"
 msgstr "En alta kaydır"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:444
 msgid "Scroll to bottom when sending a message"
 msgstr "Mesaj gönderirken en alta kaydır"
 
@@ -29569,7 +29579,7 @@ msgid "Search bans"
 msgstr "Yasaklıları ara"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:280
 msgid "Search by image"
 msgstr "Görselle ara"
 
@@ -29596,12 +29606,12 @@ msgid "Search emojis"
 msgstr "Emojileri ara"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:232
 msgid "Search engine"
 msgstr "Arama motoru"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:228
 msgid "Search engines"
 msgstr "Arama motorları"
 
@@ -29740,7 +29750,7 @@ msgid "Search scope: {label}"
 msgstr "Arama kapsamı: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:240
 msgid "Search selected text"
 msgstr "Seçili metni ara"
 
@@ -30077,7 +30087,7 @@ msgid "Select interface language"
 msgstr "Arayüz dilini seçin"
 
 #. Tooltip for the persona selection button
-#: src/features/personas/components/PersonaPickerComposerButton.tsx:23
+#: src/features/personas/components/PersonaPickerComposerButton.tsx:24
 msgid "Select persona"
 msgstr "Persona seç"
 
@@ -30246,7 +30256,7 @@ msgid "Send an action message (wraps in italics)."
 msgstr "Bir eylem mesajı gönder (italik olarak gösterilir)."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:40
 msgid "Send animation"
 msgstr "Animasyon gönder"
 
@@ -30256,7 +30266,7 @@ msgstr "Başka bir rapor gönder"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:436
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:173
 msgid "Send button"
 msgstr "Gönder düğmesi"
@@ -30273,8 +30283,8 @@ msgstr "DSA raporu gönder"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:128
 msgid "Send file messages in order"
 msgstr "Dosya mesajlarını sırayla gönder"
 
@@ -30453,18 +30463,18 @@ msgstr "Bir ek gönderdi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:452
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:185
 msgid "Sent messages"
 msgstr "Gönderilen mesajlar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:132
 msgid "Sequential send"
 msgstr "Ardışık gönderim"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:144
 msgid "Serial send"
 msgstr "Seri gönderim"
 
@@ -30691,10 +30701,6 @@ msgstr "Daha sonra ayarla"
 msgid "Set voice region"
 msgstr "Ses bölgesini ayarla"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
-msgid "Set what happens when you send a message using a persona's trigger."
-msgstr "Bir Persona'nın tetikleyicisini kullanarak mesaj gönderdiğinizde ne olacağını ayarlayın."
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:172
 msgid "Set your new password."
 msgstr "Yeni parolanızı belirleyin."
@@ -30913,7 +30919,7 @@ msgid "Shift"
 msgstr "Shift"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:324
 msgid "Shift expand"
 msgstr "Shift ile genişletme"
 
@@ -31037,7 +31043,7 @@ msgid "Show active now on the home screen to surface friends active in voice. Yo
 msgstr "Sesli sohbette aktif olan arkadaşları öne çıkarmak için ana ekranda şu an aktif bölümünü gösterin. Bir önizleme, kanal bağlamı, kimlerin zaten orada olduğunu ve hızlıca katılmanın bir yolunu göreceksiniz."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
 msgid "Show attachment expiration indicator"
 msgstr "Ek sona erme göstergesini göster"
 
@@ -31088,7 +31094,7 @@ msgid "Show creation date instead of expiration date"
 msgstr "Sona erme tarihi yerine oluşturulma tarihini göster"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
 msgid "Show custom emojis in expression autocomplete"
 msgstr "İfade otomatik tamamlama özelliğinde özel emojileri göster"
 
@@ -31098,18 +31104,18 @@ msgid "Show default avatar, ignoring your global profile"
 msgstr "Genel profilinizi yok sayarak varsayılan avatarı göster"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show default emojis in expression autocomplete"
 msgstr "İfade otomatik tamamlama özelliğinde varsayılan emojileri göster"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
 msgid "Show delete button"
 msgstr "Silme düğmesini göster"
 
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "Show download button"
 msgstr "İndirme düğmesini göster"
@@ -31137,7 +31143,7 @@ msgstr "Gömülü içerikleri göster ve web sitesi bağlantılarını önizle"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
 msgid "Show emoji button"
 msgstr "Emoji düğmesini göster"
 
@@ -31147,7 +31153,7 @@ msgid "Show emoji reactions on messages"
 msgstr "Mesajlarda emoji tepkilerini göster"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
 msgid "Show favorite button"
 msgstr "Favori düğmesini göster"
 
@@ -31169,14 +31175,14 @@ msgid "Show focus ring on chat text area"
 msgstr "Sohbet metin alanında odak halkasını göster"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
 msgid "Show GIF indicator"
 msgstr "GIF göstergesini göster"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show GIFs button"
 msgstr "GIF düğmesini göster"
 
@@ -31191,7 +31197,7 @@ msgid "Show icon when collapsed"
 msgstr "Daraltıldığında simgeyi göster"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:168
 msgid "Show in all communities"
 msgstr "Tüm topluluklarda göster"
 
@@ -31235,7 +31241,7 @@ msgstr "Nasıl yapıldığını göster"
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show media button"
 msgstr "Medya düğmesini göster"
 
@@ -31256,7 +31262,7 @@ msgid "Show menu bar icon"
 msgstr "Menü çubuğu simgesini göster"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
 msgid "Show message action bar"
 msgstr "Mesaj işlem çubuğunu göster"
 
@@ -31339,7 +31345,7 @@ msgid "Show oldest messages first"
 msgstr "En eski mesajları önce göster"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show only the more button"
 msgstr "Sadece daha fazla düğmesini göster"
 
@@ -31358,8 +31364,15 @@ msgstr "Parolayı göster"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Ses menülerinde cihaza özel katılımcı ses seviyesi kaydırıcılarını göster"
 
+#. Plus menu submenu toggle that shows the persona picker button next to the textarea.
+#. Short label for an advanced message input preference.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+msgid "Show persona button"
+msgstr "Persona düğmesini göster"
+
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
 msgid "Show quick reactions"
 msgstr "Hızlı tepkileri göster"
 
@@ -31369,7 +31382,7 @@ msgid "Show rich previews for YouTube links."
 msgstr "YouTube bağlantıları için zengin önizlemeler göster."
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show saved media in expression autocomplete"
 msgstr "Kayıtlı medyayı ifade otomatik tamamlamada göster"
 
@@ -31378,7 +31391,7 @@ msgstr "Kayıtlı medyayı ifade otomatik tamamlamada göster"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
 msgid "Show send button"
 msgstr "Gönder düğmesini göster"
 
@@ -31390,12 +31403,12 @@ msgstr "Tıklandığında spoiler içeriğini göster"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show stickers button"
 msgstr "Çıkartma düğmesini göster"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
 msgid "Show stickers in expression autocomplete"
 msgstr "İfade otomatik tamamlama özelliğinde çıkartmaları göster"
 
@@ -31405,7 +31418,7 @@ msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Üstü çizili Markdown metnini biraz daha soluk bir renkte göster."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
 msgid "Show suppress embeds button"
 msgstr "Gömülü içerik gizleme düğmesini göster"
 
@@ -31422,6 +31435,11 @@ msgstr "Bu rolü ayrı göster"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "Tepsi simgesini göster"
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:200
+msgid "Show trigger behavior slider in persona picker"
+msgstr "Persona seçicide tetikleyici davranışı kaydırıcısını göster"
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:26
@@ -31711,14 +31729,14 @@ msgid "Size selection"
 msgstr "Boyut seçimi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:480
 msgid "Skip"
 msgstr "Atla"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:460
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "\"Tümünü okundu olarak işaretle\" onayını atla"
 
@@ -31732,7 +31750,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "Harici bağlantı uyarılarını atla. Daha az güvenli."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:224
 msgid "Skip the external link warning for all domains"
 msgstr "Tüm alan adları için harici bağlantı uyarısını atla"
 
@@ -31956,7 +31974,7 @@ msgid "Small submitting"
 msgstr "Küçük gönderiliyor"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:380
 msgid "Smiley face"
 msgstr "Gülen yüz"
 
@@ -32547,7 +32565,7 @@ msgid "Star a GIF or import a list to see it here."
 msgstr "Burada görmek için bir GIF'i yıldızlayın veya bir liste içe aktarın."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:67
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:68
 msgid "Star animation"
 msgstr "Yıldız animasyonu"
 
@@ -32648,7 +32666,7 @@ msgid "Start speaking"
 msgstr "Konuşmayı başlat"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:152
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "Ekler, mesaj girişine eklenir eklenmez yüklenmeye başlar"
 
@@ -32785,7 +32803,7 @@ msgid "Sticker attached to the message"
 msgstr "Mesaja çıkartma eklendi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:356
 msgid "Sticker autocomplete"
 msgstr "Çıkartma otomatik tamamlama"
 
@@ -32905,7 +32923,7 @@ msgid "Stop being an announcement channel?"
 msgstr "Duyuru kanalı olmayı durdur?"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
 msgid "Stop hiding muted channels by default?"
 msgstr "Sessize alınmış kanallar varsayılan olarak gizlenmesin mi?"
 
@@ -33128,19 +33146,19 @@ msgid "Strikethrough"
 msgstr "Üstü çizili"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:188
 msgid "Strip parameters"
 msgstr "Parametreleri kaldır"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:184
 msgid "Strip tracking"
 msgstr "İzlemeyi kaldır"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:156
 msgid "Strip tracking parameters from URLs"
 msgstr "URL'lerden izleme parametrelerini kaldır"
 
@@ -33301,7 +33319,7 @@ msgid "SVC mode"
 msgstr "SVC modu"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:388
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "Mesaj gönderirken :) ve <3 gibi yaygın metin ifadelerini emojilerle değiştirin"
 
@@ -33924,7 +33942,7 @@ msgstr "Saydamlık açıkken metin, ClearType yerine gri tonlamalı kenar yumuş
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:384
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:153
 msgid "Text replacement"
 msgstr "Metin değiştirme"
@@ -34931,7 +34949,7 @@ msgid "This is the third option description"
 msgstr "Bu, üçüncü seçenek açıklamasıdır"
 
 #. Tooltip on the crown icon on the persona entry that represents your main account.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:30
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:31
 msgid "This is your account."
 msgstr "Bu sizin hesabınız."
 
@@ -35677,12 +35695,12 @@ msgid "Track moderator actions across the community."
 msgstr "Topluluk genelindeki moderatör eylemlerini takip edin."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:160
 msgid "Tracking"
 msgstr "Takip"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:164
 msgid "Tracking parameters"
 msgstr "İzleme parametreleri"
 
@@ -35715,7 +35733,7 @@ msgstr "Sahiplik {0} adlı kişiye devredildi"
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:593
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:256
 msgid "Translate"
 msgstr "Çevir"
 
@@ -35730,12 +35748,12 @@ msgid "Translation provider"
 msgstr "Çeviri sağlayıcısı"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:248
 msgid "Translator"
 msgstr "Çevirmen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:252
 msgid "Translators"
 msgstr "Çevirmenler"
 
@@ -35765,10 +35783,6 @@ msgstr "Tepsi simgesi değişiklikleri yalnızca Linux'ta yeniden başlattıktan
 msgid "Trending GIFs"
 msgstr "Popüler GIF'ler"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
-msgid "Trigger Behavior"
-msgstr "Tetikleyici davranışı"
-
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "React çökmesini tetikle"
@@ -35779,7 +35793,7 @@ msgid "Triggers"
 msgstr "Tetikleyiciler"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:180
 msgid "Triggers don't do anything."
 msgstr "Tetikleyiciler hiçbir şey yapmaz."
 
@@ -35806,14 +35820,14 @@ msgstr "Doğru veya yanlış"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:200
 msgid "Trust all"
 msgstr "Tümüne güven"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:196
 msgid "Trust all external links"
 msgstr "Tüm harici bağlantılara güven"
 
@@ -35823,17 +35837,17 @@ msgid "Trust all external links?"
 msgstr "Tüm harici bağlantılara güvenilsin mi?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:204
 msgid "Trust all links"
 msgstr "Tüm bağlantılara güven"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:212
 msgid "Trust domain"
 msgstr "Güvenilen alan adı"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:208
 msgid "Trusted domains"
 msgstr "Güvenilen alan adları"
 
@@ -35874,7 +35888,7 @@ msgid "Try a different search term or filter"
 msgstr "Farklı bir arama terimi veya filtre deneyin"
 
 #. Slate message that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:53
 msgid "Try a different search, or check your spelling."
 msgstr "Farklı bir arama deneyin veya yazımınızı kontrol edin."
 
@@ -36087,7 +36101,7 @@ msgstr "Yayın gizliliğini aç"
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:364
 msgid "Turn text smileys into emoji"
 msgstr "Metin emotikonlarını emojiye dönüştür"
 
@@ -37257,8 +37271,8 @@ msgstr "Öğeleri yükle"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:108
 msgid "Upload attachments before sending"
 msgstr "Göndermeden önce ekleri yükle"
 
@@ -39340,7 +39354,7 @@ msgid "Web authentication"
 msgstr "Web kimlik doğrulaması"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:236
 msgid "Web search"
 msgstr "Web araması"
 
@@ -39623,7 +39637,7 @@ msgid "When they come online, they'll appear right here."
 msgstr "Çevrimiçi olduklarında burada görünecekler."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:416
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
 msgstr "Bu ayar kapalıyken, ekleri olan bir mesajın metnini temizlediğinizde mesajı silmeniz istenir"
 
@@ -40017,7 +40031,7 @@ msgid "You can close this tab"
 msgstr "Bu sekmeyi kapatabilirsiniz"
 
 #. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:57
 msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
 msgstr "Pluralkit, Tupperbox, /plu/ral, Fishing Bucket veya uyumlu bir formatta dışa aktaran başka bir araçtan dışa aktarılan JSON dosyalarını içe aktarabilirsiniz."
 

@@ -57,20 +57,20 @@ msgid "{0} personas imported successfully"
 msgstr "นำเข้า {0} Persona สำเร็จแล้ว"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:19
-#: src/features/typing/rolling/RollingTypingText.tsx:54
+#: src/features/typing/rolling/RollingTypingText.tsx:21
+#: src/features/typing/rolling/RollingTypingText.tsx:61
 msgid "{a} and {b} are typing..."
 msgstr "{a} และ {b} กำลังพิมพ์..."
 
 #. Screen reader announcement in the composer when one person is typing. {a} is their display name.
-#: src/features/typing/rolling/RollingTypingText.tsx:15
-#: src/features/typing/rolling/RollingTypingText.tsx:50
+#: src/features/typing/rolling/RollingTypingText.tsx:17
+#: src/features/typing/rolling/RollingTypingText.tsx:57
 msgid "{a} is typing..."
 msgstr "{a} กำลังพิมพ์..."
 
 #. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:24
-#: src/features/typing/rolling/RollingTypingText.tsx:60
+#: src/features/typing/rolling/RollingTypingText.tsx:26
+#: src/features/typing/rolling/RollingTypingText.tsx:67
 msgid "{a}, {b} and {c} are typing..."
 msgstr "{a}, {b} และ {c} กำลังพิมพ์..."
 
@@ -2653,12 +2653,12 @@ msgid "a sticker"
 msgstr "สติกเกอร์"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:188
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "ทริกเกอร์ส่งข้อความที่แสดง Persona แต่ Persona ที่ใช้งานอยู่จะไม่เปลี่ยน"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:196
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "ทริกเกอร์จะตั้ง Persona ของตัวเองเป็นที่ใช้งาน จนกว่า Persona ที่ใช้งานจะถูกเปลี่ยน ซึ่งอาจเรียกว่า \"latching\"."
 
@@ -2898,7 +2898,7 @@ msgid "Action"
 msgstr "การกระทำ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:308
 msgid "Action bar"
 msgstr "แถบการทำงาน"
 
@@ -4262,7 +4262,7 @@ msgstr "วิดีโอเคลื่อนไหว"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:27
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:95
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:15
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:16
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:251
 msgid "Animation"
 msgstr "ภาพเคลื่อนไหว"
@@ -4274,17 +4274,17 @@ msgid "Animation"
 msgstr "ภาพเคลื่อนไหว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:36
 msgid "Animation behavior"
 msgstr "ลักษณะแอนิเมชัน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:59
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:60
 msgid "Animation favorites"
 msgstr "รายการโปรดแอนิเมชัน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:32
 msgid "Animation picker"
 msgstr "ตัวเลือกภาพเคลื่อนไหว"
 
@@ -4294,7 +4294,7 @@ msgid "Animation playback"
 msgstr "การเล่นภาพเคลื่อนไหว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:71
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:72
 msgid "Animation saving"
 msgstr "การบันทึกภาพเคลื่อนไหว"
 
@@ -4302,7 +4302,7 @@ msgstr "การบันทึกภาพเคลื่อนไหว"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:301
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:19
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:20
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:279
 msgid "Animations"
 msgstr "ภาพเคลื่อนไหว"
@@ -4586,7 +4586,7 @@ msgid "Apply theme"
 msgstr "ใช้ธีม"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Apply to all communities"
 msgstr "ใช้กับทุกคอมมูนิตี้"
 
@@ -4753,7 +4753,7 @@ msgid "As a gift"
 msgstr "เป็นของขวัญ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:376
 msgid "ASCII smileys"
 msgstr "อิโมจิ ASCII"
 
@@ -4854,7 +4854,7 @@ msgid "Attachment thumbnails"
 msgstr "รูปย่อไฟล์แนบ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:119
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:120
 msgid "Attachment upload"
 msgstr "การอัปโหลดไฟล์แนบ"
 
@@ -5260,7 +5260,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "ลบพารามิเตอร์ติดตาม (เช่น utm_source, fbclid, gclid) ออกจาก URL ในข้อความที่คุณส่งโดยอัตโนมัติ ลิงก์จะถูกล้างข้อมูลก่อนถึงผู้รับ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:192
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "ลบพารามิเตอร์ติดตามออกจาก URL ในข้อความที่คุณส่งโดยอัตโนมัติ"
 
@@ -5269,24 +5269,24 @@ msgid "Automatically screen messages for explicit content in channels not marked
 msgstr "คัดกรองข้อความที่มีเนื้อหาโจ่งแจ้งโดยอัตโนมัติในช่องที่ไม่ได้ระบุว่าเป็นเนื้อหาสำหรับผู้ใหญ่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:23
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:24
 msgid "Automatically send animation"
 msgstr "ส่งภาพเคลื่อนไหวอัตโนมัติ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:27
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:28
 msgid "Automatically send animations"
 msgstr "ส่งภาพเคลื่อนไหวอัตโนมัติ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:44
 msgid "Automatically send GIFs from the picker without confirmation"
 msgstr "ส่ง GIF จากตัวเลือก GIF ทันทีโดยไม่ต้องยืนยัน"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF behavior preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:40
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:11
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:12
 msgid "Automatically send GIFs when selected"
 msgstr "ส่ง GIF อัตโนมัติเมื่อเลือก"
 
@@ -7760,7 +7760,7 @@ msgid "Choose friends to message."
 msgstr "เลือกเพื่อนเพื่อส่งข้อความ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:456
 msgid "Choose how chat moves after you send a message"
 msgstr "เลือกวิธีที่แชทจะเลื่อนหลังจากที่คุณส่งข้อความ"
 
@@ -7780,7 +7780,7 @@ msgid "Choose how people sign in"
 msgstr "เลือกวิธีที่ผู้คนจะใช้ลงชื่อเข้าใช้"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:79
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:80
 msgid "Choose how starred GIF favorites are stored"
 msgstr "เลือกวิธีจัดเก็บ GIF ที่ติดดาวเป็นรายการโปรด"
 
@@ -7845,6 +7845,11 @@ msgstr "เลือกสิ่งที่ {clientLabel} ทำได้ใน
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:293
 msgid "Choose what friends see in their active now panel"
 msgstr "เลือกสิ่งที่เพื่อนเห็นในแผงกำลังใช้งานอยู่ตอนนี้"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:516
+msgid "Choose what happens when you use a persona trigger"
+msgstr "เลือกว่าจะเกิดอะไรขึ้นเมื่อคุณใช้ทริกเกอร์ Persona"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -8067,7 +8072,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "แอบอ้างเป็นบุคคลอื่น แบรนด์ หรือองค์กร"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:176
 msgid "Clean link"
 msgstr "ล้างลิงก์"
 
@@ -8117,7 +8122,7 @@ msgstr "ล้างข้อมูลจำลองไฟล์แนบ"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:142
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:143
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "ล้างคำสั่ง"
@@ -8141,7 +8146,7 @@ msgid "Clear friends search"
 msgstr "ล้างการค้นหาเพื่อน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:400
 msgid "Clear message text"
 msgstr "ล้างข้อความแชท"
 
@@ -8604,7 +8609,7 @@ msgstr "โคลอน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:348
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:157
 msgid "Colon autocomplete"
 msgstr "เติมคำอัตโนมัติด้วยโคลอน"
@@ -9049,7 +9054,7 @@ msgstr "ปุ่มในช่องพิมพ์ข้อความ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:424
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:193
 msgid "Composer buttons"
 msgstr "ปุ่มในช่องพิมพ์ข้อความ"
@@ -9066,7 +9071,7 @@ msgstr "กำลังบีบอัด"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:172
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
 msgid "Configure"
 msgstr "กำหนดค่า"
@@ -9107,7 +9112,7 @@ msgid "Configure role settings and permissions"
 msgstr "ตั้งค่าบทบาทและสิทธิ์"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:264
 msgid "Configure search engines used from selected text"
 msgstr "กำหนดค่าเครื่องมือค้นหาที่จะใช้เมื่อเลือกข้อความ"
 
@@ -9117,7 +9122,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "ตั้งค่าการตรวจสอบตัวสะกด พจนานุกรม และคำส่วนตัว"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:296
 msgid "Configure translator providers used from selected text"
 msgstr "กำหนดค่าผู้ให้บริการแปลที่ใช้สำหรับข้อความที่เลือก"
 
@@ -9141,7 +9146,7 @@ msgstr "ตั้งค่าป้ายโปรไฟล์"
 #: src/features/channel/components/MentionEveryonePopout.tsx:185
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:472
 msgid "Confirm"
 msgstr "ยืนยัน"
 
@@ -9201,7 +9206,7 @@ msgid "Confirm voice join"
 msgstr "ยืนยันการเข้าร่วมช่องเสียง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:468
 msgid "Confirmation"
 msgstr "การยืนยัน"
 
@@ -10779,7 +10784,7 @@ msgstr "สร้างลิงก์ใหม่"
 msgid "Create or join a community"
 msgstr "สร้างหรือเข้าร่วมคอมมูนิตี้"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:256
 msgid "Create Persona"
 msgstr "สร้าง Persona"
 
@@ -11128,7 +11133,7 @@ msgid "Custom ringtone"
 msgstr "เสียงเรียกเข้าที่กำหนดเอง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:244
 msgid "Custom search engine"
 msgstr "เครื่องมือค้นหาที่กำหนดเอง"
 
@@ -11202,7 +11207,7 @@ msgid "Custom title bar"
 msgstr "แถบชื่อเรื่องที่กำหนดเอง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:260
 msgid "Custom translator"
 msgstr "เครื่องมือแปลภาษาที่กำหนดเอง"
 
@@ -11261,7 +11266,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "ปรับแต่งหน้าตาและการทำงานของแอป"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:340
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "ปรับแต่งแถบการทำงานที่ปรากฏขึ้นเมื่อวางเมาส์เหนือข้อความ"
 
@@ -11271,7 +11276,7 @@ msgid "Customize the spacing and size"
 msgstr "กำหนดระยะห่างและขนาด"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:103
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:104
 msgid "Customize which buttons and indicators appear on media attachments and embeds"
 msgstr "ปรับแต่งปุ่มและตัวบ่งชี้ที่จะแสดงบนไฟล์แนบสื่อและการฝัง"
 
@@ -11885,7 +11890,7 @@ msgid "Delete passkey"
 msgstr "ลบพาสคีย์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:404
 msgid "Delete prompt"
 msgstr "การยืนยันการลบ"
 
@@ -13154,7 +13159,7 @@ msgid "Download audio"
 msgstr "ดาวน์โหลดเสียง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:91
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:92
 msgid "Download button"
 msgstr "ปุ่มดาวน์โหลด"
 
@@ -13454,7 +13459,7 @@ msgid "Early access to new features"
 msgstr "เข้าถึงฟีเจอร์ใหม่ก่อนใคร"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:115
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:116
 msgid "Early upload"
 msgstr "อัปโหลดล่วงหน้า"
 
@@ -13903,12 +13908,12 @@ msgid "Emoji and sticker cloning shortcuts"
 msgstr "ทางลัดคัดลอกอิโมจิและสติกเกอร์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:352
 msgid "Emoji autocomplete"
 msgstr "การเติมข้อความอัตโนมัติของอิโมจิ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:432
 msgid "Emoji button"
 msgstr "ปุ่มอิโมจิ"
 
@@ -13972,19 +13977,19 @@ msgid "Emojis"
 msgstr "อิโมจิ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:372
 msgid "Emoticon"
 msgstr "อิโมติคอน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:368
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:145
 msgid "Emoticons"
 msgstr "อิโมติคอน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:396
 msgid "Empty edit"
 msgstr "แก้ไขให้ว่าง"
 
@@ -14197,7 +14202,7 @@ msgid "Enable self-hosted mode client-side. Hides all premium and billing UI."
 msgstr "เปิดใช้งานโหมดโฮสต์เองฝั่งไคลเอ็นต์ ซ่อน UI พรีเมียมและการเรียกเก็บเงินทั้งหมด"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
 msgid "Enable Shift to expand"
 msgstr "เปิดใช้ Shift เพื่อขยาย"
 
@@ -14368,7 +14373,7 @@ msgid "Enhanced"
 msgstr "ปรับปรุงแล้ว"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:148
 msgid "Ensures file messages appear in the order you sent them"
 msgstr "จัดเรียงข้อความไฟล์ตามลำดับที่คุณส่ง"
 
@@ -14815,7 +14820,7 @@ msgid "Expand"
 msgstr "ขยาย"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:328
 msgid "Expand action bar"
 msgstr "ขยายแถบเครื่องมือ"
 
@@ -14997,7 +15002,7 @@ msgstr "ส่งออกธีม"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:344
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:161
 msgid "Expression autocomplete"
 msgstr "เติมอิโมจิอัตโนมัติ"
@@ -15027,7 +15032,7 @@ msgstr "ภายนอก"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:18
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:216
 msgid "External link warning"
 msgstr "คำเตือนลิงก์ภายนอก"
 
@@ -15393,17 +15398,17 @@ msgid "Favicon"
 msgstr "ไอคอน Favicon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:52
 msgid "Favorite animation"
 msgstr "ภาพเคลื่อนไหวโปรด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:55
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:56
 msgid "Favorite animations"
 msgstr "แอนิเมชันโปรด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:95
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:96
 msgid "Favorite button"
 msgstr "ปุ่มโปรด"
 
@@ -15514,7 +15519,7 @@ msgid "File options"
 msgstr "ตัวเลือกไฟล์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:136
 msgid "File ordering"
 msgstr "ลำดับไฟล์"
 
@@ -15536,7 +15541,7 @@ msgstr "อัปโหลดไฟล์"
 #. Label for the has:file option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/search/components/search/HasFilterSheet.tsx:49
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:123
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:124
 msgid "File upload"
 msgstr "อัปโหลดไฟล์"
 
@@ -15638,8 +15643,8 @@ msgstr "กรองสมาชิกที่ไม่มีบทบาท"
 msgid "Filter mentions"
 msgstr "ตัวกรองการกล่าวถึง"
 
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:158
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:159
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:177
 msgid "Filter personas"
 msgstr "กรอง Personas"
 
@@ -16623,12 +16628,12 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:428
 msgid "GIF button"
 msgstr "ปุ่ม GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:99
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:100
 msgid "GIF indicator"
 msgstr "ตัวบ่งชี้ GIF"
 
@@ -16997,7 +17002,7 @@ msgid "Go to third community"
 msgstr "ไปที่คอมมูนิตี้ที่สาม"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:288
 msgid "Google Lens"
 msgstr "Google Lens"
 
@@ -17519,7 +17524,7 @@ msgid "Hide avatars"
 msgstr "ซ่อนรูปโปรไฟล์"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:507
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:508
 msgid "Hide channels you've muted from community sidebars"
 msgstr "ซ่อนช่องที่คุณปิดเสียงจากแถบด้านข้างของคอมมูนิตี้"
 
@@ -17569,7 +17574,7 @@ msgid "Hide members"
 msgstr "ซ่อนสมาชิก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:499
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:500
 msgid "Hide muted"
 msgstr "ซ่อนที่ปิดเสียง"
 
@@ -17580,13 +17585,13 @@ msgstr "ซ่อนช่องที่ปิดเสียง"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:487
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:488
 msgid "Hide muted channels by default"
 msgstr "ซ่อนช่องที่ปิดเสียงไว้เป็นค่าเริ่มต้น"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Hide muted channels by default?"
 msgstr "ซ่อนช่องที่ปิดเสียงไว้เป็นค่าเริ่มต้นหรือไม่"
 
@@ -17751,7 +17756,7 @@ msgid "Hotkeys"
 msgstr "ปุ่มลัด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:316
 msgid "Hover buttons"
 msgstr "ปุ่มโฮเวอร์"
 
@@ -18144,7 +18149,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "ขนาดรูปภาพต้องอยู่ระหว่าง {min}x{min2} และ {max}x{max2} พิกเซล"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:284
 msgid "Image lookup"
 msgstr "ค้นหารูปภาพ"
 
@@ -18159,12 +18164,12 @@ msgid "Image preview"
 msgstr "ตัวอย่างรูปภาพ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:276
 msgid "Image search"
 msgstr "ค้นหารูปภาพ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:292
 msgid "Image search provider"
 msgstr "ผู้ให้บริการค้นหารูปภาพ"
 
@@ -18287,7 +18292,7 @@ msgstr "นำเข้าธีม"
 msgid "Import unavailable"
 msgstr "ไม่สามารถนำเข้าได้"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:231
 msgid "Import..."
 msgstr "นำเข้า..."
 
@@ -19455,14 +19460,14 @@ msgid "Keep animations, GIF playback, hover effects, and tooltips running while 
 msgstr "แสดงภาพเคลื่อนไหว, เล่น GIF, เอฟเฟกต์โฮเวอร์ และคำแนะนำต่างๆ ต่อไป แม้ว่าหน้าต่างจะไม่ได้โฟกัส"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:412
 msgid "Keep attachments"
 msgstr "เก็บไฟล์แนบ"
 
 #. Label for an advanced message editing preference.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:392
 msgid "Keep attachments when clearing an edit"
 msgstr "เก็บไฟล์แนบเมื่อล้างการแก้ไข"
 
@@ -19670,7 +19675,7 @@ msgid "Last used"
 msgstr "ใช้งานล่าสุด"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:192
 msgid "Last Used"
 msgstr "ใช้งานครั้งล่าสุด"
 
@@ -20131,7 +20136,7 @@ msgid "Link underline"
 msgstr "ขีดเส้นใต้ลิงก์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:220
 msgid "Link warnings"
 msgstr "คำเตือนเกี่ยวกับลิงก์"
 
@@ -20490,12 +20495,12 @@ msgid "Make group owner"
 msgstr "ตั้งเป็นเจ้าของกลุ่ม"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:32
 msgid "Make persona active"
 msgstr "ตั้ง Persona เป็นที่ใช้งาน"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:36
 msgid "Make persona not active"
 msgstr "ตั้ง Persona ให้ไม่ใช้งาน"
 
@@ -20641,7 +20646,7 @@ msgid "Manage your subscription"
 msgstr "จัดการการสมัครสมาชิกของคุณ"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:184
 msgid "Manual"
 msgstr "ด้วยตนเอง"
 
@@ -20653,7 +20658,7 @@ msgstr "อัปเดตเดสก์ท็อปด้วยตนเอง
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:464
 msgid "Mark all as read"
 msgstr "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด"
 
@@ -20675,7 +20680,7 @@ msgid "Mark all inbox channels as read"
 msgstr "ทำเครื่องหมายทุกช่องในกล่องข้อความว่าอ่านแล้ว"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:483
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:484
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "ทำเครื่องหมายช่องที่ยังไม่ได้อ่านทั้งหมดในกล่องข้อความว่าอ่านแล้วทันที โดยไม่ต้องยืนยัน"
 
@@ -20770,7 +20775,7 @@ msgid "Markers below slider"
 msgstr "เครื่องหมายใต้แถบเลื่อน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:168
 msgid "Marketing parameters"
 msgstr "พารามิเตอร์การตลาด"
 
@@ -21008,7 +21013,7 @@ msgid "Media"
 msgstr "สื่อ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:87
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:88
 msgid "Media attachment buttons"
 msgstr "ปุ่มแนบไฟล์มีเดีย"
 
@@ -21018,7 +21023,7 @@ msgid "Media button"
 msgstr "ปุ่มมีเดีย"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:84
 msgid "Media buttons"
 msgstr "ปุ่มสื่อ"
 
@@ -21386,7 +21391,7 @@ msgid "Message #{channelName}"
 msgstr "ส่งข้อความไปยัง #{channelName}"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:304
 msgid "Message action bar"
 msgstr "แถบการทำงานของข้อความ"
 
@@ -21408,7 +21413,7 @@ msgid "Message badge"
 msgstr "ป้ายกำกับข้อความ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:336
 msgid "Message buttons"
 msgstr "ปุ่มข้อความ"
 
@@ -21456,7 +21461,7 @@ msgid "Message display settings are only available on desktop."
 msgstr "การตั้งค่าการแสดงข้อความใช้ได้เฉพาะบนเดสก์ท็อปเท่านั้น"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:408
 msgid "Message editing"
 msgstr "แก้ไขข้อความ"
 
@@ -21489,7 +21494,7 @@ msgid "Message history threshold updated"
 msgstr "อัปเดตเกณฑ์ประวัติข้อความแล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:312
 msgid "Message hover"
 msgstr "การวางเมาส์เหนือข้อความ"
 
@@ -21502,7 +21507,7 @@ msgstr "ช่องป้อนข้อความ"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:420
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:197
 msgid "Message input buttons"
 msgstr "ปุ่มป้อนข้อความ"
@@ -22046,7 +22051,7 @@ msgid "More actions for {displayName}"
 msgstr "ตัวเลือกเพิ่มเติมสำหรับ {displayName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:332
 msgid "More button"
 msgstr "ปุ่มเพิ่มเติม"
 
@@ -22246,7 +22251,7 @@ msgid "Multi-line"
 msgstr "หลายบรรทัด"
 
 #. Label in the composer typing row when the names of the people typing do not fit.
-#: src/features/typing/rolling/RollingTypingText.tsx:29
+#: src/features/typing/rolling/RollingTypingText.tsx:31
 msgid "Multiple people are typing..."
 msgstr "มีคนกำลังพิมพ์หลายคน..."
 
@@ -22445,7 +22450,7 @@ msgstr "ปิดเสียง"
 #. Short label in the sidebar navigation guild list item.
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:492
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
@@ -22468,7 +22473,7 @@ msgstr "ปิดไมโครโฟนโดยผู้ดูแล"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:496
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Muted channels"
 msgstr "ช่องที่ปิดเสียง"
@@ -22591,7 +22596,7 @@ msgid "My group"
 msgstr "กลุ่มของฉัน"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:44
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "ชื่อของฉันคือ Darth Vader ฉันเป็นสิ่งมีชีวิตต่างดาวจากดาว Vulcan!"
 
@@ -22684,7 +22689,7 @@ msgid "Names get a random tag, like alex#4821, so several people can share a nam
 msgstr "ชื่อจะได้รับแท็กสุ่ม เช่น alex#4821 เพื่อให้หลายคนสามารถใช้ชื่อเดียวกันได้"
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:34
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:35
 msgid "Names, pronouns, or triggers"
 msgstr "ชื่อ สรรพนาม หรือทริกเกอร์"
 
@@ -22869,20 +22874,20 @@ msgid "New category"
 msgstr "หมวดหมู่ใหม่"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 msgid "New communities only"
 msgstr "เฉพาะคอมมูนิตี้ใหม่"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:650
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:734
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "ช่องที่ปิดเสียงในคอมมูนิตี้ใหม่ที่คุณเข้าร่วมจะถูกซ่อนโดยอัตโนมัติ คุณต้องการใช้การตั้งค่านี้กับคอมมูนิตี้ที่มีอยู่ทั้งหมดของคุณด้วยหรือไม่"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:681
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:765
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "คอมมูนิตี้ใหม่ที่คุณเข้าร่วมจะไม่ซ่อนช่องที่ปิดเสียงโดยอัตโนมัติอีกต่อไป คุณต้องการแสดงช่องที่ปิดเสียงในคอมมูนิตี้ที่มีอยู่ทั้งหมดของคุณด้วยหรือไม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:503
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:504
 msgid "New community muted"
 msgstr "ปิดเสียงคอมมูนิตี้ใหม่"
 
@@ -23434,12 +23439,12 @@ msgid "No personal words yet."
 msgstr "ยังไม่มีคำส่วนตัว"
 
 #. Slate title that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:49
 msgid "No personas found"
 msgstr "ไม่พบ Personas"
 
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:40
 msgid "No personas yet"
 msgstr "ยังไม่มี Personas"
 
@@ -24029,7 +24034,7 @@ msgstr "สิ่งของ"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:176
 msgid "Off"
 msgstr "ปิด"
 
@@ -24620,7 +24625,7 @@ msgstr "เปิดโปรไฟล์ของ {directMessageName}"
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:48
-#: src/features/ui/avatars/AvatarStack.tsx:23
+#: src/features/ui/avatars/AvatarStack.tsx:25
 msgid "Open profile for {displayName}"
 msgstr "เปิดโปรไฟล์ของ {displayName}"
 
@@ -24852,7 +24857,7 @@ msgid "Ordered"
 msgstr "รายการแบบลำดับเลข"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:140
 msgid "Ordered upload"
 msgstr "การอัปโหลดตามลำดับ"
 
@@ -25497,6 +25502,11 @@ msgstr "Persona ถูกสร้างแล้ว"
 msgid "Persona deleted"
 msgstr "Persona ถูกลบแล้ว"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:512
+msgid "Persona trigger behavior"
+msgstr "ลักษณะทริกเกอร์ Persona"
+
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
@@ -25526,7 +25536,7 @@ msgstr "บันทึกส่วนตัวว่างเปล่าอย
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:214
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas คือเอกลักษณ์ที่นำกลับมาใช้ใหม่ได้ ซึ่งคุณสามารถแนบกับข้อความได้"
 
@@ -25606,12 +25616,12 @@ msgid "Pick the rule to review."
 msgstr "เลือกกฎที่ต้องการให้ตรวจสอบ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:360
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "เลือกสิ่งที่แสดงเมื่อคุณพิมพ์เครื่องหมายโคลอนในช่องป้อนข้อความ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:440
 msgid "Pick which buttons show in the message input"
 msgstr "เลือกปุ่มที่จะแสดงในช่องป้อนข้อความ"
 
@@ -25949,7 +25959,7 @@ msgid "Power saving"
 msgstr "ประหยัดพลังงาน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:112
 msgid "Pre-upload attachments"
 msgstr "อัปโหลดไฟล์แนบล่วงหน้า"
 
@@ -26523,7 +26533,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "การส่งเสริมหรือคำแนะนำที่สนับสนุนการทำร้ายตัวเองหรือโรคการกินผิดปกติ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:476
 msgid "Prompt"
 msgstr "ข้อความแจ้ง"
 
@@ -26860,7 +26870,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "เปลี่ยน CSS ด่วนจาก {fileName} แล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:320
 msgid "Quick reactions"
 msgstr "รีแอ็กชันด่วน"
 
@@ -27293,7 +27303,7 @@ msgid "Reference copied."
 msgstr "คัดลอกข้อมูลอ้างอิงแล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:172
 msgid "Referral parameters"
 msgstr "พารามิเตอร์การแนะนำ"
 
@@ -28726,14 +28736,14 @@ msgid "Reveal spoiler"
 msgstr "เปิดสปอยล์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:272
 msgid "Reverse image"
 msgstr "ค้นหารูปภาพ"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:613
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:268
 msgid "Reverse image search"
 msgstr "ค้นหารูปภาพย้อนกลับ"
 
@@ -28743,7 +28753,7 @@ msgid "Reverse image search provider"
 msgstr "ผู้ให้บริการค้นหารูปภาพย้อนกลับ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:300
 msgid "Reverse image search providers"
 msgstr "ผู้ให้บริการค้นหารูปภาพแบบย้อนกลับ"
 
@@ -29098,7 +29108,7 @@ msgid "Same time as you"
 msgstr "เวลาเดียวกับคุณ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:180
 msgid "Sanitize link"
 msgstr "ล้างลิงก์"
 
@@ -29160,7 +29170,7 @@ msgid "Save a recovery kit"
 msgstr "บันทึกชุดกู้คืน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:75
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:76
 msgid "Save animation"
 msgstr "บันทึกภาพเคลื่อนไหว"
 
@@ -29189,8 +29199,8 @@ msgstr "บันทึกเป็นรายการโปรด"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF storage preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:48
 msgid "Save GIF favorites as saved media"
 msgstr "บันทึก GIF รายการโปรดเป็นสื่อที่บันทึกไว้"
 
@@ -29223,7 +29233,7 @@ msgstr "บันทึกแล้ว"
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:56
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:64
 msgid "Saved media"
 msgstr "สื่อที่บันทึกไว้"
 
@@ -29505,15 +29515,15 @@ msgstr "Scroll Lock"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:29
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:448
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:181
 msgid "Scroll to bottom"
 msgstr "เลื่อนไปล่างสุด"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:444
 msgid "Scroll to bottom when sending a message"
 msgstr "เลื่อนไปด้านล่างเมื่อส่งข้อความ"
 
@@ -29569,7 +29579,7 @@ msgid "Search bans"
 msgstr "ค้นหาผู้ที่ถูกแบน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:280
 msgid "Search by image"
 msgstr "ค้นหาด้วยรูปภาพ"
 
@@ -29596,12 +29606,12 @@ msgid "Search emojis"
 msgstr "ค้นหาอิโมจิ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:232
 msgid "Search engine"
 msgstr "เครื่องมือค้นหา"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:228
 msgid "Search engines"
 msgstr "เครื่องมือค้นหา"
 
@@ -29740,7 +29750,7 @@ msgid "Search scope: {label}"
 msgstr "ขอบเขตการค้นหา: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:240
 msgid "Search selected text"
 msgstr "ค้นหาข้อความที่เลือก"
 
@@ -30077,7 +30087,7 @@ msgid "Select interface language"
 msgstr "เลือกภาษาของแอป"
 
 #. Tooltip for the persona selection button
-#: src/features/personas/components/PersonaPickerComposerButton.tsx:23
+#: src/features/personas/components/PersonaPickerComposerButton.tsx:24
 msgid "Select persona"
 msgstr "เลือก Persona"
 
@@ -30246,7 +30256,7 @@ msgid "Send an action message (wraps in italics)."
 msgstr "ส่งข้อความแบบบรรยายการกระทำ (แสดงเป็นตัวเอียง)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:40
 msgid "Send animation"
 msgstr "ส่งแอนิเมชัน"
 
@@ -30256,7 +30266,7 @@ msgstr "ส่งรายงานอีกฉบับ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:436
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:173
 msgid "Send button"
 msgstr "ปุ่มส่งข้อความ"
@@ -30273,8 +30283,8 @@ msgstr "ส่งรายงาน DSA"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:128
 msgid "Send file messages in order"
 msgstr "ส่งข้อความไฟล์ตามลำดับ"
 
@@ -30453,18 +30463,18 @@ msgstr "ส่งไฟล์แนบ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:452
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:185
 msgid "Sent messages"
 msgstr "ข้อความที่ส่งแล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:132
 msgid "Sequential send"
 msgstr "ส่งตามลำดับ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:144
 msgid "Serial send"
 msgstr "ส่งทีละไฟล์"
 
@@ -30691,10 +30701,6 @@ msgstr "ตั้งค่าทีหลัง"
 msgid "Set voice region"
 msgstr "ตั้งค่าภูมิภาคเสียง"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
-msgid "Set what happens when you send a message using a persona's trigger."
-msgstr "ตั้งค่าว่าจะเกิดอะไรขึ้นเมื่อคุณส่งข้อความโดยใช้ทริกเกอร์ของ Persona"
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:172
 msgid "Set your new password."
 msgstr "ตั้งรหัสผ่านใหม่ของคุณ"
@@ -30913,7 +30919,7 @@ msgid "Shift"
 msgstr "Shift"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:324
 msgid "Shift expand"
 msgstr "Shift ขยาย"
 
@@ -31037,7 +31043,7 @@ msgid "Show active now on the home screen to surface friends active in voice. Yo
 msgstr "แสดงสถานะกำลังใช้งานบนหน้าหลักเพื่อให้เห็นเพื่อนที่กำลังใช้เสียงอยู่ คุณจะเห็นตัวอย่าง บริบทของช่อง ใครอยู่ในนั้นบ้าง และวิธีเข้าร่วมอย่างรวดเร็ว"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
 msgid "Show attachment expiration indicator"
 msgstr "แสดงตัวบ่งชี้วันหมดอายุของไฟล์แนบ"
 
@@ -31088,7 +31094,7 @@ msgid "Show creation date instead of expiration date"
 msgstr "แสดงวันที่สร้างแทนวันหมดอายุ"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
 msgid "Show custom emojis in expression autocomplete"
 msgstr "แสดงอิโมจิที่กำหนดเองในการเติมข้อความอัตโนมัติ"
 
@@ -31098,18 +31104,18 @@ msgid "Show default avatar, ignoring your global profile"
 msgstr "แสดงรูปโปรไฟล์เริ่มต้น ไม่ใช้โปรไฟล์ส่วนกลางของคุณ"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show default emojis in expression autocomplete"
 msgstr "แสดงอิโมจิเริ่มต้นในการเติมข้อความอัตโนมัติ"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
 msgid "Show delete button"
 msgstr "แสดงปุ่มลบ"
 
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "Show download button"
 msgstr "แสดงปุ่มดาวน์โหลด"
@@ -31137,7 +31143,7 @@ msgstr "แสดงตัวอย่างลิงก์เว็บไซต
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
 msgid "Show emoji button"
 msgstr "แสดงปุ่มอิโมจิ"
 
@@ -31147,7 +31153,7 @@ msgid "Show emoji reactions on messages"
 msgstr "แสดงรีแอ็กชันอิโมจิบนข้อความ"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
 msgid "Show favorite button"
 msgstr "แสดงปุ่มรายการโปรด"
 
@@ -31169,14 +31175,14 @@ msgid "Show focus ring on chat text area"
 msgstr "แสดงวงแหวนโฟกัสบนช่องข้อความแชท"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
 msgid "Show GIF indicator"
 msgstr "แสดงตัวบ่งชี้ GIF"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show GIFs button"
 msgstr "แสดงปุ่ม GIF"
 
@@ -31191,7 +31197,7 @@ msgid "Show icon when collapsed"
 msgstr "แสดงไอคอนเมื่อยุบ"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:168
 msgid "Show in all communities"
 msgstr "แสดงในทุกคอมมูนิตี้"
 
@@ -31235,7 +31241,7 @@ msgstr "แสดงวิธีทำ"
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show media button"
 msgstr "แสดงปุ่มสื่อ"
 
@@ -31256,7 +31262,7 @@ msgid "Show menu bar icon"
 msgstr "แสดงไอคอนแถบเมนู"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
 msgid "Show message action bar"
 msgstr "แสดงแถบการทำงานของข้อความ"
 
@@ -31339,7 +31345,7 @@ msgid "Show oldest messages first"
 msgstr "แสดงข้อความเก่าสุดก่อน"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show only the more button"
 msgstr "แสดงเฉพาะปุ่มเพิ่มเติม"
 
@@ -31358,8 +31364,15 @@ msgstr "แสดงรหัสผ่าน"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "แสดงแถบเลื่อนระดับเสียงของผู้เข้าร่วมตามอุปกรณ์ในเมนูเสียง"
 
+#. Plus menu submenu toggle that shows the persona picker button next to the textarea.
+#. Short label for an advanced message input preference.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+msgid "Show persona button"
+msgstr "แสดงปุ่ม Persona"
+
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
 msgid "Show quick reactions"
 msgstr "แสดงรีแอ็กชันด่วน"
 
@@ -31369,7 +31382,7 @@ msgid "Show rich previews for YouTube links."
 msgstr "แสดงตัวอย่างแบบเต็มสำหรับลิงก์ YouTube"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show saved media in expression autocomplete"
 msgstr "แสดงสื่อที่บันทึกไว้ในการเติมข้อความอัตโนมัติ"
 
@@ -31378,7 +31391,7 @@ msgstr "แสดงสื่อที่บันทึกไว้ในกา
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
 msgid "Show send button"
 msgstr "แสดงปุ่มส่ง"
 
@@ -31390,12 +31403,12 @@ msgstr "แสดงเนื้อหาสปอยล์เมื่อคล
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show stickers button"
 msgstr "แสดงปุ่มสติกเกอร์"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
 msgid "Show stickers in expression autocomplete"
 msgstr "แสดงสติกเกอร์ในการเติมข้อความอัตโนมัติ"
 
@@ -31405,7 +31418,7 @@ msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "แสดงข้อความ Markdown ที่ขีดฆ่าด้วยสีที่หม่นลงเล็กน้อย"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
 msgid "Show suppress embeds button"
 msgstr "แสดงปุ่มซ่อนเนื้อหาที่ฝัง"
 
@@ -31422,6 +31435,11 @@ msgstr "แสดงบทบาทนี้แยกต่างหาก"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "แสดงไอคอนในถาดระบบ"
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:200
+msgid "Show trigger behavior slider in persona picker"
+msgstr "แสดงตัวเลื่อนลักษณะทริกเกอร์ในตัวเลือก Persona"
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:26
@@ -31711,14 +31729,14 @@ msgid "Size selection"
 msgstr "เลือกขนาด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:480
 msgid "Skip"
 msgstr "ข้าม"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:460
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "ข้ามการยืนยัน \"ทำเครื่องหมายว่าอ่านแล้วทั้งหมด\""
 
@@ -31732,7 +31750,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "ข้ามคำเตือนลิงก์ภายนอก ปลอดภัยน้อยลง"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:224
 msgid "Skip the external link warning for all domains"
 msgstr "ข้ามคำเตือนลิงก์ภายนอกสำหรับทุกโดเมน"
 
@@ -31956,7 +31974,7 @@ msgid "Small submitting"
 msgstr "เล็ก (กำลังส่ง)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:380
 msgid "Smiley face"
 msgstr "หน้ายิ้ม"
 
@@ -32547,7 +32565,7 @@ msgid "Star a GIF or import a list to see it here."
 msgstr "ติดดาว GIF หรือนำเข้ารายการเพื่อดูที่นี่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:67
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:68
 msgid "Star animation"
 msgstr "ภาพเคลื่อนไหวรูปดาว"
 
@@ -32648,7 +32666,7 @@ msgid "Start speaking"
 msgstr "เริ่มพูด"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:152
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "เริ่มอัปโหลดไฟล์แนบเมื่อเพิ่มลงในช่องข้อความ"
 
@@ -32785,7 +32803,7 @@ msgid "Sticker attached to the message"
 msgstr "สติกเกอร์ที่แนบกับข้อความ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:356
 msgid "Sticker autocomplete"
 msgstr "เติมสติกเกอร์อัตโนมัติ"
 
@@ -32905,7 +32923,7 @@ msgid "Stop being an announcement channel?"
 msgstr "หยุดเป็นช่องประกาศหรือไม่"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
 msgid "Stop hiding muted channels by default?"
 msgstr "หยุดซ่อนช่องที่ปิดเสียงไว้เป็นค่าเริ่มต้นหรือไม่"
 
@@ -33128,19 +33146,19 @@ msgid "Strikethrough"
 msgstr "ขีดทับ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:188
 msgid "Strip parameters"
 msgstr "ตัดพารามิเตอร์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:184
 msgid "Strip tracking"
 msgstr "ปิดการติดตาม"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:156
 msgid "Strip tracking parameters from URLs"
 msgstr "ลบพารามิเตอร์ติดตามออกจาก URL"
 
@@ -33301,7 +33319,7 @@ msgid "SVC mode"
 msgstr "โหมด SVC"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:388
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "เปลี่ยนอีโมติคอนข้อความทั่วไป เช่น :) และ <3 เป็นอิโมจิเมื่อส่งข้อความ"
 
@@ -33924,7 +33942,7 @@ msgstr "ข้อความจะแสดงผลด้วยการลบ
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:384
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:153
 msgid "Text replacement"
 msgstr "การแทนที่ข้อความ"
@@ -34931,7 +34949,7 @@ msgid "This is the third option description"
 msgstr "นี่คือคำอธิบายตัวเลือกที่สาม"
 
 #. Tooltip on the crown icon on the persona entry that represents your main account.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:30
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:31
 msgid "This is your account."
 msgstr "นี่คือบัญชีของคุณ"
 
@@ -35677,12 +35695,12 @@ msgid "Track moderator actions across the community."
 msgstr "ติดตามการดำเนินการของผู้ดูแลทั่วทั้งคอมมูนิตี้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:160
 msgid "Tracking"
 msgstr "การติดตาม"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:164
 msgid "Tracking parameters"
 msgstr "พารามิเตอร์การติดตาม"
 
@@ -35715,7 +35733,7 @@ msgstr "โอนความเป็นเจ้าของให้ {0} แ�
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:593
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:256
 msgid "Translate"
 msgstr "แปลภาษา"
 
@@ -35730,12 +35748,12 @@ msgid "Translation provider"
 msgstr "ผู้ให้บริการแปลภาษา"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:248
 msgid "Translator"
 msgstr "นักแปล"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:252
 msgid "Translators"
 msgstr "ผู้แปล"
 
@@ -35765,10 +35783,6 @@ msgstr "การเปลี่ยนแปลงไอคอนถาดระ
 msgid "Trending GIFs"
 msgstr "GIF ยอดนิยม"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
-msgid "Trigger Behavior"
-msgstr "พฤติกรรมทริกเกอร์"
-
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "ทำให้ React หยุดทำงาน"
@@ -35779,7 +35793,7 @@ msgid "Triggers"
 msgstr "ทริกเกอร์"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:180
 msgid "Triggers don't do anything."
 msgstr "ทริกเกอร์ไม่ทำอะไร"
 
@@ -35806,14 +35820,14 @@ msgstr "จริงหรือเท็จ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:200
 msgid "Trust all"
 msgstr "เชื่อถือทั้งหมด"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:196
 msgid "Trust all external links"
 msgstr "เชื่อถือลิงก์ภายนอกทั้งหมด"
 
@@ -35823,17 +35837,17 @@ msgid "Trust all external links?"
 msgstr "เชื่อถือลิงก์ภายนอกทั้งหมดหรือไม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:204
 msgid "Trust all links"
 msgstr "เชื่อถือลิงก์ทั้งหมด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:212
 msgid "Trust domain"
 msgstr "โดเมนที่เชื่อถือได้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:208
 msgid "Trusted domains"
 msgstr "โดเมนที่เชื่อถือได้"
 
@@ -35874,7 +35888,7 @@ msgid "Try a different search term or filter"
 msgstr "ลองใช้คำค้นหาหรือตัวกรองอื่น"
 
 #. Slate message that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:53
 msgid "Try a different search, or check your spelling."
 msgstr "ลองค้นหาด้วยวิธีอื่น หรือตรวจสอบการสะกดของคุณ"
 
@@ -36087,7 +36101,7 @@ msgstr "เปิดความเป็นส่วนตัวในการ
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:364
 msgid "Turn text smileys into emoji"
 msgstr "เปลี่ยนอิโมติคอนแบบข้อความให้เป็นอิโมจิ"
 
@@ -37257,8 +37271,8 @@ msgstr "อัปโหลดไฟล์ประกอบ"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:108
 msgid "Upload attachments before sending"
 msgstr "อัปโหลดไฟล์แนบก่อนส่ง"
 
@@ -39340,7 +39354,7 @@ msgid "Web authentication"
 msgstr "การยืนยันตัวตนผ่านเว็บ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:236
 msgid "Web search"
 msgstr "ค้นหาเว็บ"
 
@@ -39623,7 +39637,7 @@ msgid "When they come online, they'll appear right here."
 msgstr "เมื่อเพื่อนออนไลน์ จะมาปรากฏตรงนี้"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:416
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
 msgstr "เมื่อปิดตัวเลือกนี้ การลบเนื้อหาข้อความที่มีไฟล์แนบออกจนหมดจะถามคุณว่าต้องการลบข้อความนั้นหรือไม่"
 
@@ -40017,7 +40031,7 @@ msgid "You can close this tab"
 msgstr "คุณสามารถปิดแท็บนี้ได้"
 
 #. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:57
 msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
 msgstr "คุณสามารถนำเข้าไฟล์ JSON ที่ส่งออกจาก Pluralkit, Tupperbox, /plu/ral, Fishing Bucket หรืออะไรก็ตามที่ส่งออกเป็นรูปแบบที่เข้ากันได้"
 

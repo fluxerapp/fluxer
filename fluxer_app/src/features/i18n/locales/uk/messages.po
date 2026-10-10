@@ -57,20 +57,20 @@ msgid "{0} personas imported successfully"
 msgstr "Успішно імпортовано {0} personas"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:19
-#: src/features/typing/rolling/RollingTypingText.tsx:54
+#: src/features/typing/rolling/RollingTypingText.tsx:21
+#: src/features/typing/rolling/RollingTypingText.tsx:61
 msgid "{a} and {b} are typing..."
 msgstr "{a} та {b} друкують..."
 
 #. Screen reader announcement in the composer when one person is typing. {a} is their display name.
-#: src/features/typing/rolling/RollingTypingText.tsx:15
-#: src/features/typing/rolling/RollingTypingText.tsx:50
+#: src/features/typing/rolling/RollingTypingText.tsx:17
+#: src/features/typing/rolling/RollingTypingText.tsx:57
 msgid "{a} is typing..."
 msgstr "{a} друкує..."
 
 #. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
-#: src/features/typing/rolling/RollingTypingText.tsx:24
-#: src/features/typing/rolling/RollingTypingText.tsx:60
+#: src/features/typing/rolling/RollingTypingText.tsx:26
+#: src/features/typing/rolling/RollingTypingText.tsx:67
 msgid "{a}, {b} and {c} are typing..."
 msgstr "{a}, {b} та {c} друкують..."
 
@@ -2653,12 +2653,12 @@ msgid "a sticker"
 msgstr "стікер"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:188
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "Тригер надсилає повідомлення зі своєю Persona, але активна Persona не змінюється."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:196
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "Тригер встановлює свою Persona як активну, доки активна Persona не буде змінена. Це також може називатися \"latching\"."
 
@@ -2898,7 +2898,7 @@ msgid "Action"
 msgstr "Дія"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:308
 msgid "Action bar"
 msgstr "Панель дій"
 
@@ -4262,7 +4262,7 @@ msgstr "Анімоване відео"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:27
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:95
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:15
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:16
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:251
 msgid "Animation"
 msgstr "Анімація"
@@ -4274,17 +4274,17 @@ msgid "Animation"
 msgstr "Анімація"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:36
 msgid "Animation behavior"
 msgstr "Поведінка анімації"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:59
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:60
 msgid "Animation favorites"
 msgstr "Вибрані анімації"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:32
 msgid "Animation picker"
 msgstr "Вибір анімації"
 
@@ -4294,7 +4294,7 @@ msgid "Animation playback"
 msgstr "Відтворення анімації"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:71
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:72
 msgid "Animation saving"
 msgstr "Збереження анімації"
 
@@ -4302,7 +4302,7 @@ msgstr "Збереження анімації"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:301
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:19
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:20
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:279
 msgid "Animations"
 msgstr "Анімації"
@@ -4586,7 +4586,7 @@ msgid "Apply theme"
 msgstr "Застосувати тему"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Apply to all communities"
 msgstr "Застосувати до всіх спільнот"
 
@@ -4753,7 +4753,7 @@ msgid "As a gift"
 msgstr "У подарунок"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:376
 msgid "ASCII smileys"
 msgstr "ASCII-смайлики"
 
@@ -4854,7 +4854,7 @@ msgid "Attachment thumbnails"
 msgstr "Мініатюри вкладень"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:119
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:120
 msgid "Attachment upload"
 msgstr "Завантаження вкладень"
 
@@ -5260,7 +5260,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "Автоматично видаляти параметри відстеження (як-от utm_source, fbclid, gclid) з URL-адрес у повідомленнях, які ви надсилаєте. Очищає посилання до того, як воно дійде до інших."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:192
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "Автоматично видаляти параметри відстеження з URL-адрес у повідомленнях, які ви надсилаєте"
 
@@ -5269,24 +5269,24 @@ msgid "Automatically screen messages for explicit content in channels not marked
 msgstr "Автоматично перевіряти повідомлення на наявність відвертого вмісту в каналах, не позначених як вміст для дорослих."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:23
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:24
 msgid "Automatically send animation"
 msgstr "Автоматично надсилати анімацію"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:27
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:28
 msgid "Automatically send animations"
 msgstr "Автоматично надсилати анімації"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:44
 msgid "Automatically send GIFs from the picker without confirmation"
 msgstr "Автоматично надсилати GIF-файли з панелі без підтвердження"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF behavior preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:40
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:11
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:12
 msgid "Automatically send GIFs when selected"
 msgstr "Автоматично надсилати GIF-файли після вибору"
 
@@ -7760,7 +7760,7 @@ msgid "Choose friends to message."
 msgstr "Виберіть друзів для листування."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:456
 msgid "Choose how chat moves after you send a message"
 msgstr "Оберіть, як чат прокручується після надсилання повідомлення"
 
@@ -7780,7 +7780,7 @@ msgid "Choose how people sign in"
 msgstr "Виберіть, як люди будуть входити"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:79
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:80
 msgid "Choose how starred GIF favorites are stored"
 msgstr "Виберіть, як зберігатимуться вибрані GIF"
 
@@ -7845,6 +7845,11 @@ msgstr "Виберіть, що {clientLabel} може робити у вашій
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:293
 msgid "Choose what friends see in their active now panel"
 msgstr "Виберіть, що друзі бачитимуть на панелі «Активні зараз»"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:516
+msgid "Choose what happens when you use a persona trigger"
+msgstr "Виберіть, що відбувається, коли ви використовуєте тригер Persona"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -8067,7 +8072,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "Видавання себе за іншу особу, бренд чи організацію."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:176
 msgid "Clean link"
 msgstr "Очистити посилання"
 
@@ -8117,7 +8122,7 @@ msgstr "Очистити макети вкладень"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:142
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:143
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Очистити команду"
@@ -8141,7 +8146,7 @@ msgid "Clear friends search"
 msgstr "Очистити пошук друзів"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:400
 msgid "Clear message text"
 msgstr "Очистити текст повідомлення"
 
@@ -8604,7 +8609,7 @@ msgstr "Двокрапка"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:348
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:157
 msgid "Colon autocomplete"
 msgstr "Автозаповнення після двокрапки"
@@ -9049,7 +9054,7 @@ msgstr "Кнопка редактора"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:424
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:193
 msgid "Composer buttons"
 msgstr "Кнопки редактора"
@@ -9066,7 +9071,7 @@ msgstr "Стискаємо"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:172
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
 msgid "Configure"
 msgstr "Налаштувати"
@@ -9107,7 +9112,7 @@ msgid "Configure role settings and permissions"
 msgstr "Налаштуйте параметри та дозволи ролі"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:264
 msgid "Configure search engines used from selected text"
 msgstr "Налаштуйте пошукові системи, які використовуються для пошуку виділеного тексту"
 
@@ -9117,7 +9122,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "Налаштувати перевірку орфографії, словники та особисті слова"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:296
 msgid "Configure translator providers used from selected text"
 msgstr "Налаштуйте постачальників перекладу, які використовуються для виділеного тексту"
 
@@ -9141,7 +9146,7 @@ msgstr "Налаштуйте свій значок профілю"
 #: src/features/channel/components/MentionEveryonePopout.tsx:185
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:472
 msgid "Confirm"
 msgstr "Підтвердити"
 
@@ -9201,7 +9206,7 @@ msgid "Confirm voice join"
 msgstr "Підтвердження приєднання до голосового каналу"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:468
 msgid "Confirmation"
 msgstr "Підтвердження"
 
@@ -10779,7 +10784,7 @@ msgstr "Створити нове посилання"
 msgid "Create or join a community"
 msgstr "Створити спільноту або приєднатися до неї"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:256
 msgid "Create Persona"
 msgstr "Створити Persona"
 
@@ -11128,7 +11133,7 @@ msgid "Custom ringtone"
 msgstr "Власний рингтон"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:244
 msgid "Custom search engine"
 msgstr "Власна пошукова система"
 
@@ -11202,7 +11207,7 @@ msgid "Custom title bar"
 msgstr "Власний рядок заголовка"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:260
 msgid "Custom translator"
 msgstr "Власний перекладач"
 
@@ -11261,7 +11266,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "Налаштуйте елементи інтерфейсу та поведінку."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:340
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "Налаштуйте панель дій, що з'являється при наведенні на повідомлення"
 
@@ -11271,7 +11276,7 @@ msgid "Customize the spacing and size"
 msgstr "Налаштуйте інтервали та розмір"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:103
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:104
 msgid "Customize which buttons and indicators appear on media attachments and embeds"
 msgstr "Налаштуйте, які кнопки та індикатори відображаються на медіафайлах і у вбудованому вмісті"
 
@@ -11885,7 +11890,7 @@ msgid "Delete passkey"
 msgstr "Видалити ключ доступу"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:404
 msgid "Delete prompt"
 msgstr "Підтвердження видалення"
 
@@ -13154,7 +13159,7 @@ msgid "Download audio"
 msgstr "Завантажити аудіо"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:91
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:92
 msgid "Download button"
 msgstr "Кнопка завантаження"
 
@@ -13454,7 +13459,7 @@ msgid "Early access to new features"
 msgstr "Ранній доступ до нових функцій"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:115
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:116
 msgid "Early upload"
 msgstr "Раннє завантаження"
 
@@ -13903,12 +13908,12 @@ msgid "Emoji and sticker cloning shortcuts"
 msgstr "Ярлики для клонування емодзі та стікерів"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:352
 msgid "Emoji autocomplete"
 msgstr "Автозаповнення емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:432
 msgid "Emoji button"
 msgstr "Кнопка емоджі"
 
@@ -13972,19 +13977,19 @@ msgid "Emojis"
 msgstr "Емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:372
 msgid "Emoticon"
 msgstr "Емотикон"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:368
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:145
 msgid "Emoticons"
 msgstr "Емотикони"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:396
 msgid "Empty edit"
 msgstr "Порожнє редагування"
 
@@ -14197,7 +14202,7 @@ msgid "Enable self-hosted mode client-side. Hides all premium and billing UI."
 msgstr "Увімкнути режим самостійного розміщення на боці клієнта. Приховує весь інтерфейс преміуму та оплати."
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
 msgid "Enable Shift to expand"
 msgstr "Увімкнути Shift для розгортання"
 
@@ -14368,7 +14373,7 @@ msgid "Enhanced"
 msgstr "Покращено"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:148
 msgid "Ensures file messages appear in the order you sent them"
 msgstr "Гарантує, що повідомлення з файлами відображаються в порядку надсилання"
 
@@ -14815,7 +14820,7 @@ msgid "Expand"
 msgstr "Розгорнути"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:328
 msgid "Expand action bar"
 msgstr "Розгорнути панель дій"
 
@@ -14997,7 +15002,7 @@ msgstr "Експортувати теми"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:344
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:161
 msgid "Expression autocomplete"
 msgstr "Автозавершення виразів"
@@ -15027,7 +15032,7 @@ msgstr "Зовнішні"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:18
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:216
 msgid "External link warning"
 msgstr "Попередження про зовнішнє посилання"
 
@@ -15393,17 +15398,17 @@ msgid "Favicon"
 msgstr "Фавікон"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:52
 msgid "Favorite animation"
 msgstr "Вибрана анімація"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:55
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:56
 msgid "Favorite animations"
 msgstr "Вибрані анімації"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:95
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:96
 msgid "Favorite button"
 msgstr "Кнопка додавання до вибраного"
 
@@ -15514,7 +15519,7 @@ msgid "File options"
 msgstr "Параметри файлу"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:136
 msgid "File ordering"
 msgstr "Порядок файлів"
 
@@ -15536,7 +15541,7 @@ msgstr "завантаження файлу"
 #. Label for the has:file option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/search/components/search/HasFilterSheet.tsx:49
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:123
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:124
 msgid "File upload"
 msgstr "Завантаження файлу"
 
@@ -15638,8 +15643,8 @@ msgstr "Фільтрувати учасників без ролей"
 msgid "Filter mentions"
 msgstr "Фільтрувати згадки"
 
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:158
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:159
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:177
 msgid "Filter personas"
 msgstr "Фільтрувати Personas"
 
@@ -16623,12 +16628,12 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:428
 msgid "GIF button"
 msgstr "Кнопка GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:99
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:100
 msgid "GIF indicator"
 msgstr "Індикатор GIF"
 
@@ -16997,7 +17002,7 @@ msgid "Go to third community"
 msgstr "Перейти до третьої спільноти"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:288
 msgid "Google Lens"
 msgstr "Google Lens"
 
@@ -17519,7 +17524,7 @@ msgid "Hide avatars"
 msgstr "Приховати аватари"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:507
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:508
 msgid "Hide channels you've muted from community sidebars"
 msgstr "Не показувати канали з вимкненими сповіщеннями в бічних панелях спільнот"
 
@@ -17569,7 +17574,7 @@ msgid "Hide members"
 msgstr "Приховати учасників"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:499
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:500
 msgid "Hide muted"
 msgstr "Приховати вимкнені"
 
@@ -17580,13 +17585,13 @@ msgstr "Приховати канали з вимкненими сповіщен
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:487
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:488
 msgid "Hide muted channels by default"
 msgstr "Приховувати канали з вимкненими сповіщеннями за замовчуванням"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Hide muted channels by default?"
 msgstr "Приховувати канали з вимкненими сповіщеннями за замовчуванням?"
 
@@ -17751,7 +17756,7 @@ msgid "Hotkeys"
 msgstr "Гарячі клавіші"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:316
 msgid "Hover buttons"
 msgstr "Кнопки, що з'являються при наведенні"
 
@@ -18144,7 +18149,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "Розміри зображення мають бути від {min}x{min2} до {max}x{max2} пікселів."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:284
 msgid "Image lookup"
 msgstr "Пошук зображень"
 
@@ -18159,12 +18164,12 @@ msgid "Image preview"
 msgstr "Попередній перегляд зображення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:276
 msgid "Image search"
 msgstr "Пошук зображень"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:292
 msgid "Image search provider"
 msgstr "Постачальник пошуку зображень"
 
@@ -18287,7 +18292,7 @@ msgstr "Імпортувати теми"
 msgid "Import unavailable"
 msgstr "Імпорт недоступний"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:231
 msgid "Import..."
 msgstr "Імпортувати..."
 
@@ -19455,14 +19460,14 @@ msgid "Keep animations, GIF playback, hover effects, and tooltips running while 
 msgstr "Не зупиняти анімації, відтворення GIF, ефекти наведення та підказки, коли вікно неактивне."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:412
 msgid "Keep attachments"
 msgstr "Зберігати вкладення"
 
 #. Label for an advanced message editing preference.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:392
 msgid "Keep attachments when clearing an edit"
 msgstr "Зберігати вкладення, якщо очистити текст під час редагування"
 
@@ -19670,7 +19675,7 @@ msgid "Last used"
 msgstr "Востаннє використано"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:192
 msgid "Last Used"
 msgstr "Останнє використання"
 
@@ -20131,7 +20136,7 @@ msgid "Link underline"
 msgstr "Підкреслення посилань"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:220
 msgid "Link warnings"
 msgstr "Попередження про посилання"
 
@@ -20490,12 +20495,12 @@ msgid "Make group owner"
 msgstr "Зробити власником групи"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:32
 msgid "Make persona active"
 msgstr "Зробити Persona активною"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:36
 msgid "Make persona not active"
 msgstr "Зробити Persona неактивною"
 
@@ -20641,7 +20646,7 @@ msgid "Manage your subscription"
 msgstr "Керування підпискою"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:184
 msgid "Manual"
 msgstr "Вручну"
 
@@ -20653,7 +20658,7 @@ msgstr "Оновлення для комп'ютера вручну"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:464
 msgid "Mark all as read"
 msgstr "Позначити всі як прочитані"
 
@@ -20675,7 +20680,7 @@ msgid "Mark all inbox channels as read"
 msgstr "Позначити всі канали у вхідних як прочитані"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:483
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:484
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "Позначати всі непрочитані канали у вхідних як прочитані одразу, без запиту підтвердження"
 
@@ -20770,7 +20775,7 @@ msgid "Markers below slider"
 msgstr "Маркери під повзунком"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:168
 msgid "Marketing parameters"
 msgstr "Маркетингові параметри"
 
@@ -21008,7 +21013,7 @@ msgid "Media"
 msgstr "Медіа"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:87
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:88
 msgid "Media attachment buttons"
 msgstr "Кнопки для вкладень медіафайлів"
 
@@ -21018,7 +21023,7 @@ msgid "Media button"
 msgstr "Кнопка медіа"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:84
 msgid "Media buttons"
 msgstr "Кнопки медіа"
 
@@ -21386,7 +21391,7 @@ msgid "Message #{channelName}"
 msgstr "Написати в #{channelName}"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:304
 msgid "Message action bar"
 msgstr "Панель дій з повідомленнями"
 
@@ -21408,7 +21413,7 @@ msgid "Message badge"
 msgstr "Значок повідомлення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:336
 msgid "Message buttons"
 msgstr "Кнопки повідомлень"
 
@@ -21456,7 +21461,7 @@ msgid "Message display settings are only available on desktop."
 msgstr "Налаштування відображення повідомлень доступні лише на комп'ютері."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:408
 msgid "Message editing"
 msgstr "Редагування повідомлень"
 
@@ -21489,7 +21494,7 @@ msgid "Message history threshold updated"
 msgstr "Поріг історії повідомлень оновлено"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:312
 msgid "Message hover"
 msgstr "Наведення на повідомлення"
 
@@ -21502,7 +21507,7 @@ msgstr "Поле введення повідомлення"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:420
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:197
 msgid "Message input buttons"
 msgstr "Кнопки введення повідомлень"
@@ -22046,7 +22051,7 @@ msgid "More actions for {displayName}"
 msgstr "Більше дій для {displayName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:332
 msgid "More button"
 msgstr "Кнопка «Більше»"
 
@@ -22246,7 +22251,7 @@ msgid "Multi-line"
 msgstr "Кілька рядків"
 
 #. Label in the composer typing row when the names of the people typing do not fit.
-#: src/features/typing/rolling/RollingTypingText.tsx:29
+#: src/features/typing/rolling/RollingTypingText.tsx:31
 msgid "Multiple people are typing..."
 msgstr "Кілька людей набирають текст..."
 
@@ -22445,7 +22450,7 @@ msgstr "сповіщення вимкнено"
 #. Short label in the sidebar navigation guild list item.
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:492
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
@@ -22468,7 +22473,7 @@ msgstr "Мікрофон вимкнено модераторами"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:496
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Muted channels"
 msgstr "Канали з вимкненими сповіщеннями"
@@ -22591,7 +22596,7 @@ msgid "My group"
 msgstr "Моя група"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:44
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "Мене звати Дарт Вейдер. Я позаземна істота з планети Вулкан!"
 
@@ -22684,7 +22689,7 @@ msgid "Names get a random tag, like alex#4821, so several people can share a nam
 msgstr "Іменам надається випадковий тег, наприклад alex#4821, щоб кілька людей могли використовувати однакове ім'я."
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:34
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:35
 msgid "Names, pronouns, or triggers"
 msgstr "Імена, займенники або тригери"
 
@@ -22869,20 +22874,20 @@ msgid "New category"
 msgstr "Нова категорія"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 msgid "New communities only"
 msgstr "Лише нові спільноти"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:650
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:734
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "У нових спільнотах, до яких ви приєднаєтеся, канали з вимкненими сповіщеннями автоматично приховуватимуться. Застосувати це налаштування й до всіх наявних спільнот?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:681
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:765
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "У нових спільнотах, до яких ви приєднаєтеся, канали з вимкненими сповіщеннями більше не приховуватимуться автоматично. Показувати такі канали й в усіх наявних спільнотах?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:503
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:504
 msgid "New community muted"
 msgstr "Канали з вимкненими сповіщеннями в нових спільнотах"
 
@@ -23434,12 +23439,12 @@ msgid "No personal words yet."
 msgstr "Особистих слів ще немає."
 
 #. Slate title that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:49
 msgid "No personas found"
 msgstr "Personas не знайдено"
 
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:40
 msgid "No personas yet"
 msgstr "Persona ще не створені"
 
@@ -24029,7 +24034,7 @@ msgstr "Об'єкти"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:176
 msgid "Off"
 msgstr "Вимкнено"
 
@@ -24620,7 +24625,7 @@ msgstr "Відкрити профіль {directMessageName}"
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:48
-#: src/features/ui/avatars/AvatarStack.tsx:23
+#: src/features/ui/avatars/AvatarStack.tsx:25
 msgid "Open profile for {displayName}"
 msgstr "Відкрити профіль {displayName}"
 
@@ -24852,7 +24857,7 @@ msgid "Ordered"
 msgstr "Нумерований"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:140
 msgid "Ordered upload"
 msgstr "Упорядковане завантаження"
 
@@ -25497,6 +25502,11 @@ msgstr "Persona створено"
 msgid "Persona deleted"
 msgstr "Persona видалено"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:512
+msgid "Persona trigger behavior"
+msgstr "Поведінка тригера Persona"
+
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
@@ -25526,7 +25536,7 @@ msgstr "Особисті нотатки вже були порожні"
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:214
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas — це повторно використовувані ідентичності, які ви можете прикріплювати до повідомлень."
 
@@ -25606,12 +25616,12 @@ msgid "Pick the rule to review."
 msgstr "Виберіть правило для перегляду."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:360
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "Виберіть, що відображатиметься під час введення двокрапки в полі для введення повідомлення"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:440
 msgid "Pick which buttons show in the message input"
 msgstr "Виберіть, які кнопки відображатимуться в полі введення повідомлень"
 
@@ -25949,7 +25959,7 @@ msgid "Power saving"
 msgstr "Енергозбереження"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:112
 msgid "Pre-upload attachments"
 msgstr "Завантажувати вкладення перед надсиланням"
 
@@ -26523,7 +26533,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Просування або інструкції, що заохочують до самоушкодження чи розладів харчової поведінки."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:476
 msgid "Prompt"
 msgstr "Запит"
 
@@ -26860,7 +26870,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "Швидкий CSS замінено з {fileName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:320
 msgid "Quick reactions"
 msgstr "Швидкі реакції"
 
@@ -27293,7 +27303,7 @@ msgid "Reference copied."
 msgstr "Посилання скопійовано."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:172
 msgid "Referral parameters"
 msgstr "Реферальні параметри"
 
@@ -28726,14 +28736,14 @@ msgid "Reveal spoiler"
 msgstr "Показати спойлер"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:272
 msgid "Reverse image"
 msgstr "Зворотний пошук зображень"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:613
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:268
 msgid "Reverse image search"
 msgstr "Зворотний пошук зображень"
 
@@ -28743,7 +28753,7 @@ msgid "Reverse image search provider"
 msgstr "Постачальник зворотного пошуку зображень"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:300
 msgid "Reverse image search providers"
 msgstr "Постачальники зворотного пошуку зображень"
 
@@ -29098,7 +29108,7 @@ msgid "Same time as you"
 msgstr "Час збігається з вашим"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:180
 msgid "Sanitize link"
 msgstr "Очистити посилання"
 
@@ -29160,7 +29170,7 @@ msgid "Save a recovery kit"
 msgstr "Зберегти резервний набір"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:75
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:76
 msgid "Save animation"
 msgstr "Зберегти анімацію"
 
@@ -29189,8 +29199,8 @@ msgstr "Зберегти у вибране"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF storage preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:48
 msgid "Save GIF favorites as saved media"
 msgstr "Зберігати вибрані GIF як збережені медіа"
 
@@ -29223,7 +29233,7 @@ msgstr "Збережено"
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:56
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:64
 msgid "Saved media"
 msgstr "Збережені медіа"
 
@@ -29505,15 +29515,15 @@ msgstr "Scroll Lock"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:29
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:448
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:181
 msgid "Scroll to bottom"
 msgstr "Прокрутити донизу"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:444
 msgid "Scroll to bottom when sending a message"
 msgstr "Прокручувати донизу під час надсилання повідомлення"
 
@@ -29569,7 +29579,7 @@ msgid "Search bans"
 msgstr "Пошук заблокованих"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:280
 msgid "Search by image"
 msgstr "Пошук за зображенням"
 
@@ -29596,12 +29606,12 @@ msgid "Search emojis"
 msgstr "Пошук емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:232
 msgid "Search engine"
 msgstr "Пошукова система"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:228
 msgid "Search engines"
 msgstr "Пошукові системи"
 
@@ -29740,7 +29750,7 @@ msgid "Search scope: {label}"
 msgstr "Область пошуку: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:240
 msgid "Search selected text"
 msgstr "Шукати виділений текст"
 
@@ -30077,7 +30087,7 @@ msgid "Select interface language"
 msgstr "Виберіть мову інтерфейсу"
 
 #. Tooltip for the persona selection button
-#: src/features/personas/components/PersonaPickerComposerButton.tsx:23
+#: src/features/personas/components/PersonaPickerComposerButton.tsx:24
 msgid "Select persona"
 msgstr "Вибрати Persona"
 
@@ -30246,7 +30256,7 @@ msgid "Send an action message (wraps in italics)."
 msgstr "Надіслати повідомлення дії (відображається курсивом)."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:40
 msgid "Send animation"
 msgstr "Надіслати анімацію"
 
@@ -30256,7 +30266,7 @@ msgstr "Надіслати ще одну скаргу"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:436
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:173
 msgid "Send button"
 msgstr "Кнопка надсилання"
@@ -30273,8 +30283,8 @@ msgstr "Надіслати скаргу за DSA"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:128
 msgid "Send file messages in order"
 msgstr "Надсилати файли послідовно"
 
@@ -30453,18 +30463,18 @@ msgstr "Надіслано вкладення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:452
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:185
 msgid "Sent messages"
 msgstr "Надіслані повідомлення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:132
 msgid "Sequential send"
 msgstr "Послідовне надсилання"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:144
 msgid "Serial send"
 msgstr "Надсилати послідовно"
 
@@ -30691,10 +30701,6 @@ msgstr "Налаштувати пізніше"
 msgid "Set voice region"
 msgstr "Змінювати голосовий регіон"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
-msgid "Set what happens when you send a message using a persona's trigger."
-msgstr "Налаштуйте, що відбувається, коли ви надсилаєте повідомлення, використовуючи тригер Persona."
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:172
 msgid "Set your new password."
 msgstr "Встановіть новий пароль."
@@ -30913,7 +30919,7 @@ msgid "Shift"
 msgstr "Shift"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:324
 msgid "Shift expand"
 msgstr "Розгортання з Shift"
 
@@ -31037,7 +31043,7 @@ msgid "Show active now on the home screen to surface friends active in voice. Yo
 msgstr "Показувати «Зараз активні» на головному екрані, щоб бачити друзів, які спілкуються голосом. Ви побачите попередній перегляд, контекст каналу, хто вже там, і швидкий спосіб приєднатися."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
 msgid "Show attachment expiration indicator"
 msgstr "Показувати індикатор закінчення терміну дії вкладення"
 
@@ -31088,7 +31094,7 @@ msgid "Show creation date instead of expiration date"
 msgstr "Показувати дату створення замість дати закінчення"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
 msgid "Show custom emojis in expression autocomplete"
 msgstr "Показувати власні емоджі в автозаповненні виразів"
 
@@ -31098,18 +31104,18 @@ msgid "Show default avatar, ignoring your global profile"
 msgstr "Показувати типовий аватар, ігноруючи ваш глобальний профіль"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show default emojis in expression autocomplete"
 msgstr "Показувати стандартні емодзі в автозаповненні виразів"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
 msgid "Show delete button"
 msgstr "Показувати кнопку видалення"
 
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "Show download button"
 msgstr "Показувати кнопку завантаження"
@@ -31137,7 +31143,7 @@ msgstr "Показувати вбудований вміст і попередн
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
 msgid "Show emoji button"
 msgstr "Показувати кнопку емоджі"
 
@@ -31147,7 +31153,7 @@ msgid "Show emoji reactions on messages"
 msgstr "Показувати реакції емоджі на повідомленнях"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
 msgid "Show favorite button"
 msgstr "Показувати кнопку додавання до вибраного"
 
@@ -31169,14 +31175,14 @@ msgid "Show focus ring on chat text area"
 msgstr "Показувати рамку фокусу в полі введення чату"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
 msgid "Show GIF indicator"
 msgstr "Показувати індикатор GIF"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show GIFs button"
 msgstr "Показувати кнопку GIF"
 
@@ -31191,7 +31197,7 @@ msgid "Show icon when collapsed"
 msgstr "Показувати іконку, коли згорнуто"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:168
 msgid "Show in all communities"
 msgstr "Показувати в усіх спільнотах"
 
@@ -31235,7 +31241,7 @@ msgstr "Показати інструкції"
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show media button"
 msgstr "Показувати кнопку медіа"
 
@@ -31256,7 +31262,7 @@ msgid "Show menu bar icon"
 msgstr "Показувати іконку в рядку меню"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
 msgid "Show message action bar"
 msgstr "Показувати панель дій з повідомленнями"
 
@@ -31339,7 +31345,7 @@ msgid "Show oldest messages first"
 msgstr "Спочатку показувати найстаріші повідомлення"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show only the more button"
 msgstr "Показувати лише кнопку «Більше»"
 
@@ -31358,8 +31364,15 @@ msgstr "Показати пароль"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Показувати повзунки гучності учасників для кожного пристрою в голосових меню"
 
+#. Plus menu submenu toggle that shows the persona picker button next to the textarea.
+#. Short label for an advanced message input preference.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+msgid "Show persona button"
+msgstr "Показувати кнопку Persona"
+
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
 msgid "Show quick reactions"
 msgstr "Показувати швидкі реакції"
 
@@ -31369,7 +31382,7 @@ msgid "Show rich previews for YouTube links."
 msgstr "Показувати розширені попередні перегляди для посилань YouTube."
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show saved media in expression autocomplete"
 msgstr "Показувати збережені медіа в автозаповненні виразів"
 
@@ -31378,7 +31391,7 @@ msgstr "Показувати збережені медіа в автозапов
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
 msgid "Show send button"
 msgstr "Показувати кнопку надсилання"
 
@@ -31390,12 +31403,12 @@ msgstr "Показувати прихований вміст після нати
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show stickers button"
 msgstr "Показувати кнопку стікерів"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
 msgid "Show stickers in expression autocomplete"
 msgstr "Показувати стікери в автозаповненні виразів"
 
@@ -31405,7 +31418,7 @@ msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Показувати закреслений текст Markdown трохи приглушеним кольором."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
 msgid "Show suppress embeds button"
 msgstr "Показувати кнопку приховування вбудованого вмісту"
 
@@ -31422,6 +31435,11 @@ msgstr "Показувати цю роль окремо"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "Показувати іконку в треї"
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:200
+msgid "Show trigger behavior slider in persona picker"
+msgstr "Показувати повзунок поведінки тригера у виборі Persona"
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:26
@@ -31711,14 +31729,14 @@ msgid "Size selection"
 msgstr "Вибір розміру"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:480
 msgid "Skip"
 msgstr "Пропустити"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:460
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Пропускати підтвердження «Позначити всі як прочитані»"
 
@@ -31732,7 +31750,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "Пропускати попередження про зовнішні посилання. Менш безпечно."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:224
 msgid "Skip the external link warning for all domains"
 msgstr "Пропускати попередження про зовнішні посилання для всіх доменів"
 
@@ -31956,7 +31974,7 @@ msgid "Small submitting"
 msgstr "Надсилання (мала)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:380
 msgid "Smiley face"
 msgstr "Смайлик"
 
@@ -32547,7 +32565,7 @@ msgid "Star a GIF or import a list to see it here."
 msgstr "Додайте GIF до вибраного або імпортуйте список, щоб побачити його тут."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:67
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:68
 msgid "Star animation"
 msgstr "Анімація зірки"
 
@@ -32648,7 +32666,7 @@ msgid "Start speaking"
 msgstr "Почати озвучення"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:152
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "Завантажувати вкладення одразу після їх додавання до поля введення повідомлення"
 
@@ -32785,7 +32803,7 @@ msgid "Sticker attached to the message"
 msgstr "Стікер, прикріплений до повідомлення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:356
 msgid "Sticker autocomplete"
 msgstr "Автозаповнення стікерів"
 
@@ -32905,7 +32923,7 @@ msgid "Stop being an announcement channel?"
 msgstr "Припинити бути каналом оголошень?"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
 msgid "Stop hiding muted channels by default?"
 msgstr "Припинити приховувати канали з вимкненими сповіщеннями за замовчуванням?"
 
@@ -33128,19 +33146,19 @@ msgid "Strikethrough"
 msgstr "Закреслення"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:188
 msgid "Strip parameters"
 msgstr "Видалити параметри"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:184
 msgid "Strip tracking"
 msgstr "Видалення трекерів"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:156
 msgid "Strip tracking parameters from URLs"
 msgstr "Видаляти параметри відстеження з посилань"
 
@@ -33301,7 +33319,7 @@ msgid "SVC mode"
 msgstr "Режим SVC"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:388
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "Замінюйте звичайні текстові смайли, такі як :) і <3, на емоджі під час надсилання повідомлень"
 
@@ -33924,7 +33942,7 @@ msgstr "Текст відображається зі згладжуванням 
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:384
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:153
 msgid "Text replacement"
 msgstr "Заміна тексту"
@@ -34931,7 +34949,7 @@ msgid "This is the third option description"
 msgstr "Це опис третього варіанту"
 
 #. Tooltip on the crown icon on the persona entry that represents your main account.
-#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:30
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx:31
 msgid "This is your account."
 msgstr "Це ваш обліковий запис."
 
@@ -35677,12 +35695,12 @@ msgid "Track moderator actions across the community."
 msgstr "Відстежуйте дії модераторів у спільноті."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:160
 msgid "Tracking"
 msgstr "Відстеження"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:164
 msgid "Tracking parameters"
 msgstr "Параметри відстеження"
 
@@ -35715,7 +35733,7 @@ msgstr "Право власності передано користувачу {0
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:593
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:256
 msgid "Translate"
 msgstr "Перекласти"
 
@@ -35730,12 +35748,12 @@ msgid "Translation provider"
 msgstr "Постачальник перекладу"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:248
 msgid "Translator"
 msgstr "Перекладач"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:252
 msgid "Translators"
 msgstr "Перекладачі"
 
@@ -35765,10 +35783,6 @@ msgstr "Зміни іконки в треї застосовуються лиш�
 msgid "Trending GIFs"
 msgstr "Популярні GIF-файли"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
-msgid "Trigger Behavior"
-msgstr "Поведінка тригера"
-
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "Спричинити збій React"
@@ -35779,7 +35793,7 @@ msgid "Triggers"
 msgstr "Тригери"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:180
 msgid "Triggers don't do anything."
 msgstr "Тригери нічого не роблять."
 
@@ -35806,14 +35820,14 @@ msgstr "Так або ні"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:200
 msgid "Trust all"
 msgstr "Довіряти всім"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:196
 msgid "Trust all external links"
 msgstr "Довіряти всім зовнішнім посиланням"
 
@@ -35823,17 +35837,17 @@ msgid "Trust all external links?"
 msgstr "Довіряти всім зовнішнім посиланням?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:204
 msgid "Trust all links"
 msgstr "Довіряти всім посиланням"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:212
 msgid "Trust domain"
 msgstr "Довірений домен"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:208
 msgid "Trusted domains"
 msgstr "Довірені домени"
 
@@ -35874,7 +35888,7 @@ msgid "Try a different search term or filter"
 msgstr "Спробуйте інший пошуковий запит або фільтр"
 
 #. Slate message that shows in the Personas tab when there are no personas when filtered.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:53
 msgid "Try a different search, or check your spelling."
 msgstr "Спробуйте інший пошук або перевірте правопис."
 
@@ -36087,7 +36101,7 @@ msgstr "Увімкнути конфіденційність трансляції
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:364
 msgid "Turn text smileys into emoji"
 msgstr "Увімкнути перетворення текстових смайликів на емоджі"
 
@@ -37257,8 +37271,8 @@ msgstr "Завантажити ресурси"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:108
 msgid "Upload attachments before sending"
 msgstr "Завантажувати вкладення перед надсиланням"
 
@@ -39340,7 +39354,7 @@ msgid "Web authentication"
 msgstr "Вебавтентифікація"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:236
 msgid "Web search"
 msgstr "Вебпошук"
 
@@ -39623,7 +39637,7 @@ msgid "When they come online, they'll appear right here."
 msgstr "Щойно вони з'являться онлайн, ви побачите їх тут."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:416
 msgid "When this is off, clearing the text of a message with attachments asks you to delete the message"
 msgstr "Коли вимкнено, видалення тексту повідомлення з вкладеннями пропонує видалити саме повідомлення"
 
@@ -40017,7 +40031,7 @@ msgid "You can close this tab"
 msgstr "Ви можете закрити цю вкладку"
 
 #. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:57
 msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
 msgstr "Ви можете імпортувати файли JSON, експортовані з Pluralkit, Tupperbox, /plu/ral, Fishing Bucket або будь-чого, що експортує в сумісний формат."
 
