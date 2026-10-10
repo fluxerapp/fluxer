@@ -192,6 +192,7 @@ const PremiumBadge = () => (
 );
 
 export function useHasHigherVideoQuality(): boolean {
+	useMediaEngineVersion();
 	return resolveHigherVideoQuality();
 }
 

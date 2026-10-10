@@ -233,6 +233,7 @@ export const Endpoints = {
 	USER_ENTRANCE_SOUND: (soundId: string) => `/users/@me/entrance-sounds/${soundId}`,
 	USER_ENTRANCE_SOUND_SELECTIONS: '/users/@me/entrance-sound-selections',
 	VOICE_CHANNEL_ENTRANCE_SOUND: (channelId: string) => `/voice/channels/${channelId}/entrance-sound`,
+	VOICE_P2P_CONNECTION_REPORTS: '/voice/p2p/connection-reports',
 	USER_FAVORITE_MEMES: (query = ME) => `/users/${query}/memes`,
 	USER_FAVORITE_MEME: (query = ME, memeId: string) => `/users/${query}/memes/${memeId}`,
 	USER_FAVORITE_GIFS_RESOLVE: (query = ME) => `/users/${query}/favorite-gifs/resolve`,

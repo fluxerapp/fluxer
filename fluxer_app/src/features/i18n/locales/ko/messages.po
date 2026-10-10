@@ -27,7 +27,7 @@ msgstr "... 좁게 모드를 켜 보세요. 좋아요!"
 msgid "(edited)"
 msgstr "(수정됨)"
 
-#: src/features/app/components/pages/YouPage.tsx:194
+#: src/features/app/components/pages/YouPage.tsx:206
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:907
 msgid "(only visible to you)"
 msgstr "(나에게만 보임)"
@@ -1114,7 +1114,7 @@ msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {#개 차단된 메시지} other {#개 차단된 메시지}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:112
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {#개의 채널이 이 채널을 구독 중입니다} other {#개의 채널이 이 채널을 구독 중입니다}} 이 채널을 텍스트 채널로 전환하면 해당 구독이 제거됩니다."
 
@@ -1123,14 +1123,14 @@ msgstr "{count, plural, one {#개의 채널이 이 채널을 구독 중입니다
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {#개 커뮤니티 찾음} other {#개 커뮤니티 찾음}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {#개의 커뮤니티가 자체 설정을 가지고 있습니다} other {#개의 커뮤니티가 자체 설정을 가지고 있습니다}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.} other {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {#개의 커뮤니티에서 다른 설정을 사용합니다} other {#개의 커뮤니티에서 다른 설정을 사용합니다}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -1195,6 +1195,11 @@ msgstr "{count, plural, one {다른 #명} other {다른 #명}}"
 #: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {#명 통화 중} other {#명 통화 중}}"
+
+#. Security settings: badge next to the Passkeys title showing how many passkeys are registered.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:112
+msgid "{count, plural, one {# passkey} other {# passkeys}}"
+msgstr "{count, plural, one {# 개의 보안 키} other {# 개의 보안 키}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx:24
@@ -2715,6 +2720,11 @@ msgstr "기본 이모지입니다. {productName} 어디에서든 사용할 수 �
 msgid "A description is required."
 msgstr "설명이 필요합니다."
 
+#. Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "A direct connection couldn't be made. You can't hear or see each other."
+msgstr "직접 연결할 수 없습니다. 서로 듣거나 볼 수 없습니다."
+
 #. Duration label component for a very short elapsed call.
 #: src/features/channel/components/CallMessage.tsx:63
 msgid "a few seconds"
@@ -2789,6 +2799,11 @@ msgstr "리치 임베드 또는 링크 미리보기(업로드된 파일 아님)"
 msgid "A separate profile for each community"
 msgstr "커뮤니티별 별도 프로필"
 
+#. Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:424
+msgid "A standard call goes through a server and works for everyone."
+msgstr "일반 통화는 서버를 통해 이루어지며 모든 사용자에게 작동합니다."
+
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
 msgid "a sticker"
@@ -2821,7 +2836,7 @@ msgstr "{appName} 정보"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:171
+#: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
 #: src/features/user/components/popouts/UserProfileShared.tsx:42
@@ -2911,7 +2926,7 @@ msgstr "기본 프로필 정보(사용자 이름, 아바타 등)에 접근"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:59
 msgid "Accessibility"
 msgstr "접근성"
@@ -2934,11 +2949,6 @@ msgstr "계정"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:59
 msgid "Account & premium overrides"
 msgstr "계정 및 프리미엄 재정의"
-
-#. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
-msgid "Account access"
-msgstr "계정 액세스"
 
 #. Title for a gate that hides account/security settings while streaming privacy is enabled.
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:15
@@ -3272,10 +3282,6 @@ msgstr "계정을 추가하여 계속하세요."
 msgid "Add an email and password to your account first."
 msgstr "먼저 계정에 이메일과 비밀번호를 추가하세요."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
-msgid "Add an extra layer of security to your account"
-msgstr "계정 보안을 한 단계 더 강화하세요"
-
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
@@ -3327,7 +3333,7 @@ msgstr "단축키를 추가하고, 내장 단축키를 비활성화하고, 단�
 msgid "Add domain connection"
 msgstr "도메인 연결 추가"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:114
 msgid "Add email"
 msgstr "이메일 추가"
 
@@ -3409,7 +3415,7 @@ msgid "Add override"
 msgstr "권한 재정의 추가"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:450
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 msgid "Add passkey"
 msgstr "패스키 추가"
@@ -3548,6 +3554,14 @@ msgstr "사용자 지정 URL 패턴으로 나만의 검색 엔진을 추가하�
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "사용자 지정 URL 패턴으로 나만의 번역기를 추가하세요. 번역할 텍스트의 자리 표시자로 <0>{query}</0>을(를) 사용하세요."
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:477
+msgid "Added {createdDate}, last used {lastUsedDate}"
+msgstr "{createdDate}에 추가됨, {lastUsedDate}에 마지막 사용"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:481
+msgid "Added {createdDate}, never used"
+msgstr "{createdDate}에 추가됨, 사용된 적 없음"
+
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3628,14 +3642,6 @@ msgstr "즐겨찾기에 추가됨"
 msgid "Added to saved media"
 msgstr "저장된 미디어에 추가됨"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
-msgid "Added: {createdDate}"
-msgstr "추가일: {createdDate}"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
-msgid "Added: {createdDate} • last used: {lastUsedDate}"
-msgstr "추가일: {createdDate} • 마지막 사용: {lastUsedDate}"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:26
@@ -3680,7 +3686,7 @@ msgstr "관리자가 초대를 일시 중지했습니다. 지금은 참여할 �
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:519
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:546
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:138
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
@@ -3945,7 +3951,7 @@ msgid "Allow bot direct messages"
 msgstr "봇 DM 허용"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:24
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:26
 msgid "Allow bots to send you direct messages?"
 msgstr "봇이 DM을 보내도록 허용하시겠어요?"
 
@@ -3963,16 +3969,16 @@ msgstr "텍스트 채널 이름에 대문자와 공백을 허용합니다. 이 �
 msgid "Allow direct messages"
 msgstr "DM 허용"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "커뮤니티 봇의 DM 허용"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:259
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "커뮤니티 멤버의 DM 허용"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:28
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:30
 msgid "Allow direct messages from community members?"
 msgstr "커뮤니티 멤버의 DM을 허용할까요?"
 
@@ -3987,7 +3993,7 @@ msgid "Allow flexible text channel names"
 msgstr "텍스트 채널 이름 자유롭게 설정 허용"
 
 #. Label in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:58
 msgid "Allow for all communities"
 msgstr "모든 커뮤니티에서 허용"
 
@@ -4071,7 +4077,7 @@ msgstr "{permissions} 권한을 허용했습니다"
 msgid "Allowed all members to mention this role"
 msgstr "모든 멤버가 이 역할을 멘션할 수 있도록 허용했습니다"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "허용된 발신자"
 
@@ -4080,7 +4086,7 @@ msgstr "허용된 발신자"
 msgid "Allowed flexible text channel names"
 msgstr "텍스트 채널 이름을 자유롭게 지정할 수 있도록 허용했습니다"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "허용된 초대"
 
@@ -4168,6 +4174,11 @@ msgstr "이미 사용됨"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "이미 취소 예정"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "아래 커뮤니티도 변경하기"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4623,9 +4634,18 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "누구나 계정을 요청할 수 있지만, 관리자의 승인이 필요합니다."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "내 커뮤니티에 있는 모든 사람"
+
+#. Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:372
+msgid "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+msgstr "직접 연결할 수 없는 사람은 누군가가 통화를 일반 통화로 전환할 때까지 참여할 수 없습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "찾는 사람이 요청을 보낼 수 있습니다. 아래 그룹을 선택하려면 이 기능을 끄세요."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4710,8 +4730,8 @@ msgstr "애플리케이션 액세스 권한이 해지되었습니다"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:68
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:112
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:71
 msgid "Application details"
 msgstr "애플리케이션 정보"
 
@@ -4774,6 +4794,14 @@ msgstr "앱 및 봇"
 msgid "Applies to"
 msgstr "적용 대상"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "앞으로 참여하는 커뮤니티의 봇에 적용됩니다. 각 커뮤니티별로 변경할 수도 있습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "앞으로 가입하는 커뮤니티에 적용됩니다. 각 커뮤니티별로 변경할 수도 있습니다."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4790,11 +4818,6 @@ msgstr "테마 적용"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "모든 커뮤니티에 적용"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "이 커뮤니티에도 적용"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -4815,6 +4838,11 @@ msgstr "승인됨"
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
 msgid "Apps"
 msgstr "앱"
+
+#. Security settings card title for third-party app access and signed-in devices.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:94
+msgid "Apps and devices"
+msgstr "앱 및 기기"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:12
@@ -4869,7 +4897,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? The chan
 msgstr "카테고리 \"{categoryName}\"을(를) 삭제하시겠어요? 안에 있는 채널은 채널 목록의 맨 위로 이동됩니다."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:278
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "패스키 <0>{0}</0>을(를) 정말 삭제하시겠어요?"
 
@@ -4881,7 +4909,7 @@ msgstr "이 첨부 파일을 삭제하시겠어요? 이 작업은 되돌릴 수 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "정말 이 커뮤니티를 삭제하시겠어요? 이 작업은 되돌릴 수 없으며, 모든 채널, 메시지, 설정이 영구적으로 삭제됩니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "Are you sure you want to delete this passkey?"
 msgstr "이 패스키를 삭제하시겠어요?"
 
@@ -4961,10 +4989,15 @@ msgid "Ask before starting calls"
 msgstr "통화 시작 전에 확인"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:511
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "로그인 시 비밀번호 입력 후 패스키를 요청합니다"
+
+#. Security settings: description under the two-factor authentication card title.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:98
+msgid "Ask for a second step after your password when you sign in."
+msgstr "로그인 시 비밀번호 입력 후 두 번째 단계를 요청합니다."
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -5079,7 +5112,7 @@ msgstr "첨부 파일"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:179
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
 msgid "Audio"
 msgstr "오디오"
 
@@ -5093,6 +5126,16 @@ msgstr "오디오"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:343
 msgid "Audio & video"
 msgstr "오디오 및 비디오"
+
+#. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:451
+msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+msgstr "오디오 및 비디오는 참가자 간에 직접 전송되며, 최대 {maxParticipants, plural, one {#명} other {#명}}까지 가능합니다. 모든 참가자는 참여 전에 동의하며 서로의 IP 주소를 볼 수 있습니다."
+
+#. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:350
+msgid "Audio and video go directly between participants."
+msgstr "오디오 및 비디오는 참가자 간에 직접 전송됩니다."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:78
@@ -5239,7 +5282,7 @@ msgstr "인증"
 msgid "Authenticator"
 msgstr "인증 앱"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:361
 msgid "Authenticator app"
 msgstr "인증 앱"
 
@@ -5314,7 +5357,7 @@ msgstr "연결된 앱"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:147
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
@@ -5401,7 +5444,7 @@ msgstr "자동 완성 제안: {label}, {resultCount}개 중 {selectedOptionPosit
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
-#: src/features/voice/components/VoiceSettingsMenus.tsx:93
+#: src/features/voice/components/VoiceSettingsMenus.tsx:97
 msgid "Automatic"
 msgstr "자동"
 
@@ -5630,7 +5673,7 @@ msgstr "목록으로 돌아가기"
 #. Back-navigation label that returns from permission overrides to the main settings pane.
 #: src/features/app/components/dialogs/components/DesktopChannelSettingsView.tsx:45
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:55
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:98
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:100
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:74
 msgid "Back to overrides"
 msgstr "재정의로 돌아가기"
@@ -5735,7 +5778,7 @@ msgstr "백업 코드"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5981,7 +6024,7 @@ msgid "Block"
 msgstr "차단"
 
 #. Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:31
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:32
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "차단"
@@ -6007,7 +6050,7 @@ msgid "Block bot direct messages"
 msgstr "봇 DM 차단"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:32
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:34
 msgid "Block bots from sending you direct messages?"
 msgstr "봇이 회원님에게 DM을 보내지 못하도록 차단할까요?"
 
@@ -6022,12 +6065,12 @@ msgid "Block direct messages"
 msgstr "DM 차단"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:36
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:38
 msgid "Block direct messages from community members?"
 msgstr "커뮤니티 멤버의 DM을 차단할까요?"
 
 #. Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:60
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:62
 msgid "Block for all communities"
 msgstr "모든 커뮤니티에서 차단"
 
@@ -6098,7 +6141,7 @@ msgid "Blur"
 msgstr "흐리게"
 
 #. Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:25
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:26
 msgctxt "sensitive-media-filter-level"
 msgid "Blur"
 msgstr "흐리게"
@@ -6561,7 +6604,7 @@ msgid "California"
 msgstr "캘리포니아"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:164
 msgid "Call"
 msgstr "통화"
 
@@ -6603,6 +6646,10 @@ msgstr "통화 공개 설정"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:191
 msgid "Calls"
 msgstr "통화"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "허용된 통화는 계속 오지만 벨이 울리지 않습니다."
 
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
@@ -6714,6 +6761,11 @@ msgstr "카메라 및 가상 캡처 기기는 Wayland 시스템 선택기가 아
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "참여자가 {voiceChannelCameraUserLimit}명을 초과하면 카메라가 꺼집니다"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "메시지를 보낼 수 있습니다"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -6909,15 +6961,15 @@ msgstr "계정을 삭제할 수 없습니다"
 msgid "Capture"
 msgstr "캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Capture app audio"
 msgstr "앱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:814
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:815
 msgid "Capture desktop audio"
 msgstr "데스크톱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture device audio"
 msgstr "기기 오디오 캡처"
 
@@ -6990,7 +7042,7 @@ msgstr "카테고리 ID 복사됨"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Form field label for the name of a favorites category.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:77
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:20
 msgid "Category name"
 msgstr "카테고리 이름"
@@ -7048,7 +7100,7 @@ msgid "Change chat embed background"
 msgstr "채팅 임베드 배경 변경"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:150
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:99
 msgid "Change email"
 msgstr "이메일 변경"
 
@@ -7141,7 +7193,7 @@ msgstr "소유자 변경"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:272
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:175
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:62
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:36
 msgid "Change password"
@@ -7493,7 +7545,7 @@ msgid "Channel added to favorites"
 msgstr "채널이 즐겨찾기에 추가되었습니다"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:23
 msgid "Channel badges"
 msgstr "채널 배지"
 
@@ -7527,7 +7579,7 @@ msgstr "채널 정보 섹션"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "채널 ID 복사됨"
@@ -7545,7 +7597,7 @@ msgid "channel link"
 msgstr "채널 링크"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 msgid "Channel link copied"
 msgstr "채널 링크 복사됨"
 
@@ -7577,7 +7629,7 @@ msgstr "채널 관리"
 #. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
 #: src/features/forum/utils/ForumMessageDescriptors.ts:331
@@ -7624,7 +7676,7 @@ msgid "Channel synced with parent category"
 msgstr "채널이 상위 카테고리와 동기화되었습니다"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:68
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
 msgid "Channel topic is too long."
 msgstr "채널 주제가 너무 깁니다."
 
@@ -7641,8 +7693,8 @@ msgstr "채널 유형 선택"
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #. Toast shown after forum channel settings are saved.
 #: src/features/app/config/AuditLogConstants.ts:14
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:295
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:338
 #: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "채널 업데이트됨"
@@ -7704,7 +7756,7 @@ msgid "Chat font size"
 msgstr "채팅 글자 크기"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:79
 msgid "chat input"
 msgstr "채팅 입력창"
 
@@ -8051,6 +8103,11 @@ msgstr "{clientLabel}이(가) 내 커뮤니티에서 수행할 작업을 선택�
 msgid "Choose what friends see in their active now panel"
 msgstr "친구의 활동 중 패널에 표시되는 내용을 선택하세요"
 
+#. Introduction at the top of the sensitive content settings. Show, Blur and Block are the option names used below and must match their translations.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:50
+msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+msgstr "민감한 콘텐츠로 표시된 이미지 및 동영상을 어떻게 처리할지 선택하세요. '표시'를 선택하면 평소처럼 표시되고, '흐리게'를 선택하면 클릭할 때까지 숨겨지며, '차단'을 선택하면 완전히 숨겨집니다."
+
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "커뮤니티 멤버가 글을 쓰거나 DM을 보내기 전에 반드시 갖춰야 할 조건을 선택하세요. 역할이 있는 멤버는 이 검사를 건너뛸 수 있습니다. 공개 공간의 경우 인증을 활성화하는 것이 좋습니다."
@@ -8082,6 +8139,11 @@ msgstr "{PRODUCT_NAME}에서 역방향 이미지 검색을 위해 이미지를 �
 msgid "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
 msgstr "팔로우한 메시지를 게시할 위치를 선택하세요. 커뮤니티 설정 → 웹훅에서 언제든지 팔로우를 취소할 수 있습니다."
 
+#. Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:72
+msgid "Choose whether people who share a community with you can send you direct messages without being friends first."
+msgstr "커뮤니티를 공유하는 사람이 먼저 친구가 되지 않아도 다이렉트 메시지를 보낼 수 있는지 선택하세요."
+
 #. Setup wizard media expiry step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:306
 msgid "Choose whether uploaded attachments should expire automatically based on size."
@@ -8107,6 +8169,10 @@ msgstr "선택한 텍스트를 검색할 때 기본으로 사용할 검색 엔�
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "선택한 텍스트를 번역할 때 기본으로 사용할 번역기를 선택하세요."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "누가 먼저 묻지 않고 나를 그룹 채팅에 추가할 수 있는지 선택하세요."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "내 프로필에서 이 연결을 볼 수 있는 사람을 선택하세요."
@@ -8116,10 +8182,13 @@ msgstr "내 프로필에서 이 연결을 볼 수 있는 사람을 선택하세�
 msgid "Choose who can see your profile details"
 msgstr "내 프로필 세부 정보를 볼 수 있는 사람 선택"
 
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "누가 나에게 다이렉트 메시지를 보낼 수 있는지 선택하세요."
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "누가 친구 요청을 보낼 수 있는지 선택하세요."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "누가 나에게 전화를 걸 수 있는지 선택하세요."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8189,7 +8258,7 @@ msgstr "이메일과 비밀번호를 추가하여 계정을 등록하세요. 완
 msgid "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
 msgstr "사용자 이름과 비밀번호를 선택하여 계정을 등록하세요. 이 정보로 로그인하므로 기억하기 쉬운 것으로 선택하세요."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "계정을 등록하여 2단계 인증 및 패스키와 같은 보안 기능에 액세스하세요."
 
@@ -8553,7 +8622,7 @@ msgid "Clock"
 msgstr "시계"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:40
 msgid "Clone emoji"
 msgstr "이모티콘 복제"
 
@@ -8563,7 +8632,7 @@ msgid "Clone emoji to..."
 msgstr "이모티콘 복제 위치 선택..."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:44
 msgid "Clone sticker"
 msgstr "스티커 복제"
 
@@ -8773,6 +8842,10 @@ msgstr "코덱"
 msgid "Codes"
 msgstr "코드"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:344
+msgid "Codes from your authenticator app are your second step when you sign in."
+msgstr "인증 앱의 코드는 로그인 시 두 번째 단계입니다."
+
 #. Short label in the unread channels content.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:69
 msgid "Collapse"
@@ -8970,6 +9043,21 @@ msgstr "250명이 넘는 커뮤니티는 \"멘션만\" 설정으로 자동 전�
 msgid "Communities you can join"
 msgstr "가입할 수 있는 커뮤니티"
 
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "지금부터 참여하는 커뮤니티에 이 설정이 적용되며, 아래 커뮤니티들도 이에 맞춰 변경됩니다."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "앞으로 가입하는 커뮤니티에서 이 설정을 사용합니다."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "앞으로 가입하는 커뮤니티에 이 설정이 적용됩니다. 현재 커뮤니티의 설정은 유지됩니다."
+
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
 #. Generic label for a community. Used as a field label, filter label, or fallback community name.
@@ -8987,7 +9075,7 @@ msgid "Community at capacity"
 msgstr "커뮤니티 정원 초과"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:14
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:19
 msgid "Community badges"
 msgstr "커뮤니티 배지"
 
@@ -9074,7 +9162,7 @@ msgid "Community message notifications"
 msgstr "커뮤니티 메시지 알림"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:86
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "커뮤니티 MFA 필수 알림 표시줄"
 
@@ -9351,14 +9439,14 @@ msgstr "확인"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:26
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "음성 채널 참여 전 확인"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the keyboard tab. Keep it concise.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:23
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:28
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:17
 msgid "Confirm before starting calls"
 msgstr "통화 시작 전 확인"
@@ -9643,7 +9731,7 @@ msgstr "콘텐츠 안전 게이트"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:168
 msgid "Context menu"
 msgstr "상황별 메뉴"
 
@@ -9759,7 +9847,7 @@ msgid "Conversations"
 msgstr "대화"
 
 #. Button in the confirmation that converts an announcement channel back into a text channel. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:123
 msgid "Convert"
 msgstr "변환"
 
@@ -9779,7 +9867,7 @@ msgid "Converted the channel to an announcement channel"
 msgstr "채널을 공지 채널로 전환했습니다"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel, used when the number of following channels could not be loaded. Channels that follow it get copies of its published messages and stop getting them after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:113
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
 msgid "Converting this channel to a text channel removes every channel that follows it."
 msgstr "이 채널을 텍스트 채널로 전환하면 팔로우하는 모든 채널이 삭제됩니다."
 
@@ -9886,7 +9974,7 @@ msgstr "채널 ID 복사"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:213
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Copy channel link"
 msgstr "채널 링크 복사"
 
@@ -9907,7 +9995,7 @@ msgid "Copy device ID"
 msgstr "기기 ID 복사"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:48
 msgid "Copy emoji"
 msgstr "이모티콘 복사"
 
@@ -10100,7 +10188,7 @@ msgid "Copy stats JSON"
 msgstr "통계 JSON 복사"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:52
 msgid "Copy sticker"
 msgstr "스티커 복사"
 
@@ -10316,13 +10404,18 @@ msgstr "로그인을 완료할 수 없습니다. 다시 시도해 주세요."
 msgid "Couldn't connect to {domain}. Try again."
 msgstr "{domain}(으)로 연결할 수 없습니다. 다시 시도해 보세요."
 
+#. Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Couldn't connect to {names}"
+msgstr "{names}(님)에게 연결할 수 없습니다."
+
 #. Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.
 #: src/features/voice/engine/media_engine_facade/shared.ts:35
 msgid "Couldn't connect to voice. Please try again."
 msgstr "음성 연결에 실패했습니다. 다시 시도해 주세요."
 
 #. Title of the error dialog shown when converting a channel between a text channel and an announcement channel failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:122
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
 msgid "Couldn't convert this channel"
 msgstr "채널을 변환할 수 없습니다"
 
@@ -10377,7 +10470,7 @@ msgid "Couldn't delete application"
 msgstr "애플리케이션을 삭제할 수 없습니다"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:44
 msgid "Couldn't delete passkey"
 msgstr "패스키를 삭제할 수 없습니다"
 
@@ -10419,7 +10512,7 @@ msgid "Couldn't download the desktop update"
 msgstr "데스크톱 업데이트를 다운로드할 수 없습니다"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Couldn't duplicate this channel"
 msgstr "채널을 복제할 수 없습니다"
 
@@ -10447,6 +10540,11 @@ msgstr "친구 요청을 무시할 수 없습니다. 다시 시도해 주세요.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
 msgstr "커뮤니티에 참여할 수 없습니다"
+
+#. Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:442
+msgid "Couldn't join the P2P call. Try again."
+msgstr "P2P 통화에 참여할 수 없습니다. 다시 시도해 주세요."
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
@@ -10538,7 +10636,7 @@ msgid "Couldn't open the billing portal"
 msgstr "결제 포털을 열 수 없습니다"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Couldn't pin this conversation"
 msgstr "이 대화를 고정할 수 없습니다"
 
@@ -10645,7 +10743,7 @@ msgid "Couldn't run that command: {detail}"
 msgstr "명령을 실행할 수 없습니다: {detail}"
 
 #. Title of the error dialog shown when saving the channel overview settings failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:132
 msgid "Couldn't save channel settings"
 msgstr "채널 설정을 저장할 수 없습니다"
 
@@ -10742,7 +10840,7 @@ msgid "Couldn't unfollow this channel"
 msgstr "이 채널을 구독 취소할 수 없습니다"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Couldn't unpin this conversation"
 msgstr "이 대화를 고정 해제할 수 없습니다"
 
@@ -10772,7 +10870,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "멘션 알림 끄기 우회 설정을 업데이트할 수 없습니다"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:90
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "패스키 2단계 인증을 업데이트할 수 없습니다"
 
@@ -10888,7 +10986,7 @@ msgstr "{userName}님과 새 그룹 만들기"
 #. Confirm button that replaces the existing account recovery kit with a new one.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:141
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
 msgid "Create a new kit"
 msgstr "새 키트 만들기"
 
@@ -11045,8 +11143,8 @@ msgstr "공개 스레드 만들기"
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:137
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:103
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:126
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
 msgid "Create recovery kit"
 msgstr "복구 키트 만들기"
@@ -11117,7 +11215,7 @@ msgid "Created"
 msgstr "생성됨"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(createdAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:88
 msgid "Created {0}"
 msgstr "{0}에 생성됨"
 
@@ -11235,6 +11333,11 @@ msgstr "Ctrl"
 msgid "Currency"
 msgstr "통화"
 
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "현재"
+
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
 msgid "Current channel message notifications"
@@ -11270,12 +11373,12 @@ msgid "Current uses:"
 msgstr "현재 사용 횟수:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "현재 닫힘"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "현재 표시 중"
 
@@ -11306,7 +11409,7 @@ msgstr "사용자 지정"
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
-#: src/features/voice/components/VoiceSettingsMenus.tsx:70
+#: src/features/voice/components/VoiceSettingsMenus.tsx:74
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "사용자 지정"
@@ -11789,7 +11892,7 @@ msgstr "DEB 패키지"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:64
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:67
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:11
 msgid "Debug"
 msgstr "디버그"
@@ -11870,7 +11973,7 @@ msgstr "기본"
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:68
-#: src/features/voice/components/VoiceSettingsMenus.tsx:87
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
 msgid "Default"
@@ -11996,12 +12099,12 @@ msgstr "델라웨어"
 #: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:502
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:194
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:201
 msgid "Delete"
 msgstr "삭제"
 
@@ -12030,7 +12133,7 @@ msgstr "\"{stickerName}\"을(를) 삭제하시겠어요? 이 작업은 되돌릴
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:103
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "{channelLabel}을(를) 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다."
 
@@ -12169,9 +12272,14 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "다른 멤버의 메시지를 삭제합니다. 고정 권한은 별도로 관리됩니다."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Delete passkey"
 msgstr "패스키 삭제"
+
+#. Security settings: accessible name for the delete button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:130
+msgid "Delete passkey {passkeyName}"
+msgstr "{passkeyName} 비번 삭제"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
@@ -12291,7 +12399,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "멤버의 최근 {duration} 동안의 메시지 기록을 삭제했습니다"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:128
 msgid "Deleted text"
 msgstr "삭제선"
 
@@ -12607,7 +12715,7 @@ msgid "Device audio ({deviceLabel})"
 msgstr "기기 오디오({deviceLabel})"
 
 #. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:869
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:50
 msgid "Device audio only"
 msgstr "기기 오디오만"
@@ -12621,7 +12729,7 @@ msgstr "기기 정보"
 msgid "Device revoked"
 msgstr "기기 연결 해제됨"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Device selection"
 msgstr "기기 선택"
 
@@ -12640,7 +12748,7 @@ msgstr "기기:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:155
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:542
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12681,9 +12789,14 @@ msgid "Different sizes & member counts"
 msgstr "다양한 크기 및 멤버 수"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "취소선 텍스트 흐리게 표시"
+
+#. Tooltip on the P2P indicator of a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:336
+msgid "Direct connection. Media is encrypted between participants."
+msgstr "직접 연결. 참여자 간 미디어가 암호화됩니다."
 
 #. Voice input processing profile with raw microphone audio.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:199
@@ -12696,7 +12809,7 @@ msgstr "원본 입력"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:10
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:576
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:99
 msgid "Direct message"
 msgstr "DM"
 
@@ -12725,7 +12838,7 @@ msgstr "DM 미리보기"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "DM"
 
@@ -12735,12 +12848,12 @@ msgid "Direct messages (open and closed)"
 msgstr "DM (열림 및 닫힘)"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:37
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:38
 msgid "Direct messages from friends"
 msgstr "친구에게 받은 DM"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:41
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:42
 msgid "Direct messages from others"
 msgstr "다른 사람의 DM"
 
@@ -12751,7 +12864,6 @@ msgstr "바로 업로드 활성화됨"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
 msgid "Disable"
@@ -12824,6 +12936,11 @@ msgstr "하드웨어 가속을 비활성화할까요?"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:65
 msgid "Disable mobile push notifications"
 msgstr "모바일 푸시 알림 끄기"
+
+#. Accessible name for the group of disable and delete account actions in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:21
+msgid "Disable or delete your account"
+msgstr "계정 비활성화 또는 삭제"
 
 #. Short label for an advanced screen-share preview preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
@@ -13133,7 +13250,7 @@ msgid "District of Columbia"
 msgstr "컬럼비아 특별구"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:193
 msgid "DM"
 msgstr "DM"
 
@@ -13205,6 +13322,11 @@ msgstr "DM 사이드바"
 msgid "DNS TXT record"
 msgstr "DNS TXT 레코드"
 
+#. Checkbox in the dialog shown before joining a peer-to-peer call. When checked, future joins skip the dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:391
+msgid "Do not ask again, always agree"
+msgstr "다시 묻지 않기"
+
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
@@ -13217,22 +13339,22 @@ msgid "Do nothing, I don't want to join"
 msgstr "아니요, 참여하지 않을래요"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:40
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:42
 msgid "Do you also want to allow bots from your existing communities to send you direct messages?"
 msgstr "기존 커뮤니티의 봇이 보내는 DM도 허용할까요?"
 
 #. Confirmation prompt in the connections tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:44
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:46
 msgid "Do you also want to allow direct messages from members of your existing communities?"
 msgstr "기존 커뮤니티 멤버가 보내는 DM도 허용할까요?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:48
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:50
 msgid "Do you also want to block direct messages from bots in your existing communities?"
 msgstr "기존 커뮤니티에 있는 봇이 보내는 DM도 차단할까요?"
 
 #. Confirmation prompt in the connections tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:52
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:54
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "기존 커뮤니티 멤버가 보내는 DM도 차단할까요?"
 
@@ -13277,7 +13399,7 @@ msgid "Domain"
 msgstr "도메인"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "도메인 이동 알림 표시줄"
 
@@ -13614,7 +13736,7 @@ msgstr "복제"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 msgid "Duplicate channel"
 msgstr "채널 복제"
 
@@ -13748,7 +13870,7 @@ msgstr "카테고리 편집"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:153
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:154
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:160
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:72
 msgid "Edit channel"
 msgstr "채널 편집"
@@ -13833,7 +13955,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "이 채널의 역할 및 멤버 권한을 수정합니다."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
-#: src/features/app/components/pages/YouPage.tsx:162
+#: src/features/app/components/pages/YouPage.tsx:174
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
 #: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
@@ -13990,8 +14112,8 @@ msgstr "이메일"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepEmail.tsx:13
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:59
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:105
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
 msgid "Email address"
 msgstr "이메일 주소"
@@ -14112,7 +14234,7 @@ msgstr "임베드를 다시 표시했습니다"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:176
 msgid "Emoji"
 msgstr "이모티콘"
 
@@ -14128,7 +14250,7 @@ msgid "emoji {emojiName}"
 msgstr "이모티콘 {emojiName}"
 
 #. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:36
 msgid "Emoji and sticker cloning shortcuts"
 msgstr "이모티콘 및 스티커 복제 단축키"
 
@@ -14227,7 +14349,6 @@ msgstr "즐겨찾기 없음"
 #. Primary button label in the enable-invites confirmation modal.
 #: src/features/app/components/layout/GuildLayout.tsx:55
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 msgid "Enable"
 msgstr "활성화"
 
@@ -14327,7 +14448,7 @@ msgid "Enable extra option"
 msgstr "추가 옵션 활성화"
 
 #. Toggle label and settings search entry for controlling whether favorites are visible throughout the app.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:58
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:63
 msgid "Enable favorites"
 msgstr "즐겨찾기 사용"
 
@@ -14928,7 +15049,7 @@ msgstr "Esc 키"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:15
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:20
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:197
 msgid "Escape key exits keyboard mode"
 msgstr "Esc 키로 키보드 모드 종료"
@@ -14967,9 +15088,14 @@ msgstr "이 채널을 구독하는 모든 커뮤니티에 복사본이 전송됩
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:234
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "모든 사람"
+
+#. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:358
+msgid "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
+msgstr "통화에 참여한 모든 분께는 무료로 플루토늄 스트림 품질이 제공됩니다. 최대 4K 소스 해상도 및 60fps를 지원합니다."
 
 #. Premium model option that gives everyone the highest limits.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:428
@@ -15091,7 +15217,7 @@ msgid "expanded"
 msgstr "펼쳐짐"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:27
 msgid "Experimental"
 msgstr "실험적인 기능"
 
@@ -16186,12 +16312,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "안전을 위해 본인 확인 후 계속해 주세요."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "강제 비활성화됨"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "강제 활성화됨"
 
@@ -16448,7 +16574,7 @@ msgid "Friend request sent"
 msgstr "친구 요청 보냄"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:230
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:279
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:22
 msgid "Friend requests"
 msgstr "친구 요청"
@@ -16477,7 +16603,7 @@ msgstr "친구 추가 가능 봇"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:103
 msgid "Friends"
 msgstr "친구"
 
@@ -16512,10 +16638,14 @@ msgstr "친구 및 선택한 그룹은 회원님에게 전화를 걸 수 있습�
 msgid "Friends and small communities only"
 msgstr "친구 및 소규모 커뮤니티에만 공개"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "친구는 항상 나에게 직접 메시지를 보낼 수 있습니다. 나와 같은 커뮤니티에 있는 사람들이 친구 요청을 먼저 보내지 않고 메시지를 보낼 수 있는지 여부를 선택하세요."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "친구는 언제든지 메시지를 보낼 수 있습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "친구는 항상 메시지를 보낼 수 있습니다. 이 설정은 커뮤니티만 공유하는 사람 및 봇에 적용됩니다."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16524,7 +16654,9 @@ msgstr "친구의 친구"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "친구에게만 공개"
@@ -16533,6 +16665,11 @@ msgstr "친구에게만 공개"
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "친구 섹션"
+
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "친구들이 활동 중 목록에서 내가 어떤 음성 채널에 있는지 볼 수 있습니다. 이 설정은 24시간마다 한 번 변경할 수 있습니다."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
@@ -16855,7 +16992,7 @@ msgstr "연간 구독하기"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:172
 msgid "GIF"
 msgstr "GIF"
 
@@ -17294,7 +17431,7 @@ msgstr "{permissions} 권한을 부여했습니다"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "모든 권한을 부여하고 채널 제한을 우회합니다. 매우 민감한 권한입니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:993
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Granular selection"
 msgstr "세부 선택"
 
@@ -17304,7 +17441,7 @@ msgid "Graphics"
 msgstr "그래픽"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:132
 msgid "Gray text"
 msgstr "회색 텍스트"
 
@@ -17330,7 +17467,7 @@ msgstr "그리스어"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:69
-#: src/features/voice/components/VoiceSettingsMenus.tsx:789
+#: src/features/voice/components/VoiceSettingsMenus.tsx:796
 msgid "Grid view"
 msgstr "격자 보기"
 
@@ -17358,6 +17495,10 @@ msgstr "그룹 채팅 추가: 친구만"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:117
 msgid "Group chat adds: nobody"
 msgstr "그룹 채팅 추가: 없음"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "그룹 채팅"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
@@ -17685,7 +17826,7 @@ msgstr "숨김"
 #. Account settings: button that hides the user email address (currently revealed). Verb, sentence case.
 #. Confirm button on the hide-own-camera dialog that hides the local camera tile.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:24
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:61
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:16
 msgid "Hide"
@@ -17818,7 +17959,7 @@ msgstr "참여자 숨기기"
 msgid "Hide password"
 msgstr "비밀번호 숨기기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:770
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:771
 msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
@@ -18194,7 +18335,7 @@ msgstr "불법이라고 생각하시면 어떤 법을 위반했는지와 그 이
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "이 알림을 닫으면 나중에 {notificationSettingsPath}에서 데스크톱 알림을 다시 켤 수 있습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:147
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:140
 msgid "If you forget your password, a recovery kit is the only way back into your account."
 msgstr "비밀번호를 잊으셨다면, 복구 키트만이 계정으로 돌아갈 수 있는 유일한 방법입니다."
 
@@ -18231,11 +18372,11 @@ msgstr "무시"
 msgid "Ignore friend request"
 msgstr "친구 요청 무시하기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:984
 msgid "Ignore hardware devices"
 msgstr "하드웨어 기기 무시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:959
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
 msgid "Ignore input media"
 msgstr "입력 미디어 무시"
 
@@ -18266,7 +18407,7 @@ msgstr "{displayName}님의 친구 요청을 무시하시겠어요?"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "이 채널의 슬로우 모드 제한을 무시합니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:971
 msgid "Ignore virtual"
 msgstr "가상 기기 무시"
 
@@ -18762,7 +18903,7 @@ msgid "Input device"
 msgstr "입력 장치"
 
 #. Read-only microphone input level shown in the voice device menu.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:102
+#: src/features/voice/components/VoiceSettingsMenus.tsx:106
 msgid "Input level"
 msgstr "입력 레벨"
 
@@ -18774,7 +18915,7 @@ msgstr "입력 모니터링"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:134
-#: src/features/voice/components/VoiceSettingsMenus.tsx:75
+#: src/features/voice/components/VoiceSettingsMenus.tsx:79
 msgid "Input profile"
 msgstr "입력 프로필"
 
@@ -19231,7 +19372,7 @@ msgid "Invites disabled"
 msgstr "초대 비활성화됨"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "초대 비활성화 알림 표시줄"
 
@@ -19340,6 +19481,12 @@ msgstr "지터:"
 msgid "Join"
 msgstr "참여하기"
 
+#. Primary button in the dialog shown before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:386
+msgctxt "voice-p2p-consent"
+msgid "Join"
+msgstr "참여"
+
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
@@ -19363,6 +19510,11 @@ msgstr "커뮤니티 참여하기"
 #: src/features/channel/components/StickersPicker.tsx:54
 msgid "Join a community to unlock stickers."
 msgstr "스티커를 사용하려면 커뮤니티에 참여하세요."
+
+#. Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:345
+msgid "Join a P2P call?"
+msgstr "P2P 통화에 참여하시겠어요?"
 
 #. Action label in the DM channel header pill that joins an ongoing call.
 #. Primary CTA button in the mobile direct-call lobby bottom sheet. Joins the active call.
@@ -19401,6 +19553,11 @@ msgstr "참여 방법"
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:88
 msgid "Join on this device"
 msgstr "이 기기에서 참여"
+
+#. Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:396
+msgid "Join P2P calls without asking"
+msgstr "P2P 통화 시 확인 없이 바로 참여"
 
 #. Call-to-action button label on an in-progress call system message.
 #: src/features/channel/components/CallMessage.tsx:67
@@ -19635,8 +19792,13 @@ msgstr "무료 및 프리미엄 등급을 유지하세요. 등급을 맞춤 설�
 msgid "Keep grace period"
 msgstr "유예 기간 유지"
 
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "현재 설정 유지"
+
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:59
 msgid "Keep Neko still"
 msgstr "네코 고정하기"
 
@@ -19818,11 +19980,11 @@ msgid "Largest file you can upload"
 msgstr "업로드할 수 있는 가장 큰 파일"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:158
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:123
 msgid "Last changed: {0}"
 msgstr "마지막 변경: {0}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:160
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:125
 msgid "Last changed: never"
 msgstr "마지막 변경: 없음"
 
@@ -19927,8 +20089,10 @@ msgstr "{threadName}에서 나가시겠어요? 이곳은 비공개 스레드이�
 msgid "Leave blank for a random username"
 msgstr "비워두시면 임의의 사용자 이름이 생성됩니다"
 
+#. Button in the peer-to-peer connection failure dialog that leaves the call.
 #. Destructive button in the mobile direct-call lobby bottom sheet. Disconnects from the call.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:92
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:434
 msgid "Leave call"
 msgstr "통화 나가기"
 
@@ -20105,7 +20269,7 @@ msgid "Lets custom CSS reveal transparent window regions after restarting the de
 msgstr "데스크톱 앱 재시작 시 사용자 지정 CSS가 투명한 창 영역을 표시하도록 허용합니다."
 
 #. Description under the Announcement channel switch in channel settings. Turning it on converts a text channel into an announcement channel. Publishing a message sends a copy of it to every channel in other communities that follows this one.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
 msgid "Lets other communities follow this channel and get copies of what you publish."
 msgstr "다른 커뮤니티에서 이 채널을 팔로우하고 게시하는 내용의 복사본을 받을 수 있습니다."
 
@@ -20124,7 +20288,7 @@ msgstr "동영상으로 사용자를 볼 수 있게 합니다."
 msgid "Lets push-to-talk and shortcuts work in other apps."
 msgstr "다른 앱에서 푸시 투 토크 및 단축키가 작동하도록 합니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:98
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:90
 msgid "Lets you reset your password if you forget it."
 msgstr "비밀번호를 잊어버렸을 때 재설정할 수 있습니다."
 
@@ -20633,6 +20797,11 @@ msgstr "루이지애나"
 msgid "Low"
 msgstr "낮음"
 
+#. Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:354
+msgid "Lower latency."
+msgstr "낮은 지연 시간."
+
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:92
 msgid "Luxembourg"
@@ -20717,8 +20886,8 @@ msgstr "인스턴스를 나만의 것으로 만들기"
 msgid "Malta"
 msgstr "몰타"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:539
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:556
 msgid "Manage"
 msgstr "관리"
 
@@ -20729,13 +20898,18 @@ msgid "Manage accounts"
 msgstr "계정 관리"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:143
 msgid "Manage apps and devices with access to your account"
 msgstr "계정에 액세스할 수 있는 앱과 장치를 관리합니다"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:30
 msgid "Manage authorized applications"
+msgstr "승인된 앱 관리"
+
+#. Security settings: accessible name for the button that opens the authorized apps list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:135
+msgid "Manage authorized apps"
 msgstr "승인된 앱 관리"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -20762,6 +20936,11 @@ msgstr "커뮤니티 관리"
 #: src/features/app/components/layout/GuildLayout.tsx:89
 msgid "Manage community features"
 msgstr "커뮤니티 기능 관리"
+
+#. Security settings: accessible name for the button that opens the signed-in devices list.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:139
+msgid "Manage devices"
+msgstr "기기 관리"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:395
@@ -20938,7 +21117,7 @@ msgstr "받은 메시지함의 최상단 채널을 읽음으로 표시"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:136
 msgid "Markdown"
 msgstr "마크다운"
 
@@ -21203,6 +21382,16 @@ msgstr "미디어 표시"
 msgid "Media filter"
 msgstr "미디어 필터"
 
+#. Helper text under "Messages in community channels" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:64
+msgid "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+msgstr "18+로 표시되지 않은 채널의 미디어. 18+로 표시된 채널은 항상 표시됩니다."
+
+#. Helper text under "Direct messages from others" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:60
+msgid "Media in group chats and in direct messages from people who aren't your friends."
+msgstr "그룹 채팅 및 친구가 아닌 사람으로부터 온 다이렉트 메시지의 미디어"
+
 #. Plutonium page comparison row label for the saved media limit.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Media items you can save for later"
@@ -21254,6 +21443,11 @@ msgstr "미디어 크기"
 msgctxt "keyboard-key-name"
 msgid "Media stop"
 msgstr "재생 중지"
+
+#. Helper text under "Direct messages from friends" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:56
+msgid "Media your friends send you in direct messages."
+msgstr "친구들이 다이렉트 메시지로 보내는 미디어."
 
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
@@ -21461,7 +21655,7 @@ msgstr "이 역할을 멘션할까요?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:657
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
 msgid "Mentions"
 msgstr "멘션"
 
@@ -21809,7 +22003,7 @@ msgid "Messages failed to load"
 msgstr "메시지를 불러오지 못했습니다"
 
 #. Label in the sensitive content tab.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:45
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:46
 msgid "Messages in community channels"
 msgstr "커뮤니티 채널 메시지"
 
@@ -21882,7 +22076,7 @@ msgstr "미시간"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/permissions/system/components/useMacPermissionControl.ts:10
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:26
-#: src/features/voice/components/VoiceSettingsMenus.tsx:79
+#: src/features/voice/components/VoiceSettingsMenus.tsx:83
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:41
 #: src/features/voice/utils/SettingsDeviceOptions.ts:16
 msgid "Microphone"
@@ -21980,7 +22174,7 @@ msgstr "미네소타"
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:114
+#: src/features/voice/components/VoiceSettingsMenus.tsx:118
 msgid "Mirror camera"
 msgstr "카메라 좌우 반전"
 
@@ -22537,7 +22731,7 @@ msgstr "멤버 음소거"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:63
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "마이크 음소거"
@@ -22589,7 +22783,7 @@ msgstr "알림 꺼짐"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:87
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "알림 꺼짐"
@@ -22612,7 +22806,7 @@ msgstr "모더레이터에 의해 음소거됨"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:83
 msgid "Muted channels"
 msgstr "음소거된 채널"
 
@@ -22702,7 +22896,7 @@ msgid "My awesome sticker"
 msgstr "내 멋진 스티커"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
 msgid "My category"
 msgstr "내 카테고리"
 
@@ -22830,7 +23024,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "현재 보고 있는 채널만 읽어줍니다. 채널을 이동해도 계속 읽어줍니다."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:160
 msgid "Narration"
 msgstr "내레이션"
 
@@ -22885,7 +23079,7 @@ msgid "Need an account?"
 msgstr "계정이 없으신가요?"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:75
 msgid "Neko"
 msgstr "네코"
 
@@ -23374,7 +23568,7 @@ msgstr "사용 가능한 데스크톱 업데이트가 없습니다."
 msgid "No displays found"
 msgstr "디스플레이를 찾을 수 없습니다"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:121
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:106
 msgid "No email address set"
 msgstr "이메일 주소가 설정되지 않았습니다"
 
@@ -23537,7 +23731,11 @@ msgstr "이 인스턴스에서는 선택적 서비스를 사용할 수 없습니
 msgid "No part of {query} could be applied. Fix the underlined value or add something to search for."
 msgstr "{query}에서 적용할 수 있는 부분이 없습니다. 밑줄 친 값을 수정하거나 검색할 내용을 추가하세요."
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:194
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+msgid "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+msgstr "아직 패스키가 없습니다. 지문, 얼굴 또는 보안 키로 로그인하려면 하나를 추가하세요."
+
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:148
 msgid "No password set"
 msgstr "비밀번호가 설정되지 않았습니다"
 
@@ -23663,7 +23861,7 @@ msgid "No server is selected for this request."
 msgstr "이 요청에 대해 선택된 서버가 없습니다."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:552
 msgid "No settings found"
 msgstr "설정 없음"
 
@@ -23950,7 +24148,7 @@ msgstr "페이지를 찾을 수 없음"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
 #: src/features/permissions/system/components/MacPermissionPrompt.tsx:39
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:134
 #: src/features/user/components/RecoveryKitReminderGate.tsx:34
 msgid "Not now"
 msgstr "나중에"
@@ -23983,7 +24181,7 @@ msgstr "참 또는 거짓이 아닙니다"
 #. Markdown alert label for a note callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/app/components/pages/YouPage.tsx:191
+#: src/features/app/components/pages/YouPage.tsx:203
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
@@ -24026,6 +24224,11 @@ msgstr "환불할 항목 없음"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:82
 msgid "Nothing to search for"
 msgstr "검색할 내용이 없습니다"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "아무것도 변경되지 않습니다. 설정을 확인하는 과정입니다."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
@@ -24156,12 +24359,14 @@ msgstr "사물"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned off. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:99
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:141
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:107
 msgid "Off"
 msgstr "꺼짐"
 
@@ -24219,9 +24424,11 @@ msgstr "오래된 순"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that marks this channel for mature content.
 #. On state suffix appended to the reply bar mention toggle label.
+#. Security settings: status badge next to the two-factor authentication title when it is turned on. One word.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:137
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:102
 msgid "On"
 msgstr "켜짐"
 
@@ -24310,7 +24517,7 @@ msgstr "이 로그인은 본인이 제어하는 기기에서 시작한 것이 �
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "신용카드만 사용할 수 있습니다. 성인 콘텐츠 확인을 위해 직불카드 및 선불카드는 사용할 수 없습니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:949
 msgid "Only default speakers"
 msgstr "기본 스피커만"
 
@@ -24388,7 +24595,7 @@ msgstr "선택한 멤버와 역할만 이 채널을 볼 수 있습니다."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "읽지 않은 메시지가 있는 DM에 대해서만 메시지 미리보기 표시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:938
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:939
 msgid "Only speakers"
 msgstr "스피커만"
 
@@ -24446,7 +24653,7 @@ msgstr "불투명도"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/platform/utils/DesktopLocaleBridge.ts:332
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:25
 msgid "Open"
 msgstr "열기"
 
@@ -24567,7 +24774,7 @@ msgid "Open audio link"
 msgstr "오디오 링크 열기"
 
 #. Short label in the you page.
-#: src/features/app/components/pages/YouPage.tsx:28
+#: src/features/app/components/pages/YouPage.tsx:33
 msgid "Open avatar"
 msgstr "아바타 열기"
 
@@ -24625,7 +24832,7 @@ msgstr "{channelName} 채널 정보 열기"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:129
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:158
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:164
 msgid "Open chat"
 msgstr "채팅 열기"
 
@@ -24706,7 +24913,7 @@ msgstr "브라우저에서 이모티콘 열기"
 msgid "Open emoji picker"
 msgstr "이모티콘 선택기 열기"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:863
+#: src/features/voice/components/VoiceSettingsMenus.tsx:888
 msgid "Open event sink"
 msgstr "이벤트 싱크 열기"
 
@@ -24937,7 +25144,7 @@ msgid "Open thread again"
 msgstr "스레드 다시 열기"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:71
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "{displayName}님의 사용자 메뉴 열기"
 
@@ -25008,7 +25215,7 @@ msgid "Operating system"
 msgstr "운영체제"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "커뮤니티별 및 채널별 읽지 않은 배지 제어 실험 기능을 사용합니다"
 
@@ -25146,6 +25353,16 @@ msgstr "다른 활성 스레드"
 msgid "Other devices"
 msgstr "다른 기기"
 
+#. Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:363
+msgid "Other participants can see your IP address."
+msgstr "다른 참여자가 IP 주소를 볼 수 있습니다."
+
+#. Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:401
+msgid "Other participants in a P2P call can see your IP address."
+msgstr "P2P 통화의 다른 참가자가 내 IP 주소를 볼 수 있습니다."
+
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -25261,6 +25478,22 @@ msgstr "현재 <0>{username}</0>님에게 소유권을 이전할 수 없습니�
 msgid "Ownership transferred"
 msgstr "소유권이 이전되었습니다"
 
+# auto-i18n: reviewed unchanged
+#. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:331
+msgid "P2P"
+msgstr "P2P"
+
+#. Error shown when the server refuses to start or join a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:438
+msgid "P2P calls are unavailable right now."
+msgstr "지금은 P2P 통화를 사용할 수 없습니다."
+
+#. Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:446
+msgid "P2P calls only"
+msgstr "P2P 통화만"
+
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:130
@@ -25351,7 +25584,7 @@ msgstr "패스키가 업데이트되었습니다"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:110
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -25366,8 +25599,8 @@ msgstr "패스키를 사용하려면 유효한 앱 식별자가 있는 서명된
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:120
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:147
 msgid "Password"
 msgstr "비밀번호"
 
@@ -25592,8 +25825,18 @@ msgstr "펜실베이니아"
 msgid "People"
 msgstr "사람"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "커뮤니티의 멤버들이 친구가 아니어도 메시지를 보낼 수 있습니다."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "커뮤니티의 멤버가 메시지를 보내려면 먼저 친구여야 합니다."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "친구가 된 사람만 메시지를 보낼 수 있습니다. 친구 요청은 여전히 보낼 수 있습니다."
 
@@ -25608,9 +25851,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "이메일 주소와 비밀번호로 로그인합니다. 비밀번호 재설정 및 인증에는 이메일 전송이 필요하며, 이는 나중에 설정할 수 있습니다."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "나와 같은 커뮤니티에 있는 사람들은 나에게 직접 메시지를 보낼 수 있습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "커뮤니티를 함께 사용하는 사람들"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "나와 친구가 한 명 이상 겹치는 사람"
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -25689,7 +25940,7 @@ msgstr "이 커뮤니티의 모든 채널에서 보낸 메시지가 영구적으
 msgid "Permanently delete the messages that match the filters below. This cannot be undone."
 msgstr "아래 필터와 일치하는 메시지를 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:73
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:83
 msgid "Permanently delete your account and all associated data. This action cannot be undone."
 msgstr "회원님의 계정과 모든 관련 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
 
@@ -25901,7 +26152,7 @@ msgstr "모든 채널 멤버가 볼 수 있도록 이 메시지를 고정합니�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:197
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -25944,7 +26195,7 @@ msgstr "고정된 그룹"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "고정된 그룹 DM"
@@ -25953,7 +26204,7 @@ msgstr "고정된 그룹 DM"
 #. Button or menu action label in the channel pins button. Keep it concise.
 #. Button or menu action label in the channel pins popout. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelPinsBottomSheet.tsx:10
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:22
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:23
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:19
 msgid "Pinned messages"
 msgstr "고정된 메시지"
@@ -25964,7 +26215,7 @@ msgid "Pinned messages show up here."
 msgstr "고정된 메시지가 여기에 표시됩니다."
 
 #. Button or menu action label in the channel pins button. Keep it concise.
-#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:18
+#: src/features/channel/components/channel_header_components/ChannelPinsButton.tsx:19
 msgid "Pinned messages, unread pinned messages"
 msgstr "고정된 메시지, 읽지 않은 고정된 메시지"
 
@@ -26126,7 +26377,7 @@ msgid "Popped out"
 msgstr "팝아웃됨"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:204
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:209
 msgid "Popup"
 msgstr "팝업"
 
@@ -26384,7 +26635,7 @@ msgstr "미리보기 버튼"
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:58
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:61
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/VoiceSettingsMenus.tsx:621
 msgid "Preview camera"
 msgstr "카메라 미리보기"
 
@@ -26541,7 +26792,7 @@ msgstr "우선 발언권"
 msgid "Privacy"
 msgstr "개인정보 보호"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:447
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "개인정보처리방침"
@@ -26550,11 +26801,6 @@ msgstr "개인정보처리방침"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "개인 정보 보호 설정"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "개인정보 설정 알림"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1162
@@ -26948,7 +27194,7 @@ msgid "Push to talk (priority)"
 msgstr "눌러서 말하기 (우선순위)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:54
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "눌러서 말하기가 켜져 있습니다. {pushToTalkHint}을(를) 길게 눌러 말하세요."
 
@@ -26960,7 +27206,7 @@ msgstr "눌러서 말하기 키"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
-#: src/features/voice/components/VoiceSettingsMenus.tsx:422
+#: src/features/voice/components/VoiceSettingsMenus.tsx:426
 msgid "Push-to-talk"
 msgstr "눌러서 말하기"
 
@@ -27186,7 +27432,7 @@ msgid "Reactivate subscription"
 msgstr "구독 재활성화"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:144
 msgid "Read aloud"
 msgstr "소리 내어 읽기"
 
@@ -27203,7 +27449,7 @@ msgstr "메시지 기록 읽기"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:140
 msgid "Read messages"
 msgstr "메시지 읽기"
 
@@ -27277,6 +27523,10 @@ msgstr "사유: {0}"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:112
 msgid "Receipt"
 msgstr "영수증"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "무음으로 통화 받기"
 
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
@@ -27388,7 +27638,7 @@ msgid "Recovery key"
 msgstr "복구 키"
 
 #. Settings search entry label for the account recovery kit used to reset a forgotten password.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:87
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:85
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:38
 msgid "Recovery kit"
 msgstr "복구 키트"
@@ -27576,10 +27826,6 @@ msgstr "가입하기"
 msgid "Register an account"
 msgstr "계정 등록"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
-msgid "Registered passkeys"
-msgstr "등록된 패스키"
-
 #. Summary row label for the registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Registration"
@@ -27710,7 +27956,7 @@ msgstr "창 크기 및 위치 기억"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:200
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:205
 #: src/features/webhook/components/WebhookListItem.tsx:278
 msgid "Remove"
 msgstr "제거"
@@ -28166,7 +28412,7 @@ msgstr "권한을 삭제하면 봇 기능이 제한될 수 있습니다."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "타임아웃을 해제하면 <0>{targetUserTag}</0>님이 메시지를 보내고, 반응하고, 음성 채널에 다시 참여할 수 있습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:493
 msgid "Rename"
 msgstr "이름 변경"
 
@@ -28194,6 +28440,11 @@ msgstr "채널 이름 변경 양식"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
 msgstr "이모티콘 이름 변경"
+
+#. Security settings: accessible name for the rename button on a passkey row. {passkeyName} is the name the user gave the passkey.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:125
+msgid "Rename passkey {passkeyName}"
+msgstr "'{passkeyName}'(으)로 이름 변경"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28405,13 +28656,13 @@ msgid "Require 2FA for moderation actions"
 msgstr "모더레이션 작업에 2단계 인증 필수"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:510
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 msgid "Require a passkey as your second factor"
 msgstr "패스키를 두 번째 인증 수단으로 요구"
 
 #. Short label for an advanced voice-channel navigation preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:20
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:22
 msgid "Require double-click to join voice channels"
 msgstr "음성 채널 참가 시 두 번 클릭 필요"
 
@@ -28941,7 +29192,7 @@ msgstr "로그인으로 돌아가기"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat mature media blur overlay. Keep it concise.
 #: src/features/channel/components/embeds/MatureMediaBlurOverlay.tsx:19
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:28
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:32
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:65
 msgid "Reveal"
 msgstr "보기"
@@ -28999,22 +29250,27 @@ msgid "Review and confirm"
 msgstr "검토 및 확인"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:151
 msgid "Review apps that can access your account."
 msgstr "계정에 액세스할 수 있는 앱을 검토하세요."
+
+#. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
+msgid "Review needed"
+msgstr "검토 필요"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:120
 msgid "Review past purchases and refund options"
 msgstr "이전 구매 내역 및 환불 옵션 검토"
 
-#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+#. Button in the inline privacy review alert. Opens the privacy setup modal.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:78
 msgid "Review privacy settings"
 msgstr "개인정보 설정 검토"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:159
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "로그인된 기기를 검토하고 알 수 없는 세션을 로그아웃하세요."
 
@@ -29036,6 +29292,11 @@ msgstr "이 파일을 검토하고 더 작거나 간단한 이미지로 다시 �
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "계속하기 전에 이 앱이 요청하는 권한을 검토하세요."
+
+#. Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:67
+msgid "Review who can message you"
+msgstr "누가 메시지를 보낼 수 있는지 검토하기"
 
 #. Setup wizard finish step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:441
@@ -29141,6 +29402,11 @@ msgstr "오른쪽 아이콘"
 msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "마우스 오른쪽 버튼"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "지금"
 
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
@@ -29332,13 +29598,12 @@ msgstr "채도"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
-#: src/features/channel/components/modals/EditGroupModal.tsx:342
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:387
+#: src/features/channel/components/modals/EditGroupModal.tsx:343
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -29357,7 +29622,6 @@ msgstr "채도"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "저장"
@@ -29379,7 +29643,7 @@ msgid "Save 17%"
 msgstr "17% 할인"
 
 #. Title of the one-time prompt asking a signed-in user without a recovery kit to create one.
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:124
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:117
 #: src/features/user/components/RecoveryKitReminderGate.tsx:21
 msgid "Save a recovery kit"
 msgstr "복구 키트 저장"
@@ -29404,7 +29668,9 @@ msgstr "배경 저장"
 msgid "Save banner"
 msgstr "배너 저장"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "변경 사항 저장"
 
@@ -29957,7 +30223,7 @@ msgstr "게시물 검색"
 
 #. Default header title in the channel search results panel before a query has been submitted.
 #. Settings content title shown above results for a settings search query.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:106
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:108
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "검색 결과"
@@ -30174,7 +30440,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "보안"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:326
 msgid "Security features"
 msgstr "보안 기능"
 
@@ -30233,6 +30499,12 @@ msgstr "이 채널을 볼 수 있습니다. {everyoneMention}에 대해 이 권�
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
 msgstr "탐색 미리보기"
+
+# auto-i18n: reviewed unchanged
+#. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:61
+msgid "Segoe UI"
+msgstr "Segoe UI"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
@@ -30800,7 +31072,7 @@ msgstr "음소거 단축키 설정"
 msgid "Set new password"
 msgstr "새 비밀번호 설정"
 
-#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:156
 msgid "Set password"
 msgstr "비밀번호 설정"
 
@@ -30920,6 +31192,7 @@ msgid "Set the voice region to automatic"
 msgstr "음성 지역을 자동으로 설정했습니다"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:401
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "설정"
@@ -30930,7 +31203,9 @@ msgid "Set up {productName}"
 msgstr "{productName} 설정"
 
 #. Security modal title for adding a TOTP authenticator app.
+#. Security settings: accessible name for the button that starts authenticator-app setup.
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:121
 msgid "Set up authenticator app"
 msgstr "인증 앱 설정"
 
@@ -31212,7 +31487,7 @@ msgid "Shorten the message and try again."
 msgstr "메시지를 줄여서 다시 시도해 주세요."
 
 #. Body of the error modal shown when the channel topic exceeds the maximum length.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:78
 msgid "Shorten the topic and try again."
 msgstr "주제를 줄여서 다시 시도해 주세요."
 
@@ -31222,7 +31497,7 @@ msgid "Shorten your about me and try again."
 msgstr "소개 내용을 줄이고 다시 시도해 주세요."
 
 #. Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
+#: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:20
 msgctxt "sensitive-media-filter-level"
 msgid "Show"
 msgstr "표시"
@@ -31248,7 +31523,7 @@ msgid "Show a content warning in this channel"
 msgstr "이 채널에 콘텐츠 경고 표시"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:56
 msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
 msgstr "이를 허용하는 커뮤니티의 맞춤 이모티콘 및 스티커를 한 번의 클릭으로 복사하는 바로가기를 표시합니다"
 
@@ -31312,7 +31587,7 @@ msgstr "연결 볼륨 컨트롤 표시"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:19
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:24
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:221
 msgid "Show context menu shortcuts"
 msgstr "상황별 메뉴 단축키 표시"
@@ -31344,7 +31619,7 @@ msgstr "삭제 버튼 표시"
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:71
 msgid "Show download button"
 msgstr "다운로드 버튼 표시"
 
@@ -31397,7 +31672,7 @@ msgstr "효과음 적게 보기"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:11
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:16
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:245
 msgid "Show focus ring on chat text area"
 msgstr "채팅 입력창에 포커스 링 표시"
@@ -31420,7 +31695,7 @@ msgid "Show guidelines"
 msgstr "가이드라인 보기"
 
 #. Toggle label and settings search entry for showing the help center button in the sidebar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:67
 msgid "Show help center button"
 msgstr "도움말 센터 버튼 표시"
 
@@ -31525,7 +31800,7 @@ msgstr "음소거한 채널 표시"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:819
+#: src/features/voice/components/VoiceSettingsMenus.tsx:826
 msgid "Show my own camera"
 msgstr "내 카메라 표시"
 
@@ -31566,7 +31841,7 @@ msgstr "새 글을 읽지 않음으로 표시"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:103
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:77
-#: src/features/voice/components/VoiceSettingsMenus.tsx:833
+#: src/features/voice/components/VoiceSettingsMenus.tsx:840
 msgid "Show non-video participants"
 msgstr "비디오를 켜지 않은 참여자 표시"
 
@@ -31642,7 +31917,7 @@ msgid "Show store folder"
 msgstr "저장 폴더 보기"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "취소선 마크다운 텍스트를 약간 흐린 색상으로 표시합니다."
 
@@ -31654,6 +31929,11 @@ msgstr "임베드 숨기기 버튼 표시"
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "시스템 트레이 아이콘 표시"
+
+#. Settings search entry description. One-line summary of what the setting controls. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:65
+msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
+msgstr "Windows 시스템 글꼴 대신 이전 기본 글꼴인 Fluxer Sans로 텍스트 표시"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:34
@@ -31880,6 +32160,11 @@ msgstr "로그인 절차"
 msgid "Sign-in method"
 msgstr "로그인 방법"
 
+#. Accessible name for the group of email, password and recovery kit rows in account settings.
+#: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:36
+msgid "Sign-in methods"
+msgstr "로그인 방법"
+
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -31958,11 +32243,7 @@ msgstr "무음 통화"
 msgid "Silent calls"
 msgstr "무음 통화"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "모든 사람의 통화 무음 처리"
-
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:874
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:875
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "오디오 입력이 없는 캡처 장치는 음소거됩니다"
 
@@ -32057,12 +32338,12 @@ msgstr "시스템 퇴장 알림을 건너뛰어 아무도 알림을 받지 않�
 msgid "Skip this now and configure it from the admin panel."
 msgstr "지금 건너뛰고 관리자 패널에서 설정하세요."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:142
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:160
 msgid "Skip this step"
 msgstr "건너뛰기"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:73
+#: src/app/App.tsx:74
 msgid "Skip to content"
 msgstr "본문으로 건너뛰기"
 
@@ -32473,8 +32754,8 @@ msgstr "문제가 발생했습니다."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:156
 msgid "Something went wrong. Please try again in a moment."
 msgstr "문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
@@ -32568,7 +32849,7 @@ msgstr "소리"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:332
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:458
 msgid "Source"
 msgstr "원본"
 
@@ -32677,7 +32958,7 @@ msgstr "지금 말하세요. 완료되면 중지를 누르세요. 나중에 다�
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:46
-#: src/features/voice/components/VoiceSettingsMenus.tsx:83
+#: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:20
 msgid "Speaker"
 msgstr "스피커"
@@ -32700,7 +32981,7 @@ msgstr "관전자 {count}명"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:156
 msgid "Speech"
 msgstr "음성"
 
@@ -32875,12 +33156,12 @@ msgid "Start a group DM"
 msgstr "그룹 DM 시작"
 
 #. Confirm dialog body before starting a 1:1 video call.
-#: src/features/voice/utils/CallUtils.tsx:17
+#: src/features/voice/utils/CallUtils.tsx:21
 msgid "Start a video call?"
 msgstr "영상 통화를 시작할까요?"
 
 #. Confirm dialog body before starting a 1:1 voice call.
-#: src/features/voice/utils/CallUtils.tsx:21
+#: src/features/voice/utils/CallUtils.tsx:25
 msgid "Start a voice call?"
 msgstr "음성 통화를 시작할까요?"
 
@@ -32910,6 +33191,16 @@ msgstr "시작일은 종료일보다 빨라야 합니다."
 msgid "Start drag and drop"
 msgstr "끌어서 놓기 시작"
 
+#. Primary button in the dialog offering to start a call in peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:377
+msgid "Start in P2P mode"
+msgstr "P2P 모드로 시작"
+
+#. Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:340
+msgid "Start in P2P mode?"
+msgstr "P2P 모드로 시작할까요?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:231
 msgid "Start in the tray instead of opening the window when launched at login"
@@ -32935,6 +33226,11 @@ msgstr "최소화하여 시작"
 msgid "Start over"
 msgstr "다시 시작"
 
+#. Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Start P2P call"
+msgstr "P2P 통화 시작"
+
 #. Button label shown before recording starts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:69
 msgid "Start recording"
@@ -32948,6 +33244,11 @@ msgstr "검색어 앞에 <0>{peoplePrefix}</0>, <1>{textChannelPrefix}</1>, <2>{
 #: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "말하기 시작"
+
+#. Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:381
+msgid "Start standard call"
+msgstr "표준 통화 시작"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
@@ -33019,6 +33320,11 @@ msgstr "상태 패널"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:368
 msgid "Status:"
 msgstr "상태:"
+
+#. Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:429
+msgid "Stay"
+msgstr "유지"
 
 #. Empty state explanation in the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:198
@@ -33227,7 +33533,7 @@ msgid "Stop"
 msgstr "중지"
 
 #. Title of the confirmation shown when a member turns off the Announcement channel switch in channel settings, which converts the channel back into a normal text channel.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
 msgid "Stop being an announcement channel?"
 msgstr "공지 채널 사용을 중지하시겠어요?"
 
@@ -33280,7 +33586,7 @@ msgid "Stop trusting all links?"
 msgstr "모든 링크 신뢰를 중단할까요?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:70
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "2단계 인증에 패스키 사용을 중단하시겠어요?"
 
@@ -33436,14 +33742,14 @@ msgid "Streaming privacy on"
 msgstr "스트리밍 개인 정보 보호 켜짐"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:124
 msgid "Strike through"
 msgstr "취소선"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:120
 msgid "Strikethrough"
 msgstr "취소선"
 
@@ -33632,6 +33938,11 @@ msgstr "계정 전환"
 msgid "Switch accounts"
 msgstr "계정 전환"
 
+#. Nagbar button that opens the setting for switching the app font back to Fluxer Sans. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:21
+msgid "Switch back to Fluxer Sans"
+msgstr "Fluxer Sans로 돌아가기"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:53
 msgid "Switch between channels"
@@ -33733,6 +34044,11 @@ msgstr "이전 커뮤니티 또는 DM으로 전환"
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:81
 msgid "Switch to single column"
 msgstr "1열로 전환"
+
+#. Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "Switch to standard call"
+msgstr "일반 통화로 전환"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
@@ -34027,6 +34343,11 @@ msgstr "태그는 사람들이 게시물을 찾는 데 도움이 됩니다. 최�
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "태그는 2자에서 {maxLength}자 사이의 영숫자여야 합니다."
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "메시지를 보낼 수 있는 사람을 확인해 보세요. 원치 않으시면 아무것도 변경되지 않습니다."
+
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "다음 갱신 시 적용됩니다. 현재 월별 결제 금액에서 {creditLabel} 크레딧이 적용되어 첫 연간 요금은 <0>{firstRenewalPriceLabel}</0>입니다. 이후 연간 갱신 요금은 연 {renewalPrice}입니다."
@@ -34108,7 +34429,7 @@ msgstr "시간 레이어"
 msgid "Temporarily disable your account"
 msgstr "계정 일시 비활성화"
 
-#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/DangerZoneTab.tsx:67
 msgid "Temporarily disable your account. You can reactivate it later by signing back in."
 msgstr "계정을 일시적으로 비활성화합니다. 나중에 다시 로그인하여 재활성화할 수 있습니다."
 
@@ -34138,7 +34459,7 @@ msgstr "테네시"
 msgid "Terms acceptance nagbar"
 msgstr "약관 동의 알림 표시줄"
 
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:438
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "이용약관"
@@ -34227,6 +34548,11 @@ msgstr "텍스트 서식"
 msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
 msgstr "투명도가 활성화되면 ClearType 대신 회색조 안티앨리어싱을 사용하여 텍스트가 더 부드럽게 보입니다."
 
+#. Nagbar message shown once to existing Windows users after the default app font changed to the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:16
+msgid "Text on Windows now uses the system font. You can switch back to Fluxer Sans in settings."
+msgstr "이제 Windows의 텍스트가 시스템 글꼴을 사용합니다. 설정에서 Fluxer Sans로 다시 전환할 수 있습니다."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
@@ -34249,7 +34575,7 @@ msgstr "글자 크기"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:428
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:152
 msgid "Text-to-speech"
 msgstr "텍스트 음성 변환"
 
@@ -35336,11 +35662,11 @@ msgstr "두 번째 옵션에 대한 설명입니다"
 msgid "This is the third option description"
 msgstr "세 번째 옵션 설명입니다"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:299
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "이것이 마지막 패스키이며, 패스키가 두 번째 인증 수단입니다. 삭제하면 계정의 2단계 인증이 해제되고 현재 백업 코드도 더 이상 작동하지 않습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:294
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "이것이 마지막 패스키입니다. 삭제하고 나면 패스키를 두 번째 인증 수단으로 사용할 수 없습니다."
 
@@ -36424,7 +36750,7 @@ msgid "Try sending your message again."
 msgstr "메시지를 다시 보내보세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:148
 msgid "TTS"
 msgstr "TTS"
 
@@ -36451,7 +36777,8 @@ msgstr "튀르키예어"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:86
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:382
 msgid "Turn off"
 msgstr "끄기"
 
@@ -36468,6 +36795,11 @@ msgstr "원하지 않는 항목은 꺼 주세요. 일부 기능이 작동하지 
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "이 소스의 오디오 공유를 끄거나 잠시 후 다시 시도하세요."
+
+#. Security settings: accessible name for the button that removes authenticator-app two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:116
+msgid "Turn off authenticator app"
+msgstr "인증 앱 사용 중지"
 
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:520
@@ -36500,7 +36832,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "로그인 또는 계정 보안 세부 정보를 보려면 스트리밍 개인 정보 보호를 끄세요."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:66
 msgid "Turn on"
 msgstr "켜기"
 
@@ -36638,10 +36970,6 @@ msgstr "2단계 인증이 해제되었습니다"
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:40
 msgid "Two-factor authentication enabled"
 msgstr "2단계 인증이 설정되었습니다"
-
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
-msgid "Two-factor authentication is enabled"
-msgstr "2단계 인증이 사용 설정되었습니다"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:102
@@ -37276,7 +37604,7 @@ msgstr "즐겨찾기 알림 켜기"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:59
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "마이크 음소거 해제"
@@ -37369,7 +37697,7 @@ msgstr "고정 해제된 그룹"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "고정 해제된 그룹 DM"
@@ -37392,7 +37720,7 @@ msgstr "읽지 않음"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:91
 msgid "Unread"
 msgstr "안 읽음"
 
@@ -37404,7 +37732,7 @@ msgid "Unread badge"
 msgstr "읽지 않은 메시지 배지"
 
 #. Settings search entry label for opting into experimental per-community unread badge controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:6
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:11
 msgid "Unread badge customization"
 msgstr "읽지 않은 메시지 배지 사용자 지정"
 
@@ -37413,7 +37741,7 @@ msgstr "읽지 않은 메시지 배지 사용자 지정"
 #. Short label in the channel notification settings dropdown. Keep it concise.
 #: src/features/channel/components/channel_header_components/ChannelNotificationSettingsDropdown.tsx:38
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:72
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:10
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:15
 msgid "Unread badges"
 msgstr "읽지 않은 메시지 배지"
 
@@ -37528,6 +37856,11 @@ msgstr "인증되지 않은 이메일"
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "최대 {DISCOVERY_MAX_TAGS}개의 태그로 커뮤니티를 더 쉽게 찾을 수 있습니다. 이 태그는 디스커버리 검색에 표시됩니다."
 
+#. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
+msgstr "최대 {maxParticipants, plural, one {#명} other {#명}}까지"
+
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
 msgid "Up to 4K at 60 FPS"
@@ -37585,7 +37918,7 @@ msgid "Update passkey"
 msgstr "패스키 업데이트"
 
 #. Short label in the settings dialog mobile settings view.
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:59
 msgid "Update service worker"
 msgstr "서비스 워커 업데이트"
 
@@ -37842,7 +38175,7 @@ msgstr "이모티콘 업로드 중"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
@@ -37958,7 +38291,7 @@ msgstr "실제 값 사용"
 msgid "Use alternative method"
 msgstr "다른 방법 사용"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "인증 앱을 사용하여 2단계 인증 코드를 생성합니다"
 
@@ -38065,6 +38398,11 @@ msgstr "외부 스티커 사용"
 msgid "Use filters or enter keywords to find messages"
 msgstr "필터를 사용하거나 키워드를 입력하여 메시지를 찾아보세요"
 
+#. Toggle label and settings search entry for showing app text in the Fluxer Sans font instead of the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+msgid "Use Fluxer Sans on Windows"
+msgstr "Windows에서 Fluxer Sans 사용"
+
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
@@ -38095,12 +38433,12 @@ msgid "Use native title bar"
 msgstr "기본 제목 표시줄 사용"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
 msgid "Use passkeys for two-factor authentication?"
 msgstr "패스키를 2단계 인증에 사용하시겠어요?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:433
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Use passkeys to sign in without a password"
 msgstr "패스키를 사용하여 비밀번호 없이 로그인합니다"
@@ -38146,7 +38484,7 @@ msgid "Use the spellchecker built into your operating system."
 msgstr "운영체제에 내장된 맞춤법 검사기를 사용합니다."
 
 #. Visually hidden help text announced to screen readers describing how to navigate the settings sidebar tree.
-#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:23
+#: src/features/app/components/dialogs/shared/SettingsModalLayout.tsx:24
 msgid "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
 msgstr "항목 간 이동하려면 위쪽 및 아래쪽 화살표 키를 사용하고, 항목을 열려면 스페이스바 또는 Enter 키를 사용하세요. 탭에 섹션이 있는 경우 오른쪽 화살표 키로 확장하고 왼쪽 화살표 키로 축소하세요."
 
@@ -38249,7 +38587,7 @@ msgid "User avatars"
 msgstr "프로필 사진"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:67
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "사용자 컨트롤"
 
@@ -38317,6 +38655,11 @@ msgstr "사용자 레코드"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:315
 msgid "User settings"
 msgstr "사용자 설정"
+
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+msgid "User settings, privacy review needed"
+msgstr "사용자 설정, 개인 정보 검토 필요"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:52
@@ -38434,27 +38777,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "{effectiveLabel}이 준비될 때까지 {requestedLabel}을(를) 사용합니다."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "실제 계정 상태 사용 중"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "실제 선물 재고 상태 사용 중"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "실제 프리미엄 상태 사용 중"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:135
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "실제 상태 사용 중"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "실제 인증 상태 사용 중"
 
@@ -38620,12 +38963,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "친구 요청을 보내려면 이메일 주소를 인증하세요."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
 msgid "Verify your email before adding a passkey."
 msgstr "패스키를 추가하기 전에 이메일을 인증하세요."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding an authenticator app."
 msgstr "인증 앱을 추가하기 전에 이메일을 인증하세요."
 
@@ -38826,7 +39169,7 @@ msgstr "비디오 전송:"
 #. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:65
-#: src/features/voice/components/VoiceSettingsMenus.tsx:110
+#: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Video settings"
 msgstr "비디오 설정"
 
@@ -38912,7 +39255,7 @@ msgstr "차단된 사용자를 확인하고 관리합니다."
 msgid "View and manage every webhook configured across your community."
 msgstr "커뮤니티에 설정된 모든 웹훅을 확인하고 관리합니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:408
 msgid "View and manage your backup codes for account recovery"
 msgstr "계정 복구를 위한 백업 코드 확인 및 관리"
 
@@ -38951,7 +39294,7 @@ msgstr "채널 보기"
 msgid "View channel members"
 msgstr "채널 멤버 보기"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
 msgid "View codes"
 msgstr "코드 보기"
 
@@ -39171,7 +39514,7 @@ msgstr "사용자 상태를 나타내는 시각적 표시입니다. 아바타와
 #: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:95
 msgid "Voice"
 msgstr "음성"
 
@@ -39208,11 +39551,6 @@ msgstr "음성 활동"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "음성 활동"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "활동 중에 음성 활동 표시"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
@@ -39366,19 +39704,19 @@ msgstr "이 브라우저에서는 음성 녹음을 지원하지 않습니다."
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:98
+#: src/features/voice/components/VoiceSettingsMenus.tsx:102
 msgid "Voice region"
 msgstr "음성 지역"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "음성 세션 복원 알림 표시줄"
 
 #. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:53
-#: src/features/voice/components/VoiceSettingsMenus.tsx:106
+#: src/features/voice/components/VoiceSettingsMenus.tsx:110
 msgid "Voice settings"
 msgstr "음성 설정"
 
@@ -39408,7 +39746,7 @@ msgstr "무효"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "Volume"
 msgstr "볼륨"
 
@@ -39957,8 +40295,8 @@ msgstr "무슨 일이 일어나고 있나요?"
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
-#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:102
-#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:60
+#: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:104
+#: src/features/app/components/dialogs/components/MobileSettingsView.tsx:63
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "새로운 기능"
@@ -40054,10 +40392,6 @@ msgstr "눌러서 말하기가 켜져 있는 동안에는 단축키로 마이크
 msgid "Who can add"
 msgstr "추가할 수 있는 사람"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "나를 그룹 채팅에 추가할 수 있는 사람"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40079,12 +40413,12 @@ msgid "Who can join"
 msgstr "누가 가입할 수 있나요"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "누가 메시지를 보낼 수 있나요"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "누가 메시지를 보낼 수 있나요?"
 
@@ -40393,7 +40727,7 @@ msgstr "업로드 전 코멘트를 추가할 수 있습니다. Shift 키를 누�
 msgid "You can add friends with their username."
 msgstr "사용자 이름으로 친구를 추가할 수 있습니다."
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:128
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:146
 msgid "You can also change this setting per-community by right-clicking the community name and selecting privacy settings."
 msgstr "커뮤니티 이름을 마우스 오른쪽 버튼으로 클릭하고 개인 정보 보호 설정을 선택하여 커뮤니티별로 이 설정을 변경할 수도 있습니다."
 
@@ -40406,7 +40740,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "14일 이내에 계정 삭제를 취소할 수 있습니다"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "이 설정은 언제든지 개인정보 보호 설정에서 변경할 수 있으며, 커뮤니티별로도 설정할 수 있습니다."
 
@@ -40679,7 +41013,7 @@ msgstr "{PREMIUM_PRODUCT_NAME} 사용 중에 태그를 변경했습니다. 구�
 msgid "You do not have access to the channel where this message was sent."
 msgstr "이 메시지가 전송된 채널에 접근할 수 없습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:91
+#: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:93
 msgid "You don't have a recovery kit yet"
 msgstr "복구 키트가 아직 없습니다"
 
@@ -40933,7 +41267,7 @@ msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "승인 후 {redirectHostname}(으)로 이동합니다."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "더 이상 로그인 시 비밀번호 입력 후 패스키를 요청하지 않습니다. 인증 앱은 계속해서 두 번째 인증 수단으로 사용됩니다."
 
@@ -40957,7 +41291,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "로그아웃된 모든 기기에서 다시 로그인해야 합니다"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "새 기기에서 로그인하려면 등록된 패스키 중 하나가 필요합니다. 패스키를 모두 잃어버리면 계정에 영구적으로 접근하지 못할 수 있습니다. 백업 코드가 저장되므로 계정에 들어갈 방법은 남아 있습니다."
 
@@ -41302,7 +41636,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "계정에 다단계 인증이 필요하지만, 이 기기에는 지원되는 방법이 설정되어 있지 않습니다. 인증 앱 또는 보안 키가 있는 기기에서 로그인하거나 이 인스턴스의 관리자에게 문의하세요."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "비밀번호로 로그인할 때 더 이상 2단계 인증으로 계정이 보호되지 않습니다. 또한 2단계 인증이 필요한 커뮤니티에서는 상위 권한도 사용할 수 없게 됩니다."
 

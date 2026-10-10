@@ -42,6 +42,7 @@ import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import WindowsFont from '@app/features/theme/state/WindowsFont';
 import {useThemeStudioBroadcast} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
@@ -175,6 +176,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useDocumentClassToggle('reduced-motion', reducedMotion);
 	useDocumentClassToggle('mobile-layout', MobileLayout.platformMobileDetected || MobileLayout.enabled);
 	useDocumentClassToggle(UNFOCUSED_FULLY_INTERACTIVE_CLASS, stayInteractiveWhenUnfocused);
+	useDocumentClassToggle('windows-fluxer-sans', WindowsFont.useFluxerSans);
 	useDesktopAllowTransparency(isNative);
 	useWindowEventListeners();
 	useRemScaleTracking();

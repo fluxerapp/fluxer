@@ -22,10 +22,10 @@ export const NagbarType = {
 	VISIONARY_MFA: 'visionary-mfa',
 	VOICE_SESSION_RESTORE: 'voice-session-restore',
 	TERMS_ACCEPTANCE: 'terms-acceptance',
-	PRIVACY_SETUP: 'privacy-setup',
 	SOFTWARE_ENCODER: 'software-encoder',
 	STREAMER_MODE: 'streamer-mode',
 	DOMAIN_MOVED: 'domain-moved',
+	WINDOWS_FONT: 'windows-font',
 } as const;
 
 export type NagbarType = ValueOf<typeof NagbarType>;
@@ -61,8 +61,8 @@ export interface NagbarConditions {
 	canShowVisionaryMfa: boolean;
 	canShowVoiceSessionRestore: boolean;
 	needsTermsAcceptance: boolean;
-	needsPrivacySetup: boolean;
 	canShowSoftwareEncoder: boolean;
 	canShowStreamerMode: boolean;
 	canShowDomainMoved: boolean;
+	canShowWindowsFont: boolean;
 }

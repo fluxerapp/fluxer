@@ -45,7 +45,6 @@ const CONTENT_I18N_UK_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Реальні або згенеровані ШІ зображення чи відео сексуального насильства над дітьми",
 	"report_flow.label.discovery_listing": "Запис у Discovery",
 	"report_flow.label.dislike": "Мені це просто не підходить",
-	"report_flow.label.dsa": "Вміст, незаконний в ЄС (Акт про цифрові послуги)",
 	"report_flow.label.eating_disorder_promotion": "Заохочення розладів харчової поведінки",
 	"report_flow.label.eating_disorder_promotion_profile": "Їхній профіль пропагує розлади харчової поведінки",
 	"report_flow.label.email": "Адреса електронної пошти",

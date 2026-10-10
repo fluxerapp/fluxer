@@ -69,9 +69,10 @@ const TOAST_ERROR_DESCRIPTOR = msg({
 	message: "Couldn't update voice activity sharing right now",
 	comment: 'Privacy > Active now: error modal title shown when the mass-update request fails.',
 });
-const SECTION_TITLE_DESCRIPTOR = msg({
-	message: 'Voice activity on active now',
-	comment: 'Privacy > Active now: settings subsection title for voice activity sharing.',
+const SHARE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours.",
+	comment: 'Privacy > Active now: helper text under the switch controlling whether friends see voice activity.',
 });
 
 function formatRemaining(i18n: I18n, ms: number): string {
@@ -143,12 +144,10 @@ export const ActiveNowTabContent: React.FC = observer(() => {
 		);
 	};
 	return (
-		<SettingsTabSection
-			title={i18n._(SECTION_TITLE_DESCRIPTOR)}
-			data-flx="user.privacy-safety-tab.active-now-tab.settings-tab-section"
-		>
+		<SettingsTabSection data-flx="user.privacy-safety-tab.active-now-tab.settings-tab-section">
 			<Switch
 				label={i18n._(TITLE_DESCRIPTOR)}
+				description={i18n._(SHARE_DESCRIPTION_DESCRIPTOR)}
 				value={sharing}
 				disabled={onCooldown || submitting}
 				onChange={(value) => openConfirm(value)}

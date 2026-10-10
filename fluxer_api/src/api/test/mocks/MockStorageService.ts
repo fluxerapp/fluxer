@@ -556,6 +556,14 @@ export class MockStorageService implements IStorageService {
 		return this.objects.has(this.objectId(bucket, key));
 	}
 
+	setObjectLastModified(bucket: string, key: string, lastModified: Date): void {
+		const object = this.objects.get(this.objectId(bucket, key));
+		if (!object) {
+			throw new Error(`No stored object ${key} in ${bucket}`);
+		}
+		object.lastModified = lastModified;
+	}
+
 	reset(): void {
 		this.objects.clear();
 		this.multipartUploads.clear();

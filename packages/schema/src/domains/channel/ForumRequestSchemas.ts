@@ -38,7 +38,6 @@ import {z} from 'zod';
 
 const EXPERIMENT = {experiment: 'channel_threads'} as const;
 const EMOJI_NAME_MAX_LENGTH = 64;
-const LOCATION_MAX_LENGTH = 100;
 
 export const ForumTagRequest = withSchemaMetadata(
 	z.object({
@@ -141,7 +140,6 @@ export const StartForumThreadRequest = withSchemaMetadata(
 			.describe('Seconds a user has to wait before sending another message (0-21600)'),
 		applied_tags: AppliedTagsType.optional(),
 		message: ForumThreadMessageRequest.describe('The first message of the post'),
-		location: z.string().max(LOCATION_MAX_LENGTH).optional().describe('Accepted and ignored'),
 	}),
 	EXPERIMENT,
 );

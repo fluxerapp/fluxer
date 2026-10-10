@@ -45,7 +45,6 @@ const CONTENT_I18N_NL_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Echte of door AI gegenereerde beelden of video's van seksueel misbruik van kinderen",
 	"report_flow.label.discovery_listing": "Vermelding bij Ontdekken",
 	"report_flow.label.dislike": "Het is gewoon niets voor mij",
-	"report_flow.label.dsa": "Inhoud die illegaal is in de EU (digitaledienstenverordening)",
 	"report_flow.label.eating_disorder_promotion": "Gestoord eetgedrag aanmoedigen",
 	"report_flow.label.eating_disorder_promotion_profile": "Hun profiel promoot eetstoornissen",
 	"report_flow.label.email": "E-mailadres",

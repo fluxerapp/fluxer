@@ -8,6 +8,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
 import {VoiceChannelFullModal} from '@app/features/voice/components/alerts/VoiceChannelFullModal';
 import {VoiceConnectionConfirmModal} from '@app/features/voice/components/alerts/VoiceConnectionConfirmModal';
+import {VoiceP2pConsentModal} from '@app/features/voice/components/alerts/VoiceP2pConsentModal';
 import {
 	getAllVoiceStatesInChannelFromMediaEngine,
 	getVoiceConnectionContextFromMediaEngine,
@@ -16,35 +17,97 @@ import {
 } from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import type {VoiceStateSyncPartial} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import {isChannelP2p} from '@app/features/voice/state/ChannelP2pStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
+import VoiceP2pRollout from '@app/features/voice/state/VoiceP2pRollout';
+import VoicePrompts from '@app/features/voice/state/VoicePrompts';
 import {applyVoiceSpeakPermissionToSelfMute} from '@app/features/voice/utils/VoicePermissionUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
 
 const logger = new Logger('VoiceChannelConnector');
 
-export function checkChannelLimit(guildId: string | null, channelId: string): boolean {
-	if (!guildId) return true;
-	const channel = Channels.getChannel(channelId);
-	if (!channel?.userLimit || channel.userLimit <= 0) return true;
-	const voiceStates = getAllVoiceStatesInChannelFromMediaEngine(guildId, channelId);
+export function showVoiceChannelFullModal(): void {
+	ModalCommands.push(
+		modal(() => (
+			<VoiceChannelFullModal data-flx="voice.engine.voice-channel-connector.show-voice-channel-full-modal.voice-channel-full-modal" />
+		)),
+	);
+}
+
+function countOtherVoiceConnections(guildId: string | null, channelId: string): number {
+	const voiceStates = getAllVoiceStatesInChannelFromMediaEngine(guildId ?? ME, channelId);
 	const currentConnectionId = getVoiceConnectionContextFromMediaEngine()?.connectionId;
-	let adjusted = 0;
+	const currentUserId = Users.getCurrentUser()?.id;
+	let count = 0;
 	for (const connectionId in voiceStates) {
 		const voiceState = voiceStates[connectionId];
 		if (!voiceState) continue;
 		if (voiceState.connection_id === currentConnectionId) continue;
-		adjusted += 1;
+		if (guildId === null && voiceState.user_id === currentUserId) continue;
+		count += 1;
 	}
-	if (adjusted >= channel.userLimit) {
-		ModalCommands.push(
-			modal(() => (
-				<VoiceChannelFullModal data-flx="voice.engine.voice-channel-connector.check-channel-limit.voice-channel-full-modal" />
-			)),
-		);
-		return false;
+	return count;
+}
+
+export function checkChannelLimit(guildId: string | null, channelId: string): boolean {
+	const limits: Array<number> = [];
+	const userLimit = guildId ? Channels.getChannel(channelId)?.userLimit : undefined;
+	if (userLimit && userLimit > 0) limits.push(userLimit);
+	if (isChannelP2p(guildId, channelId)) limits.push(VoiceP2pRollout.maxParticipants);
+	if (limits.length === 0) return true;
+	if (countOtherVoiceConnections(guildId, channelId) < Math.min(...limits)) return true;
+	showVoiceChannelFullModal();
+	return false;
+}
+
+function isEmptyPinnedP2pChannel(guildId: string | null, channelId: string): boolean {
+	return (
+		VoiceP2pRollout.enabled &&
+		guildId !== null &&
+		Channels.getChannel(channelId)?.rtcP2p === true &&
+		countOtherVoiceConnections(guildId, channelId) === 0
+	);
+}
+
+export function requestP2pConsent(
+	guildId: string | null,
+	channelId: string,
+	onAgree: () => void,
+	onCancel: () => void,
+): boolean {
+	if (VoiceP2pConsent.isAgreed(channelId)) return true;
+	if (VoicePrompts.getSkipP2pJoinConfirm()) {
+		VoiceP2pConsent.agree(channelId);
+		return true;
 	}
-	return true;
+	const intent = isEmptyPinnedP2pChannel(guildId, channelId) ? 'start' : 'join';
+	ModalCommands.push(
+		modal(() => (
+			<VoiceP2pConsentModal
+				intent={intent}
+				allowStandard={false}
+				onP2p={() => {
+					VoiceP2pConsent.agree(channelId);
+					onAgree();
+				}}
+				onCancel={onCancel}
+				data-flx="voice.engine.voice-channel-connector.request-p2p-consent.voice-p2p-consent-modal"
+			/>
+		)),
+	);
+	return false;
+}
+
+export function checkP2pConsent(
+	guildId: string | null,
+	channelId: string,
+	onAgree: () => void,
+	onCancel: () => void,
+): boolean {
+	if (!isChannelP2p(guildId, channelId) && !isEmptyPinnedP2pChannel(guildId, channelId)) return true;
+	return requestP2pConsent(guildId, channelId, onAgree, onCancel);
 }
 
 function resolveVoiceConnectionLimit(guildId: string | null, channelId: string): number {
@@ -121,6 +184,7 @@ export function sendVoiceStateConnect(
 		: LocalVoiceState.getSelfMute();
 	const selfMute = applyVoiceSpeakPermissionToSelfMute(guildId, channelId, effectiveSelfMute);
 	const connectionId = getVoiceConnectionContextFromMediaEngine()?.connectionId ?? null;
+	VoiceP2pConsent.commit(channelId);
 	socket.updateVoiceStateExplicit({
 		guild_id: guildId,
 		channel_id: channelId,
@@ -130,6 +194,7 @@ export function sendVoiceStateConnect(
 		self_stream: false,
 		viewer_stream_keys: viewerStreamKeys,
 		connection_id: connectionId,
+		...(VoiceP2pConsent.isAgreed(channelId) ? {p2p: true} : {}),
 	});
 }
 
@@ -156,6 +221,7 @@ export function syncVoiceStateToServer(
 	channelId: string,
 	connectionId: string,
 	partial?: VoiceStateSyncPartial,
+	p2p?: false,
 ): void {
 	const socket = GatewayConnection.socket;
 	if (!socket) return;
@@ -173,5 +239,6 @@ export function syncVoiceStateToServer(
 		self_stream: partial?.self_stream ?? LocalVoiceState.getSelfStream(),
 		viewer_stream_keys: partial?.viewer_stream_keys ?? LocalVoiceState.getViewerStreamKeys(),
 		connection_id: connectionId,
+		...(p2p === undefined ? {} : {p2p}),
 	});
 }

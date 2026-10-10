@@ -27,6 +27,8 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub domain_migration: DomainMigrationConfigResponse,
     #[serde(default)]
+    pub voice_p2p: VoiceP2pConfigResponse,
+    #[serde(default)]
     pub captcha: CaptchaConfigResponse,
     #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
@@ -506,7 +508,10 @@ impl VoiceE2eeScope {
 }
 
 pub const EXPERIMENT_MAX_TARGETED_USERS: usize = 1_000;
+pub const EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES: usize = 250;
 pub const DOMAIN_MIGRATION_DEFAULT_SALT: &str = "domain-migration-v1";
+pub const VOICE_P2P_DEFAULT_SALT: &str = "voice-p2p-v1";
+pub const VOICE_P2P_MAX_PARTICIPANTS_RANGE: std::ops::RangeInclusive<u32> = 2..=4;
 pub const CAPTCHA_COST_RANGE: std::ops::RangeInclusive<u32> = 1_000..=20_000;
 pub const CAPTCHA_MAX_COUNTER_RANGE: std::ops::RangeInclusive<u32> = 100..=20_000;
 
@@ -530,6 +535,7 @@ pub struct DomainMigrationConfigResponse {
     pub enabled: bool,
     pub config_version: u64,
     pub rollout_basis_points: u32,
+    pub rollout_country_codes: Vec<String>,
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
     pub included_guild_ids: Vec<String>,
@@ -545,6 +551,7 @@ impl Default for DomainMigrationConfigResponse {
             enabled: false,
             config_version: 0,
             rollout_basis_points: 0,
+            rollout_country_codes: Vec::new(),
             rollout_salt: DOMAIN_MIGRATION_DEFAULT_SALT.to_owned(),
             included_user_ids: Vec::new(),
             included_guild_ids: Vec::new(),
@@ -563,6 +570,8 @@ pub struct DomainMigrationConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rollout_basis_points: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_country_codes: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rollout_salt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub included_user_ids: Option<Vec<String>>,
@@ -576,6 +585,60 @@ pub struct DomainMigrationConfigUpdateRequest {
     pub anonymous_rollout_basis_points: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standalone_forwarding: Option<bool>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
+pub struct VoiceP2pConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_country_codes: Vec<String>,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub included_guild_ids: Vec<String>,
+    pub include_premium_users: bool,
+    pub excluded_user_ids: Vec<String>,
+    pub max_participants: u32,
+}
+
+impl Default for VoiceP2pConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_country_codes: Vec::new(),
+            rollout_salt: VOICE_P2P_DEFAULT_SALT.to_owned(),
+            included_user_ids: Vec::new(),
+            included_guild_ids: Vec::new(),
+            include_premium_users: false,
+            excluded_user_ids: Vec::new(),
+            max_participants: *VOICE_P2P_MAX_PARTICIPANTS_RANGE.start(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct VoiceP2pConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_country_codes: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_guild_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_premium_users: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_participants: Option<u32>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -723,6 +786,8 @@ pub struct InstanceConfigUpdateRequest {
     pub push_relay: Option<PushRelayConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_migration: Option<DomainMigrationConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice_p2p: Option<VoiceP2pConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub captcha: Option<CaptchaConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1028,17 +1093,22 @@ mod tests {
                 .expect("admin schema");
         let domain_migration = serde_json::from_value::<DomainMigrationConfigResponse>(json!({}))
             .expect("default domain migration config");
+        let voice_p2p = serde_json::from_value::<VoiceP2pConfigResponse>(json!({}))
+            .expect("default voice p2p config");
         let captcha = serde_json::from_value::<CaptchaConfigResponse>(json!({}))
             .expect("default captcha config");
         let delivery = serde_json::from_value::<ExperimentDeliveryConfigResponse>(json!({}))
             .expect("default delivery config");
         let domain_migration =
             serde_json::to_value(domain_migration).expect("serializable domain migration config");
+        let voice_p2p = serde_json::to_value(voice_p2p).expect("serializable voice p2p config");
         let captcha = serde_json::to_value(captcha).expect("serializable captcha config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let generated_domain_migration: generated_types::DomainMigrationConfigResponse =
             serde_json::from_value(domain_migration.clone())
                 .expect("generated domain migration config contract");
+        let generated_voice_p2p: generated_types::VoiceP2pConfigResponse =
+            serde_json::from_value(voice_p2p.clone()).expect("generated voice p2p config contract");
         let generated_captcha: generated_types::CaptchaConfigResponse =
             serde_json::from_value(captcha.clone()).expect("generated captcha config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1047,6 +1117,11 @@ mod tests {
             serde_json::to_value(generated_domain_migration)
                 .expect("serializable generated domain migration config"),
             domain_migration
+        );
+        assert_eq!(
+            serde_json::to_value(generated_voice_p2p)
+                .expect("serializable generated voice p2p config"),
+            voice_p2p
         );
         assert_eq!(
             serde_json::to_value(generated_captcha).expect("serializable generated captcha config"),
@@ -1059,6 +1134,7 @@ mod tests {
         );
         for (name, value) in [
             ("DomainMigrationConfigResponse", domain_migration),
+            ("VoiceP2pConfigResponse", voice_p2p),
             ("CaptchaConfigResponse", captcha),
             ("ExperimentDeliveryConfigResponse", delivery),
         ] {
@@ -1089,6 +1165,27 @@ mod tests {
         );
         assert_eq!(
             serde_json::to_value(DomainMigrationConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
+    }
+
+    #[test]
+    fn voice_p2p_update_preserves_empty_lists_and_omitted_fields() {
+        let update = VoiceP2pConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::VoiceP2pConfigUpdateRequest>(value.clone())
+            .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(VoiceP2pConfigUpdateRequest::default())
                 .expect("serializable update"),
             json!({})
         );

@@ -3,6 +3,7 @@
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
+import {isVoiceMeshRoom} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
@@ -234,7 +235,7 @@ export function bindRoomEvents(
 		screenShareMigrationDisposer = null;
 	};
 	const bindScreenShareNegotiation = (): void => {
-		if (screenShareNegotiationBound) return;
+		if (screenShareNegotiationBound || isVoiceMeshRoom(room)) return;
 		screenShareNegotiationBound = true;
 		bindCodecNegotiation();
 		bindScreenShareMigration();

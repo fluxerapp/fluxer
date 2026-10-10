@@ -198,7 +198,39 @@ handle_cast({cleanup_virtual_access_for_user, UId}, State) when
     is_integer(UId)
 ->
     NewState = guild_voice_disconnect:cleanup_virtual_channel_access_for_user(UId, State),
-    {noreply, NewState}.
+    {noreply, NewState};
+handle_cast({voice_signal, Request}, State) when is_map(Request) ->
+    ok = relay_voice_signal(Request, State),
+    {noreply, State}.
+
+-spec relay_voice_signal(map(), guild_state()) -> ok.
+relay_voice_signal(
+    #{session_id := SessionId, channel_id := ChannelId, to := To, data := Data}, State
+) ->
+    ChannelVoiceStates = maps:values(
+        voice_state_utils:channel_voice_states(ChannelId, voice_state_utils:voice_states(State))
+    ),
+    case voice_p2p:signal_route(ChannelVoiceStates, SessionId, To) of
+        {ok, Sender, Target} ->
+            GuildId = maps:get(id, State),
+            dispatch_voice_signal(
+                maps:get(<<"session_id">>, Target, undefined),
+                voice_p2p:signal_payload(GuildId, ChannelId, Sender, Data),
+                GuildId,
+                State
+            );
+        error ->
+            ok
+    end.
+
+-spec dispatch_voice_signal(term(), map(), integer(), guild_state()) -> ok.
+dispatch_voice_signal(SessionId, Payload, GuildId, State) ->
+    case maps:get(SessionId, maps:get(sessions, State, #{}), undefined) of
+        #{pid := Pid} when is_pid(Pid) ->
+            gateway_dispatch_relay:dispatch(Pid, voice_signal, Payload, GuildId);
+        _ ->
+            ok
+    end.
 
 -spec cast_relay_voice_server(
     integer(), integer(), binary(), binary(), binary(), binary(), guild_state()

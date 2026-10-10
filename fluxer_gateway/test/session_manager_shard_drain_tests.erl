@@ -284,6 +284,40 @@ build_session_data_normalizes_current_user_for_ready_test() ->
     ?assertEqual(1, maps:get(<<"mention_flags">>, UserData)),
     ?assertEqual(false, maps:get(<<"is_staff">>, UserData)).
 
+build_session_data_stores_the_geoip_country_code_test() ->
+    UserDataMap = #{
+        <<"id">> => <<"123">>,
+        <<"username">> => <<"tester">>,
+        <<"discriminator">> => <<"0001">>,
+        <<"avatar">> => null,
+        <<"flags">> => 0
+    },
+    IdentifyData = #{properties => #{}, token => <<"token">>, presence => null},
+    Data = fun(CountryCode) ->
+        #{
+            <<"guilds">> => [],
+            <<"user">> => UserDataMap,
+            <<"user_settings">> => null,
+            <<"geoip_country_code">> => CountryCode
+        }
+    end,
+    CountryCode = fun(Value) ->
+        maps:get(
+            geoip_country_code, build_test_session_data(Data(Value), IdentifyData, UserDataMap)
+        )
+    end,
+    ?assertEqual(<<"SE">>, CountryCode(<<"SE">>)),
+    ?assertEqual(undefined, CountryCode(null)),
+    ?assertEqual(
+        undefined,
+        maps:get(
+            geoip_country_code,
+            build_test_session_data(
+                maps:remove(<<"geoip_country_code">>, Data(null)), IdentifyData, UserDataMap
+            )
+        )
+    ).
+
 build_session_data_filters_guilds_for_identify_shard_test() ->
     Guild0 = guild_id_for_shard(0, 4, 0),
     Guild1 = guild_id_for_shard(1, 4, 0),

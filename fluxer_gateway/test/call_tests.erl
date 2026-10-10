@@ -86,7 +86,7 @@ join_from_ringing_adds_voice_state_test() ->
         initiator_ready => true
     }),
     {reply, ok, NewState} = call_voice:handle_join_internal(
-        UserId, VoiceState, SessionId, self(), ConnectionId, State
+        UserId, VoiceState, SessionId, self(), ConnectionId, undefined, State
     ),
     ?assert(maps:is_key(UserId, maps:get(voice_states, NewState))),
     ?assertNot(lists:member(UserId, maps:get(ringing, NewState))).
@@ -165,7 +165,7 @@ leave_then_rejoin_keeps_voice_state_test() ->
         )
     ),
     {reply, ok, Rejoined} = call_voice:handle_join_internal(
-        UserId, VoiceState, SessionId, self(), <<"conn-42">>, PostLeave
+        UserId, VoiceState, SessionId, self(), <<"conn-42">>, undefined, PostLeave
     ),
     ?assert(maps:is_key(UserId, maps:get(voice_states, Rejoined))).
 

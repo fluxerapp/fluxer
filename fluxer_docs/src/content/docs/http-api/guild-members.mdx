@@ -308,7 +308,7 @@ Hierarchy authority over the target is not checked for `roles`, so a caller who 
 
 Fluxer never checks the target's own permissions in the destination, so a member can be moved into a channel they could not join themselves. Disconnecting sets `channel_id` to null and requires the same permission.
 
-Supplying `channel_id` for a target with no live voice connection, or a `connection_id` that is not one of the target's own, returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a target succeeds and stores the flags. A destination that does not exist returns the field code `CHANNEL_DOES_NOT_EXIST`, and one that is not a voice channel `CHANNEL_MUST_BE_VOICE`.
+Supplying `channel_id` for a target with no live voice connection, or a `connection_id` that is not one of the target's own, returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a target succeeds and stores the flags. A destination that does not exist returns the field code `CHANNEL_DOES_NOT_EXIST`, and one that is not a voice channel `CHANNEL_MUST_BE_VOICE`. A destination that is [peer-to-peer](/gateway/events/#peer-to-peer-voice) also returns 400 `USER_NOT_IN_VOICE`.
 
 `MANAGE_ROLES` and `MODERATE_MEMBERS` are [elevated permissions](/http-api/permissions/#elevated-permissions). When the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller who is not the guild owner also needs an enrolled multi-factor authenticator to replace `roles` or apply `communication_disabled_until`.
 

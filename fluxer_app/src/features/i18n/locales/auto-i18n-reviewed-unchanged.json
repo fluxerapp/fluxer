@@ -39,6 +39,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -46,6 +49,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -119,6 +125,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -126,6 +135,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -280,6 +292,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -299,6 +314,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -775,6 +793,9 @@
         "msgid": "Output"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -809,6 +830,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Send"
@@ -1437,6 +1461,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -1462,6 +1489,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Smileys"
@@ -1907,6 +1937,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -1926,6 +1959,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -2045,6 +2081,9 @@
         "msgid": "A default emoji. You can use it anywhere on {productName}."
       },
       {
+        "msgid": "A direct connection couldn't be made. You can't hear or see each other."
+      },
+      {
         "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
       },
       {
@@ -2052,6 +2091,9 @@
       },
       {
         "msgid": "A separate profile for each community"
+      },
+      {
+        "msgid": "A standard call goes through a server and works for everyone."
       },
       {
         "msgid": "AV1"
@@ -2105,6 +2147,12 @@
         "msgid": "Added the tag {name}"
       },
       {
+        "msgid": "Added {createdDate}, last used {lastUsedDate}"
+      },
+      {
+        "msgid": "Added {createdDate}, never used"
+      },
+      {
         "msgid": "Allow AV1 for screen sharing"
       },
       {
@@ -2150,6 +2198,9 @@
         "msgid": "Allows members to start threads that only invited members and moderators can see."
       },
       {
+        "msgid": "Also change the communities below to match"
+      },
+      {
         "msgid": "An update for {appName} is available."
       },
       {
@@ -2174,6 +2225,12 @@
         "msgid": "Anyone in my communities"
       },
       {
+        "msgid": "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+      },
+      {
+        "msgid": "Anyone who finds you can send a request. Turn this off to pick groups below."
+      },
+      {
         "msgid": "Anyone with this key can reset your password. Never share it."
       },
       {
@@ -2183,13 +2240,19 @@
         "msgid": "App audio isn't available right now on Windows."
       },
       {
-        "msgid": "Apply to these communities too"
+        "msgid": "Applies to bots in communities you join from now on. You can also change it for each community."
+      },
+      {
+        "msgid": "Applies to communities you join from now on. You can also change it for each community."
       },
       {
         "msgid": "Approval required"
       },
       {
         "msgid": "Approve this app from the {productName} app you already use. No password needed."
+      },
+      {
+        "msgid": "Apps and devices"
       },
       {
         "msgid": "Are you sure you want to delete {threadName}? This cannot be undone."
@@ -2201,10 +2264,19 @@
         "msgid": "Ask for a passkey after your password when you sign in"
       },
       {
+        "msgid": "Ask for a second step after your password when you sign in."
+      },
+      {
         "msgid": "Attach an image or a video to post in a media channel."
       },
       {
         "msgid": "Attachment {pendingFilename}"
+      },
+      {
+        "msgid": "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+      },
+      {
+        "msgid": "Audio and video go directly between participants."
       },
       {
         "msgid": "Audio muted"
@@ -2276,7 +2348,13 @@
         "msgid": "CSS files"
       },
       {
+        "msgid": "Calls you allow still come through, but they don't ring."
+      },
+      {
         "msgid": "Camera access is needed for device previews"
+      },
+      {
+        "msgid": "Can message you"
       },
       {
         "msgid": "Can't find {path}. Using the last loaded version."
@@ -2375,13 +2453,25 @@
         "msgid": "Choose the reason again"
       },
       {
+        "msgid": "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+      },
+      {
         "msgid": "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
       },
       {
         "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
       },
       {
-        "msgid": "Choose who can send you direct messages."
+        "msgid": "Choose whether people who share a community with you can send you direct messages without being friends first."
+      },
+      {
+        "msgid": "Choose who can add you to a group chat without asking first."
+      },
+      {
+        "msgid": "Choose who can send you a friend request."
+      },
+      {
+        "msgid": "Choose who can start a call with you."
       },
       {
         "msgid": "Choose your defaults"
@@ -2438,6 +2528,9 @@
         "msgid": "Code from the {productName} app"
       },
       {
+        "msgid": "Codes from your authenticator app are your second step when you sign in."
+      },
+      {
         "msgid": "Combobox"
       },
       {
@@ -2448,6 +2541,12 @@
       },
       {
         "msgid": "Communities you can join"
+      },
+      {
+        "msgid": "Communities you join from now on will use this."
+      },
+      {
+        "msgid": "Communities you join from now on will use this. Your current communities keep their settings."
       },
       {
         "msgid": "Community overrides"
@@ -2540,6 +2639,9 @@
         "msgid": "Couldn't connect to {domain}. Try again."
       },
       {
+        "msgid": "Couldn't connect to {names}"
+      },
+      {
         "msgid": "Couldn't convert this channel"
       },
       {
@@ -2553,6 +2655,9 @@
       },
       {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't join the P2P call. Try again."
       },
       {
         "msgid": "Couldn't load posts. Try again later."
@@ -2645,6 +2750,9 @@
         "msgid": "Cropping {percent}%"
       },
       {
+        "msgid": "Current"
+      },
+      {
         "msgid": "Custom emoji {emojiName} from a community"
       },
       {
@@ -2679,6 +2787,9 @@
       },
       {
         "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
+      },
+      {
+        "msgid": "Delete passkey {passkeyName}"
       },
       {
         "msgid": "Delete prompt"
@@ -2720,7 +2831,13 @@
         "msgid": "Device volume"
       },
       {
+        "msgid": "Direct connection. Media is encrypted between participants."
+      },
+      {
         "msgid": "Disable direct messages and friend requests"
+      },
+      {
+        "msgid": "Disable or delete your account"
       },
       {
         "msgid": "Disable translation DOM guard"
@@ -2891,6 +3008,9 @@
         "msgid": "Every community that follows this channel gets a copy. If you edit or delete it later, the copies change too."
       },
       {
+        "msgid": "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
+      },
+      {
         "msgid": "Expires in {remainingSeconds}s"
       },
       {
@@ -2969,7 +3089,13 @@
         "msgid": "Forum"
       },
       {
-        "msgid": "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
+        "msgid": "Friends can always message you."
+      },
+      {
+        "msgid": "Friends can always message you. These settings cover people and bots you only share a community with."
+      },
+      {
+        "msgid": "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
       },
       {
         "msgid": "From {sourceGuildName}"
@@ -3039,6 +3165,9 @@
       },
       {
         "msgid": "Got it!"
+      },
+      {
+        "msgid": "Group chats"
       },
       {
         "msgid": "H.265 (requires opt-in)"
@@ -3179,6 +3308,12 @@
         "msgid": "Italic"
       },
       {
+        "msgid": "Join P2P calls without asking"
+      },
+      {
+        "msgid": "Join a P2P call?"
+      },
+      {
         "msgid": "Join this thread to follow it in your channel list and get notifications."
       },
       {
@@ -3204,6 +3339,9 @@
       },
       {
         "msgid": "Keep attachments when clearing an edit"
+      },
+      {
+        "msgid": "Keep my current settings"
       },
       {
         "msgid": "Keep this page somewhere safe. If you forget your password, you can use it to get back into your account. Anyone with this recovery key can reset your password, so never share it."
@@ -3314,6 +3452,9 @@
         "msgid": "Logo"
       },
       {
+        "msgid": "Lower latency."
+      },
+      {
         "msgid": "Make sure this code matches the one in the {PRODUCT_NAME} app."
       },
       {
@@ -3321,6 +3462,9 @@
       },
       {
         "msgid": "Make the instance yours"
+      },
+      {
+        "msgid": "Manage devices"
       },
       {
         "msgid": "Manage posts"
@@ -3332,7 +3476,16 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+      },
+      {
+        "msgid": "Media in group chats and in direct messages from people who aren't your friends."
+      },
+      {
         "msgid": "Media items you can save for later"
+      },
+      {
+        "msgid": "Media your friends send you in direct messages."
       },
       {
         "msgid": "Members who can manage posts can add or remove it."
@@ -3437,6 +3590,9 @@
         "msgid": "No part of {query} could be applied. Fix the underlined value or add something to search for."
       },
       {
+        "msgid": "No passkeys yet. Add one to sign in with your fingerprint, face or a security key."
+      },
+      {
         "msgid": "No posts match your search"
       },
       {
@@ -3471,6 +3627,9 @@
       },
       {
         "msgid": "Nothing to search for"
+      },
+      {
+        "msgid": "Nothing will change. This just confirms your settings."
       },
       {
         "msgid": "OP"
@@ -3593,6 +3752,21 @@
         "msgid": "Other active threads"
       },
       {
+        "msgid": "Other participants can see your IP address."
+      },
+      {
+        "msgid": "Other participants in a P2P call can see your IP address."
+      },
+      {
+        "msgid": "P2P"
+      },
+      {
+        "msgid": "P2P calls are unavailable right now."
+      },
+      {
+        "msgid": "P2P calls only"
+      },
+      {
         "msgid": "Passkey sign-in is unavailable here."
       },
       {
@@ -3608,6 +3782,12 @@
         "msgid": "Pay once and get a gift link to share. Gifts never renew."
       },
       {
+        "msgid": "People in your communities can message you without being friends."
+      },
+      {
+        "msgid": "People in your communities need to be your friend before they can message you."
+      },
+      {
         "msgid": "People need to be your friend before they can message you. They can still send you a friend request."
       },
       {
@@ -3618,6 +3798,12 @@
       },
       {
         "msgid": "People who share a community with you can message you directly."
+      },
+      {
+        "msgid": "People who share a community with you."
+      },
+      {
+        "msgid": "People who share at least one friend with you."
       },
       {
         "msgid": "Per-device volume"
@@ -3719,9 +3905,6 @@
         "msgid": "Print"
       },
       {
-        "msgid": "Privacy setup nagbar"
-      },
-      {
         "msgid": "Private channel"
       },
       {
@@ -3803,6 +3986,9 @@
         "msgid": "Reason (optional)."
       },
       {
+        "msgid": "Receive calls silently"
+      },
+      {
         "msgid": "Recently active"
       },
       {
@@ -3852,6 +4038,9 @@
       },
       {
         "msgid": "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
+      },
+      {
+        "msgid": "Rename passkey {passkeyName}"
       },
       {
         "msgid": "Reply to message above"
@@ -3965,10 +4154,19 @@
         "msgid": "Retry"
       },
       {
+        "msgid": "Review needed"
+      },
+      {
         "msgid": "Review privacy settings"
       },
       {
         "msgid": "Review the permissions {productName} uses for voice, video, screen sharing, and shortcuts."
+      },
+      {
+        "msgid": "Review who can message you"
+      },
+      {
+        "msgid": "Right now"
       },
       {
         "msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
@@ -4047,6 +4245,9 @@
       },
       {
         "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Select the account you want to sign in with on your new device."
@@ -4166,6 +4367,9 @@
         "msgid": "Show store folder"
       },
       {
+        "msgid": "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
+      },
+      {
         "msgid": "Showed media download options"
       },
       {
@@ -4215,6 +4419,9 @@
       },
       {
         "msgid": "Sign-in method"
+      },
+      {
+        "msgid": "Sign-in methods"
       },
       {
         "msgid": "Signing in as {name}"
@@ -4289,13 +4496,28 @@
         "msgid": "Stack traces"
       },
       {
+        "msgid": "Start P2P call"
+      },
+      {
+        "msgid": "Start in P2P mode"
+      },
+      {
+        "msgid": "Start in P2P mode?"
+      },
+      {
         "msgid": "Start in the tray instead of opening the window when launched at login"
+      },
+      {
+        "msgid": "Start standard call"
       },
       {
         "msgid": "Started by {name}"
       },
       {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Stay"
       },
       {
         "msgid": "Stay focused on a conversation with a thread, a temporary text channel."
@@ -4349,10 +4571,16 @@
         "msgid": "Subscriber badge on your profile"
       },
       {
+        "msgid": "Switch back to Fluxer Sans"
+      },
+      {
         "msgid": "Switch price"
       },
       {
         "msgid": "Switch to account {slot}"
+      },
+      {
+        "msgid": "Switch to standard call"
       },
       {
         "msgid": "Switch to the new price?"
@@ -4382,7 +4610,13 @@
         "msgid": "Tags help people find posts. You can add up to {count} tags."
       },
       {
+        "msgid": "Take a moment to check who can message you. Nothing changes unless you choose to."
+      },
+      {
         "msgid": "Tap Share, then Add to Home Screen."
+      },
+      {
+        "msgid": "Text on Windows now uses the system font. You can switch back to Fluxer Sans in settings."
       },
       {
         "msgid": "Thanks for flagging this"
@@ -4610,6 +4844,9 @@
         "msgid": "Turn off audio sharing for this source or try again in a moment."
       },
       {
+        "msgid": "Turn off authenticator app"
+      },
+      {
         "msgid": "Turn on"
       },
       {
@@ -4655,6 +4892,9 @@
         "msgid": "Up to 720p at 30 FPS"
       },
       {
+        "msgid": "Up to {maxParticipants, plural, one {# person} other {# people}}."
+      },
+      {
         "msgid": "Update available"
       },
       {
@@ -4686,6 +4926,9 @@
       },
       {
         "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use Fluxer Sans on Windows"
       },
       {
         "msgid": "Use a different account"
@@ -4746,6 +4989,9 @@
       },
       {
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+      },
+      {
+        "msgid": "User settings, privacy review needed"
       },
       {
         "msgid": "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
@@ -5171,7 +5417,7 @@
         "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
       },
       {
-        "msgid": "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
+        "msgid": "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
       },
       {
         "msgid": "{count, plural, one {# file} other {# files}}"
@@ -5190,6 +5436,9 @@
       },
       {
         "msgid": "{count, plural, one {# new message} other {# new messages}}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{count, plural, one {# video} other {# videos}}"
@@ -5322,6 +5571,10 @@
       {
         "msgctxt": "voice-connection-status",
         "msgid": "Dismiss"
+      },
+      {
+        "msgctxt": "voice-p2p-consent",
+        "msgid": "Join"
       }
     ],
     "es-419": [
@@ -5437,6 +5690,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PiP"
       },
       {
@@ -5456,6 +5712,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Social"
@@ -5826,6 +6085,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PiP"
       },
       {
@@ -5845,6 +6107,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Social"
@@ -6160,6 +6425,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -6179,6 +6447,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Slovakia"
@@ -6647,6 +6918,9 @@
         "msgid": "Options"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Participants"
       },
       {
@@ -6684,6 +6958,9 @@
       },
       {
         "msgid": "Secret"
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Session"
@@ -6786,6 +7063,9 @@
       },
       {
         "msgid": "{count, plural, one {# message} other {# messages}}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
@@ -7056,6 +7336,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7063,6 +7346,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -7167,6 +7453,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -7291,6 +7580,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7319,6 +7611,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -7655,6 +7950,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7671,6 +7969,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -8147,6 +8448,9 @@
         "msgid": "Output"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -8178,6 +8482,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -8710,6 +9017,9 @@
         "msgid": "Output"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -8738,6 +9048,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Slovenia"
@@ -9105,6 +9418,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -9121,6 +9437,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -9223,6 +9542,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -9230,6 +9552,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -9347,6 +9672,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -9363,6 +9691,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -9730,6 +10061,9 @@
         "msgid": "Open {productName}"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -9770,6 +10104,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -9905,6 +10242,9 @@
       },
       {
         "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{count, plural, one {# passkey} other {# passkeys}}"
       },
       {
         "msgid": "{formattedPresenceCount} online"
@@ -10304,6 +10644,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Pause"
       },
       {
@@ -10335,6 +10678,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Send"
@@ -10745,6 +11091,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -10764,6 +11113,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -11118,6 +11470,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -11140,6 +11495,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -11615,6 +11973,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -11640,6 +12001,9 @@
       },
       {
         "msgid": "Secret"
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -12029,6 +12393,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -12036,6 +12403,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -12201,6 +12571,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -12238,6 +12611,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Session"
@@ -12624,6 +13000,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -12634,6 +13013,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -12784,6 +13166,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -12815,6 +13200,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -13117,6 +13505,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -13124,6 +13515,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -13283,6 +13677,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -13296,6 +13693,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -13614,7 +14014,13 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"
@@ -13728,6 +14134,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -13735,6 +14144,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Segoe UI"
       },
       {
         "msgid": "Shift"

@@ -205,6 +205,7 @@ export interface MasterConfig {
 				latitude: number;
 				longitude: number;
 			};
+			p2p_stun_urls?: Array<string>;
 		};
 		search: {
 			engine: 'elasticsearch' | 'meilisearch';

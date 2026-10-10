@@ -22,7 +22,8 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 | 9 | Invalid Session<sup>1</sup> | Server to client |
 | 10 | Hello | Server to client |
 | 11 | Heartbeat ACK | Server to client |
-| 12 | Gateway Error | Reserved |
+| 12 | Gateway Error | Server to client |
+| 13 | Voice Signal | Client to server |
 | 14 | Lazy Request | Client to server |
 | 15 | Request Guild Counts | Client to server |
 | 16 | Request Channel Member Counts | Client to server |
@@ -46,7 +47,8 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 | 9 | Literal `false` | The session named by Resume could not be reached, the supplied `seq` is below the replay floor, or an established session ended<sup>6</sup> |
 | 10 | Object with `heartbeat_interval` | Sent as the WebSocket is accepted, before any client payload is read |
 | 11 | No `d` field | Acknowledges an accepted client heartbeat |
-| 12 | Not implemented | Never sent. Errors reach the client as a Dispatch or a close frame |
+| 12 | [Gateway Error object](#gateway-error) | Fluxer reports a refused voice join that the client is expected to act on |
+| 13 | [Voice Signal object](/gateway/commands/#voice-signal) | The client sends peer-to-peer signalling to one other voice connection |
 | 14 | [Lazy Request object](/gateway/commands/#lazy-request) | The client replaces bounded guild subscriptions |
 | 15 | [Request Guild Counts object](/gateway/commands/#request-guild-counts) | The client requests current guild count records |
 | 16 | [Request Channel Member Counts object](/gateway/commands/#request-channel-member-counts) | The client requests channel count records |
@@ -56,7 +58,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 
 <sup>2</sup> Answer a server heartbeat request immediately, in addition to the regular schedule
 
-<sup>3</sup> A client that sends Opcode 5 or 12 gets the same close as a client that sent an undefined opcode
+<sup>3</sup> A client that sends Opcode 5 or 12 gets the same close as a client that sent an undefined opcode. Fluxer never sends Opcode 5
 
 <sup>4</sup> Resume is accepted whether or not a session is already attached to the connection
 
@@ -64,7 +66,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 
 <sup>6</sup> After the frame, a socket whose session ended is unauthenticated. After a failed Resume, a socket that already held a session still holds it
 
-The registry is complete. Opcode 13, the values 17 through 27, and every value above 28 are undefined.
+The registry is complete. The values 17 through 27 and every value above 28 are undefined.
 
 Fluxer resolves an inbound payload in this order.
 
@@ -72,13 +74,40 @@ Fluxer resolves an inbound payload in this order.
 2. Heartbeat and Resume are handled whether or not a session is attached.
 3. Identify closes with `4005` when a session is already attached.
 4. Every remaining opcode closes with `4003` while no session is attached.
-5. With a session attached, Presence Update, Voice State Update, Request Guild Members, Lazy Request, Request Guild Counts, Request Channel Member Counts, and Request Forum Unreads are handled. Every other opcode, including a server opcode and an undefined value, closes with `4001`.
+5. With a session attached, Presence Update, Voice State Update, Voice Signal, Request Guild Members, Lazy Request, Request Guild Counts, Request Channel Member Counts, and Request Forum Unreads are handled. Every other opcode, including a server opcode and an undefined value, closes with `4001`.
 
 Request Forum Unreads from a user session that did not set [`CHANNEL_THREADS`](/gateway/threads/#session-flag) also closes with `4001`.
 
 :::note[Unknown server opcodes are forward compatible]
 A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close or reconnect solely because the server used an opcode newer than this registry.
 :::
+
+## Gateway Error
+
+Opcode `12` reports a refused [Voice State Update](/gateway/commands/#voice-state-update) command to the session that sent it. The payload has no `s` and no `t`, is not replayed by [Resume](/gateway/commands/#resume), and closes nothing.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The refusal code |
+| message | string | A description for diagnosis, which a client does not show or parse |
+
+```json
+{
+  "op": 12,
+  "d": {
+    "code": "VOICE_P2P_CONSENT_REQUIRED",
+    "message": "This call is peer-to-peer and requires agreement to join"
+  }
+}
+```
+
+Fluxer sends three codes.
+
+- `VOICE_P2P_CONSENT_REQUIRED` means the channel or call is peer-to-peer and the join did not send `p2p: true`. Ask the user, then send the join again with `p2p: true`.
+- `VOICE_P2P_UNAVAILABLE` means Fluxer declined peer-to-peer for a join into a peer-to-peer channel or call. Abort the join and tell the user.
+- `VOICE_CHANNEL_FULL` means the channel is at its `user_limit`, or the peer-to-peer mesh is at its participant cap. Abort the join and tell the user.
+
+Every other voice refusal sends no payload. [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) states when each of the first two codes is produced.
 
 ## Close codes
 
@@ -185,7 +214,7 @@ The Gateway sends an exact reason string with every application close.
 Reason strings are stable wire values. A client branches on the code and MAY record the reason for diagnosis.
 
 :::note[Some refusals send nothing]
-A held or discarded Identify, an over-budget Presence Update, an over-budget [Request Forum Unreads](/gateway/threads/#request-forum-unreads), a dropped bounded request, and a rejected voice state update produce no close and no reason. [Client commands](/gateway/commands/) states which command behaves that way.
+A held or discarded Identify, an over-budget Presence Update, an over-budget [Request Forum Unreads](/gateway/threads/#request-forum-unreads), a dropped bounded request, an unroutable or over-budget Voice Signal, and a rejected voice state update produce no close and no reason. A rejected voice state update sends a [Gateway Error](#gateway-error) for three codes and nothing for the rest. [Client commands](/gateway/commands/) states which command behaves that way.
 :::
 
 ## Ordinary WebSocket closes

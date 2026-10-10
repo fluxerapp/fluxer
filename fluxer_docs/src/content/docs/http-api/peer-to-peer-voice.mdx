@@ -1,0 +1,89 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Peer-to-peer voice
+description: Connection outcome reports for the peer connections of a peer-to-peer voice call.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A peer-to-peer voice call connects its participants directly, as [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) describes. Fluxer hands out STUN servers only and never relays media, so whether two participants connect depends on their networks. Clients report how each peer connection settled, so an operator can see which networks connect directly.
+
+The route on this page is user-only. Fluxer rejects a bot or OAuth2 credential with 403 `ACCESS_DENIED`.
+
+## Connection report object
+
+The outcome of one peer connection, as seen from the reporting client. A client sends one report for each remote peer of a call, once the connection to that peer reaches connected or fails.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the guild voice channel or private channel of the call |
+| guild_id | ?snowflake | The ID of the guild of the channel, null for a call |
+| participant_count | integer | Participants in the call when the connection settled (2-4) |
+| outcome | string | `connected` or `failed` |
+| local_candidate_type<sup>2</sup> | ?string | Candidate type of the local end of the selected pair |
+| remote_candidate_type<sup>2</sup> | ?string | Candidate type of the remote end of the selected pair |
+| ip_family<sup>3</sup> | ?string | `ipv4` or `ipv6`, the address family of the selected pair |
+| protocol<sup>3</sup> | ?string | `udp` or `tcp`, the transport of the selected pair |
+| setup_ms<sup>4</sup> | ?integer | Milliseconds from creating the connection to its first connected state (0-2,147,483,647) |
+| ice_restarted | boolean | Whether the connection ran an ICE restart |
+
+<sup>1</sup> Fluxer stores the value with no check that the channel exists or that the caller was in its call
+
+<sup>2</sup> One of `host`, `srflx`, `prflx`, or `relay`, and null when the connection has no selected candidate pair
+
+<sup>3</sup> Null when the connection has no selected candidate pair
+
+<sup>4</sup> Null for a connection that never reached connected
+
+### Example
+
+```json
+{
+  "channel_id": "1189375284394692610",
+  "guild_id": null,
+  "participant_count": 2,
+  "outcome": "connected",
+  "local_candidate_type": "srflx",
+  "remote_candidate_type": "host",
+  "ip_family": "ipv6",
+  "protocol": "udp",
+  "setup_ms": 840,
+  "ice_restarted": false
+}
+```
+
+## Report connection outcomes
+
+<RouteHeader method="POST" path="/v1/voice/p2p/connection-reports" />
+
+Records 1 through 8 [connection report objects](#connection-report-object) and returns 204 with an empty body. User-only. Emits no Gateway event.
+
+A client batches its reports and sends them best effort. A failed or rate-limited request changes nothing about the call, and a client drops the batch rather than retrying more than once.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reports<sup>1</sup> | array[[connection report](#connection-report-object) object] | The reports to record (1-8) |
+
+<sup>1</sup> A list of fewer than 1 or more than 8 entries, or any invalid entry, fails with 400 `INVALID_FORM_BODY` and records nothing
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Every report was recorded, or peer-to-peer voice is disabled on the instance and nothing was recorded |
+| 400 | [error response](/http-api/#error-response) | The body is invalid and the request returns `INVALID_FORM_BODY` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+
+### Side effects
+
+Fluxer stores each report with the caller's user ID, the time of the request, the request address and its country, and the client platform and operating system of the caller's session. The country is null when the address resolves to none. Reports expire after 180 days.
+
+Fluxer keeps each report for 180 days. No route reads reports back.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `voice:p2p:connection_reports` bucket.

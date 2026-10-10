@@ -180,6 +180,7 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 		<>
 			<SettingsTabSection
 				title={<Trans>Incoming calls</Trans>}
+				description={<Trans>Choose who can start a call with you.</Trans>}
 				data-flx="user.privacy-safety-tab.communication-tab.communication-tab-content.settings-tab-section"
 			>
 				<CompactComboboxRow<CommunicationPermissionValue>
@@ -214,7 +215,8 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 				)}
 				{incomingCallBaseValue !== CommunicationPermissionValue.NOBODY && (
 					<Switch
-						label={<Trans>Silent calls from everyone</Trans>}
+						label={<Trans>Receive calls silently</Trans>}
+						description={<Trans>Calls you allow still come through, but they don't ring.</Trans>}
 						value={hasCallFlag(IncomingCallFlags.SILENT_EVERYONE)}
 						onChange={(value) =>
 							handleIncomingCallModifierToggle({flag: IncomingCallFlags.SILENT_EVERYONE, enabled: value})
@@ -224,7 +226,8 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 				)}
 			</SettingsTabSection>
 			<SettingsTabSection
-				title={<Trans>Who can add you to group chats</Trans>}
+				title={<Trans>Group chats</Trans>}
+				description={<Trans>Choose who can add you to a group chat without asking first.</Trans>}
 				data-flx="user.privacy-safety-tab.communication-tab.communication-tab-content.settings-tab-section--2"
 			>
 				<CompactComboboxRow<CommunicationPermissionValue>

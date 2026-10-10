@@ -45,7 +45,6 @@ const CONTENT_I18N_DA_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Ægte eller AI-genererede billeder eller videoer af seksuelle overgreb mod børn",
 	"report_flow.label.discovery_listing": "Opslag i Opdag",
 	"report_flow.label.dislike": "Det er bare ikke noget for mig",
-	"report_flow.label.dsa": "Indhold, der er ulovligt i EU (retsakten om digitale tjenester, DSA)",
 	"report_flow.label.eating_disorder_promotion": "Opfordrer til spiseforstyrrelser",
 	"report_flow.label.eating_disorder_promotion_profile": "Deres profil fremmer spiseforstyrrelser",
 	"report_flow.label.email": "E-mailadresse",

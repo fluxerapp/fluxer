@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
 import type {LiveKitService} from '@app/api/infrastructure/LiveKitService';
 import type {PinnedRoomServer, VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
@@ -23,6 +27,7 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 
 interface GetVoiceTokenParams {
 	guildId?: GuildID;
@@ -36,7 +41,34 @@ interface GetVoiceTokenParams {
 	canStream?: boolean;
 	canVideo?: boolean;
 	tokenNonce?: string;
+	p2p?: boolean;
+	p2pInitiator?: boolean;
+	p2pParticipantCount?: number;
+	countryCode?: string;
 }
+
+interface VoiceTokenGrant {
+	token: string;
+	endpoint: string;
+	connectionId: string;
+	tokenNonce: string;
+	regionId: string;
+	serverId: string;
+}
+
+interface VoiceP2pGrant {
+	p2p: true;
+	connectionId: string;
+	iceServers: Array<{urls: Array<string>}>;
+	maxParticipants: number;
+}
+
+interface VoiceP2pDecline {
+	p2p: false;
+	declineReason: 'channel_full';
+}
+
+type VoiceP2pDecision = {kind: 'granted'; maxParticipants: number} | {kind: 'declined'} | {kind: 'channel_full'};
 
 interface VoicePermissions {
 	canSpeak: boolean;
@@ -64,16 +96,10 @@ export class VoiceService {
 		private channelRepository: IChannelRepository,
 		private voiceRoomStore: VoiceRoomStore,
 		private voiceAvailabilityService: VoiceAvailabilityService,
+		private instanceConfigRepository: InstanceConfigRepository,
 	) {}
 
-	async getVoiceToken(params: GetVoiceTokenParams): Promise<{
-		token: string;
-		endpoint: string;
-		connectionId: string;
-		tokenNonce: string;
-		regionId: string;
-		serverId: string;
-	}> {
+	async getVoiceToken(params: GetVoiceTokenParams): Promise<VoiceTokenGrant | VoiceP2pGrant | VoiceP2pDecline> {
 		const {guildId, channelId, userId, connectionId: providedConnectionId} = params;
 		const selectionKey = this.createVoiceRoutingSelectionKey(guildId, channelId);
 		let connectionId = providedConnectionId;
@@ -119,6 +145,19 @@ export class VoiceService {
 			if (guild) {
 				guildFeatures = guild.features;
 			}
+		}
+		const p2pDecision: VoiceP2pDecision = params.p2p ? await this.decideVoiceP2p(user, params) : {kind: 'declined'};
+		if (p2pDecision.kind === 'channel_full') {
+			return {p2p: false, declineReason: 'channel_full'};
+		}
+		if (p2pDecision.kind === 'granted') {
+			const stunUrls = Config.voice.p2pStunUrls;
+			return {
+				p2p: true,
+				connectionId: providedConnectionId || generateConnectionId(),
+				iceServers: stunUrls?.length ? [{urls: stunUrls}] : [],
+				maxParticipants: p2pDecision.maxParticipants,
+			};
 		}
 		const context: VoiceAccessContext = {
 			requestingUserId: userId,
@@ -255,6 +294,22 @@ export class VoiceService {
 				});
 		}
 		return {token, endpoint, connectionId, tokenNonce, regionId, serverId};
+	}
+
+	private async decideVoiceP2p(user: User, params: GetVoiceTokenParams): Promise<VoiceP2pDecision> {
+		const config = await this.instanceConfigRepository.getVoiceP2pConfig();
+		if (!config.enabled) {
+			return {kind: 'declined'};
+		}
+		if (params.p2pParticipantCount !== undefined && params.p2pParticipantCount > config.max_participants) {
+			return {kind: 'channel_full'};
+		}
+		const granted: VoiceP2pDecision = {kind: 'granted', maxParticipants: config.max_participants};
+		if (!params.p2pInitiator) {
+			return granted;
+		}
+		const targeting = await resolveExperimentTargeting(user, params.countryCode ?? null, [config]);
+		return resolveVoiceP2pAssignment(config, user.id.toString(), targeting).enabled ? granted : {kind: 'declined'};
 	}
 
 	private createVoiceRoutingSelectionKey(guildId: GuildID | undefined, channelId: ChannelID): string {

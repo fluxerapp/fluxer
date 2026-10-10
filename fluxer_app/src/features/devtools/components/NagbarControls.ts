@@ -66,10 +66,6 @@ const TERMS_ACCEPTANCE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Terms acceptance nagbar',
 	comment: 'Developer control label for the terms-acceptance banner.',
 });
-const PRIVACY_SETUP_NAGBAR_DESCRIPTOR = msg({
-	message: 'Privacy setup nagbar',
-	comment: 'Developer control label for the privacy setup banner.',
-});
 const VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Voice session restore nagbar',
 	comment: 'Developer control label for the voice-session-restore banner.',
@@ -304,18 +300,6 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceTermsAcceptance && !state.forceHideTermsAcceptance,
 		forceShowDisabled: (state) => state.forceTermsAcceptance,
 		forceHideDisabled: (state) => state.forceHideTermsAcceptance,
-	},
-	{
-		key: 'forcePrivacySetup',
-		label: PRIVACY_SETUP_NAGBAR_DESCRIPTOR,
-		forceKey: 'forcePrivacySetup',
-		forceHideKey: 'forceHidePrivacySetup',
-		resetKeys: ['forcePrivacySetup'],
-		status: (state) =>
-			state.forcePrivacySetup ? FORCE_ENABLED : state.forceHidePrivacySetup ? FORCE_DISABLED : USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forcePrivacySetup && !state.forceHidePrivacySetup,
-		forceShowDisabled: (state) => state.forcePrivacySetup,
-		forceHideDisabled: (state) => state.forceHidePrivacySetup,
 	},
 	{
 		key: 'forceDesktopDownload',

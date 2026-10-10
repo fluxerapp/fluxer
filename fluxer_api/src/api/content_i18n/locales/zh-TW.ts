@@ -45,7 +45,6 @@ const CONTENT_I18N_ZH_TW_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "兒童性虐待的真實或 AI 生成圖片或影片",
 	"report_flow.label.discovery_listing": "探索列表",
 	"report_flow.label.dislike": "對我來說不太適合",
-	"report_flow.label.dsa": "在歐盟屬違法的內容（《數位服務法》）",
 	"report_flow.label.eating_disorder_promotion": "鼓勵飲食失調",
 	"report_flow.label.eating_disorder_promotion_profile": "他們的個人檔案宣傳飲食失調",
 	"report_flow.label.email": "電子郵件地址",

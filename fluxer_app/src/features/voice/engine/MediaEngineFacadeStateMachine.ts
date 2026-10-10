@@ -92,7 +92,10 @@ export type MediaEngineFacadeGatewayErrorDecision =
 			showUnavailableToast: boolean;
 			disconnectReason: 'server' | null;
 			toast: 'timed-out' | 'connection-limit' | 'unclaimed-account' | null;
+			p2pRefusal: MediaEngineFacadeP2pRefusal | null;
 	  };
+
+export type MediaEngineFacadeP2pRefusal = 'consent-required' | 'unavailable' | 'channel-full';
 
 export interface MediaEngineFacadeDeferredDisconnectInput {
 	connectionId: string;
@@ -411,6 +414,8 @@ const voiceGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_MISSING_CONNECTION_ID,
 	GatewayErrorCodes.VOICE_TOKEN_FAILED,
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
+	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
+	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
 ]);
 
 const unavailableGatewayErrorCodes = new Set<GatewayErrorCode>([
@@ -430,6 +435,14 @@ const preConnectAbortGatewayErrorCodes = new Set<GatewayErrorCode>([
 	GatewayErrorCodes.VOICE_CONNECTION_LIMIT_REACHED,
 	GatewayErrorCodes.VOICE_MEMBER_TIMED_OUT,
 	GatewayErrorCodes.VOICE_UNCLAIMED_ACCOUNT,
+	GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED,
+	GatewayErrorCodes.VOICE_P2P_UNAVAILABLE,
+]);
+
+const p2pRefusalsByGatewayErrorCode = new Map<GatewayErrorCode, MediaEngineFacadeP2pRefusal>([
+	[GatewayErrorCodes.VOICE_P2P_CONSENT_REQUIRED, 'consent-required'],
+	[GatewayErrorCodes.VOICE_P2P_UNAVAILABLE, 'unavailable'],
+	[GatewayErrorCodes.VOICE_CHANNEL_FULL, 'channel-full'],
 ]);
 
 export function selectMediaEngineGatewayErrorDecision(
@@ -456,6 +469,7 @@ export function selectMediaEngineGatewayErrorDecision(
 				showUnavailableToast: unavailableChannelId !== null,
 				disconnectReason: null,
 				toast: null,
+				p2pRefusal: null,
 			};
 		}
 		if (unavailableChannelId && input.channelId === unavailableChannelId) {
@@ -481,6 +495,7 @@ export function selectMediaEngineGatewayErrorDecision(
 		showUnavailableToast: unavailableChannelId !== null,
 		disconnectReason,
 		toast,
+		p2pRefusal: p2pRefusalsByGatewayErrorCode.get(input.code) ?? null,
 	};
 }
 

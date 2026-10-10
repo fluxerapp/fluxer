@@ -4,6 +4,7 @@
 import type {E2EEOptions} from './e2ee/types.ts';
 import type {FrameMetadataOptions} from './frameMetadata/FrameMetadataManager.ts';
 import type {ReconnectPolicy} from './room/ReconnectPolicy.ts';
+import type RTCEngine from './room/RTCEngine.ts';
 import type {
 	AudioCaptureOptions,
 	AudioOutputOptions,
@@ -54,6 +55,7 @@ export interface InternalRoomOptions {
 	subscriberVideoCodecExclusions?: Array<VideoCodec>;
 	h264HardwareProfiles?: ReadonlySet<string>;
 	dataStream?: RoomDataStreamOptions;
+	createEngine?: (options: InternalRoomOptions) => RTCEngine;
 }
 export interface RoomDataStreamOptions {
 	maxPayloadByteLength?: number;

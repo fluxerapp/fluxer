@@ -6,6 +6,7 @@
 -export([
     handle_opcode/3,
     handle_dispatch/4,
+    handle_gateway_error/2,
     handle_session_down/1,
     handle_session_reconnect/1,
     handle_presence_update/3,
@@ -72,6 +73,13 @@ handle_authenticated_opcode(voice_state_update, _Data, State) ->
     gateway_handler_encode:close_with_reason(
         decode_error, <<"Invalid voice payload">>, State
     );
+handle_authenticated_opcode(voice_signal, Data, #{session_pid := Pid} = State) when
+    is_pid(Pid), is_map(Data)
+->
+    gen_server:cast(Pid, {voice_signal, Data}),
+    {ok, State};
+handle_authenticated_opcode(voice_signal, _Data, State) ->
+    {ok, State};
 handle_authenticated_opcode(request_guild_members, Data, #{session_pid := Pid} = State) when
     is_pid(Pid)
 ->
@@ -124,6 +132,22 @@ do_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
     dispatch_pre_encoded(Event, EncodedData, Seq, State);
 do_dispatch(Event, Data, Seq, State) ->
     dispatch_standard(Event, Data, Seq, State).
+
+-spec handle_gateway_error(atom(), state()) -> ws_result().
+handle_gateway_error(ErrorAtom, State) ->
+    {Code, ErrorMessage, _Category} = gateway_errors:voice_error_info(ErrorAtom),
+    Message = #{
+        <<"op">> => constants:opcode_to_num(gateway_error),
+        <<"d">> => #{<<"code">> => Code, <<"message">> => ErrorMessage}
+    },
+    encode_frame(Message, State).
+
+-spec encode_frame(map(), state()) -> ws_result().
+encode_frame(Message, State) ->
+    case gateway_handler_encode:encode_and_compress(Message, State) of
+        {ok, Frame, NewState} -> {[Frame], NewState};
+        {error, _} -> {ok, State}
+    end.
 
 -spec peer_ip(state()) -> binary().
 peer_ip(#{peer_ip := PeerIP}) when is_binary(PeerIP) ->
@@ -197,10 +221,7 @@ handle_session_down(State) ->
         request_guild_members_pid => undefined,
         request_guild_members_pending => undefined
     },
-    case gateway_handler_encode:encode_and_compress(Message, NewState) of
-        {ok, Frame, NewState2} -> {[Frame], NewState2};
-        {error, _} -> {ok, NewState}
-    end.
+    encode_frame(Message, NewState).
 
 -spec handle_session_reconnect(state()) -> ws_result().
 handle_session_reconnect(State) ->

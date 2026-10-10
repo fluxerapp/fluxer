@@ -33,7 +33,6 @@ import {
 	StartThreadFromMessageRequest,
 	StartThreadRequest,
 	ThreadChannelResponse,
-	ThreadLocationQuery,
 	ThreadMemberGetQuery,
 	ThreadMemberListResponse,
 	ThreadMembersListQuery,
@@ -389,7 +388,6 @@ export function ThreadController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_THREAD_MEMBER_PUT),
 		LoginRequired,
 		Validator('param', ChannelIdParam),
-		Validator('query', ThreadLocationQuery),
 		OpenAPI({
 			operationId: 'join_thread',
 			summary: 'Join a thread',
@@ -415,7 +413,6 @@ export function ThreadController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_THREAD_MEMBER_DELETE),
 		LoginRequired,
 		Validator('param', ChannelIdParam),
-		Validator('query', ThreadLocationQuery),
 		OpenAPI({
 			operationId: 'leave_thread',
 			summary: 'Leave a thread',
@@ -474,7 +471,6 @@ export function ThreadController(app: HonoApp) {
 		LoginRequired,
 		SelfThreadMemberAlias('join'),
 		Validator('param', ChannelIdUserIdParam),
-		Validator('query', ThreadLocationQuery),
 		OpenAPI({
 			operationId: 'add_thread_member',
 			summary: 'Add a thread member',
@@ -504,7 +500,6 @@ export function ThreadController(app: HonoApp) {
 		LoginRequired,
 		SelfThreadMemberAlias('leave'),
 		Validator('param', ChannelIdUserIdParam),
-		Validator('query', ThreadLocationQuery),
 		OpenAPI({
 			operationId: 'remove_thread_member',
 			summary: 'Remove a thread member',

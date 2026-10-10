@@ -11,7 +11,9 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
+import {PrivacySetupModal} from '@app/features/user/components/modals/PrivacySetupModal';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.module.css';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {FriendSourceFlags} from '@fluxer/constants/src/UserConstants';
@@ -60,6 +62,22 @@ const ALLOW_FOR_ALL_COMMUNITIES_DESCRIPTOR = msg({
 const BLOCK_FOR_ALL_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Block for all communities',
 	comment: 'Button or menu action label in the connections tab. Keep it concise. Keep the tone plain and specific.',
+});
+
+const PRIVACY_REVIEW_TITLE_DESCRIPTOR = msg({
+	message: 'Review who can message you',
+	comment:
+		'Title of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.',
+});
+const PRIVACY_REVIEW_BODY_DESCRIPTOR = msg({
+	message:
+		'Choose whether people who share a community with you can send you direct messages without being friends first.',
+	comment:
+		'Body of the inline alert in Privacy > Friends & direct messages, shown until the user reviews their direct message setting.',
+});
+const REVIEW_PRIVACY_SETTINGS_DESCRIPTOR = msg({
+	message: 'Review privacy settings',
+	comment: 'Button in the inline privacy review alert. Opens the privacy setup modal.',
 });
 
 interface DirectMessagesConfirmModalProps {
@@ -156,6 +174,37 @@ const DirectMessagesConfirmModal = observer(
 		);
 	},
 );
+const PrivacyReviewAlert = observer(() => {
+	const {i18n} = useLingui();
+	const handleReview = useCallback(() => {
+		ModalCommands.push(
+			modal(() => (
+				<PrivacySetupModal data-flx="user.privacy-safety-tab.connections-tab.privacy-review-alert.privacy-setup-modal" />
+			)),
+		);
+	}, []);
+	if (!UserSettings.isPrivacySetupPending()) {
+		return null;
+	}
+	return (
+		<WarningAlert
+			title={i18n._(PRIVACY_REVIEW_TITLE_DESCRIPTOR)}
+			actions={
+				<Button
+					variant="primary"
+					small
+					onClick={handleReview}
+					data-flx="user.privacy-safety-tab.connections-tab.privacy-review-alert.button.review"
+				>
+					{i18n._(REVIEW_PRIVACY_SETTINGS_DESCRIPTOR)}
+				</Button>
+			}
+			data-flx="user.privacy-safety-tab.connections-tab.privacy-review-alert"
+		>
+			{i18n._(PRIVACY_REVIEW_BODY_DESCRIPTOR)}
+		</WarningAlert>
+	);
+});
 export const ConnectionsTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const friendSourceFlags = UserSettings.getFriendSourceFlags();
@@ -228,16 +277,19 @@ export const ConnectionsTabContent: React.FC = observer(() => {
 		<>
 			<SettingsTabSection
 				title={<Trans>Friend requests</Trans>}
+				description={<Trans>Choose who can send you a friend request.</Trans>}
 				data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.settings-tab-section"
 			>
 				<Switch
 					label={<Trans>Everyone</Trans>}
+					description={<Trans>Anyone who finds you can send a request. Turn this off to pick groups below.</Trans>}
 					value={hasFriendFlag(FriendSourceFlags.NO_RELATION)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.NO_RELATION, value)}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.friend-request-toggle"
 				/>
 				<Switch
 					label={i18n._(FRIENDS_OF_FRIENDS_DESCRIPTOR)}
+					description={<Trans>People who share at least one friend with you.</Trans>}
 					value={everyoneEnabled || hasFriendFlag(FriendSourceFlags.MUTUAL_FRIENDS)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.MUTUAL_FRIENDS, value)}
 					disabled={everyoneEnabled}
@@ -245,24 +297,39 @@ export const ConnectionsTabContent: React.FC = observer(() => {
 				/>
 				<Switch
 					label={i18n._(COMMUNITY_MEMBERS_DESCRIPTOR)}
+					description={<Trans>People who share a community with you.</Trans>}
 					value={everyoneEnabled || hasFriendFlag(FriendSourceFlags.MUTUAL_GUILDS)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.MUTUAL_GUILDS, value)}
 					disabled={everyoneEnabled}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.friend-request-toggle--3"
 				/>
 			</SettingsTabSection>
+			<PrivacyReviewAlert data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.privacy-review-alert" />
 			<SettingsTabSection
 				title={<Trans>Direct messages</Trans>}
+				description={
+					<Trans>
+						Friends can always message you. These settings cover people and bots you only share a community with.
+					</Trans>
+				}
 				data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.settings-tab-section--2"
 			>
 				<Switch
 					label={<Trans>Allow direct messages from community members</Trans>}
+					description={
+						<Trans>Applies to communities you join from now on. You can also change it for each community.</Trans>
+					}
 					value={!defaultGuildsRestricted}
 					onChange={handleDirectMessagesToggle}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.direct-messages-toggle"
 				/>
 				<Switch
 					label={<Trans>Allow direct messages from community bots</Trans>}
+					description={
+						<Trans>
+							Applies to bots in communities you join from now on. You can also change it for each community.
+						</Trans>
+					}
 					value={!botDefaultGuildsRestricted}
 					onChange={handleBotDirectMessagesToggle}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.bot-direct-messages-toggle"

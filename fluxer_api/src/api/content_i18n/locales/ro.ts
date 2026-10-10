@@ -45,7 +45,6 @@ const CONTENT_I18N_RO_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Imagini sau videoclipuri reale sau generate de AI cu abuz sexual asupra copiilor",
 	"report_flow.label.discovery_listing": "Listarea în Discovery",
 	"report_flow.label.dislike": "Pur și simplu nu este pentru mine",
-	"report_flow.label.dsa": "Conținut ilegal în UE (Regulamentul privind serviciile digitale)",
 	"report_flow.label.eating_disorder_promotion": "Încurajarea tulburărilor de alimentație",
 	"report_flow.label.eating_disorder_promotion_profile": "Profilul său promovează tulburările de alimentație",
 	"report_flow.label.email": "Adresă de e-mail",

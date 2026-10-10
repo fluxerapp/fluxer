@@ -54,7 +54,7 @@ A thread is a [channel object](/http-api/channels/#channel-object) with the thre
 
 <sup>6</sup> Present only when the caller is a member, on [Get channel](/http-api/channels/#get-channel), on [Modify channel](/http-api/channels/#modify-channel), on `thread` of a message, on [Thread Create](/gateway/threads/#thread-create), and on the `threads` list of a guild in [Ready](/gateway/events/#ready), [Guild Create](/gateway/events/#guild-create), and [Guild Sync](/gateway/events/#guild-sync)
 
-The schema also declares `topic`, `url`, `icon`, `position`, `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region`, `permission_overwrites`, `recipients`, `nsfw`, `nsfw_override`, `content_warning_level`, `content_warning_text`, `nicks`, `default_auto_archive_duration`, `default_thread_rate_limit_per_user`, `available_tags`, `default_reaction_emoji`, `default_sort_order`, `default_forum_layout`, and `default_tag_setting`. Fluxer never sends them on a thread. A thread uses the permissions of its parent as [Thread permissions](#thread-permissions) describes. An age restriction and a content warning resolve through the parent, then the parent category, and finally the guild.
+The schema also declares `topic`, `url`, `icon`, `position`, `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region`, `rtc_p2p`, `permission_overwrites`, `recipients`, `nsfw`, `nsfw_override`, `content_warning_level`, `content_warning_text`, `nicks`, `default_auto_archive_duration`, `default_thread_rate_limit_per_user`, `available_tags`, `default_reaction_emoji`, `default_sort_order`, `default_forum_layout`, and `default_tag_setting`. Fluxer never sends them on a thread. A thread uses the permissions of its parent as [Thread permissions](#thread-permissions) describes. An age restriction and a content warning resolve through the parent, then the parent category, and finally the guild.
 
 ### Example
 
@@ -184,7 +184,6 @@ Starts a public thread from a message in a guild text channel, or an announcemen
 | name | string | The name of the thread (1-100 characters) |
 | auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
 | rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
-| location? | string | A value Fluxer accepts and ignores (max 100 characters) |
 
 `rate_limit_per_user` defaults to the `default_thread_rate_limit_per_user` of the parent, or `0` when the parent has none.
 
@@ -252,7 +251,6 @@ The parent type selects the body. Either body can be sent as multipart form data
 | auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
 | rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
 | invitable?<sup>1</sup> | boolean | Whether a member who is not a thread moderator can add members who are not thread moderators (default true) |
-| location? | string | A value Fluxer accepts and ignores (max 100 characters) |
 
 <sup>1</sup> Applies only to a private thread
 
@@ -266,7 +264,6 @@ The parent type selects the body. Either body can be sent as multipart form data
 | auto_archive_duration? | integer | The [auto archive duration](#auto-archive-durations) in minutes (default 4320) |
 | rate_limit_per_user? | integer | The slowmode interval in seconds (0-21,600) |
 | type?<sup>2</sup> | integer | The thread type (`11` only) |
-| location? | string | A value Fluxer accepts and ignores (max 100 characters) |
 
 <sup>1</sup> Required when the channel has `REQUIRE_TAG`. A tag marked `moderated` needs a thread moderator
 

@@ -45,7 +45,6 @@ const CONTENT_I18N_IT_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Immagini o video reali o generati da IA di abusi sessuali su minori",
 	"report_flow.label.discovery_listing": "Elenco in Scopri",
 	"report_flow.label.dislike": "Non fa per me",
-	"report_flow.label.dsa": "Contenuti illegali nell'UE (Regolamento sui servizi digitali, DSA)",
 	"report_flow.label.eating_disorder_promotion": "Incoraggiare disturbi alimentari",
 	"report_flow.label.eating_disorder_promotion_profile": "Il suo profilo promuove disturbi alimentari",
 	"report_flow.label.email": "Indirizzo e-mail",

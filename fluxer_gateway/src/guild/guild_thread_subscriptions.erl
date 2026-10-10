@@ -12,6 +12,7 @@
     member_lists_changed/2,
     resync_after_load/1,
     presence_changed/2,
+    member_changed/2,
     handle_list_flush/1,
     refresh_presence_users/1,
     export_handoff/1,
@@ -74,7 +75,6 @@ apply_threads_flag(_Other, Session) ->
 
 -spec apply_member_lists(term(), map(), guild_state()) -> {map(), [integer()]}.
 apply_member_lists(Ids, Session, State) when is_list(Ids) ->
-    Previous = maps:get(thread_member_lists, Session, []),
     Viewable = lists:sublist(
         [Id || Id <- lists:usort(Ids), viewable_thread(Session, Id, State)], ?MAX_MEMBER_LISTS
     ),
@@ -83,7 +83,7 @@ apply_member_lists(Ids, Session, State) when is_list(Ids) ->
             [] -> maps:remove(thread_member_lists, Session);
             _ -> Session#{thread_member_lists => Viewable}
         end,
-    {Updated, Viewable -- Previous};
+    {Updated, Viewable};
 apply_member_lists(_Other, Session, _State) ->
     {Session, []}.
 
@@ -305,6 +305,10 @@ presence_changed(UserId, #{thread_presence_users := Users} = State) ->
     mark_dirty(maps:get(UserId, Users, []), State);
 presence_changed(_UserId, State) ->
     State.
+
+-spec member_changed(integer(), guild_state()) -> guild_state().
+member_changed(UserId, State) ->
+    presence_changed(UserId, State).
 
 -spec mark_dirty([integer()], guild_state()) -> guild_state().
 mark_dirty([], State) ->

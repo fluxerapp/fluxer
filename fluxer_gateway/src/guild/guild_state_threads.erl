@@ -293,12 +293,23 @@ after_store_event(channel_delete, Data, Tab, State) ->
     end,
     State;
 after_store_event(guild_member_remove, Data, Tab, State) ->
-    _ =
-        case guild_state_member:extract_user_id(Data) of
-            UserId when is_integer(UserId) -> guild_thread_store:remove_user(Tab, UserId);
-            _ -> []
-        end,
-    State;
+    case guild_state_member:extract_user_id(Data) of
+        UserId when is_integer(UserId) ->
+            lists:foldl(
+                fun guild_thread_subscriptions:member_lists_changed/2,
+                State,
+                guild_thread_store:remove_user(Tab, UserId)
+            );
+        _ ->
+            State
+    end;
+after_store_event(guild_member_update, Data, _Tab, State) ->
+    case guild_state_member:extract_user_id(Data) of
+        UserId when is_integer(UserId) ->
+            guild_thread_subscriptions:member_changed(UserId, State);
+        _ ->
+            State
+    end;
 after_store_event(_Event, _Data, _Tab, State) ->
     State.
 

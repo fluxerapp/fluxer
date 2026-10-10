@@ -17,18 +17,25 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {SoundType, setSoundOutputDeviceIdResolver} from '@app/features/notification/utils/SoundUtils';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
+import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import Idle from '@app/features/ui/state/Idle';
 import Sound from '@app/features/ui/state/Sound';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {VoiceP2pPeerFailedModal} from '@app/features/voice/components/alerts/VoiceP2pPeerFailedModal';
 import {getStreamKey, parseStreamKey} from '@app/features/voice/components/StreamKeys';
+import {pushActiveStreamSettings} from '@app/features/voice/components/StreamSettingsMenuContent';
 import {voiceStatsDB} from '@app/features/voice/diagnostics/VoiceStatsDB';
 import {
 	createMediaEngineFacadeSnapshot,
 	type MediaEngineFacadeEvent,
+	type MediaEngineFacadeP2pRefusal,
 	type MediaEngineFacadePendingSessionRestore,
 	type MediaEngineFacadeSnapshot,
 	selectMediaEngineConnectPreflightDecision,
@@ -56,6 +63,8 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
+import VoiceMeshPeers from '@app/features/voice/engine/mesh/VoiceMeshPeers';
+import {isVoiceMeshRoom} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
@@ -63,8 +72,11 @@ import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking
 import {
 	checkChannelLimit,
 	checkMultipleConnections,
+	checkP2pConsent,
+	requestP2pConsent,
 	sendVoiceStateConnect,
 	sendVoiceStateDisconnect,
+	showVoiceChannelFullModal,
 	syncVoiceStateToServer,
 } from '@app/features/voice/engine/VoiceChannelConnector';
 import type {
@@ -102,6 +114,7 @@ import {
 } from '@app/features/voice/engine/VoiceStreamWatchState';
 import {type VoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {bindVoiceEngineV2AppAudioPreferencesSync} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioPreferencesSyncBinding';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import voiceEngineV2AppConnectionHostAdapter, {
 	type VoiceServerUpdateData,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppConnectionHostAdapter';
@@ -138,15 +151,23 @@ import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/Vo
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import type {DisplayScreenShareCaptureContext} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import {type ChannelE2EEStatus, computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
+import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import VoiceSessionRestore, {type VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {setNativeAudioCaptureBridgeLifecycleBridge} from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {resolveDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
+import {
+	VOICE_P2P_CONSENT_REQUIRED_DESCRIPTOR,
+	VOICE_P2P_UNAVAILABLE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
@@ -182,9 +203,11 @@ import type {
 	ScreenShareCaptureOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {makeObservable, observableRef} from 'mobx';
+import {compareStructural, makeObservable, observableRef, reaction} from 'mobx';
+import React from 'react';
 
 const logger = new Logger('MediaEngineFacade');
+const VOICE_P2P_PEER_FAILED_MODAL_KEY = 'voice-p2p-peer-failed';
 
 function isCameraPermissionDeniedCommandFailure(error: unknown): boolean {
 	if (!(error instanceof Error)) return false;
@@ -411,6 +434,7 @@ class MediaEngineFacade extends Store {
 		this.initializeLocalAudioStateSync();
 		this.initializeVoiceSessionRestoreSync();
 		this.initializeE2EEStatusSync();
+		this.initializeP2pPeerFailedModalSync();
 		this.initializeTerminalUnloadVoiceDisconnect();
 		Sound.setSelfDeafenedResolver(() => getEffectiveAudioState().effectiveDeaf);
 		setSoundOutputDeviceIdResolver(() => VoiceSettings.getOutputDeviceId());
@@ -877,7 +901,7 @@ class MediaEngineFacade extends Store {
 			}
 			previousRoom = room;
 			previousStatus = status;
-			if (!room) return;
+			if (!room || isVoiceMeshRoom(room)) return;
 			if (status === 'encrypted') {
 				void room.setE2EEEnabled(true).catch((error) => {
 					logger.warn('Failed to enable E2EE on room', error);
@@ -890,6 +914,51 @@ class MediaEngineFacade extends Store {
 		};
 		voiceEngineV2AppConnectionHostAdapter.subscribe(syncE2EEStatus);
 		voiceEngineV2AppVoiceStateAdapter.subscribe(syncE2EEStatus);
+	}
+
+	private initializeP2pPeerFailedModalSync(): void {
+		reaction(
+			() => VoiceMeshPeers.failedConnectionIds,
+			(failedConnectionIds, previousConnectionIds) => {
+				if (failedConnectionIds.length === 0) {
+					ModalCommands.popWithKey(VOICE_P2P_PEER_FAILED_MODAL_KEY);
+					return;
+				}
+				if (failedConnectionIds.some((connectionId) => !previousConnectionIds.includes(connectionId))) {
+					this.showP2pPeerFailedModal(failedConnectionIds);
+				}
+			},
+			{equals: compareStructural},
+		);
+	}
+
+	private showP2pPeerFailedModal(failedConnectionIds: ReadonlyArray<string>): void {
+		const {guildId, channelId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
+		if (!channelId) return;
+		const names = failedConnectionIds.flatMap((connectionId) => {
+			const userId = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId)?.user_id;
+			const user = userId ? Users.getUser(userId) : undefined;
+			return user ? [NicknameUtils.getNickname(user, guildId, channelId)] : [];
+		});
+		const allowSwitch = guildId === null || Channels.getChannel(channelId)?.rtcP2p !== true;
+		ModalCommands.pushWithKey(
+			modal(() =>
+				React.createElement(VoiceP2pPeerFailedModal, {
+					names,
+					allowSwitch,
+					onLeave: () => void this.disconnectFromVoiceChannel('user'),
+					onSwitch: () => this.switchToStandardCall(),
+				}),
+			),
+			VOICE_P2P_PEER_FAILED_MODAL_KEY,
+		);
+	}
+
+	switchToStandardCall(): void {
+		const {guildId, channelId, connectionId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
+		if (!channelId || !connectionId) return;
+		logger.info('Switching P2P call to a standard call', {guildId, channelId});
+		syncVoiceStateToServer(guildId, channelId, connectionId, undefined, false);
 	}
 
 	private initializeVoiceSessionRestoreSync(): void {
@@ -1143,6 +1212,13 @@ class MediaEngineFacade extends Store {
 		if (channelLimitDecision.type === 'abort') {
 			return;
 		}
+		const hasP2pConsent = checkP2pConsent(
+			resolvedGuildId,
+			channelId,
+			() => void this.connectToVoiceChannel(guildId, channelId, options),
+			() => voiceEngineV2AppConnectionHostAdapter.clearInFlightConnect(),
+		);
+		if (!hasP2pConsent) return;
 		const shouldProceed = checkMultipleConnections(
 			resolvedGuildId,
 			channelId,
@@ -1322,6 +1398,7 @@ class MediaEngineFacade extends Store {
 		this.statsHostAdapter.reset();
 		if (reason === 'user' || reason === 'server') {
 			VoiceSessionRestore.clearSnapshot();
+			VoiceP2pConsent.clear();
 		}
 		if (reason !== 'server' && connectionId) {
 			sendVoiceStateDisconnect(guildId, connectionId);
@@ -1490,6 +1567,7 @@ class MediaEngineFacade extends Store {
 		if (raw.connection_id && raw.connection_id === this.pendingServerDisconnectConnectionId) {
 			this.cancelPendingServerDisconnect();
 		}
+		if (!raw.ice_servers) VoiceP2pConsent.clear();
 		this.handleVoiceServerUpdateViaJs(raw);
 	}
 
@@ -1537,6 +1615,8 @@ class MediaEngineFacade extends Store {
 			Boolean(this.pendingSessionRestore) &&
 			this.pendingSessionRestore?.guildId === resolvedGuildId &&
 			this.pendingSessionRestore?.channelId === resolvedChannelId;
+		const currentRoom = voiceEngineV2AppConnectionHostAdapter.room;
+		const isConversion = !raw.ice_servers && currentRoom !== null && isVoiceMeshRoom(currentRoom);
 		voiceEngineV2AppConnectionHostAdapter.handleVoiceServerUpdate(
 			raw,
 			(room, attemptId, guildId, channelId) => {
@@ -1559,6 +1639,7 @@ class MediaEngineFacade extends Store {
 							if (shouldPreserveLocalMedia) {
 								await this.restoreLocalMediaState(room);
 							}
+							if (isConversion) await this.reapplyVideoQualityLimits(room);
 							if (shouldApplyPendingSessionRestore) {
 								await this.restorePendingSessionMedia();
 							}
@@ -1629,6 +1710,7 @@ class MediaEngineFacade extends Store {
 				}
 				voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 				this.reconcileLocalAudioStateInBackground('region hot-swap complete');
+				if (isConversion) void this.reapplyVideoQualityLimits(newRoom);
 			},
 			(_guildId, _channelId, _connectionId, _attemptId, error) => {
 				logger.warn('LiveKit connect failed, clearing gateway voice state', {error});
@@ -2573,6 +2655,7 @@ class MediaEngineFacade extends Store {
 	}
 
 	handleGatewayError(error: GatewayErrorData): void {
+		const {guildId, channelId} = voiceEngineV2AppConnectionHostAdapter;
 		const decision = selectMediaEngineGatewayErrorDecision(this.facadeSnapshot, {
 			code: error.code,
 			connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
@@ -2611,6 +2694,38 @@ class MediaEngineFacade extends Store {
 						: CLAIM_YOUR_ACCOUNT_TO_JOIN_THIS_VOICE_CHANNEL_DESCRIPTOR;
 			this.showVoiceErrorModal(descriptor, `voice.media-engine-facade.gateway-${decision.toast}-error-modal`);
 		}
+		if (decision.p2pRefusal) {
+			this.handleP2pRefusal(decision.p2pRefusal, decision.abortConnection && channelId ? {guildId, channelId} : null);
+		}
+	}
+
+	private handleP2pRefusal(
+		refusal: MediaEngineFacadeP2pRefusal,
+		target: {guildId: string | null; channelId: string} | null,
+	): void {
+		if (refusal === 'consent-required' && target && !VoiceP2pConsent.isAgreed(target.channelId)) {
+			const retry = () => void this.connectToVoiceChannel(target.guildId, target.channelId);
+			if (requestP2pConsent(target.guildId, target.channelId, retry, () => {})) retry();
+			return;
+		}
+		VoiceP2pConsent.clear();
+		switch (refusal) {
+			case 'consent-required':
+				this.showVoiceErrorModal(
+					VOICE_P2P_CONSENT_REQUIRED_DESCRIPTOR,
+					'voice.media-engine-facade.gateway-p2p-consent-required-error-modal',
+				);
+				return;
+			case 'unavailable':
+				this.showVoiceErrorModal(
+					VOICE_P2P_UNAVAILABLE_DESCRIPTOR,
+					'voice.media-engine-facade.gateway-p2p-unavailable-error-modal',
+				);
+				return;
+			case 'channel-full':
+				showVoiceChannelFullModal();
+				return;
+		}
 	}
 
 	cleanup(): void {
@@ -2643,6 +2758,25 @@ class MediaEngineFacade extends Store {
 		this.resetLocalMediaAndScreenShareTracking();
 		this.voiceEngineV2Participants.clear();
 		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('cleanup');
+	}
+
+	private async reapplyVideoQualityLimits(room: Room): Promise<void> {
+		try {
+			if (room.localParticipant.isCameraEnabled) {
+				await voiceEngineV2AppMediaExecutionAdapter.updateCameraEncoding(
+					getCameraCaptureDimensions(VoiceSettings.getCameraResolution()),
+				);
+			}
+			if (!room.localParticipant.isScreenShareEnabled) return;
+			await executeScreenShareOperation(() =>
+				pushActiveStreamSettings(
+					ActiveScreenShareSource.getShareContext() ?? 'display',
+					resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop),
+				),
+			);
+		} catch (error) {
+			logger.warn('Failed to reapply video quality limits after conversion', {error});
+		}
 	}
 
 	private async restoreLocalMediaState(roomOverride?: Room | null): Promise<void> {

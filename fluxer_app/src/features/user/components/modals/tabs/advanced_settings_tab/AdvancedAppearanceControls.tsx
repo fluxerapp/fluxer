@@ -3,6 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
+import WindowsFont from '@app/features/theme/state/WindowsFont';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
 import {
@@ -12,6 +13,7 @@ import {
 	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
 	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
+	USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -24,6 +26,19 @@ const REQUIRE_DOUBLE_CLICK_TO_JOIN_VOICE_DESCRIPTOR = msg({
 const CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR = msg({
 	message: 'Confirm before joining voice channels',
 	comment: 'Short label for an advanced voice-channel safety preference.',
+});
+
+export const WindowsFluxerSansControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR)}
+			value={WindowsFont.useFluxerSans}
+			onChange={WindowsFont.setUseFluxerSans}
+			compact
+			data-flx="user.advanced-settings-tab.switch.windows-fluxer-sans"
+		/>
+	);
 });
 
 export const ShowNekoControl = observer(() => {

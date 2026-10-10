@@ -100,6 +100,8 @@ Changes the RTC region of an active direct message or group direct message call.
 
 The caller does not have to be connected to the call.
 
+Supplying `region` on a [peer-to-peer](/gateway/events/#peer-to-peer-voice) call moves the call to a voice server, even when the value names the region the call already has. The move is one way for the life of that call.
+
 ### Path parameters
 
 | Field | Type | Description |

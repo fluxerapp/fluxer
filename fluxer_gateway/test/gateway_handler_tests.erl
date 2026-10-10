@@ -263,6 +263,26 @@ check_presence_rate_limit_soft_drops_only_presence_test() ->
         ?assertEqual(1, length(maps:get(events, RateLimitState)))
     end).
 
+check_voice_signal_rate_limit_allows_trickle_bursts_test() ->
+    with_rate_limits_enabled(fun() ->
+        Now = erlang:system_time(millisecond),
+        State = fun(Count) ->
+            (gateway_handler:new_state())#{
+                rate_limit_state => #{
+                    events => [],
+                    op_events => #{voice_signal => lists:duplicate(Count, Now - 1000)}
+                }
+            }
+        end,
+        ?assertMatch(
+            {ok, _}, gateway_handler_rate_limit:check_rate_limit(State(239), voice_signal)
+        ),
+        ?assertMatch(
+            {opcode_rate_limited, _},
+            gateway_handler_rate_limit:check_rate_limit(State(240), voice_signal)
+        )
+    end).
+
 enqueue_voice_update_keeps_latest_update_for_connection_test() ->
     Queue0 = queue:new(),
     Data1 = #{
@@ -505,6 +525,47 @@ voice_state_update_with_non_map_payload_closes_test() ->
         voice_state_update, #{<<"d">> => <<"not-a-map">>}, State
     ),
     ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
+
+voice_signal_is_cast_to_the_session_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    Data = #{<<"channel_id">> => <<"100">>, <<"to">> => <<"conn-b">>, <<"data">> => #{}},
+    ?assertEqual(
+        {ok, State},
+        gateway_handler_dispatch:handle_opcode(voice_signal, #{<<"d">> => Data}, State)
+    ),
+    receive
+        {'$gen_cast', {voice_signal, Data}} -> ok
+    after 1000 ->
+        error(voice_signal_not_cast)
+    end.
+
+voice_signal_with_non_map_payload_is_dropped_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    ?assertEqual(
+        {ok, State},
+        gateway_handler_dispatch:handle_opcode(
+            voice_signal, #{<<"d">> => <<"not-a-map">>}, State
+        )
+    ).
+
+websocket_info_gateway_error_emits_an_error_frame_test() ->
+    {[{text, Frame}], _State} = gateway_handler:websocket_info(
+        {gateway_error, voice_p2p_consent_required}, new_json_state()
+    ),
+    ?assertEqual(
+        #{
+            <<"op">> => 12,
+            <<"d">> => #{
+                <<"code">> => <<"VOICE_P2P_CONSENT_REQUIRED">>,
+                <<"message">> => <<"This call is peer-to-peer and requires agreement to join">>
+            }
+        },
+        json:decode(Frame)
+    ).
+
+voice_signal_opcode_is_thirteen_test() ->
+    ?assertEqual(voice_signal, constants:gateway_opcode(13)),
+    ?assertEqual(13, constants:opcode_to_num(voice_signal)).
 
 websocket_handle_rejects_compressed_frame_past_max_payload_test() ->
     {ok, Compressed, _} = gateway_compress:compress(

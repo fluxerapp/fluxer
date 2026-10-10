@@ -55,6 +55,7 @@
     bot => boolean(),
     shard => gateway_sharding:shard() | undefined,
     e2ee_capable => boolean(),
+    geoip_country_code => binary() | undefined,
     ignored_events => #{binary() => true},
     initial_guild_id => guild_id() | undefined,
     collected_guild_states => [map()],
@@ -146,6 +147,12 @@ handle_cast({dispatch, Event, Data}, State) when
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({initial_global_presences, Presences}, State) ->
     handle_cast_presences(Presences, State);
+handle_cast({voice_rejected, ErrorAtom}, State) when is_atom(ErrorAtom) ->
+    ok = session_voice:report_rejection(ErrorAtom, State),
+    {noreply, State};
+handle_cast({voice_signal, Data}, State) when is_map(Data) ->
+    ok = session_voice:handle_voice_signal(Data, State),
+    {noreply, State};
 handle_cast(Msg, State) ->
     handle_cast_guild_or_lifecycle(Msg, State).
 

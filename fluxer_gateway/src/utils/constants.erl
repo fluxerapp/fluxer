@@ -47,6 +47,7 @@ gateway_opcode(9) -> invalid_session;
 gateway_opcode(10) -> hello;
 gateway_opcode(11) -> heartbeat_ack;
 gateway_opcode(12) -> gateway_error;
+gateway_opcode(13) -> voice_signal;
 gateway_opcode(14) -> lazy_request;
 gateway_opcode(15) -> request_guild_counts;
 gateway_opcode(16) -> request_channel_member_counts;
@@ -67,6 +68,7 @@ opcode_to_num(invalid_session) -> 9;
 opcode_to_num(hello) -> 10;
 opcode_to_num(heartbeat_ack) -> 11;
 opcode_to_num(gateway_error) -> 12;
+opcode_to_num(voice_signal) -> 13;
 opcode_to_num(lazy_request) -> 14;
 opcode_to_num(request_guild_counts) -> 15;
 opcode_to_num(request_channel_member_counts) -> 16;
@@ -108,7 +110,7 @@ status_type_atom(invisible) -> <<"invisible">>;
 status_type_atom(offline) -> <<"offline">>.
 
 -spec max_payload_size() -> pos_integer().
-max_payload_size() -> 4096.
+max_payload_size() -> 16384.
 
 -spec heartbeat_interval() -> pos_integer().
 heartbeat_interval() -> 41250.
@@ -210,7 +212,7 @@ status_type_atom_atom_to_binary_test() ->
     ?assertEqual(<<"idle">>, status_type_atom(idle)).
 
 constants_values_test() ->
-    ?assertEqual(4096, max_payload_size()),
+    ?assertEqual(16384, max_payload_size()),
     ?assertEqual(41250, heartbeat_interval()),
     ?assertEqual(45000, heartbeat_timeout()),
     ?assertEqual(60000, resume_timeout()),

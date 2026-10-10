@@ -15,6 +15,7 @@ import {
 	KeepNekoStillControl,
 	ShowNekoControl,
 	VoiceChannelJoinBehaviorControl,
+	WindowsFluxerSansControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls';
 import {
 	AutoSendGifsControl,
@@ -61,6 +62,7 @@ import type {SearchableSettingItem} from '@app/features/user/components/settings
 import {observer} from 'mobx-react-lite';
 
 export const DIRECT_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -112,6 +114,7 @@ export const FULL_WIDTH_CONTROL_ITEM_IDS = new Set([
 ]);
 
 export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -148,6 +151,10 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 
 export const AdvancedSettingControl = observer(({item}: {item: SearchableSettingItem}) => {
 	switch (item.id) {
+		case 'advanced-windows-fluxer-sans':
+			return (
+				<WindowsFluxerSansControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.windows-fluxer-sans-control" />
+			);
 		case 'accessibility-text-selection':
 			return (
 				<TextSelectionControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.text-selection-control" />

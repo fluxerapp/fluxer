@@ -46,6 +46,7 @@ broadcast_payload(VoiceState) ->
             <<"suppress">> => false,
             <<"viewer_stream_keys">> => [],
             <<"e2ee_capable">> => false,
+            <<"p2p">> => false,
             <<"version">> => 0
         },
         VoiceState
