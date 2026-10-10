@@ -18,7 +18,7 @@ use crate::{
             InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
             InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
             InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
-            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, PremiumMode,
+            LimitConfigUpdateRequest, LimitKeyMetadata, LimitRule, LimitRuleFilters, PremiumMode,
             PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
             VOICE_P2P_MAX_PARTICIPANTS_RANGE, VoiceE2eeScope, VoiceP2pConfigUpdateRequest,
         },
@@ -1042,6 +1042,7 @@ fn update_limit_rule_values(
     rule: &mut LimitRule,
     form: &MultiValueForm,
     limit_keys: &[String],
+    metadata: &std::collections::BTreeMap<String, LimitKeyMetadata>,
     fallback_limits: Option<&std::collections::BTreeMap<String, u64>>,
 ) {
     let mut limits = std::collections::BTreeMap::new();
@@ -1054,6 +1055,11 @@ fn update_limit_rule_values(
         && let Some(defaults) = fallback_limits
     {
         limits.extend(defaults.clone());
+    }
+    for key in limit_keys {
+        if metadata.get(key).is_some_and(|metadata| metadata.is_toggle) {
+            limits.insert(key.clone(), u64::from(form.bool_value(key)));
+        }
     }
     rule.limits = limits;
     rule.filters = build_limit_filters(form);
@@ -1137,7 +1143,13 @@ pub async fn limit_config_post(
                 .defaults
                 .get(&rule_id)
                 .or_else(|| current.defaults.get("default"));
-            update_limit_rule_values(rule, &form, &current.limit_keys, fallback);
+            update_limit_rule_values(
+                rule,
+                &form,
+                &current.limit_keys,
+                &current.metadata,
+                fallback,
+            );
             let request = LimitConfigUpdateRequest { limit_config };
             let result = client.update_limit_config(&request).await;
             let flash = limit_config_result(
@@ -1357,6 +1369,53 @@ mod tests {
         assert_eq!(
             filters.guild_features,
             vec!["COMMUNITY".to_owned(), "NEWS".to_owned()]
+        );
+    }
+
+    #[test]
+    fn update_limit_rule_values_saves_unchecked_toggles_as_off() {
+        let toggle = |key: &str, is_toggle: bool| {
+            (
+                key.to_owned(),
+                LimitKeyMetadata {
+                    key: key.to_owned(),
+                    label: key.to_owned(),
+                    description: String::new(),
+                    category: "features".to_owned(),
+                    scope: "user".to_owned(),
+                    is_toggle,
+                    unit: None,
+                    min: None,
+                    max: None,
+                },
+            )
+        };
+        let metadata = std::collections::BTreeMap::from([
+            toggle("feature_animated_avatar", true),
+            toggle("feature_animated_banner", true),
+            toggle("max_guilds", false),
+        ]);
+        let limit_keys = metadata.keys().cloned().collect::<Vec<_>>();
+        let mut rule = LimitRule {
+            id: "premium".to_owned(),
+            filters: None,
+            limits: std::collections::BTreeMap::from([
+                ("feature_animated_avatar".to_owned(), 1),
+                ("feature_animated_banner".to_owned(), 1),
+                ("max_guilds".to_owned(), 200),
+            ]),
+            modified_fields: None,
+        };
+        let form =
+            MultiValueForm::parse(b"traits=premium&feature_animated_banner=1&max_guilds=250");
+        update_limit_rule_values(&mut rule, &form, &limit_keys, &metadata, None);
+        assert_eq!(
+            rule.limits,
+            std::collections::BTreeMap::from([
+                ("feature_animated_avatar".to_owned(), 0),
+                ("feature_animated_banner".to_owned(), 1),
+                ("max_guilds".to_owned(), 250),
+            ])
         );
     }
 
@@ -1823,7 +1882,13 @@ mod tests {
             limits: std::collections::BTreeMap::new(),
             modified_fields: None,
         };
-        update_limit_rule_values(&mut rule, &form, &["message_send".to_owned()], None);
+        update_limit_rule_values(
+            &mut rule,
+            &form,
+            &["message_send".to_owned()],
+            &std::collections::BTreeMap::new(),
+            None,
+        );
         assert_eq!(rule.limits.get("message_send"), Some(&1));
         assert_eq!(
             rule.filters.expect("filters").traits,
