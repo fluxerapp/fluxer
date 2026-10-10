@@ -43,6 +43,10 @@ function getProfileAvatarUrl(
 	if (previewAvatarUrl) {
 		return previewAvatarUrl;
 	}
+	const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(user.id);
+	if (systemAvatarUrl !== null) {
+		return systemAvatarUrl;
+	}
 	if (!ignoreGuildAvatar && guildId && guildMember) {
 		return AvatarUtils.getGuildMemberDisplayAvatarURL({
 			guildId,

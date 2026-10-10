@@ -11,6 +11,10 @@ export const NATIVE_NOTIFICATION_ICON_CSS_SIZE: MediaProxyImageSize = 128;
 export function getNotificationIconURL(user: Pick<User, 'id' | 'avatar'>, guildId?: string | null): string {
 	const member = guildId ? GuildMembers.getMember(guildId, user.id) : null;
 	const nativeIcon = isDesktop();
+	const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(user.id);
+	if (systemAvatarUrl !== null) {
+		return systemAvatarUrl;
+	}
 	if (guildId && member) {
 		return nativeIcon
 			? AvatarUtils.getGuildMemberNotificationAvatarURL({

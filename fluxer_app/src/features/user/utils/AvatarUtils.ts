@@ -82,6 +82,11 @@ export function getSystemUserBrandingAvatarURL(userId: string): string | null {
 	return branding?.icon_url ?? branding?.logo_url ?? null;
 }
 
+export function getSystemUserBrandingColor(userId: string): string | null {
+	if (userId !== FLUXERBOT_ID || !RuntimeConfig.isSelfHosted()) return null;
+	return RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.theme_color ?? null;
+}
+
 export function getDefaultAvatarPrimaryColor(id: string) {
 	return getSharedDefaultAvatarPrimaryColor(id);
 }
