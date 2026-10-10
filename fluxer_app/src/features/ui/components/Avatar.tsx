@@ -64,12 +64,14 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const {i18n} = useLingui();
 		const userId = user.id;
 		const userAvatar = user.avatar;
+		const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(userId);
 		const guildMember = GuildMembers.getMember(guildId || '', userId);
 		const hasGuildMemberAvatarSource = Boolean(guildId) && guildMember != null;
 		const memberAvatar = guildMember?.avatar ?? null;
 		const memberAvatarUnset = guildMember?.isAvatarUnset() ?? false;
 		const avatarUrl = useMemo(() => {
 			if (customAvatarUrl !== undefined) return customAvatarUrl;
+			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
@@ -88,11 +90,13 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			memberAvatar,
 			memberAvatarUnset,
 			mediaSize,
+			systemAvatarUrl,
 			userAvatar,
 			userId,
 		]);
 		const hoverAvatarUrl = useMemo(() => {
 			if (customHoverAvatarUrl !== undefined) return customHoverAvatarUrl;
+			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
@@ -111,6 +115,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			memberAvatar,
 			memberAvatarUnset,
 			mediaSize,
+			systemAvatarUrl,
 			userAvatar,
 			userId,
 		]);

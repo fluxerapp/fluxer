@@ -20,6 +20,7 @@ import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
 import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
@@ -190,6 +191,9 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		messageGutter: Accessibility.messageGutter,
 		messageGroupSpacing: Accessibility.getMessageGroupSpacingValue(messageDisplayCompact),
 		hdrDisplayMode: Accessibility.hdrDisplayMode,
+		instanceThemeColor: RuntimeConfig.isSelfHosted()
+			? (RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.theme_color ?? null)
+			: null,
 	});
 	useCustomThemeStyle({
 		enabledThemeCss: ThemeLibrary.activeThemeCss,

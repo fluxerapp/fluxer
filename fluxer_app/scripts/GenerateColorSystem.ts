@@ -31,6 +31,7 @@ interface TokenDef {
 	lightness?: number;
 	alpha?: number;
 	useSaturationFactor?: boolean;
+	instanceOverride?: string;
 }
 
 interface Config {
@@ -457,10 +458,28 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 			{name: '--control-button-active-text', value: 'var(--text-primary)'},
 			{name: '--control-button-danger-text', hue: 1, saturation: 77, useSaturationFactor: true, lightness: 60},
 			{name: '--control-button-danger-hover-bg', hue: 1, saturation: 77, useSaturationFactor: true, lightness: 20},
-			{name: '--brand-primary', family: 'brand', lightness: 55},
-			{name: '--brand-secondary', family: 'brand', saturation: 60, lightness: 49},
-			{name: '--brand-primary-light', family: 'brand', saturation: 100, lightness: 84},
-			{name: '--brand-primary-fill', hue: 0, saturation: 0, lightness: 100},
+			{name: '--brand-primary', family: 'brand', lightness: 55, instanceOverride: '--instance-brand-primary'},
+			{
+				name: '--brand-secondary',
+				family: 'brand',
+				saturation: 60,
+				lightness: 49,
+				instanceOverride: '--instance-brand-secondary',
+			},
+			{
+				name: '--brand-primary-light',
+				family: 'brand',
+				saturation: 100,
+				lightness: 84,
+				instanceOverride: '--instance-brand-primary-light',
+			},
+			{
+				name: '--brand-primary-fill',
+				hue: 0,
+				saturation: 0,
+				lightness: 100,
+				instanceOverride: '--instance-brand-primary-fill',
+			},
 			{name: '--status-online', family: 'statusOnline', lightness: 40},
 			{name: '--status-idle', family: 'statusIdle', lightness: 50},
 			{name: '--status-dnd', family: 'statusDnd', lightness: 60},
@@ -474,7 +493,13 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 			{name: '--plutonium-icon', family: 'brandIcon', lightness: 50},
 			{name: '--invite-verified-icon-color', value: 'var(--text-on-brand-primary)'},
 			{name: '--text-link', family: 'link', lightness: 70},
-			{name: '--text-on-brand-primary', hue: 0, saturation: 0, lightness: 98},
+			{
+				name: '--text-on-brand-primary',
+				hue: 0,
+				saturation: 0,
+				lightness: 98,
+				instanceOverride: '--instance-text-on-brand-primary',
+			},
 			...DARK_CODE_TOKENS,
 			{name: '--text-selection', hue: 198, saturation: 92, useSaturationFactor: true, lightness: 70, alpha: 0.35},
 			{name: '--markup-mention-text', value: 'var(--text-link)'},
@@ -792,6 +817,7 @@ interface OutputToken {
 	alpha?: number;
 	useSaturationFactor?: boolean;
 	value?: string;
+	instanceOverride?: string;
 }
 
 function clamp01(value: number): number {
@@ -866,6 +892,7 @@ function expandTokens(defs: Array<TokenDef>, scales: Record<string, Scale>): Arr
 				lightness: def.lightness,
 				alpha: def.alpha,
 				useSaturationFactor: def.useSaturationFactor,
+				instanceOverride: def.instanceOverride,
 			});
 		}
 	}
@@ -919,7 +946,8 @@ function formatTone(token: OutputToken, families: Record<string, ColorFamily>): 
 
 function formatValue(token: OutputToken, families: Record<string, ColorFamily>): string {
 	if (token.type === 'tone') {
-		return formatTone(token, families);
+		const tone = formatTone(token, families);
+		return token.instanceOverride ? `var(${token.instanceOverride}, ${tone})` : tone;
 	}
 	return token.value!.trim();
 }
