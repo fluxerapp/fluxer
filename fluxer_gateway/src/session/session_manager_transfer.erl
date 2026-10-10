@@ -93,28 +93,12 @@ safe_shard_call(Pid, Request) ->
 -spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (_Index, _Shard, {ok, _} = Found) -> Found;
-            (Index, #{ref := ExistingRef}, not_found) when ExistingRef =:= Ref -> {ok, Index};
-            (_Index, _Shard, not_found) -> not_found
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (_Index, _Shard, {ok, _} = Found) -> Found;
-            (Index, #{pid := ExistingPid}, not_found) when ExistingPid =:= Pid -> {ok, Index};
-            (_Index, _Shard, not_found) -> not_found
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -188,6 +172,21 @@ aggregate_handoff_to_topology_marks_invalid_reply_as_failed_test() ->
         aggregate_handoff_to_topology(['peer@host'], State),
     InvalidShardPid ! stop.
 
+aggregate_handoff_to_topology_counts_unavailable_and_bare_replies_test() ->
+    ExitedShardPid = spawn(fun() -> ok end),
+    ok = gateway_retry_timer:wait(5),
+    BareShardPid = spawn(fun() -> shard_bare_reply_test_loop(2) end),
+    State = #{
+        shards => #{
+            0 => #{pid => ExitedShardPid, ref => make_ref()},
+            1 => #{pid => BareShardPid, ref => make_ref()}
+        },
+        shard_count => 2
+    },
+    {#{attempted := 3, handed_off := 2}, _State} =
+        aggregate_handoff_to_topology(['peer@host'], State),
+    BareShardPid ! stop.
+
 shard_reconnect_test_loop(DrainCount) ->
     receive
         {'$gen_call', From, reconnect_drain} ->
@@ -217,10 +216,13 @@ shard_handoff_test_loop(Result) ->
     end.
 
 shard_invalid_reply_test_loop() ->
+    shard_bare_reply_test_loop(invalid_reply).
+
+shard_bare_reply_test_loop(Reply) ->
     receive
         {'$gen_call', From, _Request} ->
-            gen_server:reply(From, invalid_reply),
-            shard_invalid_reply_test_loop();
+            gen_server:reply(From, Reply),
+            shard_bare_reply_test_loop(Reply);
         stop ->
             ok
     after 5000 ->

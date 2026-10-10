@@ -153,26 +153,12 @@ select_shard(Key, Count) when Count > 0 ->
 -spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec rebalance_retry_timer_ref(map()) -> reference() | undefined.
 rebalance_retry_timer_ref(State) ->

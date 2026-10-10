@@ -44,7 +44,7 @@ diagnostic_info() ->
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 10),
-    {ShardCount, _Source} = determine_shard_count(presence_bus_shards),
+    {ShardCount, _Source} = shard_utils:determine_shard_count(presence_bus_shards),
     Shards = start_shards(ShardCount, #{}),
     {ok, #{shards => Shards, shard_count => ShardCount}, hibernate}.
 
@@ -126,22 +126,6 @@ terminate(_Reason, State) ->
 code_change(_OldVsn, State, _Extra) ->
     erlang:garbage_collect(),
     {ok, State}.
-
--spec determine_shard_count(atom()) -> {pos_integer(), configured | auto}.
-determine_shard_count(ConfigKey) ->
-    case fluxer_gateway_env:get(ConfigKey) of
-        Value when is_integer(Value), Value > 0 ->
-            {Value, configured};
-        _ ->
-            {default_shard_count(), auto}
-    end.
-
--spec default_shard_count() -> pos_integer().
-default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
 
 -spec start_shards(pos_integer(), #{}) -> #{non_neg_integer() => shard()}.
 start_shards(Count, Acc) ->
@@ -238,26 +222,12 @@ select_shard(Key, Count) when Count > 0 ->
 -spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_shard_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec safe_gen_server_call(pid() | atom(), term(), timeout()) -> term().
 safe_gen_server_call(Server, Request, Timeout) ->

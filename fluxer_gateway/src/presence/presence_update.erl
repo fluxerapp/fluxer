@@ -269,7 +269,7 @@ push_eligible(State) ->
 -spec build_push_create_params(user_id(), map()) -> map() | undefined.
 build_push_create_params(UserId, Data) ->
     AuthorIdBin = maps:get(<<"id">>, maps:get(<<"author">>, Data, #{}), undefined),
-    case parse_snowflake(<<"author_id">>, AuthorIdBin) of
+    case guild_dispatch_decorate:parse_snowflake(<<"author_id">>, AuthorIdBin) of
         undefined ->
             undefined;
         AuthorId ->
@@ -439,14 +439,7 @@ session_holds_push(Session) ->
 
 -spec extract_snowflake(binary(), map()) -> integer() | undefined.
 extract_snowflake(FieldName, Data) ->
-    parse_snowflake(FieldName, maps:get(FieldName, Data, undefined)).
-
--spec parse_snowflake(binary(), term()) -> integer() | undefined.
-parse_snowflake(FieldName, Value) ->
-    case validation:validate_snowflake(FieldName, Value) of
-        {ok, Id} -> Id;
-        {error, _, _} -> undefined
-    end.
+    guild_dispatch_decorate:parse_snowflake(FieldName, maps:get(FieldName, Data, undefined)).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

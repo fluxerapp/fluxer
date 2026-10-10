@@ -2,7 +2,6 @@
 
 mod aggregate_error;
 pub mod asset_hash;
-mod asset_size;
 pub mod aws_sigv4;
 mod byte_budget;
 mod byte_cache;

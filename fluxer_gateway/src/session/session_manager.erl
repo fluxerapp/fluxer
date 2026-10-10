@@ -96,7 +96,7 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     _ = fluxer_gateway_env:load(),
     session_manager_shards:ensure_shard_table(),
-    {ShardCount, _Source} = determine_shard_count(),
+    {ShardCount, _Source} = shard_utils:determine_shard_count(session_shards),
     Shards = session_manager_shards:start_shards(ShardCount),
     State = #{shards => Shards, shard_count => ShardCount},
     session_manager_shards:sync_shard_table(State),
@@ -316,19 +316,3 @@ atom_list([Value | Rest], Acc) when is_atom(Value) ->
     atom_list(Rest, [Value | Acc]);
 atom_list(_, _) ->
     error.
-
--spec determine_shard_count() -> {pos_integer(), configured | auto}.
-determine_shard_count() ->
-    case fluxer_gateway_env:get(session_shards) of
-        Value when is_integer(Value), Value > 0 ->
-            {Value, configured};
-        _ ->
-            {default_shard_count(), auto}
-    end.
-
--spec default_shard_count() -> pos_integer().
-default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).

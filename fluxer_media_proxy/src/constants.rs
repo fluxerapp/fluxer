@@ -157,6 +157,9 @@ mod tests {
         assert_eq!(16, parse_image_size(Some("0")));
         assert_eq!(16384, parse_image_size(Some("99999")));
         assert_eq!(128, parse_image_size(Some("not-a-number")));
+        assert_eq!(128, parse_image_size(Some("")));
+        assert_eq!(128, parse_image_size(Some("-1")));
+        assert_eq!(128, parse_image_size(Some("99999999999")));
     }
 
     #[test]

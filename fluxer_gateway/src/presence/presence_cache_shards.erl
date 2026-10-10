@@ -66,7 +66,7 @@ handle_down_by_ref(Ref, State) ->
 -spec handle_down_by_pid(pid(), state()) -> state().
 handle_down_by_pid(Pid, State) ->
     Shards = maps:get(shards, State),
-    case find_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_state(Index, State);
         not_found -> State
     end.
@@ -196,14 +196,7 @@ memory_stats(State) ->
 -spec find_by_ref(reference(), #{non_neg_integer() => shard()}) ->
     {ok, non_neg_integer()} | not_found.
 find_by_ref(Ref, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
+    shard_utils:find_shard_by_ref(Ref, Shards).
 
 -spec start(non_neg_integer()) -> {ok, shard()} | {error, term()}.
 start(Index) ->
@@ -305,18 +298,6 @@ merge_snapshot_reply(Snapshot, AccMap) when is_map(Snapshot) ->
     maps:merge(AccMap, Snapshot);
 merge_snapshot_reply(_, AccMap) ->
     AccMap.
-
--spec find_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_by_pid(Pid, Shards) ->
-    maps:fold(
-        fun
-            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
-            (_, _, Acc) -> Acc
-        end,
-        not_found,
-        Shards
-    ).
 
 -spec error_reply(term()) -> term().
 error_reply({put, _, _}) -> {error, unavailable};
