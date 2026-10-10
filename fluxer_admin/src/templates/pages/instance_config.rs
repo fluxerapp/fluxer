@@ -782,7 +782,7 @@ fn media_config_section(base: &str, csrf_token: &str, media: &InstanceMediaRespo
         .to_string();
     section_card_with_description(
         "Media Expiry",
-        "Expire eligible attachments using size-based lifetimes. This is disabled by default and applies at runtime. Changes also apply to attachments uploaded earlier, which are kept for at least the renew window before a new or shorter expiry deletes them.",
+        "Expire eligible attachments using size-based lifetimes. This is enabled by default and applies at runtime. Changes also apply to attachments uploaded earlier, which are kept for at least the renew window before a new or shorter expiry deletes them.",
         html! {
             form method="post" action={(base) "/instance-config?action=update_media"} {
                 (csrf_input(csrf_token))
