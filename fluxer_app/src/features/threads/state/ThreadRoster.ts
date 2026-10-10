@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {type StatusType, StatusTypes} from '@fluxer/constants/src/StatusConstants';
+import {
+	type CustomStatus,
+	fromGatewayCustomStatus,
+	type GatewayCustomStatusPayload,
+} from '@app/features/user/state/CustomStatus';
+import {isOfflineStatus, normalizeStatus, type StatusType} from '@fluxer/constants/src/StatusConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {makeAutoObservable, observable} from 'mobx';
 
@@ -15,20 +20,15 @@ export interface ThreadMemberListPayload {
 		join_timestamp: string | null;
 		flags: number;
 		member: GuildMemberData | null;
-		presence?: {status?: string} | null;
+		presence?: {status?: string | null; custom_status?: GatewayCustomStatusPayload | null} | null;
 	}>;
 }
 
 export interface ThreadRosterMember {
 	readonly userId: string;
 	readonly joinTimestamp: string | null;
-	readonly online: boolean;
-}
-
-const OFFLINE_STATUSES = new Set<string>([StatusTypes.OFFLINE, StatusTypes.INVISIBLE]);
-
-function isOnline(status: string | undefined): boolean {
-	return status != null && !OFFLINE_STATUSES.has(status as StatusType);
+	readonly status: StatusType;
+	readonly customStatus: CustomStatus | null;
 }
 
 class ThreadRoster {
@@ -80,10 +80,12 @@ class ThreadRoster {
 			if (entry.member) {
 				GuildMembers.hydrateIfMissing(payload.guild_id, entry.member);
 			}
+			const status = normalizeStatus(entry.presence?.status);
 			members.push({
 				userId: entry.user_id,
 				joinTimestamp: entry.join_timestamp,
-				online: isOnline(entry.presence?.status),
+				status,
+				customStatus: isOfflineStatus(status) ? null : fromGatewayCustomStatus(entry.presence?.custom_status),
 			});
 		}
 		this.rosters.set(payload.thread_id, members);

@@ -25,9 +25,14 @@ class ThreadSubscriptions {
 	armed = false;
 	private sent = new Map<string, SentState>();
 	private lastGuildId: string | null = null;
+	private listGuilds = new Set<string>();
 
 	constructor() {
-		makeAutoObservable<this, 'sent' | 'lastGuildId'>(this, {sent: false, lastGuildId: false}, {autoBind: true});
+		makeAutoObservable<this, 'sent' | 'lastGuildId' | 'listGuilds'>(
+			this,
+			{sent: false, lastGuildId: false, listGuilds: false},
+			{autoBind: true},
+		);
 		deferUntilModulesLoaded(() => {
 			reaction(
 				(): Desired => {
@@ -42,7 +47,7 @@ class ThreadSubscriptions {
 					};
 				},
 				(desired) => this.apply(desired),
-				{equals: compareStructural, fireImmediately: true},
+				{equals: compareStructural, fireImmediately: true, scheduler: (run) => queueMicrotask(run)},
 			);
 			reaction(
 				() => GatewayConnection.isReady,
@@ -74,21 +79,29 @@ class ThreadSubscriptions {
 			if (this.lastGuildId) this.sent.delete(this.lastGuildId);
 			this.lastGuildId = desired.guildId;
 		}
-		if (!desired.ready || !desired.guildId || !desired.active) return;
+		if (!desired.ready) return;
+		const guildId = desired.active ? desired.guildId : null;
+		const subscriptions: Record<string, {threads?: boolean; thread_member_lists: Array<string>}> = {};
+		for (const listGuildId of this.listGuilds) {
+			if (listGuildId !== guildId) subscriptions[listGuildId] = {thread_member_lists: []};
+		}
 		const memberLists = desired.memberLists.join(',');
-		const previous = this.sent.get(desired.guildId);
-		if (previous?.threads && previous.memberLists === memberLists) return;
+		const previous = guildId ? this.sent.get(guildId) : undefined;
+		if (guildId && !(previous?.threads && previous.memberLists === memberLists)) {
+			subscriptions[guildId] = {threads: true, thread_member_lists: [...desired.memberLists]};
+		}
+		if (Object.keys(subscriptions).length === 0) return;
 		const socket = GatewayConnection.socket;
 		if (!socket?.isConnected()) return;
-		socket.updateGuildSubscriptions({
-			subscriptions: {
-				[desired.guildId]: {
-					threads: true,
-					thread_member_lists: [...desired.memberLists],
-				},
-			},
-		});
-		this.sent.set(desired.guildId, {threads: true, memberLists});
+		socket.updateGuildSubscriptions({subscriptions});
+		for (const clearedGuildId of Object.keys(subscriptions)) {
+			if (clearedGuildId !== guildId) this.listGuilds.delete(clearedGuildId);
+		}
+		if (guildId && subscriptions[guildId]) {
+			this.sent.set(guildId, {threads: true, memberLists});
+			if (desired.memberLists.length > 0) this.listGuilds.add(guildId);
+			else this.listGuilds.delete(guildId);
+		}
 	}
 
 	private handleActiveGuildsChanged(activeGuildIds: ReadonlyArray<string>): void {
@@ -98,6 +111,7 @@ class ThreadSubscriptions {
 			if (active.has(guildId)) continue;
 			this.sent.delete(guildId);
 			if (socket?.isConnected()) {
+				this.listGuilds.delete(guildId);
 				socket.updateGuildSubscriptions({
 					subscriptions: {[guildId]: {threads: false, thread_member_lists: []}},
 				});
