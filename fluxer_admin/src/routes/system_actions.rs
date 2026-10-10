@@ -1062,8 +1062,10 @@ fn update_limit_rule_values(
         limits.extend(defaults.clone());
     }
     for key in limit_keys {
-        if metadata.get(key).is_some_and(|metadata| metadata.is_toggle) {
-            limits.insert(key.clone(), u64::from(form.bool_value(key)));
+        if metadata.get(key).is_some_and(|metadata| metadata.is_toggle)
+            && rule.limits.contains_key(key)
+        {
+            limits.entry(key.clone()).or_insert(0);
         }
     }
     rule.limits = limits;
@@ -1442,6 +1444,19 @@ mod tests {
                 ("feature_animated_banner".to_owned(), 1),
                 ("max_guilds".to_owned(), 250),
             ])
+        );
+
+        let mut custom = LimitRule {
+            id: "vip".to_owned(),
+            filters: None,
+            limits: std::collections::BTreeMap::from([("max_guilds".to_owned(), 300)]),
+            modified_fields: None,
+        };
+        let form = MultiValueForm::parse(b"traits=vip&max_guilds=300");
+        update_limit_rule_values(&mut custom, &form, &limit_keys, &metadata, None);
+        assert_eq!(
+            custom.limits,
+            std::collections::BTreeMap::from([("max_guilds".to_owned(), 300)])
         );
     }
 
