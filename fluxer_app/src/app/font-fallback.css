@@ -25,7 +25,7 @@
 	--font-mono: 'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', var(--font-fallback-mono), monospace;
 }
 
-:root.platform-windows {
+:root.platform-windows:not(.windows-fluxer-sans) {
 	--font-sans-primary: 'Segoe UI Variable Text', 'Segoe UI';
 }
 

@@ -1117,7 +1117,7 @@ msgstr "{count, plural, one {# community gevonden} other {# communities gevonden
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
 msgstr "{count, plural, one {# community heeft een eigen instelling} other {# communities hebben een eigen instelling}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# community is tijdelijk niet beschikbaar door een storing in de fluxcondensator.} other {# communities zijn tijdelijk niet beschikbaar door een storing in de fluxcondensator.}}"
 
@@ -2906,7 +2906,7 @@ msgstr "Toegang tot je basisprofielinformatie (gebruikersnaam, avatar, etc.)"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:59
 msgid "Accessibility"
 msgstr "Toegankelijkheid"
@@ -5087,7 +5087,7 @@ msgstr "Bijlagen"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:179
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
 msgid "Audio"
 msgstr "Audio"
 
@@ -6569,7 +6569,7 @@ msgid "California"
 msgstr "Californië"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:164
 msgid "Call"
 msgstr "Bellen"
 
@@ -7510,7 +7510,7 @@ msgid "Channel added to favorites"
 msgstr "Kanaal toegevoegd aan favorieten"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:23
 msgid "Channel badges"
 msgstr "Kanaalbadges"
 
@@ -7721,7 +7721,7 @@ msgid "Chat font size"
 msgstr "Lettergrootte chat"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:79
 msgid "chat input"
 msgstr "chat-invoer"
 
@@ -8587,7 +8587,7 @@ msgid "Clock"
 msgstr "Klok"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:40
 msgid "Clone emoji"
 msgstr "Emoji klonen"
 
@@ -8597,7 +8597,7 @@ msgid "Clone emoji to..."
 msgstr "Emoji klonen naar..."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:44
 msgid "Clone sticker"
 msgstr "Sticker klonen"
 
@@ -9040,7 +9040,7 @@ msgid "Community at capacity"
 msgstr "Community zit vol"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:14
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:19
 msgid "Community badges"
 msgstr "Communitybadges"
 
@@ -9404,7 +9404,7 @@ msgstr "Bevestigen"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:26
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "Bevestigen voordat je deelneemt aan spraakkanalen"
@@ -9696,7 +9696,7 @@ msgstr "Toegangscontroles voor inhoud"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:168
 msgid "Context menu"
 msgstr "Contextmenu"
 
@@ -9960,7 +9960,7 @@ msgid "Copy device ID"
 msgstr "Apparaat-ID kopiëren"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:48
 msgid "Copy emoji"
 msgstr "Emoji kopiëren"
 
@@ -10153,7 +10153,7 @@ msgid "Copy stats JSON"
 msgstr "Statistieken-JSON kopiëren"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:52
 msgid "Copy sticker"
 msgstr "Sticker kopiëren"
 
@@ -12059,7 +12059,7 @@ msgstr "Delaware"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:286
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:194
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:201
 msgid "Delete"
 msgstr "Verwijderen"
 
@@ -12354,7 +12354,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "{duration} van de recente berichtgeschiedenis van het lid verwijderd"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:128
 msgid "Deleted text"
 msgstr "Verwijderde tekst"
 
@@ -12744,7 +12744,7 @@ msgid "Different sizes & member counts"
 msgstr "Verschillende formaten en ledenaantallen"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "Doorgestreepte tekst dimmen"
 
@@ -12759,7 +12759,7 @@ msgstr "Directe invoer"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:10
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:576
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:99
 msgid "Direct message"
 msgstr "Direct bericht"
 
@@ -13200,7 +13200,7 @@ msgid "District of Columbia"
 msgstr "District of Columbia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:193
 msgid "DM"
 msgstr "DM"
 
@@ -14179,7 +14179,7 @@ msgstr "Ingesloten inhoud weer zichtbaar"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:176
 msgid "Emoji"
 msgstr "Emoji"
 
@@ -14195,7 +14195,7 @@ msgid "emoji {emojiName}"
 msgstr "emoji {emojiName}"
 
 #. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:36
 msgid "Emoji and sticker cloning shortcuts"
 msgstr "Snelacties om emoji's en stickers te klonen"
 
@@ -14393,7 +14393,7 @@ msgid "Enable extra option"
 msgstr "Extra optie inschakelen"
 
 #. Toggle label and settings search entry for controlling whether favorites are visible throughout the app.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:58
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:63
 msgid "Enable favorites"
 msgstr "Favorieten inschakelen"
 
@@ -15157,7 +15157,7 @@ msgid "expanded"
 msgstr "uitgeklapt"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:27
 msgid "Experimental"
 msgstr "Experimenteel"
 
@@ -16543,7 +16543,7 @@ msgstr "Vriendelijke bot"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:103
 msgid "Friends"
 msgstr "Vrienden"
 
@@ -16932,7 +16932,7 @@ msgstr "Jaarlijks afsluiten"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:172
 msgid "GIF"
 msgstr "GIF"
 
@@ -17381,7 +17381,7 @@ msgid "Graphics"
 msgstr "Grafische verwerking"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:132
 msgid "Gray text"
 msgstr "Grijze tekst"
 
@@ -19722,7 +19722,7 @@ msgid "Keep my current settings"
 msgstr "Mijn huidige instellingen behouden"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:59
 msgid "Keep Neko still"
 msgstr "Neko stilhouden"
 
@@ -21034,7 +21034,7 @@ msgstr "Markeer bovenste inboxkanaal als gelezen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:136
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -21572,7 +21572,7 @@ msgstr "Deze rol vermelden?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:657
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
 msgid "Mentions"
 msgstr "Vermeldingen"
 
@@ -22700,7 +22700,7 @@ msgstr "gedempt"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:87
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "Gedempt"
@@ -22723,7 +22723,7 @@ msgstr "Gedempt door moderators"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:83
 msgid "Muted channels"
 msgstr "Gedempte kanalen"
 
@@ -22941,7 +22941,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "Leest alleen het kanaal voor dat je bekijkt. De voorleesfunctie volgt je tussen kanalen."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:160
 msgid "Narration"
 msgstr "Voorlezen"
 
@@ -22996,7 +22996,7 @@ msgid "Need an account?"
 msgstr "Account nodig?"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:75
 msgid "Neko"
 msgstr "Neko"
 
@@ -24570,7 +24570,7 @@ msgstr "Dekking"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/platform/utils/DesktopLocaleBridge.ts:332
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:25
 msgid "Open"
 msgstr "Openen"
 
@@ -25132,7 +25132,7 @@ msgid "Operating system"
 msgstr "Besturingssysteem"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Schakel experimentele instellingen in voor ongelezen badges per community en per kanaal"
 
@@ -26043,7 +26043,7 @@ msgstr "Zet dit bericht vast in het kanaal zodat iedereen het kan zien."
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:197
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -26268,7 +26268,7 @@ msgid "Popped out"
 msgstr "In apart venster"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:204
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:209
 msgid "Popup"
 msgstr "Pop-up"
 
@@ -27323,7 +27323,7 @@ msgid "Reactivate subscription"
 msgstr "Abonnement opnieuw activeren"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:144
 msgid "Read aloud"
 msgstr "Voorlezen"
 
@@ -27340,7 +27340,7 @@ msgstr "Berichtgeschiedenis lezen"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:140
 msgid "Read messages"
 msgstr "Berichten lezen"
 
@@ -27847,7 +27847,7 @@ msgstr "Venstergrootte en -positie onthouden"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:200
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:205
 #: src/features/webhook/components/WebhookListItem.tsx:278
 msgid "Remove"
 msgstr "Verwijderen"
@@ -28553,7 +28553,7 @@ msgid "Require a passkey as your second factor"
 msgstr "Een passkey als je tweede factor vereisen"
 
 #. Short label for an advanced voice-channel navigation preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:20
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:22
 msgid "Require double-click to join voice channels"
 msgstr "Dubbelklikken vereist om spraakkanalen te betreden"
 
@@ -30391,6 +30391,12 @@ msgstr "Dit kanaal kunnen zien. Als je deze machtiging weigert voor {everyoneMen
 msgid "Seek preview"
 msgstr "Voorbeeld bij spoelen"
 
+# auto-i18n: reviewed unchanged
+#. Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:61
+msgid "Segoe UI"
+msgstr "Segoe UI"
+
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
@@ -31408,7 +31414,7 @@ msgid "Show a content warning in this channel"
 msgstr "Toon een inhoudswaarschuwing in dit kanaal"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:56
 msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
 msgstr "Toon een snelkoppeling met één klik om aangepaste emoji's en stickers te kopiëren uit communities die dit toestaan"
 
@@ -31504,7 +31510,7 @@ msgstr "Verwijderknop tonen"
 #. Short label for an advanced media button preference.
 #. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:71
 msgid "Show download button"
 msgstr "Downloadknop tonen"
 
@@ -31580,7 +31586,7 @@ msgid "Show guidelines"
 msgstr "Toon richtlijnen"
 
 #. Toggle label and settings search entry for showing the help center button in the sidebar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:67
 msgid "Show help center button"
 msgstr "Toon knop helpcentrum"
 
@@ -31802,7 +31808,7 @@ msgid "Show store folder"
 msgstr "Toon opslagmap"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Toon doorgestreepte Markdown-tekst in een iets gedemptere kleur."
 
@@ -31814,6 +31820,11 @@ msgstr "Knop voor het verbergen van ingesloten inhoud tonen"
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "Pictogram in systeemvak weergeven"
+
+#. Settings search entry description. One-line summary of what the setting controls. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:65
+msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
+msgstr "Toon tekst in Fluxer Sans, het vorige standaardlettertype, in plaats van het Windows-systeempje"
 
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:34
@@ -32223,7 +32234,7 @@ msgid "Skip this step"
 msgstr "Deze stap overslaan"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:73
+#: src/app/App.tsx:74
 msgid "Skip to content"
 msgstr "Naar inhoud springen"
 
@@ -32861,7 +32872,7 @@ msgstr "Kijkers - {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:156
 msgid "Speech"
 msgstr "Spraak"
 
@@ -33597,14 +33608,14 @@ msgid "Streaming privacy on"
 msgstr "Streamingprivacy aan"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:124
 msgid "Strike through"
 msgstr "Doorhalen"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:120
 msgid "Strikethrough"
 msgstr "Doorhalen"
 
@@ -33792,6 +33803,11 @@ msgstr "Ander account"
 #: src/features/app/components/floating/UserAreaPopout.tsx:579
 msgid "Switch accounts"
 msgstr "Van account wisselen"
+
+#. Nagbar button that opens the setting for switching the app font back to Fluxer Sans. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:21
+msgid "Switch back to Fluxer Sans"
+msgstr "Terug naar Fluxer Sans"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:53
@@ -34393,6 +34409,11 @@ msgstr "Tekstopmaak"
 msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
 msgstr "Wanneer transparantie is ingeschakeld, wordt tekst weergegeven met antialiasing in grijstinten in plaats van ClearType. Daardoor ziet de tekst er zachter uit."
 
+#. Nagbar message shown once to existing Windows users after the default app font changed to the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/app/components/layout/app_layout/nagbars/WindowsFontNagbar.tsx:16
+msgid "Text on Windows now uses the system font. You can switch back to Fluxer Sans in settings."
+msgstr "Tekst op Windows gebruikt nu het systeemlettertype. Je kunt terugschakelen naar Fluxer Sans in de instellingen."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
@@ -34415,7 +34436,7 @@ msgstr "Tekstgrootte"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:428
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:152
 msgid "Text-to-speech"
 msgstr "Tekst naar spraak"
 
@@ -36590,7 +36611,7 @@ msgid "Try sending your message again."
 msgstr "Probeer je bericht opnieuw te verzenden."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:148
 msgid "TTS"
 msgstr "TTS"
 
@@ -37560,7 +37581,7 @@ msgstr "ongelezen"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:91
 msgid "Unread"
 msgstr "Ongelezen"
 
@@ -37572,7 +37593,7 @@ msgid "Unread badge"
 msgstr "Ongelezen-badge"
 
 #. Settings search entry label for opting into experimental per-community unread badge controls.
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:6
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:11
 msgid "Unread badge customization"
 msgstr "Aanpassing van ongelezen badges"
 
@@ -37581,7 +37602,7 @@ msgstr "Aanpassing van ongelezen badges"
 #. Short label in the channel notification settings dropdown. Keep it concise.
 #: src/features/channel/components/channel_header_components/ChannelNotificationSettingsDropdown.tsx:38
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:72
-#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:10
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:15
 msgid "Unread badges"
 msgstr "Ongelezen-badges"
 
@@ -38232,6 +38253,11 @@ msgstr "Externe stickers gebruiken"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:486
 msgid "Use filters or enter keywords to find messages"
 msgstr "Gebruik filters of typ trefwoorden om berichten te vinden"
+
+#. Toggle label and settings search entry for showing app text in the Fluxer Sans font instead of the Windows system font. Fluxer Sans is a font name and must not be translated.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
+msgid "Use Fluxer Sans on Windows"
+msgstr "Gebruik Fluxer Sans op Windows"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
@@ -39344,7 +39370,7 @@ msgstr "Visuele indicatoren die de gebruikersstatus weergeven met dezelfde gemas
 #: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:95
 msgid "Voice"
 msgstr "Spraak"
 
@@ -39576,7 +39602,7 @@ msgstr "Ongeldig"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "Volume"
 msgstr "Volume"
 

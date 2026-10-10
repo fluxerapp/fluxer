@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isNativeWindows} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {
+	FONTS_DESCRIPTOR,
+	USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
 const UNREAD_BADGE_CUSTOMIZATION_DESCRIPTOR = msg({
@@ -53,7 +58,27 @@ const SHOW_A_ONE_CLICK_SHORTCUT_FOR_COPYING_EXPRESSIONS_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
 
+const SEGOE_UI_DESCRIPTOR = msg({
+	message: 'Segoe UI',
+	comment: 'Settings search synonym. Segoe UI is the name of the Windows system font and must not be translated.',
+});
+const SHOW_TEXT_IN_THE_PREVIOUS_FONT_DESCRIPTOR = msg({
+	message: 'Show text in Fluxer Sans, the previous default font, instead of the Windows system font',
+	comment:
+		'Settings search entry description. One-line summary of what the setting controls. Fluxer Sans is a font name and must not be translated.',
+});
+
 export const advancedSettingsIndex: Array<SearchableSettingDescriptor> = [
+	{
+		id: 'advanced-windows-fluxer-sans',
+		tabType: 'advanced_settings',
+		label: USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR,
+		keywords: [FONTS_DESCRIPTOR, SEGOE_UI_DESCRIPTOR],
+		description: SHOW_TEXT_IN_THE_PREVIOUS_FONT_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['appearance'],
+		isVisible: () => isNativeWindows(),
+	},
 	{
 		id: 'advanced-unread-badge-customization',
 		tabType: 'advanced_settings',

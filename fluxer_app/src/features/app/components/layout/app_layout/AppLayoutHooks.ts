@@ -27,8 +27,9 @@ import {
 	shouldShowPremiumFeatures,
 } from '@app/features/premium/utils/PremiumUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import WindowsFont, {WINDOWS_FONT_CHANGED_AT_MS} from '@app/features/theme/state/WindowsFont';
 import Nagbar from '@app/features/ui/state/Nagbar';
-import {hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {hasUnavailableElectronNativeContext, isDesktop, isNativeWindows} from '@app/features/ui/utils/NativeUtils';
 import {isStandalonePwa} from '@app/features/ui/utils/PwaUtils';
 import StatusPage from '@app/features/user/state/StatusPage';
 import Users from '@app/features/user/state/Users';
@@ -258,6 +259,12 @@ export const useNagbarConditions = (): NagbarConditions => {
 	})();
 	const canShowSoftwareEncoder = SoftwareEncoderWarning.showWarning;
 	const canShowStreamerMode = StreamerMode.shouldShowNagbar;
+	const canShowWindowsFont =
+		isNativeWindows() &&
+		user != null &&
+		user.createdAt.getTime() < WINDOWS_FONT_CHANGED_AT_MS &&
+		!WindowsFont.useFluxerSans &&
+		!WindowsFont.nagbarDismissed;
 	const canShowDomainMoved = nagbarState.forceHideDomainMoved
 		? false
 		: nagbarState.forceDomainMoved
@@ -328,6 +335,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
 		canShowDomainMoved,
+		canShowWindowsFont,
 	};
 };
 export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarState> => {
@@ -463,6 +471,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.DOMAIN_MOVED,
 				priority: 3,
 				visible: conditions.canShowDomainMoved,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.WINDOWS_FONT,
+				priority: 4.5,
+				visible: conditions.canShowWindowsFont,
 				dismissible: true,
 			},
 		];
