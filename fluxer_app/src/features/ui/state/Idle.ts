@@ -29,6 +29,8 @@ function normalizeIdleTimeMs(value: number): number | null {
 
 class Idle {
 	idle = false;
+	afk = false;
+	private afkThresholdMs = IDLE_DURATION_MS;
 	private lastLocalActivityTime = Date.now();
 	private lastSystemActivityTime = 0;
 	private checkInterval: NodeJS.Timeout | null = null;
@@ -56,13 +58,21 @@ class Idle {
 
 	recordActivity(): void {
 		this.lastLocalActivityTime = Date.now();
-		if (this.idle) {
-			this.applyIdleState(false);
-		}
+		this.applyInactiveDuration(0);
 	}
 
 	isIdle(): boolean {
 		return this.idle;
+	}
+
+	isAfk(): boolean {
+		return this.afk;
+	}
+
+	setAfkTimeoutMs(afkThresholdMs: number): void {
+		if (afkThresholdMs === this.afkThresholdMs) return;
+		this.afkThresholdMs = afkThresholdMs;
+		this.updateIdleStateFromLocalActivity();
 	}
 
 	getIdleSince(): number {
@@ -91,8 +101,7 @@ class Idle {
 	}
 
 	private updateIdleStateFromLocalActivity(): void {
-		const now = Date.now();
-		this.applyIdleState(this.getInactiveDurationMs(now) >= IDLE_DURATION_MS);
+		this.applyInactiveDuration(this.getInactiveDurationMs());
 	}
 
 	private async updateIdleStateFromSystem(desktopIdleApi: Required<DesktopIdleApi>): Promise<void> {
@@ -112,8 +121,9 @@ class Idle {
 		this.updateIdleStateFromLocalActivity();
 	}
 
-	private applyIdleState(idle: boolean): void {
-		this.idle = idle;
+	private applyInactiveDuration(inactiveDurationMs: number): void {
+		this.idle = inactiveDurationMs >= IDLE_DURATION_MS;
+		this.afk = inactiveDurationMs >= this.afkThresholdMs;
 	}
 }
 

@@ -19,6 +19,7 @@ import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork'
 import SessionManager, {type Account} from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getGatewayClientProperties} from '@app/features/platform/utils/ClientInfo';
+import Idle from '@app/features/ui/state/Idle';
 import {compareStructural, reaction} from 'mobx';
 
 const logger = new Logger('BackgroundGatewaySessionManager');
@@ -91,12 +92,13 @@ export class BackgroundGatewaySessionManager {
 		this.disposers.push(
 			installDeferredReaction(() =>
 				reaction(
-					() => BackgroundAccountPresence.appearOffline,
+					() => [BackgroundAccountPresence.appearOffline, Idle.isAfk()],
 					() => {
 						for (const session of BackgroundGatewaySessions.values()) {
 							session.refreshPresence();
 						}
 					},
+					{equals: compareStructural},
 				),
 			),
 		);

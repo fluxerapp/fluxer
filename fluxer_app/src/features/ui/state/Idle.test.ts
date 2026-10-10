@@ -19,12 +19,12 @@ vi.mock('@app/features/user/state/CustomStatus', () => ({
 	toGatewayCustomStatus: () => null,
 }));
 
-function hydratedOnlineSettings() {
+function hydratedOnlineSettings(afkTimeoutSeconds = 600) {
 	return {
 		status: StatusTypes.ONLINE,
 		isHydrated: () => true,
 		markSessionChanging: () => {},
-		getAfkTimeout: () => 600,
+		getAfkTimeout: () => afkTimeoutSeconds,
 		getCustomStatus: () => null,
 		getStatusResetsAt: () => null,
 		getStatusResetsTo: () => null,
@@ -71,5 +71,25 @@ describe('Idle', () => {
 		expect(Idle.isIdle()).toBe(false);
 		expect(LocalPresence.getStatus()).toBe(StatusTypes.ONLINE);
 		expect(LocalPresence.getPresence().since).toBe(0);
+	});
+
+	it('reports afk once the user afk timeout passes', async () => {
+		const {default: LocalPresence, setLocalPresenceUserSettings} = await import(
+			'@app/features/presence/state/LocalPresence'
+		);
+		const {default: Idle} = await import('@app/features/ui/state/Idle');
+		setLocalPresenceUserSettings(hydratedOnlineSettings(60));
+		LocalPresence.updatePresence();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(LocalPresence.getPresence().afk).toBe(false);
+
+		await vi.advanceTimersByTimeAsync(45 * 1000);
+		expect(LocalPresence.getPresence().afk).toBe(false);
+
+		await vi.advanceTimersByTimeAsync(45 * 1000);
+		expect(LocalPresence.getPresence().afk).toBe(true);
+
+		Idle.recordActivity();
+		expect(LocalPresence.getPresence().afk).toBe(false);
 	});
 });
