@@ -2,6 +2,7 @@
 
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
 import type {IAssetDeletionQueue, QueuedAssetDeletion} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
@@ -29,10 +30,10 @@ function createQueue(): {queue: IAssetDeletionQueue; queued: Array<QueuedAssetDe
 	return {queue, queued};
 }
 
-function installDependencies(queue: IAssetDeletionQueue): void {
+function installDependencies(queue: IAssetDeletionQueue, kvClient = new MockKVProvider()): void {
 	setWorkerDependenciesForTest({
 		assetDeletionQueue: queue,
-		kvClient: new MockKVProvider(),
+		kvClient,
 		instanceConfigRepository: {
 			async getEffectiveAttachmentDecayConfig() {
 				return {enabled: true};
@@ -59,8 +60,27 @@ async function writeDecayRecord(repository: AttachmentDecayRepository, expiresAt
 }
 
 describe('processExpiredAttachments', () => {
+	const originalSelfHosted = getConfig().instance.selfHosted;
 	afterEach(() => {
+		getConfig().instance.selfHosted = originalSelfHosted;
 		clearWorkerDependencies();
+	});
+
+	it.each([
+		[true, []],
+		[false, [`attachments/${CHANNEL_ID}/${ATTACHMENT_ID}/${FILENAME}`]],
+	])('pauses deletion during a reconcile run only when self-hosted (%s)', async (selfHosted, expectedKeys) => {
+		getConfig().instance.selfHosted = selfHosted;
+		const repository = new AttachmentDecayRepository();
+		const {queue, queued} = createQueue();
+		const kvClient = new MockKVProvider();
+		await kvClient.setex('attachment_decay:reconcile_run', 60, 'run');
+		installDependencies(queue, kvClient);
+		await writeDecayRecord(repository, FIRST_EXPIRY);
+
+		await processExpiredAttachments(new Date(FIRST_EXPIRY.getTime() + ms('1 day')));
+
+		expect(queued.map((item) => item.s3Key)).toEqual(expectedKeys);
 	});
 
 	it('keeps the decay record when it clears a superseded expiry row', async () => {

@@ -114,8 +114,12 @@ export async function reconcileAttachmentDecayChunk(
 	payload: ReconcileAttachmentDecayPayload,
 	limits = DEFAULT_CHUNK_LIMITS,
 ): Promise<ReconcileAttachmentDecayPayload | null> {
-	const {instanceConfigRepository, kvClient} = getWorkerDependencies();
 	const {runId, chunk} = payload;
+	if (!Config.instance.selfHosted) {
+		Logger.info({runId, chunk}, 'Attachment decay reconcile only runs on self-hosted instances; stopping');
+		return null;
+	}
+	const {instanceConfigRepository, kvClient} = getWorkerDependencies();
 	if (!(await holdAttachmentDecayReconcileRun(kvClient, runId))) {
 		Logger.info({runId, chunk}, 'Attachment decay reconcile superseded by a newer run; stopping');
 		return null;

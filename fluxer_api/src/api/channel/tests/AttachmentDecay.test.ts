@@ -3,7 +3,7 @@
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
+import {Config, getConfig} from '@app/api/Config';
 import {
 	createChannel,
 	createGuild,
@@ -49,10 +49,13 @@ interface ListedMessage {
 
 describe('Attachment Decay', () => {
 	let harness: ApiTestHarness;
+	const originalSelfHosted = getConfig().instance.selfHosted;
 	beforeEach(async () => {
+		getConfig().instance.selfHosted = true;
 		harness = await createApiTestHarness();
 	});
 	afterEach(async () => {
+		getConfig().instance.selfHosted = originalSelfHosted;
 		vi.restoreAllMocks();
 		clearWorkerDependencies();
 		await harness?.shutdown();
@@ -195,6 +198,36 @@ describe('Attachment Decay', () => {
 
 		await setAttachmentExpiry(admin, {enabled: false});
 		expect(addJob).toHaveBeenCalledTimes(1);
+	});
+	test('should not queue a reconcile on the hosted instance', async () => {
+		const admin = await createInstanceAdmin();
+		await setAttachmentExpiry(admin, {enabled: false});
+		getConfig().instance.selfHosted = false;
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+
+		await setAttachmentExpiry(admin, {enabled: true});
+		await setAttachmentExpiry(admin, {max_lifetime_days: 200});
+
+		expect(addJob).not.toHaveBeenCalled();
+		expect(await harness.kvProvider.exists('attachment_decay:reconcile_run')).toBe(0);
+	});
+	test('should not run a queued reconcile job on the hosted instance', async () => {
+		const admin = await createInstanceAdmin();
+		const guild = await createGuild(harness, admin.token, 'Hosted Guild');
+		await setAttachmentExpiry(admin, {enabled: false});
+		const upload = await uploadWhileExpiryIsOff(admin.token, guild.system_channel_id!, 'hosted.png');
+		const reconcile = await enableExpiryAndTakeReconcile(admin);
+		installWorkerDependencies();
+		getConfig().instance.selfHosted = false;
+		const addJob = vi.fn();
+
+		await reconcileAttachmentDecay({...reconcile, __jobId: '1'}, {addJob} as unknown as WorkerTaskHelpers);
+
+		expect(addJob).not.toHaveBeenCalled();
+		expect(await fetchDecayRow(upload.attachmentId)).toBeNull();
+		getConfig().instance.selfHosted = true;
+		expect(await runReconcile(reconcile)).toBe(1);
+		expect(await fetchDecayRow(upload.attachmentId)).not.toBeNull();
 	});
 	test('should reconcile in resumable chunks', async () => {
 		const admin = await createInstanceAdmin();

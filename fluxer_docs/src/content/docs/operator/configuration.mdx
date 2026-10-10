@@ -1769,7 +1769,11 @@ The premium tier name and information link, the billing switch, the Stripe secre
 
 Size-based attachment lifetimes. The built-in default is on.
 
-Changes also apply to attachments that were uploaded earlier. Turning expiry off hides every expiry date at once and stops deletion. The stored dates are kept. Turning it on, or changing a size or lifetime rule, starts a background job that works through existing messages in chunks and recalculates the expiry of their attachments. No attachment is deleted while that job runs. An attachment whose date passed while expiry was off, or that the new settings would expire sooner, is kept for at least the renew window first. Until the job reaches a message, its attachments show the state they had before, so one whose date passed while expiry was off shows as expired until then.
+Turning expiry off hides every expiry date at once and stops deletion. The stored dates are kept.
+
+On a self-hosted instance, changes also apply to attachments that were uploaded earlier. Turning expiry on, or changing a size or lifetime rule, starts a background job that works through existing messages in chunks and recalculates the expiry of their attachments. No attachment is deleted while that job runs. An attachment whose date passed while expiry was off, or that the new settings would expire sooner, is kept for at least the renew window first. Until the job reaches a message, its attachments show the state they had before, so one whose date passed while expiry was off shows as expired until then.
+
+The official hosted instance does not run that job. There, a change applies to attachments uploaded from then on, and deletion of expired attachments is never paused.
 
 #### Instance Config, Gateway Rollout Configuration
 

@@ -200,7 +200,12 @@ pub fn instance_config_page(
                     "Media & retention",
                     "Attachment expiry rules that can be changed without editing environment variables.",
                     html! {
-                        (media_config_section(base, csrf_token, &instance_config.media))
+                        (media_config_section(
+                            base,
+                            csrf_token,
+                            &instance_config.media,
+                            instance_config.self_hosted,
+                        ))
                     },
                 ))
                 (config_group(
@@ -752,7 +757,12 @@ fn integrations_config_section(
     )
 }
 
-fn media_config_section(base: &str, csrf_token: &str, media: &InstanceMediaResponse) -> Markup {
+fn media_config_section(
+    base: &str,
+    csrf_token: &str,
+    media: &InstanceMediaResponse,
+    self_hosted: bool,
+) -> Markup {
     let decay = &media.attachment_decay;
     let effective = &decay.effective;
     let enabled = decay.enabled.unwrap_or(effective.enabled);
@@ -780,9 +790,14 @@ fn media_config_section(base: &str, csrf_token: &str, media: &InstanceMediaRespo
         .renew_window_days
         .unwrap_or(effective.renew_window_days)
         .to_string();
+    let description = if self_hosted {
+        "Expire eligible attachments using size-based lifetimes. This is enabled by default and applies at runtime. On a self-hosted instance, changes also apply to attachments uploaded earlier, which are kept for at least the renew window before a new or shorter expiry deletes them."
+    } else {
+        "Expire eligible attachments using size-based lifetimes. This is enabled by default and applies at runtime. Changes apply to attachments uploaded from then on."
+    };
     section_card_with_description(
         "Media Expiry",
-        "Expire eligible attachments using size-based lifetimes. This is enabled by default and applies at runtime. Changes also apply to attachments uploaded earlier, which are kept for at least the renew window before a new or shorter expiry deletes them.",
+        description,
         html! {
             form method="post" action={(base) "/instance-config?action=update_media"} {
                 (csrf_input(csrf_token))
