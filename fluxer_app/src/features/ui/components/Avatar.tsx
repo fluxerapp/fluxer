@@ -4,7 +4,6 @@ import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
@@ -65,11 +64,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const {i18n} = useLingui();
 		const userId = user.id;
 		const userAvatar = user.avatar;
-		const runtimeSnapshot = RuntimeConfig.getSnapshotOrNull();
-		const systemAvatarUrl =
-			userId === '0' && RuntimeConfig.isSelfHosted()
-				? (runtimeSnapshot?.appPublic.branding.logo_url ?? runtimeSnapshot?.appPublic.branding.icon_url ?? null)
-				: null;
+		const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(userId);
 		const guildMember = GuildMembers.getMember(guildId || '', userId);
 		const hasGuildMemberAvatarSource = Boolean(guildId) && guildMember != null;
 		const memberAvatar = guildMember?.avatar ?? null;

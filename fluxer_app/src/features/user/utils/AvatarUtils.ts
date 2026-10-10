@@ -18,6 +18,7 @@ import {
 	parseAvatarHash,
 } from '@app/features/user/utils/AvatarMediaUtils';
 import {getDefaultAvatarAssetURL} from '@app/features/user/utils/DefaultAvatars';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {
 	MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 	MEDIA_PROXY_ICON_SIZE_DEFAULT,
@@ -74,6 +75,12 @@ const getViewportSplashSize = (): MediaProxyImageSize => {
 };
 
 export const getDefaultAvatarURLForIndex = (index: number): string => getDefaultAvatarAssetURL(index);
+
+export function getSystemUserBrandingAvatarURL(userId: string): string | null {
+	if (userId !== FLUXERBOT_ID || !RuntimeConfig.isSelfHosted()) return null;
+	const branding = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding;
+	return branding?.icon_url ?? branding?.logo_url ?? null;
+}
 
 export function getDefaultAvatarPrimaryColor(id: string) {
 	return getSharedDefaultAvatarPrimaryColor(id);

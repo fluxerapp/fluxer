@@ -5,6 +5,7 @@ import {getUserAccentColor} from '@app/features/theme/utils/AccentColorUtils';
 import {ProfileBody} from '@app/features/user/components/modals/user_profile_modal/ProfileBody';
 import {ProfileMediaHeader} from '@app/features/user/components/modals/user_profile_modal/ProfileMediaHeader';
 import type {ProfileModalContentProps} from '@app/features/user/components/modals/user_profile_modal/UserProfileModalShared';
+import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
 import {resolveProfileGuildMembership, toProfileDisplayContext} from '@app/features/user/utils/ProfileGuildMembership';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
@@ -29,10 +30,11 @@ export const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 	}) => {
 		const effectiveProfile = profile?.getEffectiveProfile() ?? null;
 		const isSystemUser = user.id === FLUXERBOT_ID;
-		const systemBranding = isSystemUser ? RuntimeConfig.getSnapshotOrNull()?.appPublic.branding : null;
-		const bannerColor =
-			(isSystemUser && RuntimeConfig.isSelfHosted() ? systemBranding?.theme_color : null) ??
-			getUserAccentColor(user, effectiveProfile?.accent_color);
+		const systemThemeColor =
+			isSystemUser && RuntimeConfig.isSelfHosted()
+				? RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.theme_color
+				: null;
+		const bannerColor = systemThemeColor ?? getUserAccentColor(user, effectiveProfile?.accent_color);
 		const membership = resolveProfileGuildMembership(profile);
 		const profileContext = useMemo<ProfileDisplayUtils.ProfileDisplayContext>(
 			() =>
@@ -48,10 +50,9 @@ export const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 			() => ProfileDisplayUtils.getProfileAvatarUrls(profileContext, previewOverrides, MEDIA_PROXY_AVATAR_SIZE_PROFILE),
 			[profileContext, previewOverrides],
 		);
-		const avatarUrl = isSystemUser
-			? (systemBranding?.logo_url ?? systemBranding?.icon_url ?? profileAvatarUrl)
-			: profileAvatarUrl;
-		const hoverAvatarUrl = isSystemUser ? avatarUrl : profileHoverAvatarUrl;
+		const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(user.id);
+		const avatarUrl = systemAvatarUrl ?? profileAvatarUrl;
+		const hoverAvatarUrl = systemAvatarUrl ?? profileHoverAvatarUrl;
 		const {bannerUrl, hoverBannerUrl} = useMemo(
 			() =>
 				ProfileDisplayUtils.getProfileBannerUrls(
