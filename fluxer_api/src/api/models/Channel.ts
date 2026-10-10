@@ -83,10 +83,6 @@ export class Channel {
 		return THREAD_CHANNEL_TYPES.has(this.type);
 	}
 
-	isPrivateThread(): boolean {
-		return this.type === ChannelTypes.PRIVATE_THREAD;
-	}
-
 	isThreadOnly(): boolean {
 		return THREAD_ONLY_CHANNEL_TYPES.has(this.type);
 	}

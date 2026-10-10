@@ -70,10 +70,6 @@ class Authentication {
 		SessionManager.handleConnectionReady();
 	}
 
-	handleAuthSessionChange({token}: {token: string}): void {
-		persistToken(token || null);
-	}
-
 	async handleConnectionClosed({code, accountKey}: {code: number; accountKey?: string | null}): Promise<void> {
 		const failedAccountKey = accountKey === undefined ? SessionManager.currentAccountKey : accountKey;
 		const result = await SessionManager.handleConnectionClosed(code, failedAccountKey);

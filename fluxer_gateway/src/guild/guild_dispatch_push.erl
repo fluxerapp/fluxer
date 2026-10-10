@@ -1866,10 +1866,6 @@ grace_recipients_push_a_user_whose_live_session_went_offline_test() ->
     Presences = #{1 => #{<<"status">> => <<"offline">>}},
     ?assertEqual([1], grace_recipients([1], [1], Presences, [])).
 
-grace_recipients_skip_a_user_with_one_ended_and_one_live_online_session_test() ->
-    Presences = #{1 => #{<<"status">> => <<"online">>}},
-    ?assertEqual([], grace_recipients([1], [1], Presences, [])).
-
 grace_recipients_mix_users_test() ->
     Presences = #{
         1 => #{<<"status">> => <<"online">>},
@@ -2005,37 +2001,6 @@ push_candidate_user_ids_deduplicates_mentions_test() ->
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
     ?assertEqual([1], CandidateUserIds).
 
-build_user_roles_map_uses_member_map_test() ->
-    Members = #{
-        1 => #{<<"roles">> => [<<"10">>, <<"11">>]},
-        2 => #{<<"roles">> => [<<"20">>]}
-    },
-    Result = build_user_roles_map(Members, [2, 1]),
-    ?assertEqual([10, 11], lists:sort(maps:get(1, Result))),
-    ?assertEqual([20], maps:get(2, Result)).
-
-find_channel_name_found_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>},
-            #{<<"id">> => <<"101">>, <<"name">> => <<"random">>}
-        ]
-    },
-    ?assertEqual(<<"general">>, find_channel_name(<<"100">>, Data)).
-
-find_channel_name_not_found_test() ->
-    Data = #{<<"channels">> => []},
-    ?assertEqual(<<"unknown">>, find_channel_name(<<"100">>, Data)).
-
-find_channel_name_uses_index_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-        ],
-        <<"channel_index">> => #{100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}}
-    },
-    ?assertEqual(<<"general">>, find_channel_name(<<"100">>, Data)).
-
 send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
     Self = self(),
     ok = meck:new(push, [passthrough, no_link]),
@@ -2086,42 +2051,6 @@ send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
     after
         meck:unload(push)
     end.
-
-find_channel_name_invalid_id_test() ->
-    Data = #{<<"channels">> => []},
-    ?assertEqual(<<"unknown">>, find_channel_name(<<"invalid">>, Data)).
-
-build_role_names_map_uses_role_index_test() ->
-    Data = #{
-        <<"roles">> => [
-            #{<<"id">> => <<"100">>, <<"name">> => <<"Fallback">>}
-        ],
-        <<"role_index">> => #{
-            100 => #{<<"id">> => <<"100">>, <<"name">> => <<"Mods">>},
-            200 => #{<<"id">> => <<"200">>, <<"name">> => <<>>},
-            bad => #{<<"id">> => <<"300">>, <<"name">> => <<"Bad">>}
-        }
-    },
-    ?assertEqual(#{100 => <<"Mods">>}, build_role_names_map(Data)).
-
-extract_role_ids_test() ->
-    Member = #{<<"roles">> => [<<"10">>, <<"20">>, <<"invalid">>]},
-    Result = lists:sort(extract_role_ids(Member)),
-    ?assertEqual([10, 20], Result).
-
-extract_role_ids_empty_test() ->
-    Member = #{<<"roles">> => []},
-    ?assertEqual([], extract_role_ids(Member)).
-
-extract_role_ids_missing_key_test() ->
-    Member = #{},
-    ?assertEqual([], extract_role_ids(Member)).
-
-meta_accessors_default_to_undefined_test() ->
-    ?assertEqual(undefined, meta_member_count(undefined)),
-    ?assertEqual(undefined, meta_features(undefined)),
-    ?assertEqual(5, meta_member_count(#{member_count => 5, features => []})),
-    ?assertEqual([], meta_features(#{member_count => 5, features => []})).
 
 compact_push_state_drops_members_and_keeps_member_count_test() ->
     Tab = ets:new(test_members, [set, public]),
@@ -2489,117 +2418,6 @@ stale_push_worker_slot_is_reclaimed_and_counted_test() ->
         reset_push_worker_state()
     end.
 
-push_drop_is_readable_from_named_ets_table_test() ->
-    reset_push_worker_state(),
-    ok = application:set_env(fluxer_gateway, ?CONCURRENCY_LIMIT_KEY, 1),
-    ok = application:set_env(fluxer_gateway, ?QUEUE_LIMIT_KEY, 0),
-    Blocker = blocking_push_worker(),
-    put(push_inflight_workers, [{1, Blocker, erlang:monotonic_time(millisecond)}]),
-    Before = read_push_counter(dropped_at_limit),
-    try
-        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
-        ?assertEqual(Before + 1, read_push_counter(dropped_at_limit)),
-        ?assertMatch([{dropped_at_limit, _}], ets:lookup(?PUSH_COUNTERS, dropped_at_limit)),
-        ?assertEqual(
-            lists:sort(?PUSH_COUNTER_KEYS),
-            lists:sort([Key || {Key, _} <- ets:tab2list(?PUSH_COUNTERS)])
-        )
-    after
-        stop_push_worker(Blocker),
-        reset_push_worker_state()
-    end.
-
-started_push_worker_is_counted_test() ->
-    reset_push_worker_state(),
-    Before = read_push_counter(worker_started),
-    try
-        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
-        ?assertEqual(Before + 1, read_push_counter(worker_started)),
-        ?assert(is_pid(get(push_inflight))),
-        ?assertEqual(1, length(get(push_inflight_workers)))
-    after
-        reset_push_worker_state()
-    end.
-
-worker_completion_is_counted_test() ->
-    reset_push_worker_state(),
-    Before = read_push_counter(worker_completed),
-    BeforeFailed = read_push_counter(worker_failed),
-    try
-        ?assertEqual(ok, run_counted_push_worker(fun() -> ok end)),
-        ?assertEqual(Before + 1, read_push_counter(worker_completed)),
-        ?assertEqual(BeforeFailed, read_push_counter(worker_failed))
-    after
-        reset_push_worker_state()
-    end.
-
-worker_crash_is_counted_as_failure_not_completion_test() ->
-    reset_push_worker_state(),
-    Before = read_push_counter(worker_failed),
-    BeforeCompleted = read_push_counter(worker_completed),
-    try
-        ?assertEqual(ok, run_counted_push_worker(fun() -> error(boom) end)),
-        ?assertEqual(Before + 1, read_push_counter(worker_failed)),
-        ?assertEqual(BeforeCompleted, read_push_counter(worker_completed))
-    after
-        reset_push_worker_state()
-    end.
-
-spawned_worker_reports_started_and_completed_test() ->
-    reset_push_worker_state(),
-    Self = self(),
-    Started = read_push_counter(worker_started),
-    Completed = read_push_counter(worker_completed),
-    try
-        ?assertEqual(
-            ok,
-            spawn_push_worker(
-                fun() ->
-                    Self ! {ran, self()},
-                    ok
-                end,
-                7,
-                undefined
-            )
-        ),
-        Pid = get(push_inflight),
-        receive
-            {ran, Pid} -> ok
-        after 1000 -> ?assert(false)
-        end,
-        wait_for_counter(worker_completed, Completed + 1),
-        ?assertEqual(Started + 1, read_push_counter(worker_started)),
-        ?assertEqual(Completed + 1, read_push_counter(worker_completed)),
-        Messages = element(2, process_info(self(), messages)),
-        ?assertEqual([], [M || {'DOWN', _, process, P, _} = M <- Messages, P =:= Pid])
-    after
-        reset_push_worker_state()
-    end.
-
-missing_members_table_is_counted_test() ->
-    reset_push_worker_state(),
-    Before = read_push_counter(members_table_missing),
-    try
-        ?assertEqual(ok, maybe_spawn_push(#{}, 7, legacy_test_state())),
-        ?assertEqual(Before + 1, read_push_counter(members_table_missing))
-    after
-        reset_push_worker_state()
-    end.
-
-scan_table_unavailable_is_counted_test() ->
-    reset_push_worker_state(),
-    Tab = ets:new(test_members, [set, public]),
-    State = compact_scan_state(Tab),
-    true = ets:delete(Tab),
-    Before = read_push_counter(scan_table_unavailable),
-    try
-        MessageData = #{<<"channel_id">> => <<"10">>},
-        ?assertEqual(ok, send_compact_push_notifications(MessageData, 7, State)),
-        ?assertEqual(Before + 1, read_push_counter(scan_table_unavailable))
-    after
-        reset_push_worker_state()
-    end.
-
 bounded_scan_leaves_the_members_table_unfixed_test() ->
     reset_push_worker_state(),
     Tab = ets:new(test_members, [set, public]),
@@ -2714,20 +2532,6 @@ legacy_test_state() ->
 
 worker_pids(Workers) ->
     [Pid || {_Gen, Pid, _StartedMs} <- Workers].
-
-wait_for_counter(Key, Target) ->
-    wait_for_counter(Key, Target, 200).
-
-wait_for_counter(Key, Target, 0) ->
-    ?assertEqual(Target, read_push_counter(Key));
-wait_for_counter(Key, Target, Retries) ->
-    case read_push_counter(Key) >= Target of
-        true ->
-            ok;
-        false ->
-            timer:sleep(5),
-            wait_for_counter(Key, Target, Retries - 1)
-    end.
 
 remote_test_pid() ->
     binary_to_term(<<131, 88, 119, 12, "fake@nowhere", 1:32, 0:32, 1:32>>).

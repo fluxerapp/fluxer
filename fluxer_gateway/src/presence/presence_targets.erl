@@ -195,14 +195,6 @@ friend_ids_from_state_filters_relationship_types_test() ->
     Ids = lists:sort(friend_ids_from_state(State)),
     ?assertEqual([10], Ids).
 
-friend_ids_from_state_empty_test() ->
-    State = #{relationships => #{}},
-    ?assertEqual([], friend_ids_from_state(State)).
-
-friend_ids_from_state_missing_key_test() ->
-    State = #{},
-    ?assertEqual([], friend_ids_from_state(State)).
-
 group_dm_recipients_from_state_test() ->
     State = #{
         user_id => 1,
@@ -257,32 +249,4 @@ api_channel(IdBin, Type, RecipientIdBins) ->
         ]
     }.
 
-extract_recipient_id_map_test() ->
-    ?assertEqual(123, extract_recipient_id(#{<<"id">> => <<"123">>})),
-    ?assertEqual(undefined, extract_recipient_id(#{})).
-
-extract_recipient_id_binary_test() ->
-    ?assertEqual(456, extract_recipient_id(<<"456">>)).
-
-extract_recipient_id_integer_test() ->
-    ?assertEqual(789, extract_recipient_id(789)).
-
-extract_recipient_id_invalid_test() ->
-    ?assertEqual(undefined, extract_recipient_id(undefined)),
-    ?assertEqual(undefined, extract_recipient_id([1, 2, 3])).
-
-extract_recipient_ids_deduplicates_test() ->
-    Channel = #{
-        <<"recipients">> => [
-            #{<<"id">> => <<"1">>},
-            #{<<"id">> => <<"1">>},
-            #{<<"id">> => <<"2">>}
-        ]
-    },
-    Ids = extract_recipient_ids(Channel),
-    ?assertEqual([1, 2], Ids).
-
-map_from_ids_test() ->
-    ?assertEqual(#{}, map_from_ids([])),
-    ?assertEqual(#{1 => true, 2 => true}, map_from_ids([1, 2])).
 -endif.

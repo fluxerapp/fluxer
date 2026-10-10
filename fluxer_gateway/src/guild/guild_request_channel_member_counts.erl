@@ -183,31 +183,6 @@ parse_nonce_test() ->
     Big = binary:copy(<<"a">>, ?MAX_NONCE_BYTES + 1),
     ?assertEqual(undefined, parse_nonce(Big)).
 
-build_entry_uses_string_ids_test() ->
-    Entry = build_entry(123, 456, 50, 10),
-    ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Entry)),
-    ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Entry)),
-    ?assertEqual(50, maps:get(<<"member_count">>, Entry)),
-    ?assertEqual(10, maps:get(<<"online_count">>, Entry)).
-
-normalize_entries_drops_invalid_test() ->
-    Entries = normalize_entries(1, [
-        #{channel_id => 2, member_count => 3, online_count => 1},
-        #{channel_id => 0, member_count => 3, online_count => 1},
-        #{channel_id => 4, member_count => -1, online_count => 1}
-    ]),
-    ?assertEqual([build_entry(1, 2, 3, 1)], Entries).
-
-handle_request_no_session_id_returns_ok_test() ->
-    ?assertEqual(
-        ok,
-        handle_request(
-            #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>},
-            self(),
-            #{session_pid => self(), user_id => <<"100">>, guilds => #{}}
-        )
-    ).
-
 handle_request_dispatches_empty_when_no_guild_test() ->
     Self = self(),
     SessionState = #{

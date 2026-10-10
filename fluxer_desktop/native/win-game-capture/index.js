@@ -315,11 +315,6 @@ function restoreGpuSchedulingPriority(processId) {
 	}
 }
 
-function __setBindingForTests(nextBinding) {
-	binding = nextBinding;
-	loadError = null;
-}
-
 module.exports = {
 	isSupported,
 	getAvailability,
@@ -327,7 +322,6 @@ module.exports = {
 	ScreenCapture,
 	elevateGpuSchedulingPriority,
 	restoreGpuSchedulingPriority,
-	__setBindingForTests,
 	get loadError() {
 		return loadError;
 	},

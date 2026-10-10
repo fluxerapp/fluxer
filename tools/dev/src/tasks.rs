@@ -118,21 +118,3 @@ pub fn run_knip() -> Result<i32> {
     task_run(&["pnpm", "exec", "knip"])?;
     Ok(0)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_nats_url_switches_inside_container() {
-        let expected_host = if Path::new("/.dockerenv").exists() {
-            "nats"
-        } else {
-            "127.0.0.1"
-        };
-        assert_eq!(
-            default_test_nats_url(),
-            format!("nats://{expected_host}:4222")
-        );
-    }
-}

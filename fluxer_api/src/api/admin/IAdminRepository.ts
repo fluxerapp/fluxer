@@ -59,8 +59,6 @@ export abstract class IAdminRepository {
 
 	abstract loadAllBannedEmails(): Promise<Array<string>>;
 
-	abstract isPhraseBanned(phrase: string): Promise<boolean>;
-
 	abstract banPhrase(phrase: string): Promise<void>;
 
 	abstract unbanPhrase(phrase: string): Promise<void>;
@@ -69,23 +67,17 @@ export abstract class IAdminRepository {
 
 	abstract loadAllBannedIps(): Promise<Set<string>>;
 
-	abstract isUrlBanned(url: string): Promise<boolean>;
-
 	abstract banUrl(row: BannedUrlRow): Promise<void>;
 
 	abstract unbanUrl(url: string): Promise<void>;
 
 	abstract loadAllBannedUrls(): Promise<Array<BannedUrlRow>>;
 
-	abstract isUrlDomainBanned(domain: string): Promise<boolean>;
-
 	abstract banUrlDomain(row: BannedUrlDomainRow): Promise<void>;
 
 	abstract unbanUrlDomain(domain: string): Promise<void>;
 
 	abstract loadAllBannedUrlDomains(): Promise<Array<BannedUrlDomainRow>>;
-
-	abstract isFileShaBanned(sha256Hex: string): Promise<boolean>;
 
 	abstract banFileSha(row: BannedFileShaRow): Promise<void>;
 
@@ -94,8 +86,6 @@ export abstract class IAdminRepository {
 	abstract unbanFeedFileSha(sha256Hex: string): Promise<boolean>;
 
 	abstract loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>>;
-
-	abstract isAvatarHashBanned(hashShort: string): Promise<boolean>;
 
 	abstract banAvatarHash(row: BannedAvatarHashRow): Promise<void>;
 

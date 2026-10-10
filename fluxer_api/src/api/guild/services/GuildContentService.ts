@@ -21,7 +21,6 @@ import type {
 	GuildStickerResponse,
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export class GuildContentService {
 	private readonly contentHelpers: ContentHelpers;
@@ -68,15 +67,6 @@ export class GuildContentService {
 		requestCache: RequestCache;
 	}): Promise<Array<GuildEmojiWithUserResponse>> {
 		return this.emojiService.getEmojis(params);
-	}
-
-	async getEmojiUser(params: {
-		userId: UserID;
-		guildId: GuildID;
-		emojiId: EmojiID;
-		requestCache: RequestCache;
-	}): Promise<UserPartialResponse> {
-		return this.emojiService.getEmojiUser(params);
 	}
 
 	async createEmoji(
@@ -152,15 +142,6 @@ export class GuildContentService {
 		requestCache: RequestCache;
 	}): Promise<Array<GuildStickerWithUserResponse>> {
 		return this.stickerService.getStickers(params);
-	}
-
-	async getStickerUser(params: {
-		userId: UserID;
-		guildId: GuildID;
-		stickerId: StickerID;
-		requestCache: RequestCache;
-	}): Promise<UserPartialResponse> {
-		return this.stickerService.getStickerUser(params);
 	}
 
 	async createSticker(

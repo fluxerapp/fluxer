@@ -10,7 +10,6 @@ import type {AuditLogSearchFilters, SearchableAuditLog} from '@fluxer/schema/src
 export interface IAuditLogSearchService extends SchemaISearchAdapter<AuditLogSearchFilters, SearchableAuditLog> {
 	indexAuditLog(log: AdminAuditLog): Promise<void>;
 	indexAuditLogs(logs: Array<AdminAuditLog>): Promise<void>;
-	deleteAuditLog(logId: bigint): Promise<void>;
 	searchAuditLogs(
 		query: string,
 		filters: AuditLogSearchFilters,

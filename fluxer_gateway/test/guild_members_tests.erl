@@ -93,33 +93,6 @@ check_target_member_test() ->
         #{user_id => 2, target_user_id => 1}, State
     ).
 
-normalize_int_list_test() ->
-    ?assertEqual(
-        [1, 2, 3], guild_members_common:normalize_int_list([<<"1">>, <<"2">>, <<"3">>])
-    ),
-    ?assertEqual([], guild_members_common:normalize_int_list([])).
-
-normalize_int_list_rejects_malformed_snowflakes_test() ->
-    ?assertEqual([3], guild_members_common:normalize_int_list([<<"001">>, <<"+2">>, <<"3">>])).
-
-member_common_helpers_test() ->
-    ?assertEqual(undefined, guild_members_common:member_user_id(#{})),
-    ?assertEqual(
-        42, guild_members_common:member_user_id(#{<<"user">> => #{<<"id">> => <<"42">>}})
-    ),
-    ?assertEqual(
-        undefined,
-        guild_members_common:member_user_id(#{<<"user">> => #{<<"id">> => <<"042">>}})
-    ),
-    ?assertEqual(false, guild_members_common:is_member_bot(#{})),
-    ?assertEqual(
-        true, guild_members_common:is_member_bot(#{<<"user">> => #{<<"bot">> => true}})
-    ).
-
-role_ids_from_roles_rejects_malformed_role_id_test() ->
-    Roles = [#{<<"id">> => <<"007">>}, #{<<"id">> => <<"8">>}],
-    ?assertEqual([8], guild_members_common:role_ids_from_roles(Roles)).
-
 test_state() ->
     GuildId = 100,
     OwnerId = 1,

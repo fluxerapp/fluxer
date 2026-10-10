@@ -53,10 +53,6 @@ class RollingTypingSender {
 		}
 	}
 
-	reset(): void {
-		this.dropSlot();
-	}
-
 	private dropSlot(): void {
 		const slot = this.slot;
 		if (slot === null) {

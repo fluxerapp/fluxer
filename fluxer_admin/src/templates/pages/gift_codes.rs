@@ -139,39 +139,3 @@ pub fn gift_codes_page(
     };
     admin_layout(config, auth, "Gift Codes", "gift-codes", None, content)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn branding(name: &str, premium_enabled: bool) -> PremiumBranding {
-        PremiumBranding {
-            name: Some(name.to_owned()),
-            premium_enabled,
-        }
-    }
-
-    #[test]
-    fn premium_name_comes_from_branding_with_per_deployment_fallbacks() {
-        let hosted = GiftCodesPremium::from_branding(false, None);
-        assert_eq!(hosted.name, "Plutonium");
-        assert!(!hosted.needs_mirror_mode);
-        let self_hosted = GiftCodesPremium::from_branding(true, None);
-        assert_eq!(self_hosted.name, "Premium");
-        assert!(!self_hosted.needs_mirror_mode);
-        let gold = GiftCodesPremium::from_branding(true, Some(&branding("Gold", true)));
-        assert_eq!(gold.name, "Gold");
-        assert!(!gold.needs_mirror_mode);
-    }
-
-    #[test]
-    fn everyone_mode_is_only_flagged_on_self_hosted_instances() {
-        assert!(
-            GiftCodesPremium::from_branding(true, Some(&branding("Gold", false))).needs_mirror_mode
-        );
-        assert!(
-            !GiftCodesPremium::from_branding(false, Some(&branding("Plutonium", false)))
-                .needs_mirror_mode
-        );
-    }
-}

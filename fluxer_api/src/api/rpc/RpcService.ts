@@ -69,7 +69,6 @@ import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import {UserSettings} from '@app/api/models/UserSettings';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
 import type {BotAuthService} from '@app/api/oauth/BotAuthService';
-import {sendApnsPush} from '@app/api/push/ApnsPushService';
 import {mapReadStateResponse} from '@app/api/read_state/ReadStateResponseMapper';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {badgeReadStates, visibleReadStates} from '@app/api/read_state/ReadStateVisibility';
@@ -455,25 +454,6 @@ export class RpcService {
 						})),
 					}),
 				};
-			case 'send_apns_push': {
-				const result = await sendApnsPush({
-					userId: request.user_id.toString(),
-					subscriptionId: request.subscription_id,
-					deviceToken: request.device_token,
-					appId: request.app_id,
-					providerEnvironment: request.provider_environment,
-					payload: request.payload,
-				});
-				return {
-					type: 'send_apns_push',
-					data: {
-						success: result.success,
-						should_delete: result.shouldDelete,
-						reason: result.reason,
-						status_code: result.statusCode,
-					},
-				};
-			}
 			case 'get_user_blocked_ids':
 				return {
 					type: 'get_user_blocked_ids',

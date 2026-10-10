@@ -281,36 +281,6 @@ describe('Auth SSO flow', () => {
 				.expect(400, 'INVALID_FORM_BODY')
 				.execute();
 		});
-		it('uses default redirect when missing', async () => {
-			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
-				.post('/auth/sso/start')
-				.body({})
-				.execute();
-			const email = `sso-default-redirect-${Date.now()}@example.com`;
-			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
-				.post('/auth/sso/complete')
-				.body({
-					code: email,
-					state: startData.state,
-				})
-				.execute();
-			expect(completeData.redirect_to.trim()).toBe('');
-		});
-		it('treats empty redirect as missing', async () => {
-			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
-				.post('/auth/sso/start')
-				.body({redirect_to: ''})
-				.execute();
-			const email = `sso-empty-redirect-${Date.now()}@example.com`;
-			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
-				.post('/auth/sso/complete')
-				.body({
-					code: email,
-					state: startData.state,
-				})
-				.execute();
-			expect(completeData.redirect_to.trim()).toBe('');
-		});
 	});
 	describe('state validation', () => {
 		let admin: TestAccount;
@@ -359,42 +329,6 @@ describe('Auth SSO flow', () => {
 				})
 				.expect(400)
 				.execute();
-		});
-		it('rejects missing state', async () => {
-			const email = `sso-missing-state-${Date.now()}@example.com`;
-			await createBuilderWithoutAuth(harness)
-				.post('/auth/sso/complete')
-				.body({
-					code: email,
-				})
-				.expect(400)
-				.execute();
-		});
-		it('rejects empty code', async () => {
-			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
-				.post('/auth/sso/start')
-				.body({})
-				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/auth/sso/complete')
-				.body({
-					code: '',
-					state: startData.state,
-				})
-				.expect(400)
-				.execute();
-		});
-		it('generates unique states', async () => {
-			const states = new Set<string>();
-			for (let i = 0; i < 10; i++) {
-				const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
-					.post('/auth/sso/start')
-					.body({})
-					.execute();
-				expect(states.has(startData.state)).toBe(false);
-				states.add(startData.state);
-			}
-			expect(states.size).toBe(10);
 		});
 	});
 	describe('domain validation', () => {

@@ -94,32 +94,6 @@ export_handoff_state_omits_pending_member_list_batch_test() ->
     Exported = guild_handoff:export_handoff_state(State),
     ?assertNot(maps:is_key(pending_member_list_sync_batch, Exported)).
 
-validate_handoff_state_rejects_missing_keys_test() ->
-    ?assertMatch({error, _}, guild_handoff:validate_handoff_state(#{})),
-    ?assertMatch({error, _}, guild_handoff:validate_handoff_state(#{id => 1})),
-    ?assertMatch({error, [not_a_map]}, guild_handoff:validate_handoff_state(not_a_map)).
-
-validate_handoff_state_rejects_bad_types_test() ->
-    BadState = #{id => <<"not_int">>, data => #{}, sessions => #{}, voice_states => #{}},
-    ?assertMatch({error, [id]}, guild_handoff:validate_handoff_state(BadState)).
-
-export_import_roundtrip_preserves_data_test() ->
-    State = #{
-        id => 54321,
-        data => #{<<"guild">> => #{<<"id">> => <<"54321">>}, <<"channels">> => []},
-        sessions => #{},
-        voice_states => #{<<"c1">> => #{<<"user_id">> => 1, <<"channel_id">> => 100}},
-        virtual_channel_access => #{10 => sets:from_list([20])},
-        virtual_channel_access_pending => #{},
-        virtual_channel_access_preserve => #{},
-        virtual_channel_access_move_pending => #{}
-    },
-    Exported = guild_handoff:export_handoff_state(State),
-    ?assertEqual(ok, guild_handoff:validate_handoff_state(Exported)),
-    ExportedVoice = maps:get(voice_states, Exported),
-    ?assertEqual(1, maps:size(ExportedVoice)),
-    ?assert(maps:is_key(<<"c1">>, ExportedVoice)).
-
 session_loop() ->
     receive
         stop -> ok

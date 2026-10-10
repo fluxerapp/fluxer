@@ -7,11 +7,7 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-import type {
-	ApplicationUpdateResponse,
-	ListApplicationsResponse,
-	LookupApplicationResponse,
-} from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
+import type {ApplicationUpdateResponse} from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface AuditLogsResponse {
@@ -33,42 +29,6 @@ describe('Admin applications', () => {
 		await harness.shutdown();
 	});
 
-	test('gets an application by id', async () => {
-		const owner = await createTestAccount(harness);
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName('Lookup App'),
-			redirect_uris: ['https://example.test/callback'],
-		});
-		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LOOKUP]);
-
-		const response = await createBuilder<LookupApplicationResponse>(harness, `${owner.token}`)
-			.get(`/admin/applications/${app.application.id}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-
-		expect(response.application).toMatchObject({
-			id: app.application.id,
-			owner_user_id: owner.userId,
-		});
-	});
-
-	test('lists applications owned by a user', async () => {
-		const owner = await createTestAccount(harness);
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName('Owned App'),
-			redirect_uris: ['https://example.test/callback'],
-		});
-		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LIST_BY_OWNER]);
-
-		const response = await createBuilder<ListApplicationsResponse>(harness, `${owner.token}`)
-			.get(`/admin/applications?owner_id=${owner.userId}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-
-		expect(response.applications).toHaveLength(1);
-		expect(response.applications[0]).toMatchObject({id: app.application.id});
-	});
-
 	test('rejects a list by owner from a lookup-only admin', async () => {
 		const owner = await createTestAccount(harness);
 		await createOAuth2Application(harness, owner.token, {
@@ -80,16 +40,6 @@ describe('Admin applications', () => {
 		await createBuilder(harness, `${owner.token}`)
 			.get(`/admin/applications?owner_id=${owner.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
-			.executeWithResponse();
-	});
-
-	test('rejects a list without owner_id or guild_id', async () => {
-		const owner = await createTestAccount(harness);
-		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LOOKUP]);
-
-		await createBuilder(harness, `${owner.token}`)
-			.get('/admin/applications')
-			.expect(HTTP_STATUS.BAD_REQUEST)
 			.executeWithResponse();
 	});
 

@@ -196,7 +196,7 @@ const MAX_DRAIN_FRAMES_PER_TICK = 16;
 const MAX_IDLE_DIRECT_CAPTURES = 2;
 const MIX_TICK_PERIOD_MS = 20;
 
-let idleDirectCaptures = [];
+const idleDirectCaptures = [];
 
 function acquireDirectAudioCapture() {
 	if (typeof binding.DirectAudioCapture !== 'function') {
@@ -211,10 +211,6 @@ function releaseDirectAudioCapture(capture) {
 	if (idleDirectCaptures.length < MAX_IDLE_DIRECT_CAPTURES) {
 		idleDirectCaptures.push(capture);
 	}
-}
-
-function clearIdleDirectCapturePool() {
-	idleDirectCaptures = [];
 }
 
 function patternsEqual(a, b) {
@@ -369,10 +365,6 @@ class ProcessLoopback extends EventEmitter {
 		}
 	}
 
-	routingGraph() {
-		return this.capture && typeof this.capture.routingGraph === 'function' ? this.capture.routingGraph() : null;
-	}
-
 	setScreenAudioSink(handle) {
 		if (!this.capture || typeof this.capture.setScreenAudioSink !== 'function') return false;
 		try {
@@ -416,15 +408,7 @@ class ProcessLoopback extends EventEmitter {
 module.exports = {
 	AudioBridge: binding.AudioBridge,
 	DirectAudioCapture: binding.DirectAudioCapture,
-	AudioMixRuntimeHandle: binding.AudioMixRuntimeHandle,
 	ProcessLoopback,
 	pipeWireAvailable: binding.pipeWireAvailable,
 	audioBackend: binding.audioBackend ?? (() => (binding.pipeWireAvailable?.() ? 'pipewire' : 'none')),
-	__setBindingForTests(nextBinding) {
-		binding = nextBinding;
-		clearIdleDirectCapturePool();
-	},
-	__getIdleDirectCaptureCountForTests() {
-		return idleDirectCaptures.length;
-	},
 };

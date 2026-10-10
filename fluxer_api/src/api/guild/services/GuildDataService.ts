@@ -17,7 +17,6 @@ import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
-import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
@@ -160,9 +159,5 @@ export class GuildDataService {
 		auditLogReason?: string | null,
 	): Promise<GuildResponse> {
 		return this.ownershipService.transferOwnership(params, auditLogReason);
-	}
-
-	async checkGuildVerification(params: {user: User; guild: Guild; member: GuildMember}): Promise<void> {
-		return this.ownershipService.checkGuildVerification(params);
 	}
 }

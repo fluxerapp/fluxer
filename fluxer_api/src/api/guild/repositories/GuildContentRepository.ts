@@ -60,13 +60,6 @@ export class GuildContentRepository extends IGuildContentRepository {
 		return emojis.map((emoji) => new GuildEmoji(emoji));
 	}
 
-	async countEmojis(guildId: GuildID): Promise<number> {
-		const emojis = await fetchMany<GuildEmojiRow>(FETCH_GUILD_EMOJIS_BY_GUILD_ID_QUERY, {
-			guild_id: guildId,
-		});
-		return emojis.length;
-	}
-
 	async upsertEmoji(data: GuildEmojiRow, oldData?: GuildEmojiRow | null): Promise<GuildEmoji> {
 		const guildId = data.guild_id;
 		const emojiId = data.emoji_id;
@@ -119,13 +112,6 @@ export class GuildContentRepository extends IGuildContentRepository {
 			guild_id: guildId,
 		});
 		return stickers.map((sticker) => new GuildSticker(sticker));
-	}
-
-	async countStickers(guildId: GuildID): Promise<number> {
-		const stickers = await fetchMany<GuildStickerRow>(FETCH_GUILD_STICKERS_BY_GUILD_ID_QUERY, {
-			guild_id: guildId,
-		});
-		return stickers.length;
 	}
 
 	async upsertSticker(data: GuildStickerRow, oldData?: GuildStickerRow | null): Promise<GuildSticker> {

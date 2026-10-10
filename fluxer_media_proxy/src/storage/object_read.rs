@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{
-    BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, Object,
-    ObjectReadRequest, StorageError, Store, record_storage_outcome, unversioned_read_budget,
+    BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, Object, StorageError,
+    Store, record_storage_outcome, unversioned_read_budget,
 };
-use crate::{
-    byte_budget::ByteBudget,
-    config::StorageBackend,
-    constants,
-    storage::source_read::{SourceReadClaim, SourceReadWaitOutcome},
-};
-
-const SOURCE_READ_LEADER_RETRY_LIMIT: usize = 1;
+use crate::{byte_budget::ByteBudget, config::StorageBackend, constants};
 
 impl Store {
     pub async fn read_object(&self, bucket: &str, key: &str) -> Result<Object, StorageError> {
@@ -37,7 +30,6 @@ impl Store {
             key,
             limit,
             budget,
-            expected_identity: None,
             content_digest: ContentDigestRequest::Omit,
         })
         .await
@@ -55,23 +47,7 @@ impl Store {
             key,
             limit,
             budget,
-            expected_identity: None,
             content_digest: ContentDigestRequest::Include,
-        })
-        .await
-    }
-
-    pub async fn read_object_versioned(
-        &self,
-        request: ObjectReadRequest<'_>,
-    ) -> Result<BufferedStorageObject, StorageError> {
-        self.read_object_inner(BufferedObjectReadRequest {
-            bucket: request.bucket,
-            key: request.key,
-            limit: request.max_bytes,
-            budget: request.budget,
-            expected_identity: Some(request.expected_identity),
-            content_digest: ContentDigestRequest::Omit,
         })
         .await
     }
@@ -80,54 +56,9 @@ impl Store {
         &self,
         request: BufferedObjectReadRequest<'_>,
     ) -> Result<BufferedStorageObject, StorageError> {
-        let Some(expected_identity) = request.expected_identity else {
-            let result = self.read_object_direct(request).await;
-            record_storage_outcome(&self.metrics, &result);
-            return result;
-        };
-        let key = format!(
-            "{}\u{0}{}\u{0}{}\u{0}{}\u{0}{}",
-            request.bucket,
-            request.key,
-            expected_identity.cache_identity(),
-            request.limit,
-            request.content_digest.cache_key()
-        );
-        let mut leader_retries = 0;
-        loop {
-            let claim = match self.source_reads.claim(key.clone()) {
-                Ok(claim) => claim,
-                Err(error) => {
-                    let result = Err(error);
-                    record_storage_outcome::<BufferedStorageObject>(&self.metrics, &result);
-                    return result;
-                }
-            };
-            match claim {
-                SourceReadClaim::Leader(leader) => {
-                    let result = self.read_object_direct(request).await;
-                    leader.publish(&result);
-                    record_storage_outcome(&self.metrics, &result);
-                    return result;
-                }
-                SourceReadClaim::Waiter(waiter) => match waiter.wait().await {
-                    SourceReadWaitOutcome::Retry
-                        if leader_retries < SOURCE_READ_LEADER_RETRY_LIMIT =>
-                    {
-                        leader_retries += 1;
-                    }
-                    SourceReadWaitOutcome::Retry => {
-                        let result = Err(StorageError::SourceReadLeaderEnded);
-                        record_storage_outcome::<BufferedStorageObject>(&self.metrics, &result);
-                        return result;
-                    }
-                    SourceReadWaitOutcome::Completed(result) => {
-                        record_storage_outcome::<BufferedStorageObject>(&self.metrics, &result);
-                        return result;
-                    }
-                },
-            }
-        }
+        let result = self.read_object_direct(request).await;
+        record_storage_outcome(&self.metrics, &result);
+        result
     }
 
     async fn read_object_direct(

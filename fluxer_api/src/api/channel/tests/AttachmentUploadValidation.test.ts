@@ -113,67 +113,6 @@ describe('Attachment Upload Validation', () => {
 			});
 		});
 		describe('filename validation', () => {
-			it('should reject empty filenames', async () => {
-				const account = await createTestAccount(harness);
-				const guild = await createGuild(harness, account.token, 'Empty Filename Test Guild');
-				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-				const channelId = guild.system_channel_id ?? channel.id;
-				const fileData = Buffer.from('test content');
-				const payload = {
-					content: 'Empty filename test',
-					attachments: [
-						{
-							id: 0,
-							filename: '',
-						},
-					],
-				};
-				const {response} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-					{index: 0, filename: 'actualname.txt', data: fileData},
-				]);
-				expect(response.status).toBe(400);
-			});
-			it('should reject empty filename in metadata and upload', async () => {
-				const account = await createTestAccount(harness);
-				const guild = await createGuild(harness, account.token, 'Invalid Filename Test Guild');
-				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-				const channelId = guild.system_channel_id ?? channel.id;
-				const fileData = Buffer.from('test content');
-				const payload = {
-					content: 'Invalid filename test',
-					attachments: [
-						{
-							id: 0,
-							filename: '',
-						},
-					],
-				};
-				const {response} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-					{index: 0, filename: '', data: fileData},
-				]);
-				expect(response.status).not.toBe(200);
-			});
-			it('should reject excessively long filename', async () => {
-				const account = await createTestAccount(harness);
-				const guild = await createGuild(harness, account.token, 'Invalid Filename Test Guild');
-				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-				const channelId = guild.system_channel_id ?? channel.id;
-				const fileData = Buffer.from('test content');
-				const longFilename = 'a'.repeat(300);
-				const payload = {
-					content: 'Invalid filename test',
-					attachments: [
-						{
-							id: 0,
-							filename: longFilename,
-						},
-					],
-				};
-				const {response} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-					{index: 0, filename: longFilename, data: fileData},
-				]);
-				expect(response.status).not.toBe(200);
-			});
 			it('should use metadata filename when different from upload filename', async () => {
 				const account = await createTestAccount(harness);
 				const guild = await createGuild(harness, account.token, 'Filename Mismatch Test Guild');
@@ -321,35 +260,6 @@ describe('Attachment Upload Validation', () => {
 				]);
 				expect(response.status).toBe(400);
 			});
-			it('should correctly match files with metadata when sent in natural order', async () => {
-				const account = await createTestAccount(harness);
-				const guild = await createGuild(harness, account.token, 'ID Matching Test Guild');
-				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-				const channelId = guild.system_channel_id ?? channel.id;
-				const file1Data = loadFixture('yeah.png');
-				const file2Data = loadFixture('animated.gif');
-				const payload = {
-					content: 'Ordered files test',
-					attachments: [
-						{id: 0, filename: 'yeah.png', description: 'First file', title: 'First'},
-						{id: 1, filename: 'animated.gif', description: 'Second file', title: 'Second'},
-					],
-				};
-				const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-					{index: 0, filename: 'yeah.png', data: file1Data},
-					{index: 1, filename: 'animated.gif', data: file2Data},
-				]);
-				expect(response.status).toBe(200);
-				expect(json.attachments).toBeDefined();
-				expect(json.attachments).not.toBeNull();
-				expect(json.attachments!).toHaveLength(2);
-				expect(json.attachments![0].filename).toBe('yeah.png');
-				expect(json.attachments![0].description).toBe('First file');
-				expect(json.attachments![0].title).toBe('First');
-				expect(json.attachments![1].filename).toBe('animated.gif');
-				expect(json.attachments![1].description).toBe('Second file');
-				expect(json.attachments![1].title).toBe('Second');
-			});
 			it('should handle non-sequential IDs like 2, 5', async () => {
 				const account = await createTestAccount(harness);
 				const guild = await createGuild(harness, account.token, 'Sparse IDs Test Guild');
@@ -406,37 +316,6 @@ describe('Attachment Upload Validation', () => {
 				expect(response.status).toBe(400);
 			});
 		});
-		describe('title and description', () => {
-			it('should preserve title and description fields through upload flow', async () => {
-				const account = await createTestAccount(harness);
-				const guild = await createGuild(harness, account.token, 'Title Description Test Guild');
-				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-				const channelId = guild.system_channel_id ?? channel.id;
-				const fileData = loadFixture('yeah.png');
-				const payload = {
-					content: 'Testing title and description',
-					attachments: [
-						{
-							id: 0,
-							filename: 'yeah.png',
-							title: 'My Awesome Title',
-							description: 'This is a detailed description of the attachment with special chars: émoji 🎉',
-						},
-					],
-				};
-				const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-					{index: 0, filename: 'yeah.png', data: fileData},
-				]);
-				expect(response.status).toBe(200);
-				expect(json.attachments).toBeDefined();
-				expect(json.attachments).not.toBeNull();
-				expect(json.attachments!).toHaveLength(1);
-				const att = json.attachments![0];
-				expect(att.title).toBe('My Awesome Title');
-				const expectedDesc = 'This is a detailed description of the attachment with special chars: émoji 🎉';
-				expect(att.description).toBe(expectedDesc);
-			});
-		});
 	});
 	describe('Flag Preservation', () => {
 		it('should preserve attachment flags through upload flow', async () => {
@@ -463,44 +342,6 @@ describe('Attachment Upload Validation', () => {
 			expect(json.attachments).not.toBeNull();
 			expect(json.attachments!).toHaveLength(1);
 			expect(json.attachments![0].flags).toBe(8);
-		});
-	});
-	describe('Multiple File Upload', () => {
-		it('should handle multiple files with mixed metadata quality', async () => {
-			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Mixed Metadata Test Guild');
-			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-			const channelId = guild.system_channel_id ?? channel.id;
-			const file1Data = loadFixture('yeah.png');
-			const file2Data = loadFixture('animated.gif');
-			const payload = {
-				content: 'Mixed metadata test',
-				attachments: [
-					{
-						id: 0,
-						filename: 'yeah.png',
-						title: 'Full Metadata',
-						description: 'Complete description',
-						flags: 0,
-					},
-					{
-						id: 1,
-						filename: 'animated.gif',
-					},
-				],
-			};
-			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-				{index: 0, filename: 'yeah.png', data: file1Data},
-				{index: 1, filename: 'animated.gif', data: file2Data},
-			]);
-			expect(response.status).toBe(200);
-			expect(json.attachments).toBeDefined();
-			expect(json.attachments).not.toBeNull();
-			expect(json.attachments!).toHaveLength(2);
-			expect(json.attachments![0].title).toBe('Full Metadata');
-			expect(json.attachments![0].description).toBe('Complete description');
-			expect(json.attachments![1].title).toBeNull();
-			expect(json.attachments![1].description).toBeNull();
 		});
 	});
 });

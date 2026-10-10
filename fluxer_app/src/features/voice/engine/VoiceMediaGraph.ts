@@ -23,8 +23,6 @@ import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsPlatform,
 	type VoiceMediaGraphStatsTrackObservation,
-	type VoiceMediaGraphStatsTrackTarget,
-	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
 } from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {
@@ -65,7 +63,6 @@ export {
 export type {
 	VoiceMediaGraphStatsEntry,
 	VoiceMediaGraphStatsTrackObservation,
-	VoiceMediaGraphStatsTrackTarget,
 } from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 export type {
 	VoiceMediaGraphSubscriptionCommand,
@@ -1543,18 +1540,4 @@ export function selectVoiceMediaGraphSubscriptionCommands(
 	snapshot: VoiceMediaGraphSnapshot,
 ): ReadonlyArray<VoiceMediaGraphSubscriptionCommand> {
 	return snapshot.subscriptionCommands;
-}
-
-export function selectVoiceMediaGraphStatsEntry(
-	snapshot: VoiceMediaGraphSnapshot,
-	target: VoiceMediaGraphStatsTrackTarget,
-): VoiceMediaGraphStatsEntry | null {
-	let visited = 0;
-	for (const entry of snapshot.statsByTrackKey.values()) {
-		visited += 1;
-		assert.ok(visited <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'stats selector exceeded graph limit');
-		if (snapshot.statsConnectionId !== null && entry.connectionId !== snapshot.statsConnectionId) continue;
-		if (voiceMediaGraphStatsObservationMatchesTarget(entry.observation, target)) return entry;
-	}
-	return null;
 }

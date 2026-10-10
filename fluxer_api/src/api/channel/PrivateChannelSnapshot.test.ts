@@ -3,7 +3,6 @@
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {
 	channelRowFromPrivateChannelSnapshot,
-	isPrivateChannelType,
 	privateChannelFanOutTargets,
 	privateChannelHydrationPatch,
 	privateChannelLastMessageIdPatch,
@@ -58,15 +57,6 @@ function setValue<T>(op: unknown): T {
 	return typed.value;
 }
 
-describe('isPrivateChannelType', () => {
-	test('matches DM, GROUP_DM, and personal notes only', () => {
-		expect(isPrivateChannelType(ChannelTypes.DM)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.GROUP_DM)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.DM_PERSONAL_NOTES)).toBe(true);
-		expect(isPrivateChannelType(ChannelTypes.GUILD_TEXT)).toBe(false);
-	});
-});
-
 describe('privateChannelFanOutTargets', () => {
 	test('returns recipients for a GDM', () => {
 		expect(new Set(privateChannelFanOutTargets(gdmRow()))).toEqual(new Set([OWNER, MEMBER_A, MEMBER_B]));
@@ -97,11 +87,6 @@ describe('privateChannelMetadataPatch', () => {
 		const patch = privateChannelMetadataPatch(gdmRow({recipient_ids: new Set(), nicks: new Map()}));
 		expect(setValue<Set<unknown> | null>(patch.channel_recipient_ids)).toBeNull();
 		expect(setValue<Map<unknown, unknown> | null>(patch.channel_nicks)).toBeNull();
-	});
-
-	test('missing version normalizes to zero', () => {
-		const patch = privateChannelMetadataPatch(gdmRow({version: undefined as unknown as number}));
-		expect(setValue<number>(patch.channel_version)).toBe(0);
 	});
 });
 

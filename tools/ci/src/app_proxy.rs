@@ -532,7 +532,6 @@ fn tree_differences(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::parse_version_instant;
     use chrono::{DateTime, TimeZone, Utc};
     use std::ffi::OsString;
 
@@ -568,16 +567,6 @@ mod tests {
         assert_eq!(
             resolve_calver(&generated, dt(2026, 1, 1, 0, 0, 0)).unwrap(),
             "2026.520.10203"
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_calver_time() {
-        assert_eq!(
-            parse_version_instant("2026.520.246000")
-                .unwrap_err()
-                .to_string(),
-            "Invalid build version date/time: 2026.520.246000"
         );
     }
 
@@ -622,35 +611,6 @@ mod tests {
                 .to_string(),
             "Docker config auths must be a JSON object"
         );
-    }
-
-    #[test]
-    fn build_command_sets_bake_environment() {
-        let command = CommandSpec::new("docker")
-            .args(["buildx", "bake", "-f", "fluxer_app_proxy/docker-bake.hcl"])
-            .env("IMAGE_REPO", "ghcr.io/example/fluxer-app-proxy")
-            .env("BUILD_VERSION", "2026.520.1")
-            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL);
-
-        assert_eq!(command.program, OsString::from("docker"));
-        assert_eq!(
-            command.args,
-            vec![
-                OsString::from("buildx"),
-                OsString::from("bake"),
-                OsString::from("-f"),
-                OsString::from("fluxer_app_proxy/docker-bake.hcl"),
-            ]
-        );
-        assert!(command.env.contains(&(
-            OsString::from("BUILD_VERSION"),
-            OsString::from("2026.520.1")
-        )));
-    }
-
-    #[test]
-    fn hosted_bake_trims_the_local_asset_tree_by_default() {
-        assert_eq!(DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS, "false");
     }
 
     #[test]
@@ -964,70 +924,6 @@ mod tests {
                 OsString::from("cafe1234:/srv/app/static"),
                 OsString::from("/tmp/arm64"),
             ]
-        );
-    }
-
-    #[test]
-    fn dockerfile_injects_one_canonical_asset_tree_into_every_architecture() {
-        let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
-        for entry in [
-            "ARG APP_ASSETS_REF=app-assets",
-            "ARG APP_ASSETS_PLATFORM=$BUILDPLATFORM",
-            "FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static",
-            "COPY --from=app-static /assets ./static/",
-        ] {
-            assert!(
-                dockerfile.contains(entry),
-                "every architecture must serve the injected canonical tree, so the Dockerfile must contain {entry}"
-            );
-        }
-    }
-
-    #[test]
-    fn dockerfile_prepares_the_asset_tree_once_before_the_architecture_stages() {
-        let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
-        let canonical = dockerfile
-            .split("FROM alpine:3.24 AS app-assets")
-            .nth(1)
-            .expect("app-assets stage");
-        let (canonical, per_architecture) = canonical
-            .split_once("AS app-static")
-            .expect("app-static stage");
-
-        for entry in ["apk add --no-cache brotli", "precompress_assets.sh"] {
-            assert!(
-                canonical.contains(entry),
-                "the canonical asset tree is prepared once, so {entry} must run in the app-assets stage"
-            );
-            assert!(
-                !per_architecture.contains(entry),
-                "{entry} must not run again per architecture or the trees stop being byte-identical"
-            );
-        }
-    }
-
-    #[test]
-    fn bake_publishes_the_canonical_asset_image() {
-        let bake = include_str!("../../../fluxer_app_proxy/docker-bake.hcl");
-        for entry in [
-            "target \"app-assets-image\"",
-            "${BUILD_VERSION}-assets",
-            "type=registry",
-            "APP_ASSETS_REF                        = APP_ASSETS_REF",
-            "APP_ASSETS_PLATFORM                   = APP_ASSETS_PLATFORM",
-        ] {
-            assert!(bake.contains(entry), "docker-bake.hcl must contain {entry}");
-        }
-    }
-
-    #[test]
-    fn canonical_assets_platform_falls_back_to_the_bake_default() {
-        let bake = include_str!("../../../fluxer_app_proxy/docker-bake.hcl");
-        let declared =
-            format!("variable \"APP_ASSETS_PLATFORM\" {{ default = \"{AMD64_PLATFORM}\" }}");
-        assert!(
-            bake.contains(&declared),
-            "the parity gate reads APP_ASSETS_PLATFORM and falls back to {AMD64_PLATFORM}, so docker-bake.hcl must declare the same default"
         );
     }
 

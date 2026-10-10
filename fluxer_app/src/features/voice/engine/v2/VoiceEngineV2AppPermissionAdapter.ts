@@ -300,18 +300,6 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		syncLocalVoiceStateWithServer(canSpeak ? {} : {self_mute: true});
 	}
 
-	setPermissions(permissions: Partial<VoiceChannelPermissions>): void {
-		const hasChanges = Object.entries(permissions).some(
-			([key, value]) => this.snapshot.context.permissions[key as keyof VoiceChannelPermissions] !== value,
-		);
-		if (!hasChanges) {
-			logger.debug('No changes detected, skipping update');
-			return;
-		}
-		this.sendPermissionEvent({type: 'permission.set', permissions});
-		logger.debug('Updated', {permissions: this.snapshot.context.permissions});
-	}
-
 	reset(): void {
 		this.sendPermissionEvent({type: 'permission.reset'});
 		this.update(() => {

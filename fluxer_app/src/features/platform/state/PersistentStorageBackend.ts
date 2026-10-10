@@ -110,16 +110,6 @@ function nextStamp(): AppStorageStamp {
 	return {wall: stampWall, seq: stampSequence};
 }
 
-export function compareAppStorageStamps(left: AppStorageStamp, right: AppStorageStamp): number {
-	if (left.wall !== right.wall) {
-		return left.wall < right.wall ? -1 : 1;
-	}
-	if (left.seq !== right.seq) {
-		return left.seq < right.seq ? -1 : 1;
-	}
-	return 0;
-}
-
 interface AppStorageRecord {
 	readonly id: string;
 	readonly scope: string;

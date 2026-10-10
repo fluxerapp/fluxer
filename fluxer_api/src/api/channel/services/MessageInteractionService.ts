@@ -21,7 +21,6 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import type {MessageReaction} from '@app/api/models/MessageReaction';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {
 	assertMayStartConversation,
@@ -320,21 +319,6 @@ export class MessageInteractionService {
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
 		await this.reactionService.removeAllReactions({authChannel, messageId});
-	}
-
-	async getMessageReactions({
-		userId,
-		viewer,
-		channelId,
-		messageId,
-	}: {
-		userId: UserID;
-		viewer: ThreadViewer;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<Array<MessageReaction>> {
-		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
-		return this.reactionService.getMessageReactions({authChannel, messageId});
 	}
 
 	async dispatchMessageUpdate({

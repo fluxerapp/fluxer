@@ -660,48 +660,6 @@ memo_prune_subscriptions() ->
 
 %% prune_member_subscription_map/3 as it read before the memo: every subscribed member
 %% materialises its own viewable channel map and every subscriber set is rebuilt.
-reference_prune_member_subscription_map(MemberSubs, Sessions, State) ->
-    maps:fold(
-        fun(MemberId, Subscribers, Acc) ->
-            reference_prune_member(MemberId, Subscribers, Sessions, State, Acc)
-        end,
-        {MemberSubs, #{}},
-        MemberSubs
-    ).
-
-reference_prune_member(MemberId, Subscribers, Sessions, State, Acc) when is_integer(MemberId) ->
-    MemberViewable = member_viewable_channel_map(MemberId, State),
-    {Kept, RemovedCount} = reference_prune_subscriber_set(
-        Subscribers, Sessions, MemberViewable, State
-    ),
-    update_pruned_member_subscription(MemberId, Kept, RemovedCount, Acc);
-reference_prune_member(_MemberId, _Subscribers, _Sessions, _State, Acc) ->
-    Acc.
-
-reference_prune_subscriber_set(Subscribers, Sessions, MemberViewable, State) ->
-    sets:fold(
-        fun(SessionId, Acc) ->
-            reference_prune_subscriber(SessionId, Sessions, MemberViewable, State, Acc)
-        end,
-        {sets:new(), 0},
-        Subscribers
-    ).
-
-reference_prune_subscriber(SessionId, Sessions, MemberViewable, State, {Kept, RemovedCount}) ->
-    case subscriber_can_still_view_member(SessionId, Sessions, MemberViewable, State) of
-        true -> {sets:add_element(SessionId, Kept), RemovedCount};
-        false -> {Kept, RemovedCount + 1}
-    end.
-
-prune_member_subscription_map_matches_unmemoised_reference_test() ->
-    State = memo_prune_state(),
-    MemberSubs = member_subscriptions(State),
-    Sessions = maps:get(sessions, State),
-    ?assertEqual(
-        reference_prune_member_subscription_map(MemberSubs, Sessions, State),
-        prune_member_subscription_map(MemberSubs, Sessions, State)
-    ).
-
 prune_keeps_exception_members_a_session_can_still_see_test() ->
     Result = maybe_prune_invalid_member_subscriptions(guild_role_update, memo_prune_state()),
     MemberSubs = maps:get(member_subscriptions, Result),

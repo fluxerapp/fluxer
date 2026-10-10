@@ -182,6 +182,6 @@ WHERE table_name = 'banned_file_shas' AND row_data->>'sha256_hex' = $1`,
 		await syncFileShaBlocklists({}, createHelpers());
 
 		staleRead.mockRestore();
-		expect(await adminRepository.isFileShaBanned(FEED_SHA)).toBe(true);
+		expect((await adminRepository.loadAllBannedFileShas()).map((row) => row.sha256_hex)).toContain(FEED_SHA);
 	});
 });

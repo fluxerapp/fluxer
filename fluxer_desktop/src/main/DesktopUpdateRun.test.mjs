@@ -203,59 +203,6 @@ describe('DesktopUpdateRun', () => {
 	});
 });
 
-describe('DesktopUpdateRun telling the user when a click did not update', () => {
-	const SHELL_AND_MODULES = {shellLatestVersion: '2026.1008.2', shellNewer: true, modulesChanged: true};
-
-	test('an update that installs reports nothing', async () => {
-		const {run, failures} = harness();
-
-		await run.start();
-
-		assert.deepEqual(failures, []);
-	});
-
-	test('a check that fails gives the windows back and says so', async () => {
-		const {run, steps, failures} = harness({probes: [new Error('offline')]});
-
-		await run.start();
-
-		assert.deepEqual(steps, ['probe', 'takeover', 'restore']);
-		assert.deepEqual(failures, [{reason: 'check-failed', detail: 'offline'}]);
-	});
-
-	test('a shell update that does not finish is reported once the app is back', async () => {
-		const {run, steps, failures} = harness({
-			probes: [SHELL_AND_MODULES],
-			shellResults: [{reason: 'timed-out', detail: 'the update did not finish'}],
-		});
-
-		await run.start();
-
-		assert.equal(steps.at(-1), 'reopen-updated');
-		assert.deepEqual(failures, [{reason: 'timed-out', detail: 'the update did not finish'}]);
-	});
-
-	test('a feed that has no newer shell after all is not a failure', async () => {
-		const {run, failures} = harness({
-			probes: [SHELL_AND_MODULES],
-			shellResults: [{reason: 'no-update', detail: null}],
-		});
-
-		await run.start();
-
-		assert.deepEqual(failures, []);
-	});
-
-	test('a module install that throws is reported with its cause', async () => {
-		const {run, steps, failures} = harness({installFails: true});
-
-		await run.start();
-
-		assert.equal(steps.at(-1), 'reopen');
-		assert.deepEqual(failures, [{reason: 'download-failed', detail: 'disk full'}]);
-	});
-});
-
 describe('DesktopUpdateRun installing a renderer only update in place', () => {
 	const MODULES_ONLY = {shellLatestVersion: '2026.1008.2', shellNewer: false, modulesChanged: true};
 	const SHELL_TOO = {shellLatestVersion: '2026.1008.3', shellNewer: true, modulesChanged: true};

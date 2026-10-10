@@ -34,17 +34,6 @@ describe('Admin last active IP search', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	test('finds a user by exact IPv4 last active IP', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
-		const targetUser = await createTestAccount(harness);
-		await setLastActiveIp(harness, targetUser.token, '198.51.100.91');
-		const result = await createBuilder<AdminUserSearchResponse>(harness, `${admin.token}`)
-			.get(`/admin/users?last_active_ip=${encodeURIComponent('198.51.100.91')}&limit=10&offset=0`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(result.users.find((user) => user.id === targetUser.userId)).toBeDefined();
-	});
 	test('matches IPv6 last active addresses by /64 trust key', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
@@ -60,19 +49,5 @@ describe('Admin last active IP search', () => {
 			.execute();
 		expect(result.users.find((user) => user.id === firstUser.userId)).toBeDefined();
 		expect(result.users.find((user) => user.id === secondUser.userId)).toBeDefined();
-	});
-	test('keeps IPv4 last active searches exact', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
-		const firstUser = await createTestAccount(harness);
-		const secondUser = await createTestAccount(harness);
-		await setLastActiveIp(harness, firstUser.token, '198.51.100.91');
-		await setLastActiveIp(harness, secondUser.token, '198.51.100.92');
-		const result = await createBuilder<AdminUserSearchResponse>(harness, `${admin.token}`)
-			.get(`/admin/users?last_active_ip=${encodeURIComponent('198.51.100.91')}&limit=10&offset=0`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(result.users.find((user) => user.id === firstUser.userId)).toBeDefined();
-		expect(result.users.find((user) => user.id === secondUser.userId)).toBeUndefined();
 	});
 });

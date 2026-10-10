@@ -49,24 +49,4 @@ export class BillingPaymentRepository {
 		}
 		return {changed: true, row: mapped.primary};
 	}
-
-	async upsertFromStripe(
-		p: BillingPaymentRow,
-		hints?: {
-			byInvoice?: BillingPaymentByInvoiceRow;
-		},
-	): Promise<{
-		changed: boolean;
-		row: BillingPaymentRow;
-	}> {
-		const existing = await this.findById(p.provider_id);
-		if (isExistingNewer(existing, p)) {
-			return {changed: false, row: existing!};
-		}
-		await upsertOne(BillingPayments.upsertAll(p));
-		if (hints?.byInvoice?.invoice_id) {
-			await upsertOne(BillingPaymentsByInvoice.upsertAll(hints.byInvoice));
-		}
-		return {changed: true, row: p};
-	}
 }

@@ -2,13 +2,10 @@
 
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
-use fluxer_dev::cassandra::{
-    apply_schema, compute_diff, render_target_schema, verify_schema, write_diff_file,
-};
+use fluxer_dev::cassandra::{apply_schema, compute_diff, verify_schema, write_diff_file};
 use fluxer_dev::desktop::{
     DEFAULT_INSTALL_DIR, DesktopAppOptions, RendererDelivery, build_desktop, desktop_app,
     install_desktop_app, install_desktop_dependencies, package_desktop, run_desktop,
-    typecheck_desktop,
 };
 use fluxer_dev::env::merge_default_env_with_current;
 use fluxer_dev::manifest::{DEV_PROXY_PORT, LOCAL_APP_URL};
@@ -114,7 +111,6 @@ enum CassandraCommand {
     },
     Apply,
     Verify,
-    TargetSchema,
 }
 
 #[derive(Debug, Args)]
@@ -132,7 +128,6 @@ enum DesktopCommand {
         #[arg(long)]
         skip_native: bool,
     },
-    Typecheck,
     Pkgs,
     Package {
         #[arg(long)]
@@ -194,8 +189,6 @@ enum MediaProxyCommand {
         #[arg(long)]
         path: Option<String>,
     },
-    RustStressSmoke,
-    SignExternalUrl(fluxer_dev::media_external::SignExternalUrlArgs),
 }
 
 #[derive(Debug, Args)]
@@ -279,7 +272,6 @@ async fn main() -> Result<()> {
                 apply_schema(None).await?;
             }
             CassandraCommand::Verify => verify_schema(None, None).await?,
-            CassandraCommand::TargetSchema => print!("{}", render_target_schema("fluxer")),
         },
         Command::Desktop(args) => match args.command {
             DesktopCommand::Deps => install_desktop_dependencies()?,
@@ -292,7 +284,6 @@ async fn main() -> Result<()> {
                 RendererDelivery::Offline,
             )?),
             DesktopCommand::Pkgs => fluxer_dev::desktop_modules::ensure_pkgs_server()?,
-            DesktopCommand::Typecheck => typecheck_desktop()?,
             DesktopCommand::Package {
                 rebuild_renderer,
                 ad_hoc,
@@ -340,19 +331,6 @@ async fn main() -> Result<()> {
             } => {
                 fluxer_dev::media_proxy::run_dev_media_doctor(repair, &base_url, path.as_deref())
                     .await?;
-            }
-            MediaProxyCommand::RustStressSmoke => {
-                fluxer_dev::media_proxy::run_rust_stress_smoke()?;
-            }
-            MediaProxyCommand::SignExternalUrl(args) => {
-                println!(
-                    "{}",
-                    fluxer_dev::media_external::sign_external_url(
-                        &args.secret_key,
-                        &args.server_url,
-                        &args.upstream
-                    )?
-                );
             }
         },
         Command::Tunnel(args) => match args.command {

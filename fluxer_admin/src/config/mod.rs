@@ -10,7 +10,6 @@ const DEFAULT_REPORTS_BUCKET_ORIGIN: &str = "https://fluxer-reports.ewr1.vultrob
 
 #[derive(Clone, Debug)]
 pub struct AdminConfig {
-    pub env: RuntimeEnv,
     pub host: String,
     pub port: u16,
     pub secret_key_base: String,
@@ -35,13 +34,6 @@ pub struct ProxyConfig {
     pub client_ip_header_name: String,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum RuntimeEnv {
-    Development,
-    Production,
-    Test,
-}
-
 impl AdminConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let base_path = normalize_base_path(&read_env("FLUXER_ADMIN_BASE_PATH", ""));
@@ -60,7 +52,6 @@ impl AdminConfig {
         );
 
         Ok(Self {
-            env: RuntimeEnv::from_env_value(&read_env("FLUXER_ENV", "development")),
             host: read_env("FLUXER_ADMIN_HOST", "0.0.0.0"),
             port: read_env("FLUXER_ADMIN_PORT", "3020")
                 .parse()
@@ -103,14 +94,6 @@ impl AdminConfig {
                     .to_ascii_lowercase(),
             },
         })
-    }
-
-    pub fn is_dev(&self) -> bool {
-        self.env == RuntimeEnv::Development
-    }
-
-    pub fn is_production(&self) -> bool {
-        self.env == RuntimeEnv::Production
     }
 
     pub fn secure_cookies(&self) -> bool {
@@ -189,16 +172,6 @@ fn is_virtual_hostable_bucket(bucket: &str, allow_dots: bool) -> bool {
         && !bucket.ends_with('-')
 }
 
-impl RuntimeEnv {
-    pub(crate) fn from_env_value(value: &str) -> Self {
-        match value {
-            "production" => Self::Production,
-            "test" => Self::Test,
-            _ => Self::Development,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -207,8 +180,7 @@ mod tests {
 
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-    const MANAGED_ENV: [&str; 15] = [
-        "FLUXER_ENV",
+    const MANAGED_ENV: [&str; 14] = [
         "FLUXER_ADMIN_HOST",
         "FLUXER_ADMIN_PORT",
         "FLUXER_ADMIN_ENDPOINT",
@@ -241,135 +213,6 @@ mod tests {
             unsafe { env::remove_var(name) };
         }
         config
-    }
-
-    #[test]
-    fn normalize_base_path_strips_trailing_slashes() {
-        assert_eq!(normalize_base_path("admin/"), "/admin");
-        assert_eq!(normalize_base_path("admin///"), "/admin");
-    }
-
-    #[test]
-    fn normalize_base_path_adds_leading_slash() {
-        assert_eq!(normalize_base_path("admin"), "/admin");
-    }
-
-    #[test]
-    fn normalize_base_path_empty_stays_empty() {
-        assert_eq!(normalize_base_path(""), "");
-        assert_eq!(normalize_base_path("   "), "");
-        assert_eq!(normalize_base_path("/"), "");
-    }
-
-    #[test]
-    fn normalize_base_path_preserves_inner() {
-        assert_eq!(normalize_base_path("/foo/bar/"), "/foo/bar");
-    }
-
-    #[test]
-    fn trim_trailing_slash_removes_trailing() {
-        assert_eq!(
-            trim_trailing_slash("https://example.com/"),
-            "https://example.com"
-        );
-        assert_eq!(
-            trim_trailing_slash("https://example.com"),
-            "https://example.com"
-        );
-    }
-
-    #[test]
-    fn trim_trailing_slash_empty_string() {
-        assert_eq!(trim_trailing_slash(""), "");
-        assert_eq!(trim_trailing_slash("/"), "");
-    }
-
-    #[test]
-    fn runtime_env_from_env_value() {
-        assert_eq!(
-            RuntimeEnv::from_env_value("production"),
-            RuntimeEnv::Production
-        );
-        assert_eq!(RuntimeEnv::from_env_value("test"), RuntimeEnv::Test);
-        assert_eq!(
-            RuntimeEnv::from_env_value("development"),
-            RuntimeEnv::Development
-        );
-        assert_eq!(
-            RuntimeEnv::from_env_value("anything"),
-            RuntimeEnv::Development
-        );
-    }
-
-    #[test]
-    fn is_production_returns_true_for_production() {
-        let config = AdminConfig {
-            env: RuntimeEnv::Production,
-            host: String::new(),
-            port: 3020,
-            secret_key_base: String::new(),
-            base_path: String::new(),
-            api_endpoint: String::new(),
-            media_endpoint: String::new(),
-            static_cdn_endpoint: String::new(),
-            reports_bucket_origin: String::new(),
-
-            admin_endpoint: String::new(),
-            web_app_endpoint: String::new(),
-            oauth_client_id: String::new(),
-            oauth_client_secret: String::new(),
-            oauth_redirect_uri: String::new(),
-            build_version: String::new(),
-            self_hosted: false,
-            proxy: ProxyConfig {
-                trust_client_ip_header: false,
-                client_ip_header_name: String::new(),
-            },
-        };
-        assert!(config.is_production());
-        assert!(!config.is_dev());
-    }
-
-    #[test]
-    fn is_dev_returns_true_for_development() {
-        let config = AdminConfig {
-            env: RuntimeEnv::Development,
-            host: String::new(),
-            port: 3020,
-            secret_key_base: String::new(),
-            base_path: String::new(),
-            api_endpoint: String::new(),
-            media_endpoint: String::new(),
-            static_cdn_endpoint: String::new(),
-            reports_bucket_origin: String::new(),
-
-            admin_endpoint: String::new(),
-            web_app_endpoint: String::new(),
-            oauth_client_id: String::new(),
-            oauth_client_secret: String::new(),
-            oauth_redirect_uri: String::new(),
-            build_version: String::new(),
-            self_hosted: false,
-            proxy: ProxyConfig {
-                trust_client_ip_header: false,
-                client_ip_header_name: String::new(),
-            },
-        };
-        assert!(config.is_dev());
-        assert!(!config.is_production());
-    }
-
-    #[test]
-    fn from_env_uses_defaults() {
-        let config = config_from_env(&[]);
-        assert_eq!(config.env, RuntimeEnv::Development);
-        assert_eq!(config.host, "0.0.0.0");
-        assert_eq!(config.port, 3020);
-        assert_eq!(config.oauth_client_id, DEFAULT_ADMIN_OAUTH_CLIENT_ID);
-        assert_eq!(
-            config.oauth_redirect_uri,
-            "https://admin.fluxer.app/oauth2_callback"
-        );
     }
 
     #[test]

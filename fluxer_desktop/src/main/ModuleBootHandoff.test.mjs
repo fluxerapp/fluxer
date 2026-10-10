@@ -7,11 +7,8 @@ import {installElectronStub} from './LocalAppTestSupport.test.mjs';
 const {
 	armOpenUrlForwarding,
 	armSecondInstanceForwarding,
-	getCommittedModuleFiles,
-	observeMainWindow,
 	onMainWindowCreated,
 	onMainWindowReady,
-	setCommittedModuleFiles,
 	setOpenUrlSink,
 	setSecondInstanceSink,
 	signalMainWindowCreated,
@@ -19,19 +16,6 @@ const {
 } = await import('@electron/main/ModuleBootHandoff');
 
 describe('ModuleBootHandoff', () => {
-	test('the committed module file index starts empty', () => {
-		assert.equal(getCommittedModuleFiles().size, 0);
-	});
-
-	test('the committed module file index is copied, not aliased', () => {
-		const source = new Map([['assets/app.js', '/store/fluxer_renderer/abc/assets/app.js']]);
-		setCommittedModuleFiles('/store', source);
-		source.set('assets/late.js', '/store/fluxer_renderer/abc/assets/late.js');
-		const published = getCommittedModuleFiles();
-		assert.equal(published.size, 1);
-		assert.equal(published.get('assets/app.js'), '/store/fluxer_renderer/abc/assets/app.js');
-	});
-
 	test('a listener registered before the signal receives the window', () => {
 		const received = [];
 		onMainWindowCreated((window) => {
@@ -94,40 +78,6 @@ describe('ModuleBootHandoff', () => {
 			ready += 1;
 		});
 		assert.equal(ready, 1);
-	});
-
-	test('an observer sees the live window on every signal, not only the one the handoff latched', () => {
-		const received = [];
-		const stop = observeMainWindow((window) => {
-			received.push(window);
-		});
-		assert.deepEqual(
-			received.map((window) => window.id),
-			[2],
-			'the observer starts from the window that is live right now, not from the latched boot window',
-		);
-		const reopened = {id: 3, isDestroyed: () => false};
-		signalMainWindowCreated(reopened);
-		assert.deepEqual(
-			received.map((window) => window.id),
-			[2, 3],
-			'closing and reopening the main window must hand the module poll the new window, or the poll never ticks again',
-		);
-		const latched = [];
-		onMainWindowCreated((window) => {
-			latched.push(window);
-		});
-		assert.deepEqual(
-			latched.map((window) => window.id),
-			[1],
-			'the one shot boot handoff keeps its latch',
-		);
-		stop();
-		signalMainWindowCreated({id: 4, isDestroyed: () => false});
-		assert.deepEqual(
-			received.map((window) => window.id),
-			[2, 3],
-		);
 	});
 });
 

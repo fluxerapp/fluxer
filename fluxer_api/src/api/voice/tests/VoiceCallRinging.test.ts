@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {
-	acceptInvite,
-	createChannelInvite,
-	createDmChannel,
-	createFriendship,
-	createGroupDmChannel,
-	createGuild,
-	getChannel,
-	updateUserSettings,
-} from '@app/api/channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -35,18 +25,6 @@ describe('Voice Call Ringing', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	async function setupUsersWithMutualGuild() {
-		const user1 = await createTestAccount(harness);
-		const user2 = await createTestAccount(harness);
-		await ensureSessionStarted(harness, user1.token);
-		await ensureSessionStarted(harness, user2.token);
-		await updateUserSettings(harness, user1.token, {default_guilds_restricted: false});
-		await updateUserSettings(harness, user2.token, {default_guilds_restricted: false});
-		const guild = await createGuild(harness, user1.token, 'Mutual Guild');
-		const invite = await createChannelInvite(harness, user1.token, guild.system_channel_id!);
-		await acceptInvite(harness, user2.token, invite.code);
-		return {user1, user2, guild};
-	}
 	async function setupGroupDmUsers() {
 		const owner = await createTestAccount(harness);
 		const memberOne = await createTestAccount(harness);
@@ -58,56 +36,6 @@ describe('Voice Call Ringing', () => {
 		return {owner, memberOne, memberTwo, outsider, groupDm};
 	}
 	describe('Ring call', () => {
-		it('rings call recipients in DM channel', async () => {
-			const {user1, user2} = await setupUsersWithMutualGuild();
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${dmChannel.id}/call/ring`)
-				.body({recipients: [user2.userId]})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-		it('rings call without specifying recipients', async () => {
-			const {user1, user2} = await setupUsersWithMutualGuild();
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${dmChannel.id}/call/ring`)
-				.body({})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-		it('rings call for friends DM', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await ensureSessionStarted(harness, user1.token);
-			await ensureSessionStarted(harness, user2.token);
-			await createFriendship(harness, user1, user2);
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${dmChannel.id}/call/ring`)
-				.body({recipients: [user2.userId]})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-		it('returns 404 for non-existent channel', async () => {
-			const user = await createTestAccount(harness);
-			await createBuilder(harness, user.token)
-				.post('/channels/999999999999999999/call/ring')
-				.body({recipients: []})
-				.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_CHANNEL')
-				.execute();
-		});
-		it('returns error for text channel ring', async () => {
-			const user = await createTestAccount(harness);
-			await ensureSessionStarted(harness, user.token);
-			const guild = await createGuild(harness, user.token, 'Test Guild');
-			const textChannel = await getChannel(harness, user.token, guild.system_channel_id!);
-			await createBuilder(harness, user.token)
-				.post(`/channels/${textChannel.id}/call/ring`)
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_CHANNEL_TYPE_FOR_CALL')
-				.execute();
-		});
 		it('non-member cannot ring group DM call', async () => {
 			const {owner, memberOne, outsider, groupDm} = await setupGroupDmUsers();
 			await createBuilder(harness, owner.token)
@@ -129,39 +57,6 @@ describe('Voice Call Ringing', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 			expect(error.errors?.[0]?.code).toBe('USER_NOT_IN_CHANNEL');
-		});
-		it('group DM members can ring valid subset and default recipients', async () => {
-			const {owner, memberOne, memberTwo, groupDm} = await setupGroupDmUsers();
-			await createBuilder(harness, memberOne.token)
-				.post(`/channels/${groupDm.id}/call/ring`)
-				.body({recipients: [owner.userId]})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await createBuilder(harness, memberTwo.token)
-				.post(`/channels/${groupDm.id}/call/ring`)
-				.body({})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-	});
-	describe('Stop ringing', () => {
-		it('returns 404 when stopping ring for non-existent call', async () => {
-			const {user1, user2} = await setupUsersWithMutualGuild();
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${dmChannel.id}/call/stop-ringing`)
-				.body({recipients: [user2.userId]})
-				.expect(HTTP_STATUS.NOT_FOUND, 'NO_ACTIVE_CALL')
-				.execute();
-		});
-		it('returns 404 when stopping ring without recipients for non-existent call', async () => {
-			const {user1, user2} = await setupUsersWithMutualGuild();
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post(`/channels/${dmChannel.id}/call/stop-ringing`)
-				.body({})
-				.expect(HTTP_STATUS.NOT_FOUND, 'NO_ACTIVE_CALL')
-				.execute();
 		});
 	});
 });

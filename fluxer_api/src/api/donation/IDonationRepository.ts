@@ -10,8 +10,6 @@ export abstract class IDonationRepository {
 
 	abstract findDonorByStripeSubscriptionId(subscriptionId: string): Promise<Donor | null>;
 
-	abstract upsertDonor(donor: Donor): Promise<void>;
-
 	abstract createDonor(data: {
 		email: string;
 		stripeCustomerId: string | null;

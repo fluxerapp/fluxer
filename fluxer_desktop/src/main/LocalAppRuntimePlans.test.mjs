@@ -25,7 +25,6 @@ function plan(overrides = {}) {
 		instanceKey: OFFICIAL_KEY,
 		document: {},
 		selfHosted: false,
-		desktopModulesEnabled: null,
 		endpoints: {
 			apiEndpoint: 'https://api.fluxer.app',
 			apiPublicEndpoint: 'https://api.fluxer.app',

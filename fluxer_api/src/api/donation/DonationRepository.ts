@@ -66,29 +66,6 @@ export class DonationRepository extends IDonationRepository {
 		return this.findDonorByEmail(mapping.email);
 	}
 
-	async upsertDonor(donor: Donor): Promise<void> {
-		const row = donor.toRow();
-		const batch = new BatchBuilder();
-		batch.addPrepared(Donors.upsertAll(row));
-		if (row.stripe_customer_id) {
-			batch.addPrepared(
-				DonorsByStripeCustomerId.upsertAll({
-					stripe_customer_id: row.stripe_customer_id,
-					email: row.email,
-				}),
-			);
-		}
-		if (row.stripe_subscription_id) {
-			batch.addPrepared(
-				DonorsByStripeSubscriptionId.upsertAll({
-					stripe_subscription_id: row.stripe_subscription_id,
-					email: row.email,
-				}),
-			);
-		}
-		await batch.execute();
-	}
-
 	async createDonor(data: {
 		email: string;
 		stripeCustomerId: string | null;

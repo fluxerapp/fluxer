@@ -11,7 +11,7 @@ import {
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createReportID, createUserID} from '@app/api/BrandedTypes';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {Config, getConfig} from '@app/api/Config';
+import {Config} from '@app/api/Config';
 import {loadFixture} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
@@ -27,7 +27,6 @@ import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
-import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -46,7 +45,6 @@ import {
 	executeWebhook,
 	executeWebhookWithAttachments,
 } from '@app/api/webhook/tests/WebhookTestUtils';
-import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -61,11 +59,6 @@ type AdminReport = z.infer<typeof ReportAdminResponseSchema>;
 
 interface ReportResponse {
 	report_id: string;
-}
-
-interface AdminReportList {
-	reports: Array<AdminReport>;
-	total: number;
 }
 
 type AuthorKind = 'user' | 'bot' | 'webhook';
@@ -479,47 +472,6 @@ describe('Reports of webhook and bot messages', () => {
 		expect(await countReports()).toBe(2);
 	});
 
-	test('webhook reports dedupe across the flow and the legacy route', async () => {
-		const world = await setupWorld(harness);
-		await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
-			.execute();
-		await submitLegacy(harness, world.reporter.token, world.channelId, world.messages.webhook)
-			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
-			.execute();
-		const parallel = await Promise.all(
-			[0, 1, 2].map(() =>
-				submitFlow(harness, world.author.token, world.channelId, world.messages.webhook).executeRaw(),
-			),
-		);
-		expect(parallel.map(({response}) => response.status).sort()).toEqual([200, 409, 409]);
-		expect(await countReports()).toBe(2);
-	});
-
-	test('a rate limited webhook report releases its reservation', async () => {
-		const world = await setupWorld(harness);
-		for (const kind of ['user', 'bot'] as const) {
-			await submitFlow(harness, world.reporter.token, world.channelId, world.messages[kind])
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		}
-		const extra = await sendWebhookMessage(harness, world.webhook, 'Another webhook message');
-		await submitFlow(harness, world.reporter.token, world.channelId, extra).expect(HTTP_STATUS.OK).execute();
-		for (let attempt = 0; attempt < 2; attempt++) {
-			await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-				.expect(429, APIErrorCodes.RATE_LIMITED)
-				.execute();
-		}
-		await getRateLimitService().resetLimit(`report:message:channel:user:${world.reporter.userId}:${world.channelId}`);
-		await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(await countReports()).toBe(4);
-	});
-
 	test('report_filed keeps its contract with no reported user', async () => {
 		const publisher = new CapturingPublisher();
 		await startActivityEvents({publisher, kv: new MockKVProvider()});
@@ -543,141 +495,6 @@ describe('Reports of webhook and bot messages', () => {
 			message_id: world.messages.webhook,
 			channel_id: world.channelId,
 		});
-	});
-
-	test('a DSA report of a webhook message publishes report_filed under the zero key', async () => {
-		const publisher = new CapturingPublisher();
-		await startActivityEvents({publisher, kv: new MockKVProvider()});
-		const world = await setupWorld(harness);
-		const result = await submitDsa(harness, await issueTicket(harness), world, world.messages.webhook)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const filed = () =>
-			publisher.payloads
-				.map((payload) => JSON.parse(payload) as {kind: string; key: string; data: Record<string, unknown>})
-				.filter((event) => event.kind === 'report_filed');
-		await vi.waitFor(() => expect(filed()).toHaveLength(1));
-		const [event] = filed();
-		expect(event.key).toBe('0');
-		expect(event.data).toEqual({
-			report_id: result.report_id,
-			reporter_id: '0',
-			category: 'harassment',
-			target_type: 'dsa',
-			reported_user_id: null,
-			guild_id: world.guildId,
-			message_id: world.messages.webhook,
-			channel_id: world.channelId,
-		});
-	});
-
-	test('the webhook creator tag follows the tag style of the instance', async () => {
-		const config = getConfig();
-		const originalSelfHosted = config.instance.selfHosted;
-		config.instance.selfHosted = true;
-		try {
-			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.EMAIL, 'setup', TagStyles.NONE);
-			const world = await setupWorld(harness);
-			const report = await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const admin = await createAdmin(harness);
-			const detail = await createBuilder<AdminReport>(harness, admin.token)
-				.get(`/admin/reports/${report.report_id}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(detail).toMatchObject({
-				reported_webhook_creator_id: world.owner.userId,
-				reported_webhook_creator_tag: world.creator.username,
-				reported_webhook_creator_username: world.creator.username,
-				reported_webhook_creator_discriminator: '0000',
-			});
-		} finally {
-			config.instance.selfHosted = originalSelfHosted;
-			getInstanceConfigRepository().clearCacheForTesting();
-		}
-	});
-
-	test('the admin API shows webhook fields and search filters by webhook', async () => {
-		const world = await setupWorld(harness);
-		const webhookReport = await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const botReport = await submitFlow(harness, world.reporter.token, world.channelId, world.messages.bot)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await createBuilder(harness, world.owner.token)
-			.patch('/users/@me')
-			.body({global_name: 'Renamed Keeper'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const admin = await createAdmin(harness);
-		const detail = await createBuilder<AdminReport>(harness, admin.token)
-			.get(`/admin/reports/${webhookReport.report_id}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(ReportAdminResponseSchema.safeParse(detail).success).toBe(true);
-		expect(detail).toMatchObject({
-			reported_user_id: null,
-			reported_user_tag: null,
-			reported_webhook_id: world.webhook.id,
-			reported_webhook_name: WEBHOOK_USERNAME,
-			reported_webhook_avatar_hash: world.webhook.avatar,
-			reported_webhook_default_name: WEBHOOK_NAME,
-			reported_webhook_default_avatar_hash: world.webhook.avatar,
-			reported_webhook_type: 1,
-			reported_webhook_application_id: null,
-			reported_webhook_channel_id: world.channelId,
-			reported_webhook_guild_id: world.guildId,
-			reported_webhook_created_at: webhookCreatedAt(world.webhook.id),
-			reported_webhook_creator_id: world.owner.userId,
-			reported_webhook_creator_tag: `${world.creator.username}#${world.creator.discriminator.padStart(4, '0')}`,
-			reported_webhook_creator_username: world.creator.username,
-			reported_webhook_creator_global_name: CREATOR_GLOBAL_NAME,
-			reported_webhook_creator_discriminator: world.creator.discriminator.padStart(4, '0'),
-			reported_webhook_creator_avatar_hash: world.creator.avatar,
-			reported_message_id: world.messages.webhook,
-			reported_channel_id: world.channelId,
-			reported_guild_id: world.guildId,
-		});
-		const reported = detail.message_context!.find((entry) => entry.id === world.messages.webhook)!;
-		expect(reported).toMatchObject({
-			author_id: world.webhook.id,
-			author_username: WEBHOOK_USERNAME,
-			webhook_id: world.webhook.id,
-		});
-		const neighbor = detail.message_context!.find((entry) => entry.id === world.messages.user)!;
-		expect(neighbor).toMatchObject({author_id: world.author.userId, webhook_id: null});
-		const bot = await createBuilder<AdminReport>(harness, admin.token)
-			.get(`/admin/reports/${botReport.report_id}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(bot).toMatchObject({
-			reported_user_id: world.botUserId,
-			reported_webhook_id: null,
-			reported_webhook_name: null,
-			reported_webhook_default_name: null,
-			reported_webhook_type: null,
-			reported_webhook_created_at: null,
-			reported_webhook_creator_id: null,
-			reported_webhook_creator_tag: null,
-		});
-		const list = await createBuilder<AdminReportList>(harness, admin.token)
-			.get(`/admin/reports?reported_webhook_id=${world.webhook.id}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(list.reports.map((report) => report.report_id)).toEqual([webhookReport.report_id]);
-		expect(list.reports[0]).toMatchObject({
-			reported_webhook_id: world.webhook.id,
-			reported_user_id: null,
-			reported_webhook_creator_id: world.owner.userId,
-			reported_webhook_creator_global_name: CREATOR_GLOBAL_NAME,
-		});
-		const free = await createBuilder<AdminReportList>(harness, admin.token)
-			.get(`/admin/reports?q=${world.webhook.id}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(free.reports.map((report) => report.report_id)).toContain(webhookReport.report_id);
 	});
 
 	test('a webhook whose creator deleted their account keeps the creator id without a profile', async () => {

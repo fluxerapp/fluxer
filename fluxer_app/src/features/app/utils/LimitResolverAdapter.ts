@@ -5,7 +5,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {LimitContextInput} from '@app/features/app/utils/LimitContext';
 import {LimitContext} from '@app/features/app/utils/LimitContext';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {resolveLimit, resolveLimits} from '@fluxer/limits/src/LimitResolver';
+import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 
 export interface LimitResolveOptions {
@@ -35,26 +35,6 @@ class LimitResolverClass {
 			return InstanceSnapshotStore.getLimitsForInstance(instanceDomain);
 		}
 		return RuntimeConfig.getSnapshotOrNull()?.limits ?? null;
-	}
-
-	resolveMultiple(
-		keys: Array<LimitKey>,
-		fallback: number,
-		context?: LimitContextInput,
-		instanceDomain?: string,
-	): Record<string, number> {
-		const snapshot = this.getSnapshotForInstance(instanceDomain);
-		if (snapshot === null) {
-			return Object.fromEntries(keys.map((key) => [key, fallback]));
-		}
-		const ctx = context ? LimitContext.build(context) : LimitContext.current();
-		const {limits} = resolveLimits(snapshot, ctx);
-		const result: Record<string, number> = {};
-		for (const key of keys) {
-			const resolved = limits[key];
-			result[key] = Number.isFinite(resolved) && resolved >= 0 ? Math.floor(resolved) : fallback;
-		}
-		return result;
 	}
 
 	resolvePremium(key: LimitKey, fallback: number): number {

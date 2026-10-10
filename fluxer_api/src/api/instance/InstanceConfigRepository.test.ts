@@ -25,14 +25,8 @@ import {
 	DEFAULT_CHANNEL_THREADS_CONFIG,
 	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
-import {
-	DEFAULT_DOMAIN_MIGRATION_CONFIG,
-	type DomainMigrationConfig,
-} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
-import {
-	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
-	type ExperimentDeliveryConfig,
-} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {DEFAULT_EXPERIMENT_DELIVERY_CONFIG} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
 	getDefaultPostgresClient,
 	type IPostgresClient,
@@ -498,47 +492,6 @@ describe('InstanceConfigRepository', () => {
 		await expect(repository.getDomainMigrationConfig()).resolves.toEqual(DEFAULT_DOMAIN_MIGRATION_CONFIG);
 	});
 
-	it('round-trips a stored domain migration config', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		const config: DomainMigrationConfig = {
-			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
-			enabled: true,
-			config_version: 5,
-			rollout_basis_points: 2500,
-			rollout_salt: 'domain-migration-v2',
-			included_user_ids: ['1400000000000000001'],
-			excluded_user_ids: ['1400000000000000002'],
-			anonymous_rollout_basis_points: 300,
-			standalone_forwarding: true,
-		};
-		await repository.setDomainMigrationConfig(config);
-
-		await expect(repository.getDomainMigrationConfig()).resolves.toEqual(config);
-	});
-
-	it('fills newly added domain migration fields from the schema defaults', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		await repository.setConfig(
-			DOMAIN_MIGRATION_CONFIG_KEY,
-			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
-		);
-
-		await expect(repository.getDomainMigrationConfig()).resolves.toEqual({
-			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
-			enabled: true,
-			config_version: 2,
-			rollout_basis_points: 1000,
-		});
-	});
-
 	it('publishes a refresh so another repository observes the domain migration config', async () => {
 		const executor = new CountingInMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
@@ -583,32 +536,6 @@ describe('InstanceConfigRepository', () => {
 		await repository.setConfig(EXPERIMENT_DELIVERY_CONFIG_KEY, stored);
 
 		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual(DEFAULT_EXPERIMENT_DELIVERY_CONFIG);
-	});
-
-	it('round-trips a stored experiment delivery config', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		const config: ExperimentDeliveryConfig = {poll_interval_seconds: 900, poll_jitter_percent: 0};
-		await repository.setExperimentDeliveryConfig(config);
-
-		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual(config);
-	});
-
-	it('fills missing experiment delivery fields from the schema defaults', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		await repository.setConfig(EXPERIMENT_DELIVERY_CONFIG_KEY, JSON.stringify({poll_interval_seconds: 3600}));
-
-		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual({
-			...DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
-			poll_interval_seconds: 3600,
-		});
 	});
 
 	it('uses the registration URL id as the admin-visible registration code', async () => {

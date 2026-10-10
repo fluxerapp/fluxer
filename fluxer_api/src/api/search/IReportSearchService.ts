@@ -13,7 +13,6 @@ export interface IReportSearchService extends SchemaISearchAdapter<ReportSearchF
 	indexReports(reports: Array<IARSubmission>): Promise<void>;
 	updateReport(report: IARSubmission): Promise<void>;
 	deleteReport(reportId: ReportID): Promise<void>;
-	deleteReports(reportIds: Array<ReportID>): Promise<void>;
 	searchReports(
 		query: string,
 		filters: ReportSearchFilters,

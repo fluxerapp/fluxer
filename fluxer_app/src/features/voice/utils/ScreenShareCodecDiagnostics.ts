@@ -206,7 +206,7 @@ function confirmDecodeStall(
 	return second;
 }
 
-export function computeInboundVideoDecodeHealth(
+function computeInboundVideoDecodeHealth(
 	previous: InboundVideoDecodeSample,
 	current: InboundVideoDecodeSample,
 ): InboundVideoDecodeHealth | null {

@@ -4,7 +4,6 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {buildAPIConfigFromMaster, getConfig} from '@app/api/Config';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
-import {isAppStoreConfigured, isGooglePlayConfigured} from '@app/api/store_billing/StoreBillingConfig';
 import {STORE_PURCHASE_REFRESH_QUEUE_KEY} from '@app/api/store_billing/StorePurchaseRefresh';
 import {
 	getStoreContext,
@@ -32,8 +31,6 @@ import type {PremiumStateResponse} from '@fluxer/schema/src/domains/premium/Prem
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-
-const STORE_ENV_PREFIXES = ['FLUXER_APP_STORE_', 'FLUXER_GOOGLE_PLAY_', 'FLUXER_STORE_BILLING_'];
 
 type StoreConfigState = Pick<APIConfig, 'appStore' | 'googlePlay' | 'storeBilling'>;
 
@@ -95,23 +92,6 @@ describe('Store billing with no store configuration', () => {
 		applyStoreConfig(original);
 		uninstallStoreBillingWorker();
 		server.resetHandlers();
-	});
-
-	it('loads the empty store defaults when no store variable is set', async () => {
-		expect(
-			Object.keys(process.env).filter((key) => STORE_ENV_PREFIXES.some((prefix) => key.startsWith(prefix))),
-		).toEqual([]);
-		const master = await loadConfig();
-		expect(master.integrations.app_store).toEqual({enabled: false, apps: [], products: {}});
-		expect(master.integrations.google_play).toEqual({
-			enabled: false,
-			packages: [],
-			token_uri: 'https://oauth2.googleapis.com/token',
-			products: {},
-		});
-		expect(master.integrations.store_billing).toEqual({sandbox_user_ids: [], sandbox_entitles_all: false});
-		expect(isAppStoreConfigured()).toBe(false);
-		expect(isGooglePlayConfigured()).toBe(false);
 	});
 
 	it('reports both stores disabled with no products', async () => {

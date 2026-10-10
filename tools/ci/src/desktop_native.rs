@@ -139,16 +139,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::None,
     },
     DesktopNativeAddon {
-        package_dir: "linux-screen-capture",
-        package_name: "@fluxer/linux-screen-capture",
-        crate_name: "fluxer_linux_screen_capture",
-        node_file_stem: "linux-screen-capture",
-        required_platform: Some("linux"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "mac-app-audio",
         package_name: "@fluxer/mac-app-audio",
         crate_name: "fluxer_mac_app_audio",
@@ -1006,7 +996,7 @@ mod tests {
         assert!(names.contains(&"win-game-capture"));
         assert!(names.contains(&"app-store"));
         assert!(names.contains(&"gateway-socket"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 23);
+        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
     }
 
     #[test]
@@ -1096,45 +1086,6 @@ mod tests {
     }
 
     #[test]
-    fn platform_tags_match_legacy_node_helper() {
-        assert_eq!(platform_tag("linux", "x64").unwrap(), "linux-x64-gnu");
-        assert_eq!(platform_tag("darwin", "arm64").unwrap(), "darwin-arm64");
-        assert_eq!(platform_tag("win32", "x64").unwrap(), "win32-x64-msvc");
-    }
-
-    #[test]
-    fn rust_targets_match_legacy_node_helper() {
-        assert_eq!(
-            rust_target_for_platform("linux", "arm64").unwrap(),
-            "aarch64-unknown-linux-gnu"
-        );
-        assert_eq!(
-            rust_target_for_platform("darwin", "x64").unwrap(),
-            "x86_64-apple-darwin"
-        );
-        assert_eq!(
-            rust_target_for_platform("win32", "arm64").unwrap(),
-            "aarch64-pc-windows-msvc"
-        );
-    }
-
-    #[test]
-    fn dynamic_library_names_match_legacy_node_helper() {
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "linux").unwrap(),
-            "libfluxer_webauthn.so"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer-webauthn", "darwin").unwrap(),
-            "libfluxer_webauthn.dylib"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "win32").unwrap(),
-            "fluxer_webauthn.dll"
-        );
-    }
-
-    #[test]
     fn redistributable_runtime_import_detection_matches_legacy_patterns() {
         assert!(is_redistributable_runtime_import("vcruntime140.dll"));
         assert!(is_redistributable_runtime_import("vcruntime140_1.dll"));
@@ -1209,12 +1160,5 @@ mod tests {
             assert!(assert_system32_dependent_load_flag(&unset, "win32").is_err());
             assert!(assert_system32_dependent_load_flag(&unset, "linux").is_ok());
         }
-    }
-
-    #[test]
-    fn linux_library_bundling_denylist_matches_legacy_prefixes() {
-        assert!(!should_bundle_linux_library("libc.so.6"));
-        assert!(!should_bundle_linux_library("ld-linux-x86-64.so.2"));
-        assert!(should_bundle_linux_library("libfido2.so.1"));
     }
 }

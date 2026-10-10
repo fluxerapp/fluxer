@@ -10,7 +10,7 @@ use axum::{
 };
 use fluxer_admin::{
     build_router,
-    config::{AdminConfig, ProxyConfig, RuntimeEnv},
+    config::{AdminConfig, ProxyConfig},
     session,
 };
 use serde_json::{Value, json};
@@ -85,7 +85,6 @@ async fn setup() -> TestApp {
 
 fn production_config(api_endpoint: String) -> AdminConfig {
     AdminConfig {
-        env: RuntimeEnv::Production,
         host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key_base: SECRET_KEY.to_owned(),

@@ -9,13 +9,9 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DEFAULT_CRATES=$(
 	cat <<'ENTRIES'
 fluxer_desktop/native/rt-thread:tick
-fluxer_desktop/native/audio-mix:mix
 fluxer_desktop/native/screen-frame-bus:staging
 fluxer_desktop/native/screen-frame-bus:frame_pool
 fluxer_desktop/native/encoder-ring:ring
-fluxer_desktop/native/linux-audio-capture:end_to_end
-fluxer_desktop/native/linux-screen-capture:pipewire_callback
-fluxer_desktop/native/rust:native_core
 ENTRIES
 )
 

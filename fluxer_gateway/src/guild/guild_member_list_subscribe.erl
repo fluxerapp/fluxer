@@ -6,7 +6,6 @@
 -export([
     subscribe_ranges/4,
     unsubscribe_session/2,
-    send_member_list_update_to_sessions/5,
     dispatch_sync_to_subscribed_list/7,
     handle_sync_item_cache_timeout/1,
     sync_cache_find/1,
@@ -77,56 +76,6 @@ maybe_drop_channel_engine(ListId, SubsTab, State) ->
     case map_size(guild_member_list_subs:get_list_subs(ListId, SubsTab)) =:= 0 of
         true -> guild_member_list_channel_engine:drop(ListId, State);
         false -> State
-    end.
-
--spec send_member_list_update_to_sessions(list_id(), map(), map(), map(), guild_state()) -> ok.
-send_member_list_update_to_sessions(ListId, ListSubs, Sessions, Payload, State) ->
-    case dispatch_context(ListId, State) of
-        undefined ->
-            ok;
-        {GuildId, ChannelId} ->
-            do_send_update(ListSubs, Sessions, Payload, ChannelId, GuildId, State)
-    end.
-
--spec do_send_update(
-    map(), map(), map(), channel_id() | undefined, pos_integer(), guild_state()
-) -> ok.
-do_send_update(ListSubs, Sessions, Payload, ChId, GuildId, State) ->
-    Encoded = encode_wire_payload(Payload),
-    Pids = collect_list_pids(ListSubs, Sessions, ChId, State),
-    gateway_dispatch_relay:dispatch_many(
-        Pids, guild_member_list_update, Encoded, GuildId
-    ).
-
--spec collect_list_pids(
-    map(), map(), channel_id() | undefined, guild_state()
-) -> [pid()].
-collect_list_pids(ListSubs, Sessions, ChId, State) ->
-    maps:fold(
-        fun(Sid, _Ranges, Acc) ->
-            eligible_list_pid(Sid, Sessions, ChId, State, Acc)
-        end,
-        [],
-        ListSubs
-    ).
-
--spec eligible_list_pid(
-    binary(), map(), channel_id() | undefined, guild_state(), [pid()]
-) -> [pid()].
-eligible_list_pid(Sid, Sessions, ChId, State, Acc) ->
-    case maps:get(Sid, Sessions, undefined) of
-        #{pid := Pid} = SD when is_pid(Pid) ->
-            add_if_viewable(Pid, SD, ChId, State, Acc);
-        _ ->
-            Acc
-    end.
-
--spec add_if_viewable(pid(), map(), channel_id() | undefined, guild_state(), [pid()]) ->
-    [pid()].
-add_if_viewable(Pid, SD, ChId, State, Acc) ->
-    case session_can_view_list_members(SD, ChId, State) of
-        true -> [Pid | Acc];
-        false -> Acc
     end.
 
 -spec dispatch_sync_to_subscribed_list(
@@ -406,23 +355,6 @@ session_can_view_list_members(SessionData, undefined, State) ->
 session_can_view_list_members(SessionData, ChannelId, State) ->
     guild_member_list_connected:session_can_view_channel_members(SessionData, ChannelId, State).
 
--spec dispatch_context(list_id(), guild_state()) ->
-    {pos_integer(), channel_id() | undefined} | undefined.
-dispatch_context(ListId, State) ->
-    case {valid_list_id(ListId), guild_id(State)} of
-        {true, GuildId} when is_integer(GuildId), GuildId > 0 ->
-            {GuildId, list_channel_id(ListId)};
-        _ ->
-            undefined
-    end.
-
--spec guild_id(guild_state()) -> integer() | undefined.
-guild_id(State) ->
-    case snowflake_id:parse_optional(maps:get(id, State, undefined)) of
-        GuildId when is_integer(GuildId), GuildId > 0 -> GuildId;
-        _ -> undefined
-    end.
-
 -spec valid_list_id(term()) -> boolean().
 valid_list_id(<<"0">>) ->
     true;
@@ -433,17 +365,6 @@ valid_list_id(ListId) when is_binary(ListId) ->
     end;
 valid_list_id(_) ->
     false.
-
--spec list_channel_id(term()) -> channel_id() | undefined.
-list_channel_id(<<"0">>) ->
-    undefined;
-list_channel_id(ListId) when is_binary(ListId) ->
-    case snowflake_id:parse_optional(ListId) of
-        Id when is_integer(Id), Id > 0 -> Id;
-        _ -> undefined
-    end;
-list_channel_id(_) ->
-    undefined.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

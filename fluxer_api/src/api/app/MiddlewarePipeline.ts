@@ -72,8 +72,6 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			],
 			exposedHeaders: [HttpHeaders.X_FLUXER_VERSION, HttpHeaders.ETAG],
 		},
-		skipLogger: true,
-		skipErrorHandler: true,
 	});
 	routes.use(ConcurrencyLimitMiddleware({maxInflightRequests}));
 	routes.get('/_health', async (ctx) => ctx.text('OK'));

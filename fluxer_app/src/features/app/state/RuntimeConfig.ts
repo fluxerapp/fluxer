@@ -39,11 +39,9 @@ import {InstanceDiscoveryUnreachableError} from '@fluxer/instance_bootstrap/src/
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_DISPLAY_HOST} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
-	InstanceAgePolicy,
 	InstanceAppPublic,
 	InstanceCommunity,
 	InstanceFeatures,
-	InstanceRegistration,
 	InstanceServices,
 	InstanceSso as InstanceSsoConfig,
 } from '@fluxer/instance_bootstrap/src/Types';
@@ -96,8 +94,6 @@ type RuntimeConfigPublicationPhase = 'committed' | 'published' | 'renderer-rolle
 interface RuntimeConfigPublication {
 	phase: RuntimeConfigPublicationPhase;
 }
-
-const DEFAULT_PREMIUM_PRODUCT_NAME = 'Plutonium';
 
 class RuntimeActivationSupersededError extends Error {
 	constructor() {
@@ -270,14 +266,6 @@ class RuntimeConfig {
 		return this.readableSnapshot().features;
 	}
 
-	get sso(): InstanceSsoConfig | null {
-		return this.readableSnapshot().sso;
-	}
-
-	get registration(): InstanceRegistration {
-		return this.readableSnapshot().registration;
-	}
-
 	get community(): InstanceCommunity {
 		return this.readableSnapshot().community;
 	}
@@ -286,20 +274,12 @@ class RuntimeConfig {
 		return this.readableSnapshot().services;
 	}
 
-	get publicPushVapidKey(): string | null {
-		return this.readableSnapshot().publicPushVapidKey;
-	}
-
 	get limits(): LimitConfigSnapshot {
 		return this.readableSnapshot().limits;
 	}
 
 	get appPublic(): InstanceAppPublic {
 		return this.readableSnapshot().appPublic;
-	}
-
-	get agePolicy(): InstanceAgePolicy | null {
-		return this.readableSnapshot().agePolicy ?? null;
 	}
 
 	private requireActiveSnapshot(): RuntimeConfigSnapshot {
@@ -750,10 +730,6 @@ class RuntimeConfig {
 		return this.activeRuntime?.snapshot.appPublic.branding.status_page_url ?? '';
 	}
 
-	get statusPageIncidentHistoryUrl(): string {
-		return this.activeRuntime?.snapshot.appPublic.branding.status_page_incident_history_url ?? '';
-	}
-
 	isSelfHosted(): boolean {
 		return DeveloperOptions.selfHostedModeOverride || this.features.self_hosted;
 	}
@@ -768,10 +744,6 @@ class RuntimeConfig {
 
 	get stripeServiceable(): boolean {
 		return this.features.stripe_serviceable;
-	}
-
-	get premiumProductName(): string {
-		return this.appPublic.branding.premium_product_name?.trim() || DEFAULT_PREMIUM_PRODUCT_NAME;
 	}
 
 	get premiumInfoUrl(): string | null {
@@ -800,10 +772,6 @@ class RuntimeConfig {
 
 	get productName(): string {
 		return this.appPublic.branding.product_name;
-	}
-
-	get premiumProductFullName(): string {
-		return `${this.productName} ${this.premiumProductName}`;
 	}
 
 	get iconUrl(): string | null {
@@ -842,14 +810,6 @@ class RuntimeConfig {
 		return this.appPublic.legal.guidelines_url;
 	}
 
-	get collectDateOfBirthOnRegistration(): boolean {
-		return this.appPublic.registration.collect_date_of_birth;
-	}
-
-	get setupAdminUrl(): string | null {
-		return this.appPublic.setup.admin_url;
-	}
-
 	requiresSelfHostedSetup(): boolean {
 		if (getElectronAPI() != null) {
 			return false;
@@ -882,14 +842,6 @@ class RuntimeConfig {
 
 	get marketingHost(): string {
 		return new URL(this.marketingEndpoint).host;
-	}
-
-	get inviteHost(): string {
-		return new URL(this.inviteEndpoint).host;
-	}
-
-	get giftHost(): string {
-		return new URL(this.giftEndpoint).host;
 	}
 
 	get inviteUrlBase(): string {

@@ -374,28 +374,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn off_macos_returns_platform_unsupported() {
-        let mut backend = MetalSharedTextureBackend::new();
-        let result = backend.create_slots(1920, 1080, TextureFormat::Nv12);
-        #[cfg(not(target_os = "macos"))]
-        {
-            assert!(matches!(
-                result,
-                Err(BackendError::PlatformUnsupported { .. })
-            ));
-        }
-        #[cfg(target_os = "macos")]
-        {
-            let slots = result.expect("macos create_slots ok");
-            assert_eq!(slots.len(), 8);
-            for (idx, s) in slots.iter().enumerate() {
-                assert_eq!(s.slot_index(), idx as u32);
-                assert!(s.iosurface_handle() != 0);
-            }
-        }
-    }
-
-    #[test]
     fn create_slots_rejects_zero_dims() {
         let mut backend = MetalSharedTextureBackend::new();
         let err = backend.create_slots(0, 1080, TextureFormat::Nv12).err();

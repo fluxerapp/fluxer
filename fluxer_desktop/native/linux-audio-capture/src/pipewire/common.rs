@@ -14,7 +14,6 @@ use pw::properties::{PropertiesBox, properties};
 use fluxer_rt_thread::{PriorityProfile, RealtimePriorityGuard, RtError, RtOutcome};
 
 use crate::audio_contract::{self, DIRECT_CAPTURE_SAMPLE_RATE};
-use crate::backend::{RoutingGraphLink, RoutingGraphNode, RoutingGraphPort, RoutingGraphSnapshot};
 use crate::routing::PropMap;
 
 pub(crate) const READY_TIMEOUT_MS: u64 = 2_000;
@@ -129,32 +128,6 @@ impl InventorySnapshot {
             .values()
             .map(|props| self.enriched_node_props(props))
             .collect()
-    }
-
-    pub(crate) fn routing_graph_nodes(&self) -> Vec<RoutingGraphNode> {
-        let mut nodes: Vec<RoutingGraphNode> = self
-            .enriched_nodes()
-            .into_iter()
-            .map(|(id, props)| RoutingGraphNode { id, props })
-            .collect();
-        nodes.sort_by_key(|node| node.id);
-        nodes
-    }
-
-    pub(crate) fn routing_graph_ports(&self) -> Vec<RoutingGraphPort> {
-        let mut ports: Vec<RoutingGraphPort> = self
-            .ports
-            .iter()
-            .map(|(id, port)| RoutingGraphPort {
-                id: *id,
-                node_id: port.node_id,
-                direction: port.direction.clone(),
-                channel: port.channel.clone(),
-                props: port.props.clone(),
-            })
-            .collect();
-        ports.sort_by_key(|port| port.id);
-        ports
     }
 }
 
@@ -307,15 +280,6 @@ impl LinkKey {
             sink_port,
         }
     }
-
-    pub(crate) fn graph_link(self) -> RoutingGraphLink {
-        RoutingGraphLink {
-            output_node_id: self.src_node,
-            output_port_id: self.src_port,
-            input_node_id: self.sink_node,
-            input_port_id: self.sink_port,
-        }
-    }
 }
 
 pub(crate) struct OwnedLink {
@@ -397,27 +361,6 @@ pub(crate) fn ensure_virtual_sink(
     let props = build_virtual_sink_props_for(node_name, description, kind);
     if let Ok(node) = core.create_object::<pw::node::Node>("adapter", &props) {
         *sink_proxy.borrow_mut() = Some(node);
-    }
-}
-
-pub(crate) fn build_routing_graph_snapshot(
-    backend: &str,
-    inventory: &Arc<Mutex<InventorySnapshot>>,
-    owned_link_snapshot: &Arc<Mutex<Vec<LinkKey>>>,
-) -> RoutingGraphSnapshot {
-    let (nodes, ports) = match inventory.lock() {
-        Ok(guard) => (guard.routing_graph_nodes(), guard.routing_graph_ports()),
-        Err(_) => (Vec::new(), Vec::new()),
-    };
-    let owned_links = match owned_link_snapshot.lock() {
-        Ok(guard) => guard.iter().copied().map(LinkKey::graph_link).collect(),
-        Err(_) => Vec::new(),
-    };
-    RoutingGraphSnapshot {
-        backend: backend.to_string(),
-        nodes,
-        ports,
-        owned_links,
     }
 }
 

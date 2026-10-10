@@ -53,7 +53,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const logger = Logger.create('useLoginFlow');
 
-export const LOGIN_CONNECTING_STATUS_DELAY_MS = 1500;
+const LOGIN_CONNECTING_STATUS_DELAY_MS = 1500;
 
 export const SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR = msg({
 	message: 'Session expired for {identifier}. Sign in again.',
@@ -318,7 +318,7 @@ export interface StoredAccountSelectionHandlers {
 	readonly onSessionExpired: (account: Account) => void;
 }
 
-export async function selectStoredAccount(
+async function selectStoredAccount(
 	account: Account,
 	{onLoginWithStoredAccount, onSessionExpired}: StoredAccountSelectionHandlers,
 ): Promise<void> {

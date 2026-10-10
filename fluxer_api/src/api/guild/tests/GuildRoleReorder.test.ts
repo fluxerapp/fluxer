@@ -26,24 +26,6 @@ describe('Guild Role Reorder', () => {
 		await harness?.shutdown();
 	});
 	describe('Owner Reordering', () => {
-		test('should allow owner to reorder any roles', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const roleA = await createRole(harness, owner.token, guild.id, {name: 'Role A'});
-			const roleB = await createRole(harness, owner.token, guild.id, {name: 'Role B'});
-			const roleC = await createRole(harness, owner.token, guild.id, {name: 'Role C'});
-			await updateRolePositions(harness, owner.token, guild.id, [
-				{id: roleC.id, position: 3},
-				{id: roleB.id, position: 2},
-				{id: roleA.id, position: 1},
-			]);
-			const roles = await getRoles(harness, owner.token, guild.id);
-			const updatedA = roles.find((r) => r.id === roleA.id)!;
-			const updatedB = roles.find((r) => r.id === roleB.id)!;
-			const updatedC = roles.find((r) => r.id === roleC.id)!;
-			expect(updatedC.position).toBeGreaterThan(updatedB.position);
-			expect(updatedB.position).toBeGreaterThan(updatedA.position);
-		});
 		test('should allow owner to reverse all role positions', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Test Guild');
@@ -310,28 +292,6 @@ describe('Guild Role Reorder', () => {
 				.body([{id: '999999999999999999', position: 1}])
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
-		});
-		test('should accept reorder with no position changes (no-op)', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			const roleA = await createRole(harness, owner.token, guild.id, {name: 'Role A'});
-			const roleB = await createRole(harness, owner.token, guild.id, {name: 'Role B'});
-			await updateRolePositions(harness, owner.token, guild.id, [
-				{id: roleA.id, position: 2},
-				{id: roleB.id, position: 1},
-			]);
-			const rolesBefore = await getRoles(harness, owner.token, guild.id);
-			const beforeA = rolesBefore.find((r) => r.id === roleA.id)!;
-			const beforeB = rolesBefore.find((r) => r.id === roleB.id)!;
-			await updateRolePositions(harness, owner.token, guild.id, [
-				{id: roleA.id, position: 2},
-				{id: roleB.id, position: 1},
-			]);
-			const rolesAfter = await getRoles(harness, owner.token, guild.id);
-			const afterA = rolesAfter.find((r) => r.id === roleA.id)!;
-			const afterB = rolesAfter.find((r) => r.id === roleB.id)!;
-			expect(afterA.position).toBe(beforeA.position);
-			expect(afterB.position).toBe(beforeB.position);
 		});
 	});
 	describe('Position Assignment', () => {

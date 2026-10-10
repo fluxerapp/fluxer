@@ -26,26 +26,3 @@ export function createJsonErrorResponse(options: JsonErrorResponseOptions): Resp
 		},
 	);
 }
-
-export function createXmlErrorResponse(status: number, code: string, message: string): Response {
-	const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<Error>
-  <Code>${escapeXml(code)}</Code>
-  <Message>${escapeXml(message)}</Message>
-</Error>`;
-	return new Response(xml, {
-		status,
-		headers: {
-			'Content-Type': MimeType.XML,
-		},
-	});
-}
-
-function escapeXml(value: string): string {
-	return value
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;')
-		.replaceAll("'", '&apos;');
-}

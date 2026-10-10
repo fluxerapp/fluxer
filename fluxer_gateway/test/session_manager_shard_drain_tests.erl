@@ -110,7 +110,7 @@ reconnect_drain_ignores_dead_sessions_test() ->
     ?assertEqual([LiveSessionPid], collect_reconnect_drain_pids(1, [])),
     ok.
 
-broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
+handoff_to_topology_skips_sessions_owned_by_local_node_test() ->
     with_session_state_transfer(fun() ->
         TestPid = self(),
         SessionId = <<"session-transfer-topology">>,
@@ -122,7 +122,8 @@ broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
             }
         },
         ?assertEqual(
-            0, session_manager_shard_drain:broadcast_transfer_to_topology([node()], State)
+            #{attempted => 0, handed_off => 0},
+            session_manager_shard_drain:handoff_to_topology([node()], State)
         ),
         ?assertEqual({error, not_found}, session_state_transfer:pop_state(SessionId)),
         receive
@@ -133,28 +134,6 @@ broadcast_transfer_to_topology_skips_sessions_owned_by_local_node_test() ->
         end,
         SessionPid ! stop
     end).
-
-broadcast_transfer_to_topology_keeps_session_when_state_push_fails_test() ->
-    TestPid = self(),
-    SessionId = <<"session-transfer-fail">>,
-    TransferState = #{token_hash => utils:hash_token(<<"resume-token">>), seq => 7},
-    SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to_topology(['missing@127.0.0.1'], State)
-    ),
-    receive
-        {transfer_reconnect_drain_cast, SessionPid} ->
-            ?assert(false, unexpected_transfer_reconnect_drain)
-    after 200 ->
-        ok
-    end,
-    SessionPid ! stop.
 
 handoff_to_topology_reports_failed_remote_transfer_test() ->
     TestPid = self(),
@@ -178,30 +157,7 @@ handoff_to_topology_reports_failed_remote_transfer_test() ->
     end,
     SessionPid ! stop.
 
-push_state_rpc_timeout_does_not_drain_session_test() ->
-    TestPid = self(),
-    SessionId = <<"session-push-timeout">>,
-    TransferState = #{token_hash => utils:hash_token(<<"tok">>), seq => 3},
-    SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to('nonexistent@127.0.0.1', State)
-    ),
-    receive
-        {transfer_reconnect_drain_cast, SessionPid} ->
-            ?assert(false, session_was_drained_despite_push_failure)
-    after 300 ->
-        ok
-    end,
-    ?assert(is_process_alive(SessionPid)),
-    SessionPid ! stop.
-
-broadcast_transfer_to_success_drains_session_test() ->
+push_and_drain_session_success_drains_session_test() ->
     with_session_state_transfer(fun() ->
         TestPid = self(),
         SessionId = <<"session-push-ok">>,
@@ -211,14 +167,9 @@ broadcast_transfer_to_success_drains_session_test() ->
             socket_pid => undefined
         },
         SessionPid = spawn(fun() -> transfer_test_session_loop(TestPid, TransferState) end),
-        State = #{
-            sessions => #{
-                SessionId => {SessionPid, make_ref()}
-            }
-        },
         ?assertEqual(
-            1,
-            session_manager_shard_drain:broadcast_transfer_to(node(), State)
+            ok,
+            session_manager_shard_drain:push_and_drain_session(node(), SessionId, SessionPid)
         ),
         receive
             {transfer_reconnect_drain_cast, SessionPid} -> ok
@@ -234,14 +185,9 @@ export_state_failure_does_not_drain_session_test() ->
     TestPid = self(),
     SessionId = <<"session-export-fail">>,
     SessionPid = spawn(fun() -> export_failing_session_loop(TestPid) end),
-    State = #{
-        sessions => #{
-            SessionId => {SessionPid, make_ref()}
-        }
-    },
-    ?assertEqual(
-        0,
-        session_manager_shard_drain:broadcast_transfer_to(node(), State)
+    ?assertMatch(
+        {error, _},
+        session_manager_shard_drain:push_and_drain_session(node(), SessionId, SessionPid)
     ),
     receive
         {transfer_reconnect_drain_cast, SessionPid} ->

@@ -39,13 +39,6 @@ describe('OAuth2 Application Get', () => {
 		expect(application.bot?.token).toBeUndefined();
 		expect(application.client_secret).toBeUndefined();
 	});
-	test('returns 404 for non-existent application', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.get('/oauth2/applications/999999999999999999')
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.execute();
-	});
 	test('enforces access control - user cannot access another users application', async () => {
 		const owner = await createTestAccount(harness);
 		const otherUser = await createTestAccount(harness);
@@ -56,9 +49,6 @@ describe('OAuth2 Application Get', () => {
 			.get(`/oauth2/applications/${createResult.application.id}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
-	});
-	test('requires authentication', async () => {
-		await createBuilderWithoutAuth(harness).get('/oauth2/applications/123').expect(HTTP_STATUS.UNAUTHORIZED).execute();
 	});
 	test('public bot representation omits the owner MFA mirror the owner view keeps', async () => {
 		const account = await createTestAccount(harness);

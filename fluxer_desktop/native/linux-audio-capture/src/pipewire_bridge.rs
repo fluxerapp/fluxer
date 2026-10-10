@@ -12,11 +12,11 @@ use pw::channel::{Sender as PwSender, channel as pw_channel};
 use fluxer_rt_thread::{MonotonicClock, SystemMonotonicClock};
 
 use crate::audio_contract::DIRECT_CAPTURE_MAX_READ_SAMPLES;
-use crate::backend::{CaptureBridge, CapturedFrame, DirectCapture, RoutingGraphSnapshot};
+use crate::backend::{CaptureBridge, CapturedFrame, DirectCapture};
 use crate::direct_buffer::DirectAudioBuffer;
 use crate::pipewire::common::{
-    InventorySnapshot, LinkKey, READY_TIMEOUT_MS, build_routing_graph_snapshot,
-    daemon_reachable as common_daemon_reachable, next_direct_sink_name,
+    InventorySnapshot, READY_TIMEOUT_MS, daemon_reachable as common_daemon_reachable,
+    next_direct_sink_name,
 };
 use crate::pipewire::event_loop::{
     BridgeCommand, DirectCommand, DirectWorkerInputs, run_bridge_worker, run_direct_worker,
@@ -30,7 +30,6 @@ pub fn daemon_reachable() -> bool {
 
 pub struct PipeWireBridge {
     snapshot: Arc<Mutex<InventorySnapshot>>,
-    owned_link_snapshot: Arc<Mutex<Vec<LinkKey>>>,
     tx: PwSender<BridgeCommand>,
     thread: Mutex<Option<JoinHandle<()>>>,
 }
@@ -44,18 +43,16 @@ impl PipeWireBridge {
         let owned_link_snapshot = Arc::new(Mutex::new(Vec::new()));
         let (tx, rx) = pw_channel::<BridgeCommand>();
         let snap_for_thread = snapshot.clone();
-        let links_for_thread = owned_link_snapshot.clone();
         let (ready_tx, ready_rx) = std::sync::mpsc::sync_channel::<bool>(1);
         let handle = thread::Builder::new()
             .name("fluxer-pipewire-bridge".into())
             .spawn(move || {
-                run_bridge_worker(snap_for_thread, links_for_thread, rx, ready_tx);
+                run_bridge_worker(snap_for_thread, owned_link_snapshot, rx, ready_tx);
             })
             .ok()?;
         match ready_rx.recv_timeout(Duration::from_millis(READY_TIMEOUT_MS)) {
             Ok(true) => Some(Self {
                 snapshot,
-                owned_link_snapshot,
                 tx,
                 thread: Mutex::new(Some(handle)),
             }),
@@ -102,16 +99,10 @@ impl CaptureBridge for PipeWireBridge {
     fn backend_name(&self) -> &'static str {
         "pipewire"
     }
-
-    fn routing_graph(&self) -> RoutingGraphSnapshot {
-        build_routing_graph_snapshot("pipewire", &self.snapshot, &self.owned_link_snapshot)
-    }
 }
 
 pub struct PipeWireDirectCapture {
     samples: Arc<Mutex<DirectAudioBuffer>>,
-    inventory: Arc<Mutex<InventorySnapshot>>,
-    owned_link_snapshot: Arc<Mutex<Vec<LinkKey>>>,
     tx: PwSender<DirectCommand>,
     #[allow(dead_code)]
     running: Arc<AtomicBool>,
@@ -141,8 +132,8 @@ impl PipeWireDirectCapture {
         let sink_node_name = next_direct_sink_name();
         let inputs = DirectWorkerInputs {
             samples: samples.clone(),
-            inventory: inventory.clone(),
-            owned_link_snapshot: owned_link_snapshot.clone(),
+            inventory,
+            owned_link_snapshot,
             running: running.clone(),
             sink_node_name,
             last_push_ns: last_push_ns.clone(),
@@ -159,8 +150,6 @@ impl PipeWireDirectCapture {
         match ready_rx.recv_timeout(Duration::from_millis(READY_TIMEOUT_MS)) {
             Ok(true) => Some(Self {
                 samples,
-                inventory,
-                owned_link_snapshot,
                 tx,
                 running,
                 thread: Mutex::new(Some(handle)),
@@ -246,14 +235,6 @@ impl DirectCapture for PipeWireDirectCapture {
         if let Ok(mut guard) = self.identity.lock() {
             *guard = identity;
         }
-    }
-
-    fn routing_graph(&self) -> RoutingGraphSnapshot {
-        build_routing_graph_snapshot("pipewire", &self.inventory, &self.owned_link_snapshot)
-    }
-
-    fn last_push_ns_arc(&self) -> Option<Arc<AtomicU64>> {
-        Some(Arc::clone(&self.last_push_ns))
     }
 }
 
@@ -793,7 +774,6 @@ mod tests {
         }
     }
 
-    use crate::ignore_audio_runtime::SOURCE_STALE_AFTER_NS;
     use crate::pipewire::stream_ops::{build_test_user_data, process_audio_chunk};
     use fluxer_rt_thread::MonotonicClock;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -829,49 +809,6 @@ mod tests {
     }
 
     #[test]
-    fn production_callback_marks_freshness_with_monotonic_clock() {
-        let clock = Arc::new(FakeClock::new(7_500_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut data = build_test_user_data(
-            last_push_ns.clone(),
-            Arc::clone(&clock) as Arc<dyn MonotonicClock>,
-        );
-        assert_eq!(last_push_ns.load(Ordering::Acquire), u64::MAX);
-        let frame: Vec<f32> = (0..960).map(|n| (n as f32) * 0.0001).collect();
-        let payload = make_f32_payload(&frame);
-        process_audio_chunk(&mut data, &payload);
-        let observed = last_push_ns.load(Ordering::Acquire);
-        assert_eq!(observed, 7_500_000);
-        assert_ne!(observed, u64::MAX);
-    }
-
-    #[test]
-    fn freshness_age_grows_to_signal_stale_source_after_threshold() {
-        let clock = Arc::new(FakeClock::new(1_000_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut data = build_test_user_data(
-            last_push_ns.clone(),
-            Arc::clone(&clock) as Arc<dyn MonotonicClock>,
-        );
-        let frame = vec![0.1_f32; DIRECT_CAPTURE_APM_FRAME_SAMPLES];
-        let payload = make_f32_payload(&frame);
-        process_audio_chunk(&mut data, &payload);
-        let after_first = last_push_ns.load(Ordering::Acquire);
-        assert_eq!(after_first, 1_000_000);
-        clock.set(1_000_000 + SOURCE_STALE_AFTER_NS + 1);
-        let age = clock.now_ns() - after_first;
-        assert!(age > SOURCE_STALE_AFTER_NS);
-        clock.set(2_000_000 + SOURCE_STALE_AFTER_NS + 1);
-        let payload2 = make_f32_payload(&frame);
-        process_audio_chunk(&mut data, &payload2);
-        let after_second = last_push_ns.load(Ordering::Acquire);
-        assert!(after_second > after_first);
-        assert_eq!(after_second, 2_000_000 + SOURCE_STALE_AFTER_NS + 1);
-        let fresh_age = clock.now_ns() - after_second;
-        assert_eq!(fresh_age, 0);
-    }
-
-    #[test]
     fn callback_path_does_not_allocate_in_steady_state() {
         let clock = Arc::new(FakeClock::new(1_000));
         let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
@@ -885,58 +822,17 @@ mod tests {
             clock.set(clock.now_ns() + 10_000_000);
             process_audio_chunk(&mut data, &payload);
         }
-        let allocs_before = crate::audio_mix_runtime::ALLOC_PROBE.load(Ordering::Relaxed);
-        crate::audio_mix_runtime::begin_thread_alloc_probe();
+        let allocs_before = crate::test_alloc::ALLOC_PROBE.load(Ordering::Relaxed);
+        crate::test_alloc::begin_thread_alloc_probe();
         clock.set(clock.now_ns() + 10_000_000);
         process_audio_chunk(&mut data, &payload);
-        let probed = crate::audio_mix_runtime::end_thread_alloc_probe();
-        let allocs_after = crate::audio_mix_runtime::ALLOC_PROBE.load(Ordering::Relaxed);
+        let probed = crate::test_alloc::end_thread_alloc_probe();
+        let allocs_after = crate::test_alloc::ALLOC_PROBE.load(Ordering::Relaxed);
         assert_eq!(
             probed,
             0,
             "steady-state callback allocated {probed} times (global delta {})",
             allocs_after.saturating_sub(allocs_before)
-        );
-    }
-
-    #[test]
-    fn production_callback_freshness_drives_audio_mix_runtime_mark_pushed() {
-        use crate::audio_mix_runtime::{
-            AudioMixRuntimeBuilder, CaptureSource, MIX_CHANNELS, MIX_SAMPLE_RATE_HZ,
-            NullMixOutputSink,
-        };
-        let clock = Arc::new(FakeClock::new(9_000_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut data = build_test_user_data(
-            last_push_ns.clone(),
-            Arc::clone(&clock) as Arc<dyn MonotonicClock>,
-        );
-        let source_id: u64 = 1;
-        let (_source, consumer) =
-            CaptureSource::create(source_id, MIX_SAMPLE_RATE_HZ, MIX_CHANNELS).expect("source");
-        let mut runtime = AudioMixRuntimeBuilder::new()
-            .with_clock(Arc::clone(&clock) as Arc<dyn MonotonicClock>)
-            .add_source_with_freshness(source_id, consumer, Arc::clone(&last_push_ns))
-            .build(NullMixOutputSink)
-            .expect("build");
-        assert_eq!(runtime.mark_pushed_total(), 0);
-        assert_eq!(last_push_ns.load(Ordering::Acquire), u64::MAX);
-        let frame: Vec<f32> = (0..DIRECT_CAPTURE_APM_FRAME_SAMPLES)
-            .map(|n| (n as f32) * 0.0001)
-            .collect();
-        let payload = make_f32_payload(&frame);
-        process_audio_chunk(&mut data, &payload);
-        let observed = last_push_ns.load(Ordering::Acquire);
-        assert_eq!(observed, 9_000_000);
-        let _ = runtime.run_one_tick_blocking(observed).expect("frame");
-        assert!(
-            runtime.mark_pushed_total() >= 1,
-            "AudioMixRuntime.tick() did not invoke StaleSourceTracker::mark_pushed",
-        );
-        let not_stale = !runtime.is_source_stale(0, observed + 1_000_000, 5_000_000_000);
-        assert!(
-            not_stale,
-            "source must not be stale immediately after a fresh push"
         );
     }
 }

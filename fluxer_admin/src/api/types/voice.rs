@@ -78,8 +78,3 @@ pub struct CreateVoiceServerResponse {
 pub struct UpdateVoiceServerResponse {
     pub server: VoiceServer,
 }
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct GetVoiceServerResponse {
-    pub server: Option<VoiceServer>,
-}

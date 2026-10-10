@@ -15,7 +15,6 @@
     cleanup_identify_worker/2,
     resolve_identify_result/4,
     reply_to_waiters/2,
-    build_and_start_session/7,
     build_and_start_session/8
 ]).
 
@@ -563,21 +562,6 @@ cancel_identify_timeout(PendingIdentify) ->
 reply_to_waiters(Waiters, Reply) ->
     lists:foreach(fun(From) -> gen_server:reply(From, Reply) end, Waiters),
     ok.
-
--spec build_and_start_session(
-    map(),
-    map(),
-    non_neg_integer(),
-    pid(),
-    session_id(),
-    #{session_id() => session_ref()},
-    state()
-) ->
-    {reply, start_reply(), state()}.
-build_and_start_session(Data, IdentifyData, Version, SocketPid, SessionId, Sessions, State) ->
-    session_manager_shard_start:build_and_start_session(
-        Data, IdentifyData, Version, SocketPid, SessionId, Sessions, State
-    ).
 
 -spec build_and_start_session(
     map(),

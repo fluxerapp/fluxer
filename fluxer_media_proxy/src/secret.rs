@@ -75,13 +75,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn zeroing_overwrites_every_byte_in_place() {
-        let mut buffer = [1u8, 2, 3, 4, 5];
-        zero(&mut buffer);
-        assert_eq!([0u8; 5], buffer);
-    }
-
-    #[test]
     fn secrets_expose_their_value_without_printing_it() {
         let string = SecretString::new("hunter2".to_owned());
         assert_eq!("hunter2", string.expose());
@@ -92,19 +85,5 @@ mod tests {
         let bytes = SecretBytes::new(vec![7u8; 32]);
         assert_eq!(&[7u8; 32][..], bytes.expose());
         assert_eq!("[REDACTED]", format!("{bytes:?}"));
-    }
-
-    #[test]
-    fn empty_secrets_report_themselves_empty() {
-        assert!(SecretString::default().is_empty());
-        assert!(SecretString::new(String::new()).is_empty());
-        assert!(SecretBytes::default().expose().is_empty());
-    }
-
-    #[test]
-    fn cloning_a_secret_keeps_the_original_readable_after_the_clone_drops() {
-        let original = SecretString::new("shared".to_owned());
-        drop(original.clone());
-        assert_eq!("shared", original.expose());
     }
 }

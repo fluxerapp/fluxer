@@ -26,10 +26,6 @@ export class EmailChangeRepository {
 		return await fetchOne<EmailChangeTicketRow>(FETCH_TICKET_CQL, {ticket});
 	}
 
-	async deleteTicket(ticket: string): Promise<void> {
-		await deleteOneOrMany(EmailChangeTickets.deleteByPk({ticket}));
-	}
-
 	async createToken(row: EmailChangeTokenRow): Promise<void> {
 		await upsertOne(EmailChangeTokens.insert(row));
 	}

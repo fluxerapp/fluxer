@@ -196,22 +196,3 @@ pub(crate) fn next_page_link(
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::status_badge;
-
-    #[test]
-    fn status_badges_use_us_spelling_and_readable_labels() {
-        let canceled = status_badge("cancelled").into_string();
-        assert!(canceled.contains(">Canceled<"));
-        assert!(!canceled.contains("Cancelled"));
-        assert!(
-            status_badge("deadletter")
-                .into_string()
-                .contains(">Dead-letter<")
-        );
-        assert!(status_badge("running").into_string().contains(">Running<"));
-        assert!(status_badge("mystery").into_string().contains(">mystery<"));
-    }
-}

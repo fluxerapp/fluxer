@@ -23,22 +23,6 @@ start_new_guild_skips_start_when_already_registered_test() ->
         ExistingPid ! stop
     end.
 
-start_guild_returns_existing_when_registered_test() ->
-    process_registry:init(),
-    GuildId = 88888,
-    GuildKey = process_registry:build_process_key(guild, GuildId),
-    ExistingPid = spawn(fun mock_guild_loop/0),
-    ets:insert(process_registry_table, {GuildKey, ExistingPid}),
-    try
-        State0 = #{guilds => #{}, pending_requests => #{}, shard_index => 0},
-        Data = #{<<"guild">> => #{<<"id">> => <<"88888">>, <<"features">> => []}},
-        Result = guild_manager_shard_lifecycle:start_guild(GuildId, Data, State0),
-        ?assertMatch({ok, ExistingPid, _}, Result)
-    after
-        process_registry:registry_unregister(GuildKey),
-        ExistingPid ! stop
-    end.
-
 normalize_transferred_guild_state_keeps_only_transferable_fields_test() ->
     GuildId = 99998,
     TransferState = #{
@@ -114,15 +98,6 @@ shard_terminate_drains_pending_requests_test() ->
     after 100 ->
         ?assert(false)
     end.
-
-shard_terminate_empty_pending_does_not_crash_test() ->
-    State = #{
-        guilds => #{},
-        pending_requests => #{},
-        fetch_workers => #{},
-        shard_index => 0
-    },
-    ?assertEqual(ok, guild_manager_shard:terminate(normal, State)).
 
 mock_guild_loop() ->
     receive

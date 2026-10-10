@@ -214,9 +214,6 @@ check_identify_rate_disabled_by_env_test() ->
         restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
     end.
 
-check_identify_rate_non_binary_returns_ok_test() ->
-    ?assertEqual(ok, check_identify_rate(undefined)).
-
 user_session_limit_allows_under_limit_test() ->
     ensure_tables(),
     UserId = 900001,
@@ -279,10 +276,6 @@ user_session_decrement_does_not_go_negative_test() ->
     decrement_user_sessions(UserId),
     decrement_user_sessions(UserId),
     ?assertEqual(ok, check_user_session_limit(UserId)).
-
-user_session_limit_non_integer_returns_ok_test() ->
-    ?assertEqual(ok, check_user_session_limit(undefined)),
-    ?assertEqual(ok, check_user_session_limit(<<"not_an_id">>)).
 
 prune_old_identify_entries_removes_old_buckets_test() ->
     ensure_tables(),

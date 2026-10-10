@@ -433,58 +433,6 @@ passive_channel_update_bulk_dispatches_visible_channels_test() ->
         maps:get(<<"channels">>, Payload)
     ).
 
-grouped_bulk_encoding_matches_ungrouped_test() ->
-    flush_dispatches(),
-    Data = bulk_channel_data(),
-    State = passive_dispatch_state(),
-    Sessions = [bulk_session_pair(<<"a">>, #{100 => true})],
-    ?assertEqual(1, reference_dispatch_bulk_update(Sessions, channel_update_bulk, Data, State)),
-    Ungrouped = receive_pre_encoded_binary(channel_update_bulk),
-    ?assertEqual(1, dispatch_to_sessions(Sessions, channel_update_bulk, Data, State)),
-    ?assertEqual(Ungrouped, receive_pre_encoded_binary(channel_update_bulk)).
-
-reference_dispatch_bulk_update(FilteredSessions, Event, FinalData, UpdatedState) ->
-    GuildId = maps:get(id, UpdatedState),
-    BulkChannels = maps:get(<<"channels">>, FinalData, []),
-    IndexedChannels = [
-        {
-            guild_dispatch_decorate:parse_snowflake(
-                <<"id">>,
-                maps:get(<<"id">>, Ch, undefined)
-            ),
-            Ch
-        }
-     || Ch <- BulkChannels
-    ],
-    SuccessCount = lists:foldl(
-        fun({_Sid, SessionData}, Acc) ->
-            reference_dispatch_bulk_to_one_session_indexed(
-                SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
-            )
-        end,
-        0,
-        FilteredSessions
-    ),
-    normalize_success(SuccessCount).
-
-reference_dispatch_bulk_to_one_session_indexed(
-    SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
-) ->
-    Pid = maps:get(pid, SessionData),
-    case
-        session_passive:should_receive_event(
-            Event, FinalData, GuildId, SessionData, UpdatedState
-        )
-    of
-        false ->
-            Acc;
-        true ->
-            FilteredChannels = filter_indexed_for_session(
-                SessionData, IndexedChannels, UpdatedState
-            ),
-            dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc)
-    end.
-
 grouped_bulk_encodes_once_per_visible_set_test() ->
     flush_dispatches(),
     Data = bulk_channel_data(),

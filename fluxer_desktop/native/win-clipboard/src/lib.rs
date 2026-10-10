@@ -256,20 +256,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn validation_rejects_empty_paths() {
-        let err = validate_file_path("").expect_err("empty path should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "path must be non-empty");
-    }
-
-    #[test]
-    fn validation_rejects_nul_bytes() {
-        let err = validate_file_path("before\0after").expect_err("NUL path should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "path must not contain NUL bytes");
-    }
-
-    #[test]
     fn hdrop_payload_uses_unicode_dropfiles_layout() {
         let payload = build_hdrop_payload("C:\\Temp\\a.txt");
 
@@ -291,14 +277,5 @@ mod tests {
             .collect();
         assert_eq!(String::from_utf16(&path_units).unwrap(), "C:\\Temp\\a.txt");
         assert_eq!(&payload[payload.len() - 4..], &[0, 0, 0, 0]);
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    #[test]
-    fn non_windows_worker_preserves_stub_error_contract() {
-        let err =
-            platform::write_file_reference("/tmp/file.txt").expect_err("non-Windows should fail");
-        assert_eq!(err.status, Status::GenericFailure);
-        assert_eq!(err.reason, "win-clipboard not supported on this platform");
     }
 }

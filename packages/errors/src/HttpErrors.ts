@@ -12,78 +12,6 @@ interface HttpErrorOptions {
 	cause?: Error;
 }
 
-export class BadRequestError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.BAD_REQUEST,
-			message: options.message ?? 'Bad Request',
-			status: HttpStatus.BAD_REQUEST,
-		});
-		this.name = 'BadRequestError';
-	}
-}
-
-export class UnauthorizedError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.UNAUTHORIZED,
-			message: options.message ?? 'Unauthorized',
-			status: HttpStatus.UNAUTHORIZED,
-		});
-		this.name = 'UnauthorizedError';
-	}
-}
-
-export class ForbiddenError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.FORBIDDEN,
-			message: options.message ?? 'Forbidden',
-			status: HttpStatus.FORBIDDEN,
-		});
-		this.name = 'ForbiddenError';
-	}
-}
-
-export class NotFoundError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.NOT_FOUND,
-			message: options.message ?? 'Not Found',
-			status: HttpStatus.NOT_FOUND,
-		});
-		this.name = 'NotFoundError';
-	}
-}
-
-export class ConflictError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.CONFLICT,
-			message: options.message ?? 'Conflict',
-			status: HttpStatus.CONFLICT,
-		});
-		this.name = 'ConflictError';
-	}
-}
-
-export class InternalServerError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.INTERNAL_SERVER_ERROR,
-			message: options.message ?? 'Internal Server Error',
-			status: HttpStatus.INTERNAL_SERVER_ERROR,
-		});
-		this.name = 'InternalServerError';
-	}
-}
-
 export class ServiceUnavailableError extends FluxerError {
 	constructor(options: HttpErrorOptions = {}) {
 		super({
@@ -93,29 +21,5 @@ export class ServiceUnavailableError extends FluxerError {
 			status: HttpStatus.SERVICE_UNAVAILABLE,
 		});
 		this.name = 'ServiceUnavailableError';
-	}
-}
-
-export class BadGatewayError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.BAD_GATEWAY,
-			message: options.message ?? 'Bad Gateway',
-			status: HttpStatus.BAD_GATEWAY,
-		});
-		this.name = 'BadGatewayError';
-	}
-}
-
-export class GatewayTimeoutError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.GATEWAY_TIMEOUT,
-			message: options.message ?? 'Gateway Timeout',
-			status: HttpStatus.GATEWAY_TIMEOUT,
-		});
-		this.name = 'GatewayTimeoutError';
 	}
 }

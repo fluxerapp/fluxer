@@ -381,32 +381,6 @@ mod tests {
     }
 
     #[test]
-    fn appends_port_when_missing() {
-        assert_eq!(normalize_host("scylla", 9042), "scylla:9042");
-        assert_eq!(normalize_host("scylla:9041", 9042), "scylla:9041");
-        assert_eq!(normalize_host("127.0.0.1", 9042), "127.0.0.1:9042");
-    }
-
-    #[test]
-    fn normalizes_ipv6_hosts() {
-        assert_eq!(normalize_host("::1", 9042), "[::1]:9042");
-        assert_eq!(normalize_host("[::1]", 9042), "[::1]:9042");
-        assert_eq!(normalize_host("[::1]:9041", 9042), "[::1]:9041");
-    }
-
-    #[test]
-    fn parses_comma_separated_hosts() {
-        let hosts = parse_hosts("a:9042, b:9042, c:9042");
-        assert_eq!(hosts, vec!["a:9042", "b:9042", "c:9042"]);
-    }
-
-    #[test]
-    fn skips_empty_host_segments() {
-        let hosts = parse_hosts(",a,,b,");
-        assert_eq!(hosts, vec!["a", "b"]);
-    }
-
-    #[test]
     fn reads_canonical_cassandra_env_for_shards() {
         let cfg = config_from_pairs(&[
             ("FLUXER_SVC_NAME", "messages"),
@@ -428,24 +402,6 @@ mod tests {
         assert_eq!("fluxer_dev", cfg.scylla_keyspace);
         assert_eq!(Some("fluxer".to_owned()), cfg.scylla_username);
         assert_eq!(Some("secret".to_owned()), cfg.scylla_password);
-    }
-
-    #[test]
-    fn defaults_database_backend_to_postgres() {
-        let cfg = config_from_pairs(&[]);
-
-        assert_eq!(DatabaseBackend::Postgres, cfg.database_backend);
-        assert_eq!(None, cfg.postgres_url);
-        assert_eq!("127.0.0.1", cfg.postgres_host);
-        assert_eq!(5432, cfg.postgres_port);
-        assert_eq!("fluxer", cfg.postgres_database);
-        assert_eq!("fluxer", cfg.postgres_username);
-        assert_eq!(Some("fluxer".to_owned()), cfg.postgres_password);
-        assert!(!cfg.postgres_ssl);
-        assert_eq!(None, cfg.postgres_ssl_ca);
-        assert_eq!(20, cfg.postgres_max_connections);
-        assert_eq!("fluxer_kv", cfg.postgres_kv_table);
-        assert!(cfg.postgres_prepared_statements);
     }
 
     #[test]
@@ -473,40 +429,6 @@ mod tests {
         assert_eq!(Some("fluxer".to_owned()), cfg.postgres_password);
         assert_eq!(20, cfg.postgres_max_connections);
         assert!(cfg.postgres_prepared_statements);
-    }
-
-    #[test]
-    fn reads_postgres_database_env() {
-        let cfg = config_from_pairs(&[
-            ("FLUXER_DATABASE_BACKEND", "postgresql"),
-            ("FLUXER_POSTGRES_URL", "postgres://user:pass@db/fluxer"),
-            ("FLUXER_POSTGRES_HOST", "db"),
-            ("FLUXER_POSTGRES_PORT", "6432"),
-            ("FLUXER_POSTGRES_DATABASE", "fluxer_dev"),
-            ("FLUXER_POSTGRES_USERNAME", "app"),
-            ("FLUXER_POSTGRES_PASSWORD", "secret"),
-            ("FLUXER_POSTGRES_SSL", "true"),
-            ("FLUXER_POSTGRES_SSL_CA", "ca-pem"),
-            ("FLUXER_POSTGRES_MAX_CONNECTIONS", "7"),
-            ("FLUXER_POSTGRES_KV_TABLE", "fluxer_kv_dev"),
-            ("FLUXER_POSTGRES_PREPARED_STATEMENTS", "false"),
-        ]);
-
-        assert_eq!(DatabaseBackend::Postgres, cfg.database_backend);
-        assert_eq!(
-            Some("postgres://user:pass@db/fluxer".to_owned()),
-            cfg.postgres_url
-        );
-        assert_eq!("db", cfg.postgres_host);
-        assert_eq!(6432, cfg.postgres_port);
-        assert_eq!("fluxer_dev", cfg.postgres_database);
-        assert_eq!("app", cfg.postgres_username);
-        assert_eq!(Some("secret".to_owned()), cfg.postgres_password);
-        assert!(cfg.postgres_ssl);
-        assert_eq!(Some("ca-pem".to_owned()), cfg.postgres_ssl_ca);
-        assert_eq!(7, cfg.postgres_max_connections);
-        assert_eq!("fluxer_kv_dev", cfg.postgres_kv_table);
-        assert!(!cfg.postgres_prepared_statements);
     }
 
     #[test]

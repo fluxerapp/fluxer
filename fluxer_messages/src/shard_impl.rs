@@ -362,7 +362,6 @@ impl PageCursor {
 #[derive(Debug, Deserialize)]
 enum UserServiceResponse {
     FoundPartials(Vec<UserPartialServiceResponse>),
-    FoundPartial(UserPartialServiceResponse),
 }
 
 #[derive(Debug, Deserialize)]
@@ -1328,7 +1327,6 @@ impl<T: Transport> MessagesShard<T> {
             .and_then(|bytes| serde_json::from_slice::<UserServiceResponse>(&bytes).ok());
         let partials = match response {
             Some(UserServiceResponse::FoundPartials(partials)) => partials,
-            Some(UserServiceResponse::FoundPartial(partial)) => vec![partial],
             _ => Vec::new(),
         };
         users.partials.extend(
@@ -2540,33 +2538,6 @@ impl<T: Transport> ShardService for MessagesShard<T> {
 
     async fn handle(&self, request: MessageRequest) -> anyhow::Result<MessageResponse> {
         match request {
-            MessageRequest::GetById {
-                channel_id,
-                message_id,
-            } => match self.get_by_id(channel_id, message_id).await? {
-                Some(msg) => Ok(MessageResponse::Found(msg)),
-                None => Ok(MessageResponse::NotFound),
-            },
-            MessageRequest::GetLatest { channel_id, limit } => {
-                let messages = self.get_latest(channel_id, limit).await?;
-                Ok(MessageResponse::FoundMany(messages))
-            }
-            MessageRequest::GetBefore {
-                channel_id,
-                before_id,
-                limit,
-            } => {
-                let messages = self.get_before(channel_id, before_id, limit).await?;
-                Ok(MessageResponse::FoundMany(messages))
-            }
-            MessageRequest::GetAfter {
-                channel_id,
-                after_id,
-                limit,
-            } => {
-                let messages = self.get_after(channel_id, after_id, limit).await?;
-                Ok(MessageResponse::FoundMany(messages))
-            }
             MessageRequest::GetResponseById {
                 channel_id,
                 message_id,

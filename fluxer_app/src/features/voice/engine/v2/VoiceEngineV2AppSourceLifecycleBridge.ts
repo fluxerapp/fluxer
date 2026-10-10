@@ -242,19 +242,6 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 		this.dispatch(event);
 	}
 
-	dispose(): void {
-		if (this.disposed) return;
-		this.disposed = true;
-		for (const captureId of [...this.bindingsByCapture.keys()]) {
-			this.removeBinding(captureId);
-		}
-		try {
-			this.unsubscribe();
-		} catch {}
-		this.closedCleanLastAtMs.clear();
-		assert.equal(this.bindingsByCapture.size, 0, 'bindings must be cleared after dispose');
-	}
-
 	private handleNativeMessage(message: NativeScreenCaptureLifecycleMessage): void {
 		if (this.disposed) return;
 		if (!isRecord(message)) return;

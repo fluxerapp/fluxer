@@ -13,12 +13,6 @@ const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 const FETCH_DISCOVERY_BY_STATUS = GuildDiscoveryByStatus.selectCql({
 	where: GuildDiscoveryByStatus.where.eq('status'),
 });
-const FETCH_ALL_DISCOVERY_FIRST_PAGE = (limit: number) => GuildDiscovery.select({limit});
-const FETCH_ALL_DISCOVERY_PAGINATED = (limit: number) =>
-	GuildDiscovery.select({
-		where: GuildDiscovery.where.tokenGt('guild_id', 'last_guild_id'),
-		limit,
-	});
 
 export abstract class IGuildDiscoveryRepository {
 	abstract findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
@@ -26,8 +20,6 @@ export abstract class IGuildDiscoveryRepository {
 	abstract listByStatus(status: string): Promise<Array<GuildDiscoveryByStatusRow>>;
 
 	abstract listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract listAllPaginated(limit: number, lastGuildId?: GuildID): Promise<Array<GuildDiscoveryRow>>;
 
 	abstract upsert(row: GuildDiscoveryRow): Promise<void>;
 
@@ -64,17 +56,6 @@ export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
 		const indexRows = await this.listByStatus(status);
 		const fullRows = await Promise.all(indexRows.map((indexRow) => this.findByGuildId(indexRow.guild_id)));
 		return fullRows.filter((row): row is GuildDiscoveryRow => row !== null);
-	}
-
-	async listAllPaginated(limit: number, lastGuildId?: GuildID): Promise<Array<GuildDiscoveryRow>> {
-		if (lastGuildId) {
-			return fetchMany<GuildDiscoveryRow>(
-				FETCH_ALL_DISCOVERY_PAGINATED(limit).bind({
-					last_guild_id: lastGuildId,
-				}),
-			);
-		}
-		return fetchMany<GuildDiscoveryRow>(FETCH_ALL_DISCOVERY_FIRST_PAGE(limit).bind({}));
 	}
 
 	async upsert(row: GuildDiscoveryRow): Promise<void> {

@@ -317,7 +317,7 @@ function applyScreenShareHevcOptOutMigrationV1(parsed: Record<string, unknown>):
 	return true;
 }
 
-export function applyScreenShareSoftwareQualityRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+function applyScreenShareSoftwareQualityRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
 	const stored = parsed.screenShareSoftwareQualityPrefV2;
 	delete parsed.screenShareSoftwareQualityPrefV2;
 	if (parsed.screenShareSoftwareQualityRetiredV1 === true) {
@@ -330,7 +330,7 @@ export function applyScreenShareSoftwareQualityRetiredMigrationV1(parsed: Record
 	return true;
 }
 
-export function applyScreenShareBackupCodecModeRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+function applyScreenShareBackupCodecModeRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.screenShareBackupCodecModePrefV2 === undefined) {
 		return false;
 	}

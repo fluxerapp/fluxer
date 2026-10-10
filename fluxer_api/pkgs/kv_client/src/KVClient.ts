@@ -65,52 +65,6 @@ if redis.call('GET', KEYS[1]) == ARGV[1] then
 end
 return 0
 `;
-const RENEW_SNOWFLAKE_SCRIPT = `
-if redis.call('GET', KEYS[1]) == ARGV[1] then
-	redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
-	return 1
-end
-return 0
-`;
-const TRY_CONSUME_TOKENS_SCRIPT = `
-${DECODE_BUCKET_STATE_SCRIPT}
-local key = KEYS[1]
-local now = tonumber(ARGV[1])
-local requested = tonumber(ARGV[2])
-local maxTokens = tonumber(ARGV[3])
-local refillRate = tonumber(ARGV[4])
-local refillIntervalMs = tonumber(ARGV[5])
-
-local data = redis.call('GET', key)
-local tokens = maxTokens
-local lastRefill = now
-
-if data then
-	tokens, lastRefill = decodeBucketState(data, 'tokens', 'lastRefill')
-end
-
-local elapsed = now - lastRefill
-if elapsed >= refillIntervalMs then
-	local intervals = math.floor(elapsed / refillIntervalMs)
-	local tokensToAdd = intervals * refillRate
-	if tokensToAdd > 0 then
-		tokens = math.min(maxTokens, tokens + tokensToAdd)
-		lastRefill = now
-	end
-end
-
-local consumed = 0
-if tokens >= requested then
-	consumed = requested
-	tokens = tokens - requested
-elseif tokens > 0 then
-	consumed = tokens
-	tokens = 0
-end
-
-redis.call('SET', key, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
-return consumed
-`;
 const CHECK_LEAKY_BUCKET_LIMIT_SCRIPT = `
 ${DECODE_BUCKET_STATE_SCRIPT}
 local key = KEYS[1]
@@ -322,15 +276,6 @@ export class KVClient implements IKVProvider {
 		}
 		this.closed = true;
 		this.client.disconnect(false);
-	}
-
-	async health(): Promise<boolean> {
-		try {
-			return (await this.execute('health', async () => this.client.ping())) === 'PONG';
-		} catch (error) {
-			this.logger.debug({error}, 'KV health check failed');
-			return false;
-		}
 	}
 
 	async get(key: string): Promise<string | null> {
@@ -571,10 +516,6 @@ export class KVClient implements IKVProvider {
 		return await this.execute('hdel', async () => this.client.hdel(key, ...fields));
 	}
 
-	async hget(key: string, field: string): Promise<string | null> {
-		return await this.execute('hget', async () => this.client.hget(key, field));
-	}
-
 	async hgetall(key: string): Promise<Record<string, string>> {
 		return await this.execute('hgetall', async () => this.client.hgetall(key));
 	}
@@ -611,18 +552,6 @@ export class KVClient implements IKVProvider {
 		return parseIntegerDecision(result, 'extendLock');
 	}
 
-	async renewSnowflakeNode(key: string, instanceId: string, ttlSeconds: number): Promise<boolean> {
-		const result = await this.executeScript(
-			'renewSnowflakeNode',
-			RENEW_SNOWFLAKE_SCRIPT,
-			1,
-			key,
-			instanceId,
-			ttlSeconds,
-		);
-		return parseIntegerDecision(result, 'renewSnowflakeNode');
-	}
-
 	async checkLeakyBucketLimit(key: string, limit: number, windowMs: number, cost: number): Promise<KVRateLimitResult> {
 		const result = await this.executeJsonScript(
 			'checkLeakyBucketLimit',
@@ -635,31 +564,6 @@ export class KVClient implements IKVProvider {
 			cost,
 		);
 		return parseRateLimitResult(result);
-	}
-
-	async tryConsumeTokens(
-		key: string,
-		requested: number,
-		maxTokens: number,
-		refillRate: number,
-		refillIntervalMs: number,
-	): Promise<number> {
-		const now = Date.now();
-		const result = await this.executeScript(
-			'tryConsumeTokens',
-			TRY_CONSUME_TOKENS_SCRIPT,
-			1,
-			key,
-			now,
-			requested,
-			maxTokens,
-			refillRate,
-			refillIntervalMs,
-		);
-		if (!isNonNegativeSafeInteger(result) || result > requested) {
-			throw createInvalidResponseError('tryConsumeTokens', 'an integer token count within the requested amount');
-		}
-		return result;
 	}
 
 	async scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void> {

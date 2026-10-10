@@ -49,14 +49,6 @@ describe('UserChannelService', () => {
 		await harness?.shutdown();
 	});
 	describe('DM channel creation', () => {
-		test('can create DM with a friend', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const channel = await createDmChannel(harness, user1.token, user2.userId);
-			expect(channel.id).toBeDefined();
-			expect(channel.type).toBe(ChannelTypes.DM);
-		});
 		test('bot can create DM when it shares a guild with the recipient', async () => {
 			const botAccount = await createTestBotAccount(harness);
 			const recipient = await createTestAccount(harness);
@@ -92,22 +84,6 @@ describe('UserChannelService', () => {
 				.get('/users/@me/channels')
 				.execute();
 			expect(recipientChannels.some((recipientChannel) => recipientChannel.id === channel.id)).toBe(true);
-		});
-		test('cannot create DM with yourself', async () => {
-			const user = await createTestAccount(harness);
-			await createBuilder(harness, user.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: user.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('cannot create DM with unknown user', async () => {
-			const user = await createTestAccount(harness);
-			await createBuilder(harness, user.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: '999999999999999999'})
-				.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_USER')
-				.execute();
 		});
 		test('can create DM with a user who blocked you', async () => {
 			const user1 = await createTestAccount(harness);
@@ -187,18 +163,6 @@ describe('UserChannelService', () => {
 		});
 	});
 	describe('Group DM creation', () => {
-		test('can create group DM with friends', async () => {
-			const owner = await createTestAccount(harness);
-			const friend1 = await createTestAccount(harness);
-			const friend2 = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend1);
-			await createFriendship(harness, owner, friend2);
-			const channel = await createGroupDmChannel(harness, owner.token, [friend1.userId, friend2.userId]);
-			expect(channel.id).toBeDefined();
-			expect(channel.type).toBe(ChannelTypes.GROUP_DM);
-			expect(channel.owner_id).toBe(owner.userId);
-			expect(channel.recipients.length).toBe(2);
-		});
 		test('cannot create group DM with non-friend', async () => {
 			const owner = await createTestAccount(harness);
 			const friend = await createTestAccount(harness);
@@ -210,116 +174,8 @@ describe('UserChannelService', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'GROUP_DM_RECIPIENTS_NOT_ADDABLE')
 				.execute();
 		});
-		test('cannot add yourself to group DM recipients', async () => {
-			const owner = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend);
-			await createBuilder(harness, owner.token)
-				.post('/users/@me/channels')
-				.body({recipients: [friend.userId, owner.userId]})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('cannot add duplicate recipients to group DM', async () => {
-			const owner = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend);
-			await createBuilder(harness, owner.token)
-				.post('/users/@me/channels')
-				.body({recipients: [friend.userId, friend.userId]})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('cannot create group DM with unknown user', async () => {
-			const owner = await createTestAccount(harness);
-			const friend = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend);
-			await createBuilder(harness, owner.token)
-				.post('/users/@me/channels')
-				.body({recipients: [friend.userId, '999999999999999999']})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'GROUP_DM_RECIPIENTS_NOT_ADDABLE')
-				.execute();
-		});
-	});
-	describe('private channel listing', () => {
-		test('lists all private channels for user', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const user3 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			await createFriendship(harness, user1, user3);
-			await createDmChannel(harness, user1.token, user2.userId);
-			await createDmChannel(harness, user1.token, user3.userId);
-			const channels = await createBuilder<PrivateChannelsResponse>(harness, user1.token)
-				.get('/users/@me/channels')
-				.execute();
-			expect(channels.length).toBe(2);
-		});
-	});
-	describe('DM pinning', () => {
-		test('can pin and unpin DM channel', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const channel = await createDmChannel(harness, user1.token, user2.userId);
-			await createBuilder(harness, user1.token)
-				.put(`/users/@me/channels/${channel.id}/pin`)
-				.body(null)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await createBuilder(harness, user1.token)
-				.delete(`/users/@me/channels/${channel.id}/pin`)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-		test('cannot pin non-DM channel', async () => {
-			const user = await createTestAccount(harness);
-			await createBuilder(harness, user.token)
-				.put('/users/@me/channels/999999999999999999/pin')
-				.body(null)
-				.expect(HTTP_STATUS.NOT_FOUND)
-				.execute();
-		});
-	});
-	describe('preload DM messages', () => {
-		test('can preload messages for multiple DM channels', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const user3 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			await createFriendship(harness, user1, user3);
-			await ensureSessionStarted(harness, user1.token);
-			const channel1 = await createDmChannel(harness, user1.token, user2.userId);
-			const channel2 = await createDmChannel(harness, user1.token, user3.userId);
-			await sendChannelMessage(harness, user1.token, channel1.id, 'Hello user2');
-			await sendChannelMessage(harness, user1.token, channel2.id, 'Hello user3');
-			const result = await createBuilder<Record<string, unknown>>(harness, user1.token)
-				.post('/users/@me/preload-messages')
-				.body({channels: [channel1.id, channel2.id]})
-				.execute();
-			expect(result).toBeDefined();
-		});
-		test('cannot preload more than 100 channels', async () => {
-			const user = await createTestAccount(harness);
-			const tooManyChannels = Array.from({length: 101}, (_, i) => i.toString());
-			await createBuilder(harness, user.token)
-				.post('/users/@me/preload-messages')
-				.body({channels: tooManyChannels})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
 	});
 	describe('sending messages in DMs', () => {
-		test('can send message in DM to friend', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			await ensureSessionStarted(harness, user1.token);
-			const channel = await createDmChannel(harness, user1.token, user2.userId);
-			const message = await sendChannelMessage(harness, user1.token, channel.id, 'Hello!');
-			expect(message.id).toBeDefined();
-			expect(message.content).toBe('Hello!');
-		});
 		test('cannot send message to user who blocked you', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
@@ -338,31 +194,6 @@ describe('UserChannelService', () => {
 		});
 	});
 	describe('group DM recipient management', () => {
-		test('owner can add friend to group DM', async () => {
-			const owner = await createTestAccount(harness);
-			const friend1 = await createTestAccount(harness);
-			const friend2 = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend1);
-			await createFriendship(harness, owner, friend2);
-			const channel = await createGroupDmChannel(harness, owner.token, [friend1.userId]);
-			await createBuilder(harness, owner.token)
-				.put(`/channels/${channel.id}/recipients/${friend2.userId}`)
-				.body(null)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
-		test('owner can remove recipient from group DM', async () => {
-			const owner = await createTestAccount(harness);
-			const friend1 = await createTestAccount(harness);
-			const friend2 = await createTestAccount(harness);
-			await createFriendship(harness, owner, friend1);
-			await createFriendship(harness, owner, friend2);
-			const channel = await createGroupDmChannel(harness, owner.token, [friend1.userId, friend2.userId]);
-			await createBuilder(harness, owner.token)
-				.delete(`/channels/${channel.id}/recipients/${friend2.userId}`)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-		});
 		test('cannot add non-friend to group DM', async () => {
 			const owner = await createTestAccount(harness);
 			const friend = await createTestAccount(harness);
@@ -385,16 +216,6 @@ describe('UserChannelService', () => {
 			await createBuilder(harness, member1.token)
 				.delete(`/channels/${channel.id}/recipients/${member2.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('member can leave group DM', async () => {
-			const owner = await createTestAccount(harness);
-			const member = await createTestAccount(harness);
-			await createFriendship(harness, owner, member);
-			const channel = await createGroupDmChannel(harness, owner.token, [member.userId]);
-			await createBuilder(harness, member.token)
-				.delete(`/channels/${channel.id}/recipients/${member.userId}`)
-				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		});
 	});

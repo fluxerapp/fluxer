@@ -129,26 +129,6 @@ describe('voice state payloads', () => {
 		expect(JSON.parse(firstSent[0]).d.connection_id).toBe('connection-first');
 		expect(JSON.parse(secondSent[0]).d.connection_id).toBeNull();
 	});
-
-	test('stamps the injected mobile layout and geo instead of reading a global', () => {
-		const socket = createSocket({
-			isMobileLayout: () => true,
-			geo: () => ({latitude: '1.5', longitude: '-2.5'}),
-		});
-		const sent = attachOpenTransport(socket);
-
-		socket.updateVoiceStateExplicit({
-			guild_id: null,
-			channel_id: null,
-			self_mute: true,
-			self_deaf: true,
-			self_video: false,
-			self_stream: false,
-			connection_id: null,
-		});
-
-		expect(JSON.parse(sent[0]).d).toMatchObject({is_mobile: true, latitude: '1.5', longitude: '-2.5'});
-	});
 });
 
 function presenceFrames(sent: Array<string>): Array<unknown> {

@@ -39,10 +39,6 @@ export class ElasticsearchReportSearchService
 		await this.deleteDocument(reportId.toString());
 	}
 
-	async deleteReports(reportIds: Array<ReportID>): Promise<void> {
-		await this.deleteDocuments(reportIds.map((id) => id.toString()));
-	}
-
 	searchReports(
 		query: string,
 		filters: ReportSearchFilters,

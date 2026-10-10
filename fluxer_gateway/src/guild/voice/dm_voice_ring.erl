@@ -169,40 +169,6 @@ is_channel_recipient(UserId, State) ->
 
 -ifdef(TEST).
 
-is_dm_channel_type_test() ->
-    ?assert(is_dm_channel_type(1)),
-    ?assert(is_dm_channel_type(3)),
-    ?assertNot(is_dm_channel_type(0)),
-    ?assertNot(is_dm_channel_type(2)),
-    ?assertNot(is_dm_channel_type(4)).
-
-filter_recipient_id_test() ->
-    ?assertEqual(false, filter_recipient_id(null, 1)),
-    ?assertEqual(false, filter_recipient_id(1, 1)),
-    ?assertEqual({true, 2}, filter_recipient_id(2, 1)).
-
-parse_id_test() ->
-    ?assertEqual(123, parse_id(123)),
-    ?assertEqual(null, parse_id(invalid)).
-
-channel_recipient_ids_converted_shape_test() ->
-    Channel = #{<<"id">> => <<"100">>, <<"type">> => 1, <<"recipient_ids">> => [2, <<"3">>]},
-    ?assertEqual([2, 3], channel_recipient_ids(Channel)).
-
-channel_recipient_ids_api_shape_test() ->
-    Channel = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 1,
-        <<"recipients">> => [
-            #{<<"id">> => <<"2">>, <<"username">> => <<"dm-user">>},
-            #{<<"id">> => <<"3">>, <<"username">> => <<"other">>}
-        ]
-    },
-    ?assertEqual([2, 3], channel_recipient_ids(Channel)).
-
-channel_recipient_ids_missing_test() ->
-    ?assertEqual([], channel_recipient_ids(#{<<"id">> => <<"100">>, <<"type">> => 1})).
-
 check_recipient_accepts_session_owner_for_dm_types_test() ->
     State = #{
         user_id => 1,

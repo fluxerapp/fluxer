@@ -14,12 +14,9 @@
     retain_only_session_list/3,
     unsubscribe_session/2,
     get_list_subs/2,
-    has_subs/2,
     get_session_ranges/3,
     list_ids/1,
     fold_list_subs/4,
-    fold_lists/3,
-    fold_list_ids/3,
     is_subscribed/3
 ]).
 
@@ -122,13 +119,6 @@ lookup_list(Tab, Key) ->
 get_list_subs(ListId, Tab) ->
     collect_list(Tab, ets:next(Tab, {ListId, <<>>}), ListId, #{}).
 
--spec has_subs(binary(), ets:table()) -> boolean().
-has_subs(ListId, Tab) ->
-    case ets:next(Tab, {ListId, <<>>}) of
-        {ListId, SessionId} when is_binary(SessionId) -> true;
-        _ -> false
-    end.
-
 -spec get_session_ranges(binary(), binary(), ets:table()) -> [range()].
 get_session_ranges(SessionId, ListId, Tab) ->
     case ets:lookup(Tab, {ListId, SessionId}) of
@@ -143,14 +133,6 @@ list_ids(Tab) ->
 -spec fold_list_subs(binary(), ets:table(), fun((binary(), [range()], Acc) -> Acc), Acc) -> Acc.
 fold_list_subs(ListId, Tab, Fun, Acc0) ->
     fold_list_subs_loop(Tab, ets:next(Tab, {ListId, <<>>}), ListId, Fun, Acc0).
-
--spec fold_lists(fun((binary(), list_subs(), Acc) -> Acc), Acc, ets:table()) -> Acc.
-fold_lists(Fun, Acc0, Tab) ->
-    fold_lists_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
-
--spec fold_list_ids(fun((binary(), Acc) -> Acc), Acc, ets:table()) -> Acc.
-fold_list_ids(Fun, Acc0, Tab) ->
-    fold_list_ids_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
 
 -spec is_subscribed(binary(), binary(), ets:table()) -> boolean().
 is_subscribed(ListId, SessionId, Tab) ->
@@ -185,29 +167,6 @@ fold_list_subs_loop(_Tab, {Other, _}, ListId, _Fun, Acc) when Other =/= ListId -
 fold_list_subs_loop(Tab, {ListId, SId} = Key, ListId, Fun, Acc) when is_binary(SId) ->
     [{_, Ranges}] = ets:lookup(Tab, Key),
     fold_list_subs_loop(Tab, ets:next(Tab, Key), ListId, Fun, Fun(SId, Ranges, Acc)).
-
--spec fold_lists_loop(
-    fun((binary(), list_subs(), Acc) -> Acc), Acc, ets:table(), term()
-) -> Acc.
-fold_lists_loop(_Fun, Acc, _Tab, '$end_of_table') ->
-    Acc;
-fold_lists_loop(_Fun, Acc, _Tab, {idx_tab, _}) ->
-    Acc;
-fold_lists_loop(Fun, Acc, Tab, {ListId, _} = Key) when is_binary(ListId) ->
-    ListSubs = collect_list(Tab, Key, ListId, #{}),
-    Acc2 = Fun(ListId, ListSubs, Acc),
-    NextListKey = skip_past_list(Tab, Key, ListId),
-    fold_lists_loop(Fun, Acc2, Tab, NextListKey).
-
--spec fold_list_ids_loop(fun((binary(), Acc) -> Acc), Acc, ets:table(), term()) -> Acc.
-fold_list_ids_loop(_Fun, Acc, _Tab, '$end_of_table') ->
-    Acc;
-fold_list_ids_loop(_Fun, Acc, _Tab, {idx_tab, _}) ->
-    Acc;
-fold_list_ids_loop(Fun, Acc, Tab, {ListId, _} = Key) when is_binary(ListId) ->
-    Acc2 = Fun(ListId, Acc),
-    NextListKey = skip_past_list(Tab, Key, ListId),
-    fold_list_ids_loop(Fun, Acc2, Tab, NextListKey).
 
 -spec skip_past_list(ets:table(), term(), binary()) -> term().
 skip_past_list(Tab, Key, ListId) ->

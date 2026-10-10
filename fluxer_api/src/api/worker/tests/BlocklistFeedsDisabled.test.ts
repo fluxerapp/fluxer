@@ -121,7 +121,7 @@ describe('blocklist feeds turned off', () => {
 		await syncFileShaBlocklists({}, createHelpers());
 
 		staleRead.mockRestore();
-		expect(await adminRepository.isFileShaBanned(FEED_SHA)).toBe(true);
+		expect((await adminRepository.loadAllBannedFileShas()).map((row) => row.sha256_hex)).toContain(FEED_SHA);
 	});
 
 	it('file-SHA cache skips feed rows only while feeds are off', async () => {

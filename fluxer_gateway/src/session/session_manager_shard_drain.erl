@@ -5,8 +5,6 @@
 
 -export([
     broadcast_reconnect_drain/1,
-    broadcast_transfer_to/2,
-    broadcast_transfer_to_topology/2,
     handoff_to_topology/2,
     build_session_data/7,
     build_ready_data_for_session/1,
@@ -18,6 +16,10 @@
     extract_e2ee_capable/1,
     fetch_rpc_data/2
 ]).
+
+-ifdef(TEST).
+-export([push_and_drain_session/3]).
+-endif.
 
 -export_type([handoff_result/0, identify_data/0, session_id/0, shard_identify_data/0, state/0]).
 
@@ -60,33 +62,6 @@ maybe_drain_session(_SessionId, {Pid, _Ref}, Count) when is_pid(Pid) ->
 maybe_drain_session(_SessionId, _SessionRef, Count) ->
     Count.
 
--spec broadcast_transfer_to(node(), state()) -> non_neg_integer().
-broadcast_transfer_to(TargetNode, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    maps:fold(
-        fun(SId, SRef, Cnt) ->
-            maybe_transfer(TargetNode, SId, SRef, Cnt)
-        end,
-        0,
-        Sessions
-    ).
-
--spec maybe_transfer(node(), session_id(), term(), non_neg_integer()) -> non_neg_integer().
-maybe_transfer(TargetNode, SessionId, {Pid, _Ref}, Count) when is_pid(Pid) ->
-    case process_liveness:is_alive(Pid) of
-        true -> transfer_count(TargetNode, SessionId, Pid, Count);
-        false -> Count
-    end;
-maybe_transfer(_, _, _, Count) ->
-    Count.
-
--spec transfer_count(node(), session_id(), pid(), non_neg_integer()) -> non_neg_integer().
-transfer_count(TargetNode, SessionId, Pid, Count) ->
-    case push_and_drain_session(TargetNode, SessionId, Pid) of
-        ok -> Count + 1;
-        {error, _Reason} -> Count
-    end.
-
 -spec push_and_drain_session(node(), session_id(), pid()) -> ok | {error, term()}.
 push_and_drain_session(TargetNode, SessionId, Pid) ->
     ExportResult =
@@ -116,10 +91,6 @@ do_push_and_drain(TargetNode, SessionId, SessionState, Pid) ->
             ),
             Error
     end.
-
--spec broadcast_transfer_to_topology([node()], state()) -> non_neg_integer().
-broadcast_transfer_to_topology(TargetNodes, State) ->
-    maps:get(handed_off, handoff_to_topology(TargetNodes, State)).
 
 -spec handoff_to_topology([node()], state()) -> handoff_result().
 handoff_to_topology(TargetNodes, State) ->

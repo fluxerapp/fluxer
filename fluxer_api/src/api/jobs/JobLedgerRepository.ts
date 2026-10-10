@@ -343,11 +343,4 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 		const fullRows = await Promise.all(activeRows.map((r) => this.getJob(r.job_id)));
 		return fullRows.filter((r): r is JobByIdRow => r !== null);
 	}
-
-	async listActiveJobsByTaskType(taskType: string): Promise<Array<JobByIdRow>> {
-		const activeRows = await fetchMany<JobActiveRow>(ACTIVE_JOBS_QUERY.bind({}));
-		const matching = activeRows.filter((r) => r.task_type === taskType);
-		const fullRows = await Promise.all(matching.map((r) => this.getJob(r.job_id)));
-		return fullRows.filter((r): r is JobByIdRow => r !== null);
-	}
 }

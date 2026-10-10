@@ -73,17 +73,4 @@ describe('resolveExpressionSourceGuild', () => {
 		expect(community.features).not.toContain(GuildFeatures.INVITES_DISABLED);
 		expect(community.features).not.toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
 	});
-
-	it('strips the animated icon prefix unless the community is entitled to it', async () => {
-		const plain = await resolveExpressionSourceGuild({
-			loadGuild: () => Promise.resolve(guild([GuildFeatures.DISCOVERABLE], 'a_icon')),
-			isMember: () => Promise.resolve(false),
-		});
-		const animated = await resolveExpressionSourceGuild({
-			loadGuild: () => Promise.resolve(guild([GuildFeatures.DISCOVERABLE, GuildFeatures.ANIMATED_ICON], 'a_icon')),
-			isMember: () => Promise.resolve(false),
-		});
-		expect(plain.icon).toBe('icon');
-		expect(animated.icon).toBe('a_icon');
-	});
 });

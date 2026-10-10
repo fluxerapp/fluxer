@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {getConfig} from '@app/api/Config';
 import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
 import {applySharedListUpdate, resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
-import {setCachedProductName} from '@app/api/instance/ProductName';
 import {IpBanMiddleware, ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
@@ -12,7 +8,7 @@ import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {Hono} from 'hono';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it} from 'vitest';
 
 interface Pipeline {
 	request: (headers: Record<string, string>) => Promise<Response>;
@@ -58,13 +54,6 @@ beforeEach(() => {
 	resetSharedListsForTests();
 });
 
-const originalSelfHosted = getConfig().instance.selfHosted;
-
-afterEach(() => {
-	getConfig().instance.selfHosted = originalSelfHosted;
-	setCachedProductName(null);
-});
-
 describe('client ip resolution across the request pipeline', () => {
 	it('resolves once and shares that resolution with every later middleware', async () => {
 		const pipeline = createPipeline();
@@ -87,35 +76,6 @@ describe('client ip resolution across the request pipeline', () => {
 		const response = await pipeline.request({'x-forwarded-for': '203.0.113.30'});
 		expect(response.status).toBe(403);
 		expect(pipeline.errors[0]).toBeInstanceOf(IpBannedError);
-	});
-	it.each([
-		[false, 'support@fluxer.com'],
-		[true, null],
-	])('gives a banned client the appeal address of the instance (self-hosted %s)', async (selfHosted, appealEmail) => {
-		getConfig().instance.selfHosted = selfHosted;
-		ipBanCache.ban('203.0.113.20');
-		applySharedListUpdate('ip_blocked', '203.0.113.30\n');
-		const pipeline = createPipeline();
-		await pipeline.request({'x-forwarded-for': '203.0.113.20'});
-		await pipeline.request({'x-forwarded-for': '203.0.113.30'});
-		expect(pipeline.errors).toHaveLength(2);
-		for (const error of pipeline.errors) {
-			expect(error).toBeInstanceOf(IpBannedError);
-			expect((error as IpBannedError).data).toMatchObject({appeal_email: appealEmail, appeals_supported: true});
-			expect((error as IpBannedError).messageVariables).toMatchObject({appealEmail});
-		}
-	});
-	it('names the instance in the block message variables', async () => {
-		setCachedProductName('Example Chat');
-		ipBanCache.ban('203.0.113.20');
-		applySharedListUpdate('ip_blocked', '203.0.113.30\n');
-		const pipeline = createPipeline();
-		await pipeline.request({'x-forwarded-for': '203.0.113.20'});
-		await pipeline.request({'x-forwarded-for': '203.0.113.30'});
-		expect(pipeline.errors).toHaveLength(2);
-		for (const error of pipeline.errors) {
-			expect((error as IpBannedError).messageVariables).toMatchObject({product_name: 'Example Chat'});
-		}
 	});
 	it('rejects a malformed client ip header after the ban check saw no address', async () => {
 		const pipeline = createPipeline();

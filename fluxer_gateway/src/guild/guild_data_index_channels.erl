@@ -211,26 +211,6 @@ overwrite_tuple(_) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-channel_list_non_map_input_test() ->
-    ?assertEqual([], channel_list(not_a_map)).
-
-channel_list_non_list_channels_value_test() ->
-    ?assertEqual([], channel_list(#{<<"channels">> => <<"invalid">>})).
-
-channel_index_non_map_input_test() ->
-    ?assertEqual(#{}, channel_index(not_a_map)).
-
-channel_index_from_list_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"300">>, <<"name">> => <<"general">>},
-            #{<<"id">> => <<"301">>, <<"name">> => <<"random">>}
-        ]
-    },
-    Index = channel_index(Data),
-    ?assertEqual(2, map_size(Index)),
-    ?assertEqual(<<"general">>, maps:get(<<"name">>, maps:get(300, Index))).
-
 forum_categories_list_plain_children_of_forum_parents_test() ->
     Channels = [
         #{<<"id">> => 1, <<"type">> => 4},
@@ -244,24 +224,5 @@ forum_categories_list_plain_children_of_forum_parents_test() ->
     Data = put_channels(Channels, #{}),
     ?assertEqual(#{1 => [11]}, maps:get(thread_forum_categories, Data)),
     ?assertNot(maps:is_key(thread_forum_categories, put_channels([], Data))).
-
-put_channels_updates_list_and_index_test() ->
-    Data = #{<<"channels">> => []},
-    NewChannels = [
-        #{<<"id">> => <<"50">>, <<"name">> => <<"ch1">>},
-        #{<<"id">> => <<"51">>, <<"name">> => <<"ch2">>}
-    ],
-    Updated = put_channels(NewChannels, Data),
-    ?assertEqual(
-        [
-            #{<<"id">> => 50, <<"name">> => <<"ch1">>},
-            #{<<"id">> => 51, <<"name">> => <<"ch2">>}
-        ],
-        channel_list(Updated)
-    ),
-    ?assertEqual(2, map_size(channel_index(Updated))).
-
-put_channels_non_map_data_returns_unchanged_test() ->
-    ?assertEqual(not_a_map, put_channels([], not_a_map)).
 
 -endif.

@@ -17,12 +17,7 @@ import {
 } from '@app/api/database/CassandraQueryExecution';
 import type {BillingInvoiceRow} from '@app/api/database/types/BillingTypes';
 import {BILLING_INVOICE_COLUMNS} from '@app/api/database/types/BillingTypes';
-import {
-	BillingCustomersByUserId,
-	BillingInvoices,
-	BillingInvoicesByCustomer,
-	BillingInvoicesBySubscription,
-} from '@app/api/Tables';
+import {BillingInvoices, BillingInvoicesByCustomer, BillingInvoicesBySubscription} from '@app/api/Tables';
 import type Stripe from 'stripe';
 
 const FETCH_BY_ID = BillingInvoices.selectCql({
@@ -34,9 +29,6 @@ const FETCH_BY_CUSTOMER_PARTITION = BillingInvoicesByCustomer.selectCql({
 });
 const FETCH_BY_PROVIDER_IDS = BillingInvoices.selectCql({
 	where: BillingInvoices.where.in('provider_id', 'provider_ids'),
-});
-const FETCH_CUSTOMERS_BY_USER = BillingCustomersByUserId.selectCql({
-	where: BillingCustomersByUserId.where.eq('user_id'),
 });
 
 export class BillingInvoiceRepository {
@@ -66,29 +58,6 @@ export class BillingInvoiceRepository {
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingInvoiceRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
 		return {rows, pageState: refsPage.pageState};
-	}
-
-	async listByUser(
-		userId: bigint,
-		page?: {
-			pageSize: number;
-			pageState?: string | null;
-		},
-	): Promise<PagedQueryResult<BillingInvoiceRow>> {
-		const customerRefs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_CUSTOMERS_BY_USER, {user_id: userId});
-		if (customerRefs.length === 0) {
-			return {rows: [], pageState: null};
-		}
-		const aggregated: Array<BillingInvoiceRow> = [];
-		let lastPageState: string | null = null;
-		for (const ref of customerRefs) {
-			const result = await this.listByCustomer(ref.provider_id, page);
-			aggregated.push(...result.rows);
-			lastPageState = result.pageState;
-		}
-		return {rows: aggregated, pageState: lastPageState};
 	}
 
 	async upsertFromStripe(

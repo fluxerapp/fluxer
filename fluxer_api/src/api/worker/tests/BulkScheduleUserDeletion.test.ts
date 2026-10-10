@@ -589,7 +589,6 @@ describe('bulkScheduleUserDeletion', () => {
 				return 1n;
 			},
 			cancelJob: async () => false,
-			retryDeadLetterJob: async () => false,
 		});
 		await createBuilder(harness, admin.token)
 			.post('/admin/bulk-jobs')

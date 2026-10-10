@@ -70,8 +70,4 @@ export class Donor {
 		}
 		return this.subscriptionCurrentPeriodEnd > new Date();
 	}
-
-	isBusiness(): boolean {
-		return this.taxId !== null;
-	}
 }

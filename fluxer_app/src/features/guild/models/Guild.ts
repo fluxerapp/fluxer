@@ -13,7 +13,6 @@ import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants'
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRole as WireGuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface GuildRecordOptions {
 	instanceId?: string;
@@ -331,10 +330,6 @@ export class Guild {
 		return this.roles[roleId];
 	}
 
-	get createdAt(): Date {
-		return new Date(SnowflakeUtils.extractTimestamp(this.id));
-	}
-
 	isOwner(userId?: string | null): boolean {
 		return userId != null && this.ownerId === userId;
 	}
@@ -393,54 +388,5 @@ export class Guild {
 			return MessageNotifications.ONLY_MENTIONS;
 		}
 		return this.defaultMessageNotifications;
-	}
-
-	equals(other: Guild): boolean {
-		if (this === other) return true;
-		if (this.instanceId !== other.instanceId) return false;
-		if (this.id !== other.id) return false;
-		if (this.name !== other.name) return false;
-		if (this.icon !== other.icon) return false;
-		if (this.banner !== other.banner) return false;
-		if (this.bannerWidth !== other.bannerWidth) return false;
-		if (this.bannerHeight !== other.bannerHeight) return false;
-		if (this.splash !== other.splash) return false;
-		if (this.splashWidth !== other.splashWidth) return false;
-		if (this.splashHeight !== other.splashHeight) return false;
-		if (this.splashCardAlignment !== other.splashCardAlignment) return false;
-		if (this.embedSplash !== other.embedSplash) return false;
-		if (this.embedSplashWidth !== other.embedSplashWidth) return false;
-		if (this.embedSplashHeight !== other.embedSplashHeight) return false;
-		if (this.vanityURLCode !== other.vanityURLCode) return false;
-		if (this.ownerId !== other.ownerId) return false;
-		if (this.systemChannelId !== other.systemChannelId) return false;
-		if (this.systemChannelFlags !== other.systemChannelFlags) return false;
-		if (this.rulesChannelId !== other.rulesChannelId) return false;
-		if (this.afkChannelId !== other.afkChannelId) return false;
-		if (this.afkTimeout !== other.afkTimeout) return false;
-		if (this.verificationLevel !== other.verificationLevel) return false;
-		if (this.mfaLevel !== other.mfaLevel) return false;
-		if (this.nsfw !== other.nsfw) return false;
-		if (this.contentWarningLevel !== other.contentWarningLevel) return false;
-		if (this.contentWarningText !== other.contentWarningText) return false;
-		if (this.explicitContentFilter !== other.explicitContentFilter) return false;
-		if (this.defaultMessageNotifications !== other.defaultMessageNotifications) return false;
-		if (this._disabledOperations !== other._disabledOperations) return false;
-		if (this.joinedAt !== other.joinedAt) return false;
-		if (this.messageHistoryCutoff !== other.messageHistoryCutoff) return false;
-		if (this.unavailable !== other.unavailable) return false;
-		if (this.memberCount !== other.memberCount) return false;
-		if (this.features.size !== other.features.size) return false;
-		for (const feature of this.features) {
-			if (!other.features.has(feature)) return false;
-		}
-		const thisRoleIds = Object.keys(this.roles);
-		const otherRoleIds = Object.keys(other.roles);
-		if (thisRoleIds.length !== otherRoleIds.length) return false;
-		for (const roleId of thisRoleIds) {
-			const otherRole = other.roles[roleId];
-			if (!otherRole || !this.roles[roleId].equals(otherRole)) return false;
-		}
-		return true;
 	}
 }

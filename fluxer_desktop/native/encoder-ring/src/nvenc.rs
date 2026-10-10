@@ -1189,13 +1189,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sdk_not_found_when_dll_missing() {
-        let dummy_path = "/this/path/does/not/exist/fake-nvencodeAPI64.dll";
-        let result = unsafe { Library::new(dummy_path) };
-        assert!(result.is_err());
-    }
-
-    #[test]
     fn struct_version_layout_is_stable() {
         assert_eq!(NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER, struct_version(1));
         assert_eq!(NV_ENCODE_API_FUNCTION_LIST_VER, struct_version(2));

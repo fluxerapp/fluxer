@@ -3,14 +3,9 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
 import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
-import {executeConditional, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	getCompiledChannelThreadsConfig,
-	insertGuildThreadMarker,
-	isTainted,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {getCompiledChannelThreadsConfig, insertGuildThreadMarker} from '@app/api/experiment/ChannelThreadsGate';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
@@ -80,25 +75,6 @@ describe('RpcService guild load thread permission seeding', () => {
 		await loadGuild(guild.id);
 		await loadGuild(guild.id);
 		expect(addJob).not.toHaveBeenCalled();
-	});
-
-	test('channels loads skip the taint read for control guilds with no dangling references', async () => {
-		await setEnabled(true);
-		await setEnabled(false);
-		clearChannelThreadsTaintCacheForTesting();
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Control');
-		const guildId = createGuildID(BigInt(guild.id));
-		await loadCollection(guild.id, 'channels');
-		await executeConditional(
-			GuildThreadState.insertIfNotExists({
-				guild_id: guildId,
-				first_active_at: new Date(),
-				perms_seeded_at: null,
-				search_backfilled_at: null,
-			}),
-		);
-		expect(await isTainted(guildId, {fresh: true})).toBe(true);
 	});
 
 	test('channels loads keep references to dormant channels in retired guilds and repair real dangling ones', async () => {

@@ -187,34 +187,6 @@ is_guild_unavailable_for_user_unavailable_for_everyone_test() ->
     },
     ?assertEqual(true, guild_availability:is_guild_unavailable_for_user(123, State)).
 
-is_guild_unavailable_for_user_available_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}, <<"members">> => []}},
-    ?assertEqual(false, guild_availability:is_guild_unavailable_for_user(123, State)).
-
-check_unavailability_transition_no_change_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(no_change, guild_availability:check_unavailability_transition(State, State)).
-
-check_unavailability_transition_enabled_test() ->
-    OldState = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    NewState = #{
-        data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
-    },
-    ?assertEqual(
-        {unavailable_enabled, false},
-        guild_availability:check_unavailability_transition(OldState, NewState)
-    ).
-
-check_unavailability_transition_disabled_test() ->
-    OldState = #{
-        data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
-    },
-    NewState = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(
-        unavailable_disabled,
-        guild_availability:check_unavailability_transition(OldState, NewState)
-    ).
-
 -spec start_session_capture(atom(), pid()) -> pid().
 start_session_capture(Tag, Parent) ->
     spawn(fun() -> session_capture_loop(Tag, Parent) end).

@@ -153,24 +153,6 @@ is_member_list_updates_enabled(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-extract_session_id_if_needed_reaction_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_add, Data),
-    ?assertEqual(<<"sid">>, SessionId),
-    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
-
-extract_session_id_if_needed_other_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"content">> => <<"hi">>},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_create, Data),
-    ?assertEqual(undefined, SessionId),
-    ?assertEqual(Data, CleanData).
-
-extract_session_id_if_needed_reaction_remove_test() ->
-    Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
-    {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_remove, Data),
-    ?assertEqual(<<"sid">>, SessionId),
-    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
-
 should_skip_dispatch_guild_update_never_skipped_test() ->
     State = #{
         data => #{

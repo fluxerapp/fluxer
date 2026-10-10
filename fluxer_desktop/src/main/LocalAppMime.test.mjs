@@ -6,51 +6,11 @@ import {installElectronStub} from './LocalAppTestSupport.test.mjs';
 
 installElectronStub();
 
-const {isServedLocalAppExtension, localAppCacheControl, localAppContentType} = await import('./LocalAppMime.ts');
+const {localAppCacheControl} = await import('./LocalAppMime.ts');
 const {shouldRewriteLocalAppStaticMetadata} = await import('./LocalAppStaticMetadata.ts');
 
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const REVALIDATED = 'public, max-age=3600, must-revalidate';
-
-describe('local app content types', () => {
-	test('serves the types the renderer bundle actually needs', () => {
-		assert.equal(localAppContentType('/assets/main.js'), 'application/javascript; charset=utf-8');
-		assert.equal(localAppContentType('/assets/main.mjs'), 'application/javascript; charset=utf-8');
-		assert.equal(localAppContentType('/assets/main.css'), 'text/css; charset=utf-8');
-		assert.equal(localAppContentType('/index.html'), 'text/html; charset=utf-8');
-		assert.equal(localAppContentType('/manifest.json'), 'application/json; charset=utf-8');
-		assert.equal(localAppContentType('/web/favicon-32x32.png'), 'image/png');
-		assert.equal(localAppContentType('/web/apple-touch-icon.jpg'), 'image/jpeg');
-		assert.equal(localAppContentType('/assets/font.woff2'), 'font/woff2');
-	});
-
-	test('wasm is application/wasm so compileStreaming keeps working', () => {
-		assert.equal(localAppContentType('/assets/tree-sitter-rust.wasm'), 'application/wasm');
-	});
-
-	test('an unknown extension falls back to a non-executable type', () => {
-		assert.equal(localAppContentType('/assets/NOTICE.md'), 'application/octet-stream');
-		assert.equal(localAppContentType('/assets/no-extension'), 'application/octet-stream');
-	});
-
-	test('extension lookup is case insensitive', () => {
-		assert.equal(localAppContentType('/assets/MAIN.JS'), 'application/javascript; charset=utf-8');
-	});
-});
-
-describe('SPA fallback eligibility', () => {
-	test('a served extension means "this is a real asset, 404 if missing"', () => {
-		assert.equal(isServedLocalAppExtension('assets/deadbeefdeadbeef.js'), true);
-		assert.equal(isServedLocalAppExtension('web/favicon-32x32.png'), true);
-	});
-
-	test('a dotted route segment is not an asset and must reach index.html', () => {
-		assert.equal(isServedLocalAppExtension('invite/abc.def'), false);
-		assert.equal(isServedLocalAppExtension('users/1.2.3'), false);
-		assert.equal(isServedLocalAppExtension('theme/my.custom.theme'), false);
-		assert.equal(isServedLocalAppExtension('channels/@me'), false);
-	});
-});
 
 describe('local app cache control', () => {
 	test('content-hashed assets are immutable', () => {

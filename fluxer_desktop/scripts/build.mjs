@@ -388,10 +388,6 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 			relativePath: `linux-audio-capture.${tag}.node`,
 		});
 		artifacts.push({
-			label: '@fluxer/linux-screen-capture',
-			relativePath: `linux-screen-capture.${tag}.node`,
-		});
-		artifacts.push({
 			label: '@fluxer/linux-portals',
 			relativePath: `linux-portals.${tag}.node`,
 		});
@@ -609,12 +605,6 @@ function buildNativeAddons() {
 		buildNativeAddon({
 			label: '@fluxer/linux-audio-capture',
 			dirName: 'linux-audio-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
-		});
-		buildNativeAddon({
-			label: '@fluxer/linux-screen-capture',
-			dirName: 'linux-screen-capture',
 			commands: [['pnpm', 'build']],
 			jsEntry: 'index.js',
 		});

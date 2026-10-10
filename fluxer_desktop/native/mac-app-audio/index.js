@@ -98,11 +98,6 @@ function getBackendAvailability() {
 	return binding.getBackendAvailability();
 }
 
-function __setBindingForTests(nextBinding) {
-	binding = nextBinding;
-	loadError = null;
-}
-
 class ProcessLoopback extends EventEmitter {
 	constructor(pid, options = {}) {
 		super();
@@ -204,5 +199,4 @@ module.exports = {
 	getBackendInfo,
 	pidFromWindowId,
 	loadError,
-	__setBindingForTests,
 };

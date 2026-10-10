@@ -1,9 +1,8 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
 import type {GpuInfo} from '@app/types/electron.d';
-import {type I18n, type MessageDescriptor, setupI18n} from '@lingui/core';
+import type {MessageDescriptor} from '@lingui/core';
 import type {VideoCodec} from 'livekit-client';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
@@ -19,12 +18,6 @@ vi.mock('@app/features/app/config/Config', () => ({
 }));
 
 const {
-	formatScreenShareResolutionLabel,
-	formatScreenShareTargetLabel,
-	SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR,
-} = await import('@app/features/voice/utils/VoiceMessageDescriptors');
-
-const {
 	ENCODE_PROBE_VIDEO_CONFIG,
 	H264_ENCODE_PROBE_CONTENT_TYPES,
 	H264_PROBE_PROFILE_LEVEL_IDS,
@@ -33,105 +26,6 @@ const {
 	reconcileHardwareEncodeReport,
 	reportFromGpuInfo,
 } = await import('@app/features/voice/utils/GpuEncoderCapabilities');
-
-const icu = setupI18n({locale: 'en', messages: {en: {}}});
-
-type Values = Record<string, unknown> | undefined;
-
-const plainI18n = {
-	locale: 'en',
-	_: (descriptor: MessageDescriptor, values?: Values) => {
-		const message = descriptor.message;
-		if (typeof message !== 'string') {
-			throw new Error(`descriptor ${JSON.stringify(descriptor)} has no message`);
-		}
-		return icu._({id: message, message}, values);
-	},
-} as unknown as I18n;
-
-const FIXED_TARGET: ScreenShareTarget = {
-	mode: 'screenshare',
-	resolution: 'ultra',
-	frameRate: 30,
-	context: 'display',
-	width: 2560,
-	height: 1440,
-	rung: 'ultra',
-	maxBitrate: 4_000_000,
-	contentHint: 'text',
-	degradationPreference: 'maintain-resolution',
-	softwareEncoderClamped: false,
-	presetOwned: true,
-	tierLimited: false,
-	deviceMapped: false,
-};
-
-const SOURCE_BOX_TARGET: ScreenShareTarget = {
-	...FIXED_TARGET,
-	resolution: 'source',
-	frameRate: 15,
-	width: 3840,
-	height: 2160,
-	rung: 'source',
-	maxBitrate: 4_500_000,
-};
-
-const SOURCE_FITTED_TARGET: ScreenShareTarget = {
-	...SOURCE_BOX_TARGET,
-	width: 1920,
-	height: 1080,
-	rung: 'high',
-};
-
-describe('formatScreenShareResolutionLabel', () => {
-	it.each([
-		[1920, 1080, '1080p'],
-		[1280, 720, '720p'],
-		[852, 480, '480p'],
-		[854, 480, '480p'],
-		[2560, 1440, '1440p'],
-		[3840, 2160, '2160p'],
-		[2714, 762, '2714×762'],
-		[640, 480, '640×480'],
-		[1080, 1920, '1080×1920'],
-		[800, 600, '800×600'],
-		[1600, 900, '1600×900'],
-		[1280, 800, '1280×800'],
-		[860, 480, '480p'],
-		[864, 480, '864×480'],
-		[1910, 1080, '1080p'],
-		[1940, 1080, '1940×1080'],
-		[1900, 1080, '1900×1080'],
-	])('labels %ix%i as %s', (width, height, expected) => {
-		expect(formatScreenShareResolutionLabel(width, height)).toBe(expected);
-	});
-});
-
-describe('formatScreenShareTargetLabel', () => {
-	it('calls a source target with no known source size Source', () => {
-		expect(formatScreenShareTargetLabel(plainI18n, SOURCE_BOX_TARGET)).toBe('Source');
-	});
-
-	it('names the fitted size once a source target has source dimensions', () => {
-		expect(formatScreenShareTargetLabel(plainI18n, SOURCE_FITTED_TARGET)).toBe('1080p');
-	});
-
-	it('names the size a fixed target asked for', () => {
-		expect(formatScreenShareTargetLabel(plainI18n, FIXED_TARGET)).toBe('1440p');
-	});
-
-	it('names an odd fixed size by its dimensions', () => {
-		expect(formatScreenShareTargetLabel(plainI18n, {...FIXED_TARGET, width: 2714, height: 762})).toBe('2714×762');
-	});
-});
-
-describe('SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR', () => {
-	it('reads Source, has a translator comment and keeps the wording plain', () => {
-		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.message).toBe('Source');
-		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.comment).toEqual(expect.stringMatching(/\S/));
-		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.message).not.toMatch(/[;:—–]/);
-	});
-});
 
 const RTX_5090_GPU_INFO: GpuInfo = {
 	devices: [{active: true, vendorId: 0x10de, deviceId: 0x2b85, vendorName: 'NVIDIA', deviceString: 'RTX 5090'}],

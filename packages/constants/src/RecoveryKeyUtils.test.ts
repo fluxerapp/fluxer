@@ -6,7 +6,6 @@ import {
 	formatRecoveryKeyInput,
 	generateRecoveryKey,
 	normalizeRecoveryKey,
-	RECOVERY_KEY_FORMATTED_LENGTH,
 	RECOVERY_KEY_LENGTH,
 } from '@fluxer/constants/src/RecoveryKeyUtils';
 import {describe, expect, it} from 'vitest';
@@ -34,7 +33,7 @@ describe('generateRecoveryKey', () => {
 	it('returns the raw key and its display form', () => {
 		const {key, formatted} = generateRecoveryKey(new Uint8Array(20).fill(0xa5));
 		expect(key).toHaveLength(RECOVERY_KEY_LENGTH);
-		expect(formatted).toHaveLength(RECOVERY_KEY_FORMATTED_LENGTH);
+		expect(formatted).toHaveLength(39);
 		expect(formatted.split('-')).toHaveLength(8);
 		expect(formatted.replaceAll('-', '')).toBe(key);
 		expect(normalizeRecoveryKey(formatted)).toBe(key);

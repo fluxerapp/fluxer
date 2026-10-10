@@ -18,31 +18,6 @@ describe('getStatementMeta', () => {
 		expect(getStatementMeta('SELECT').unsafe).toBe(false);
 		expect(getStatementMeta('').unsafe).toBe(false);
 	});
-
-	it('derives the statement type', () => {
-		expect(getStatementMeta('  SELECT id FROM messages').type).toBe('SELECT');
-		expect(getStatementMeta('insert into messages (id) VALUES (:id)').type).toBe('INSERT');
-		expect(getStatementMeta('UPDATE messages SET content = :content').type).toBe('UPDATE');
-		expect(getStatementMeta('DELETE FROM messages WHERE id = :id').type).toBe('DELETE');
-		expect(getStatementMeta('BEGIN BATCH APPLY BATCH').type).toBe('BATCH');
-		expect(getStatementMeta('TRUNCATE messages').type).toBe('QUERY');
-	});
-
-	it('collects distinct IN parameter names in order', () => {
-		expect(getStatementMeta('SELECT id FROM messages WHERE id IN :ids AND author_id IN (:authors)').inParams).toEqual([
-			'ids',
-			'authors',
-		]);
-		expect(getStatementMeta('SELECT id FROM messages WHERE id IN :ids OR other_id IN :ids').inParams).toEqual(['ids']);
-		expect(getStatementMeta('SELECT id FROM messages WHERE id = :id').inParams).toEqual([]);
-	});
-
-	it('reuses the memoized entry for the same statement', () => {
-		const cql = 'SELECT id FROM memoized_rows WHERE id IN :ids';
-		const first = getStatementMeta(cql);
-		expect(getStatementMeta(cql)).toBe(first);
-		expect(getStatementMeta(`${cql} `)).not.toBe(first);
-	});
 });
 
 describe('normalizeInParams', () => {

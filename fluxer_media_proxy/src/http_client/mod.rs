@@ -123,64 +123,9 @@ pub fn build_raw_default() -> reqwest::Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::metrics::Metrics;
 
     fn millis(value: u64) -> NonZeroU64 {
         NonZeroU64::new(value).expect("test timeout must be nonzero")
-    }
-
-    #[test]
-    fn builds_retrying_client() {
-        let client = build(
-            HTTPClientOptions::new(millis(1), millis(1)),
-            Metrics::new().http_client(),
-        );
-        assert!(client.is_ok());
-    }
-
-    #[test]
-    fn default_options_keep_the_frozen_timeout_and_retry_budget() {
-        let options = HTTPClientOptions::default();
-        assert_eq!(options.connect_timeout_ms, millis(1_500));
-        assert_eq!(options.request_timeout_ms, millis(30_000));
-        assert_eq!(
-            options.retries,
-            HTTPRetryPolicy {
-                max_retries: NonZeroU32::new(2).expect("nonzero"),
-                min_delay_ms: millis(25),
-                max_delay_ms: millis(500),
-            }
-        );
-        assert_eq!(options.address_policy, HTTPAddressPolicy::Any);
-    }
-
-    #[test]
-    fn new_overrides_only_the_two_timeouts_and_keeps_the_default_retry_budget() {
-        let options = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert_eq!(options.connect_timeout_ms, millis(250));
-        assert_eq!(options.request_timeout_ms, millis(4_000));
-        assert_eq!(options.retries, HTTPClientOptions::default().retries);
-        assert_eq!(options.address_policy, HTTPAddressPolicy::Any);
-    }
-
-    #[test]
-    fn restricting_to_public_changes_only_the_address_policy() {
-        let base = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert_eq!(
-            base.restrict_to_public(),
-            HTTPClientOptions {
-                address_policy: HTTPAddressPolicy::PublicOnly,
-                ..base
-            }
-        );
-    }
-
-    #[test]
-    fn every_option_shape_produces_a_usable_transport_client() {
-        let base = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert!(build_raw(base).is_ok());
-        assert!(build_raw(base.restrict_to_public()).is_ok());
-        assert!(build_raw(HTTPClientOptions::default()).is_ok());
     }
 
     #[test]

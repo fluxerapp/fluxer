@@ -5,7 +5,6 @@
 
 -export([
     is_guild_unavailable_for_user/2,
-    check_unavailability_transition/2,
     handle_unavailability_transition/2,
     get_cached_unavailability_mode/1,
     is_unavailable_hidden_enabled/1,
@@ -40,11 +39,6 @@ is_guild_unavailable_for_user(UserId, State) ->
         available ->
             false
     end.
-
--spec check_unavailability_transition(guild_state(), guild_state()) ->
-    {unavailable_enabled, boolean()} | unavailable_disabled | no_change.
-check_unavailability_transition(OldState, NewState) ->
-    guild_availability_check:check_unavailability_transition(OldState, NewState).
 
 -spec get_cached_unavailability_mode(guild_id()) -> unavailability_mode().
 get_cached_unavailability_mode(GuildId) ->

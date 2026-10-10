@@ -47,14 +47,16 @@ describe('User recent mentions', () => {
 		});
 		await addMemberRole(harness, owner.token, guild.id, member.userId, accessRole.id);
 		const message = await sendMessage(harness, owner.token, channelId, `<@${member.userId}> private ping`);
-		await new UserRepository().createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(message.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: false,
-		});
+		await new UserRepository().createRecentMentions([
+			{
+				user_id: createUserID(BigInt(member.userId)),
+				channel_id: createChannelID(BigInt(channelId)),
+				message_id: createMessageID(BigInt(message.id)),
+				guild_id: createGuildID(BigInt(guild.id)),
+				is_everyone: false,
+				is_role: false,
+			},
+		]);
 		const visibleMentions = await createBuilder<MessageListResponse>(harness, member.token)
 			.get('/users/@me/mentions')
 			.expect(HTTP_STATUS.OK)
@@ -83,14 +85,16 @@ describe('User recent mentions', () => {
 		const thirdMessage = await sendMessage(harness, owner.token, channelId, `<@${member.userId}> third ping`);
 		const repository = new UserRepository();
 		for (const message of [firstMessage, secondMessage, thirdMessage]) {
-			await repository.createRecentMention({
-				user_id: createUserID(BigInt(member.userId)),
-				channel_id: createChannelID(BigInt(channelId)),
-				message_id: createMessageID(BigInt(message.id)),
-				guild_id: createGuildID(BigInt(guild.id)),
-				is_everyone: false,
-				is_role: false,
-			});
+			await repository.createRecentMentions([
+				{
+					user_id: createUserID(BigInt(member.userId)),
+					channel_id: createChannelID(BigInt(channelId)),
+					message_id: createMessageID(BigInt(message.id)),
+					guild_id: createGuildID(BigInt(guild.id)),
+					is_everyone: false,
+					is_role: false,
+				},
+			]);
 		}
 		await createBuilder(harness, member.token)
 			.post('/users/@me/mentions/read')
@@ -114,30 +118,36 @@ describe('User recent mentions', () => {
 		const roleMessage = await sendMessage(harness, owner.token, channelId, 'role row');
 		const directMessage = await sendMessage(harness, owner.token, channelId, 'direct row');
 		const repository = new UserRepository();
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(everyoneMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: true,
-			is_role: false,
-		});
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(roleMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: true,
-		});
-		await repository.createRecentMention({
-			user_id: createUserID(BigInt(member.userId)),
-			channel_id: createChannelID(BigInt(channelId)),
-			message_id: createMessageID(BigInt(directMessage.id)),
-			guild_id: createGuildID(BigInt(guild.id)),
-			is_everyone: false,
-			is_role: false,
-		});
+		await repository.createRecentMentions([
+			{
+				user_id: createUserID(BigInt(member.userId)),
+				channel_id: createChannelID(BigInt(channelId)),
+				message_id: createMessageID(BigInt(everyoneMessage.id)),
+				guild_id: createGuildID(BigInt(guild.id)),
+				is_everyone: true,
+				is_role: false,
+			},
+		]);
+		await repository.createRecentMentions([
+			{
+				user_id: createUserID(BigInt(member.userId)),
+				channel_id: createChannelID(BigInt(channelId)),
+				message_id: createMessageID(BigInt(roleMessage.id)),
+				guild_id: createGuildID(BigInt(guild.id)),
+				is_everyone: false,
+				is_role: true,
+			},
+		]);
+		await repository.createRecentMentions([
+			{
+				user_id: createUserID(BigInt(member.userId)),
+				channel_id: createChannelID(BigInt(channelId)),
+				message_id: createMessageID(BigInt(directMessage.id)),
+				guild_id: createGuildID(BigInt(guild.id)),
+				is_everyone: false,
+				is_role: false,
+			},
+		]);
 		const withoutRoles = await createBuilder<MessageListResponse>(harness, member.token)
 			.get('/users/@me/mentions?roles=false&everyone=true')
 			.expect(HTTP_STATUS.OK)
@@ -155,23 +165,27 @@ describe('User recent mentions', () => {
 		const channelId = createChannelID(20n);
 		const guildId = createGuildID(30n);
 		const everyoneMessageId = createMessageID(1000n);
-		await repository.createRecentMention({
-			user_id: userId,
-			channel_id: channelId,
-			message_id: everyoneMessageId,
-			guild_id: guildId,
-			is_everyone: true,
-			is_role: false,
-		});
-		for (let i = 0; i < 50; i++) {
-			await repository.createRecentMention({
+		await repository.createRecentMentions([
+			{
 				user_id: userId,
 				channel_id: channelId,
-				message_id: createMessageID(1001n + BigInt(i)),
+				message_id: everyoneMessageId,
 				guild_id: guildId,
-				is_everyone: false,
-				is_role: true,
-			});
+				is_everyone: true,
+				is_role: false,
+			},
+		]);
+		for (let i = 0; i < 50; i++) {
+			await repository.createRecentMentions([
+				{
+					user_id: userId,
+					channel_id: channelId,
+					message_id: createMessageID(1001n + BigInt(i)),
+					guild_id: guildId,
+					is_everyone: false,
+					is_role: true,
+				},
+			]);
 		}
 		const mentions = await repository.listRecentMentions(userId, true, false, true, 1);
 		expect(mentions.map((mention) => mention.messageId)).toEqual([everyoneMessageId]);

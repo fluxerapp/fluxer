@@ -108,29 +108,8 @@ class Invites {
 		return slot?.data && expired(slot.data, Date.now()) ? null : slot;
 	}
 
-	getInvites(target: InstanceHTTPTarget): Map<string, InviteSlot> {
-		const at = Date.now();
-		const prefix = `${instanceTargetIdentity(target)}\u0000`;
-		const visible = new Map<string, InviteSlot>();
-		for (const [resourceKey, slot] of this.inviteSlots) {
-			if (!resourceKey.startsWith(prefix) || (slot.data && expired(slot.data, at))) {
-				continue;
-			}
-			visible.set(resourceKey.slice(prefix.length), slot);
-		}
-		return visible;
-	}
-
-	getChannelInvites(channelId: string): Array<Invite> | null {
-		return this.channelInvites.get(channelId) ?? null;
-	}
-
 	getChannelInvitesFetchStatus(channelId: string): FetchStatus {
 		return this.channelFetchStatus.get(channelId) ?? 'idle';
-	}
-
-	getGuildInvites(guildId: string): Array<Invite> | null {
-		return this.guildInvites.get(guildId) ?? null;
 	}
 
 	getGuildInvitesFetchStatus(guildId: string): FetchStatus {

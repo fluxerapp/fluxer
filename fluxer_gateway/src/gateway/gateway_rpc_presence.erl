@@ -344,12 +344,6 @@ sync_blocked_ids_for_user(_UserId) ->
 
 -ifdef(TEST).
 
-normalize_recipients_test() ->
-    Input = #{<<"123">> => [<<"456">>, <<"789">>]},
-    Result = normalize_recipients(Input),
-    ?assert(is_map(Result)),
-    ?assertEqual(1, maps:size(Result)).
-
 resolve_owner_node_uses_remote_owner_when_valid_test() ->
     RemoteNode = 'gateway_b@127.0.0.1',
     ?assertEqual(
@@ -373,18 +367,6 @@ dispatch_event_atom_accepts_thread_events_test() ->
     ),
     ?assertEqual(thread_list_sync, dispatch_event_atom_or_error(<<"THREAD_LIST_SYNC">>)),
     ?assertEqual(forum_unreads, dispatch_event_atom_or_error(<<"FORUM_UNREADS">>)).
-
-presence_manager_server_ref_local_test() ->
-    ?assertEqual(presence_manager, presence_manager_server_ref(node())).
-
-offline_message_author_id_accepts_system_user_test() ->
-    ?assertEqual(system, offline_message_author_id(#{<<"author">> => #{<<"id">> => <<"0">>}})),
-    ?assertEqual(system, offline_message_author_id(#{<<"author">> => #{<<"id">> => 0}})).
-
-offline_message_author_id_accepts_positive_snowflake_test() ->
-    ?assertEqual(
-        {ok, 123}, offline_message_author_id(#{<<"author">> => #{<<"id">> => <<"123">>}})
-    ).
 
 offline_message_create_system_author_is_success_test() ->
     ?assertEqual(

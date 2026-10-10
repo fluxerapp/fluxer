@@ -17,20 +17,13 @@ export {
 } from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 export type {
 	VoiceEngineV2ClockPort,
-	VoiceEngineV2EntropySource,
-	VoiceEngineV2PlatformPort,
 	VoiceEngineV2RandomPort,
 	VoiceEngineV2SystemClockPort,
-	VoiceEngineV2SystemRandomPort,
 	VoiceEngineV2WallClockSource,
 } from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 export {
 	createVoiceEngineV2DeterministicClockPort,
-	createVoiceEngineV2DeterministicPlatformPort,
-	createVoiceEngineV2SeededRandomPort,
 	createVoiceEngineV2SystemClockPort,
-	createVoiceEngineV2SystemPlatformPort,
-	createVoiceEngineV2SystemRandomPort,
 } from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 export {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 export type {

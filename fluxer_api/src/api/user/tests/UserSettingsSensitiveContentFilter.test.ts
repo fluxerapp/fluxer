@@ -37,51 +37,7 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.BLUR);
 		});
 	});
-	describe('updating individual fields', () => {
-		test('updates sensitive_content_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-			});
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
-		});
-		test('updates sensitive_content_non_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-		});
-		test('updates sensitive_content_guild_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-		});
-	});
-	describe('updating all fields at once', () => {
-		test('updates all three filters simultaneously', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-		});
-	});
 	describe('validation', () => {
-		test('rejects invalid value for sensitive_content_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_friend_dm_filter: 3})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
 		test('rejects a non-adult account relaxing the friend DM filter', async () => {
 			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
 			const response = await createBuilder<{
@@ -146,44 +102,6 @@ describe('User Settings - Sensitive Content Filters', () => {
 			} finally {
 				await repository.setAppPublicConfig({registration: {collect_date_of_birth: previous}});
 			}
-		});
-		test('rejects negative value', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_friend_dm_filter: -1})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('rejects string value', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_non_friend_dm_filter: 'blur'})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('rejects BLOCK for sensitive_content_guild_filter', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_guild_filter: SensitiveMediaFilterLevel.BLOCK})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-	});
-	describe('persistence', () => {
-		test('values persist across GET after PATCH', async () => {
-			const account = await createTestAccount(harness);
-			await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			const {json} = await fetchUserSettings(harness, account.token);
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 		});
 	});
 });

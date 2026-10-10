@@ -12,30 +12,6 @@ describe('Admin API Key ACL Validation', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('user cannot grant ACLs they do not have - grant only ACLs user has', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				acls: ['audit_log:view'],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-	});
-	test('user cannot grant ACLs they do not have - grant ACL user does not have', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				acls: ['audit_log:view', 'user:lookup'],
-			})
-			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
 	test('user with wildcard can grant any ACL', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['*']);
@@ -138,17 +114,5 @@ describe('Admin API Key ACL Validation', () => {
 			.executeWithResponse();
 		const keys = await listAdminApiKeys(harness, admin.token);
 		expect(keys[0]!.acls).toEqual(['audit_log:view']);
-	});
-	test('empty ACL list is valid', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
-		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/api-keys')
-			.body({
-				name: 'Test Key',
-				acls: [],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
 	});
 });

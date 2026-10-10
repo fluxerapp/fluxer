@@ -4,11 +4,7 @@ import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
-import type {Guild} from '@app/api/models/Guild';
-import type {GuildMember} from '@app/api/models/GuildMember';
-import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -69,10 +65,5 @@ export class GuildOwnershipService {
 			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, OWNERSHIP_AUDIT_KEYS),
 		});
 		return mapGuildToGuildResponse(updatedGuild);
-	}
-
-	async checkGuildVerification(params: {user: User; guild: Guild; member: GuildMember}): Promise<void> {
-		const {user, guild, member} = params;
-		checkGuildVerificationWithGuildModel({user, guild, member});
 	}
 }

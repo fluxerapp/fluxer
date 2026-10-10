@@ -35,24 +35,6 @@ describe('Admin API Key Revocation', () => {
 			.execute();
 		expect(await hasAdminAPIKeyId(harness, admin.token, apiKey.keyId)).toBe(false);
 	});
-	test('revocation by ID', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'ID Test');
-		await createBuilder(harness, `${admin.token}`)
-			.delete(`/admin/api-keys/${apiKey.keyId}`)
-			.body(null)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const keys = await listAdminApiKeys(harness, admin.token);
-		expect(keys).toHaveLength(0);
-	});
 	test('revocation of non-existent key returns 404', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, [

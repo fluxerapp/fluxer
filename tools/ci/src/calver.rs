@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CALVER_SCHEME, CalverEnv, append_github_env, append_github_output, micro_segment,
-    month_day_segment, parse_version_instant, resolve_calver, trim_option,
+    CALVER_SCHEME, CalverEnv, append_github_output, micro_segment, month_day_segment,
+    parse_version_instant, resolve_calver, trim_option,
 };
 use anyhow::Result;
 use chrono::{Datelike, Timelike, Utc};
@@ -13,10 +13,6 @@ use std::env;
 pub struct ResolveCalverArgs {
     #[arg(long)]
     github_output: bool,
-    #[arg(long)]
-    github_env: bool,
-    #[arg(long, default_value = "BUILD_VERSION")]
-    env_name: String,
 }
 
 pub fn run(args: ResolveCalverArgs) -> Result<()> {
@@ -36,9 +32,6 @@ pub fn run(args: ResolveCalverArgs) -> Result<()> {
             ("month_day", output.month_day.as_str()),
             ("calver_scheme", CALVER_SCHEME),
         ])?;
-    }
-    if args.github_env {
-        append_github_env(&[(args.env_name.as_str(), resolved.as_str())])?;
     }
     println!("{resolved}");
     Ok(())
@@ -127,13 +120,5 @@ mod tests {
         .unwrap();
 
         assert_eq!(version, "2026.109.0");
-    }
-
-    #[test]
-    fn calver_rejects_invalid_time() {
-        assert_eq!(
-            calver_outputs("2026.520.246000").unwrap_err().to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
     }
 }

@@ -64,63 +64,6 @@ pub async fn ensure_dev_object_store(repair: bool, repair_timeout_secs: u64) -> 
     Ok(())
 }
 
-pub fn run_rust_stress_smoke() -> Result<()> {
-    crate::proc::run(&["cargo", "test", "-p", "fluxer-media-proxy"])?;
-    crate::proc::run(&[
-        "cargo",
-        "bench",
-        "-p",
-        "fluxer-media-proxy",
-        "--bench",
-        "core",
-        "--",
-        "--sample-size",
-        "10",
-        "--warm-up-time",
-        "1",
-        "--measurement-time",
-        "1",
-    ])?;
-
-    if which("cargo-fuzz").is_none() {
-        eprintln!("cargo-fuzz not installed; skipping fuzz smoke");
-        return Ok(());
-    }
-    let use_nightly = rustup_has_nightly();
-    for target in ["parsers", "signing_external_path", "thumbhash"] {
-        run_fuzz_smoke(target, use_nightly)?;
-    }
-    Ok(())
-}
-
-fn rustup_has_nightly() -> bool {
-    let Ok(output) = Command::new("rustup").args(["toolchain", "list"]).output() else {
-        return false;
-    };
-    if !output.status.success() {
-        return false;
-    }
-    String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .any(|line| line.starts_with("nightly"))
-}
-
-fn run_fuzz_smoke(target: &str, use_nightly: bool) -> Result<()> {
-    if use_nightly {
-        crate::proc::run(&[
-            "cargo",
-            "+nightly",
-            "fuzz",
-            "run",
-            target,
-            "--",
-            "-runs=1000",
-        ])
-    } else {
-        crate::proc::run(&["cargo", "fuzz", "run", target, "--", "-runs=1000"])
-    }
-}
-
 fn start_dev_seaweedfs() -> Result<()> {
     ensure_writable_dev_paths()?;
     if tcp_reachable(DEV_S3_HOST, DEV_S3_PORT) {

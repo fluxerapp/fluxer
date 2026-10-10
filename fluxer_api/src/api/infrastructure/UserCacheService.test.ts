@@ -107,23 +107,6 @@ describe('UserCacheService', () => {
 		});
 	});
 
-	it('records only the users-service timing boundary', async () => {
-		const userId = createUserID(2501n);
-		const servicePartial = createPartial(userId, 'TimedUsersService');
-		const usersServiceClient = new FakeUsersServiceClient(new Map([[userId, servicePartial]]));
-		const service = new UserCacheService(usersServiceClient);
-		const timedSteps: Array<string> = [];
-
-		await service.getUserPartialResponses([userId], createRequestCache(), {
-			timeStep: async (name, operation) => {
-				timedSteps.push(name);
-				return await operation();
-			},
-		});
-
-		expect(timedSteps).toEqual(['users_service_request']);
-	});
-
 	it('surfaces user partial source failures', async () => {
 		const userId = createUserID(3001n);
 		const usersServiceClient = new FakeUsersServiceClient();

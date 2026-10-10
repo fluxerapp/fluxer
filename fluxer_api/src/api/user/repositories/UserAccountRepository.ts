@@ -28,7 +28,7 @@ export class UserAccountRepository implements IUserAccountRepository {
 			this.accountRepo.findUnique.bind(this.accountRepo),
 			new UserEmailOwnershipRepository(this.accountRepo.findUnique.bind(this.accountRepo), kv),
 		);
-		this.deletionRepo = new UserDeletionRepository(this.accountRepo.findUnique.bind(this.accountRepo));
+		this.deletionRepo = new UserDeletionRepository();
 		this.guildRepo = new UserGuildRepository();
 		this.tokenRepo = new TokenRepository();
 	}
@@ -43,10 +43,6 @@ export class UserAccountRepository implements IUserAccountRepository {
 
 	async findUniqueAssert(userId: UserID): Promise<User> {
 		return this.accountRepo.findUniqueAssert(userId);
-	}
-
-	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {
-		return this.accountRepo.listAllUsersPaginated(limit, lastUserId);
 	}
 
 	async scanAllUsersPage(
@@ -146,10 +142,6 @@ export class UserAccountRepository implements IUserAccountRepository {
 		return this.deletionRepo.addPendingDeletion(userId, pendingDeletionAt, deletionReasonCode);
 	}
 
-	async findUsersPendingDeletion(now: Date): Promise<Array<User>> {
-		return this.deletionRepo.findUsersPendingDeletion(now);
-	}
-
 	async findUsersPendingDeletionByDate(deletionDate: string): Promise<
 		Array<{
 			user_id: bigint;
@@ -157,10 +149,6 @@ export class UserAccountRepository implements IUserAccountRepository {
 		}>
 	> {
 		return this.deletionRepo.findUsersPendingDeletionByDate(deletionDate);
-	}
-
-	async isUserPendingDeletion(userId: UserID, deletionDate: string): Promise<boolean> {
-		return this.deletionRepo.isUserPendingDeletion(userId, deletionDate);
 	}
 
 	async removePendingDeletion(userId: UserID, pendingDeletionAt: Date): Promise<void> {

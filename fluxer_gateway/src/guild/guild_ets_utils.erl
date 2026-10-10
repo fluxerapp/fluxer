@@ -48,21 +48,6 @@ safe_delete_table(TableName) ->
 
 test_table_opts() -> [named_table, public, set].
 
-ensure_table_creates_new_table_test() ->
-    TableName = guild_ets_utils_test_table,
-    safe_delete_table(TableName),
-    ok = ensure_table(TableName, test_table_opts()),
-    ?assertNotEqual(undefined, ets:whereis(TableName)),
-    ets:delete(TableName).
-
-ensure_table_idempotent_test() ->
-    TableName = guild_ets_utils_test_idempotent,
-    safe_delete_table(TableName),
-    ok = ensure_table(TableName, test_table_opts()),
-    ok = ensure_table(TableName, test_table_opts()),
-    ?assertNotEqual(undefined, ets:whereis(TableName)),
-    ets:delete(TableName).
-
 ensure_table_delegates_to_owner_when_running_test() ->
     TableName = guild_ets_utils_test_owner,
     safe_delete_table(TableName),

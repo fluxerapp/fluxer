@@ -52,8 +52,6 @@ export interface AudioFrame {
 
 export declare const loadError: Error | null;
 
-export declare function __setBindingForTests(binding: unknown): void;
-
 export declare function pidFromWindowId(windowId: number): number;
 
 export declare function listAudibleApplications(): Promise<Array<MacApplicationDescriptor>>;

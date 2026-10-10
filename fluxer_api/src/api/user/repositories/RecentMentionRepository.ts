@@ -68,23 +68,6 @@ export class RecentMentionRepository {
 		return true;
 	}
 
-	async createRecentMention(mention: RecentMentionRow): Promise<RecentMention> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(RecentMentions.upsertAll(mention));
-		batch.addPrepared(
-			RecentMentionsByGuild.insert({
-				user_id: mention.user_id,
-				guild_id: mention.guild_id,
-				message_id: mention.message_id,
-				channel_id: mention.channel_id,
-				is_everyone: mention.is_everyone,
-				is_role: mention.is_role,
-			}),
-		);
-		await batch.execute();
-		return new RecentMention(mention);
-	}
-
 	async createRecentMentions(mentions: Array<RecentMentionRow>): Promise<void> {
 		if (mentions.length === 0) {
 			return;

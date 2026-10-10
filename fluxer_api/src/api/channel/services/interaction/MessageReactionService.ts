@@ -354,17 +354,6 @@ export class MessageReactionService extends MessageInteractionBase {
 		await this.dispatchMessageReactionRemoveAll({channel, messageId});
 	}
 
-	async getMessageReactions({
-		authChannel,
-		messageId,
-	}: {
-		authChannel: AuthenticatedChannel;
-		messageId: MessageID;
-	}): Promise<Array<MessageReaction>> {
-		await this.assertMessageHistoryAccess({authChannel, messageId});
-		return this.channelRepository.messageInteractions.listMessageReactions(authChannel.channel.id, messageId);
-	}
-
 	private async assertCanModerateMessageReactions({
 		channel,
 		hasPermission,

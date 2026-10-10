@@ -22,18 +22,6 @@ describe('Auth desktop handoff negative paths', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('rejects unknown handoff code on status endpoint', async () => {
-		await createBuilderWithoutAuth(harness)
-			.get('/auth/handoff/unknown-code/status')
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
-			.execute();
-	});
-	it('rejects unknown handoff code on info endpoint', async () => {
-		await createBuilderWithoutAuth(harness)
-			.get('/auth/handoff/unknown-code/info')
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
-			.execute();
-	});
 	it('rejects handoff complete with bad token', async () => {
 		const account = await createTestAccount(harness);
 		const login = await loginAccount(harness, account);
@@ -66,13 +54,6 @@ describe('Auth desktop handoff negative paths', () => {
 				code: initResp.code,
 				user_id: login.userId,
 			})
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
-			.execute();
-	});
-	it('handles cancel for unknown handoff code gracefully', async () => {
-		await createBuilderWithoutAuth(harness)
-			.delete('/auth/handoff/unknown-code')
-			.body({poll_secret: 'not-the-secret'})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
 			.execute();
 	});

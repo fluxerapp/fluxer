@@ -45,27 +45,6 @@ license-files = [
     { path = "LICENSE", hash = 0xbd0eed23 },
 ]
 
-[[licenses.clarify]]
-crate = "webrtc-audio-processing@2.1.0"
-expression = "BSD-3-Clause"
-license-files = [
-    { path = "COPYING", hash = 0x3d3ea952 },
-]
-
-[[licenses.clarify]]
-crate = "webrtc-audio-processing-config@2.1.0"
-expression = "BSD-3-Clause"
-license-files = [
-    { path = "COPYING", hash = 0x7e861f0d },
-]
-
-[[licenses.clarify]]
-crate = "webrtc-audio-processing-sys@2.1.0"
-expression = "BSD-3-Clause"
-license-files = [
-    { path = "COPYING", hash = 0x7e861f0d },
-]
-
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"

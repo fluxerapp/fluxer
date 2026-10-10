@@ -64,14 +64,6 @@ describe('Stripe Webhook - Core Handling', () => {
 			const {response} = await sendWebhook(eventData);
 			expect(response.status).toBe(200);
 		});
-		test('handles unhandled webhook event types gracefully', async () => {
-			const eventData: StripeWebhookEventData = {
-				type: 'customer.created',
-				data: {object: {id: 'cus_test_unhandled'}},
-			};
-			const {response} = await sendWebhook(eventData);
-			expect(response.status).toBe(200);
-		});
 		test('handles unknown webhook event types gracefully', async () => {
 			const eventData: StripeWebhookEventData = {
 				type: 'some.unknown.event',

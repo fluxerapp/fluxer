@@ -26,9 +26,6 @@ function recordingClient(statements: Array<{text: string; values: Array<unknown>
 		},
 		async connect() {},
 		async shutdown() {},
-		isConnected() {
-			return true;
-		},
 		async transaction(fn: (db: unknown) => Promise<unknown>) {
 			return fn(client);
 		},

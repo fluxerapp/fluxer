@@ -66,6 +66,4 @@ export abstract class IJobLedgerRepository {
 	}): Promise<ListJobsResult>;
 
 	abstract listActiveJobs(): Promise<Array<JobByIdRow>>;
-
-	abstract listActiveJobsByTaskType(taskType: string): Promise<Array<JobByIdRow>>;
 }

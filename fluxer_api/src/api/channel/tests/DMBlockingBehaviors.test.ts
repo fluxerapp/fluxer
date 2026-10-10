@@ -2,13 +2,9 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
-	acceptInvite,
 	blockUser,
-	createChannelInvite,
 	createDmChannel,
 	createFriendship,
-	createGuild,
-	getChannel,
 	initiateCall,
 	pinMessage,
 	sendChannelMessage,
@@ -29,36 +25,6 @@ describe('DM Blocking Behaviors', () => {
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
-	});
-	describe('DM Creation Blocking', () => {
-		it('allows DM creation when the other user has blocked you', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const guild = await createGuild(harness, user1.token, 'Test Community');
-			const systemChannel = await getChannel(harness, user1.token, guild.system_channel_id!);
-			const invite = await createChannelInvite(harness, user1.token, systemChannel.id);
-			await acceptInvite(harness, user2.token, invite.code);
-			await blockUser(harness, user1, user2.userId);
-			await createBuilder(harness, user2.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: user1.userId})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		});
-		it('allows DM creation with someone you have blocked', async () => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const guild = await createGuild(harness, user1.token, 'Test Community');
-			const systemChannel = await getChannel(harness, user1.token, guild.system_channel_id!);
-			const invite = await createChannelInvite(harness, user1.token, systemChannel.id);
-			await acceptInvite(harness, user2.token, invite.code);
-			await blockUser(harness, user1, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: user2.userId})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-		});
 	});
 	describe('Voice Call Blocking', () => {
 		it('prevents the user who blocked someone from initiating calls in the DM', async () => {

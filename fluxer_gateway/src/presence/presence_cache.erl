@@ -24,8 +24,7 @@
     handle_nodeup/1,
     trigger_anti_entropy/0,
     generation/0,
-    pending_operations_count/0,
-    handoff_to_target/1
+    pending_operations_count/0
 ]).
 
 -export([
@@ -127,10 +126,6 @@ generation() ->
 pending_operations_count() ->
     get_pending_handoff_count().
 
--spec handoff_to_target(node()) -> ok.
-handoff_to_target(TargetNode) ->
-    presence_cache_api:handoff_to_target(TargetNode).
-
 -spec put_local(integer(), map(), state()) -> {ok, state()}.
 put_local(UserId, Presence, State) ->
     {_Reply, NewState} = presence_cache_shards:forward_put(UserId, Presence, State),
@@ -209,8 +204,6 @@ handle_call_extended({bulk_get_local_map, UserIds}, _From, State) when is_list(U
     {reply, Reply, NewState};
 handle_call_extended(rebalance, _From, State) ->
     {reply, ok, presence_cache_rebalance:rebalance_ownership(State)};
-handle_call_extended({handoff_to_target, TargetNode}, _From, State) when is_atom(TargetNode) ->
-    {reply, ok, presence_cache_rebalance:handoff_all_to_target(TargetNode, State)};
 handle_call_extended(get_pending_handoff_count, _From, State) ->
     {reply, presence_cache_rebalance:count_pending_operations(State), State};
 handle_call_extended(get_memory_stats, _From, State) ->
@@ -229,10 +222,6 @@ handle_cast({nodeup_cancel_grace, Node}, State) when is_atom(Node) ->
     {noreply, presence_cache_rebalance:cancel_nodedown_grace(Node, State)};
 handle_cast(anti_entropy_sync, State) ->
     {noreply, presence_cache_rebalance:perform_anti_entropy(State)};
-handle_cast({anti_entropy_request, FromNode, RemoteGeneration}, State) when
-    is_atom(FromNode), is_integer(RemoteGeneration), RemoteGeneration >= 0
-->
-    presence_cache_rebalance:handle_anti_entropy_request(FromNode, RemoteGeneration, State);
 handle_cast({anti_entropy_digest_request, FromNode, RemoteDigest}, State) when
     is_atom(FromNode), is_binary(RemoteDigest)
 ->

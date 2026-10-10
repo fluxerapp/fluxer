@@ -7,8 +7,6 @@ import {
 	StorageChangeFeed,
 	type StorageChangeSink,
 } from '@app/api/infrastructure/StorageChangeFeed';
-import {StorageService} from '@app/api/infrastructure/StorageService';
-import {createStorageService, shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
 import {describe, expect, it} from 'vitest';
 
@@ -199,24 +197,5 @@ describe('ChangeFeedStorageService', () => {
 
 		expect(inner.uploadObjectSpy).toHaveBeenCalledTimes(3);
 		expect(feed.stats()).toEqual({queued: 1, published: 0, dropped: 2, failed: 0});
-	});
-});
-
-describe('createStorageService', () => {
-	it('returns the plain storage service while the change feed is disabled', () => {
-		expect(Config.storageChangeFeed.enabled).toBe(false);
-		expect(Config.storageChangeFeed.skipBuckets).toEqual([Config.s3.buckets.uploads]);
-		expect(createStorageService()).toBeInstanceOf(StorageService);
-	});
-
-	it('wraps the storage service once the change feed is enabled', async () => {
-		const original = Config.storageChangeFeed.enabled;
-		Config.storageChangeFeed.enabled = true;
-		try {
-			expect(createStorageService()).toBeInstanceOf(ChangeFeedStorageService);
-		} finally {
-			Config.storageChangeFeed.enabled = original;
-			await shutdownStorageChangeFeed();
-		}
 	});
 });

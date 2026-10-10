@@ -9,7 +9,6 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import {grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {DEFAULT_CHANNEL_THREADS_CONFIG} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
@@ -20,9 +19,7 @@ import {
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
-	readChannelThreadsAssignment,
 	readDomainMigrationAssignment,
-	readPlutoniumPageAssignment,
 	readVoiceP2pAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import type {GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
@@ -104,18 +101,6 @@ describe('GET /experiments', () => {
 
 		expect(Object.hasOwn(body.assignments, 'voice_p2p')).toBe(true);
 		expect(readVoiceP2pAssignment(body).enabled).toBe(false);
-	});
-
-	it('serves the plutonium page to everyone and ignores a leftover rollout row', async () => {
-		const account = await createTestAccount(harness);
-		await getInstanceConfigRepository().setConfig(
-			'plutonium_page_config',
-			JSON.stringify({enabled: false, config_version: 3, rollout_basis_points: 0}),
-		);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
-
-		expect(readPlutoniumPageAssignment(body)).toEqual({enabled: true});
 	});
 
 	it('resolves the domain migration caller through the allowlist', async () => {
@@ -515,25 +500,6 @@ describe('GET /experiments', () => {
 		expect(body.assignments.voice_p2p).toEqual({enabled: true, max_participants: 4});
 	});
 
-	it('no longer exposes or accepts plutonium page and channel threads settings in the admin config', async () => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-
-		const updated = await createBuilder<Record<string, unknown>>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({plutonium_page: {enabled: false}, channel_threads: {enabled: false}})
-			.execute();
-		expect(Object.hasOwn(updated, 'plutonium_page')).toBe(false);
-		expect(Object.hasOwn(updated, 'channel_threads')).toBe(false);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
-		expect(body.assignments.plutonium_page).toEqual({enabled: true});
-		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 0});
-	});
-
 	it('serves the delivery cadence an admin set through the instance config', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
@@ -553,22 +519,5 @@ describe('GET /experiments', () => {
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
 		expect(body.poll_interval_seconds).toBe(3600);
 		expect(body.poll_jitter_percent).toBe(DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT);
-	});
-
-	it('assigns channel threads to every user with the stored config version, even from a disabled row', async () => {
-		const account = await createTestAccount(harness);
-		await getInstanceConfigRepository().setConfig(
-			'channel_threads_config',
-			JSON.stringify({
-				...DEFAULT_CHANNEL_THREADS_CONFIG,
-				enabled: false,
-				config_version: 7,
-				excluded_user_ids: [account.userId],
-			}),
-		);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
-
-		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 7});
 	});
 });

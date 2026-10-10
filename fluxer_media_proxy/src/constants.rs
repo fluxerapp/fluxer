@@ -143,7 +143,6 @@ pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::media_limits::MediaLimits;
 
     fn asset_cache_key(raw: Option<&str>, kind: AssetKind) -> u32 {
         clamp_size(parse_image_size(raw), kind)
@@ -219,13 +218,5 @@ mod tests {
         assert_eq!(1024, asset_cache_key(Some("1024"), AssetKind::Avatar));
         assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Emoji));
         assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Sticker));
-    }
-
-    #[test]
-    fn animated_frame_default_allows_dense_short_clips() {
-        assert_eq!(
-            MAX_ANIMATED_FRAMES_DEFAULT,
-            MediaLimits::default_from_config().animated_frames()
-        );
     }
 }

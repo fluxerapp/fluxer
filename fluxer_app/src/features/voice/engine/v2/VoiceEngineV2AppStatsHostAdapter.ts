@@ -780,11 +780,6 @@ export class VoiceEngineV2AppStatsHostAdapter extends Store {
 		return measured !== null ? measured : this.estimatedLatency;
 	}
 
-	get duration(): number {
-		if (!this.connectionStartTime) return 0;
-		return Math.floor((this.now() - this.connectionStartTime) / 1000);
-	}
-
 	setRoom(room: Room | null): void {
 		assert.ok(room === null || typeof room === 'object', 'room must be null or object');
 		this.update(() => {

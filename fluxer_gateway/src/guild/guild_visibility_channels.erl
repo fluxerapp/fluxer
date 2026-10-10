@@ -7,7 +7,6 @@
     get_user_viewable_channels/2,
     shares_viewable_channel/3,
     viewable_channel_set/2,
-    have_shared_viewable_channel/3,
     viewable_channel_map/1,
     get_cached_viewable_channel_map/2,
     cached_viewable_channel_set/3,
@@ -173,25 +172,6 @@ try_extract_viewable(UserId, SessionData) ->
             Map;
         _ ->
             undefined
-    end.
-
--spec have_shared_viewable_channel(user_id(), user_id(), guild_state()) -> boolean().
-have_shared_viewable_channel(UserId, OtherUserId, State) when
-    is_integer(UserId), is_integer(OtherUserId), UserId =/= OtherUserId
-->
-    MapA = cached_or_current_viewable_channel_map(UserId, State),
-    ListB = get_user_viewable_channels(OtherUserId, State),
-    lists:any(fun(ChId) -> maps:is_key(ChId, MapA) end, ListB);
-have_shared_viewable_channel(_, _, _) ->
-    false.
-
--spec cached_or_current_viewable_channel_map(user_id(), guild_state()) -> map().
-cached_or_current_viewable_channel_map(UserId, State) ->
-    case get_cached_viewable_channel_map(UserId, State) of
-        undefined ->
-            viewable_channel_map(sets:from_list(get_user_viewable_channels(UserId, State)));
-        Map ->
-            Map
     end.
 
 -spec filter_connected_session_entries(map()) -> [{binary(), map()}].

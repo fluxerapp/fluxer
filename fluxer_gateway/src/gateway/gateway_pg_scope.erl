@@ -157,27 +157,3 @@ safe_pg_call(Fun) ->
         error:Reason:Stack -> {'EXIT', {Reason, Stack}};
         exit:Reason -> {'EXIT', Reason}
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-presence_scope_test() ->
-    ?assertEqual(fluxer_presence, presence_scope()).
-
-ensure_presence_scope_idempotent_test() ->
-    {ok, PgPid1} = ensure_presence_scope(),
-    {ok, PgPid2} = ensure_presence_scope(),
-    ?assertEqual(PgPid1, PgPid2),
-    unlink(PgPid1).
-
-start_link_reports_scope_status_test() ->
-    case whereis(?MODULE) of
-        undefined -> ok;
-        Existing when is_pid(Existing) -> gen_server:stop(Existing)
-    end,
-    {ok, Pid} = start_link(),
-    Status = gen_server:call(?MODULE, status),
-    ?assertMatch(#{scope := fluxer_presence, pg_pid := PgPid} when is_pid(PgPid), Status),
-    ?assertEqual(ok, gen_server:stop(Pid)).
-
--endif.

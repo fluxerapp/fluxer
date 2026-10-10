@@ -749,16 +749,8 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		return this.activeSessionId;
 	}
 
-	getSequence(): number {
-		return this.lastSequenceNumber;
-	}
-
 	isConnected(): boolean {
 		return this.connectionState === GatewayState.Connected && this.socket?.readyState === GatewayWireReadyState.OPEN;
-	}
-
-	isConnecting(): boolean {
-		return this.connectionState === GatewayState.Connecting;
 	}
 
 	private openSocket(): void {

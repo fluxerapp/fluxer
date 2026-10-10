@@ -163,7 +163,6 @@
 			"**",
 			"!**/.git",
 			"!**/app.css",
-			"!fluxer_admin/public/static/app.css",
 			"!**/build",
 			"fluxer_app/scripts/build",
 			"!**/dist",

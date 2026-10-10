@@ -10,22 +10,6 @@ installElectronStub();
 const {buildLocalAppCSP} = await import('@electron/main/LocalAppCSP');
 const {randomLocalAppCSPNonce, rewriteLocalAppIndexHTML} = await import('@electron/main/LocalAppIndexHTML');
 
-const DIRECTIVE_ORDER = [
-	'default-src',
-	'script-src',
-	'style-src',
-	'img-src',
-	'media-src',
-	'font-src',
-	'connect-src',
-	'frame-src',
-	'worker-src',
-	'manifest-src',
-	'object-src',
-	'base-uri',
-	'frame-ancestors',
-];
-
 const DESKTOP_GOLDEN = [
 	"default-src 'self'",
 	"script-src 'self' 'nonce-NONCE' 'wasm-unsafe-eval' blob: https://*.fluxer.app",
@@ -55,17 +39,6 @@ function directive(policy, name) {
 describe('the local desktop CSP', () => {
 	test('the policy matches the desktop builder byte for byte', () => {
 		assert.equal(desktopPolicy(), DESKTOP_GOLDEN);
-	});
-
-	test('directive order matches build_csp_directives', () => {
-		const order = desktopPolicy()
-			.split('; ')
-			.map((entry) => entry.split(' ')[0]);
-		assert.deepEqual(order, DIRECTIVE_ORDER);
-	});
-
-	test('the nonce sits at index 1 of script-src, as csp.rs inserts it', () => {
-		assert.equal(directive(desktopPolicy(), 'script-src')[1], "'nonce-NONCE'");
 	});
 });
 

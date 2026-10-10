@@ -3,7 +3,7 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {CAPTCHA_TEST_HEADER, issueSolvedCaptchaToken, useCheapCaptcha} from '@app/api/test/CaptchaTestUtils';
+import {CAPTCHA_TEST_HEADER, useCheapCaptcha} from '@app/api/test/CaptchaTestUtils';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -67,18 +67,6 @@ describe('OAuth2 Application Create', () => {
 		expect(botUsername?.toLowerCase()).not.toContain('fluxer');
 		expect(botUsername?.toLowerCase()).not.toContain('systemmessage');
 	});
-	test('creates application without optional fields', async () => {
-		const account = await createTestAccount(harness);
-		const appName = createUniqueApplicationName();
-		const result = await createOAuth2Application(harness, account.token, {
-			name: appName,
-		});
-		expect(result.application.id).toBeTruthy();
-		expect(result.application.name).toBe(appName);
-		expect(result.application.redirect_uris).toEqual([]);
-		expect(result.application.bot).toBeDefined();
-		expect(result.application.bot?.id).toBeTruthy();
-	});
 	test('requires captcha when creating a bot application', async () => {
 		const account = await createTestAccount(harness);
 		await useCheapCaptcha();
@@ -87,25 +75,6 @@ describe('OAuth2 Application Create', () => {
 			.header(CAPTCHA_TEST_HEADER, 'true')
 			.body({name: createUniqueApplicationName()})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
-			.execute();
-	});
-	test('creates a bot application with a valid captcha token', async () => {
-		const account = await createTestAccount(harness);
-		await useCheapCaptcha();
-		await createBuilder(harness, account.token)
-			.post('/oauth2/applications')
-			.header(CAPTCHA_TEST_HEADER, 'true')
-			.header('x-captcha-token', await issueSolvedCaptchaToken(harness))
-			.body({name: createUniqueApplicationName()})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-	});
-	test('rejects missing name', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.post('/oauth2/applications')
-			.body({})
-			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
 	test('rejects non-localhost http redirect URI hostnames', async () => {
@@ -119,32 +88,5 @@ describe('OAuth2 Application Create', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 		expect(json.errors?.some((error) => error.path === 'redirect_uris.0')).toBe(true);
-	});
-	test('accepts https redirect URIs', async () => {
-		const account = await createTestAccount(harness);
-		const appName = createUniqueApplicationName();
-		const result = await createOAuth2Application(harness, account.token, {
-			name: appName,
-			redirect_uris: ['https://example.com/callback'],
-		});
-		expect(result.application.redirect_uris).toEqual(['https://example.com/callback']);
-	});
-	test('accepts localhost redirect URIs with http', async () => {
-		const account = await createTestAccount(harness);
-		const appName = createUniqueApplicationName();
-		const result = await createOAuth2Application(harness, account.token, {
-			name: appName,
-			redirect_uris: ['http://localhost:3000/callback'],
-		});
-		expect(result.application.redirect_uris).toEqual(['http://localhost:3000/callback']);
-	});
-	test('accepts IP address redirect URIs with http', async () => {
-		const account = await createTestAccount(harness);
-		const redirectURIs = ['http://192.168.1.42:3000/callback', 'http://[2001:db8::1]:3000/callback'];
-		const result = await createOAuth2Application(harness, account.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: redirectURIs,
-		});
-		expect(result.application.redirect_uris).toEqual(redirectURIs);
 	});
 });

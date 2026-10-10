@@ -288,35 +288,3 @@ pub fn sc_stream_add_stream_output(
 ) -> Result<(), Retained<objc2_foundation::NSError>> {
     unsafe { stream.addStreamOutput_type_sampleHandlerQueue_error(output, kind, queue) }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::obs_minimum_frame_interval;
-    use crate::config::{FPS_MAX, FPS_MIN, SckCaptureConfig};
-
-    #[test]
-    fn minimum_frame_interval_is_strictly_shorter_than_frame_time() {
-        for fps in [FPS_MIN, 30, 60, FPS_MAX] {
-            let t = obs_minimum_frame_interval(fps);
-            assert!(t.value > 0);
-            assert!(t.timescale > 0);
-            let interval_ns = (t.value as u64) * 1_000_000_000 / (t.timescale as u64);
-            let frame_ns = 1_000_000_000 / (fps as u64);
-            assert!(interval_ns < frame_ns, "fps={fps}");
-        }
-    }
-
-    #[test]
-    fn minimum_frame_interval_matches_config_minimum_frame_interval_ns() {
-        for fps in [FPS_MIN, 30, 60, FPS_MAX] {
-            let t = obs_minimum_frame_interval(fps);
-            let cm_interval_ns = (t.value as u64) * 1_000_000_000 / (t.timescale as u64);
-            let cfg = SckCaptureConfig::builder()
-                .target_fps(fps)
-                .build()
-                .expect("config builds");
-            let cfg_interval_ns = cfg.minimum_frame_interval_ns();
-            assert!(cm_interval_ns.abs_diff(cfg_interval_ns) <= 1, "fps={fps}");
-        }
-    }
-}

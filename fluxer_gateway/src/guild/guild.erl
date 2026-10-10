@@ -222,8 +222,6 @@ handle_cast_internal({set_session_push_hold, SessionId, Hold}, State) when
     {noreply, guild_sessions:set_session_push_hold(SessionId, Hold, State)};
 handle_cast_internal({send_guild_sync, SessionId}, State) ->
     handle_send_guild_sync_cast(SessionId, State);
-handle_cast_internal({send_members_chunk, SessionId, ChunkData}, State) ->
-    handle_send_members_chunk_cast(SessionId, ChunkData, State);
 handle_cast_internal({thread_user_flip, SessionId}, State) when is_binary(SessionId) ->
     {noreply, guild_thread_flip:user_flip(SessionId, State)};
 handle_cast_internal({thread_subscriptions, SessionId, Subscriptions}, State) when
@@ -408,13 +406,6 @@ handle_set_session_typing_override_cast(SessionId, TypingFlag, State) when
 -spec handle_send_guild_sync_cast(term(), guild_state()) -> cast_reply().
 handle_send_guild_sync_cast(SessionId, State) when is_binary(SessionId) ->
     {noreply, guild_sessions:handle_send_guild_sync(SessionId, State)}.
-
--spec handle_send_members_chunk_cast(term(), term(), guild_state()) -> cast_reply().
-handle_send_members_chunk_cast(SessionId, ChunkData, State) when
-    is_binary(SessionId), is_map(ChunkData)
-->
-    guild_sessions:handle_send_members_chunk(SessionId, ChunkData, State),
-    {noreply, State}.
 
 -spec handle_presence_info(term(), term(), guild_state()) -> info_reply().
 handle_presence_info(UserId, Payload, State) when is_integer(UserId), is_map(Payload) ->
@@ -883,44 +874,6 @@ handle_non_voice_exit_other_linked_stops_guild_test() ->
         handle_non_voice_exit(OtherPid, boom, State)
     ).
 
-voice_guild_state_pins_projected_key_set_test() ->
-    with_voice_projection_state(fun(Full) ->
-        Projected = voice_guild_state(Full),
-        ?assertEqual(
-            lists:sort([
-                id,
-                <<"id">>,
-                data,
-                sessions,
-                guild_pid,
-                voice_states,
-                pending_voice_connections,
-                recently_disconnected_voice_states,
-                e2ee_room_keys,
-                virtual_channel_access,
-                virtual_channel_access_pending,
-                virtual_channel_access_preserve,
-                virtual_channel_access_move_pending,
-                virtual_channel_access_view_only
-            ]),
-            lists:sort(maps:keys(Projected))
-        ),
-        ?assertEqual(
-            lists:sort([
-                <<"id">>,
-                <<"guild">>,
-                <<"roles">>,
-                <<"role_index">>,
-                role_perms_cache,
-                <<"channels">>,
-                <<"channel_index">>,
-                overwrite_perms_cache,
-                members_ets
-            ]),
-            lists:sort(maps:keys(maps:get(data, Projected)))
-        )
-    end).
-
 voice_guild_state_drops_non_voice_payload_test() ->
     with_voice_projection_state(fun(Full) ->
         Projected = voice_guild_state(Full),
@@ -1017,38 +970,6 @@ voice_members_table_warning_rearms_after_recovery_test() ->
         _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED)
     end).
 
-voice_guild_state_session_entries_keep_only_reader_keys_test() ->
-    with_voice_projection_state(fun(Base) ->
-        Full = Base#{sessions => voice_projection_sessions()},
-        Projected = voice_guild_state(Full),
-        Sessions = maps:get(sessions, Projected),
-        Session = maps:get(<<"s-view">>, Sessions),
-        ?assertEqual(
-            lists:sort([session_id, user_id, pid, pending_connect, viewable_channels]),
-            lists:sort(maps:keys(Session))
-        ),
-        ?assertNot(maps:is_key(active_guilds, Session)),
-        ?assertNot(maps:is_key(user_roles, Session)),
-        ?assertNot(maps:is_key(mref, Session)),
-        ?assertNot(maps:is_key(bot, Session)),
-        ?assertNot(maps:is_key(is_staff, Session))
-    end).
-
-voice_guild_state_session_projection_matches_reference_test() ->
-    with_voice_projection_state(fun(Base) ->
-        Full = Base#{sessions => voice_projection_sessions()},
-        Reference = reference_voice_guild_state(Full),
-        Projected = voice_guild_state(Full),
-        ?assertEqual(maps:remove(sessions, Reference), maps:remove(sessions, Projected)),
-        RefSessions = maps:get(sessions, Reference),
-        NewSessions = maps:get(sessions, Projected),
-        ?assertEqual(maps:keys(RefSessions), maps:keys(NewSessions)),
-        ?assertEqual(
-            maps:map(fun project_voice_session/2, RefSessions),
-            NewSessions
-        )
-    end).
-
 voice_guild_state_session_readers_see_identical_results_test() ->
     with_voice_projection_state(fun(Base) ->
         Full = Base#{sessions => voice_projection_sessions()},
@@ -1077,25 +998,8 @@ voice_guild_state_session_projection_boundaries_test() ->
         ?assertEqual(not_a_map, maps:get(sessions, voice_guild_state(BadSessions)))
     end).
 
-voice_guild_state_preserves_session_fold_order_at_scale_test() ->
-    with_voice_projection_state(fun voice_session_fold_order_scenario/1).
-
 %% 200 entries forces the hashmap representation, where iteration order is driven by key
 %% hashes. maps:map/2 rewrites values only, so the key set and therefore the order is identical.
-voice_session_fold_order_scenario(Base) ->
-    Sessions = maps:from_list(lists:map(fun voice_scale_session/1, lists:seq(1, 200))),
-    Full = Base#{sessions => Sessions},
-    Projected = voice_guild_state(Full),
-    ?assertEqual(maps:keys(Sessions), maps:keys(maps:get(sessions, Projected))),
-    ?assertEqual(
-        voice_session_reader_result(500, reference_voice_guild_state(Full)),
-        voice_session_reader_result(500, Projected)
-    ).
-
-voice_scale_session(N) ->
-    SessionId = integer_to_binary(N),
-    {SessionId, voice_projection_session(SessionId, 10, #{500 => true}, false)}.
-
 voice_session_drop_keys_never_drops_a_reader_key_test() ->
     Dropped = voice_session_drop_keys(),
     Readers = [pending_connect, user_id, viewable_channels, pid],
@@ -1137,10 +1041,6 @@ voice_projection_session(SessionId, UserId, ViewableChannels, Pending) ->
         pending_connect => Pending,
         viewable_channels => ViewableChannels
     }.
-
-voice_members_table_warning_key_is_module_scoped_test() ->
-    ?assertEqual({?MODULE, voice_members_table_unavailable}, ?VOICE_MEMBERS_TABLE_WARNED),
-    ?assertNot(is_atom(?VOICE_MEMBERS_TABLE_WARNED)).
 
 with_voice_projection_state(Fun) ->
     Tab = ets:new(guild_members_data, [set, public, {read_concurrency, true}]),

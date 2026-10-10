@@ -8,18 +8,15 @@
     clear_if_expired/2,
     remaining_ms/2,
     next_wakeup_ms/1,
-    reconcile_message/0,
-    repair/1
+    reconcile_message/0
 ]).
 
 -export_type([custom_status/0]).
 
 -type custom_status() :: map() | null.
--type user_id() :: integer().
 -type wakeup() :: {ok, pos_integer()} | none.
 -type offset() :: {ok, integer()} | none.
 
--define(MAX_REPAIR_WINDOW_SECONDS, 86400).
 -define(MAX_TIMER_MS, 86400000).
 -define(WAKEUP_JITTER_MS, 5000).
 
@@ -94,119 +91,8 @@ jittered(DelayMs) ->
 reconcile_message() ->
     {'$gen_cast', reconcile_flattened_presence}.
 
--spec repair(term()) -> map().
-repair(WindowSeconds) when
-    is_integer(WindowSeconds), WindowSeconds >= 0, WindowSeconds =< ?MAX_REPAIR_WINDOW_SECONDS
-->
-    Considered = local_presence_user_ids(),
-    Pids = expiring_presence_pids(Considered),
-    Total = length(Pids),
-    ok = schedule_reconciles(Pids, Total, WindowSeconds * 1000),
-    #{
-        scheduled => Total,
-        considered => length(Considered),
-        window_seconds => WindowSeconds
-    };
-repair(_WindowSeconds) ->
-    #{error => invalid_window_seconds}.
-
-%% Only presences whose cached payload actually has an expires_at are worth
-%% nudging. Nudging every local presence would cost one payload rebuild and one
-%% replicated cache write each, thousands per node, to correct a few dozen.
-%% Filtering on "has an expiry" rather than "is expired" is deliberate: it also
-%% arms the ongoing wakeup for statuses that have not expired yet.
--spec expiring_presence_pids([integer()]) -> [pid()].
-expiring_presence_pids(UserIds) ->
-    [
-        Pid
-     || UserId <- UserIds,
-        has_expires_at(UserId),
-        Pid <- [presence_pid(UserId)],
-        is_pid(Pid)
-    ].
-
--spec has_expires_at(integer()) -> boolean().
-has_expires_at(UserId) ->
-    try presence_cache:get(UserId) of
-        {ok, Presence} when is_map(Presence) ->
-            presence_has_expiry(Presence);
-        _ ->
-            false
-    catch
-        _:_ ->
-            false
-    end.
-
-%% presence_cache:get/1 returns {ok, map()} | not_found, never a bare map, and
-%% expires_at_ms/1 takes the timestamp value rather than the custom_status map.
--spec presence_has_expiry(map()) -> boolean().
-presence_has_expiry(Presence) ->
-    case maps:get(<<"custom_status">>, Presence, null) of
-        CustomStatus when is_map(CustomStatus) ->
-            expires_at_ms(maps:get(<<"expires_at">>, CustomStatus, null)) =/= none;
-        _ ->
-            false
-    end.
-
--spec local_presence_user_ids() -> [user_id()].
-local_presence_user_ids() ->
-    try presence_manager_shards:determine_count() of
-        {ShardCount, _Source} -> shard_user_ids(ShardCount)
-    catch
-        _Class:_Reason -> []
-    end.
-
--spec shard_user_ids(pos_integer()) -> [user_id()].
-shard_user_ids(ShardCount) ->
-    lists:append([
-        presence_manager:get_shard_user_ids(Index)
-     || Index <- lists:seq(0, ShardCount - 1)
-    ]).
-
--spec presence_pid(user_id()) -> pid() | undefined.
-presence_pid(UserId) ->
-    process_registry:registry_whereis(process_registry:build_process_key(presence, UserId)).
-
--spec schedule_reconciles([pid()], non_neg_integer(), non_neg_integer()) -> ok.
-schedule_reconciles(Pids, Total, WindowMs) ->
-    Message = reconcile_message(),
-    _ = lists:foldl(
-        fun(Pid, Index) ->
-            _ = schedule_one(Pid, spread_ms(Index, Total, WindowMs), Message),
-            Index + 1
-        end,
-        0,
-        Pids
-    ),
-    ok.
-
-%% A single unreachable destination must not abort the sweep and leave the
-%% operator unable to tell how many nudges were actually scheduled.
--spec schedule_one(pid(), non_neg_integer(), term()) -> ok.
-schedule_one(Pid, Delay, Message) ->
-    try erlang:send_after(Delay, Pid, Message) of
-        _Ref -> ok
-    catch
-        _Class:_Reason -> ok
-    end.
-
--spec spread_ms(non_neg_integer(), non_neg_integer(), non_neg_integer()) -> non_neg_integer().
-spread_ms(_Index, 0, _WindowMs) -> 0;
-spread_ms(_Index, _Total, 0) -> 0;
-spread_ms(Index, Total, WindowMs) -> (Index * WindowMs) div Total.
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-presence_has_expiry_detects_an_expiry_test() ->
-    ?assert(
-        presence_has_expiry(#{
-            <<"custom_status">> => #{<<"expires_at">> => <<"2026-05-13T13:02:27.497Z">>}
-        })
-    ),
-    ?assertNot(presence_has_expiry(#{<<"custom_status">> => #{<<"text">> => <<"hi">>}})),
-    ?assertNot(presence_has_expiry(#{<<"custom_status">> => null})),
-    ?assertNot(presence_has_expiry(#{})).
 
 -define(LIVE_EXPIRES_AT, <<"2026-05-13T13:02:27.497Z">>).
 
@@ -327,36 +213,5 @@ future_status() ->
 
 reconcile_message_is_a_gen_server_cast_test() ->
     ?assertEqual({'$gen_cast', reconcile_flattened_presence}, reconcile_message()).
-
-spread_ms_test() ->
-    ?assertEqual(0, spread_ms(0, 0, 60000)),
-    ?assertEqual(0, spread_ms(5, 10, 0)),
-    ?assertEqual(0, spread_ms(0, 10, 60000)),
-    ?assertEqual(30000, spread_ms(5, 10, 60000)),
-    ?assertEqual(54000, spread_ms(9, 10, 60000)).
-
-repair_rejects_a_bad_window_test() ->
-    ?assertEqual(#{error => invalid_window_seconds}, repair(-1)),
-    ?assertEqual(#{error => invalid_window_seconds}, repair(<<"900">>)).
-
-repair_reports_what_it_scheduled_test() ->
-    Result = repair(0),
-    ?assert(is_integer(maps:get(scheduled, Result))),
-    ?assert(maps:get(scheduled, Result) >= 0),
-    ?assertEqual(0, maps:get(window_seconds, Result)).
-
-schedule_reconciles_delivers_the_cast_test() ->
-    flush_mailbox(),
-    ok = schedule_reconciles([self()], 1, 0),
-    receive
-        Message -> ?assertEqual(reconcile_message(), Message)
-    after 1000 -> ?assert(false)
-    end.
-
-flush_mailbox() ->
-    receive
-        _Any -> flush_mailbox()
-    after 0 -> ok
-    end.
 
 -endif.

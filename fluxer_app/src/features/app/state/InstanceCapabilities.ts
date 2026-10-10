@@ -38,10 +38,6 @@ class InstanceCapabilitiesStore {
 	forget(instanceKey: string): void {
 		this.records.delete(instanceKey);
 	}
-
-	reset(): void {
-		this.records.clear();
-	}
 }
 
 export default new InstanceCapabilitiesStore();

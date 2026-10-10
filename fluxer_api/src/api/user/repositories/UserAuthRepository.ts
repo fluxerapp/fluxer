@@ -106,10 +106,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 		return this.tokenRepository.createPasswordResetToken(tokenData);
 	}
 
-	async deletePasswordResetToken(token: string): Promise<void> {
-		return this.tokenRepository.deletePasswordResetToken(token);
-	}
-
 	async deleteAllPasswordResetTokens(userId: UserID): Promise<void> {
 		return this.tokenRepository.deleteAllPasswordResetTokens(userId);
 	}

@@ -75,11 +75,6 @@ class NavigationSideEffects {
 			Notification.handleChannelSelect({channelId: threadId});
 		});
 	}
-
-	destroy(): void {
-		this.disposer?.();
-		this.disposer = null;
-	}
 }
 
 export default new NavigationSideEffects();

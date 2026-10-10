@@ -25,7 +25,6 @@ export interface IKVSubscription {
 	unsubscribe(...channels: Array<string>): Promise<void>;
 	quit(): Promise<void>;
 	disconnect(): Promise<void>;
-	removeAllListeners(event?: 'message' | 'error'): void;
 }
 
 export interface KVPurgeBatchResult {
@@ -78,22 +77,13 @@ export interface IKVProvider {
 	ltrim(key: string, start: number, stop: number): Promise<void>;
 	hset(key: string, field: string, value: string): Promise<number>;
 	hdel(key: string, ...fields: Array<string>): Promise<number>;
-	hget(key: string, field: string): Promise<string | null>;
 	hgetall(key: string): Promise<Record<string, string>>;
 	publish(channel: string, message: string): Promise<number>;
 	duplicate(): IKVSubscription;
 	acquireLock(key: string, token: string, ttlSeconds: number): Promise<boolean>;
 	releaseLock(key: string, token: string): Promise<boolean>;
 	extendLock(key: string, token: string, ttlSeconds: number): Promise<boolean>;
-	renewSnowflakeNode(key: string, instanceId: string, ttlSeconds: number): Promise<boolean>;
 	checkLeakyBucketLimit(key: string, limit: number, windowMs: number, cost: number): Promise<KVRateLimitResult>;
-	tryConsumeTokens(
-		key: string,
-		requested: number,
-		maxTokens: number,
-		refillRate: number,
-		refillIntervalMs: number,
-	): Promise<number>;
 	scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void>;
 	claimBulkDeletion(queueKey: string, member: string, maxScore: number, leaseScore: number): Promise<boolean>;
 	removeBulkDeletion(queueKey: string, secondaryKey: string, member?: string): Promise<boolean>;
@@ -109,5 +99,4 @@ export interface IKVProvider {
 	pipeline(): IKVPipeline;
 	multi(): IKVPipeline;
 	isClustered(): boolean;
-	health(): Promise<boolean>;
 }

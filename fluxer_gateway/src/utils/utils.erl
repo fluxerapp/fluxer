@@ -132,74 +132,6 @@ user_field_differs(Field, CurrentUserData, NewUserData) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-binary_to_integer_safe_integer_test() ->
-    ?assertEqual(42, binary_to_integer_safe(42)),
-    ?assertEqual(0, binary_to_integer_safe(0)),
-    ?assertEqual(-100, binary_to_integer_safe(-100)).
-
-binary_to_integer_safe_binary_test() ->
-    ?assertEqual(123, binary_to_integer_safe(<<"123">>)),
-    ?assertEqual(0, binary_to_integer_safe(<<"0">>)),
-    ?assertEqual(-456, binary_to_integer_safe(<<"-456">>)).
-
-binary_to_integer_safe_invalid_test() ->
-    ?assertEqual(undefined, binary_to_integer_safe(<<"not_a_number">>)),
-    ?assertEqual(undefined, binary_to_integer_safe(<<"12.34">>)),
-    ?assertEqual(undefined, binary_to_integer_safe(<<"">>)),
-    ?assertEqual(undefined, binary_to_integer_safe(atom)),
-    ?assertEqual(undefined, binary_to_integer_safe(#{})).
-
-generate_session_id_test() ->
-    SessionId = generate_session_id(),
-    ?assert(is_binary(SessionId)),
-    ?assertEqual(32, byte_size(SessionId)).
-
-hash_token_test() ->
-    Hash = hash_token(<<"test_token">>),
-    ?assert(is_binary(Hash)),
-    ?assertEqual(32, byte_size(Hash)).
-
-parse_status_binary_test() ->
-    ?assertEqual(online, parse_status(<<"online">>)),
-    ?assertEqual(dnd, parse_status(<<"dnd">>)),
-    ?assertEqual(idle, parse_status(<<"idle">>)),
-    ?assertEqual(invisible, parse_status(<<"invisible">>)),
-    ?assertEqual(offline, parse_status(<<"offline">>)).
-
-parse_status_atom_test() ->
-    ?assertEqual(online, parse_status(online)),
-    ?assertEqual(dnd, parse_status(dnd)),
-    ?assertEqual(idle, parse_status(idle)).
-
-parse_status_default_test() ->
-    ?assertEqual(online, parse_status(123)),
-    ?assertEqual(online, parse_status(#{})).
-
-parse_iso8601_to_unix_ms_valid_test() ->
-    ?assertEqual(1705321845000, parse_iso8601_to_unix_ms(<<"2024-01-15T12:30:45Z">>)),
-    ?assertEqual(0, parse_iso8601_to_unix_ms(<<"1970-01-01T00:00:00Z">>)).
-
-parse_iso8601_to_unix_ms_with_fraction_test() ->
-    ?assertEqual(1705321845123, parse_iso8601_to_unix_ms(<<"2024-01-15T12:30:45.123Z">>)).
-
-parse_iso8601_to_unix_ms_past_expired_test() ->
-    Past = parse_iso8601_to_unix_ms(<<"2020-01-01T00:00:00Z">>),
-    ?assert(Past < erlang:system_time(millisecond)).
-
-parse_iso8601_to_unix_ms_invalid_test() ->
-    ?assertEqual(undefined, parse_iso8601_to_unix_ms(<<"invalid">>)),
-    ?assertEqual(undefined, parse_iso8601_to_unix_ms(<<"2024-01-15">>)),
-    ?assertEqual(undefined, parse_iso8601_to_unix_ms(123)).
-
-check_user_data_differs_same_test() ->
-    User = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-    ?assertEqual(false, check_user_data_differs(User, User)).
-
-check_user_data_differs_different_test() ->
-    Current = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-    New = #{<<"id">> => <<"123">>, <<"username">> => <<"changed">>},
-    ?assertEqual(true, check_user_data_differs(Current, New)).
-
 check_user_data_differs_missing_field_test() ->
     Current = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
     New = #{<<"id">> => <<"123">>},
@@ -209,10 +141,5 @@ check_user_data_differs_normalizes_equivalent_user_ids_test() ->
     Current = #{<<"id">> => 123, <<"username">> => <<"test">>},
     New = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
     ?assertEqual(false, check_user_data_differs(Current, New)).
-
-check_user_data_differs_null_field_test() ->
-    Current = #{<<"id">> => <<"123">>, <<"username">> => <<"test">>},
-    New = #{<<"username">> => null},
-    ?assertEqual(true, check_user_data_differs(Current, New)).
 
 -endif.

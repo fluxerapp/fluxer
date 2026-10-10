@@ -56,10 +56,6 @@ export class ElasticsearchGuildSearchService
 		await this.deleteDocument(guildId.toString());
 	}
 
-	async deleteGuilds(guildIds: Array<GuildID>): Promise<void> {
-		await this.deleteDocuments(guildIds.map((id) => id.toString()));
-	}
-
 	searchGuilds(
 		query: string,
 		filters: GuildSearchFilters,

@@ -6,7 +6,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([start_link/1, get_member_count/2, get_local_member_count/2]).
+-export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -ifdef(TEST).
@@ -18,16 +18,6 @@
 -spec start_link(non_neg_integer()) -> {ok, pid()} | {error, term()}.
 start_link(ShardIndex) ->
     normalize_start_link(gen_server:start_link(?MODULE, #{shard_index => ShardIndex}, [])).
-
--spec get_member_count(atom(), integer()) -> non_neg_integer().
-get_member_count(Scope, UserId) ->
-    Group = {presence, UserId},
-    length(safe_pg_members(Scope, Group)).
-
--spec get_local_member_count(atom(), integer()) -> non_neg_integer().
-get_local_member_count(Scope, UserId) ->
-    Group = {presence, UserId},
-    length(safe_pg_local_members(Scope, Group)).
 
 -spec init(map()) -> {ok, state(), hibernate} | {stop, term()}.
 init(#{shard_index := ShardIndex}) ->
@@ -210,22 +200,6 @@ normalize_start_link(ignore) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-scope_name_uses_cluster_presence_scope_test() ->
-    ?assertEqual(gateway_pg_scope:presence_scope(), scope_name(0)),
-    ?assertEqual(gateway_pg_scope:presence_scope(), scope_name(42)).
-
-get_member_count_empty_test() ->
-    Scope = presence_bus_test_scope,
-    start_pg_scope(Scope),
-    ?assertEqual(0, get_member_count(Scope, 99999)),
-    ?assertEqual(0, get_local_member_count(Scope, 99999)).
-
-count_all_members_empty_scope_test() ->
-    Scope = presence_bus_test_scope_2,
-    start_pg_scope(Scope),
-    ?assertEqual(0, count_all_members(Scope)),
-    ?assertEqual(0, count_all_local_members(Scope)).
 
 publish_delivers_to_scope_members_test() ->
     Scope = presence_bus_test_scope_3,

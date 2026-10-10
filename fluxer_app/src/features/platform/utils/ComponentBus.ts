@@ -102,10 +102,6 @@ class Dispatch extends EventEmitter<ComponentBusEvents> {
 	unsubscribe(type: ComponentActionType, callback: (...args: Array<unknown>) => void) {
 		this.removeListener(type, callback);
 	}
-
-	reset() {
-		this.removeAllListeners();
-	}
 }
 
 export const ComponentBus = new Dispatch();

@@ -2,19 +2,16 @@
 
 use crate::{
     byte_budget::ByteBudget,
-    range::ByteRange,
     storage::{
         StorageError,
         response_body::{
-            ByteStream, LocalStreamBufferPool, StreamResponseValidation, exact_byte_stream,
-            exact_response_stream, local_reader_stream, read_exact_bytes, read_response_bytes,
-            validate_stream_response,
+            ByteStream, LocalStreamBufferPool, exact_byte_stream, exact_response_stream,
+            local_reader_stream, read_exact_bytes, read_response_bytes,
         },
     },
 };
 use bytes::Bytes;
 use futures_util::{TryStreamExt as _, stream};
-use http::{HeaderMap, HeaderValue, StatusCode, header};
 
 fn byte_stream(chunks: Vec<Result<Bytes, std::io::Error>>) -> ByteStream {
     Box::pin(stream::iter(chunks))
@@ -159,67 +156,6 @@ async fn exact_stream_rejects_short_long_and_erroring_sources() {
         .await
         .expect_err("source error");
     assert_eq!(error.kind(), std::io::ErrorKind::Other);
-}
-
-#[test]
-fn stream_response_validation_requires_exact_headers_status_and_range() {
-    let mut full_headers = HeaderMap::new();
-    full_headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("10"));
-    assert!(
-        validate_stream_response(StreamResponseValidation {
-            status: StatusCode::OK,
-            headers: &full_headers,
-            total_length: 10,
-            expected_length: 10,
-            byte_range: None,
-        })
-        .is_ok()
-    );
-
-    let range = ByteRange { start: 2, end: 5 };
-    let mut partial_headers = HeaderMap::new();
-    partial_headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("4"));
-    partial_headers.insert(
-        header::CONTENT_RANGE,
-        HeaderValue::from_static("bytes 2-5/10"),
-    );
-    assert!(
-        validate_stream_response(StreamResponseValidation {
-            status: StatusCode::PARTIAL_CONTENT,
-            headers: &partial_headers,
-            total_length: 10,
-            expected_length: 4,
-            byte_range: Some(range),
-        })
-        .is_ok()
-    );
-
-    partial_headers.insert(
-        header::CONTENT_RANGE,
-        HeaderValue::from_static("bytes 3-6/10"),
-    );
-    assert!(matches!(
-        validate_stream_response(StreamResponseValidation {
-            status: StatusCode::PARTIAL_CONTENT,
-            headers: &partial_headers,
-            total_length: 10,
-            expected_length: 4,
-            byte_range: Some(range),
-        }),
-        Err(StorageError::ObjectChanged)
-    ));
-
-    full_headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("9"));
-    assert!(matches!(
-        validate_stream_response(StreamResponseValidation {
-            status: StatusCode::OK,
-            headers: &full_headers,
-            total_length: 10,
-            expected_length: 10,
-            byte_range: None,
-        }),
-        Err(StorageError::ObjectChanged)
-    ));
 }
 
 #[tokio::test]

@@ -7,8 +7,6 @@
 
 -export([
     aggregate_counts/2,
-    aggregate_transfer_to/2,
-    aggregate_transfer_to_topology/2,
     aggregate_handoff_to_topology/2,
     find_shard_by_ref/2,
     find_shard_by_pid/2
@@ -29,30 +27,6 @@ aggregate_counts(Request, State) ->
     Total = maps:fold(
         fun(_Index, #{pid := Pid}, Acc) ->
             Acc + extract_count(safe_shard_call(Pid, Request))
-        end,
-        0,
-        Shards
-    ),
-    {Total, State}.
-
--spec aggregate_transfer_to(node(), state()) -> {non_neg_integer(), state()}.
-aggregate_transfer_to(TargetNode, State) ->
-    Shards = maps:get(shards, State),
-    Total = maps:fold(
-        fun(_Index, #{pid := Pid}, Acc) ->
-            Acc + extract_count(safe_shard_call(Pid, {transfer_to, TargetNode}))
-        end,
-        0,
-        Shards
-    ),
-    {Total, State}.
-
--spec aggregate_transfer_to_topology([node()], state()) -> {non_neg_integer(), state()}.
-aggregate_transfer_to_topology(TargetNodes, State) ->
-    Shards = maps:get(shards, State),
-    Total = maps:fold(
-        fun(_Index, #{pid := Pid}, Acc) ->
-            Acc + extract_count(safe_shard_call(Pid, {transfer_to_topology, TargetNodes}))
         end,
         0,
         Shards

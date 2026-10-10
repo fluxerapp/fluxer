@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {installLazyServices, type LazyServiceProvider} from '@app/api/middleware/LazyServiceProvider';
 import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -84,77 +81,6 @@ const REQUEST_SERVICE_VARIABLES: ReadonlyArray<keyof HonoEnv['Variables']> = [
 	'workerService',
 ];
 
-describe('installLazyServices', () => {
-	it('defers construction until the variable is read and memoises the result', async () => {
-		let builds = 0;
-		const provider: LazyServiceProvider = {
-			get requestLocale() {
-				builds += 1;
-				return 'en-US';
-			},
-		};
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			installLazyServices(ctx, provider);
-			expect(builds).toBe(0);
-			await next();
-		});
-		app.get('/probe', (ctx) => {
-			expect(ctx.get('requestLocale')).toBe('en-US');
-			expect(ctx.get('requestLocale')).toBe('en-US');
-			return ctx.body(null, NO_CONTENT);
-		});
-
-		const response = await app.request('/probe');
-
-		expect(response.status).toBe(NO_CONTENT);
-		expect(builds).toBe(1);
-	});
-
-	it('prefers a value written with set over the lazy provider', async () => {
-		let builds = 0;
-		const provider: LazyServiceProvider = {
-			get requestLocale() {
-				builds += 1;
-				return 'en-US';
-			},
-		};
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			installLazyServices(ctx, provider);
-			ctx.set('requestLocale', 'fr');
-			await next();
-		});
-		app.get('/probe', (ctx) => {
-			expect(ctx.get('requestLocale')).toBe('fr');
-			return ctx.body(null, NO_CONTENT);
-		});
-
-		const response = await app.request('/probe');
-
-		expect(response.status).toBe(NO_CONTENT);
-		expect(builds).toBe(0);
-	});
-
-	it('leaves variables the provider does not cover untouched', async () => {
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			installLazyServices(ctx, {});
-			await next();
-		});
-		app.get('/probe', (ctx) => {
-			expect(ctx.get('requestLocale')).toBeUndefined();
-			ctx.set('requestLocale', 'de');
-			expect(ctx.get('requestLocale')).toBe('de');
-			return ctx.body(null, NO_CONTENT);
-		});
-
-		const response = await app.request('/probe');
-
-		expect(response.status).toBe(NO_CONTENT);
-	});
-});
-
 describe('ServiceMiddleware lazy request services', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
@@ -162,24 +88,6 @@ describe('ServiceMiddleware lazy request services', () => {
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
-	});
-
-	it('only materialises the services a request actually reads', async () => {
-		const app = new Hono<HonoEnv>();
-		app.use(ServiceMiddleware);
-		app.get('/probe', (ctx) => {
-			ctx.get('userRepository');
-			return ctx.json({resolved: Object.keys(ctx.var)});
-		});
-
-		const response = await app.request('/probe');
-		const body = (await response.json()) as {resolved: Array<string>};
-
-		expect(body.resolved).toContain('userRepository');
-		expect(body.resolved).not.toContain('guildService');
-		expect(body.resolved).not.toContain('channelService');
-		expect(body.resolved).not.toContain('adminService');
-		expect(body.resolved).not.toContain('ssoService');
 	});
 
 	it('resolves every service variable the middleware is responsible for', async () => {

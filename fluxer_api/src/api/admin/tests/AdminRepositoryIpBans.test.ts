@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
-import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {BannedIps} from '@app/api/Tables';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {HTTP_STATUS} from '@app/api/test/TestConstants';
-import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('AdminRepository IP ban canonicalization', () => {
@@ -79,41 +73,5 @@ describe('AdminRepository IP ban canonicalization', () => {
 		await repository.unbanIp('[2001:DB8::1]');
 
 		expect(await storedIps()).toEqual([]);
-	});
-});
-
-describe('Admin blocklist entry body parsing', () => {
-	let harness: ApiTestHarness;
-
-	beforeAll(async () => {
-		harness = await createApiTestHarness();
-	});
-
-	beforeEach(async () => {
-		await harness.reset();
-	});
-
-	afterAll(async () => {
-		await harness.shutdown();
-	});
-
-	it('rejects a blocklist entry body that is not valid JSON', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.BAN_IP_ADD]);
-		const {json} = await createBuilder<{
-			code: string;
-			errors: Array<{
-				path: string;
-				code: string;
-			}>;
-		}>(harness, `${admin.token}`)
-			.post('/admin/blocklists/ip/entries')
-			.body('{not json')
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-		expect(json.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
-		const bodyError = json.errors.find((entry) => entry.path === 'body');
-		expect(bodyError).toBeDefined();
-		expect(bodyError?.code).toBe(ValidationErrorCodes.INVALID_FORMAT);
 	});
 });

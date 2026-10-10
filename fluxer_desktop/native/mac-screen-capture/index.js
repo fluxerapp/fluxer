@@ -93,11 +93,6 @@ function probeScreenRecordingAccess() {
 	return Promise.resolve(binding.probeScreenRecordingAccess());
 }
 
-function __setBindingForTests(nextBinding) {
-	binding = nextBinding;
-	loadError = null;
-}
-
 class ScreenCapture extends EventEmitter {
 	constructor(options = {}) {
 		super();
@@ -235,5 +230,4 @@ module.exports = {
 	listSources,
 	loadError,
 	probeScreenRecordingAccess,
-	__setBindingForTests,
 };

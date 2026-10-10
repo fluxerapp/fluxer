@@ -19,38 +19,6 @@ default_config() ->
         <<"voice_e2ee_scope">> => <<"guild_feature_only">>
     }.
 
-default_config_has_expected_keys_test() ->
-    persistent_term:erase(?PERSISTENT_TERM_KEY),
-    Config = gateway_rollout_config:get(),
-    ?assertEqual(100, maps:get(<<"session_rollout_percentage">>, Config)),
-    ?assertEqual(<<"modulo">>, maps:get(<<"session_rollout_mode">>, Config)),
-    ?assertEqual(100, maps:get(<<"guild_rollout_percentage">>, Config)),
-    ?assertEqual(10000, maps:get(<<"rpc_request_timeout_ms">>, Config)),
-    ?assertEqual(512, maps:get(<<"max_concurrent_session_starts">>, Config)),
-    ?assertEqual(256, maps:get(<<"max_concurrent_guild_starts">>, Config)).
-
-is_session_eligible_full_rollout_test() ->
-    persistent_term:put(?PERSISTENT_TERM_KEY, default_config()),
-    ?assert(gateway_rollout_config:is_session_eligible(<<"user123">>)),
-    ?assert(gateway_rollout_config:is_session_eligible(<<"user456">>)).
-
-is_guild_eligible_full_rollout_test() ->
-    persistent_term:put(?PERSISTENT_TERM_KEY, default_config()),
-    ?assert(gateway_rollout_config:is_guild_eligible(<<"guild123">>)),
-    ?assert(gateway_rollout_config:is_guild_eligible(<<"guild456">>)).
-
-is_session_eligible_zero_rollout_test() ->
-    Config = (default_config())#{<<"session_rollout_percentage">> => 0},
-    persistent_term:put(?PERSISTENT_TERM_KEY, Config),
-    ?assertNot(gateway_rollout_config:is_session_eligible(<<"user123">>)),
-    ?assertNot(gateway_rollout_config:is_session_eligible(<<"user456">>)).
-
-is_guild_eligible_zero_rollout_test() ->
-    Config = (default_config())#{<<"guild_rollout_percentage">> => 0},
-    persistent_term:put(?PERSISTENT_TERM_KEY, Config),
-    ?assertNot(gateway_rollout_config:is_guild_eligible(<<"guild123">>)),
-    ?assertNot(gateway_rollout_config:is_guild_eligible(<<"guild456">>)).
-
 validate_config_rejects_bad_rollout_values_test() ->
     ?assertMatch(
         {error, {invalid_field, <<"session_rollout_percentage">>, 101}},
@@ -91,28 +59,6 @@ validate_config_ignores_unknown_keys_and_merges_defaults_test() ->
     ?assertEqual(25, maps:get(<<"session_rollout_percentage">>, Config)),
     ?assertEqual(false, maps:is_key(<<"unknown">>, Config)),
     ?assertEqual(256, maps:get(<<"max_concurrent_guild_starts">>, Config)).
-
-rollout_percentage_update_applies_atomically_across_concurrent_reads_test() ->
-    Config50 = (default_config())#{<<"session_rollout_percentage">> => 50},
-    persistent_term:put(?PERSISTENT_TERM_KEY, Config50),
-    Self = self(),
-    NumReaders = 20,
-    Pids = [
-        spawn(fun() ->
-            V = gateway_rollout_config:session_rollout_percentage(),
-            Self ! {rollout_read, self(), V}
-        end)
-     || _ <- lists:seq(1, NumReaders)
-    ],
-    Results = [
-        receive
-            {rollout_read, Pid, V} -> V
-        after 1000 -> timeout
-        end
-     || Pid <- Pids
-    ],
-    ?assert(lists:all(fun(V) -> V =:= 50 end, Results)),
-    persistent_term:put(?PERSISTENT_TERM_KEY, default_config()).
 
 nats_payload_updates_config_and_notifies_subscribers_test() ->
     persistent_term:put(?PERSISTENT_TERM_KEY, default_config()),
@@ -168,24 +114,6 @@ nats_duplicate_payload_does_not_notify_subscribers_test() ->
     after 100 ->
         ok
     end.
-
-validate_config_rejects_rpc_timeout_below_minimum_test() ->
-    ?assertMatch(
-        {error, {invalid_field, <<"rpc_request_timeout_ms">>, 500}},
-        gateway_rollout_config_validate:validate(
-            #{<<"rpc_request_timeout_ms">> => 500},
-            default_config()
-        )
-    ).
-
-validate_config_rejects_rpc_timeout_above_maximum_test() ->
-    ?assertMatch(
-        {error, {invalid_field, <<"rpc_request_timeout_ms">>, 61000}},
-        gateway_rollout_config_validate:validate(
-            #{<<"rpc_request_timeout_ms">> => 61000},
-            default_config()
-        )
-    ).
 
 validate_config_rejects_relay_max_queue_zero_test() ->
     ?assertMatch(

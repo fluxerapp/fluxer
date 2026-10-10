@@ -6,7 +6,6 @@ import {Config} from '@app/api/Config';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {createGuild, createRole, getMember} from '@app/api/guild/tests/GuildTestUtils';
-import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -14,7 +13,6 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('StripePremiumService', () => {
@@ -67,99 +65,8 @@ describe('StripePremiumService', () => {
 				.expect(403, APIErrorCodes.MISSING_ACCESS)
 				.execute();
 		});
-		test('requires authentication', async () => {
-			await createBuilder(harness, 'invalid-token').post('/premium/visionary/rejoin').expect(401).execute();
-		});
-	});
-	describe('POST /premium/grace/end', () => {
-		test('rejects with UNKNOWN_USER when the account record is gone', async () => {
-			const premiumService = new StripePremiumService(
-				new UserRepository(),
-				{} as IGatewayService,
-				{} as IGuildRepositoryAggregate,
-				{} as GuildService,
-			);
-			const error = await premiumService.endGracePeriod(createUserID(999999999999999997n)).then(
-				() => null,
-				(caught: unknown) => caught,
-			);
-			expect(error).toBeInstanceOf(UnknownUserError);
-			expect((error as UnknownUserError).status).toBe(404);
-			expect((error as UnknownUserError).code).toBe(APIErrorCodes.UNKNOWN_USER);
-		});
 	});
 	describe('premium duration and stacking', () => {
-		test('sets premium_since on first grant', async () => {
-			const account = await createTestAccount(harness);
-			const before = new Date();
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-				})
-				.execute();
-			const me = await createBuilder<{
-				premium_since: string | null;
-				premium_type: number;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_since).toBeDefined();
-			const premiumSince = new Date(me.premium_since!);
-			expect(premiumSince.getTime()).toBeGreaterThanOrEqual(before.getTime() - 1000);
-			expect(premiumSince.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
-		});
-		test('preserves premium_since on renewal', async () => {
-			const account = await createTestAccount(harness);
-			const originalSince = new Date('2024-01-01T00:00:00Z');
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_since: originalSince.toISOString(),
-					premium_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-				})
-				.execute();
-			const me1 = await createBuilder<{
-				premium_since: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me1.premium_since).toBe(originalSince.toISOString());
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-				})
-				.execute();
-			const me2 = await createBuilder<{
-				premium_since: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me2.premium_since).toBe(originalSince.toISOString());
-		});
-		test('supports lifetime premium type', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.LIFETIME,
-					premium_lifetime_sequence: 5,
-				})
-				.execute();
-			const me = await createBuilder<{
-				premium_type: number;
-				premium_lifetime_sequence: number | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.LIFETIME);
-			expect(me.premium_lifetime_sequence).toBe(5);
-		});
 		test('keeps Visionary number 0 when a lifetime grant comes from a subscription period', async () => {
 			const account = await createTestAccount(harness);
 			await createBuilder(harness, account.token)

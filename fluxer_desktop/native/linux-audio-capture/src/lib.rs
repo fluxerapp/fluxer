@@ -3,29 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod audio_contract;
-mod audio_mix_runtime;
 mod backend;
 mod direct_buffer;
-mod ignore_audio_runtime;
 
-#[doc(hidden)]
-pub mod audio_mix_runtime_bench_helpers {
-    pub use crate::audio_mix_runtime::{
-        AudioMixRuntime, AudioMixRuntimeBuilder, CaptureSource, CapturedMixOutputSink,
-        MIX_CHANNELS, MIX_SAMPLE_RATE_HZ, MIX_TICK_PERIOD_NS, MixOutputFrame, MixOutputSink,
-        MixRuntimeError, NullMixOutputSink, SOURCE_RING_CAP_FRAMES,
-    };
-}
-
-#[doc(hidden)]
-pub mod ignore_audio_bench_helpers {
-    pub use crate::ignore_audio_runtime::{
-        AUDIO_BUFFERING_MAX_TICKS, IgnoreAudioDecision, IgnoreAudioEvaluation, IgnoreAudioMetrics,
-        IgnoreAudioPolicy, IgnoreAudioResetReason, IgnoreAudioSourceResetEvent,
-        IgnoreAudioSourceState, IgnoreAudioTick, SOURCE_RESET_AFTER_BUFFERED_TICKS,
-        SOURCE_STALE_AFTER_NS,
-    };
-}
 #[cfg(target_os = "linux")]
 mod pipewire;
 #[cfg(target_os = "linux")]
@@ -33,6 +13,8 @@ mod pipewire_bridge;
 mod routing;
 #[cfg(target_os = "linux")]
 mod self_identity;
+#[cfg(all(test, target_os = "linux"))]
+mod test_alloc;
 
 use std::ptr;
 use std::sync::Arc;
@@ -42,9 +24,7 @@ use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSink
 use napi::Env;
 use napi::JsValue;
 use napi::Status;
-use napi::bindgen_prelude::{
-    Array, ArrayBuffer, Error, Function, Object, Result, Unknown, ValueType,
-};
+use napi::bindgen_prelude::{ArrayBuffer, Error, Function, Object, Result, Unknown, ValueType};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 
@@ -52,9 +32,7 @@ use crate::audio_contract::{
     MAX_INVENTORY_FIELD_LENGTH, MAX_INVENTORY_FIELDS, MAX_ROUTING_RULE_KEY_LENGTH,
     MAX_ROUTING_RULE_KEYS_PER_PATTERN, MAX_ROUTING_RULE_PATTERNS, MAX_ROUTING_RULE_VALUE_LENGTH,
 };
-use crate::backend::{
-    CaptureBridge as CaptureBridgeTrait, DirectCapture as DirectCaptureTrait, RoutingGraphSnapshot,
-};
+use crate::backend::{CaptureBridge as CaptureBridgeTrait, DirectCapture as DirectCaptureTrait};
 use crate::routing::{PropMap, PropPattern, RoutingRule, SelfIdentity};
 
 type LifecycleTsfn =
@@ -184,19 +162,6 @@ impl AudioBridge {
             b.release();
         }
         Ok(())
-    }
-
-    #[napi(js_name = "routingGraph")]
-    pub fn routing_graph(&self) -> Result<RoutingGraphWire> {
-        let guard = self
-            .backend
-            .lock()
-            .map_err(|_| generic_error("AudioBridge backend poisoned"))?;
-        let graph = guard
-            .as_ref()
-            .map(|b| b.routing_graph())
-            .unwrap_or_default();
-        Ok(RoutingGraphWire(graph))
     }
 
     #[napi]
@@ -352,19 +317,6 @@ impl DirectAudioCapture {
         self.emit_lifecycle("closed-clean", "direct audio capture stopped");
         Ok(())
     }
-
-    #[napi(js_name = "routingGraph")]
-    pub fn routing_graph(&self) -> Result<RoutingGraphWire> {
-        let guard = self
-            .backend
-            .lock()
-            .map_err(|_| generic_error("DirectAudioCapture backend poisoned"))?;
-        let graph = guard
-            .as_ref()
-            .map(|b| b.routing_graph())
-            .unwrap_or_default();
-        Ok(RoutingGraphWire(graph))
-    }
 }
 
 impl Default for DirectAudioCapture {
@@ -388,139 +340,6 @@ impl DirectAudioCapture {
             ThreadsafeFunctionCallMode::NonBlocking,
         );
     }
-}
-
-#[napi]
-pub struct AudioMixRuntimeHandle {
-    inner: Mutex<Option<crate::audio_mix_runtime::AudioMixRuntime>>,
-    source_count: u32,
-    mark_pushed_total: Arc<std::sync::atomic::AtomicU64>,
-}
-
-#[napi]
-impl AudioMixRuntimeHandle {
-    #[napi(constructor)]
-    pub fn new(source_count: u32) -> Result<Self> {
-        Self::build(source_count, None)
-    }
-
-    #[napi(factory, js_name = "boundToDirectCapture")]
-    pub fn bound_to_direct_capture(direct: &DirectAudioCapture) -> Result<Self> {
-        let arc = direct_capture_freshness(direct)?;
-        Self::build(1, Some(arc))
-    }
-
-    fn build(
-        source_count: u32,
-        bound_freshness: Option<Arc<std::sync::atomic::AtomicU64>>,
-    ) -> Result<Self> {
-        if source_count == 0 {
-            return Err(invalid_arg(
-                "AudioMixRuntimeHandle requires at least 1 source",
-            ));
-        }
-        if source_count as usize > fluxer_audio_mix::MAX_MIX_SOURCES {
-            return Err(invalid_arg("AudioMixRuntimeHandle exceeds MAX_MIX_SOURCES"));
-        }
-        let clock: Arc<dyn fluxer_rt_thread::MonotonicClock> =
-            Arc::new(fluxer_rt_thread::SystemMonotonicClock::new());
-        let mut builder =
-            crate::audio_mix_runtime::AudioMixRuntimeBuilder::new().with_clock(Arc::clone(&clock));
-        for index in 0..source_count {
-            let source_id = (index as u64) + 1;
-            let (_source, consumer) = crate::audio_mix_runtime::CaptureSource::create(
-                source_id,
-                crate::audio_mix_runtime::MIX_SAMPLE_RATE_HZ,
-                crate::audio_mix_runtime::MIX_CHANNELS,
-            )
-            .map_err(|_| generic_error("CaptureSource::create failed"))?;
-            let freshness = if index == 0 {
-                match &bound_freshness {
-                    Some(arc) => Arc::clone(arc),
-                    None => Arc::new(std::sync::atomic::AtomicU64::new(u64::MAX)),
-                }
-            } else {
-                Arc::new(std::sync::atomic::AtomicU64::new(u64::MAX))
-            };
-            builder = builder.add_source_with_freshness(source_id, consumer, freshness);
-        }
-        let runtime = builder
-            .build(crate::audio_mix_runtime::NullMixOutputSink)
-            .map_err(|_| generic_error("AudioMixRuntimeBuilder::build failed"))?;
-        let mark_pushed_total = runtime.mark_pushed_total_arc();
-        Ok(Self {
-            inner: Mutex::new(Some(runtime)),
-            source_count,
-            mark_pushed_total,
-        })
-    }
-
-    #[napi(js_name = "sourceCount")]
-    pub fn source_count_js(&self) -> u32 {
-        assert!(self.source_count > 0);
-        assert!(self.source_count as usize <= fluxer_audio_mix::MAX_MIX_SOURCES);
-        self.source_count
-    }
-
-    #[napi]
-    pub fn tick(&self, tick_at_ns: Option<i64>) -> Result<u32> {
-        use fluxer_rt_thread::MonotonicClock as _;
-        assert!(self.source_count > 0);
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| generic_error("AudioMixRuntimeHandle poisoned"))?;
-        let runtime = guard
-            .as_mut()
-            .ok_or_else(|| generic_error("AudioMixRuntimeHandle disposed"))?;
-        let at_ns: u64 = match tick_at_ns {
-            Some(v) if v > 0 => v as u64,
-            _ => fluxer_rt_thread::SystemMonotonicClock::new().now_ns(),
-        };
-        assert!(at_ns > 0);
-        let marked = runtime
-            .observe_source_pushes_without_mix(at_ns)
-            .map_err(|_| generic_error("AudioMixRuntime tick failed"))?;
-        Ok(marked.min(u32::MAX as u64) as u32)
-    }
-
-    #[napi(js_name = "markPushedTotal")]
-    pub fn mark_pushed_total_js(&self) -> u32 {
-        assert!(self.source_count > 0);
-        let value = self
-            .mark_pushed_total
-            .load(std::sync::atomic::Ordering::Acquire);
-        let clamped = value.min(u32::MAX as u64);
-        assert!(clamped <= u32::MAX as u64);
-        clamped as u32
-    }
-
-    #[napi]
-    pub fn dispose(&self) -> Result<()> {
-        assert!(self.source_count > 0);
-        assert!(self.source_count as usize <= fluxer_audio_mix::MAX_MIX_SOURCES);
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| generic_error("AudioMixRuntimeHandle poisoned"))?;
-        guard.take();
-        Ok(())
-    }
-}
-
-fn direct_capture_freshness(
-    direct: &DirectAudioCapture,
-) -> Result<Arc<std::sync::atomic::AtomicU64>> {
-    let guard = direct
-        .backend
-        .lock()
-        .map_err(|_| generic_error("DirectAudioCapture backend poisoned"))?;
-    let backend = guard
-        .as_ref()
-        .ok_or_else(|| generic_error("DirectAudioCapture backend unavailable"))?;
-    backend
-        .last_push_ns_arc()
-        .ok_or_else(|| generic_error("DirectAudioCapture backend lacks freshness atomic"))
 }
 
 #[napi(object)]
@@ -549,85 +368,6 @@ impl napi::bindgen_prelude::ToNapiValue for PropMapWire {
             <Object<'_> as napi::bindgen_prelude::ToNapiValue>::to_napi_value(raw_env, object)
         }
     }
-}
-
-pub struct RoutingGraphWire(pub RoutingGraphSnapshot);
-
-impl napi::bindgen_prelude::ToNapiValue for RoutingGraphWire {
-    unsafe fn to_napi_value(
-        raw_env: napi::sys::napi_env,
-        value: Self,
-    ) -> Result<napi::sys::napi_value> {
-        let env = napi::Env::from_raw(raw_env);
-        let mut object = Object::new(&env)?;
-        object.set("backend", value.0.backend)?;
-        object.set("nodes", routing_graph_nodes_to_array(&env, value.0.nodes)?)?;
-        object.set("ports", routing_graph_ports_to_array(&env, value.0.ports)?)?;
-        object.set(
-            "ownedLinks",
-            routing_graph_links_to_array(&env, value.0.owned_links)?,
-        )?;
-        unsafe {
-            <Object<'_> as napi::bindgen_prelude::ToNapiValue>::to_napi_value(raw_env, object)
-        }
-    }
-}
-
-fn prop_map_to_object<'env>(env: &'env Env, props: PropMap) -> Result<Object<'env>> {
-    let mut object = Object::new(env)?;
-    for (key, value) in props {
-        object.set(&key, value)?;
-    }
-    Ok(object)
-}
-
-fn routing_graph_nodes_to_array<'env>(
-    env: &'env Env,
-    nodes: Vec<crate::backend::RoutingGraphNode>,
-) -> Result<Array<'env>> {
-    let mut array = env.create_array(nodes.len() as u32)?;
-    for (index, node) in nodes.into_iter().enumerate() {
-        let mut object = Object::new(env)?;
-        object.set("id", node.id)?;
-        object.set("props", prop_map_to_object(env, node.props)?)?;
-        array.set(index as u32, object)?;
-    }
-    Ok(array)
-}
-
-fn routing_graph_ports_to_array<'env>(
-    env: &'env Env,
-    ports: Vec<crate::backend::RoutingGraphPort>,
-) -> Result<Array<'env>> {
-    let mut array = env.create_array(ports.len() as u32)?;
-    for (index, port) in ports.into_iter().enumerate() {
-        let mut object = Object::new(env)?;
-        object.set("id", port.id)?;
-        object.set("nodeId", port.node_id)?;
-        object.set("direction", port.direction)?;
-        object.set("channel", port.channel)?;
-        object.set("props", prop_map_to_object(env, port.props)?)?;
-        array.set(index as u32, object)?;
-    }
-    Ok(array)
-}
-
-fn routing_graph_links_to_array<'env>(
-    env: &'env Env,
-    links: Vec<crate::backend::RoutingGraphLink>,
-) -> Result<Array<'env>> {
-    let mut array = env.create_array(links.len() as u32)?;
-    for (index, link) in links.into_iter().enumerate() {
-        let mut object = Object::new(env)?;
-        object.set("outputNodeId", link.output_node_id)?;
-        object.set("outputPortId", link.output_port_id)?;
-        object.set("inputNodeId", link.input_node_id)?;
-        object.set("inputPortId", link.input_port_id)?;
-        object.set("owned", true)?;
-        object.set("passive", true)?;
-        array.set(index as u32, object)?;
-    }
-    Ok(array)
 }
 
 fn project_inventory_entry(mut entry: PropMap, fields: &[String]) -> PropMapWire {
@@ -759,104 +499,3 @@ fn invalid_arg(reason: impl Into<String>) -> Error {
 
 #[allow(dead_code)]
 fn _keep_arc_in_scope(_: Arc<()>) {}
-
-#[cfg(all(test, target_os = "linux"))]
-mod js_path_tests {
-    use super::AudioMixRuntimeHandle;
-    use crate::pipewire::stream_ops::{
-        DIRECT_CAPTURE_APM_FRAME_SAMPLES, build_test_user_data, process_audio_chunk,
-    };
-    use fluxer_rt_thread::MonotonicClock;
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicU64, Ordering};
-
-    #[derive(Debug)]
-    struct FakeClock {
-        value_ns: AtomicU64,
-    }
-
-    impl FakeClock {
-        fn new(initial_ns: u64) -> Self {
-            assert!(initial_ns > 0);
-            Self {
-                value_ns: AtomicU64::new(initial_ns),
-            }
-        }
-    }
-
-    impl MonotonicClock for FakeClock {
-        fn now_ns(&self) -> u64 {
-            self.value_ns.load(Ordering::Acquire)
-        }
-    }
-
-    fn make_f32_payload(samples: &[f32]) -> Vec<u8> {
-        assert!(!samples.is_empty());
-        let mut out = Vec::with_capacity(samples.len() * 4);
-        for sample in samples {
-            out.extend_from_slice(&sample.to_ne_bytes());
-        }
-        assert_eq!(out.len(), samples.len() * 4);
-        out
-    }
-
-    fn build_handle_with_shared_freshness(last_push_ns: Arc<AtomicU64>) -> AudioMixRuntimeHandle {
-        assert!(Arc::strong_count(&last_push_ns) >= 1);
-        let handle = AudioMixRuntimeHandle::build(1, Some(last_push_ns))
-            .expect("AudioMixRuntimeHandle build via JS path");
-        assert_eq!(handle.source_count_js(), 1);
-        handle
-    }
-
-    #[test]
-    fn js_runtime_tick_consumes_freshness_pushed_by_production_callback() {
-        let clock: Arc<dyn MonotonicClock> = Arc::new(FakeClock::new(11_000_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut user_data = build_test_user_data(Arc::clone(&last_push_ns), Arc::clone(&clock));
-        let handle = build_handle_with_shared_freshness(Arc::clone(&last_push_ns));
-        assert_eq!(handle.mark_pushed_total_js(), 0);
-        assert_eq!(last_push_ns.load(Ordering::Acquire), u64::MAX);
-        let frame: Vec<f32> = (0..DIRECT_CAPTURE_APM_FRAME_SAMPLES)
-            .map(|n| (n as f32) * 0.0001)
-            .collect();
-        let payload = make_f32_payload(&frame);
-        process_audio_chunk(&mut user_data, &payload);
-        let pushed_after_callback = last_push_ns.load(Ordering::Acquire);
-        assert_ne!(pushed_after_callback, u64::MAX);
-        assert_eq!(pushed_after_callback, 11_000_000);
-        let marked = handle
-            .tick(Some(pushed_after_callback as i64))
-            .expect("AudioMixRuntimeHandle::tick observes freshness");
-        assert_eq!(marked, 1);
-        let total = handle.mark_pushed_total_js();
-        assert!(
-            total >= 1,
-            "AudioMixRuntimeHandle::tick did not advance mark_pushed_total ({total})",
-        );
-        handle.dispose().expect("dispose");
-    }
-
-    #[test]
-    fn js_runtime_tick_idempotent_for_unchanged_freshness_atomic() {
-        let clock: Arc<dyn MonotonicClock> = Arc::new(FakeClock::new(22_000_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut user_data = build_test_user_data(Arc::clone(&last_push_ns), Arc::clone(&clock));
-        let handle = build_handle_with_shared_freshness(Arc::clone(&last_push_ns));
-        let frame: Vec<f32> = (0..DIRECT_CAPTURE_APM_FRAME_SAMPLES)
-            .map(|n| (n as f32) * 0.0002)
-            .collect();
-        let payload = make_f32_payload(&frame);
-        process_audio_chunk(&mut user_data, &payload);
-        let observed = last_push_ns.load(Ordering::Acquire);
-        let _ = handle.tick(Some(observed as i64)).expect("first tick");
-        let after_first = handle.mark_pushed_total_js();
-        assert!(after_first >= 1);
-        let _ = handle.tick(Some(observed as i64 + 1)).expect("second tick");
-        let after_second = handle.mark_pushed_total_js();
-        assert_eq!(
-            after_first, after_second,
-            "second tick must not advance mark_pushed_total when freshness atomic is unchanged",
-        );
-        handle.dispose().expect("dispose");
-    }
-}

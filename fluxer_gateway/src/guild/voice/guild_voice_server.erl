@@ -192,14 +192,10 @@ handle_call_local({get_voice_states_for_channel, ChIdBin}, State) ->
     {reply, channel_query(voice_states, ChIdBin, State), State};
 handle_call_local({get_pending_joins_for_channel, ChIdBin}, State) ->
     {reply, channel_query(pending_joins, ChIdBin, State), State};
-handle_call_local({get_voice_states_list}, State) ->
-    {reply, maps:values(maps:get(voice_states, State, #{})), State};
 handle_call_local({get_voice_states_map}, State) ->
     {reply, maps:get(voice_states, State, #{}), State};
 handle_call_local(get_voice_server_pid, State) ->
     {reply, {ok, self()}, State};
-handle_call_local({set_voice_states, VoiceStates}, State) when is_map(VoiceStates) ->
-    {reply, ok, do_set_voice_states(VoiceStates, State)};
 handle_call_local(_, State) ->
     {reply, ok, State}.
 
@@ -214,13 +210,6 @@ channel_query(Kind, ChIdBin, State) ->
         error ->
             #{pending_joins => []}
     end.
-
--spec do_set_voice_states(map(), server_state()) -> server_state().
-do_set_voice_states(VoiceStates, State) ->
-    OldVS = maps:get(voice_states, State, #{}),
-    NewVS = voice_state_utils:ensure_voice_states(VoiceStates),
-    _ = guild_voice_server_sync:sync_replaced_voice_states(OldVS, NewVS),
-    State#{voice_states => NewVS}.
 
 -spec handle_cast(term(), server_state()) -> {noreply, server_state()}.
 handle_cast({store_pending_connection, ConnId, Meta}, State) ->
@@ -754,47 +743,6 @@ resolve_rejects_dead_voice_pid_test() ->
     after
         exit(GuildPid, kill)
     end.
-
-parse_voice_channel_id_test() ->
-    ?assertEqual({ok, 9, <<"9">>}, guild_voice_server_state:parse_voice_channel_id(<<"9">>)),
-    ?assertEqual({ok, 9, <<"9">>}, guild_voice_server_state:parse_voice_channel_id(9)),
-    ?assertEqual(error, guild_voice_server_state:parse_voice_channel_id(null)).
-
-rpc_entry_formatters_test() ->
-    VSEntries = guild_voice_server_state:voice_state_rpc_entries([
-        not_a_map,
-        #{
-            <<"connection_id">> => <<"conn-a">>,
-            <<"user_id">> => 42,
-            <<"channel_id">> => 9,
-            <<"region_id">> => <<"local">>,
-            <<"server_id">> => <<"dev-1">>
-        },
-        #{<<"connection_id">> => null, <<"user_id">> => 43, <<"channel_id">> => 9}
-    ]),
-    ?assertEqual(
-        [
-            #{
-                connection_id => <<"conn-a">>,
-                user_id => <<"42">>,
-                channel_id => <<"9">>,
-                region_id => <<"local">>,
-                server_id => <<"dev-1">>
-            }
-        ],
-        VSEntries
-    ),
-    PJEntries = guild_voice_server_state:pending_join_rpc_entries([
-        not_a_map,
-        #{
-            connection_id => <<"conn-a">>,
-            user_id => 42,
-            token_nonce => <<"nonce">>,
-            expires_at => 123
-        },
-        #{connection_id => <<"missing-user">>, token_nonce => <<"nonce">>}
-    ]),
-    ?assertEqual(1, length(PJEntries)).
 
 bounded_put_under_limit_test() ->
     Map = #{a => 1, b => 2},

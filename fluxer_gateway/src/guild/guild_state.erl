@@ -236,10 +236,6 @@ maybe_sync_member_list_permission_state(_State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-update_data_for_event_unknown_returns_data_unchanged_test() ->
-    Data = #{<<"test">> => true},
-    ?assertEqual(Data, update_data_for_event(unknown_event, #{}, Data, #{})).
-
 guild_member_remove_asks_the_voice_server_to_disconnect_test() ->
     Self = self(),
     VoicePid = spawn(fun() ->

@@ -5,10 +5,6 @@
 
 -export([handle/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -define(GUILD_CALL_TIMEOUT, 4000).
 -define(RELOAD_ALL_TIMEOUT, 15000).
 
@@ -241,20 +237,3 @@ owner_guild_manager_ref(OwnerNode) when OwnerNode =:= node() ->
     guild_manager;
 owner_guild_manager_ref(OwnerNode) ->
     {guild_manager, OwnerNode}.
-
--ifdef(TEST).
-optional_user_id_preserves_null_for_skip_membership_check_test() ->
-    ?assertEqual(null, optional_user_id(null)).
-
-optional_user_id_accepts_snowflake_test() ->
-    ?assertEqual(123, optional_user_id(<<"123">>)).
-
-optional_channel_id_defaults_to_null_test() ->
-    ?assertEqual(null, optional_channel_id(null)).
-
-optional_channel_id_accepts_snowflake_test() ->
-    ?assertEqual(456, optional_channel_id(<<"456">>)).
-
-optional_channel_id_rejects_garbage_test() ->
-    ?assertError({gateway_rpc_error, _}, optional_channel_id(<<"nope">>)).
--endif.

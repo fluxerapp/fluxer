@@ -79,27 +79,6 @@ export async function listOAuth2Applications(
 	return json;
 }
 
-export async function updateOAuth2Application(
-	harness: ApiTestHarness,
-	token: string,
-	applicationId: string,
-	params: {
-		name?: string;
-		redirect_uris?: Array<string> | null;
-		bot_public?: boolean;
-		bot_require_code_grant?: boolean;
-	},
-): Promise<ApplicationResponse> {
-	const {response, text, json} = await createBuilder<ApplicationResponse>(harness, token)
-		.patch(`/oauth2/applications/${applicationId}`)
-		.body(params)
-		.executeRaw();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}: ${text}`);
-	}
-	return json;
-}
-
 export async function deleteOAuth2Application(
 	harness: ApiTestHarness,
 	token: string,

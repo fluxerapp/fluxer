@@ -7,7 +7,6 @@
     publish_global_presence/2,
     force_publish_global_presence/1,
     dispatch_global_presence/3,
-    dispatch_initial_presences/2,
     dispatch_to_all_sessions/3,
     ensure_initial_global_subscriptions/1,
     sync_friend_subscriptions/3,
@@ -80,14 +79,6 @@ dispatch_global_presence(TargetId, Payload, State) ->
         true -> {noreply, State};
         false -> dispatch_foreign_presence(TargetId, Payload, State)
     end.
-
--spec dispatch_initial_presences([map()], state()) -> ok.
-dispatch_initial_presences(Presences, State) ->
-    SessionPids = presence_connect:collect_session_pids(State),
-    lists:foreach(
-        fun(Pid) -> gen_server:cast(Pid, {initial_global_presences, Presences}) end,
-        SessionPids
-    ).
 
 -spec dispatch_to_all_sessions(atom(), map() | list(), state()) -> ok.
 dispatch_to_all_sessions(EventAtom, Data, State) ->
@@ -297,10 +288,6 @@ expiry_timer_delivers_a_reconcile_cast_test() ->
         Expected -> ok
     after 1000 -> ?assert(false)
     end.
-
-cancel_expiry_timer_ignores_non_references_test() ->
-    ?assertEqual(ok, cancel_expiry_timer(undefined)),
-    ?assertEqual(ok, cancel_expiry_timer(not_a_ref)).
 
 future_custom_status() ->
     ExpiresAt = calendar:system_time_to_rfc3339(

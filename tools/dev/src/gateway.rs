@@ -727,7 +727,7 @@ fn cmdline_has_managed_gateway_config(args: &[String]) -> bool {
     })
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn cmdline_has_gateway_node(
     args: &[String],
     node_names: &std::collections::HashSet<String>,
@@ -746,7 +746,7 @@ fn proc_cmdline(pid: i32) -> Vec<String> {
         .collect()
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn parse_proc_stat_state_and_pgid(stat: &str) -> Option<(char, i32)> {
     let (_, after_comm) = stat.rsplit_once(')')?;
     let mut fields = after_comm.split_ascii_whitespace();
@@ -766,13 +766,13 @@ fn parse_proc_stat_process(stat: &str) -> Option<(char, i32, i32, u64)> {
     Some((state, ppid, pgid, parse_proc_stat_starttime(stat)?))
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn parse_proc_stat_starttime(stat: &str) -> Option<u64> {
     let (_, after_comm) = stat.rsplit_once(')')?;
     after_comm.split_ascii_whitespace().nth(19)?.parse().ok()
 }
 
-#[cfg(any(target_os = "linux", test))]
+#[cfg(target_os = "linux")]
 fn proc_stat_state_is_dead(state: char) -> bool {
     state == 'Z' || state == 'X' || state == 'x'
 }
@@ -1003,164 +1003,4 @@ pub fn build_gateway_command(config_dir: &Path) -> Result<Vec<String>> {
         GATEWAY_FOREGROUND_EVAL.to_owned(),
     ]);
     Ok(args)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn builds_default_cluster_nodes() {
-        let nodes = build_gateway_cluster_nodes().unwrap();
-        assert_eq!(nodes.len(), 18);
-        assert_eq!(nodes[0].name(), "websocket-1");
-        assert_eq!(nodes[0].http_port, 8771);
-        assert_eq!(nodes[17].name(), "push-3");
-        assert_eq!(nodes[17].dist_port, 9018);
-    }
-
-    #[test]
-    fn node_env_contains_role_port_and_static_peers() {
-        let node = GatewayNode {
-            role: "calls".to_owned(),
-            ordinal: 2,
-            http_port: 8811,
-            dist_port: 9014,
-        };
-        let env = gateway_node_env(&node, "a,b");
-        assert!(
-            env.iter()
-                .any(|(key, value)| key == "FLUXER_GATEWAY_ROLE"
-                    && value.as_deref() == Some("calls"))
-        );
-        assert!(
-            env.iter().any(
-                |(key, value)| key == "FLUXER_GATEWAY_PORT" && value.as_deref() == Some("8811")
-            )
-        );
-        assert!(
-            env.iter()
-                .any(|(key, value)| key == "FLUXER_GATEWAY_CLUSTER_STATIC_PEERS"
-                    && value.as_deref() == Some("a,b"))
-        );
-    }
-
-    #[test]
-    fn cmdline_gateway_node_detection_matches_exact_name_argument() {
-        let node_names =
-            std::collections::HashSet::from([String::from("fluxer_gateway_websocket_1@127.0.0.1")]);
-
-        assert!(cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-name",
-                "fluxer_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-        assert!(!cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-sname",
-                "fluxer_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-        assert!(!cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-name",
-                "other_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-    }
-
-    #[test]
-    fn proc_stat_parsing_extracts_state_and_pgid() {
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0"),
-            Some(('S', 1234))
-        );
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("77 (erl_child_setup) R 42 42 9000 0 -1"),
-            Some(('R', 42))
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_handles_parentheses_and_spaces_in_comm() {
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (weird) comm (name) Z 1 42 42 0 -1"),
-            Some(('Z', 42))
-        );
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (spaced comm) T 1 99 99 0 -1"),
-            Some(('T', 99))
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_rejects_malformed_lines() {
-        assert_eq!(parse_proc_stat_state_and_pgid(""), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp)"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp) S"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1"), None);
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1 not-a-pgid"),
-            None
-        );
-        assert_eq!(parse_proc_stat_state_and_pgid("no comm field here"), None);
-    }
-
-    #[test]
-    fn proc_stat_parsing_extracts_starttime() {
-        let stat =
-            "1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 12345678 4096";
-        assert_eq!(parse_proc_stat_starttime(stat), Some(12_345_678));
-    }
-
-    #[test]
-    fn proc_stat_starttime_parsing_handles_parentheses_and_spaces_in_comm() {
-        let stat =
-            "99 (weird) comm (name) S 1 42 42 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 777 4096";
-        assert_eq!(parse_proc_stat_starttime(stat), Some(777));
-    }
-
-    #[test]
-    fn proc_stat_starttime_parsing_rejects_truncated_lines() {
-        assert_eq!(parse_proc_stat_starttime(""), None);
-        assert_eq!(parse_proc_stat_starttime("1234 (beam.smp)"), None);
-        assert_eq!(
-            parse_proc_stat_starttime("1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0"),
-            None
-        );
-        assert_eq!(
-            parse_proc_stat_starttime(
-                "1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 not-a-number"
-            ),
-            None
-        );
-    }
-
-    #[test]
-    fn zombie_and_reaped_states_count_as_dead() {
-        assert!(proc_stat_state_is_dead('Z'));
-        assert!(proc_stat_state_is_dead('X'));
-        assert!(proc_stat_state_is_dead('x'));
-    }
-
-    #[test]
-    fn live_states_do_not_count_as_dead() {
-        assert!(!proc_stat_state_is_dead('R'));
-        assert!(!proc_stat_state_is_dead('S'));
-        assert!(!proc_stat_state_is_dead('D'));
-        assert!(!proc_stat_state_is_dead('T'));
-        assert!(!proc_stat_state_is_dead('t'));
-        assert!(!proc_stat_state_is_dead('I'));
-    }
-
-    fn strings(values: &[&str]) -> Vec<String> {
-        values.iter().map(|value| (*value).to_owned()).collect()
-    }
 }

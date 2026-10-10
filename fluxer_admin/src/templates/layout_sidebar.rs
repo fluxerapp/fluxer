@@ -29,7 +29,6 @@ pub fn render_sidebar(
             nav data-sidebar-nav="" class="sidebar-scrollbar flex-1 space-y-4 overflow-y-auto p-4" aria-label="Admin sections" {
                 @for section in NAV_SECTIONS {
                     @let visible_items: Vec<_> = section.items.iter()
-                        .filter(|item| !(item.hosted_only && config.self_hosted))
                         .filter(|item| acl::has_any_permission(admin_acls, item.required_acls))
                         .filter(|item| {
                             item.active_key != "voice-servers" || inspected_voice_region_id.is_some()

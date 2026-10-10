@@ -2,13 +2,7 @@
 
 import {createRequire} from 'node:module';
 import {createChildLogger} from '@electron/common/Logger';
-import type {
-	VirtmicAvailability,
-	VirtmicNode,
-	VirtmicRoutingGraph,
-	VirtmicRoutingGraphResult,
-	VirtmicUnavailableReason,
-} from '@electron/common/Types';
+import type {VirtmicAvailability, VirtmicNode, VirtmicUnavailableReason} from '@electron/common/Types';
 import {isFluxerAudioNode} from '@electron/main/FluxerAudioIdentity';
 import {getLinuxPortalsMode, getNativeAudioMode} from '@electron/main/LaunchOptions';
 import {
@@ -24,7 +18,6 @@ const requireModule = createRequire(import.meta.url);
 
 interface AudioBridgeInstance {
 	inventory: (fields?: ReadonlyArray<string> | null) => Array<VirtmicNode>;
-	routingGraph?: () => VirtmicRoutingGraph;
 	release: () => void;
 	backend?: () => 'pipewire' | 'none';
 }
@@ -161,21 +154,6 @@ function listVirtmicTargets(_options?: {granular?: boolean}): {
 	}
 }
 
-function getVirtmicRoutingGraph(): VirtmicRoutingGraphResult {
-	const availability = getVirtmicAvailability();
-	if (!availability.available) return {ok: false, availability};
-	const bay = getInstance();
-	if (!bay || typeof bay.routingGraph !== 'function') {
-		return {ok: false, availability: {available: false, reason: 'load-failed'}};
-	}
-	try {
-		return {ok: true, graph: bay.routingGraph(), availability};
-	} catch (error) {
-		logger.warn('AudioBridge.routingGraph() threw', error);
-		return {ok: false, availability};
-	}
-}
-
 async function resolveWindowPidViaX11(xid: string): Promise<number | null> {
 	if (getLinuxPortalsMode(process.argv) === 'off') return null;
 	const portals = requireModule('@fluxer/linux-portals') as {
@@ -268,7 +246,6 @@ export function registerVirtmicHandlers(): void {
 			},
 		) => listVirtmicTargets(options),
 	);
-	ipcMain.handle('virtmic:get-routing-graph', (): VirtmicRoutingGraphResult => getVirtmicRoutingGraph());
 	ipcMain.handle('virtmic:stop', (): void => {});
 }
 
@@ -276,7 +253,6 @@ export function cleanupVirtmic(): void {
 	if (!handlersRegistered) return;
 	ipcMain.removeHandler('virtmic:get-availability');
 	ipcMain.removeHandler('virtmic:list');
-	ipcMain.removeHandler('virtmic:get-routing-graph');
 	ipcMain.removeHandler('virtmic:stop');
 	handlersRegistered = false;
 }

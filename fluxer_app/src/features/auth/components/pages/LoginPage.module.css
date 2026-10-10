@@ -75,46 +75,6 @@
 	text-align: center;
 }
 
-.passkeyActions {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.divider {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 1.125rem;
-	margin-bottom: 1.125rem;
-}
-
-.dividerLine {
-	flex: 1;
-	border-top: 0.0625rem solid var(--background-modifier-accent);
-}
-
-.dividerText {
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
-.footer {
-	margin-top: 1rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.footerText {
-	text-align: left;
-}
-
-.footerLabel {
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
 @keyframes handoffSpin {
 	from {
 		transform: rotate(0deg);

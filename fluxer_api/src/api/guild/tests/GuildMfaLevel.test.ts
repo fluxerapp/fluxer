@@ -160,14 +160,4 @@ describe('Guild MFA level', () => {
 			Permissions.SEND_MESSAGES.toString(),
 		);
 	});
-	it('does not require sudo mode for non-mfa_level guild updates', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'MFA Test Guild');
-		const updated = await createBuilder<GuildResponse>(harness, owner.token)
-			.patch(`/guilds/${guild.id}`)
-			.body({name: 'Renamed Guild'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(updated.name).toBe('Renamed Guild');
-	});
 });

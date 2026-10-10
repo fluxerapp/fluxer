@@ -16,8 +16,6 @@
     from_list/3,
     size/1,
     bytes/1,
-    is_empty/1,
-    filter/2,
     drop_while_front/2,
     entry_bytes/1
 ]).
@@ -118,15 +116,6 @@ size(#{count := Count}) -> Count.
 -spec bytes(deque()) -> non_neg_integer().
 bytes(#{bytes := Bytes}) -> Bytes.
 
--spec is_empty(deque()) -> boolean().
-is_empty(#{count := 0}) -> true;
-is_empty(_) -> false.
-
--spec filter(fun((term()) -> boolean()), deque()) -> deque().
-filter(Pred, #{max_count := MC, max_bytes := MB} = D) ->
-    List = to_list(D),
-    from_list(lists:filter(Pred, List), MC, MB).
-
 -spec drop_while_front(fun((term()) -> boolean()), deque()) -> deque().
 drop_while_front(Pred, D) ->
     case pop_front(D) of
@@ -221,12 +210,6 @@ cache_word_size() ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-new_empty_test() ->
-    D = new(10, 0),
-    ?assertEqual(0, size(D)),
-    ?assertEqual(true, is_empty(D)),
-    ?assertEqual([], to_list(D)).
-
 push_and_to_list_test() ->
     D0 = new(10, 0),
     D1 = push(a, push(b, push(c, D0))),
@@ -278,27 +261,13 @@ assert_pop_sequence(PopFun, Items) ->
     ),
     ?assertEqual(empty, PopFun(D1)).
 
-filter_test() ->
-    D0 = default_test_deque(),
-    D1 = filter(fun(X) -> X > 3 end, D0),
-    ?assertEqual([4, 5], to_list(D1)),
-    ?assertEqual(2, size(D1)).
-
 from_list_trims_test() ->
     D = bounded_test_deque(3),
     ?assertEqual(3, size(D)),
     ?assertEqual([3, 4, 5], to_list(D)).
 
-default_test_deque() ->
-    bounded_test_deque(10).
-
 bounded_test_deque(MaxCount) ->
     from_list([1, 2, 3, 4, 5], MaxCount, 0).
-
-size_is_o1_test() ->
-    D0 = new(1000, 0),
-    D1 = lists:foldl(fun push/2, D0, lists:seq(1, 1000)),
-    ?assertEqual(1000, size(D1)).
 
 push_with_precomputed_bytes_matches_push_test() ->
     Item = #{event => presence_update, data => #{<<"status">> => <<"online">>}, seq => 7},
@@ -330,11 +299,5 @@ push_with_precomputed_bytes_matches_push_at_count_bound_test() ->
     D2 = lists:foldl(fun(I, D) -> push(I, entry_bytes(I), D) end, D0, Items),
     ?assertEqual([b, c, d], to_list(D1)),
     ?assertEqual(D1, D2).
-
-entry_bytes_uses_word_size_test() ->
-    ?assertEqual(
-        erts_debug:flat_size({a, b, c}) * erlang:system_info(wordsize),
-        entry_bytes({a, b, c})
-    ).
 
 -endif.

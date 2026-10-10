@@ -2,7 +2,6 @@
 
 import Channels from '@app/features/channel/state/Channels';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import type {Presence} from '@app/features/gateway/types/GatewayPresenceTypes';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -31,11 +30,6 @@ interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
 	guildId: string;
 	member: GuildMemberData;
-}
-
-interface PresenceUpdateAction {
-	type: 'PRESENCE_UPDATE';
-	presence: Presence;
 }
 
 export interface PendingJumpDispatch {
@@ -243,11 +237,6 @@ class Messages {
 		});
 	}
 
-	jumpedMessageId(channelId: string): string | null | undefined {
-		const channel = ChannelMessages.get(channelId);
-		return channel?.jumpDestinationId;
-	}
-
 	hasNewestMessages(channelId: string): boolean {
 		const channel = ChannelMessages.get(channelId);
 		return channel?.hasNewestMessages() ?? false;
@@ -262,20 +251,6 @@ class Messages {
 		if (!dispatch) return null;
 		this.pendingJumpDispatches.delete(channelId);
 		return dispatch.messageId === messageId ? dispatch : null;
-	}
-
-	handleConnectionClosed(): boolean {
-		let didUpdate = false;
-		ChannelMessages.forEach((messages) => {
-			if (messages.loadingMore) {
-				this.commitMessages(messages.withPatch({loadingMore: false}));
-				didUpdate = true;
-			}
-		});
-		if (didUpdate) {
-			this.notifyChange();
-		}
-		return false;
 	}
 
 	handleSessionInvalidated(): boolean {
@@ -455,16 +430,6 @@ class Messages {
 	handleLoadMessages(action: {channelId: string; jump?: JumpOptions}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
 		this.commitMessages(messages.beginLoad(action.jump));
-		this.notifyChange();
-		return false;
-	}
-
-	handleTruncateMessages(action: {channelId: string; trimNewest?: boolean; trimOldest?: boolean}): boolean {
-		const messages = ChannelMessages.getOrCreate(action.channelId).trimToWindow(
-			action.trimNewest ?? false,
-			action.trimOldest ?? false,
-		);
-		this.commitMessages(messages);
 		this.notifyChange();
 		return false;
 	}
@@ -658,25 +623,6 @@ class Messages {
 		return hasChanges;
 	}
 
-	handlePresenceUpdate(action: PresenceUpdateAction): boolean {
-		if (!action.presence.user.username && !action.presence.user.avatar && !action.presence.user.discriminator) {
-			return false;
-		}
-		const userId = action.presence.user.id;
-		const updatedAuthor = Users.getUser(userId);
-		if (!updatedAuthor) return false;
-		const authorJson = updatedAuthor.toJSON();
-		const guildId = action.presence.guild_id ?? null;
-		const hasChanges = this.patchAuthorMessages(userId, (message) => message.withUpdates({author: authorJson}), {
-			guildId,
-			patchMissingChannels: true,
-		});
-		if (hasChanges) {
-			this.notifyChange();
-		}
-		return hasChanges;
-	}
-
 	handleGuildThreadsPurged(guildId: string): void {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId)?.guildId === guildId) {
@@ -795,50 +741,6 @@ class Messages {
 			this.notifyChange();
 		}
 		return hasChanges;
-	}
-
-	handleOptimisticEdit(action: {channelId: string; messageId: string; content: string}): {
-		originalContent: string;
-		originalEditedTimestamp: string | null;
-	} | null {
-		const {channelId, messageId, content} = action;
-		const existing = ChannelMessages.get(channelId);
-		if (!existing) return null;
-		const originalMessage = existing.get(messageId);
-		if (!originalMessage) return null;
-		const rollbackData = {
-			originalContent: originalMessage.content,
-			originalEditedTimestamp: originalMessage.editedTimestamp?.toISOString() ?? null,
-		};
-		const updated = existing.update(messageId, (msg) =>
-			msg.withUpdates({
-				content,
-				state: MessageStates.EDITING,
-			}),
-		);
-		this.commitMessages(updated);
-		this.notifyChange();
-		return rollbackData;
-	}
-
-	handleEditRollback(action: {
-		channelId: string;
-		messageId: string;
-		originalContent: string;
-		originalEditedTimestamp: string | null;
-	}): void {
-		const {channelId, messageId, originalContent, originalEditedTimestamp} = action;
-		const existing = ChannelMessages.get(channelId);
-		if (!existing?.has(messageId)) return;
-		const updated = existing.update(messageId, (msg) =>
-			msg.withUpdates({
-				content: originalContent,
-				edited_timestamp: originalEditedTimestamp ?? undefined,
-				state: MessageStates.SENT,
-			}),
-		);
-		this.commitMessages(updated);
-		this.notifyChange();
 	}
 
 	subscribe(callback: () => void): () => void {

@@ -31,10 +31,6 @@ export async function leaveGuild(harness: ApiTestHarness, token: string, guildId
 	await createBuilder(harness, token).delete(`/users/@me/guilds/${guildId}`).expect(204).execute();
 }
 
-export async function getUserGuilds(harness: ApiTestHarness, token: string): Promise<Array<GuildResponse>> {
-	return createBuilder<Array<GuildResponse>>(harness, token).get('/users/@me/guilds').execute();
-}
-
 export async function createChannel(
 	harness: ApiTestHarness,
 	token: string,
@@ -103,15 +99,6 @@ export async function updateRole(
 		.patch(`/guilds/${guildId}/roles/${roleId}`)
 		.body(updates)
 		.execute();
-}
-
-export async function deleteRole(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	roleId: string,
-): Promise<void> {
-	await createBuilder(harness, token).delete(`/guilds/${guildId}/roles/${roleId}`).expect(204).execute();
 }
 
 export async function updateRolePositions(
