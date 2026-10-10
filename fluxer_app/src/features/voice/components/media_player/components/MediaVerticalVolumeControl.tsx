@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getExtendedDocument} from '@app/features/platform/types/Browser';
+import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getVolumeIcon} from '@app/features/voice/components/media_player/components/MediaVolumeControl';
 import styles from '@app/features/voice/components/media_player/MediaVerticalVolumeControl.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {SpeakerHighIcon, SpeakerLowIcon, SpeakerNoneIcon, SpeakerXIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
@@ -32,17 +32,6 @@ const VOLUME_CONTROL_DESCRIPTOR = msg({
 	comment: 'Aria label for the volume control container in the media player.',
 });
 
-function getActiveFullscreenElement(): Element | null {
-	const doc = getExtendedDocument();
-	return (
-		document.fullscreenElement ||
-		doc.webkitFullscreenElement ||
-		doc.mozFullScreenElement ||
-		doc.msFullscreenElement ||
-		null
-	);
-}
-
 interface MediaVerticalVolumeControlProps {
 	volume: number;
 	isMuted: boolean;
@@ -53,19 +42,6 @@ interface MediaVerticalVolumeControlProps {
 	position?: 'above' | 'below';
 	maxVolume?: number;
 	ariaLabel?: string;
-}
-
-function getVolumeIcon(volume: number, isMuted: boolean) {
-	if (isMuted || volume === 0) {
-		return SpeakerXIcon;
-	}
-	if (volume < 0.33) {
-		return SpeakerNoneIcon;
-	}
-	if (volume < 0.67) {
-		return SpeakerLowIcon;
-	}
-	return SpeakerHighIcon;
 }
 
 const POPOUT_GAP = 8;
@@ -98,7 +74,7 @@ export function MediaVerticalVolumeControl({
 				setPortalTarget(portalHost);
 				return;
 			}
-			const fsElement = getActiveFullscreenElement();
+			const fsElement = getFullscreenElement();
 			const button = buttonRef.current;
 			if (fsElement && button && fsElement.contains(button)) {
 				setPortalTarget(fsElement);

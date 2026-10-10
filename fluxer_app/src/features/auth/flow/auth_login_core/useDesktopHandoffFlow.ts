@@ -2,16 +2,15 @@
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
-import type {
-	DesktopHandoffInfoResponse,
-	DesktopHandoffReturnMethod,
-} from '@app/features/auth/commands/AuthenticationCommands';
+import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
+import {originOf} from '@app/features/auth/InstanceBranding';
 import type {UserData} from '@app/features/auth/state/AccountStorage';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FormUtils from '@app/lib/forms';
+import type {DesktopHandoffReturnMethod} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatDesktopHandoffCode, parseDesktopHandoffCode} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -61,23 +60,12 @@ export interface DesktopHandoffRequest {
 	readonly identifier: string | null;
 }
 
-function readOrigin(value: string | null | undefined): string | null {
-	if (value == null || value.length === 0) {
-		return null;
-	}
-	try {
-		return new URL(value).origin;
-	} catch {
-		return null;
-	}
-}
-
 export function readDesktopHandoffRequest(search: string): DesktopHandoffRequest {
 	const params = new URLSearchParams(search);
 	const code = parseDesktopHandoffCode(params.get('code') ?? '');
 	return {
 		code: code == null ? null : formatDesktopHandoffCode(code),
-		apiOrigin: readOrigin(params.get('api')),
+		apiOrigin: originOf(params.get('api')),
 		identifier: params.get('email') ?? params.get('login'),
 	};
 }
@@ -186,7 +174,7 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 			setClientInfo(null);
 			setReturnMethod(null);
 			setReturnUrl(null);
-			const accountOrigin = readOrigin(runtimeSnapshot.apiEndpoint);
+			const accountOrigin = originOf(runtimeSnapshot.apiEndpoint);
 			if (request.apiOrigin != null && accountOrigin != null && request.apiOrigin !== accountOrigin) {
 				failWith(
 					i18n._(INSTANCE_MISMATCH_DESCRIPTOR, {

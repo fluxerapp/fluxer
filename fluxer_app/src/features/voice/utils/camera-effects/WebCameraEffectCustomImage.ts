@@ -72,7 +72,7 @@ function normalizedMediaType(value: string): string {
 	return value.split(';', 1)[0]?.trim().toLowerCase() ?? '';
 }
 
-function bytesEqualAt(bytes: Uint8Array, offset: number, expected: ReadonlyArray<number>): boolean {
+export function bytesEqualAt(bytes: Uint8Array, offset: number, expected: ReadonlyArray<number>): boolean {
 	if (bytes.byteLength < offset + expected.length) return false;
 	for (let index = 0; index < expected.length; index += 1) {
 		if (bytes[offset + index] !== expected[index]) return false;

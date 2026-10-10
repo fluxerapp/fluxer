@@ -16,16 +16,12 @@ import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUti
 import {isKeybindModifierKey} from '@app/features/input/utils/KeybindComboUtils';
 import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import type {
-	GlobalKeyEvent,
-	GlobalShortcutCaptureEvent,
-	GlobalShortcutsApi,
-} from '@app/features/platform/types/Electron';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import type {GlobalKeyEvent, GlobalShortcutCaptureEvent, GlobalShortcutsApi} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowCounterClockwiseIcon, KeyboardIcon, PencilSimpleIcon, TrashIcon} from '@phosphor-icons/react';

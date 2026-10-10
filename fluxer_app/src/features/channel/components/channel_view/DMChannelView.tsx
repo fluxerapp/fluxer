@@ -34,8 +34,7 @@ import {useChannelSearchState} from '@app/features/channel/components/channel_vi
 import {useVoiceCallChromePinState} from '@app/features/channel/components/channel_view/useVoiceCallChromePinState';
 import dmStyles from '@app/features/channel/components/direct_message/DMChannelView.module.css';
 import {useMessagesBottomBarVisibility} from '@app/features/channel/components/MessagesBottomBarVisibility';
-import {useChannelMemberListVisibility} from '@app/features/channel/hooks/useChannelMemberListVisibility';
-import {useChannelSearchVisibility} from '@app/features/channel/hooks/useChannelSearchVisibility';
+import {useChannelPanelVisibility} from '@app/features/channel/hooks/useChannelPanelVisibility';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {INCOMING_CALL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -105,7 +104,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	const {onBottomBarVisibilityChange} = useMessagesBottomBarVisibility(channelId);
 	const {enabled: isMobileLayout} = MobileLayout;
 	const isSearchPanelVisible = isSearchActive && !isMobileLayout;
-	useChannelSearchVisibility(channelId, isSearchPanelVisible);
+	useChannelPanelVisibility(channelId, isSearchPanelVisible);
 	const displayName = channel ? ChannelUtils.getDMDisplayName(channel) : null;
 	const title = isDM && displayName ? `@${displayName}` : displayName;
 	useFluxerDocumentTitle(title);
@@ -118,7 +117,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 		channelId: currentChannelId,
 		defaultHiddenForChannel: memberListDefaultHiddenForChannel,
 	});
-	useChannelMemberListVisibility(channelId, isMemberListVisible);
+	useChannelPanelVisibility(channelId, isMemberListVisible);
 	const callExistsAndOngoing = callHeaderState.callExistsAndOngoing;
 	const controlsVariant = callHeaderState.controlsVariant;
 	const showCallBackground = callExistsAndOngoing && controlsVariant !== 'hidden';

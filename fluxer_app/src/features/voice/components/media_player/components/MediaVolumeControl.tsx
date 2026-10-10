@@ -43,7 +43,7 @@ interface MediaVolumeControlProps {
 	className?: string;
 }
 
-function getVolumeIcon(volume: number, isMuted: boolean) {
+export function getVolumeIcon(volume: number, isMuted: boolean) {
 	if (isMuted || volume === 0) {
 		return SpeakerXIcon;
 	}

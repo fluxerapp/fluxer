@@ -29,7 +29,7 @@ import {
 	MINUTES_DURATION_PLURAL_DESCRIPTOR,
 	SECONDS_DURATION_PLURAL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {formatList, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
 import Users from '@app/features/user/state/Users';
 import {getEmojiURL} from '@app/features/user/utils/AvatarUtils';
@@ -38,7 +38,6 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
@@ -83,7 +82,7 @@ function formatPermissions(i18n: I18n, flags: ReadonlyArray<bigint>): string {
 	if (shownFlags.length < flags.length) {
 		items.push(i18n._(MORE_PERMISSIONS_DESCRIPTOR, {count: flags.length - shownFlags.length}));
 	}
-	return formatListWithConfig(items, {locale: i18n.locale, style: 'long', type: 'conjunction'});
+	return formatList(items, {locale: i18n.locale, style: 'long', type: 'conjunction'});
 }
 
 function formatColor(value: number): string {

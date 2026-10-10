@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ElectronAPI} from '@app/features/platform/types/Electron';
 import {createDesktopModuleRequest} from '@app/features/platform/utils/DesktopModuleRequest';
+import type {ElectronAPI} from '@app/types/electron.d';
 import type {DesktopModuleEnsureResult, DesktopModuleEnsureStatus} from '@fluxer/desktop_ipc/src/ModuleContract';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 

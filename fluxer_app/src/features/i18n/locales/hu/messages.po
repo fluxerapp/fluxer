@@ -6511,8 +6511,7 @@ msgstr "Vásárolj {premiumProductName} ajándékot a(z) {premiumProductName} la
 msgid "Buy gift"
 msgstr "Ajándék vásárlása"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Közösség létrehozásával vállalod a(z) <0>{PRODUCT_NAME} közösségi irányelvek</0> betartását és betartatását."
 
@@ -7088,6 +7087,7 @@ msgstr "Csoportbeli becenév módosítása"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Ajándék beváltása"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Fejezd be a fiókod regisztrációját"
@@ -9067,8 +9066,7 @@ msgstr "Közösségi DM"
 msgid "Community filter"
 msgstr "Közösségi szűrő"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Közösség ikonja"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Az egérgörgővel és billentyűzettel végzett natív sima görgetés vezérlése az asztali alkalmazásban"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Beszédparancsok és felolvasás vezérlése a bejövő tartalomhoz."
 
@@ -11735,7 +11733,6 @@ msgstr "Dátum és idő"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Csoportbeállítások"
 msgid "Group typing states"
 msgstr "Csoportos gépelési állapotok"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Csoport frissítve"
 
@@ -21548,7 +21544,6 @@ msgstr "Mindenki vagy bármelyik szerepkör megemlítése ebben a csatornában (
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Fiók regisztrálása"
 msgid "Registration"
 msgstr "Regisztráció"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "A regisztráció jelenleg zárva van. Fiók létrehozásához használj egy admintól kapott regisztrációs hivatkozást."
@@ -28007,8 +28001,7 @@ msgstr "Eltávolítás az URL-en alapuló GIF-kedvencek közül"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Ikon eltávolítása"
 
@@ -34467,7 +34460,6 @@ msgstr "A szövegfelolvasás nem támogatott"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Értesítések szövegfelolvasással"
@@ -37943,8 +37935,7 @@ msgstr "Fájlok és média feltöltése ebben a csatornában."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Ikon feltöltése"
@@ -41063,8 +41054,7 @@ msgstr "Más közösségek emojijainak itteni használatához a(z) „{permissio
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Más közösségek matricáinak itteni használatához a(z) „{permissionLabel}” jogosultságra van szükséged."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Közösség létrehozása előtt be kell fejezned a fiókod regisztrációját."
 
@@ -41081,8 +41071,7 @@ msgstr "Közvetlen üzenetek küldéséhez be kell fejezned a fiókod regisztrá
 msgid "You need to claim your account to send messages in this community."
 msgstr "Ahhoz, hogy ebben a közösségben üzeneteket küldhess, be kell fejezned a fiókod regisztrációját."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Közösség létrehozása előtt meg kell erősítened az e-mail-címedet."
 
@@ -41483,7 +41472,6 @@ msgstr "A fiókod regisztrációja még nincs befejezve. E-mail-cím és jelszó
 msgid "Your account is too new to send messages in this community."
 msgstr "A fiókod túl új ahhoz, hogy üzeneteket küldj ebben a közösségben."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "A fiókkérelmed jóváhagyásra vár. Bejelentkezhetsz, miután egy admin jóváhagyta."

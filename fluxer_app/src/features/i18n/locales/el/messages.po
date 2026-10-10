@@ -6511,8 +6511,7 @@ msgstr "Αγοράστε ένα δώρο {premiumProductName} από την κα
 msgid "Buy gift"
 msgstr "Αγορά δώρου"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Δημιουργώντας μια κοινότητα, συμφωνείτε να ακολουθείτε και να τηρείτε τις <0>οδηγίες κοινότητας του {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Αλλαγή ψευδώνυμου στην ομάδα"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Παραλαβή δώρου"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Διεκδικήστε τον λογαριασμό σας"
@@ -9067,8 +9066,7 @@ msgstr "DM κοινότητας"
 msgid "Community filter"
 msgstr "Φίλτρο κοινότητας"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Εικονίδιο κοινότητας"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Ελέγξτε την εγγενή ομαλή κύλιση με τον τροχό και το πληκτρολόγιο στην εφαρμογή υπολογιστή"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Ελέγξτε τις φωνητικές εντολές και την αφήγηση για το εισερχόμενο περιεχόμενο."
 
@@ -11735,7 +11733,6 @@ msgstr "Ημερομηνία και ώρα"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Ρυθμίσεις ομάδας"
 msgid "Group typing states"
 msgstr "Καταστάσεις πληκτρολόγησης ομάδας"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Η ομάδα ενημερώθηκε"
 
@@ -21548,7 +21544,6 @@ msgstr "Αναφορά σε όλους ή σε οποιονδήποτε ρόλο
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Δημιουργία λογαριασμού"
 msgid "Registration"
 msgstr "Εγγραφή"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Οι εγγραφές είναι προς το παρόν κλειστές. Χρησιμοποιήστε έναν σύνδεσμο εγγραφής από διαχειριστή για να δημιουργήσετε λογαριασμό."
@@ -28007,8 +28001,7 @@ msgstr "Αφαίρεση από τα αγαπημένα GIF που αποθηκ�
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Αφαίρεση εικονιδίου"
 
@@ -34467,7 +34460,6 @@ msgstr "Η μετατροπή κειμένου σε ομιλία δεν υποσ
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Ειδοποιήσεις μετατροπής κειμένου σε ομιλία"
@@ -37943,8 +37935,7 @@ msgstr "Ανέβασμα αρχείων και πολυμέσων σε αυτό 
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Ανέβασμα εικονιδίου"
@@ -41063,8 +41054,7 @@ msgstr "Χρειάζεστε το δικαίωμα «{permissionLabel}» για 
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Χρειάζεστε το δικαίωμα «{permissionLabel}» για να χρησιμοποιήσετε αυτοκόλλητα από άλλες κοινότητες εδώ."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Πρέπει να διεκδικήσετε τον λογαριασμό σας πριν δημιουργήσετε μια κοινότητα."
 
@@ -41081,8 +41071,7 @@ msgstr "Πρέπει να διεκδικήσετε τον λογαριασμό �
 msgid "You need to claim your account to send messages in this community."
 msgstr "Πρέπει να διεκδικήσετε τον λογαριασμό σας για να στείλετε μηνύματα σε αυτήν την κοινότητα."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Πρέπει να επαληθεύσετε τη διεύθυνση email σας πριν δημιουργήσετε μια κοινότητα."
 
@@ -41483,7 +41472,6 @@ msgstr "Ο λογαριασμός σας δεν έχει διεκδικηθεί 
 msgid "Your account is too new to send messages in this community."
 msgstr "Ο λογαριασμός σας είναι πολύ καινούριος για να στέλνετε μηνύματα σε αυτήν την κοινότητα."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Το αίτημα λογαριασμού σας εκκρεμεί για έγκριση. Μπορείτε να συνδεθείτε αφού το εγκρίνει ένας διαχειριστής."

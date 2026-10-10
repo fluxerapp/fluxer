@@ -8,6 +8,7 @@ import Relationships from '@app/features/relationship/state/Relationships';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import type {User} from '@app/features/user/models/User';
+import {truncateStreamerModeName} from '@app/features/user/utils/DisplayNameUtils';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 
@@ -16,12 +17,6 @@ export interface UserDisplayNameLike {
 	displayName?: string | null;
 	globalName?: string | null;
 	global_name?: string | null;
-}
-
-function truncateStreamerModeName(name: string): string {
-	const trimmed = name.trim();
-	if (!trimmed) return '…';
-	return `${Array.from(trimmed)[0]}…`;
 }
 
 export function formatNameForStreamerMode(name: string): string {

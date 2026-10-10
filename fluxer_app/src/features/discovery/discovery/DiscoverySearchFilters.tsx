@@ -3,12 +3,12 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/discovery/discovery/DiscoverySearchFilters.module.css';
 import Discovery from '@app/features/discovery/state/Discovery';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getCurrentLocale, getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {animate} from 'animejs';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';

@@ -6511,8 +6511,7 @@ msgstr "Įsigykite {premiumProductName} dovaną skirtuke „{premiumProductName}
 msgid "Buy gift"
 msgstr "Pirkti dovaną"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Kurdami bendruomenę, sutinkate laikytis <0>{PRODUCT_NAME} bendruomenės gairių</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Keisti grupės slapyvardį"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Atsiimti dovaną"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Užregistruokite paskyrą"
@@ -9067,8 +9066,7 @@ msgstr "Bendruomenės DM"
 msgid "Community filter"
 msgstr "Bendruomenės filtras"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Bendruomenės piktograma"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Valdykite sklandų ratuko ir klaviatūros slinkimą darbalaukio programoje"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Valdykite kalbos komandas ir gaunamo turinio skaitymą balsu."
 
@@ -11735,7 +11733,6 @@ msgstr "Data ir laikas"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Grupės nustatymai"
 msgid "Group typing states"
 msgstr "Grupės rašymo būsenos"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grupė atnaujinta"
 
@@ -21549,7 +21545,6 @@ msgstr "Paminėti visus arba bet kokį vaidmenį šiame kanale (net jei vaidmuo 
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27730,7 +27725,6 @@ msgstr "Registruoti paskyrą"
 msgid "Registration"
 msgstr "Registracija"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registracija šiuo metu uždaryta. Norėdami sukurti paskyrą, naudokite administratoriaus suteiktą registracijos nuorodą."
@@ -28008,8 +28002,7 @@ msgstr "Pašalinti iš mėgstamiausių GIF (tik URL)"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Pašalinti piktogramą"
 
@@ -34468,7 +34461,6 @@ msgstr "Teksto į kalbą funkcija nepalaikoma"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Teksto į kalbą pranešimai"
@@ -37944,8 +37936,7 @@ msgstr "Įkelkite failus ir mediją į šį kanalą."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Įkelti piktogramą"
@@ -41064,8 +41055,7 @@ msgstr "Norėdami čia naudoti jaustukus iš kitų bendruomenių, turite turėti
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Norėdami čia naudoti lipdukus iš kitų bendruomenių, turite turėti leidimą „{permissionLabel}“."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Prieš kurdami bendruomenę turite užregistruoti savo paskyrą."
 
@@ -41082,8 +41072,7 @@ msgstr "Kad galėtumėte siųsti tiesiogines žinutes, turite užregistruoti sav
 msgid "You need to claim your account to send messages in this community."
 msgstr "Kad galėtumėte siųsti žinutes šioje bendruomenėje, turite užregistruoti savo paskyrą."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Prieš kurdami bendruomenę, turite patvirtinti savo el. pašto adresą."
 
@@ -41484,7 +41473,6 @@ msgstr "Jūsų paskyra dar neužregistruota. Be el. pašto ir slaptažodžio neg
 msgid "Your account is too new to send messages in this community."
 msgstr "Jūsų paskyra per nauja, kad galėtų siųsti žinutes šioje bendruomenėje."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Jūsų paskyros užklausa laukia patvirtinimo. Prisijungti galėsite, kai administratorius ją patvirtins."

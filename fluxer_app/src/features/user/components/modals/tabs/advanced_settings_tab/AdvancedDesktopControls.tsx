@@ -76,7 +76,7 @@ const LATER_DESCRIPTOR = msg({
 	comment: 'Short confirmation button label in advanced settings.',
 });
 
-function useDesktopWindowBehaviorSettings() {
+export function useDesktopWindowBehaviorSettings() {
 	const cachedDesktopWindowBehavior = getCachedDesktopWindowBehaviorSettings();
 	const [desktopWindowBehavior, setDesktopWindowBehavior] = useState<DesktopWindowBehaviorSettings | null>(
 		cachedDesktopWindowBehavior,

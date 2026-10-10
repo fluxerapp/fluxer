@@ -7,6 +7,7 @@ import {
 	keyboardEventReleasesComboModifier,
 	keyboardEventStartsComboPress,
 	keyboardEventTriggerMatchesCombo,
+	normalizeKeyboardShortcutKey,
 	shouldAllowLocalShortcutForChannelTextarea,
 } from '@app/features/app/keybindings/KeybindEventUtils';
 import {
@@ -105,11 +106,6 @@ import type {I18n} from '@lingui/core';
 import CombokeysImport from 'combokeys';
 import {autorun, compareStructural, computed, reaction} from 'mobx';
 
-const normalizeKeyboardShortcutKey = (key: string): string => {
-	if (key === ' ') return 'space';
-	if (key === 'Break') return 'pause';
-	return key.toLowerCase();
-};
 const ROUTE_ALLOWED_ACTIONS = new Set<KeybindCommand>(['system_open_theme_studio_popout']);
 const GAMEPAD_POLL_INTERVAL_MS = 50;
 const PORTAL_SOURCE_ID_PREFIX = 'portal:';

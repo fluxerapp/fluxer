@@ -1,28 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
-import guildStyles from '@app/features/app/components/layout/GuildsLayout.module.css';
-import styles from '@app/features/app/components/layout/sidebar_nav/DownloadButton.module.css';
+import {GuildListActionButton} from '@app/features/app/components/layout/sidebar_nav/GuildListActionButton';
+import styles from '@app/features/app/components/layout/sidebar_nav/GuildListActionButton.module.css';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
-import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
-import {useHover} from '@app/features/app/hooks/useHover';
-import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {DownloadSimpleIcon, EyeSlashIcon} from '@phosphor-icons/react';
-import {clsx} from 'clsx';
-import {motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useRef} from 'react';
 
 const DOWNLOAD_DESCRIPTOR = msg({
 	message: 'Download {productName}',
@@ -30,12 +21,6 @@ const DOWNLOAD_DESCRIPTOR = msg({
 });
 export const DownloadButton = observer(() => {
 	const {i18n} = useLingui();
-	const [hoverRef, isHovering] = useHover();
-	const buttonRef = useRef<HTMLButtonElement | null>(null);
-	const iconRef = useRef<HTMLDivElement | null>(null);
-	const itemRef = useRef<HTMLElement | null>(null);
-	const contextMenuOpen = useContextMenuHoverState(itemRef);
-	const mergedButtonRef = useMergeRefs([hoverRef, buttonRef, itemRef]);
 	if (HiddenGuildListButtons.downloadButtonHidden) {
 		return null;
 	}
@@ -65,51 +50,21 @@ export const DownloadButton = observer(() => {
 			</MenuGroup>
 		));
 	};
-	const shouldShowHoverState = isHovering || contextMenuOpen;
 	return (
-		<div
-			className={clsx(guildStyles.createGuildButton, contextMenuOpen && guildStyles.contextMenuHover)}
-			data-flx="app.sidebar-nav.download-button.div"
-		>
-			<Tooltip
-				position="right"
-				size="large"
-				text={() => i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
-				data-flx="app.sidebar-nav.download-button.tooltip"
-			>
-				<FocusRing
-					offset={-2}
-					focusTarget={buttonRef}
-					ringTarget={iconRef}
-					data-flx="app.sidebar-nav.download-button.focus-ring"
-				>
-					<button
-						type="button"
-						aria-label={i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
-						data-guild-list-focus-item="true"
-						onClick={handleDownload}
-						onContextMenu={handleContextMenu}
-						className={styles.button}
-						ref={mergedButtonRef}
-						data-flx="app.sidebar-nav.download-button.button.download"
-					>
-						<motion.div
-							ref={iconRef}
-							className={guildStyles.createGuildButtonIcon}
-							animate={{borderRadius: shouldShowHoverState ? '30%' : '50%'}}
-							initial={{borderRadius: shouldShowHoverState ? '30%' : '50%'}}
-							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.07, ease: 'easeOut'}}
-							data-flx="app.sidebar-nav.download-button.div--2"
-						>
-							<DownloadSimpleIcon
-								weight="bold"
-								className={styles.iconText}
-								data-flx="app.sidebar-nav.download-button.icon-text"
-							/>
-						</motion.div>
-					</button>
-				</FocusRing>
-			</Tooltip>
-		</div>
+		<GuildListActionButton
+			label={i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+			tooltip={() => i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+			icon={
+				<DownloadSimpleIcon
+					weight="bold"
+					className={styles.iconText}
+					data-flx="app.sidebar-nav.download-button.icon-text"
+				/>
+			}
+			onClick={handleDownload}
+			onContextMenu={handleContextMenu}
+			buttonDataFlx="app.sidebar-nav.download-button.button.download"
+			data-flx="app.sidebar-nav.download-button"
+		/>
 	);
 });

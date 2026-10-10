@@ -8,7 +8,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import type {User} from '@app/features/user/models/User';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 
-function truncateStreamerModeName(name: string): string {
+export function truncateStreamerModeName(name: string): string {
 	const trimmed = name.trim();
 	if (!trimmed) return '…';
 	return `${Array.from(trimmed)[0]}…`;

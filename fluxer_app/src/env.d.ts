@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import MediaEngineFacade from '@app/features/voice/engine/MediaEngineFacade';
-import type {ElectronAPI} from '@app/features/platform/types/Electron';
+import type {ElectronAPI} from '@app/types/electron.d';
 import {Buffer} from 'buffer';
 
 type MediaEngineInstance = typeof MediaEngineFacade;

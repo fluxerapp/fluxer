@@ -6511,8 +6511,7 @@ msgstr "Arkadaşlarınızla paylaşmak için {premiumProductName} sekmesinden bi
 msgid "Buy gift"
 msgstr "Hediye satın al"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Bir topluluk oluşturarak <0>{PRODUCT_NAME} Topluluk Kurallarına</0> uymayı ve bunları sürdürmeyi kabul etmiş olursunuz."
 
@@ -7088,6 +7087,7 @@ msgstr "Grup takma adını değiştir"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Hediyeyi al"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Hesabınızı sahiplenin"
@@ -9067,8 +9066,7 @@ msgstr "Topluluk DM'i"
 msgid "Community filter"
 msgstr "Topluluk filtresi"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Topluluk simgesi"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Masaüstü uygulamasında yerel akıcı tekerlek ve klavye kaydırmasını kontrol edin"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Gelen içerik için konuşma komutlarını ve anlatımı kontrol edin."
 
@@ -11735,7 +11733,6 @@ msgstr "Tarih ve saat"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Grup ayarları"
 msgid "Group typing states"
 msgstr "Grup yazma durumları"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grup güncellendi"
 
@@ -21548,7 +21544,6 @@ msgstr "Bu kanalda herkesten veya herhangi bir rolden bahset (rol bahsedilebilir
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Hesap oluştur"
 msgid "Registration"
 msgstr "Kayıt"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Kayıt şu anda kapalı. Hesap oluşturmak için bir yöneticiden aldığınız kayıt bağlantısını kullanın."
@@ -28007,8 +28001,7 @@ msgstr "Yalnızca URL'den kaydedilen GIF favorilerinden kaldır"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Simgeyi kaldır"
 
@@ -34467,7 +34460,6 @@ msgstr "Metin okuma desteklenmiyor"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Metin okuma bildirimleri"
@@ -37943,8 +37935,7 @@ msgstr "Bu kanalda dosya ve medya yükleyin."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Simge yükle"
@@ -41063,8 +41054,7 @@ msgstr "Burada diğer topluluklardan emoji kullanmak için \"{permissionLabel}\"
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Burada diğer topluluklardan çıkartma kullanmak için \"{permissionLabel}\" iznine sahip olmanız gerekir."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Topluluk oluşturmadan önce hesabınızı sahiplenmeniz gerekiyor."
 
@@ -41081,8 +41071,7 @@ msgstr "Doğrudan mesaj göndermek için hesabınızı sahiplenmeniz gerekiyor."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Bu toplulukta mesaj göndermek için hesabınızı sahiplenmeniz gerekiyor."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Bir topluluk oluşturmadan önce e-posta adresinizi doğrulamanız gerekiyor."
 
@@ -41483,7 +41472,6 @@ msgstr "Hesabınız henüz sahiplenilmedi. E-posta ve parola olmadan başka ciha
 msgid "Your account is too new to send messages in this community."
 msgstr "Bu toplulukta mesaj göndermek için hesabınız çok yeni."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Hesap isteğiniz onay bekliyor. Bir yönetici onayladıktan sonra oturum açabilirsiniz."

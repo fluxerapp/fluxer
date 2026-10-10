@@ -31,7 +31,7 @@ import {
 } from '@app/features/platform/state/AppStorageKeys';
 import {APP_STORAGE_INDEXED_DB_NAME} from '@app/features/platform/state/PersistentStorageBackend';
 import {getProtectedIndexedDB} from '@app/features/platform/state/ProtectedWebStorage';
-import type {ElectronAPI} from '@app/features/platform/types/Electron';
+import type {ElectronAPI} from '@app/types/electron.d';
 import type {DesktopLegacyHarvest} from '@fluxer/desktop_ipc/src/LegacyHarvestContract';
 import {
 	DESKTOP_LEGACY_RAW_STORAGE_SEED_MARKER_KEY,

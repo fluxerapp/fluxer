@@ -6,6 +6,7 @@ import styles from '@app/features/app/components/dialogs/components/FeatureCompa
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {COMMUNITIES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {
@@ -17,7 +18,6 @@ import {
 } from '@fluxer/constants/src/LimitTierPerks';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
 

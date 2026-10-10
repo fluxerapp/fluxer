@@ -1,33 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {
-	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_BYTES,
-	STATIC_IMAGE_FORMATS,
-	THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
-import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
-import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
-import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
-import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
-import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
-import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
-import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
 import styles from '@app/features/guild/components/modals/AddGuildModal.module.css';
 import {
-	ANIMATED_ICONS_ARE_NOT_SUPPORTED_WHEN_CREATING_A_DESCRIPTOR,
-	COMMUNITY_NAME_DESCRIPTOR,
+	renderGuildCreateAccountGate,
+	renderGuildCreateFields,
+	useGuildCreateIconField,
+} from '@app/features/guild/components/modals/add_guild_modal/GuildCreateShared';
+import {
 	CREATE_FROM_TEMPLATE_FORM_DESCRIPTOR,
 	handleGuildCreationError,
-	ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR,
 	IMPORT_TEMPLATE_FORM_DESCRIPTOR,
 	INVALID_JSON_PLEASE_PASTE_THE_FULL_RESPONSE_FROM_DESCRIPTOR,
 	isTemplateEveryoneRole,
@@ -44,38 +29,21 @@ import {
 	type TemplateJsonFormInputs,
 	THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
-import {
-	getGuildIconDisplayInitials,
-	getGuildInitialsFitStyle,
-	getInitialsLength,
-} from '@app/features/guild/utils/GuildInitialsUtils';
-import {
-	CREATE_COMMUNITY_DESCRIPTOR,
-	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
-	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
-	NEXT_DESCRIPTOR,
-	VERIFY_EMAIL_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CREATE_COMMUNITY_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
-import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
-import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
-import Users from '@app/features/user/state/Users';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as StringUtils from '@app/lib/strings';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
 import type {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
-import {msg, ph} from '@lingui/core/macro';
+import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowSquareOutIcon, EnvelopeSimpleIcon} from '@phosphor-icons/react';
+import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useContext, useEffect, useId, useMemo, useState} from 'react';
@@ -160,9 +128,12 @@ const IMAGE_COULDN_T_BE_USED_DESCRIPTOR = msg({
 	message: "Image couldn't be used",
 	comment: 'Error modal title shown when a template-import community icon upload cannot be accepted or processed.',
 });
+const ICON_FIELD_MESSAGES = {
+	imageCouldNotBeUsed: IMAGE_COULDN_T_BE_USED_DESCRIPTOR,
+	changeIcon: CHANGE_ICON_DESCRIPTOR,
+};
 export const TemplateImportForm = observer(() => {
 	const {i18n} = useLingui();
-	const guidelinesUrl = Routes.guidelines();
 	const theOtherPlatform = THE_OTHER_PLATFORM;
 	const [step, setStep] = useState<TemplateImportStep>('url');
 	const [apiUrl, setApiUrl] = useState<string | null>(null);
@@ -171,13 +142,10 @@ export const TemplateImportForm = observer(() => {
 	const urlForm = useForm<TemplateImportFormInputs>({defaultValues: {url: ''}});
 	const jsonForm = useForm<TemplateJsonFormInputs>({defaultValues: {json: ''}});
 	const createForm = useForm<TemplateCreateFormInputs>({defaultValues: {name: ''}});
-	const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
 	const modalFooterContext = useContext(ModalFooterContext);
 	const urlFormId = useId();
 	const jsonFormId = useId();
 	const createFormId = useId();
-	const currentUser = Users.currentUser;
-	const shouldRequireClaimedAccount = currentUser != null && !currentUser.isClaimed();
 	const handleResolveUrl = useCallback(
 		(data: TemplateImportFormInputs) => {
 			const code = parseTemplateCode(data.url);
@@ -250,22 +218,14 @@ export const TemplateImportForm = observer(() => {
 	const nameValue = createForm.watch('name');
 	const urlValue = urlForm.watch('url');
 	const jsonValue = jsonForm.watch('json');
-	const initials = useMemo(() => {
-		const raw = (nameValue || '').trim();
-		if (!raw) return '';
-		return getGuildIconDisplayInitials(StringUtils.getInitialsFromName(raw));
-	}, [nameValue]);
-	const initialsLength = initials ? getInitialsLength(initials) : null;
-	const showIconUploadErrorModal = useCallback(
-		(message: string) => {
-			showGuildErrorModal({
-				title: i18n._(IMAGE_COULDN_T_BE_USED_DESCRIPTOR),
-				message,
-				dataFlx: 'guild.add-guild-modal.template-import-form.icon-upload-error-modal',
-			});
-		},
-		[i18n],
-	);
+	const iconField = useGuildCreateIconField({
+		form: createForm,
+		nameValue,
+		dataFlx: 'guild.add-guild-modal.template-import-form',
+		cropModalDataFlx: 'guild.add-guild-modal.handle-icon-upload.asset-crop-modal--2',
+		clearIconErrors: false,
+		messages: ICON_FIELD_MESSAGES,
+	});
 	const templateStats = useMemo(() => {
 		if (!templateData) return null;
 		const channelTypes = templateData.channels
@@ -279,70 +239,6 @@ export const TemplateImportForm = observer(() => {
 		const roles = templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length;
 		return {textChannels, voiceChannels, categories, roles};
 	}, [templateData]);
-	const handleIconUpload = useCallback(async () => {
-		try {
-			const [file] = await openFilePicker({accept: getAcceptStringFiltered('guild_icon', false)});
-			if (!file) return;
-			if (file.size > 10 * 1024 * 1024) {
-				showIconUploadErrorModal(
-					i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-						imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
-					}),
-				);
-				return;
-			}
-			const svg = isSvgFile(file);
-			const animated = svg ? false : await isAnimatedFile(file);
-			if (animated) {
-				showIconUploadErrorModal(i18n._(ANIMATED_ICONS_ARE_NOT_SUPPORTED_WHEN_CREATING_A_DESCRIPTOR));
-				return;
-			}
-			const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
-			ModalCommands.push(
-				modal(() => (
-					<AssetCropModal
-						assetType={AssetType.GUILD_ICON}
-						imageUrl={base64}
-						onCropComplete={(croppedBlob) => {
-							const reader = new FileReader();
-							reader.onload = () => {
-								const croppedBase64 = reader.result as string;
-								createForm.setValue('icon', croppedBase64);
-								setPreviewIconUrl(croppedBase64);
-							};
-							reader.onerror = () => {
-								showIconUploadErrorModal(i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR));
-							};
-							reader.readAsDataURL(croppedBlob);
-						}}
-						onSkip={() => {
-							createForm.setValue('icon', base64);
-							setPreviewIconUrl(base64);
-						}}
-						data-flx="guild.add-guild-modal.handle-icon-upload.asset-crop-modal--2"
-					/>
-				)),
-			);
-		} catch {
-			showIconUploadErrorModal(i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR));
-		}
-	}, [createForm, i18n, showIconUploadErrorModal]);
-	const handleClearIcon = useCallback(() => {
-		createForm.setValue('icon', null);
-		setPreviewIconUrl(null);
-	}, [createForm]);
-	const handleOpenIconUpload = useCallback(() => {
-		openAssetSourceModal({
-			title: i18n._(CHANGE_ICON_DESCRIPTOR),
-			uploadHint: formatImageUploadRecommendedHint(i18n, {
-				formats: STATIC_IMAGE_FORMATS,
-				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
-				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
-			}),
-			onPickUpload: handleIconUpload,
-			showGifOption: false,
-		});
-	}, [handleIconUpload, i18n]);
 	const handleOpenApiUrl = useCallback(() => {
 		if (apiUrl) {
 			openExternalUrlWithWarning(apiUrl);
@@ -423,67 +319,9 @@ export const TemplateImportForm = observer(() => {
 		urlValue,
 		jsonValue,
 	]);
-	if (shouldRequireClaimedAccount) {
-		return (
-			<div className={styles.formContainer} data-flx="guild.add-guild-modal.template-import-form.form-container">
-				<div
-					className={styles.verificationNotice}
-					data-flx="guild.add-guild-modal.template-import-form.verification-notice"
-				>
-					<EnvelopeSimpleIcon
-						size={remFromPx(32)}
-						weight="fill"
-						data-flx="guild.add-guild-modal.template-import-form.envelope-simple-icon"
-					/>
-					<p data-flx="guild.add-guild-modal.template-import-form.p">
-						<Trans>You need to claim your account before you can create a community.</Trans>
-					</p>
-					<Button
-						onClick={() => openClaimAccountModal({force: true})}
-						data-flx="guild.add-guild-modal.template-import-form.button.open-claim-account-modal"
-					>
-						<Trans>Claim your account</Trans>
-					</Button>
-				</div>
-			</div>
-		);
-	}
-	if (currentUser?.verified === false) {
-		return (
-			<div className={styles.formContainer} data-flx="guild.add-guild-modal.template-import-form.form-container--2">
-				<div
-					className={styles.verificationNotice}
-					data-flx="guild.add-guild-modal.template-import-form.verification-notice--2"
-				>
-					<EnvelopeSimpleIcon
-						size={remFromPx(32)}
-						weight="fill"
-						data-flx="guild.add-guild-modal.template-import-form.envelope-simple-icon--2"
-					/>
-					<p data-flx="guild.add-guild-modal.template-import-form.p--2">
-						<Trans>You need to verify your email address before you can create a community.</Trans>
-					</p>
-					<Button
-						onClick={() =>
-							ModalCommands.push(
-								modal(
-									() => (
-										<UserSettingsModal
-											initialTab="account_security"
-											data-flx="guild.add-guild-modal.template-import-form.user-settings-modal"
-										/>
-									),
-									'user-settings',
-								),
-							)
-						}
-						data-flx="guild.add-guild-modal.template-import-form.button.push"
-					>
-						{i18n._(VERIFY_EMAIL_DESCRIPTOR)}
-					</Button>
-				</div>
-			</div>
-		);
+	const accountGate = renderGuildCreateAccountGate(i18n, 'guild.add-guild-modal.template-import-form');
+	if (accountGate) {
+		return accountGate;
 	}
 	const renderUrlStep = (): React.ReactNode => (
 		<div className={styles.formContainer} data-flx="guild.add-guild-modal.template-import-form.form-container--3">
@@ -592,90 +430,15 @@ export const TemplateImportForm = observer(() => {
 				aria-label={i18n._(CREATE_FROM_TEMPLATE_FORM_DESCRIPTOR)}
 				data-flx="guild.add-guild-modal.template-import-form.form.create-submit"
 			>
-				<div className={styles.iconSection} data-flx="guild.add-guild-modal.template-import-form.icon-section--3">
-					<div
-						className={styles.iconSectionInner}
-						data-flx="guild.add-guild-modal.template-import-form.icon-section-inner"
-					>
-						<div className={styles.iconLabel} data-flx="guild.add-guild-modal.template-import-form.icon-label">
-							<Trans>Community icon</Trans>
-						</div>
-						<div className={styles.iconPreview} data-flx="guild.add-guild-modal.template-import-form.icon-preview">
-							{previewIconUrl ? (
-								<div
-									className={styles.iconImage}
-									style={{backgroundImage: `url(${previewIconUrl})`}}
-									data-flx="guild.add-guild-modal.template-import-form.icon-image"
-								/>
-							) : (
-								<div
-									className={styles.iconPlaceholder}
-									data-initials-length={initialsLength}
-									data-flx="guild.add-guild-modal.template-import-form.icon-placeholder"
-								>
-									{initials ? (
-										<span
-											className={styles.iconInitials}
-											style={getGuildInitialsFitStyle(initials)}
-											data-flx="guild.add-guild-modal.template-import-form.icon-initials"
-										>
-											{initials}
-										</span>
-									) : null}
-								</div>
-							)}
-							<div className={styles.iconActions} data-flx="guild.add-guild-modal.template-import-form.icon-actions">
-								<div className={styles.iconButtons} data-flx="guild.add-guild-modal.template-import-form.icon-buttons">
-									<Button
-										variant="secondary"
-										small={true}
-										onClick={handleOpenIconUpload}
-										data-flx="guild.add-guild-modal.template-import-form.button.icon-upload"
-									>
-										{previewIconUrl ? <Trans>Change icon</Trans> : <Trans>Upload icon</Trans>}
-									</Button>
-									{previewIconUrl && (
-										<Button
-											variant="secondary"
-											small={true}
-											onClick={handleClearIcon}
-											data-flx="guild.add-guild-modal.template-import-form.button.clear-icon"
-										>
-											<Trans>Remove icon</Trans>
-										</Button>
-									)}
-								</div>
-							</div>
-						</div>
-					</div>
-					<Input
-						data-flx="guild.add-guild-modal.template-import-form.input.text--2"
-						{...createForm.register('name')}
-						autoFocus={true}
-						error={createForm.formState.errors.name?.message}
-						label={i18n._(COMMUNITY_NAME_DESCRIPTOR)}
-						minLength={1}
-						maxLength={100}
-						name="name"
-						required={true}
-						type="text"
-					/>
-					{guidelinesUrl && (
-						<p className={styles.guidelines} data-flx="guild.add-guild-modal.template-import-form.guidelines">
-							<Trans>
-								By creating a community, you agree to follow and uphold the{' '}
-								<ExternalLink
-									href={guidelinesUrl}
-									className={styles.guidelinesLink}
-									data-flx="guild.add-guild-modal.template-import-form.guidelines-link"
-								>
-									{ph({PRODUCT_NAME: RuntimeConfig.productName})} community guidelines
-								</ExternalLink>
-								.
-							</Trans>
-						</p>
-					)}
-				</div>
+				{renderGuildCreateFields({
+					...iconField,
+					i18n,
+					form: createForm,
+					dataFlx: 'guild.add-guild-modal.template-import-form',
+					iconSectionDataFlx: 'guild.add-guild-modal.template-import-form.icon-section--3',
+					nameInputDataFlx: 'guild.add-guild-modal.template-import-form.input.text--2',
+					showIconError: false,
+				})}
 			</Form>
 		</div>
 	);

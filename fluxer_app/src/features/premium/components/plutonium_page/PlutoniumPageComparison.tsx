@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
 import {
 	PlutoniumPageIcon,
@@ -42,7 +43,6 @@ import {
 } from '@fluxer/constants/src/LimitTierPerks';
 import type {MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';

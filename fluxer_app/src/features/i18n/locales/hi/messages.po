@@ -6511,8 +6511,7 @@ msgstr "दोस्तों के साथ शेयर करने के 
 msgid "Buy gift"
 msgstr "उपहार खरीदें"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "एक कम्युनिटी बनाकर, आप <0>{PRODUCT_NAME} कम्युनिटी दिशानिर्देशों</0> का पालन करने और उन्हें बनाए रखने के लिए सहमत हैं।"
 
@@ -7088,6 +7087,7 @@ msgstr "ग्रुप का उपनाम बदलें"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "उपहार क्लेम करें"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "अपना अकाउंट क्लेम करें"
@@ -9067,8 +9066,7 @@ msgstr "कम्युनिटी DM"
 msgid "Community filter"
 msgstr "कम्युनिटी फ़िल्टर"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "कम्युनिटी आइकॉन"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "डेस्कटॉप ऐप में नेटिव स्मूथ व्हील और कीबोर्ड स्क्रॉलिंग को नियंत्रित करें"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "आने वाले कॉन्टेंट के लिए स्पीच कमांड और नरेशन कंट्रोल करें।"
 
@@ -11735,7 +11733,6 @@ msgstr "तारीख और समय"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "ग्रुप सेटिंग्स"
 msgid "Group typing states"
 msgstr "ग्रुप टाइपिंग स्टेटस"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "ग्रुप अपडेट किया गया"
 
@@ -21548,7 +21544,6 @@ msgstr "इस चैनल में सभी को या किसी भ�
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "खाता पंजीकृत करें"
 msgid "Registration"
 msgstr "रजिस्ट्रेशन"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "फ़िलहाल रजिस्ट्रेशन बंद है। अकाउंट बनाने के लिए किसी एडमिन से मिला रजिस्ट्रेशन लिंक इस्तेमाल करें।"
@@ -28007,8 +28001,7 @@ msgstr "सिर्फ़ URL वाले पसंदीदा GIF से ह
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "आइकॉन हटाएँ"
 
@@ -34467,7 +34460,6 @@ msgstr "टेक्स्ट-टू-स्पीच समर्थित न�
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "टेक्स्ट-टू-स्पीच सूचनाएं"
@@ -37943,8 +37935,7 @@ msgstr "इस चैनल में फ़ाइलें और मीडि�
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "आइकॉन अपलोड करें"
@@ -41063,8 +41054,7 @@ msgstr "यहां अन्य कम्युनिटी से इमो�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "यहां अन्य कम्युनिटी से स्टिकर इस्तेमाल करने के लिए आपको \"{permissionLabel}\" अनुमति चाहिए।"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "कम्युनिटी बनाने से पहले आपको अपना अकाउंट क्लेम करना होगा।"
 
@@ -41081,8 +41071,7 @@ msgstr "डायरेक्ट मैसेज भेजने के लि�
 msgid "You need to claim your account to send messages in this community."
 msgstr "इस कम्युनिटी में मैसेज भेजने के लिए आपको अपना अकाउंट क्लेम करना होगा।"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "कम्युनिटी बनाने से पहले आपको अपना ईमेल पता वेरिफ़ाई करना होगा।"
 
@@ -41483,7 +41472,6 @@ msgstr "आपका अकाउंट अभी तक क्लेम नह�
 msgid "Your account is too new to send messages in this community."
 msgstr "इस कम्युनिटी में मैसेज भेजने के लिए आपका अकाउंट बहुत नया है।"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "आपके अकाउंट का अनुरोध मंज़ूरी के इंतज़ार में है। एडमिन के मंज़ूर करने के बाद आप साइन इन कर सकेंगे।"

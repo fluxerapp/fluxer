@@ -67,7 +67,7 @@ const CONTEXT_MENU_EDGE_PADDING = 12;
 const CONTEXT_MENU_OFFSET = 4;
 const SUBMENU_OFFSET = 10;
 
-const textValueFromNode = (node: React.ReactNode): string => {
+export const textValueFromNode = (node: React.ReactNode): string => {
 	if (typeof node === 'string') return node;
 	if (typeof node === 'number') return String(node);
 	if (Array.isArray(node)) return node.map(textValueFromNode).join('');

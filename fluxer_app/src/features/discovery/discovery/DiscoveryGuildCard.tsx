@@ -6,6 +6,7 @@ import styles from '@app/features/discovery/discovery/DiscoveryGuildCard.module.
 import {resolveBannerTintClassName} from '@app/features/discovery/utils/DiscoveryBannerTint';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {DiscoveryGuildContextMenu} from '@app/features/ui/action_menu/DiscoveryGuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -16,7 +17,6 @@ import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useId, useMemo} from 'react';

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {applySortModeToParams} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {
 	DEFAULT_SCOPE_VALUE,
 	getScopeOptionsForChannel,
@@ -88,22 +89,6 @@ interface ChannelSearchExecutionOverrides {
 	sortMode?: ChannelSearchSortMode;
 }
 
-const applySortModeToParams = (params: MessageSearchParams, mode: ChannelSearchSortMode): void => {
-	switch (mode) {
-		case 'newest':
-			params.sortBy = 'timestamp';
-			params.sortOrder = 'desc';
-			break;
-		case 'oldest':
-			params.sortBy = 'timestamp';
-			params.sortOrder = 'asc';
-			break;
-		case 'relevant':
-			params.sortBy = 'relevance';
-			params.sortOrder = 'desc';
-			break;
-	}
-};
 const filtersToParams = (filters: ChannelSearchFilters): MessageSearchParams => {
 	const params: MessageSearchParams = {};
 	if (filters.content?.trim()) {

@@ -6511,8 +6511,7 @@ msgstr "Kupite poklon {premiumProductName} na kartici {premiumProductName} i pod
 msgid "Buy gift"
 msgstr "Kupi poklon"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Stvaranjem zajednice pristajete slijediti i podržavati <0>smjernice zajednice {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Promijeni nadimak u grupi"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Preuzmi poklon"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Preuzmite svoj račun"
@@ -9067,8 +9066,7 @@ msgstr "Izravne poruke iz zajednice"
 msgid "Community filter"
 msgstr "Filtar zajednice"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Ikona zajednice"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Kontrolirajte izvorno glatko pomicanje kotačićem i tipkovnicom u aplikaciji za stolna računala"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Upravljajte govornim naredbama i naracijom za dolazni sadržaj."
 
@@ -11735,7 +11733,6 @@ msgstr "Datum i vrijeme"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Postavke grupe"
 msgid "Group typing states"
 msgstr "Status tipkanja u grupi"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Grupa ažurirana"
 
@@ -21548,7 +21544,6 @@ msgstr "Spomeni sve ili bilo koju ulogu u ovom kanalu (čak i ako za ulogu nije 
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Registriraj račun"
 msgid "Registration"
 msgstr "Registracija"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registracija je trenutačno zatvorena. Za izradu računa upotrijebi registracijsku poveznicu od administratora."
@@ -28007,8 +28001,7 @@ msgstr "Ukloni iz favorita GIF-ova pohranjenih putem URL-a"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Ukloni ikonu"
 
@@ -34467,7 +34460,6 @@ msgstr "Pretvaranje teksta u govor nije podržano"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Obavijesti putem govora"
@@ -37943,8 +37935,7 @@ msgstr "Prenesite datoteke i medije u ovaj kanal."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Učitaj ikonu"
@@ -41063,8 +41054,7 @@ msgstr "Potrebno vam je dopuštenje \"{permissionLabel}\" da biste ovdje koristi
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Potrebno vam je dopuštenje \"{permissionLabel}\" da biste ovdje koristili naljepnice iz drugih zajednica."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Morate preuzeti svoj račun prije nego što možete stvoriti zajednicu."
 
@@ -41081,8 +41071,7 @@ msgstr "Morate preuzeti svoj račun da biste slali izravne poruke."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Morate preuzeti svoj račun da biste slali poruke u ovoj zajednici."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Morate potvrditi svoju adresu e-pošte prije nego što možete stvoriti zajednicu."
 
@@ -41483,7 +41472,6 @@ msgstr "Vaš račun još nije preuzet. Bez e-pošte i lozinke nećete se moći p
 msgid "Your account is too new to send messages in this community."
 msgstr "Vaš je račun prenov da biste slali poruke u ovoj zajednici."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Vaš zahtjev za račun čeka odobrenje. Možete se prijaviti nakon što ga administrator odobri."

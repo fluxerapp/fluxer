@@ -8,13 +8,14 @@ import {
 	MobileSettingsDangerItem,
 	MobileSettingsList,
 } from '@app/features/app/components/dialogs/shared/MobileSettingsComponents';
+import {usePreservedScrollerPosition} from '@app/features/app/components/dialogs/shared/UsePreservedScrollerPosition';
 import Authentication from '@app/features/auth/state/Authentication';
 import {GuildDeleteModal} from '@app/features/guild/components/modals/GuildDeleteModal';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {Scroller} from '@app/features/ui/components/Scroller';
 import userSettingsStyles from '@app/features/user/components/modals/UserSettingsModal.module.css';
 import type {
 	GuildSettingsTab,
@@ -30,7 +31,7 @@ import {TrashIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {type UIEvent, useCallback, useEffect, useRef} from 'react';
+import {useCallback} from 'react';
 
 const DELETE_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Delete community',
@@ -104,19 +105,7 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 		);
 		const showMobileList = mobileNav.isRootView;
 		const showMobileContent = !mobileNav.isRootView;
-		const listScrollPositionRef = useRef(0);
-		const listScrollerRef = useRef<ScrollerHandle | null>(null);
-		const handleListScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
-			listScrollPositionRef.current = event.currentTarget.scrollTop;
-		}, []);
-		useEffect(() => {
-			if (!showMobileList) return;
-			const scroller = listScrollerRef.current;
-			if (!scroller) return;
-			const target = listScrollPositionRef.current;
-			if (target === 0) return;
-			scroller.scrollTo({to: target, animate: false});
-		}, [showMobileList]);
+		const {scrollerRef: listScrollerRef, handleScroll: handleListScroll} = usePreservedScrollerPosition(showMobileList);
 		const dangerAction =
 			guild.isOwner(Authentication.currentUserId) && !isStockCommunityGuild(guild.id) ? (
 				<MobileSettingsDangerItem

@@ -6511,8 +6511,7 @@ msgstr "Mua quà {premiumProductName} từ tab {premiumProductName} để chia s
 msgid "Buy gift"
 msgstr "Mua quà tặng"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Bằng cách tạo cộng đồng, bạn đồng ý tuân thủ và duy trì <0>nguyên tắc cộng đồng {PRODUCT_NAME}</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Đổi biệt danh nhóm"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Nhận quà"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Xác nhận tài khoản"
@@ -9067,8 +9066,7 @@ msgstr "Tin nhắn cộng đồng"
 msgid "Community filter"
 msgstr "Bộ lọc cộng đồng"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Biểu tượng cộng đồng"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Kiểm soát tính năng cuộn mượt tích hợp bằng bánh xe chuột và bàn phím trong ứng dụng máy tính để bàn"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Kiểm soát lệnh chuyển văn bản thành giọng nói và việc đọc nội dung đến."
 
@@ -11735,7 +11733,6 @@ msgstr "Ngày và giờ"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Cài đặt nhóm"
 msgid "Group typing states"
 msgstr "Trạng thái đang nhập của nhóm"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Đã cập nhật nhóm"
 
@@ -21548,7 +21544,6 @@ msgstr "Nhắc đến mọi người hoặc bất kỳ vai trò nào trong kênh
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Đăng ký tài khoản"
 msgid "Registration"
 msgstr "Đăng ký"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Hiện tại đăng ký đang đóng. Hãy dùng liên kết đăng ký từ quản trị viên để tạo tài khoản."
@@ -28007,8 +28001,7 @@ msgstr "Xóa khỏi GIF yêu thích lưu theo URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Xóa biểu tượng"
 
@@ -34467,7 +34460,6 @@ msgstr "Tính năng chuyển văn bản thành giọng nói không được hỗ
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Thông báo chuyển văn bản thành giọng nói"
@@ -37943,8 +37935,7 @@ msgstr "Tải tệp và phương tiện lên kênh này."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Tải biểu tượng lên"
@@ -41063,8 +41054,7 @@ msgstr "Bạn cần có quyền \"{permissionLabel}\" để sử dụng biểu t
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Bạn cần có quyền \"{permissionLabel}\" để sử dụng nhãn dán từ các cộng đồng khác tại đây."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Bạn cần xác nhận tài khoản trước khi tạo cộng đồng."
 
@@ -41081,8 +41071,7 @@ msgstr "Bạn cần xác nhận tài khoản để gửi tin nhắn trực tiế
 msgid "You need to claim your account to send messages in this community."
 msgstr "Bạn cần xác nhận tài khoản để gửi tin nhắn trong cộng đồng này."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Bạn cần xác minh địa chỉ email trước khi tạo cộng đồng."
 
@@ -41483,7 +41472,6 @@ msgstr "Tài khoản của bạn chưa được xác nhận. Nếu không có em
 msgid "Your account is too new to send messages in this community."
 msgstr "Tài khoản của bạn còn quá mới để gửi tin nhắn trong cộng đồng này."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Yêu cầu tài khoản của bạn đang chờ phê duyệt. Bạn có thể đăng nhập sau khi quản trị viên phê duyệt."

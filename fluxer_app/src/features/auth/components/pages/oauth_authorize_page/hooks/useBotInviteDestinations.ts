@@ -9,6 +9,7 @@ import {
 	logger,
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
 import Accounts from '@app/features/auth/state/Accounts';
+import {formatList} from '@app/features/i18n/utils/IntlCache';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -17,7 +18,6 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 const UNKNOWN_COMMUNITY_DESCRIPTOR = msg({
@@ -102,7 +102,7 @@ function getGroupDmLabel(channel: ChannelResponse, unknownGroupDmLabel: string, 
 	const names = recipients
 		.map((recipient) => recipient.global_name?.trim() || recipient.username?.trim())
 		.filter((name): name is string => Boolean(name));
-	if (names.length > 0) return formatListWithConfig(names, {locale, style: 'narrow', type: 'conjunction'});
+	if (names.length > 0) return formatList(names, {locale, style: 'narrow', type: 'conjunction'});
 	return unknownGroupDmLabel;
 }
 

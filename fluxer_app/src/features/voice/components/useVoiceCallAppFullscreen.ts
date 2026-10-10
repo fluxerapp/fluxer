@@ -7,6 +7,7 @@ import {
 	supportsWebkitRequestFullscreen,
 } from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
 import {setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import Modal from '@app/features/ui/state/Modal';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
@@ -26,17 +27,6 @@ interface UseVoiceCallAppFullscreenReturn {
 	enterFullscreen: () => Promise<void>;
 	exitFullscreen: () => Promise<void>;
 	toggleFullscreen: () => Promise<void>;
-}
-
-function getVoiceCallFullscreenElement(): Element | null {
-	const doc = getExtendedDocument();
-	return (
-		document.fullscreenElement ||
-		doc.webkitFullscreenElement ||
-		doc.mozFullScreenElement ||
-		doc.msFullscreenElement ||
-		null
-	);
 }
 
 function supportsFullscreenAPI(): boolean {
@@ -97,7 +87,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 	const [supportsFullscreen] = useState(() => supportsFullscreenAPI());
 	const initiatedFullscreenRef = useRef(false);
 	const handleFullscreenChange = useCallback(() => {
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (!fullscreenElement) {
 			setIsFullscreen(false);
 			initiatedFullscreenRef.current = false;
@@ -128,7 +118,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 		if (!supportsFullscreenAPI()) return;
 		const container = containerRef.current;
 		if (!container) return;
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (fullscreenElement === container && initiatedFullscreenRef.current) {
 			setIsFullscreen(true);
 			return;
@@ -145,7 +135,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 		}
 	}, [containerRef]);
 	const exitFullscreen = useCallback(async () => {
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (!fullscreenElement) {
 			setIsFullscreen(false);
 			return;
@@ -167,7 +157,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 	}, [enterFullscreen, exitFullscreen, isFullscreen]);
 	useEffect(() => {
 		return () => {
-			if (!initiatedFullscreenRef.current || getVoiceCallFullscreenElement() !== containerRef.current) {
+			if (!initiatedFullscreenRef.current || getFullscreenElement() !== containerRef.current) {
 				return;
 			}
 			void exitFullscreen();
@@ -219,7 +209,7 @@ export function useVoiceCallFullscreenViewState({
 	const closeFullscreenView = useCallback(() => {
 		const wasActive = VoiceCallFullscreen.isScopeActive(scopeKey);
 		VoiceCallFullscreen.close(scopeKey);
-		if (!wasActive || !getVoiceCallFullscreenElement()) return;
+		if (!wasActive || !getFullscreenElement()) return;
 		void exitFullscreenAPI().catch((error) => {
 			logger.error('Failed to exit voice call fullscreen view:', error);
 		});
@@ -242,7 +232,7 @@ export function useVoiceCallFullscreenViewState({
 	useEffect(() => {
 		if (!showFullscreenView) return;
 		const handleFullscreenChange = () => {
-			if (getVoiceCallFullscreenElement()) return;
+			if (getFullscreenElement()) return;
 			VoiceCallFullscreen.close(scopeKey);
 		};
 		document.addEventListener('fullscreenchange', handleFullscreenChange);

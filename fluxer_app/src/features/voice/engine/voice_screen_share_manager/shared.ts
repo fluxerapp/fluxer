@@ -15,6 +15,7 @@ import {
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {loadNativeHardwareEncoderCapabilities} from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
+import {getVideoCodecFromMimeType} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
 import {
 	buildScreenShareSenderParameters,
 	classifyScreenShareLimit,
@@ -550,18 +551,6 @@ function codecMatchesTarget(mimeType: string | undefined, codec: VideoCodec | un
 	if (codec === 'av1') return lower === 'video/av1' || lower === 'video/av1x';
 	if (codec === 'h265') return lower === 'video/h265' || lower === 'video/hevc';
 	return lower === `video/${codec}`;
-}
-
-function getVideoCodecFromMimeType(mimeType: string | undefined): VideoCodec | null {
-	const lower = mimeType?.toLowerCase();
-	if (!lower?.startsWith('video/')) return null;
-	const codec = lower.slice('video/'.length);
-	if (codec === 'av1' || codec === 'av1x') return 'av1';
-	if (codec === 'h265' || codec === 'hevc') return 'h265';
-	if (codec === 'h264') return 'h264';
-	if (codec === 'vp9') return 'vp9';
-	if (codec === 'vp8') return 'vp8';
-	return null;
 }
 
 function finiteNumber(value: unknown): number | null {

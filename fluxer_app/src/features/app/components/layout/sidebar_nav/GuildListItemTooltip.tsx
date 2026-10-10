@@ -6,6 +6,7 @@ import type {SidebarVoiceRow} from '@app/features/app/hooks/useSidebarVoiceSumma
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import type {Guild} from '@app/features/guild/models/Guild';
 import type {GuildCounts} from '@app/features/guild/state/GuildCount';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
@@ -14,7 +15,6 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {BellSlashIcon, MonitorPlayIcon, SpeakerHighIcon} from '@phosphor-icons/react';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import type React from 'react';
 
 const INVITES_PAUSED_RAID_TOOLTIP_DESCRIPTOR = msg({

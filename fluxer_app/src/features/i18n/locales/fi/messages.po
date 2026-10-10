@@ -6511,8 +6511,7 @@ msgstr "Osta {premiumProductName}-lahja {premiumProductName}-välilehdeltä ja j
 msgid "Buy gift"
 msgstr "Osta lahjaksi"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Luomalla yhteisön sitoudut noudattamaan ja ylläpitämään <0>{PRODUCT_NAME}-yhteisön sääntöjä</0>."
 
@@ -7088,6 +7087,7 @@ msgstr "Vaihda ryhmän lempinimi"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Change icon"
@@ -8189,8 +8189,7 @@ msgstr "Lunasta lahja"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 #: src/features/channel/components/direct_message/AddFriendForm.tsx
 #: src/features/channel/utils/CreateDMModalUtils.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Claim your account"
 msgstr "Viimeistele tilisi rekisteröinti"
@@ -9067,8 +9066,7 @@ msgstr "Yhteisön yksityisviesti"
 msgid "Community filter"
 msgstr "Yhteisösuodatin"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Community icon"
 msgstr "Yhteisön kuvake"
 
@@ -9767,7 +9765,7 @@ msgid "Control native smooth wheel and keyboard scrolling in the desktop app"
 msgstr "Hallitse työpöytäsovelluksen natiivia tasaista vieritystä hiiren rullalla ja näppäimistöllä"
 
 #. Description text in the inline.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
+#: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Control speech commands and narration for incoming content."
 msgstr "Hallitse saapuvan sisällön puhekomentoja ja selostusta."
 
@@ -11735,7 +11733,6 @@ msgstr "Päivämäärä ja aika"
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 #: src/features/auth/flow/DateOfBirthField.tsx
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx
@@ -17507,8 +17504,7 @@ msgstr "Ryhmän asetukset"
 msgid "Group typing states"
 msgstr "Ryhmän kirjoitustilat"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx
-#: src/features/channel/components/modals/EditGroupModal.tsx
+#: src/features/channel/components/modals/useEditGroupForm.tsx
 msgid "Group updated"
 msgstr "Ryhmä päivitetty"
 
@@ -21548,7 +21544,6 @@ msgstr "Mainitse kaikki tai mikä tahansa rooli tässä kanavassa (vaikka roolia
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Mention preference"
@@ -27729,7 +27724,6 @@ msgstr "Rekisteröi tili"
 msgid "Registration"
 msgstr "Rekisteröinti"
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Rekisteröityminen on tällä hetkellä suljettu. Luo tili käyttämällä ylläpitäjältä saatua rekisteröitymislinkkiä."
@@ -28007,8 +28001,7 @@ msgstr "Poista URL-osoitteena tallennetuista GIF-suosikeista"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "Remove icon"
 msgstr "Poista kuvake"
 
@@ -34467,7 +34460,6 @@ msgstr "Tekstistä puheeksi -toimintoa ei tueta"
 
 #. Notifications settings: section heading for text-to-speech notification behavior.
 #. Short label in the inline. Keep it concise.
-#: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline.tsx
 #: src/features/user/components/modals/tabs/NotificationsTab.tsx
 msgid "Text-to-speech notifications"
 msgstr "Tekstistä puheeksi -ilmoitukset"
@@ -37943,8 +37935,7 @@ msgstr "Lähetä tiedostoja ja mediaa tähän kanavaan."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx
 #: src/features/channel/components/modals/EditGroupModal.tsx
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx
 msgid "Upload icon"
 msgstr "Lataa kuvake"
@@ -41063,8 +41054,7 @@ msgstr "Tarvitset \"{permissionLabel}\" -käyttöoikeuden käyttääksesi muiden
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Tarvitset \"{permissionLabel}\" -käyttöoikeuden käyttääksesi muiden yhteisöjen tarroja täällä."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to claim your account before you can create a community."
 msgstr "Sinun on viimeisteltävä tilisi rekisteröinti, ennen kuin voit luoda yhteisön."
 
@@ -41081,8 +41071,7 @@ msgstr "Sinun on viimeisteltävä tilisi rekisteröinti, jotta voit lähettää 
 msgid "You need to claim your account to send messages in this community."
 msgstr "Sinun on viimeisteltävä tilisi rekisteröinti, jotta voit lähettää viestejä tässä yhteisössä."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateShared.tsx
 msgid "You need to verify your email address before you can create a community."
 msgstr "Vahvista sähköpostiosoitteesi, ennen kuin voit luoda yhteisön."
 
@@ -41483,7 +41472,6 @@ msgstr "Tilisi rekisteröintiä ei ole vielä viimeistelty. Ilman sähköpostios
 msgid "Your account is too new to send messages in this community."
 msgstr "Tilisi on liian uusi viestien lähettämiseen tässä yhteisössä."
 
-#: src/features/auth/flow/AuthMinimalRegisterFormCore.tsx
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Tilipyyntösi odottaa hyväksyntää. Voit kirjautua sisään, kun ylläpitäjä on hyväksynyt sen."

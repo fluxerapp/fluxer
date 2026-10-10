@@ -12,6 +12,7 @@ interface UseUsernameSuggestionsOptions {
 	username: string;
 	target: InstanceHTTPTarget;
 	debounceMs?: number;
+	enabled?: boolean;
 }
 
 export function useUsernameSuggestions({
@@ -19,6 +20,7 @@ export function useUsernameSuggestions({
 	username,
 	target,
 	debounceMs = 300,
+	enabled = true,
 }: UseUsernameSuggestionsOptions) {
 	const [suggestions, setSuggestions] = useState<Array<string>>([]);
 	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -46,6 +48,9 @@ export function useUsernameSuggestions({
 		[target],
 	);
 	useEffect(() => {
+		if (!enabled) {
+			return;
+		}
 		if (username && username.trim().length > 0) {
 			setSuggestions([]);
 			return;
@@ -61,6 +66,6 @@ export function useUsernameSuggestions({
 				clearTimeout(debounceTimerRef.current);
 			}
 		};
-	}, [globalName, username, debounceMs, fetchSuggestions]);
+	}, [enabled, globalName, username, debounceMs, fetchSuggestions]);
 	return {suggestions};
 }

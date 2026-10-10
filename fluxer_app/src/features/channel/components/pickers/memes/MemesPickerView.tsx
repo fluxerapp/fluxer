@@ -3,6 +3,7 @@
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import gifStyles from '@app/features/channel/components/GifPicker.module.css';
 import {useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
+import {filterMemesByContentType} from '@app/features/channel/components/pickers/memes/MediaFormat';
 import {MemesGrid} from '@app/features/channel/components/pickers/memes/MemesGrid';
 import type {MemesPickerProps} from '@app/features/channel/components/pickers/memes/MemesPicker';
 import {type ContentType, MemesPickerHeader} from '@app/features/channel/components/pickers/memes/MemesPickerHeader';
@@ -64,24 +65,7 @@ export const MemesPickerView = observer(({onClose}: MemesPickerProps = {}) => {
 		jumpToStartEdge();
 	}, [state.selectedFilter, state.searchTerm, jumpToStartEdge]);
 	const filteredMemes = useMemo(() => {
-		let memes = [...favoriteMemes];
-		if (state.selectedFilter !== 'all') {
-			memes = memes.filter((meme) => {
-				const contentType = meme.contentType.toLowerCase();
-				switch (state.selectedFilter) {
-					case 'image':
-						return contentType.startsWith('image/') && !contentType.includes('gif') && !meme.isGifv;
-					case 'video':
-						return contentType.startsWith('video/') && !meme.isGifv;
-					case 'audio':
-						return contentType.startsWith('audio/');
-					case 'gif':
-						return contentType.includes('gif') || meme.isGifv;
-					default:
-						return true;
-				}
-			});
-		}
+		let memes = filterMemesByContentType(favoriteMemes, state.selectedFilter);
 		if (state.searchTerm) {
 			const sortedByMatch = matchSorter(memes, state.searchTerm, {
 				keys: ['name', 'altText', 'filename', 'tags'],

@@ -28,7 +28,7 @@ import {getRelativeDayLabelLower} from '@app/features/ui/utils/RelativeDayLabels
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import styles from '@app/features/user/components/modals/CustomStatusModal.module.css';
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
-import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
+import {buildDraftStatus, type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
@@ -128,19 +128,6 @@ const formatRelativeDayTimeLabel = (reference: Date, target: Date): TimeLabel =>
 	if (dayOffset === 1) return {dayLabel: getRelativeDayLabelLower(getCurrentLocale(), 1), timeString};
 	const dayLabel = getFormattedShortDate(target, getCurrentLocale());
 	return {dayLabel, timeString};
-};
-const buildDraftStatus = (params: {
-	text: string;
-	emojiId: string | null;
-	emojiName: string | null;
-	expiresAt: string | null;
-}): CustomStatus | null => {
-	return normalizeCustomStatus({
-		text: params.text || null,
-		emojiId: params.emojiId,
-		emojiName: params.emojiName,
-		expiresAt: params.expiresAt,
-	});
 };
 export const CustomStatusModal = observer(() => {
 	const {i18n} = useLingui();
