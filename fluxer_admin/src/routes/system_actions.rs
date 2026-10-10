@@ -405,12 +405,17 @@ fn render_fragment_with_toast(markup: Markup, flash: &FlashData) -> Response {
     response
 }
 
-fn instance_config_result<T, E: std::fmt::Display>(result: Result<T, E>) -> FlashData {
+fn instance_config_result<T>(result: Result<T, crate::api::client::ApiError>) -> FlashData {
     match result {
         Ok(_) => FlashData::success("Instance config updated"),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: update instance config");
-            FlashData::error("Failed to update instance config")
+            match super::billing_actions::validation_message(&error) {
+                Some(message) => {
+                    FlashData::error(format!("Failed to update instance config: {message}"))
+                }
+                None => FlashData::error("Failed to update instance config"),
+            }
         }
     }
 }
@@ -1369,6 +1374,27 @@ mod tests {
         assert_eq!(
             filters.guild_features,
             vec!["COMMUNITY".to_owned(), "NEWS".to_owned()]
+        );
+    }
+
+    #[test]
+    fn instance_config_result_surfaces_the_api_validation_message() {
+        let error = crate::api::client::ApiError::Http {
+            status: 400,
+            message: serde_json::json!({
+                "code": "INVALID_FORM_BODY",
+                "message": "Input Validation Error",
+                "errors": [{
+                    "path": "policy.premium_mode",
+                    "code": "X",
+                    "message": "Disable billing before switching the premium mode to everyone"
+                }]
+            })
+            .to_string(),
+        };
+        assert_eq!(
+            instance_config_result::<()>(Err(error)).message,
+            "Failed to update instance config: policy.premium_mode: Disable billing before switching the premium mode to everyone"
         );
     }
 

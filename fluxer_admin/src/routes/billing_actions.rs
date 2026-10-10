@@ -143,7 +143,7 @@ pub(super) fn billing_result<T>(result: Result<T, ApiError>) -> FlashData {
     }
 }
 
-fn validation_message(error: &ApiError) -> Option<String> {
+pub(super) fn validation_message(error: &ApiError) -> Option<String> {
     let ApiError::Http {
         status: 400,
         message,
