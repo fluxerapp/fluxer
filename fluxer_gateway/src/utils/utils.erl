@@ -45,7 +45,7 @@ parse_status(_) ->
 -spec parse_iso8601_to_unix_ms(binary() | term()) -> integer() | undefined.
 parse_iso8601_to_unix_ms(Binary) when is_binary(Binary) ->
     Pattern =
-        <<"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{1,9}))?Z$">>,
+        <<"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{1,9}))?(?:Z|[+-]00:?00)$">>,
     CaptureOpts = [{capture, [1, 2, 3, 4, 5, 6, 7], list}],
     case re:run(Binary, Pattern, CaptureOpts) of
         {match, [YS, MS, DS, HS, MiS, SS, FS]} ->
