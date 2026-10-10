@@ -55,6 +55,7 @@ function ThemedApp({
 		messageGutter: 16,
 		messageGroupSpacing: groupSpacing,
 		hdrDisplayMode: HdrDisplayMode.FULL,
+		instanceThemeColor: null,
 	});
 	return (
 		<MeasuringChild
