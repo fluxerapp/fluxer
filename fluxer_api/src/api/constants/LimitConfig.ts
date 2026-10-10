@@ -20,9 +20,13 @@ export function getLegacyLimitConfigKvKey(selfHosted: boolean): string {
 
 export const LIMIT_CONFIG_REFRESH_CHANNEL = 'limit-config-refresh';
 
-interface LimitBuildOptions {
+export interface LimitBuildOptions {
 	selfHosted?: boolean;
 	premiumMode?: 'mirror' | 'everyone';
+}
+
+export interface StoredLimitConfig extends LimitConfigSnapshot {
+	overridesOnly?: boolean;
 }
 
 function cloneLimitConfigSnapshot(config: LimitConfigSnapshot): LimitConfigSnapshot {
@@ -134,31 +138,16 @@ export function mergeWithCurrentDefaults(
 		});
 	}
 	return {
-		traitDefinitions: stored.traitDefinitions,
+		traitDefinitions: [...new Set([...newDefaults.traitDefinitions, ...stored.traitDefinitions])],
 		rules: mergedRules,
 	};
 }
 
-export function stripCurrentDefaults(config: LimitConfigSnapshot, options?: LimitBuildOptions): LimitConfigSnapshot {
-	const defaults = builtInRuleLimits(options);
-	return {
-		traitDefinitions: config.traitDefinitions,
-		rules: config.rules.map((rule) => {
-			const ruleDefaults = defaults.get(rule.id);
-			return {
-				id: rule.id,
-				filters: rule.filters,
-				limits: ruleDefaults ? pickModifiedLimits(rule.limits, ruleDefaults) : rule.limits,
-			};
-		}),
-	};
-}
-
-export function rebaseLimitsSavedUnderOtherPremiumMode(
-	stored: LimitConfigSnapshot,
+export function readStoredLimitOverrides(
+	stored: StoredLimitConfig,
 	options: Required<LimitBuildOptions>,
-): LimitConfigSnapshot {
-	if (!options.selfHosted) {
+): StoredLimitConfig {
+	if (!options.selfHosted || stored.overridesOnly) {
 		return stored;
 	}
 	const currentDefaults = builtInRuleLimits(options);
@@ -166,17 +155,63 @@ export function rebaseLimitsSavedUnderOtherPremiumMode(
 		selfHosted: true,
 		premiumMode: options.premiumMode === 'mirror' ? 'everyone' : 'mirror',
 	});
-	let rebased = false;
-	const rules = stored.rules.map((rule) => {
-		const current = currentDefaults.get(rule.id);
-		const other = otherDefaults.get(rule.id);
-		if (!current || !other || !wasSavedUnderOtherDefaults(rule, current, other)) {
-			return rule;
-		}
-		rebased = true;
-		return {id: rule.id, filters: rule.filters, limits: pickModifiedLimits(rule.limits, other)};
+	return {
+		overridesOnly: true,
+		traitDefinitions: stored.traitDefinitions,
+		rules: stored.rules.map((rule) => {
+			const current = currentDefaults.get(rule.id);
+			const other = otherDefaults.get(rule.id);
+			const savedUnder = current && !(other && wasSavedUnderOtherDefaults(rule, current, other)) ? current : other;
+			return {
+				id: rule.id,
+				filters: rule.filters,
+				limits: savedUnder ? pickModifiedLimits(rule.limits, savedUnder) : rule.limits,
+			};
+		}),
+	};
+}
+
+export function buildStoredLimitConfig(
+	submitted: LimitConfigSnapshot,
+	previous: StoredLimitConfig | null,
+	options: Required<LimitBuildOptions>,
+): StoredLimitConfig {
+	const visible = sanitizeLimitConfigForInstance(submitted, options);
+	if (!options.selfHosted) {
+		return mergeWithCurrentDefaults(visible, options);
+	}
+	const kept = previous === null ? null : readStoredLimitOverrides(previous, options);
+	const keptRules = new Map((kept?.rules ?? []).map((rule) => [rule.id, rule]));
+	const defaults = builtInRuleLimits(options);
+	const rules: Array<LimitRule> = visible.rules.map((rule) => {
+		const ruleDefaults = defaults.get(rule.id);
+		const keptLimits = keptRules.get(rule.id)?.limits ?? {};
+		return {
+			id: rule.id,
+			filters: rule.filters,
+			limits: ruleDefaults
+				? pickLimits(rule.limits, (key, value) => value !== ruleDefaults[key] || value === keptLimits[key])
+				: rule.limits,
+		};
 	});
-	return rebased ? {traitDefinitions: stored.traitDefinitions, rules} : stored;
+	const hidden = kept === null ? null : hiddenFromInstance(kept, options);
+	const visibleRuleIds = new Set(rules.map((rule) => rule.id));
+	return {
+		overridesOnly: true,
+		traitDefinitions: [
+			...(hidden?.traitDefinitions ?? []).filter((trait) => !visible.traitDefinitions.includes(trait)),
+			...visible.traitDefinitions,
+		],
+		rules: [...(hidden?.rules ?? []).filter((rule) => !visibleRuleIds.has(rule.id)), ...rules],
+	};
+}
+
+function hiddenFromInstance(config: LimitConfigSnapshot, options: Required<LimitBuildOptions>): LimitConfigSnapshot {
+	const visible = sanitizeLimitConfigForInstance(config, options);
+	return {
+		traitDefinitions: config.traitDefinitions.filter((trait) => !visible.traitDefinitions.includes(trait)),
+		rules: config.rules.filter((rule) => !visible.rules.includes(rule)),
+	};
 }
 
 function builtInRuleLimits(options?: LimitBuildOptions): Map<string, Partial<Record<LimitKey, number>>> {
@@ -188,17 +223,15 @@ function wasSavedUnderOtherDefaults(
 	currentDefaults: Partial<Record<LimitKey, number>>,
 	otherDefaults: Partial<Record<LimitKey, number>>,
 ): boolean {
-	const modeKeys = new Set(LIMIT_KEYS.filter((key) => currentDefaults[key] !== otherDefaults[key]));
+	const modeKeys = LIMIT_KEYS.filter((key) => currentDefaults[key] !== otherDefaults[key]);
 	const edited = new Set<string>(rule.modifiedFields ?? []);
-	const untouchedModeKeys = [...modeKeys].filter((key) => !edited.has(key));
-	const holdsFilledInDefaults = LIMIT_KEYS.some(
-		(key) => !modeKeys.has(key) && rule.limits[key] !== undefined && rule.limits[key] === currentDefaults[key],
-	);
+	const untouchedModeKeys = modeKeys.filter((key) => !edited.has(key));
+	if (untouchedModeKeys.length > 0) {
+		return untouchedModeKeys.every((key) => rule.limits[key] === otherDefaults[key]);
+	}
 	return (
-		holdsFilledInDefaults &&
-		untouchedModeKeys.length > 0 &&
-		[...modeKeys].every((key) => rule.limits[key] !== undefined) &&
-		untouchedModeKeys.every((key) => rule.limits[key] === otherDefaults[key])
+		modeKeys.some((key) => rule.limits[key] === otherDefaults[key]) &&
+		modeKeys.every((key) => rule.limits[key] !== undefined && rule.limits[key] !== currentDefaults[key])
 	);
 }
 
@@ -218,7 +251,21 @@ function pickModifiedLimits(
 	limits: Partial<Record<LimitKey, number>>,
 	defaultLimits: Partial<Record<LimitKey, number>>,
 ): Partial<Record<LimitKey, number>> {
-	return Object.fromEntries(findModifiedLimits(limits, defaultLimits).map((key) => [key, limits[key]]));
+	return pickLimits(limits, (key, value) => value !== defaultLimits[key]);
+}
+
+function pickLimits(
+	limits: Partial<Record<LimitKey, number>>,
+	keep: (key: LimitKey, value: number) => boolean,
+): Partial<Record<LimitKey, number>> {
+	const picked: Partial<Record<LimitKey, number>> = {};
+	for (const key of LIMIT_KEYS) {
+		const value = limits[key];
+		if (value !== undefined && keep(key, value)) {
+			picked[key] = value;
+		}
+	}
+	return picked;
 }
 
 function findModifiedLimits(

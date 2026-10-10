@@ -7,14 +7,22 @@ import {getCachedInstancePremiumMode, setCachedInstancePremiumMode} from '@app/a
 import {getInstanceConfigRepository, getLimitConfigService} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {fetchUserMe, grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {expandWireFormat} from '@fluxer/limits/src/LimitDiffer';
+import {resolveLimits} from '@fluxer/limits/src/LimitResolver';
+import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import type {LimitConfigGetResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {z} from 'zod';
 
 type LimitConfigResponse = z.infer<typeof LimitConfigGetResponse>;
+
+const MODE_KEYS = LIMIT_KEYS.filter((key) => DEFAULT_STOCK_LIMITS[key] !== DEFAULT_RESTRICTED_LIMITS[key]);
 
 describe('limit config across premium model switches on a self-hosted instance', () => {
 	let harness: ApiTestHarness;
@@ -58,7 +66,7 @@ describe('limit config across premium model switches on a self-hosted instance',
 		return await createBuilder<LimitConfigResponse>(harness, admin.token).get('/admin/limit-config').execute();
 	}
 
-	async function saveDefaultRule(admin: TestAccount, overrides: Record<string, number>): Promise<void> {
+	async function saveRule(admin: TestAccount, ruleId: string, overrides: Record<string, number>): Promise<void> {
 		const {limit_config: config} = await getLimitConfig(admin);
 		await createBuilder(harness, admin.token)
 			.put('/admin/limit-config')
@@ -66,17 +74,38 @@ describe('limit config across premium model switches on a self-hosted instance',
 				limit_config: {
 					traitDefinitions: config.traitDefinitions,
 					rules: config.rules.map(({modifiedFields: _modifiedFields, ...rule}) =>
-						rule.id === 'default' ? {...rule, limits: {...rule.limits, ...overrides}} : rule,
+						rule.id === ruleId ? {...rule, limits: {...rule.limits, ...overrides}} : rule,
 					),
 				},
 			})
 			.execute();
 	}
 
-	function defaultRule(response: LimitConfigResponse) {
-		const rule = response.limit_config.rules.find((candidate) => candidate.id === 'default');
+	function saveDefaultRule(admin: TestAccount, overrides: Record<string, number>): Promise<void> {
+		return saveRule(admin, 'default', overrides);
+	}
+
+	function findRule(response: LimitConfigResponse, ruleId: string) {
+		const rule = response.limit_config.rules.find((candidate) => candidate.id === ruleId);
 		expect(rule).toBeDefined();
 		return rule!;
+	}
+
+	function defaultRule(response: LimitConfigResponse) {
+		return findRule(response, 'default');
+	}
+
+	async function storeLegacyLimitConfig(config: LimitConfigSnapshot): Promise<void> {
+		await getInstanceConfigRepository().setLimitConfig(config);
+		await getLimitConfigService().refreshCache();
+	}
+
+	async function changeTag(account: TestAccount, discriminator: string): Promise<number> {
+		const {response} = await createBuilder(harness, account.token)
+			.patch('/users/@me')
+			.body({discriminator, password: account.password})
+			.executeRaw();
+		return response.status;
 	}
 
 	it('gives everyone premium limits after a save in mirror mode and keeps edited values', async () => {
@@ -111,6 +140,7 @@ describe('limit config across premium model switches on a self-hosted instance',
 		await setPremiumMode(admin, 'mirror');
 		await saveDefaultRule(admin, {max_bio_length: 300});
 		const {config: stored} = await getInstanceConfigRepository().readLimitConfigInputs();
+		expect(stored?.overridesOnly).toBe(true);
 		expect(stored?.rules).toEqual([
 			{id: 'premium', filters: {traits: ['premium']}, limits: {}},
 			{id: 'default', limits: {max_bio_length: 300}},
@@ -121,7 +151,7 @@ describe('limit config across premium model switches on a self-hosted instance',
 	it('repairs free limits stored in full before an earlier switch to everyone', async () => {
 		const admin = await createAdmin();
 		await setPremiumMode(admin, 'everyone');
-		await getInstanceConfigRepository().setLimitConfig({
+		await storeLegacyLimitConfig({
 			traitDefinitions: ['premium'],
 			rules: [
 				{id: 'premium', filters: {traits: ['premium']}, limits: {...DEFAULT_STOCK_LIMITS}},
@@ -132,10 +162,36 @@ describe('limit config across premium model switches on a self-hosted instance',
 				},
 			],
 		});
-		await getLimitConfigService().refreshCache();
 		const rule = defaultRule(await getLimitConfig(admin));
 		expect(rule.limits).toEqual({...DEFAULT_STOCK_LIMITS, max_bio_length: 300});
 		expect(rule.modifiedFields).toEqual(['max_bio_length']);
+	});
+
+	it('repairs premium limits stored in full before an earlier switch to mirror', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'mirror');
+		await storeLegacyLimitConfig({
+			traitDefinitions: [],
+			rules: [{id: 'default', limits: {...DEFAULT_STOCK_LIMITS}}],
+		});
+		const response = await getLimitConfig(admin);
+		expect(defaultRule(response).limits).toEqual(DEFAULT_RESTRICTED_LIMITS);
+		expect(defaultRule(response).modifiedFields).toBeUndefined();
+	});
+
+	it('repairs free limits saved again after an earlier switch to everyone', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'everyone');
+		await storeLegacyLimitConfig({
+			traitDefinitions: [],
+			rules: [{id: 'default', limits: {...DEFAULT_RESTRICTED_LIMITS}, modifiedFields: MODE_KEYS}],
+		});
+		const rule = defaultRule(await getLimitConfig(admin));
+		expect(rule.limits).toEqual(DEFAULT_STOCK_LIMITS);
+		expect(rule.modifiedFields).toBeUndefined();
+		const member = await createTestAccount(harness);
+		expect(await changeTag(member, '4242')).toBe(200);
+		await saveDefaultRule(admin, {max_bio_length: 300});
 		const {config: stored} = await getInstanceConfigRepository().readLimitConfigInputs();
 		expect(stored?.rules.find((candidate) => candidate.id === 'default')).toEqual({
 			id: 'default',
@@ -143,16 +199,91 @@ describe('limit config across premium model switches on a self-hosted instance',
 		});
 	});
 
-	it('repairs premium limits stored in full before an earlier switch to mirror', async () => {
+	it('repairs premium limits saved again after an earlier switch to mirror', async () => {
 		const admin = await createAdmin();
 		await setPremiumMode(admin, 'mirror');
-		await getInstanceConfigRepository().setLimitConfig({
+		await storeLegacyLimitConfig({
 			traitDefinitions: [],
-			rules: [{id: 'default', limits: {...DEFAULT_STOCK_LIMITS}}],
+			rules: [{id: 'default', limits: {...DEFAULT_STOCK_LIMITS}, modifiedFields: MODE_KEYS}],
 		});
-		await getLimitConfigService().refreshCache();
 		const response = await getLimitConfig(admin);
 		expect(defaultRule(response).limits).toEqual(DEFAULT_RESTRICTED_LIMITS);
-		expect(defaultRule(response).modifiedFields).toBeUndefined();
+		expect(findRule(response, 'premium').limits).toEqual(DEFAULT_STOCK_LIMITS);
+		expect(response.limit_config.traitDefinitions).toEqual(['premium']);
+	});
+
+	it('reads limits stored in full under the model that is being left', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'mirror');
+		await storeLegacyLimitConfig({
+			traitDefinitions: ['premium'],
+			rules: [
+				{id: 'premium', filters: {traits: ['premium']}, limits: {...DEFAULT_STOCK_LIMITS}},
+				{id: 'default', limits: {...DEFAULT_RESTRICTED_LIMITS, max_guilds: 150}},
+			],
+		});
+		await setPremiumMode(admin, 'everyone');
+		expect(defaultRule(await getLimitConfig(admin)).limits).toEqual({...DEFAULT_STOCK_LIMITS, max_guilds: 150});
+		const {config: stored} = await getInstanceConfigRepository().readLimitConfigInputs();
+		expect(stored?.rules).toEqual([
+			{id: 'premium', filters: {traits: ['premium']}, limits: {}},
+			{id: 'default', limits: {max_guilds: 150}},
+		]);
+	});
+
+	it('keeps edits that match the other model across a save there', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'mirror');
+		const edits = {feature_custom_discriminator: 1, max_guilds: DEFAULT_STOCK_LIMITS.max_guilds};
+		await saveDefaultRule(admin, edits);
+		await setPremiumMode(admin, 'everyone');
+		await saveDefaultRule(admin, {max_bio_length: 300});
+		await setPremiumMode(admin, 'mirror');
+		const rule = defaultRule(await getLimitConfig(admin));
+		expect(rule.limits).toEqual({...DEFAULT_RESTRICTED_LIMITS, ...edits, max_bio_length: 300});
+		expect(rule.modifiedFields).toEqual(['feature_custom_discriminator', 'max_bio_length', 'max_guilds']);
+	});
+
+	it('keeps premium rule edits across a save while everyone hides the rule', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'mirror');
+		const edits = {max_guilds: 999, feature_animated_avatar: 0};
+		await saveRule(admin, 'premium', edits);
+		await setPremiumMode(admin, 'everyone');
+		const hidden = await getLimitConfig(admin);
+		expect(hidden.limit_config.rules.map((rule) => rule.id)).toEqual(['default', 'very_large_guild']);
+		expect(hidden.limit_config.traitDefinitions).toEqual([]);
+		await saveDefaultRule(admin, {max_bio_length: 300});
+		await setPremiumMode(admin, 'mirror');
+		const response = await getLimitConfig(admin);
+		expect(findRule(response, 'premium').limits).toEqual({...DEFAULT_STOCK_LIMITS, ...edits});
+		expect(response.limit_config.traitDefinitions).toEqual(['premium']);
+		expect(defaultRule(response).limits).toEqual({...DEFAULT_RESTRICTED_LIMITS, max_bio_length: 300});
+	});
+
+	it('lets only premium members change their tag in mirror mode', async () => {
+		const admin = await createAdmin();
+		await setPremiumMode(admin, 'everyone');
+		await saveDefaultRule(admin, {});
+		await setPremiumMode(admin, 'mirror');
+		const free = await createTestAccount(harness);
+		const subscriber = await createTestAccount(harness);
+		const gifted = await createTestAccount(harness);
+		await grantPremium(harness, subscriber.userId, UserPremiumTypes.SUBSCRIPTION);
+		await grantPremium(harness, gifted.userId, UserPremiumTypes.LIFETIME);
+		expect(await changeTag(free, '4242')).toBe(400);
+		expect(await changeTag(subscriber, '4242')).toBe(200);
+		expect(await changeTag(gifted, '4243')).toBe(200);
+		const {json: me} = await fetchUserMe(harness, subscriber.token);
+		expect(me.traits).toContain('premium');
+		const discovery = await createBuilderWithoutAuth<WellKnownFluxerResponse>(harness)
+			.get('/.well-known/fluxer')
+			.execute();
+		const {limits} = resolveLimits(expandWireFormat(discovery.limits), {
+			traits: new Set(me.traits),
+			guildFeatures: new Set(),
+		});
+		expect(limits.feature_custom_discriminator).toBe(1);
+		expect(limits.max_guilds).toBe(DEFAULT_STOCK_LIMITS.max_guilds);
 	});
 });

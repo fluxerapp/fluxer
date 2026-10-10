@@ -3,6 +3,7 @@
 import crypto from 'node:crypto';
 import {Config} from '@app/api/Config';
 import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
+import type {StoredLimitConfig} from '@app/api/constants/LimitConfig';
 import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {InstanceConfigurationRow} from '@app/api/database/types/InstanceConfigTypes';
@@ -33,7 +34,7 @@ import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {getDefaultProductName, setCachedProductName} from '@app/api/instance/ProductName';
 import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValidation';
 import {Logger} from '@app/api/Logger';
-import {isLimitConfigSnapshot} from '@app/api/limits/LimitConfigValidation';
+import {isStoredLimitConfig} from '@app/api/limits/LimitConfigValidation';
 import {
 	getEffectiveBillingConfig,
 	isBillingActive,
@@ -52,7 +53,6 @@ import {
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {
 	InstanceConfigResponse,
 	InstanceConfigUpdateRequest,
@@ -198,7 +198,7 @@ export interface InstanceBillingAdminConfig {
 export type InstancePremiumMode = 'mirror' | 'everyone';
 
 interface LimitConfigInputs {
-	config: LimitConfigSnapshot | null;
+	config: StoredLimitConfig | null;
 	premiumMode: InstancePremiumMode;
 }
 
@@ -382,7 +382,7 @@ const FETCH_LIMIT_CONFIG_INPUTS_QUERY = InstanceConfiguration.selectCql({
 	where: InstanceConfiguration.where.in('key', 'keys'),
 });
 
-function parseStoredLimitConfig(raw: string | null): LimitConfigSnapshot | null {
+function parseStoredLimitConfig(raw: string | null): StoredLimitConfig | null {
 	if (raw === null) return null;
 	let parsed: unknown;
 	try {
@@ -391,7 +391,7 @@ function parseStoredLimitConfig(raw: string | null): LimitConfigSnapshot | null 
 		Logger.error({error}, 'Stored limit configuration is not valid JSON, falling back to default limits');
 		return null;
 	}
-	if (!isLimitConfigSnapshot(parsed)) {
+	if (!isStoredLimitConfig(parsed)) {
 		Logger.error('Stored limit configuration has an invalid shape, falling back to default limits');
 		return null;
 	}
@@ -1680,7 +1680,7 @@ export class InstanceConfigRepository {
 		};
 	}
 
-	async setLimitConfig(config: LimitConfigSnapshot): Promise<void> {
+	async setLimitConfig(config: StoredLimitConfig): Promise<void> {
 		await this.setConfig(LIMIT_CONFIG_KEY, JSON.stringify(config));
 	}
 

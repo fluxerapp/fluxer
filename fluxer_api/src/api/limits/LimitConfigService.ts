@@ -2,13 +2,14 @@
 
 import {Config} from '@app/api/Config';
 import {
+	buildStoredLimitConfig,
 	createDefaultLimitConfig,
 	getLegacyLimitConfigKvKey,
 	LIMIT_CONFIG_REFRESH_CHANNEL,
+	type LimitBuildOptions,
 	mergeWithCurrentDefaults,
-	rebaseLimitsSavedUnderOtherPremiumMode,
+	readStoredLimitOverrides,
 	sanitizeLimitConfigForInstance,
-	stripCurrentDefaults,
 } from '@app/api/constants/LimitConfig';
 import {
 	INSTANCE_CONFIG_REFRESH_CHANNEL,
@@ -29,11 +30,6 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 const MAX_PENDING_OPERATIONS = 32;
 
 let globalLimitConfigService: LimitConfigService | null = null;
-
-interface LimitBuildOptions {
-	selfHosted: boolean;
-	premiumMode: InstancePremiumMode;
-}
 
 export class LimitConfigService {
 	private premiumMode: InstancePremiumMode = 'everyone';
@@ -148,32 +144,29 @@ export class LimitConfigService {
 		this.assertRefreshActive(generation);
 		const {config: stored, premiumMode} = await this.repository.readLimitConfigInputs();
 		this.assertRefreshActive(generation);
-		const buildOptions: LimitBuildOptions = {
+		const buildOptions: Required<LimitBuildOptions> = {
 			selfHosted: Config.instance.selfHosted,
 			premiumMode,
 		};
-		const rebased = stored === null ? null : rebaseLimitsSavedUnderOtherPremiumMode(stored, buildOptions);
 		this.config =
-			rebased === null
+			stored === null
 				? createDefaultLimitConfig(buildOptions)
-				: mergeWithCurrentDefaults(sanitizeLimitConfigForInstance(rebased, buildOptions), buildOptions);
+				: mergeWithCurrentDefaults(
+						sanitizeLimitConfigForInstance(readStoredLimitOverrides(stored, buildOptions), buildOptions),
+						buildOptions,
+					);
 		this.premiumMode = premiumMode;
 		setCachedInstancePremiumMode(premiumMode);
-		if (rebased !== null && rebased !== stored) {
-			await this.repository.setLimitConfig(rebased);
-			Logger.info({premiumMode}, 'Limit config saved under the other premium mode was rebased');
-		}
 	}
 
 	updateConfig(config: LimitConfigSnapshot): Promise<void> {
 		return this.runOperation(async (generation) => {
-			const policy = await this.repository.readStoredInstancePolicyConfig();
+			const {config: previous, premiumMode} = await this.repository.readLimitConfigInputs();
 			this.assertRefreshActive(generation);
-			const buildOptions: LimitBuildOptions = {
+			const stored = buildStoredLimitConfig(config, previous, {
 				selfHosted: Config.instance.selfHosted,
-				premiumMode: policy.premium_mode,
-			};
-			const stored = stripCurrentDefaults(sanitizeLimitConfigForInstance(config, buildOptions), buildOptions);
+				premiumMode,
+			});
 			await this.repository.setLimitConfig(stored);
 			await this.reloadConfig(generation);
 			Logger.info({ruleCount: stored.rules.length}, 'Limit config updated');
@@ -199,10 +192,10 @@ export class LimitConfigService {
 		if (stored === null || premiumMode === nextPremiumMode) {
 			return;
 		}
-		const buildOptions: LimitBuildOptions = {selfHosted: Config.instance.selfHosted, premiumMode};
-		await this.repository.setLimitConfig(
-			stripCurrentDefaults(rebaseLimitsSavedUnderOtherPremiumMode(stored, buildOptions), buildOptions),
-		);
+		const overrides = readStoredLimitOverrides(stored, {selfHosted: Config.instance.selfHosted, premiumMode});
+		if (overrides !== stored) {
+			await this.repository.setLimitConfig(overrides);
+		}
 	}
 
 	private async reloadConfig(generation: number): Promise<void> {

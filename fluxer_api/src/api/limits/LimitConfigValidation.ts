@@ -1,5 +1,6 @@
+import type {StoredLimitConfig} from '@app/api/constants/LimitConfig';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
-import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
+import type {LimitRule} from '@fluxer/limits/src/LimitTypes';
 
 function isStringArray(value: unknown): value is Array<string> {
 	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
@@ -17,10 +18,11 @@ function isLimitRuleSnapshot(value: unknown): value is LimitRule {
 	);
 }
 
-export function isLimitConfigSnapshot(value: unknown): value is LimitConfigSnapshot {
+export function isStoredLimitConfig(value: unknown): value is StoredLimitConfig {
 	return (
 		isJsonRecord(value) &&
 		(value.version === undefined || typeof value.version === 'number') &&
+		(value.overridesOnly === undefined || typeof value.overridesOnly === 'boolean') &&
 		isStringArray(value.traitDefinitions) &&
 		Array.isArray(value.rules) &&
 		value.rules.every(isLimitRuleSnapshot)
