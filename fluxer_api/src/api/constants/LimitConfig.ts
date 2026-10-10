@@ -20,16 +20,18 @@ export function getLegacyLimitConfigKvKey(selfHosted: boolean): string {
 
 export const LIMIT_CONFIG_REFRESH_CHANNEL = 'limit-config-refresh';
 
+interface LimitBuildOptions {
+	selfHosted?: boolean;
+	premiumMode?: 'mirror' | 'everyone';
+}
+
 function cloneLimitConfigSnapshot(config: LimitConfigSnapshot): LimitConfigSnapshot {
 	return structuredClone(config);
 }
 
 export function sanitizeLimitConfigForInstance(
 	config: LimitConfigSnapshot,
-	options?: {
-		selfHosted?: boolean;
-		premiumMode?: 'mirror' | 'everyone';
-	},
+	options?: LimitBuildOptions,
 ): LimitConfigSnapshot {
 	const selfHosted = options?.selfHosted ?? false;
 	const premiumMode = options?.premiumMode ?? 'everyone';
@@ -51,10 +53,7 @@ export function sanitizeLimitConfigForInstance(
 	};
 }
 
-export function createDefaultLimitConfig(options?: {
-	selfHosted?: boolean;
-	premiumMode?: 'mirror' | 'everyone';
-}): LimitConfigSnapshot {
+export function createDefaultLimitConfig(options?: LimitBuildOptions): LimitConfigSnapshot {
 	const selfHosted = options?.selfHosted ?? false;
 	const premiumMode = options?.premiumMode ?? 'everyone';
 	const useTiers = !selfHosted || premiumMode === 'mirror';
@@ -94,10 +93,7 @@ export function createDefaultLimitConfig(options?: {
 
 export function mergeWithCurrentDefaults(
 	stored: LimitConfigSnapshot,
-	options?: {
-		selfHosted?: boolean;
-		premiumMode?: 'mirror' | 'everyone';
-	},
+	options?: LimitBuildOptions,
 ): LimitConfigSnapshot {
 	const selfHosted = options?.selfHosted ?? false;
 	const premiumMode = options?.premiumMode ?? 'everyone';
@@ -141,6 +137,76 @@ export function mergeWithCurrentDefaults(
 		traitDefinitions: stored.traitDefinitions,
 		rules: mergedRules,
 	};
+}
+
+export function stripCurrentDefaults(config: LimitConfigSnapshot, options?: LimitBuildOptions): LimitConfigSnapshot {
+	const defaults = builtInRuleLimits(options);
+	return {
+		traitDefinitions: config.traitDefinitions,
+		rules: config.rules.map((rule) => {
+			const ruleDefaults = defaults.get(rule.id);
+			return {
+				id: rule.id,
+				filters: rule.filters,
+				limits: ruleDefaults ? pickModifiedLimits(rule.limits, ruleDefaults) : rule.limits,
+			};
+		}),
+	};
+}
+
+export function rebaseLimitsSavedUnderOtherPremiumMode(
+	stored: LimitConfigSnapshot,
+	options: Required<LimitBuildOptions>,
+): LimitConfigSnapshot {
+	if (!options.selfHosted) {
+		return stored;
+	}
+	const currentDefaults = builtInRuleLimits(options);
+	const otherDefaults = builtInRuleLimits({
+		selfHosted: true,
+		premiumMode: options.premiumMode === 'mirror' ? 'everyone' : 'mirror',
+	});
+	let rebased = false;
+	const rules = stored.rules.map((rule) => {
+		const current = currentDefaults.get(rule.id);
+		const other = otherDefaults.get(rule.id);
+		if (!current || !other || !wasSavedUnderOtherDefaults(rule, current, other)) {
+			return rule;
+		}
+		rebased = true;
+		return {id: rule.id, filters: rule.filters, limits: pickModifiedLimits(rule.limits, other)};
+	});
+	return rebased ? {traitDefinitions: stored.traitDefinitions, rules} : stored;
+}
+
+function builtInRuleLimits(options?: LimitBuildOptions): Map<string, Partial<Record<LimitKey, number>>> {
+	return new Map(createDefaultLimitConfig(options).rules.map((rule) => [rule.id, rule.limits]));
+}
+
+function wasSavedUnderOtherDefaults(
+	rule: LimitRule,
+	currentDefaults: Partial<Record<LimitKey, number>>,
+	otherDefaults: Partial<Record<LimitKey, number>>,
+): boolean {
+	const modeKeys = new Set(LIMIT_KEYS.filter((key) => currentDefaults[key] !== otherDefaults[key]));
+	const edited = new Set<string>(rule.modifiedFields ?? []);
+	const untouchedModeKeys = [...modeKeys].filter((key) => !edited.has(key));
+	const holdsFilledInDefaults = LIMIT_KEYS.some(
+		(key) => !modeKeys.has(key) && rule.limits[key] !== undefined && rule.limits[key] === currentDefaults[key],
+	);
+	return (
+		holdsFilledInDefaults &&
+		untouchedModeKeys.length > 0 &&
+		[...modeKeys].every((key) => rule.limits[key] !== undefined) &&
+		untouchedModeKeys.every((key) => rule.limits[key] === otherDefaults[key])
+	);
+}
+
+function pickModifiedLimits(
+	limits: Partial<Record<LimitKey, number>>,
+	defaultLimits: Partial<Record<LimitKey, number>>,
+): Partial<Record<LimitKey, number>> {
+	return Object.fromEntries(findModifiedLimits(limits, defaultLimits).map((key) => [key, limits[key]]));
 }
 
 function findModifiedLimits(

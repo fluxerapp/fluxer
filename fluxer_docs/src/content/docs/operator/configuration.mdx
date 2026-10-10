@@ -1069,7 +1069,7 @@ Explicit `false` values and supported null clears remain valid. Branding and int
 
 ## Limits
 
-No environment variable changes an instance limit. Use the admin dashboard's Limit Config page or the [Admin API](/admin-api/). The thread and forum limits are fixed and have no limit key. [Thread lifecycle](/http-api/threads/#thread-lifecycle), [Thread members](/http-api/thread-members/) and [Forum channel fields](/http-api/forums/#forum-channel-fields) state them. Effective limits combine saved settings, deployment defaults and premium policy. After a change is saved, every running `api` and `worker` process reloads the limits with no restart. Clients receive the [limit configuration object](/http-api/instance/#limit-configuration-object).
+No environment variable changes an instance limit. Use the admin dashboard's Limit Config page or the [Admin API](/admin-api/). The thread and forum limits are fixed and have no limit key. [Thread lifecycle](/http-api/threads/#thread-lifecycle), [Thread members](/http-api/thread-members/) and [Forum channel fields](/http-api/forums/#forum-channel-fields) state them. Effective limits combine saved settings, deployment defaults and premium policy. Only the values you change are saved. Every other limit follows the deployment defaults and the premium model, so switching the model moves the untouched limits and keeps your edits. After a change is saved, every running `api` and `worker` process reloads the limits with no restart. Clients receive the [limit configuration object](/http-api/instance/#limit-configuration-object).
 
 Request concurrency is separate from instance limits, and each process sets its own. All are optional.
 

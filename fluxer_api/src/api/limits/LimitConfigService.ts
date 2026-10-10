@@ -6,7 +6,9 @@ import {
 	getLegacyLimitConfigKvKey,
 	LIMIT_CONFIG_REFRESH_CHANNEL,
 	mergeWithCurrentDefaults,
+	rebaseLimitsSavedUnderOtherPremiumMode,
 	sanitizeLimitConfigForInstance,
+	stripCurrentDefaults,
 } from '@app/api/constants/LimitConfig';
 import {
 	INSTANCE_CONFIG_REFRESH_CHANNEL,
@@ -150,12 +152,17 @@ export class LimitConfigService {
 			selfHosted: Config.instance.selfHosted,
 			premiumMode,
 		};
+		const rebased = stored === null ? null : rebaseLimitsSavedUnderOtherPremiumMode(stored, buildOptions);
 		this.config =
-			stored === null
+			rebased === null
 				? createDefaultLimitConfig(buildOptions)
-				: mergeWithCurrentDefaults(sanitizeLimitConfigForInstance(stored, buildOptions), buildOptions);
+				: mergeWithCurrentDefaults(sanitizeLimitConfigForInstance(rebased, buildOptions), buildOptions);
 		this.premiumMode = premiumMode;
 		setCachedInstancePremiumMode(premiumMode);
+		if (rebased !== null && rebased !== stored) {
+			await this.repository.setLimitConfig(rebased);
+			Logger.info({premiumMode}, 'Limit config saved under the other premium mode was rebased');
+		}
 	}
 
 	updateConfig(config: LimitConfigSnapshot): Promise<void> {
@@ -166,18 +173,36 @@ export class LimitConfigService {
 				selfHosted: Config.instance.selfHosted,
 				premiumMode: policy.premium_mode,
 			};
-			const normalized = mergeWithCurrentDefaults(sanitizeLimitConfigForInstance(config, buildOptions), buildOptions);
-			await this.repository.setLimitConfig(normalized);
+			const stored = stripCurrentDefaults(sanitizeLimitConfigForInstance(config, buildOptions), buildOptions);
+			await this.repository.setLimitConfig(stored);
 			await this.reloadConfig(generation);
-			Logger.info({ruleCount: normalized.rules.length}, 'Limit config updated');
+			Logger.info({ruleCount: stored.rules.length}, 'Limit config updated');
 		});
 	}
 
 	updatePolicyConfig(patch: Partial<InstancePolicyConfig>): Promise<void> {
 		return this.runOperation(async (generation) => {
+			if (patch.premium_mode !== undefined) {
+				await this.detachStoredLimitsFromPremiumMode(generation, patch.premium_mode);
+			}
 			await this.repository.setInstancePolicyConfig(patch);
 			await this.reloadConfig(generation);
 		});
+	}
+
+	private async detachStoredLimitsFromPremiumMode(
+		generation: number,
+		nextPremiumMode: InstancePremiumMode,
+	): Promise<void> {
+		const {config: stored, premiumMode} = await this.repository.readLimitConfigInputs();
+		this.assertRefreshActive(generation);
+		if (stored === null || premiumMode === nextPremiumMode) {
+			return;
+		}
+		const buildOptions: LimitBuildOptions = {selfHosted: Config.instance.selfHosted, premiumMode};
+		await this.repository.setLimitConfig(
+			stripCurrentDefaults(rebaseLimitsSavedUnderOtherPremiumMode(stored, buildOptions), buildOptions),
+		);
 	}
 
 	private async reloadConfig(generation: number): Promise<void> {
