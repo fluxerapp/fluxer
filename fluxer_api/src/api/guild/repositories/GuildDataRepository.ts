@@ -4,7 +4,6 @@ import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import {GUILD_COLUMNS, type GuildMemberByUserIdRow, type GuildRow} from '@app/api/database/types/GuildTypes';
-import {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {Guild} from '@app/api/models/Guild';
 import {GuildMembersByUserId, Guilds} from '@app/api/Tables';
@@ -26,10 +25,8 @@ function createFetchAllGuildsFirstPageQuery(limit: number) {
 	return Guilds.select({limit});
 }
 
-export class GuildDataRepository extends IGuildDataRepository {
-	constructor(private readonly requestCache?: RequestCache) {
-		super();
-	}
+export class GuildDataRepository {
+	constructor(private readonly requestCache?: RequestCache) {}
 
 	async findUnique(guildId: GuildID): Promise<Guild | null> {
 		const prefetched = this.requestCache?.takeGuild(guildId);

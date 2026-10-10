@@ -2,7 +2,7 @@
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {Guild} from '@app/api/models/Guild';
@@ -13,7 +13,7 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 
 interface AdminGuildUpdatePropagatorDeps {
 	gatewayService: IGatewayService;
-	discoveryRepository: IGuildDiscoveryRepository;
+	discoveryRepository: GuildDiscoveryRepository;
 }
 
 interface AdminGuildUpdateDispatchOptions {

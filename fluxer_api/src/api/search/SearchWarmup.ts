@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, ReportID} from '@app/api/BrandedTypes';
-import type {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
+import type {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
 import type {ILogger} from '@app/api/ILogger';
-import type {IReportRepository} from '@app/api/report/IReportRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import {
 	getAuditLogSearchService,
 	getGuildSearchService,
@@ -13,14 +13,14 @@ import {
 import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 
 const BATCH_SIZE = 100;
 
 interface SearchWarmupDeps {
-	userRepository: IUserRepository;
-	guildRepository: IGuildDataRepository;
-	reportRepository: IReportRepository;
+	userRepository: UserRepository;
+	guildRepository: GuildDataRepository;
+	reportRepository: ReportRepository;
 	logger: ILogger;
 }
 
@@ -66,7 +66,7 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 }
 
 async function warmupGuilds(
-	guildRepository: IGuildDataRepository,
+	guildRepository: GuildDataRepository,
 	guildSearchService: IGuildSearchService,
 	logger: ILogger,
 ): Promise<void> {
@@ -87,7 +87,7 @@ async function warmupGuilds(
 }
 
 async function warmupUsers(
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 	userSearchService: IUserSearchService,
 	logger: ILogger,
 ): Promise<void> {
@@ -106,7 +106,7 @@ async function warmupUsers(
 }
 
 async function warmupReports(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	reportSearchService: IReportSearchService,
 	logger: ILogger,
 ): Promise<void> {

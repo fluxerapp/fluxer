@@ -3,7 +3,7 @@
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -16,7 +16,7 @@ const CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
 interface EnsureStripeCustomerParams {
 	stripe: Stripe;
 	user: User;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	cacheService: ICacheService;
 }
 

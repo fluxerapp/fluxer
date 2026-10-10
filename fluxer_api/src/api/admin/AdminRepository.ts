@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from '@app/api/admin/IAdminRepository';
-import {createUserID} from '@app/api/BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
 import {
@@ -34,6 +33,27 @@ import {
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
+
+export interface AdminAuditLog {
+	logId: bigint;
+	adminUserId: UserID;
+	targetType: string;
+	targetId: bigint;
+	action: string;
+	auditLogReason: string | null;
+	metadata: Map<string, string>;
+	createdAt: Date;
+}
+
+export type BannedIpKind = 'permanent' | 'temporary_24h';
+
+export interface BannedIpEntry {
+	ip: string;
+	kind: BannedIpKind;
+	reason: string | null;
+	expiresAt: Date | null;
+	createdAt: Date | null;
+}
 
 const FETCH_AUDIT_LOG_BY_ID_QUERY = AdminAuditLogs.select({
 	where: AdminAuditLogs.where.eq('log_id'),
@@ -84,7 +104,7 @@ function canonicalizeBannedIpEntry(value: string): string {
 	return parseIpBanEntry(value)?.canonical ?? value;
 }
 
-export class AdminRepository implements IAdminRepository {
+export class AdminRepository {
 	async createAuditLog(log: AdminAuditLogRow): Promise<AdminAuditLog> {
 		await upsertOne(AdminAuditLogs.insert(log));
 		return this.mapRowToAuditLog(log);

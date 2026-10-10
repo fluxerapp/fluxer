@@ -6,7 +6,7 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {ensureStripeCustomer} from '@app/api/stripe/StripeCustomer';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {AgeVerificationAlreadyVerifiedError} from '@fluxer/errors/src/domains/payment/AgeVerificationAlreadyVerifiedError';
@@ -19,7 +19,7 @@ import type Stripe from 'stripe';
 export class AgeVerificationService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
 		private cacheService: ICacheService,
 	) {}

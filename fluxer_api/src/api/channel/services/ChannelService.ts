@@ -2,7 +2,7 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {ChannelID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {AttachmentUploadService} from '@app/api/channel/services/AttachmentUploadService';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
@@ -14,9 +14,9 @@ import {MessageService} from '@app/api/channel/services/MessageService';
 import {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
@@ -24,13 +24,13 @@ import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -60,9 +60,9 @@ export class ChannelService {
 
 	constructor(
 		apiContext: ApiContext,
-		channelRepository: IChannelRepository,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		embedService: EmbedService,
 		readStateService: ReadStateService,
@@ -71,12 +71,12 @@ export class ChannelService {
 		avatarService: AvatarService,
 		virusScanService: IVirusScanService,
 		purgeQueue: IPurgeQueue,
-		favoriteMemeRepository: IFavoriteMemeRepository,
+		favoriteMemeRepository: FavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		voiceRoomStore: IVoiceRoomStore,
 		liveKitService: ILiveKitService,
-		inviteRepository: IInviteRepository,
-		webhookRepository: IWebhookRepository,
+		inviteRepository: InviteRepository,
+		webhookRepository: WebhookRepository,
 		limitConfigService: LimitConfigService,
 		voiceAvailabilityService: VoiceAvailabilityService | null,
 	) {

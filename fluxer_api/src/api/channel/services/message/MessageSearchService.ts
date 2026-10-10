@@ -6,7 +6,7 @@ import type {Message} from '@app/api/models/Message';
 import {getMessageSearchService} from '@app/api/SearchFactory';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
@@ -31,7 +31,7 @@ export function isMessageSearchIndexable(message: Message): boolean {
 
 export class MessageSearchService {
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private workerService: IWorkerService<WorkerTaskName>,
 	) {}
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
 import {getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';

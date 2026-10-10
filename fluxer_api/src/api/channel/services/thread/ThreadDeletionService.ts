@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createMessageID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {
@@ -26,7 +26,7 @@ import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/Invali
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export async function clearThreadSourceFlag(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	cacheService: ICacheService,
 	state: ThreadState,
 	parent?: Channel | null,

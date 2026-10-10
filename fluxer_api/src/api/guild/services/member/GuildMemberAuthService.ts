@@ -3,7 +3,7 @@
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -20,7 +20,7 @@ interface GuildAuth {
 export class GuildMemberAuthService {
 	constructor(
 		private readonly gatewayService: IGatewayService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 	) {}
 
 	async getGuildAuthenticated({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildAuth> {

@@ -12,8 +12,8 @@ import {
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {AttachmentRequestData, AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
@@ -41,7 +41,7 @@ import {enqueueThreadSearchSync} from '@app/api/channel/threads/ThreadJobs';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {MessageAttachment, MessageReference} from '@app/api/database/types/MessageTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -54,8 +54,8 @@ import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {Webhook} from '@app/api/models/Webhook';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isContentHidden, isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
@@ -83,13 +83,13 @@ import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface MessageSendServiceDeps {
 	threadActivity: ThreadMessageActivity;
-	channelRepository: IChannelRepositoryAggregate;
-	userRepository: IUserRepository;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
 	storageService: IStorageService;
 	gatewayService: IGatewayService;
 	snowflakeService: ISnowflakeService;
 	rateLimitService: IRateLimitService;
-	favoriteMemeRepository: IFavoriteMemeRepository;
+	favoriteMemeRepository: FavoriteMemeRepository;
 	validationService: MessageValidationService;
 	mentionService: MessageMentionService;
 	searchService: MessageSearchService;

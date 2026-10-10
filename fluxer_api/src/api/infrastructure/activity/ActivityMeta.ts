@@ -7,7 +7,7 @@ import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
 

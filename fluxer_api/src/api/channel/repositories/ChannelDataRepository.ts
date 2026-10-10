@@ -6,7 +6,6 @@ import {
 	privateChannelLastMessageIdPatch,
 	privateChannelMetadataPatch,
 } from '@app/api/channel/PrivateChannelSnapshot';
-import {type GuildChannelListMode, IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
 import {
 	BatchBuilder,
 	executeConditional,
@@ -26,6 +25,8 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {Channel} from '@app/api/models/Channel';
 import {Channels, ChannelsByGuild, PrivateChannels, ThreadOnlyChannelsByGuild, ThreadStats} from '@app/api/Tables';
 import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+
+export type GuildChannelListMode = 'enrolled' | 'maintenance' | 'complete';
 
 const FETCH_CHANNEL_BY_ID = Channels.select({
 	where: [Channels.where.eq('channel_id'), Channels.where.eq('soft_deleted')],
@@ -48,10 +49,8 @@ const FETCH_OPEN_PRIVATE_CHANNEL_TARGET = PrivateChannels.selectCql({
 	limit: 1,
 });
 
-export class ChannelDataRepository extends IChannelDataRepository {
-	constructor(private readonly requestCache?: RequestCache) {
-		super();
-	}
+export class ChannelDataRepository {
+	constructor(private readonly requestCache?: RequestCache) {}
 
 	async findUnique(channelId: ChannelID): Promise<Channel | null> {
 		const prefetched = this.requestCache?.takeChannel(channelId);

@@ -4,10 +4,10 @@ import {AdminArchive} from '@app/api/admin/models/AdminArchiveModel';
 import type {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -35,8 +35,8 @@ interface ListArchivesParams {
 export class AdminArchiveService {
 	constructor(
 		private readonly adminArchiveRepository: AdminArchiveRepository,
-		private readonly userRepository: IUserRepository,
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly userRepository: UserRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly storageService: IStorageService,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,

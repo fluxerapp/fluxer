@@ -180,7 +180,7 @@ describe('thread message search', () => {
 	});
 	it('never hands an indexed thread created notice to a control search', async () => {
 		const s = await setup();
-		const [notice] = (await new ChannelRepository().listMessages(createChannelID(BigInt(s.channelId)))).filter(
+		const [notice] = (await new ChannelRepository().messages.listMessages(createChannelID(BigInt(s.channelId)))).filter(
 			(message) => message.type === MessageTypes.THREAD_CREATED,
 		);
 		if (!notice) expect.fail('Expected a thread created notice');

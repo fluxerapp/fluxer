@@ -134,7 +134,7 @@ describe('thread maintenance tasks', () => {
 		const thread = await startThread(s.owner.token, s.channelId);
 		await deleteChannelThreads({guildId: s.guildId, parentId: s.channelId}, helpers());
 		expect(await state(thread.id)).toBeNull();
-		expect(await getChannelRepository().findUnique(createChannelID(BigInt(thread.id)))).toBeNull();
+		expect(await getChannelRepository().channelData.findUnique(createChannelID(BigInt(thread.id)))).toBeNull();
 	});
 
 	it('purges thread memberships of a removed guild member and keeps those of a rejoined one', async () => {

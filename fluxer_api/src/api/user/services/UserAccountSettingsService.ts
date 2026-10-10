@@ -10,7 +10,7 @@ import {
 } from '@app/api/BrandedTypes';
 import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
 import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -19,9 +19,7 @@ import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
@@ -58,13 +56,13 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 
 interface UserAccountSettingsServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	userSettingsRepository: IUserSettingsRepository;
-	userRelationshipRepository: IUserRelationshipRepository;
+	userAccountRepository: UserRepository;
+	userSettingsRepository: UserRepository;
+	userRelationshipRepository: UserRepository;
 	updatePropagator: UserAccountUpdatePropagator;
 	gatewayService: IGatewayService;
 	userCacheService: UserCacheService;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	limitConfigService: LimitConfigService;
 }
 

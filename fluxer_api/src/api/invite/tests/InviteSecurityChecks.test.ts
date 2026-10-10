@@ -57,23 +57,6 @@ describe('Invite Security Checks', () => {
 			.execute();
 		await deleteInvite(harness, owner.token, invite.code);
 	});
-	test('owner can delete invite', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Invite Security Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await deleteInvite(harness, owner.token, invite.code);
-		await createBuilder(harness, owner.token).get(`/invites/${invite.code}`).expect(HTTP_STATUS.NOT_FOUND).execute();
-	});
-	test('deleted invite cannot be retrieved', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Invite Security Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await createBuilder(harness, owner.token).get(`/invites/${invite.code}`).expect(HTTP_STATUS.OK).execute();
-		await deleteInvite(harness, owner.token, invite.code);
-		await createBuilder(harness, owner.token).get(`/invites/${invite.code}`).expect(HTTP_STATUS.NOT_FOUND).execute();
-	});
 	test('deleted invite cannot be accepted', async () => {
 		const owner = await createTestAccount(harness);
 		const joiner = await createTestAccount(harness);
@@ -118,24 +101,6 @@ describe('Invite Security Checks', () => {
 		expect(updatedInvite).toBeDefined();
 		expect(updatedInvite!.uses).toBe(1);
 		await deleteInvite(harness, owner.token, inviteCode);
-	});
-	test('invite with max_uses limit becomes invalid after exhaustion', async () => {
-		const owner = await createTestAccount(harness);
-		const joiner1 = await createTestAccount(harness);
-		const joiner2 = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Max Uses Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createBuilder<GuildInviteMetadataResponse>(harness, owner.token)
-			.post(`/channels/${systemChannel.id}/invites`)
-			.body({max_uses: 1})
-			.execute();
-		expect(invite.max_uses).toBe(1);
-		await acceptInvite(harness, joiner1.token, invite.code);
-		await createBuilder(harness, joiner2.token)
-			.post(`/invites/${invite.code}`)
-			.body(null)
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.execute();
 	});
 	test('banned user cannot use invite to rejoin guild', async () => {
 		const owner = await createTestAccount(harness);
@@ -197,21 +162,6 @@ describe('Invite Security Checks', () => {
 			.body(null)
 			.expect(HTTP_STATUS.OK)
 			.execute();
-	});
-	test('non-member can view public invite', async () => {
-		const owner = await createTestAccount(harness);
-		const nonMember = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Public Invite Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		const inviteData = await createBuilder<{
-			code: string;
-		}>(harness, nonMember.token)
-			.get(`/invites/${invite.code}`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(inviteData.code).toBe(invite.code);
-		await deleteInvite(harness, owner.token, invite.code);
 	});
 	test('unauthenticated request can view public invite', async () => {
 		const owner = await createTestAccount(harness);

@@ -15,7 +15,7 @@ import {
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {ensurePersonalNotesChannelExists} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
@@ -33,7 +33,7 @@ import {
 	type ThreadViewer,
 } from '@app/api/experiment/ChannelThreadsGate';
 import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import {
 	mapGuildEmojiToResponse,
 	mapGuildMemberToResponse,
@@ -41,7 +41,7 @@ import {
 	mapGuildStickerToResponse,
 	mapGuildToGuildResponse,
 } from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -50,7 +50,7 @@ import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -81,7 +81,7 @@ import {
 	timeRpcStep,
 	timeRpcStepSync,
 } from '@app/api/rpc/RpcTimings';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {
@@ -102,7 +102,7 @@ import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceService} from '@app/api/voice/VoiceService';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {ensureGuildThreadPermissionsSeeded} from '@app/api/worker/tasks/SeedThreadPermissions';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -259,18 +259,18 @@ export class RpcService {
 	private readonly sessionStartService: RpcSessionStartService;
 
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
-		private channelRepository: IChannelRepository,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
+		private channelRepository: ChannelRepository,
 		private userCacheService: UserCacheService,
 		private readStateService: ReadStateService,
 		private apiContext: ApiContext,
 		private gatewayService: IGatewayService,
 		private discriminatorService: IDiscriminatorService,
-		private favoriteMemeRepository: IFavoriteMemeRepository,
+		private favoriteMemeRepository: FavoriteMemeRepository,
 		private botAuthService: BotAuthService,
-		private inviteRepository: IInviteRepository,
-		private webhookRepository: IWebhookRepository,
+		private inviteRepository: InviteRepository,
+		private webhookRepository: WebhookRepository,
 		private storageService: IStorageService,
 		private avatarService: AvatarService,
 		private rateLimitService: IRateLimitService,
@@ -298,7 +298,7 @@ export class RpcService {
 
 	private async ensurePersonalNotesChannel(user: User): Promise<void> {
 		const personalNotesChannelId = userIdToChannelId(user.id);
-		const existingChannel = await this.channelRepository.findUnique(personalNotesChannelId);
+		const existingChannel = await this.channelRepository.channelData.findUnique(personalNotesChannelId);
 		if (existingChannel) {
 			if (existingChannel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
 				Logger.warn(
@@ -308,7 +308,7 @@ export class RpcService {
 			}
 			return;
 		}
-		await ensurePersonalNotesChannelExists({channelRepository: this.channelRepository, userId: user.id});
+		await ensurePersonalNotesChannelExists({channelRepository: this.channelRepository.channelData, userId: user.id});
 	}
 
 	private async updateGuildMemberCount(guild: Guild, actualMemberCount: number): Promise<Guild> {
@@ -1399,7 +1399,7 @@ export class RpcService {
 		requestCache: RequestCache;
 	}): Promise<RpcResponseGuildCollectionData> {
 		const guild = await this.getGuildOrThrow(guildId);
-		const channels = await this.channelRepository.listGuildChannels(guildId, 'enrolled');
+		const channels = await this.channelRepository.channelData.listGuildChannels(guildId, 'enrolled');
 		const channelIds = new Set(channels.map((channel) => channel.id));
 		let maintenanceChannelIds: Promise<ReadonlySet<ChannelID>> | null = null;
 		const resolveMaintenanceChannelIds = () => {
@@ -1462,7 +1462,7 @@ export class RpcService {
 		await this.getGuildOrThrow(guildId);
 		const active = guildActive(guildId);
 		const [channels, roles, tainted] = await Promise.all([
-			this.channelRepository.listGuildChannels(guildId, 'enrolled'),
+			this.channelRepository.channelData.listGuildChannels(guildId, 'enrolled'),
 			this.guildRepository.listRoles(guildId),
 			isTainted(guildId),
 		]);
@@ -1900,7 +1900,7 @@ export class RpcService {
 		enrolledChannelIds: ReadonlySet<ChannelID>,
 	): Promise<ReadonlySet<ChannelID>> {
 		if (guildActive(guildId) || !(await isTainted(guildId))) return enrolledChannelIds;
-		const channels = await this.channelRepository.listGuildChannels(guildId, 'maintenance');
+		const channels = await this.channelRepository.channelData.listGuildChannels(guildId, 'maintenance');
 		return new Set(channels.map((channel) => channel.id));
 	}
 
@@ -2137,8 +2137,8 @@ export class RpcService {
 	}): Promise<void> {
 		const {channelId, messageId, participants, endedTimestamp} = params;
 		const [message, channel] = await Promise.all([
-			this.channelRepository.getMessage(channelId, createMessageID(messageId)),
-			this.channelRepository.findUnique(channelId),
+			this.channelRepository.messages.getMessage(channelId, createMessageID(messageId)),
+			this.channelRepository.channelData.findUnique(channelId),
 		]);
 		if (!message || !channel) {
 			return;
@@ -2147,7 +2147,7 @@ export class RpcService {
 			return;
 		}
 		const messageRow = message.toRow();
-		const updatedMessage = await this.channelRepository.upsertMessage({
+		const updatedMessage = await this.channelRepository.messages.upsertMessage({
 			...messageRow,
 			call: {
 				participant_ids: new Set(participants),
@@ -2203,7 +2203,7 @@ export class RpcService {
 		requestCache: RequestCache;
 	}): Promise<ChannelResponse | null> {
 		const {channelId, userId, requestCache} = params;
-		const channel = await this.channelRepository.findUnique(channelId);
+		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			return null;
 		}

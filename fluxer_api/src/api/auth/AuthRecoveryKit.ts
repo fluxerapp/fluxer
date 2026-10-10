@@ -19,6 +19,7 @@ import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons
 import type {User} from '@app/api/models/User';
 import {findPersonByLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {
 	generateRecoveryKey,
@@ -30,7 +31,6 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
 import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {RecoverAccountRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {
@@ -101,10 +101,7 @@ function invalidRecoveryKeyError(): InputValidationError {
 
 async function checkRecoverRateLimits(ctx: ApiContext, username: string | null, request: Request): Promise<void> {
 	const {rateLimit, config} = ctx.services;
-	const clientIp = requireClientIp(request, {
-		trustClientIpHeader: config.proxy.trust_client_ip_header,
-		clientIpHeaderName: config.proxy.client_ip_header,
-	});
+	const clientIp = requireConfiguredClientIp(request, config.proxy);
 	const sourceKey = getSameIpDecisionKey(clientIp) ?? clientIp;
 	const ipRateLimit = await rateLimit.checkLimit({
 		identifier: `recover:ip:${sourceKey}`,

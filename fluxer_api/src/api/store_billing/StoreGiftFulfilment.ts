@@ -11,7 +11,7 @@ import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRe
 import {redactStoreKey, type StoreSlot, UNSUPPORTED_QUANTITY_REASON} from '@app/api/store_billing/StoreBillingTypes';
 import type {StoreEntitlementWriter} from '@app/api/store_billing/StoreEntitlementWriter';
 import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 
 const PURCHASE_WRITE_ATTEMPTS = 4;
@@ -19,7 +19,7 @@ const GIFT_REFUND_REVERSAL_REASON = 'store_refund';
 
 interface StoreGiftFulfilmentDeps {
 	repository: StoreBillingRepository;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	giftReversalHandler: StripeGiftReversalHandler;
 	googlePlaySettlement: GooglePlaySettlement;
 	entitlementWriter: StoreEntitlementWriter;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createMessageID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
-import type {ThreadStatePatch} from '@app/api/channel/repositories/IThreadRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ThreadStatePatch} from '@app/api/channel/repositories/ThreadRepository';
 import type {AuthenticatedChannel, AuthenticatedThread} from '@app/api/channel/services/AuthenticatedChannel';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
@@ -55,7 +55,7 @@ import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface ThreadModifyServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	guildAuditLogService: GuildAuditLogService;
 	rateLimitService: IRateLimitService;
@@ -92,7 +92,7 @@ function requiresModerator(patch: ThreadPatch, thread: AuthenticatedThread): boo
 export class ThreadModifyService {
 	constructor(private readonly deps: ThreadModifyServiceDeps) {}
 
-	get repository(): IChannelRepositoryAggregate {
+	get repository(): ChannelRepository {
 		return this.deps.channelRepository;
 	}
 

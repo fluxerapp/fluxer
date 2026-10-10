@@ -2,16 +2,16 @@
 
 import type {EmojiID, GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import {createEmojiID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 
-type EmojiGuildRepository = Pick<IGuildRepositoryAggregate, 'getEmoji' | 'getEmojiById'>;
-type EmojiUserRepository = Pick<IUserAccountRepository, 'findUnique'>;
+type EmojiGuildRepository = Pick<GuildRepository, 'getEmoji' | 'getEmojiById'>;
+type EmojiUserRepository = Pick<UserRepository, 'findUnique'>;
 
 const CUSTOM_EMOJI_MARKDOWN_REGEX = /<(a)?:([^:]+):(\d+)>/g;
 const CUSTOM_EMOJI_MARKDOWN_REGEX_GLOBAL = new RegExp(CUSTOM_EMOJI_MARKDOWN_REGEX.source, 'g');

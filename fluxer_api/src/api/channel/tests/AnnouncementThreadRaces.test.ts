@@ -111,7 +111,7 @@ describe('announcement thread races', () => {
 		});
 		expect(await repository.threads.setThreadType(threadId, ChannelTypes.ANNOUNCEMENT_THREAD)).toBeNull();
 		vi.restoreAllMocks();
-		expect(await repository.findUnique(threadId)).toBeNull();
+		expect(await repository.channelData.findUnique(threadId)).toBeNull();
 		expect(await repository.threads.getState(threadId)).toBeNull();
 		expect(await repository.threads.listParentThreads(createChannelID(BigInt(s.textId)))).toEqual([]);
 		expect(await repository.threads.countActiveThreads(createGuildID(BigInt(s.guildId)))).toBe(0);
@@ -136,7 +136,7 @@ describe('announcement thread races', () => {
 			.expect(200)
 			.execute();
 		vi.restoreAllMocks();
-		const stored = await repository.findUnique(threadId);
+		const stored = await repository.channelData.findUnique(threadId);
 		expect(stored?.name).toBe('renamed');
 		expect(stored?.type).toBe(ChannelTypes.ANNOUNCEMENT_THREAD);
 		expect((await repository.threads.getState(threadId))?.type).toBe(ChannelTypes.ANNOUNCEMENT_THREAD);
@@ -161,7 +161,7 @@ describe('announcement thread races', () => {
 		});
 		await threadsRequest(harness, s.owner.token).put(`/channels/${thread.id}/pins/${message.id}`).expect(204).execute();
 		vi.restoreAllMocks();
-		const stored = await repository.findUnique(threadId);
+		const stored = await repository.channelData.findUnique(threadId);
 		expect(stored?.lastPinTimestamp).not.toBeNull();
 		expect(stored?.type).toBe(ChannelTypes.ANNOUNCEMENT_THREAD);
 		expect((await repository.threads.getState(threadId))?.type).toBe(ChannelTypes.ANNOUNCEMENT_THREAD);
@@ -184,7 +184,7 @@ describe('announcement thread races', () => {
 			.expect(204)
 			.execute();
 		vi.restoreAllMocks();
-		const parent = await repository.findUnique(createChannelID(BigInt(s.textId)));
+		const parent = await repository.channelData.findUnique(createChannelID(BigInt(s.textId)));
 		expect(parent?.type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
 		expect(parent?.permissionOverwrites?.size ?? 0).toBeGreaterThan(0);
 		expect((await repository.threads.getState(createChannelID(BigInt(thread.id))))?.type).toBe(
@@ -215,8 +215,10 @@ describe('announcement thread races', () => {
 			.expect(500)
 			.execute();
 		vi.restoreAllMocks();
-		expect((await repository.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(ChannelTypes.GUILD_TEXT);
-		expect((await repository.findUnique(threadId))?.type).toBe(ChannelTypes.PUBLIC_THREAD);
+		expect((await repository.channelData.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(
+			ChannelTypes.GUILD_TEXT,
+		);
+		expect((await repository.channelData.findUnique(threadId))?.type).toBe(ChannelTypes.PUBLIC_THREAD);
 		expect((await repository.threads.getState(threadId))?.type).toBe(ChannelTypes.PUBLIC_THREAD);
 	});
 

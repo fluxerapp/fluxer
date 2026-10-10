@@ -6,7 +6,7 @@ import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import {SERVER_MUTE_ATTRIBUTE} from '@app/api/infrastructure/LiveKitService';
 import {LiveKitWebhookService} from '@app/api/infrastructure/LiveKitWebhookService';
-import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {TrackSource, type WebhookEvent} from 'livekit-server-sdk';
 import {describe, expect, it, vi} from 'vitest';
@@ -33,7 +33,7 @@ function harness(pinnedServerId: string | null) {
 		voiceRoomStore,
 		gatewayService,
 		liveKitService,
-		new VoiceTopology({} as unknown as IVoiceRepository, null),
+		new VoiceTopology({} as unknown as VoiceRepository, null),
 	);
 	return {service, deleteRoomServer};
 }
@@ -92,7 +92,7 @@ function trackHarness() {
 		{} as unknown as IVoiceRoomStore,
 		{} as unknown as IGatewayService,
 		{muteMicrophoneTrack} as unknown as ILiveKitService,
-		new VoiceTopology({} as unknown as IVoiceRepository, null),
+		new VoiceTopology({} as unknown as VoiceRepository, null),
 	);
 	return {service, muteMicrophoneTrack};
 }

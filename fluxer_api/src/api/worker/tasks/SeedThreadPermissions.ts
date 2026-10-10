@@ -2,7 +2,7 @@
 
 import {createGuildID, type GuildID, guildIdToRoleId} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
+import type {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
 import {getCompiledChannelThreadsConfig, guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
@@ -41,7 +41,7 @@ async function enqueueThreadPermissionSeed(guildId: string): Promise<void> {
 	);
 }
 
-export async function ensureGuildThreadPermissionsSeeded(threads: IThreadRepository, guildId: GuildID): Promise<void> {
+export async function ensureGuildThreadPermissionsSeeded(threads: ThreadRepository, guildId: GuildID): Promise<void> {
 	const key = guildId.toString();
 	if (seededGuildIds.has(key)) return;
 	const marker = await threads.getGuildMarker(guildId);
@@ -74,7 +74,7 @@ const seedThreadPermissions: WorkerTaskHandler = async (payload) => {
 	const guild = await guildRepository.findUnique(guildId);
 	if (!guild) return;
 	await channelRepository.threads.ensureGuildMarker(guildId);
-	const channels = await channelRepository.listGuildChannels(guildId, 'complete');
+	const channels = await channelRepository.channelData.listGuildChannels(guildId, 'complete');
 	const updatedChannels: Array<Channel> = [];
 	for (const channel of channels) {
 		if (channel.permissionOverwrites.size === 0) continue;

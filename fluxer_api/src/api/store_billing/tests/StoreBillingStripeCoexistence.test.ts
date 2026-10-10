@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto, {randomUUID} from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -17,7 +17,7 @@ import {
 	seedStorePurchase,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {sendStripeWebhook, setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	buildFakeSubscriptionPurchase,
@@ -25,11 +25,9 @@ import {
 	type FakeGooglePlayDeveloperApi,
 } from '@app/api/test/msw/handlers/GooglePlayDeveloperApiHandlers';
 import {
-	createMockWebhookPayload,
 	createStripeApiHandlers,
 	createSubscriptionDeletedEvent,
 	type StripeApiHandlers,
-	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -96,20 +94,6 @@ describe('Store purchases alongside Stripe billing', () => {
 		server.resetHandlers();
 	});
 
-	async function sendStripeWebhook(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = crypto
-			.createHmac('sha256', Config.stripe.webhookSecret!)
-			.update(`${timestamp}.${payload}`)
-			.digest('hex');
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', `t=${timestamp},v1=${signature}`)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-
 	async function createStoreSubscriber(): Promise<{account: TestAccount; userId: UserID; expiresAt: Date}> {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
@@ -129,6 +113,7 @@ describe('Store purchases alongside Stripe billing', () => {
 		);
 
 		await sendStripeWebhook(
+			harness,
 			createSubscriptionDeletedEvent({
 				subscriptionId: 'sub_store_coexist_old',
 				customerId: 'cus_store_coexist',

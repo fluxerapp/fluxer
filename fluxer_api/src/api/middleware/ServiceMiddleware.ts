@@ -577,7 +577,7 @@ class RequestServices implements RequestScopedServices {
 	get singleCommunityService(): SingleCommunityService {
 		this.cachedSingleCommunityService ??= new SingleCommunityService(
 			getInstanceConfigRepository(),
-			this.guildService.data,
+			this.guildService.data.operations,
 			this.guildService.members,
 		);
 		return this.cachedSingleCommunityService;

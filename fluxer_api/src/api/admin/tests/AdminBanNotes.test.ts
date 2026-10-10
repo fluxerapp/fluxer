@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {decodeHeaderUtf8} from '@app/api/middleware/AuditLogMiddleware';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';

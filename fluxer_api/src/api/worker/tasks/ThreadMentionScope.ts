@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {
 	CreateThreadMember,
-	IThreadRepository,
 	ThreadMemberAddResult,
-} from '@app/api/channel/repositories/IThreadRepository';
+	ThreadRepository,
+} from '@app/api/channel/repositories/ThreadRepository';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {dispatchThreadEvents, threadMembersUpdateEvent} from '@app/api/channel/services/thread/ThreadDispatch';
 import {loadThreadView} from '@app/api/channel/services/thread/ThreadViews';
@@ -21,7 +21,7 @@ import {
 import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadState} from '@app/api/models/ThreadState';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	MAX_ROLE_MENTION_THREAD_ADDS,
 	MAX_THREAD_MEMBERS,
@@ -30,13 +30,13 @@ import {
 import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThreadMembersError';
 
 export interface ThreadMentionScopeDeps {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 }
 
 export async function threadRecipients(
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 	guildId: GuildID,
 	userIds: Array<UserID>,
 ): Promise<Set<UserID>> {
@@ -51,7 +51,7 @@ export async function threadRecipients(
 }
 
 export async function addThreadMembersWithinCap(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	state: ThreadState,
 	members: Array<CreateThreadMember>,
 ): Promise<ThreadMemberAddResult | null> {

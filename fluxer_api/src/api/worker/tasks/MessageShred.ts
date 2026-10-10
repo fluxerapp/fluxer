@@ -103,7 +103,7 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 		for (const validationChunk of chunkArray(typedSlice, VALIDATION_CHUNK_SIZE)) {
 			const messageFetches = validationChunk.map(
 				({channelId, messageId}: {channelId: ChannelID; messageId: MessageID}) =>
-					channelRepository.getMessage(channelId, messageId),
+					channelRepository.messages.getMessage(channelId, messageId),
 			);
 			const fetchedMessages = await Promise.all(messageFetches);
 			const deletableChunk: Array<{
@@ -130,7 +130,7 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 					deletionChunk.map(
 						async ({channelId, messageId, message}: {channelId: ChannelID; messageId: MessageID; message: Message}) => {
 							await purgeMessageAttachments(message, storageService, purgeQueue);
-							return channelRepository.deleteMessage(channelId, messageId, authorId);
+							return channelRepository.messages.deleteMessage(channelId, messageId, authorId);
 						},
 					),
 				);

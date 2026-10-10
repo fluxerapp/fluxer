@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, createMessageID, type MessageID} from '@app/api/BrandedTypes';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {Logger} from '@app/api/Logger';
 import type {Message} from '@app/api/models/Message';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
@@ -17,7 +17,7 @@ const MAX_STALE_DELETE_RATIO = 0.5;
 const HIT_LOOKUP_CONCURRENCY = 32;
 
 interface MessageLookupRepository {
-	readonly messages: Pick<IMessageRepository, 'getMessage'>;
+	readonly messages: Pick<MessageRepository, 'getMessage'>;
 }
 
 interface MessageSearchLookupResult extends SearchResult<SearchableMessage> {

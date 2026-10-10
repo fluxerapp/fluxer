@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
 import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -10,7 +10,7 @@ import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownG
 
 export class GuildMemberRoleService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly authService: GuildMemberAuthService,
 		private readonly validationService: GuildMemberValidationService,

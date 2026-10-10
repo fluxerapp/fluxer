@@ -140,7 +140,7 @@ export class InviteRequestService {
 				await this.channelService.channelData.operations.getChannelSystem(channelId),
 			getChannelMemberCount: async (channelId: ChannelID) =>
 				await this.channelService.channelData.operations.getChannelMemberCount(channelId),
-			getGuildResponse: async (guildId: GuildID) => await this.guildService.data.getPublicGuildData(guildId),
+			getGuildResponse: async (guildId: GuildID) => await this.guildService.data.operations.getPublicGuildData(guildId),
 			getGuildCounts: async (guildId: GuildID) => await this.gatewayService.getGuildCounts(guildId),
 			gatewayService: this.gatewayService,
 		};

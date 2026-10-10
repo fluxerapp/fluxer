@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {CrosspostWorkerService} from '@app/api/channel/services/message/CrosspostPropagation';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -34,7 +34,7 @@ function unusableDependency(): object {
 function createMessageDeletionService(): UserMessageDeletionService {
 	const unusable = unusableDependency();
 	return new UserMessageDeletionService({
-		channelRepository: unusable as IChannelRepository,
+		channelRepository: unusable as ChannelRepository,
 		gatewayService: unusable as IGatewayService,
 		storageService: unusable as IStorageService,
 		purgeQueue: unusable as IPurgeQueue,
@@ -50,7 +50,7 @@ function createGuildMemberOperationsService(): GuildMemberOperationsService {
 		async getMember() {
 			return null;
 		},
-	} as unknown as IGuildRepositoryAggregate;
+	} as unknown as GuildRepository;
 	const unusable = unusableDependency();
 	return new GuildMemberOperationsService(
 		guildRepository,

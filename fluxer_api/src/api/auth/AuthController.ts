@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
-import {Config} from '@app/api/Config';
 import {
 	onUsernameInstance,
 	RequireEmailAccountIdentity,
@@ -16,8 +15,8 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	AuthLoginResponse,
 	AuthorizeIpRequest,
@@ -646,10 +645,7 @@ export function AuthController(app: HonoApp) {
 				'Retrieve device and location information about a pending handoff request. Non-destructive – the code remains valid after this call.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('authRequestService').getHandoffInfo({
 				code: ctx.req.valid('param').code,
 				clientIp,
@@ -672,10 +668,7 @@ export function AuthController(app: HonoApp) {
 				'Complete the handoff process and authenticate on the target device using the handoff code. With the deep_link return method, responds with the deep link that hands the one-time grant back to the initiating app. Otherwise responds with no content.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('authRequestService').completeHandoff({
 				data: ctx.req.valid('json'),
 				clientIp,
@@ -700,10 +693,7 @@ export function AuthController(app: HonoApp) {
 				'Decline a handoff request after looking it up. The initiating device sees the denied status and the code can no longer be approved.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			await ctx.get('authRequestService').denyHandoff({code: ctx.req.valid('param').code, clientIp});
 			return ctx.body(null, 204);
 		},
@@ -723,10 +713,7 @@ export function AuthController(app: HonoApp) {
 				'Check the status of a handoff session. Returns whether the handoff has been completed or is still pending.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('authRequestService').getHandoffStatus({
 				code: ctx.req.valid('param').code,
 				clientIp,
@@ -750,10 +737,7 @@ export function AuthController(app: HonoApp) {
 				'Check the status of a handoff session using the poll secret from initiation. Returns the authentication token once the handoff is complete and the presented secret matches.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('authRequestService').getHandoffStatus({
 				code: ctx.req.valid('param').code,
 				clientIp,

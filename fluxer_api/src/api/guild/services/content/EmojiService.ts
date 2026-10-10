@@ -3,7 +3,7 @@
 import {createEmojiID, type EmojiID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {mapGuildEmojisWithUsersToResponse, mapGuildEmojiToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ContentHelpers} from '@app/api/guild/services/content/ContentHelpers';
 import type {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
@@ -29,7 +29,7 @@ import type {GuildEmojiResponse, GuildEmojiWithUserResponse} from '@fluxer/schem
 
 export class EmojiService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly gatewayService: IGatewayService,
 		private readonly avatarService: AvatarService,

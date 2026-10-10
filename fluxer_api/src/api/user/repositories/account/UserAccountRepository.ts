@@ -16,13 +16,24 @@ import {
 import {UserIndexRepository} from '@app/api/user/repositories/account/crud/UserIndexRepository';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
 import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
-import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	LEGACY_DEAD_USER_FLAGS_MASK,
 	LEGACY_PREMIUM_FLAGS_MASK,
 } from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+
+export interface UserDeletionScheduleUpdate {
+	pending_deletion_at: Date | null;
+	flags?: bigint;
+	deletion_reason_code?: number | null;
+	deletion_public_reason?: string | null;
+	deletion_audit_log_reason?: string | null;
+	deletion_scheduled_by?: UserID | null;
+	deletion_scheduled_at?: Date | null;
+	temp_banned_until?: Date | null;
+	first_refund_at?: Date | null;
+}
 
 const USER_FLAGS_WRITE_ATTEMPTS = 3;
 

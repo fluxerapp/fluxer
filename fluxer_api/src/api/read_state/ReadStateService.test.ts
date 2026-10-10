@@ -10,7 +10,7 @@ import {
 } from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {ReadState} from '@app/api/models/ReadState';
-import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import type {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {describe, expect, it, vi} from 'vitest';
@@ -38,7 +38,7 @@ describe('ReadStateService gateway side effects after the write', () => {
 				stored.push({channelId, messageId});
 				return {readState: makeReadState(channelId, messageId), previous: null};
 			}),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const gatewayService = {
 			clearPushChannelNotifications: vi.fn().mockRejectedValue(new BadGatewayError()),
 			dispatchPresence: vi.fn().mockResolvedValue(undefined),
@@ -64,7 +64,7 @@ describe('ReadStateService gateway side effects after the write', () => {
 				readState: makeReadState(channelId, messageId),
 				previous: null,
 			})),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const gatewayService = {
 			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
 			dispatchPresence: vi.fn().mockRejectedValue(new BadGatewayError()),
@@ -88,7 +88,7 @@ describe('ReadStateService gateway side effects after the write', () => {
 				stored.push(channelId.toString());
 				return {readState: makeReadState(channelId, messageId, 1), previous: null};
 			}),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const gatewayService = {
 			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
 			dispatchPresence: vi.fn().mockRejectedValue(new BadGatewayError()),
@@ -111,7 +111,7 @@ describe('ReadStateService gateway side effects after the write', () => {
 		const updated = [makeReadState(CHANNEL_ID, MESSAGE_ID)];
 		const repository = {
 			bulkAckMessages: vi.fn().mockResolvedValue(updated),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const gatewayService = {
 			clearPushChannelNotifications: vi.fn().mockRejectedValue(new BadGatewayError()),
 			dispatchPresence: vi.fn().mockResolvedValue(undefined),
@@ -138,7 +138,7 @@ describe('ReadStateService implicit acknowledgements', () => {
 				readState: makeReadState(channelId, messageId),
 				previous: params.previous,
 			})),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const clearPushChannelNotifications = vi.fn().mockResolvedValue(undefined);
 		const gatewayService = {
 			clearPushChannelNotifications,
@@ -211,7 +211,7 @@ describe('ReadStateService implicit acknowledgements', () => {
 				readState: makeReadState(channelId, messageId),
 				previous: makeReadState(channelId, createMessageID(30n), 1),
 			})),
-		} as unknown as IReadStateRepository;
+		} as unknown as ReadStateRepository;
 		const clearPushChannelNotifications = vi.fn(() => new Promise<void>(() => {}));
 		const gatewayService = {clearPushChannelNotifications} as unknown as IGatewayService;
 		const readState = await new ReadStateService(repository, gatewayService).ackMessage({

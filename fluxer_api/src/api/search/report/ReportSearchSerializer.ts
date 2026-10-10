@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IARSubmission} from '@app/api/report/IReportRepository';
+import type {IARSubmission} from '@app/api/report/ReportModels';
 import type {SearchableReport} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 

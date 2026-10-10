@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {collectEmbedContentHashes} from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import {
@@ -36,7 +36,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface MessageCrosspostServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
+	channelRepository: ChannelRepository;
 	channelAuthService: MessageChannelAuthService;
 	dispatchService: MessageDispatchService;
 	rateLimitService: IRateLimitService;

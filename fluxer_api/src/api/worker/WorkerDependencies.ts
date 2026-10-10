@@ -10,7 +10,6 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
 import {ConnectionService} from '@app/api/connection/ConnectionService';
 import {DonationRepository} from '@app/api/donation/DonationRepository';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -165,7 +164,7 @@ export interface WorkerDependencies {
 	channelService: ChannelService;
 	guildAuditLogService: GuildAuditLogService;
 	contactChangeLogService: UserContactChangeLogService;
-	donationRepository: IDonationRepository;
+	donationRepository: DonationRepository;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
 	storeEntitlementService: StoreEntitlementService;

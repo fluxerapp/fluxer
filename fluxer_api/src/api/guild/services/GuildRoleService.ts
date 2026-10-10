@@ -6,8 +6,7 @@ import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildMemberRepository} from '@app/api/guild/repositories/IGuildMemberRepository';
-import type {IGuildRoleRepository} from '@app/api/guild/repositories/IGuildRoleRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import {computeMovedIds, getMemberListRoleOrderIds} from '@app/api/guild/services/role/RoleOrderAuditUtils';
 import {
@@ -23,7 +22,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {GuildRole} from '@app/api/models/GuildRole';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {applyProtectedRolePermissions, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {computePermissionsDiff} from '@app/api/utils/PermissionUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -45,8 +44,6 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
-interface GuildRoleRepository extends IGuildRoleRepository, IGuildMemberRepository {}
-
 interface GuildAuth {
 	guildData: GuildResponse;
 	checkPermission: (permission: bigint) => Promise<void>;
@@ -67,13 +64,13 @@ type RoleUpdateData = Partial<{
 
 export class GuildRoleService {
 	constructor(
-		private readonly guildRepository: GuildRoleRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly cacheService: ICacheService,
 		private readonly gatewayService: IGatewayService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 	) {}
 
 	async systemCreateRole(params: {
@@ -270,7 +267,7 @@ export class GuildRoleService {
 			hoist: updateData.hoist ?? role.isHoisted,
 			mentionable: updateData.mentionable ?? role.isMentionable,
 		};
-		const updatedRole = await this.guildRepository.upsertRole(updatedRoleData, role.toRow());
+		const updatedRole = await this.guildRepository.upsertRole(updatedRoleData);
 		await this.dispatchGuildRoleUpdate({guildId, role: updatedRole});
 		const changes = this.guildAuditLogService.computeChanges(previousSnapshot, this.serializeRoleForAudit(updatedRole));
 		if (role.permissions !== updatedRole.permissions) {
@@ -449,14 +446,10 @@ export class GuildRoleService {
 			for (const update of updates) {
 				const role = roleMap.get(update.roleId)!;
 				if (role.hoistPosition === update.hoistPosition) continue;
-				const roleRow = role.toRow();
-				const updatedRole = await this.guildRepository.upsertRole(
-					{
-						...roleRow,
-						hoist_position: update.hoistPosition,
-					},
-					roleRow,
-				);
+				const updatedRole = await this.guildRepository.upsertRole({
+					...role.toRow(),
+					hoist_position: update.hoistPosition,
+				});
 				changedRoles.push(updatedRole);
 			}
 			if (changedRoles.length > 0) {
@@ -497,14 +490,7 @@ export class GuildRoleService {
 			const changedRoles: Array<GuildRole> = [];
 			for (const role of allRoles) {
 				if (role.hoistPosition === null) continue;
-				const roleRow = role.toRow();
-				const updatedRole = await this.guildRepository.upsertRole(
-					{
-						...roleRow,
-						hoist_position: null,
-					},
-					roleRow,
-				);
+				const updatedRole = await this.guildRepository.upsertRole({...role.toRow(), hoist_position: null});
 				changedRoles.push(updatedRole);
 			}
 			if (changedRoles.length > 0) {
@@ -697,11 +683,7 @@ export class GuildRoleService {
 		});
 		const reorderedIds = targetOrder.map((r) => r.id);
 		const reorderedRoles = this.reorderRolePositions({allRoles, reorderedIds, guildId});
-		const updatePromises = reorderedRoles.map((role) => {
-			const roleRow = role.toRow();
-			const oldRole = roleMap.get(role.id);
-			return this.guildRepository.upsertRole(roleRow, oldRole ? oldRole.toRow() : undefined);
-		});
+		const updatePromises = reorderedRoles.map((role) => this.guildRepository.upsertRole(role.toRow()));
 		await Promise.all(updatePromises);
 		const updatedRoles = await this.guildRepository.listRoles(guildId);
 		const changedRoles = updatedRoles.filter((role) => {

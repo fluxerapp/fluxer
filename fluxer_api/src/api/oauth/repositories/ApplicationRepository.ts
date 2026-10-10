@@ -9,7 +9,6 @@ import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/type
 import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Application} from '@app/api/models/Application';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import {Applications, ApplicationsByOwner} from '@app/api/Tables';
 import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -67,7 +66,7 @@ function buildAdminApplication(secretHash: string | null): Application {
 	return new Application(row);
 }
 
-export class ApplicationRepository implements IApplicationRepository {
+export class ApplicationRepository {
 	async getApplication(applicationId: ApplicationID): Promise<Application | null> {
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
 			const secretHash = await getAdminSecretHash();

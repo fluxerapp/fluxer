@@ -129,7 +129,7 @@ function planStatementName(prefix: string, plan: CandidatePlan): string | undefi
 	}
 }
 
-function normalizeCql(cql: string): string {
+export function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
 }
 
@@ -283,7 +283,7 @@ function compareValues(left: unknown, right: unknown): number {
 	return (l as number | string) < (r as number | string) ? -1 : 1;
 }
 
-function valuesEqual(left: unknown, right: unknown): boolean {
+export function valuesEqual(left: unknown, right: unknown): boolean {
 	if (left == null && right == null) return true;
 	if (left instanceof Date && right instanceof Date) return left.getTime() === right.getTime();
 	if (Buffer.isBuffer(left) && Buffer.isBuffer(right)) return left.equals(right);
@@ -363,7 +363,7 @@ function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): 
 	return 0;
 }
 
-function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
+export function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
 	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
 	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
 	const column = meta.orderBy.col as string;

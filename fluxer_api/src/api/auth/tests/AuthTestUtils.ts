@@ -260,6 +260,22 @@ export function totpCodeNow(secret: string): string {
 	return generateTotpCode(secret, Date.now());
 }
 
+export async function loginWithTotp(
+	harness: ApiTestHarness,
+	account: TestAccount,
+	secret: string,
+): Promise<TestAccount> {
+	const login = await loginUser(harness, {email: account.email, password: account.password});
+	if (!('mfa' in login)) {
+		throw new Error('Expected MFA login');
+	}
+	const mfaLogin = await createBuilder<{token: string}>(harness, '')
+		.post('/auth/login/mfa/totp')
+		.body({ticket: login.ticket, code: totpCodeNow(secret)})
+		.execute();
+	return {...account, token: mfaLogin.token};
+}
+
 export async function seedMfaTicket(
 	harness: ApiTestHarness,
 	ticket: string,

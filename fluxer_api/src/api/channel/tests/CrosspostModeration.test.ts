@@ -209,7 +209,11 @@ function helpers(): WorkerTaskHelpers {
 }
 
 async function listCopies(channelId: string, sourceId: string): Promise<Array<string>> {
-	const messages = await new ChannelRepository().listMessages(createChannelID(BigInt(channelId)), undefined, 100);
+	const messages = await new ChannelRepository().messages.listMessages(
+		createChannelID(BigInt(channelId)),
+		undefined,
+		100,
+	);
 	return messages
 		.filter(
 			(message) =>

@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
-import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {clearTestEmails, createTestAccount, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {clearDonationTestEmails, listDonationTestEmails} from '@app/api/donation/tests/DonationTestUtils';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {
+	sendStripeWebhook,
+	sendStripeWebhookExpectStripeError,
+	sendStripeWebhookRaw,
+	setupSyncStripeWebhookWorker,
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createCheckoutCompletedEvent,
-	createMockWebhookPayload,
 	createStripeApiHandlers,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -80,50 +81,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		Config.stripe.webhookSecret = originalWebhookSecret;
 		Config.stripe.prices = originalPrices;
 	});
-	function createWebhookSignature(payload: string, timestamp: number, secret: string): string {
-		const signedPayload = `${timestamp}.${payload}`;
-		const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-		return `t=${timestamp},v1=${signature}`;
-	}
-	async function sendWebhook(eventData: StripeWebhookEventData): Promise<{
-		received: boolean;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder<{
-			received: boolean;
-		}>(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-	async function sendWebhookRaw(eventData: StripeWebhookEventData): Promise<{
-		response: Response;
-		text: string;
-		json: unknown;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.executeRaw();
-	}
-	async function sendWebhookExpectStripeError(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.expect(400, APIErrorCodes.STRIPE_ERROR)
-			.execute();
-	}
 	describe('premium checkout', () => {
 		test('processes completed premium checkout session successfully', async () => {
 			const account = await createTestAccount(harness);
@@ -147,7 +104,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				subscriptionId: 'sub_test_1',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -189,7 +146,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			});
 			eventData.data.object.payment_intent = null;
 			eventData.data.object.payment_method_types = ['pix'];
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -226,7 +183,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				customerId: 'cus_new_123',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const user = await userRepository.findUnique(createUserID(BigInt(account.userId)));
 			expect(user?.stripeCustomerId).toBe('cus_new_123');
@@ -255,7 +212,10 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				}),
 				id: 'evt_duplicate_checkout_delivery_1',
 			};
-			const concurrentResponses = await Promise.all([sendWebhookRaw(eventData), sendWebhookRaw(eventData)]);
+			const concurrentResponses = await Promise.all([
+				sendStripeWebhookRaw(harness, eventData),
+				sendStripeWebhookRaw(harness, eventData),
+			]);
 			const statuses = concurrentResponses.map((response) => response.response.status).sort();
 			expect(statuses).toEqual([200, 400]);
 			expect(
@@ -277,7 +237,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				...eventData,
 				id: 'evt_duplicate_checkout_delivery_retry_1',
 			};
-			const retryResponse = await sendWebhook(retryEventData);
+			const retryResponse = await sendStripeWebhook(harness, retryEventData);
 			expect(retryResponse.received).toBe(true);
 			const userAfterRetry = await createBuilder<{
 				premium_type: number;
@@ -316,7 +276,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId,
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await createBuilder<{
 				premium_type: number;
@@ -332,7 +292,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId: 'cs_nonexistent_123',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 		});
 		test('handles external donate checkout sessions without internal payment records', async () => {
@@ -360,7 +320,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 		});
 		test('handles gift purchase correctly', async () => {
@@ -383,7 +343,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId,
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -401,17 +361,17 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			const eventData = createCheckoutCompletedEvent({
 				metadata: {is_donation: 'true'},
 			});
-			await sendWebhookExpectStripeError(eventData);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 		});
 		test('records donation with valid email and subscription', async () => {
-			await clearDonationTestEmails(harness);
+			await clearTestEmails(harness);
 			const donationEmail = 'donor@example.com';
 			const eventData = createCheckoutCompletedEvent({
 				customerId: 'cus_donation_1',
 				subscriptionId: 'sub_donation_1',
 				metadata: {is_donation: 'true', donation_email: donationEmail},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			const donationRepository = new DonationRepository();
@@ -419,7 +379,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			expect(donor).not.toBeNull();
 			expect(donor?.stripeCustomerId).toBe('cus_donation_1');
 			expect(donor?.stripeSubscriptionId).toBe('sub_donation_1');
-			const emails = await listDonationTestEmails(harness, {recipient: donationEmail});
+			const emails = await listTestEmails(harness, {recipient: donationEmail});
 			const confirmationEmail = emails.find((e) => e.type === 'donation_confirmation');
 			expect(confirmationEmail).toBeDefined();
 			expect(confirmationEmail?.to).toBe(donationEmail);

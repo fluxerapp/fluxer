@@ -9,7 +9,7 @@ import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcemen
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {Guild} from '@app/api/models/Guild';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {serializeGuildForAudit as serializeGuildForAuditUtil} from '@app/api/utils/AuditSerializationUtils';
 import {requirePermission} from '@app/api/utils/PermissionUtils';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -26,7 +26,7 @@ export class GuildDataHelpers {
 	constructor(
 		private readonly gatewayService: IGatewayService,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 	) {}
 
 	private readonly guildRepository = new GuildRepository();

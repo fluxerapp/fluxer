@@ -2,7 +2,7 @@
 
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
@@ -37,7 +37,7 @@ import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
 
 interface MessageDeleteServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
+	channelRepository: ChannelRepository;
 	storageService: IStorageService;
 	purgeQueue: IPurgeQueue;
 	validationService: MessageValidationService;

@@ -10,7 +10,7 @@ import {extractId} from '@app/api/stripe/StripeUtils';
 import {shouldBlockFurtherPurchases} from '@app/api/stripe/services/RefundAllowance';
 import {REFUND_ALLOWANCE_CLAIM_PREFIX} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -91,7 +91,7 @@ function getInvoicePaymentRef(invoice: Stripe.Invoice): {
 export class StripeRefundService {
 	constructor(
 		private readonly stripe: Stripe | null,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly subscriptionService: StripeSubscriptionService,
 	) {}
 

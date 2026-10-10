@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
@@ -21,9 +21,9 @@ import {MessageSystemService} from '@app/api/channel/services/message/MessageSys
 import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
@@ -32,7 +32,7 @@ import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -58,9 +58,9 @@ export class MessageService {
 	public readonly threadActivity: ThreadMessageActivity;
 
 	constructor(
-		channelRepository: IChannelRepositoryAggregate,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		readStateService: ReadStateService,
 		cacheService: ICacheService,
@@ -71,7 +71,7 @@ export class MessageService {
 		snowflakeService: ISnowflakeService,
 		rateLimitService: IRateLimitService,
 		purgeQueue: IPurgeQueue,
-		favoriteMemeRepository: IFavoriteMemeRepository,
+		favoriteMemeRepository: FavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,

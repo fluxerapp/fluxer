@@ -2,12 +2,12 @@
 
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {createEmojiID, type MessageID, type UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {MessageInteractionBase, type ParsedEmoji} from '@app/api/channel/services/interaction/MessageInteractionBase';
 import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -16,7 +16,7 @@ import type {Channel} from '@app/api/models/Channel';
 import type {MessageReaction} from '@app/api/models/MessageReaction';
 import type {User} from '@app/api/models/User';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -40,9 +40,9 @@ const REACTION_CUSTOM_EMOJI_REGEX = /^(.+):(\d+)$/;
 export class MessageReactionService extends MessageInteractionBase {
 	constructor(
 		gatewayService: IGatewayService,
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private limitConfigService: LimitConfigService,
 	) {
 		super(gatewayService);

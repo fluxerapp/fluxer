@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createMessageID, type UserID} from '@app/api/BrandedTypes';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {getCacheService, getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
@@ -80,8 +80,8 @@ export function oneToOneDmRecipient(channel: Pick<Channel, 'guildId' | 'type' | 
 	return others.length === 1 ? others[0]! : null;
 }
 
-type ConversationUsers = Pick<IUserRepository, 'getRelationship' | 'findExistingDmState' | 'findUnique'>;
-type ConversationMessages = Pick<IMessageRepository, 'listMessages'>;
+type ConversationUsers = Pick<UserRepository, 'getRelationship' | 'findExistingDmState' | 'findUnique'>;
+type ConversationMessages = Pick<MessageRepository, 'listMessages'>;
 
 export interface NewConversationCheck {
 	user: Pick<User, 'id' | 'isBot' | 'isSystem' | 'flags'>;

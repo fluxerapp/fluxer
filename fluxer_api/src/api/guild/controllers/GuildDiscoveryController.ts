@@ -151,7 +151,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 			if (!status || status.status !== DiscoveryApplicationStatus.APPROVED) {
 				throw new DiscoveryNotDiscoverableError();
 			}
-			const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
+			const guild = await ctx.get('guildService').data.operations.getGuildSystem(guildId);
 			if (guild.features.has(GuildFeatures.INVITES_DISABLED)) {
 				throw new InvitesDisabledError();
 			}

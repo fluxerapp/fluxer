@@ -227,7 +227,10 @@ describe('Guild Channel Positions', () => {
 			{id: coopVoice.id, parent_id: coopGames.id},
 		]);
 		const channelRepository = new ChannelRepository();
-		const channelsBeforeMove = await channelRepository.listGuildChannels(createGuildID(BigInt(guild.id)), 'enrolled');
+		const channelsBeforeMove = await channelRepository.channelData.listGuildChannels(
+			createGuildID(BigInt(guild.id)),
+			'enrolled',
+		);
 		const storedCoopText = channelsBeforeMove.find((channel) => channel.id.toString() === coopText.id);
 		const storedCoopVoice = channelsBeforeMove.find((channel) => channel.id.toString() === coopVoice.id);
 		expect(storedCoopText).toBeDefined();
@@ -235,8 +238,8 @@ describe('Guild Channel Positions', () => {
 		if (!storedCoopText || !storedCoopVoice) {
 			return;
 		}
-		await channelRepository.upsert({...storedCoopVoice.toRow(), position: 1});
-		await channelRepository.upsert({...storedCoopText.toRow(), position: 2});
+		await channelRepository.channelData.upsert({...storedCoopVoice.toRow(), position: 1});
+		await channelRepository.channelData.upsert({...storedCoopText.toRow(), position: 2});
 		await updateChannelPositions(harness, account.token, guild.id, [
 			{
 				id: frontDoor.id,

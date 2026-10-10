@@ -1,11 +1,6 @@
+import {clearTestEmails, createUniqueEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {DonationRepository} from '@app/api/donation/DonationRepository';
-import {
-	clearDonationTestEmails,
-	createDonationRequestLinkBuilder,
-	createUniqueEmail,
-	listDonationTestEmails,
-	TEST_DONOR_EMAIL,
-} from '@app/api/donation/tests/DonationTestUtils';
+import {createDonationRequestLinkBuilder, TEST_DONOR_EMAIL} from '@app/api/donation/tests/DonationTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -21,7 +16,7 @@ describe('POST /donations/request-link', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
-		await clearDonationTestEmails(harness);
+		await clearTestEmails(harness);
 	});
 	async function createDonor(email: string): Promise<void> {
 		await donationRepository.createDonor({
@@ -41,20 +36,20 @@ describe('POST /donations/request-link', () => {
 		test('sends magic link email when donor exists', async () => {
 			await createDonor(TEST_DONOR_EMAIL);
 			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
-			const emails = await listDonationTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
+			const emails = await listTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
 			expect(emails).toHaveLength(1);
 			expect(emails[0]?.type).toBe('donation_magic_link');
 		});
 		test('does not send email when donor does not exist', async () => {
 			const unknownEmail = createUniqueEmail('unknown');
 			await createDonationRequestLinkBuilder(harness).body({email: unknownEmail}).expect(204).execute();
-			const emails = await listDonationTestEmails(harness, {recipient: unknownEmail});
+			const emails = await listTestEmails(harness, {recipient: unknownEmail});
 			expect(emails).toHaveLength(0);
 		});
 		test('magic link token is 64-character hex string', async () => {
 			await createDonor(TEST_DONOR_EMAIL);
 			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
-			const emails = await listDonationTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
+			const emails = await listTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
 			const token = emails[0]?.metadata.token;
 			expect(token).toBeDefined();
 			expect(token).toHaveLength(64);
@@ -66,7 +61,7 @@ describe('POST /donations/request-link', () => {
 			await createDonor(TEST_DONOR_EMAIL);
 			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
 			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
-			const emails = await listDonationTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
+			const emails = await listTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
 			expect(emails).toHaveLength(2);
 			const token1 = emails[0]?.metadata.token;
 			const token2 = emails[1]?.metadata.token;

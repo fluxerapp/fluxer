@@ -318,7 +318,7 @@ describe('thread permission bits across guild modes', () => {
 			.execute();
 		const channelId = createChannelID(BigInt(channel.id));
 		const stored = async () => {
-			const overwrites = (await new ChannelRepository().findUnique(channelId))!.permissionOverwrites;
+			const overwrites = (await new ChannelRepository().channelData.findUnique(channelId))!.permissionOverwrites;
 			return {
 				everyone: overwrites.get(createRoleID(BigInt(guild.id))),
 				target: overwrites.get(createRoleID(BigInt(target.id))),
@@ -358,9 +358,14 @@ describe('thread permission bits across guild modes', () => {
 			.execute();
 		const repository = new ChannelRepository();
 		const before = await repository.channelData.countGuildChannels(guildId);
-		const source = (await repository.findUnique(createChannelID(BigInt(text.id))))!;
+		const source = (await repository.channelData.findUnique(createChannelID(BigInt(text.id))))!;
 		const forumId = createChannelID(BigInt(text.id) + 1n);
-		await repository.upsert({...source.toRow(), channel_id: forumId, type: ChannelTypes.GUILD_FORUM, name: 'forum'});
+		await repository.channelData.upsert({
+			...source.toRow(),
+			channel_id: forumId,
+			type: ChannelTypes.GUILD_FORUM,
+			name: 'forum',
+		});
 		expect(await repository.channelData.countGuildChannels(guildId)).toBe(before + 1);
 		await createBuilder(harness, owner.token)
 			.delete(`/channels/${forumId}`)
@@ -383,9 +388,14 @@ describe('thread permission bits across guild modes', () => {
 			.body({name: 'text', type: ChannelTypes.GUILD_TEXT, parent_id: category.id})
 			.execute();
 		const repository = new ChannelRepository();
-		const source = (await repository.findUnique(createChannelID(BigInt(text.id))))!;
+		const source = (await repository.channelData.findUnique(createChannelID(BigInt(text.id))))!;
 		const forumId = createChannelID(BigInt(text.id) + 1n);
-		await repository.upsert({...source.toRow(), channel_id: forumId, type: ChannelTypes.GUILD_FORUM, name: 'forum'});
+		await repository.channelData.upsert({
+			...source.toRow(),
+			channel_id: forumId,
+			type: ChannelTypes.GUILD_FORUM,
+			name: 'forum',
+		});
 		expect(await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId})).not.toBeNull();
 		await setChannelThreadsConfig({enabled: false});
 		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
@@ -398,12 +408,12 @@ describe('thread permission bits across guild modes', () => {
 				.patch(`/channels/${category.id}`)
 				.body({permission_overwrites: [{id: guild.id, type: 0, allow: '0', deny: Permissions.VIEW_CHANNEL.toString()}]})
 				.execute();
-			expect((await repository.findUnique(forumId))?.permissionOverwrites.size).toBe(1);
+			expect((await repository.channelData.findUnique(forumId))?.permissionOverwrites.size).toBe(1);
 			expect(updatedIds()).toContain(text.id);
 			expect(updatedIds()).not.toContain(forumId.toString());
 			dispatchSpy.mockClear();
 			await createBuilder(harness, owner.token).delete(`/channels/${category.id}`).expect(204).execute();
-			expect((await repository.findUnique(forumId))?.parentId).toBeNull();
+			expect((await repository.channelData.findUnique(forumId))?.parentId).toBeNull();
 			expect(updatedIds()).toContain(text.id);
 			expect(updatedIds()).not.toContain(forumId.toString());
 		} finally {
@@ -429,7 +439,7 @@ describe('thread permission bits across guild modes', () => {
 		const channelId = createChannelID(BigInt(channel.id));
 		const everyoneId = createRoleID(BigInt(guild.id));
 		const storedAllow = async () =>
-			(await new ChannelRepository().findUnique(channelId))?.permissionOverwrites.get(everyoneId)?.allow;
+			(await new ChannelRepository().channelData.findUnique(channelId))?.permissionOverwrites.get(everyoneId)?.allow;
 		await createBuilder(harness, owner.token)
 			.patch(`/channels/${channel.id}`)
 			.body({permission_overwrites: [{id: guild.id, type: 0, allow: Permissions.VIEW_CHANNEL.toString(), deny: '0'}]})
@@ -480,7 +490,7 @@ describe('thread permission bits across guild modes', () => {
 				.body([{id: child.id, parent_id: category.id, lock_permissions: true}])
 				.expect(204);
 			await (capable ? builder.header(FEATURES, CAPABLE) : builder).execute();
-			const stored = await new ChannelRepository().findUnique(createChannelID(BigInt(child.id)));
+			const stored = await new ChannelRepository().channelData.findUnique(createChannelID(BigInt(child.id)));
 			return stored?.permissionOverwrites.get(everyoneId)?.allow;
 		};
 		expect(await moveAndRead(true)).toBe(Permissions.SEND_MESSAGES | inThreads);

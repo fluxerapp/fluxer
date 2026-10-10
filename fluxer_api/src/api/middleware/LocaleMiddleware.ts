@@ -2,7 +2,7 @@
 
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Locales} from '@fluxer/constants/src/Locales';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 import {createMiddleware} from 'hono/factory';
 
 export const LocaleMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {

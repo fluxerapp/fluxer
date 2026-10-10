@@ -4,7 +4,7 @@ import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
@@ -25,7 +25,7 @@ import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumS
 import type {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
 import {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
 import {StripeSubscriptionWebhookHandler} from '@app/api/stripe/services/StripeSubscriptionWebhookHandler';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeWebhookNotAvailableError} from '@fluxer/errors/src/domains/payment/StripeWebhookNotAvailableError';
 import {StripeWebhookSignatureInvalidError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureInvalidError';
@@ -46,7 +46,7 @@ export class StripeWebhookService {
 
 	constructor(
 		private stripe: Stripe | null,
-		userRepository: IUserRepository,
+		userRepository: UserRepository,
 		userCacheService: UserCacheService,
 		sessionTerminator: ISessionTerminator,
 		emailService: IEmailService,
@@ -55,7 +55,7 @@ export class StripeWebhookService {
 		cacheService: ICacheService,
 		giftService: StripeGiftService,
 		premiumService: StripePremiumService,
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private ageVerificationService: AgeVerificationService | null,

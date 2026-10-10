@@ -2,7 +2,7 @@
 
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -18,7 +18,7 @@ import {resolveStoreAccessEnd} from '@app/api/store_billing/StoreBillingMappers'
 import {isTerminalStorePurchaseState} from '@app/api/store_billing/StoreBillingTypes';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {checkIsPremium, createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -43,8 +43,8 @@ interface SweepResult {
 }
 
 interface SweepDeps {
-	userRepository: IUserRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService;

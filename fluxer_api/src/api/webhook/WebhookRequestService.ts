@@ -3,7 +3,7 @@
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {maskThreadArtifactsFor} from '@app/api/channel/services/message/ThreadMessageResponses';
@@ -180,7 +180,7 @@ interface SweegoWebhookParams {
 export class WebhookRequestService {
 	constructor(
 		private readonly webhookService: WebhookService,
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly liveKitWebhookService: LiveKitWebhookService | null,
 		private readonly sweegoWebhookService: SweegoWebhookService,
@@ -410,7 +410,7 @@ export class WebhookRequestService {
 	}
 
 	private async mapMessageResponse(message: Message, _requestCache: RequestCache): Promise<MessageResponse> {
-		const channel = await this.channelRepository.findUnique(message.channelId);
+		const channel = await this.channelRepository.channelData.findUnique(message.channelId);
 		const response = await createMessageResponseDataService().buildMessage({
 			userId: createUserID(0n),
 			message,

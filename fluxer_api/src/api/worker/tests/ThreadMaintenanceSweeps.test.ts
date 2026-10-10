@@ -180,7 +180,7 @@ describe('thread maintenance sweeps', () => {
 	it('includes thread messages in user and guild harvests', async () => {
 		const s = await setup();
 		const harvested = await harvestMessages(
-			getChannelRepository(),
+			getChannelRepository().messages,
 			createUserID(BigInt(s.member.userId)),
 			Date.now(),
 			null,

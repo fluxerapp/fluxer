@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import {createMessageID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import type {CrosspostedMessageKey} from '@app/api/channel/repositories/ICrosspostedMessageRepository';
+import type {CrosspostedMessageKey} from '@app/api/channel/repositories/CrosspostedMessageRepository';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	collectEmbedContentHashes,
@@ -36,7 +36,7 @@ import type {
 	MessageEmbedChild,
 	MessageStickerItem,
 } from '@app/api/database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
@@ -49,8 +49,8 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {
 	CROSSPOST_PENDING_RECLAIM_AFTER_MS,
 	CROSSPOST_SOURCE_DELETED_CONTENT,
@@ -109,9 +109,9 @@ type CrosspostCopyPayloadResult = {kind: 'blocked'} | {kind: 'ready'; payload: C
 
 export interface CrosspostDeliveryDeps {
 	channelRepository: ChannelRepository;
-	webhookRepository: IWebhookRepository;
-	userRepository: IUserRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	webhookRepository: WebhookRepository;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 	gatewayService: IGatewayService;
 	storageService: IStorageService;
 	avatarService: AvatarService;
@@ -222,7 +222,7 @@ export class CrosspostDeliveryService {
 	async loadSource(channelId: ChannelID, messageId: MessageID): Promise<CrosspostSourceContext | null> {
 		const message = await this.deps.channelRepository.messages.getMessage(channelId, messageId);
 		if (!message) return null;
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		if (!channel?.guildId) return null;
 		const guild = await this.loadGuild(channel.guildId);
 		if (!guild) return null;
@@ -316,7 +316,7 @@ export class CrosspostDeliveryService {
 				const copyChannel =
 					existing.target_channel_id === target.channel.id
 						? target.channel
-						: await this.deps.channelRepository.findUnique(existing.target_channel_id);
+						: await this.deps.channelRepository.channelData.findUnique(existing.target_channel_id);
 				if (copyChannel) {
 					await this.announceCopy(copyChannel, copy);
 				}
@@ -370,7 +370,7 @@ export class CrosspostDeliveryService {
 			sourceFingerprint: context.fingerprint,
 		});
 		if (!marked) {
-			await this.deps.channelRepository.deleteMessage(target.channel.id, messageId, createUserID(0n));
+			await this.deps.channelRepository.messages.deleteMessage(target.channel.id, messageId, createUserID(0n));
 			return 'skipped';
 		}
 		await this.announceCopy(target.channel, copy);
@@ -417,7 +417,7 @@ export class CrosspostDeliveryService {
 			});
 			return message;
 		} catch (error) {
-			await this.deps.channelRepository.deleteMessage(target.channel.id, messageId, createUserID(0n));
+			await this.deps.channelRepository.messages.deleteMessage(target.channel.id, messageId, createUserID(0n));
 			await this.deps.channelRepository.crossposts.delete(
 				{sourceMessageId: context.message.id, webhookId: webhook.id},
 				{state: 'pending', target_message_id: messageId},
@@ -604,7 +604,7 @@ export class CrosspostDeliveryService {
 			},
 		);
 		if (!updated) return;
-		const channel = await this.deps.channelRepository.findUnique(row.target_channel_id);
+		const channel = await this.deps.channelRepository.channelData.findUnique(row.target_channel_id);
 		if (!channel) return;
 		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updated});
 		if (channel.indexedAt != null) {
@@ -663,7 +663,7 @@ export class CrosspostDeliveryService {
 			return;
 		}
 		if (outcome.kind === 'marked') {
-			const channel = await this.deps.channelRepository.findUnique(row.target_channel_id);
+			const channel = await this.deps.channelRepository.channelData.findUnique(row.target_channel_id);
 			if (channel) {
 				await dispatchMessageUpdateBroadcast({
 					gatewayService: this.deps.gatewayService,
@@ -686,7 +686,7 @@ export class CrosspostDeliveryService {
 			row.target_message_id,
 			async (fresh) => {
 				if (!fresh) return null;
-				await this.deps.channelRepository.deleteMessage(
+				await this.deps.channelRepository.messages.deleteMessage(
 					fresh.channelId,
 					fresh.id,
 					fresh.authorId ?? createUserID(0n),
@@ -701,7 +701,7 @@ export class CrosspostDeliveryService {
 			}
 			return;
 		}
-		const channel = await this.deps.channelRepository.findUnique(row.target_channel_id);
+		const channel = await this.deps.channelRepository.channelData.findUnique(row.target_channel_id);
 		if (channel) {
 			await dispatchChannelEvent({
 				gatewayService: this.deps.gatewayService,
@@ -717,7 +717,7 @@ export class CrosspostDeliveryService {
 	async deleteSourceMessage(channelId: ChannelID, messageId: MessageID): Promise<void> {
 		const removed = await this.writeLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) return null;
-			await this.deps.channelRepository.deleteMessage(
+			await this.deps.channelRepository.messages.deleteMessage(
 				channelId,
 				messageId,
 				fresh.authorId ?? createUserID(0n),
@@ -727,7 +727,7 @@ export class CrosspostDeliveryService {
 		});
 		if (!removed) return;
 		await purgeMessageAttachments(removed, this.deps.storageService, this.deps.purgeQueue);
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		if (channel) {
 			await dispatchChannelEvent({
 				gatewayService: this.deps.gatewayService,
@@ -877,7 +877,7 @@ export class CrosspostDeliveryService {
 	}
 
 	private async loadSyncTarget(channelId: ChannelID): Promise<CrosspostTarget | null> {
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		if (!channel?.guildId) return null;
 		const guild = await this.loadGuild(channel.guildId);
 		if (!guild) return null;
@@ -886,7 +886,7 @@ export class CrosspostDeliveryService {
 
 	private async loadParent(channel: Channel): Promise<Channel | null> {
 		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) return null;
-		return this.deps.channelRepository.findUnique(channel.parentId);
+		return this.deps.channelRepository.channelData.findUnique(channel.parentId);
 	}
 
 	private async loadGuild(guildId: GuildID): Promise<GuildResponse | null> {

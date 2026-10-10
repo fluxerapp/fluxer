@@ -4,7 +4,7 @@ import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {BillingSubscriptionRow} from '@app/api/database/types/BillingTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
@@ -22,7 +22,7 @@ import {extractId} from '@app/api/stripe/StripeUtils';
 import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from '@app/api/stripe/services/StripeCheckoutService';
 import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -74,14 +74,14 @@ export class StripeCheckoutWebhookHandler {
 
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private emailService: IEmailService,
 		private gatewayService: IGatewayService,
 		private productRegistry: ProductRegistry,
 		private cacheService: ICacheService,
 		private giftService: StripeGiftService,
 		private premiumService: StripePremiumService,
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 	) {}
 
 	async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {

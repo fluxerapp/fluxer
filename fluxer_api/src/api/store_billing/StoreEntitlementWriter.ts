@@ -11,7 +11,7 @@ import type {User} from '@app/api/models/User';
 import {selectActiveStoreSubscription} from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {shiftGiftExtensionEnd} from '@app/api/user/GiftExtensionShift';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -20,7 +20,7 @@ const USER_WRITE_ATTEMPTS = 3;
 
 interface StoreEntitlementWriterDeps {
 	repository: StoreBillingRepository;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 }

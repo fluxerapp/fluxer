@@ -190,11 +190,11 @@ export function workerHelpers(worker: SyncTaskWorkerService): WorkerTaskHelpers 
 
 export async function patchChannelRow(channelId: string, patch: Partial<ChannelRow>): Promise<void> {
 	const repository = new ChannelRepository();
-	const channel = await repository.findUnique(createChannelID(BigInt(channelId)));
+	const channel = await repository.channelData.findUnique(createChannelID(BigInt(channelId)));
 	if (!channel) {
 		throw new Error(`channel ${channelId} not found`);
 	}
-	await repository.upsert({...channel.toRow(), ...patch});
+	await repository.channelData.upsert({...channel.toRow(), ...patch});
 }
 
 export async function writeRow(message: Message, patch: Partial<MessageRow>): Promise<void> {

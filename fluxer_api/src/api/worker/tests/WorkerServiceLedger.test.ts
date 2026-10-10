@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {CreateJobInput, IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {CreateJobInput, JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import type {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {describe, expect, test} from 'vitest';
@@ -47,7 +47,7 @@ function createHarness(options?: {
 			if (options?.discardError) throw options.discardError;
 			discarded.push({jobId, createdAt});
 		},
-	} as unknown as IJobLedgerRepository;
+	} as unknown as JobLedgerRepository;
 	const queue = {
 		enqueue: async (taskType: string, payload: Record<string, unknown>) => {
 			calls.push('enqueue');

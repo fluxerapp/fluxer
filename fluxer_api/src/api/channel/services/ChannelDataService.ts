@@ -2,7 +2,7 @@
 
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
 import type {
 	ChannelTypeConversion,
@@ -16,7 +16,7 @@ import {ThreadModifyService} from '@app/api/channel/services/thread/ThreadModify
 import {pickThreadParentSettings} from '@app/api/channel/services/thread/ThreadParentSettings';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -25,13 +25,13 @@ import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService'
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	ChannelUpdateGatedRequest,
@@ -57,9 +57,9 @@ export class ChannelDataService {
 	public readonly threadModify: ThreadModifyService;
 
 	constructor(
-		channelRepository: IChannelRepositoryAggregate,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		storageService: IStorageService,
 		gatewayService: IGatewayService,
@@ -71,8 +71,8 @@ export class ChannelDataService {
 		voiceAvailabilityService: VoiceAvailabilityService | null,
 		messagePersistenceService: MessagePersistenceService,
 		guildAuditLogService: GuildAuditLogService,
-		inviteRepository: IInviteRepository,
-		webhookRepository: IWebhookRepository,
+		inviteRepository: InviteRepository,
+		webhookRepository: WebhookRepository,
 		limitConfigService: LimitConfigService,
 		rateLimitService: IRateLimitService,
 		cacheService: ICacheService,

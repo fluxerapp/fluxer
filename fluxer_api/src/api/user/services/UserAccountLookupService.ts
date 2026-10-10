@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
+import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
 import {hasFixedDiscriminator} from '@app/api/user/UserTag';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -36,14 +33,14 @@ interface ProfileFieldPrivacyContext {
 }
 
 interface UserAccountLookupServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	userChannelRepository: IUserChannelRepository;
-	userRelationshipRepository: IUserRelationshipRepository;
-	userSettingsRepository: IUserSettingsRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userAccountRepository: UserRepository;
+	userChannelRepository: UserRepository;
+	userRelationshipRepository: UserRepository;
+	userSettingsRepository: UserRepository;
+	guildRepository: GuildRepository;
 	guildService: GuildService;
 	discriminatorService: IDiscriminatorService;
-	connectionRepository: IConnectionRepository;
+	connectionRepository: ConnectionRepository;
 }
 
 export class UserAccountLookupService {

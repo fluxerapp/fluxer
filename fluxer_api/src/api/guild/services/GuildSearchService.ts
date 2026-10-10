@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {threadSearchIndexEnqueueCappedTotal} from '@app/api/channel/threads/ThreadMetrics';
 import {
 	guildActive,
@@ -21,7 +21,7 @@ import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponse
 import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
 import {channelRequiresAgeVerification} from '@app/api/search/SearchNsfwUtils';
 import {accessibleRequestedThreadIds, accessibleThreadIds} from '@app/api/search/ThreadSearchScope';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -46,10 +46,10 @@ export class GuildSearchService {
 	private readonly responseMapper: MessageSearchResponseMapper;
 
 	constructor(
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly gatewayService: IGatewayService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 	) {
 		this.responseMapper = new MessageSearchResponseMapper(this.channelRepository, this.userCacheService);
@@ -74,7 +74,7 @@ export class GuildSearchService {
 		const threadsVisible = viewerActive(viewer, guildId);
 		const explicitChannelIds = channelIds.length > 0;
 		if (!explicitChannelIds) {
-			const channels = await this.channelRepository.listGuildChannels(guildId, 'enrolled');
+			const channels = await this.channelRepository.channelData.listGuildChannels(guildId, 'enrolled');
 			channelIds = channels.filter((c) => threadsVisible || !c.isThreadOnly()).map((c) => c.id);
 		}
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
@@ -85,7 +85,7 @@ export class GuildSearchService {
 		}
 		const canIncludeNsfw = canUserAccessNsfw && (includeNsfwRequested || guildIsAgeRestricted);
 		const guildNsfw = guildData?.nsfw ?? false;
-		const channels = await this.channelRepository.listChannels(channelIds);
+		const channels = await this.channelRepository.channelData.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
 		for (const channel of channels) {
 			if (channel.guildId === guildId && (threadsVisible || !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))) {
@@ -103,7 +103,7 @@ export class GuildSearchService {
 		if (requestedThreads.length > 0) {
 			const threadIds = new Set(requestedThreads.map((thread) => thread.id.toString()));
 			const parentIds = requestedThreads.flatMap((thread) => (thread.parentId ? [thread.parentId] : []));
-			for (const parent of await this.channelRepository.listChannels(
+			for (const parent of await this.channelRepository.channelData.listChannels(
 				parentIds.filter((id) => !channelMap.has(id.toString())),
 			)) {
 				if (parent.guildId === guildId) channelMap.set(parent.id.toString(), parent);
@@ -357,7 +357,7 @@ export class GuildSearchService {
 			}
 		}
 		if (missingParentIds.length > 0) {
-			const parents = await this.channelRepository.listChannels(missingParentIds);
+			const parents = await this.channelRepository.channelData.listChannels(missingParentIds);
 			for (const parent of parents) {
 				lookup.set(parent.id.toString(), parent);
 			}
@@ -393,7 +393,7 @@ export class GuildSearchService {
 		threadParents: Map<string, Channel>,
 	): Promise<void> {
 		const threadsByGuild = new Map<string, Array<Channel>>();
-		for (const thread of await this.channelRepository.listChannels([...threadIds])) {
+		for (const thread of await this.channelRepository.channelData.listChannels([...threadIds])) {
 			const parent = thread.parentId === null ? undefined : parentById.get(thread.parentId.toString());
 			if (!thread.isThread() || !parent || thread.guildId === null || parent.guildId !== thread.guildId) continue;
 			const threads = threadsByGuild.get(thread.guildId.toString());
@@ -438,7 +438,7 @@ export class GuildSearchService {
 		await mapWithConcurrency(guildIds, GUILD_FANOUT_CONCURRENCY, async (guildId) => {
 			const [guildData, guildChannels, viewableChannels] = await Promise.all([
 				this.gatewayService.getGuildData({guildId, userId}),
-				this.channelRepository
+				this.channelRepository.channelData
 					.listGuildChannels(guildId, 'enrolled')
 					.then((channels) =>
 						channels.filter(

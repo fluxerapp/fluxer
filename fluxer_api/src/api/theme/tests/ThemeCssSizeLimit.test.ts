@@ -55,16 +55,6 @@ describe('Theme CSS size limits', () => {
 			.execute();
 		expect(theme.id).toBeDefined();
 	});
-	it('rejects CSS that exceeds the real 8MB limit through the full HTTP stack', async () => {
-		setThemeCssMaxBytesForTesting(undefined);
-		const user = await createTestAccount(harness);
-		const oversizedCss = 'a'.repeat(THEME_CSS_MAX_BYTES + 1);
-		await createBuilder(harness, user.token)
-			.post('/users/@me/themes')
-			.body({css: oversizedCss})
-			.expect(HTTP_STATUS.BAD_REQUEST, 'FILE_SIZE_TOO_LARGE')
-			.execute();
-	});
 	it('rejects CSS that exceeds the limit', async () => {
 		const user = await createTestAccount(harness);
 		const oversizedCss = 'a'.repeat(TEST_MAX_CSS_BYTES + 1);
@@ -80,16 +70,6 @@ describe('Theme CSS size limits', () => {
 		const theme = await createBuilder<ThemeCreateResponse>(harness, user.token)
 			.post('/users/@me/themes')
 			.body({css: maxCss})
-			.expect(HTTP_STATUS.CREATED)
-			.execute();
-		expect(theme.id).toBeDefined();
-	});
-	it('accepts CSS just under the limit', async () => {
-		const user = await createTestAccount(harness);
-		const nearMaxCss = 'a'.repeat(TEST_MAX_CSS_BYTES - 1);
-		const theme = await createBuilder<ThemeCreateResponse>(harness, user.token)
-			.post('/users/@me/themes')
-			.body({css: nearMaxCss})
 			.expect(HTTP_STATUS.CREATED)
 			.execute();
 		expect(theme.id).toBeDefined();

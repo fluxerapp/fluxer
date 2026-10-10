@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
-import type {ListMessagesOptions} from '@app/api/channel/repositories/IMessageRepository';
+import type {ListMessagesOptions} from '@app/api/channel/repositories/MessageRepository';
 import {BucketScanDirection, scanBucketsWithIndex} from '@app/api/channel/repositories/message/BucketScanEngine';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type QueryTemplate} from '@app/api/database/CassandraTypes';

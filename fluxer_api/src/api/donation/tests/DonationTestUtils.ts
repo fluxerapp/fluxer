@@ -1,35 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID} from 'node:crypto';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilderWithoutAuth, type TestRequestBuilder} from '@app/api/test/TestRequestBuilder';
 import {DONATION_CURRENCIES, type DonationCurrency} from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
-
-interface DonationTestEmailRecord {
-	to: string;
-	type: string;
-	timestamp: string;
-	metadata: Record<string, string>;
-}
-
-export async function listDonationTestEmails(
-	harness: ApiTestHarness,
-	params?: {
-		recipient?: string;
-	},
-): Promise<Array<DonationTestEmailRecord>> {
-	const query = params?.recipient ? `?recipient=${encodeURIComponent(params.recipient)}` : '';
-	const response = await createBuilderWithoutAuth<{
-		emails: Array<DonationTestEmailRecord>;
-	}>(harness)
-		.get(`/test/emails${query}`)
-		.execute();
-	return response.emails;
-}
-
-export async function clearDonationTestEmails(harness: ApiTestHarness): Promise<void> {
-	await createBuilderWithoutAuth(harness).delete('/test/emails').expect(204).execute();
-}
 
 export const TEST_DONOR_EMAIL = 'donor@test.com';
 export const TEST_MAGIC_LINK_TOKEN = 'a'.repeat(64);
@@ -83,8 +56,4 @@ export function createValidCheckoutBody(overrides?: Partial<DonationCheckoutRequ
 		interval: DONATION_INTERVALS.MONTH,
 		...overrides,
 	};
-}
-
-export function createUniqueEmail(prefix = 'donation'): string {
-	return `${prefix}-${randomUUID()}@test.com`;
 }

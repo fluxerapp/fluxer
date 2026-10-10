@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MessageID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {Logger} from '@app/api/Logger';
 
 export class MessageAnonymizationService {
-	constructor(private channelRepository: IChannelRepositoryAggregate) {}
+	constructor(private channelRepository: ChannelRepository) {}
 
 	async anonymizeMessagesByAuthor(originalAuthorId: UserID, newAuthorId: UserID): Promise<void> {
 		const CHUNK_SIZE = 100;

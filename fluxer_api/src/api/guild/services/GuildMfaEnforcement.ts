@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
@@ -21,7 +21,7 @@ const ELEVATED_MFA_PERMISSIONS =
 	ThreadPermissionFlags.MANAGE_THREADS;
 
 export async function createGuildMfaEnforcer(params: {
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	guildData: Pick<GuildResponse, 'mfa_level' | 'owner_id'>;
 	userId: UserID;
 }): Promise<(permission: bigint) => void> {

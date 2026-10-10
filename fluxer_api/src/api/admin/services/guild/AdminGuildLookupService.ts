@@ -4,11 +4,11 @@ import {mapGuildsToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {GuildID} from '@app/api/BrandedTypes';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {MEDIA_PROXY_ICON_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -22,9 +22,9 @@ import type {ListGuildEmojisResponse, ListGuildStickersResponse} from '@fluxer/s
 const ADMIN_STICKER_MEDIA_RUNG: MediaProxyImageSize = 320;
 
 interface AdminGuildLookupServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
-	userRepository: IUserRepository;
-	channelRepository: IChannelRepository;
+	guildRepository: GuildRepository;
+	userRepository: UserRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 }
 
@@ -39,7 +39,7 @@ export class AdminGuildLookupService {
 			return {guild: null};
 		}
 		const [channels, roles, ownerUser] = await Promise.all([
-			channelRepository.listGuildChannels(guildId, 'maintenance'),
+			channelRepository.channelData.listGuildChannels(guildId, 'maintenance'),
 			guildRepository.listRoles(guildId),
 			userRepository.findUnique(guild.ownerId),
 		]);

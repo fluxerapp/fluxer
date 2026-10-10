@@ -2,8 +2,8 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
-import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
@@ -15,10 +15,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserAccountLifecycleService} from '@app/api/user/services/UserAccountLifecycleService';
 import {UserAccountLookupService} from '@app/api/user/services/UserAccountLookupService';
 import {UserAccountNotesService} from '@app/api/user/services/UserAccountNotesService';
@@ -50,12 +47,6 @@ interface UpdateUserResult {
 	authSessionReplacement: AuthSessionReplacement | null;
 }
 
-interface UserAccountRepository
-	extends IUserAccountRepository,
-		IUserSettingsRepository,
-		IUserRelationshipRepository,
-		IUserChannelRepository {}
-
 export class UserAccountService {
 	readonly lookupService: UserAccountLookupService;
 	private readonly profileService: UserAccountProfileService;
@@ -64,8 +55,8 @@ export class UserAccountService {
 	readonly notesService: UserAccountNotesService;
 	readonly lifecycleService: UserAccountLifecycleService;
 	readonly updatePropagator: UserAccountUpdatePropagator;
-	private readonly userAccountRepository: UserAccountRepository;
-	private readonly guildRepository: IGuildRepositoryAggregate;
+	private readonly userAccountRepository: UserRepository;
+	private readonly guildRepository: GuildRepository;
 	private readonly searchIndexService: GuildMemberSearchIndexService;
 
 	constructor(
@@ -73,11 +64,11 @@ export class UserAccountService {
 		userCacheService: UserCacheService,
 		guildService: GuildService,
 		entityAssetService: EntityAssetService,
-		guildRepository: IGuildRepositoryAggregate,
+		guildRepository: GuildRepository,
 		discriminatorService: IDiscriminatorService,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		private readonly contactChangeLogService: UserContactChangeLogService,
-		connectionRepository: IConnectionRepository,
+		connectionRepository: ConnectionRepository,
 		readonly limitConfigService: LimitConfigService,
 	) {
 		const {

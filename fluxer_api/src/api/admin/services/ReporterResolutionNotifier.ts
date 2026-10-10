@@ -12,7 +12,7 @@ import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
-import type {IARSubmission} from '@app/api/report/IReportRepository';
+import type {IARSubmission} from '@app/api/report/ReportModels';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';

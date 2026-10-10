@@ -15,7 +15,7 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
-import {type IARSubmission, ReportStatus} from '@app/api/report/IReportRepository';
+import {type IARSubmission, ReportStatus} from '@app/api/report/ReportModels';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';

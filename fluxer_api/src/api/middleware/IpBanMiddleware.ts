@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminRepository} from '@app/api/admin/AdminRepository';
-import type {BannedIpEntry, BannedIpKind} from '@app/api/admin/IAdminRepository';
+import {AdminRepository, type BannedIpEntry, type BannedIpKind} from '@app/api/admin/AdminRepository';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';

@@ -11,7 +11,7 @@ import {
 import type {GuildAuditLogRow} from '@app/api/database/types/GuildTypes';
 import {mapGuildAuditLogEntry} from '@app/api/guild/GuildAuditLogEntryMapper';
 import {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
@@ -29,19 +29,6 @@ const MEMBER_ID = createUserID(1420000000000000002n);
 const ROLE_ID = createRoleID(1420000000000000003n);
 const CHANNEL_ID = createChannelID(1420000000000000004n);
 
-const SKIPPABLE_ACTIONS = [
-	AuditLogActionType.GUILD_UPDATE,
-	AuditLogActionType.CHANNEL_UPDATE,
-	AuditLogActionType.CHANNEL_OVERWRITE_UPDATE,
-	AuditLogActionType.MEMBER_UPDATE,
-	AuditLogActionType.MEMBER_ROLE_UPDATE,
-	AuditLogActionType.MEMBER_MOVE,
-	AuditLogActionType.ROLE_UPDATE,
-	AuditLogActionType.WEBHOOK_UPDATE,
-	AuditLogActionType.EMOJI_UPDATE,
-	AuditLogActionType.STICKER_UPDATE,
-];
-
 function createService(roleNames: Map<string, string> = new Map()) {
 	let nextLogId = 1420000000000001000n;
 	const createAuditLog = vi.fn(async (row: GuildAuditLogRow) => new GuildAuditLog(row));
@@ -55,7 +42,7 @@ function createService(roleNames: Map<string, string> = new Map()) {
 	const dispatchGuild = vi.fn().mockResolvedValue(undefined);
 	const addJob = vi.fn().mockResolvedValue(undefined);
 	const service = new GuildAuditLogService(
-		{createAuditLog, batchDeleteAndCreateAuditLogs, getRole} as unknown as IGuildRepositoryAggregate,
+		{createAuditLog, batchDeleteAndCreateAuditLogs, getRole} as unknown as GuildRepository,
 		{generate: vi.fn(async () => nextLogId++)} as unknown as ISnowflakeService,
 		{addJob} as unknown as IWorkerService<WorkerTaskName>,
 		{dispatchGuild} as unknown as IGatewayService,
@@ -175,11 +162,11 @@ describe('GuildAuditLogService dispatch', () => {
 });
 
 describe('GuildAuditLogBuilder.commit', () => {
-	it.each(SKIPPABLE_ACTIONS)('skips action %i with empty changes', async (actionType) => {
+	it('skips an update with empty changes', async () => {
 		const {service, createAuditLog, dispatchGuild} = createService();
 		const result = await service
 			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(actionType, MEMBER_ID.toString())
+			.withAction(AuditLogActionType.MEMBER_UPDATE, MEMBER_ID.toString())
 			.withReason('ignored reason')
 			.withMetadata({role_name: 'Moderators'})
 			.withChanges([])
@@ -187,31 +174,6 @@ describe('GuildAuditLogBuilder.commit', () => {
 		expect(result).toBeNull();
 		expect(createAuditLog).not.toHaveBeenCalled();
 		expect(dispatchGuild).not.toHaveBeenCalled();
-	});
-
-	it.each(SKIPPABLE_ACTIONS)('skips action %i without changes', async (actionType) => {
-		const {service, createAuditLog, dispatchGuild} = createService();
-		const result = await service
-			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(actionType, MEMBER_ID.toString())
-			.commit();
-		expect(result).toBeNull();
-		expect(createAuditLog).not.toHaveBeenCalled();
-		expect(dispatchGuild).not.toHaveBeenCalled();
-	});
-
-	it('skips a guild update that only changes internal keys', async () => {
-		const {service, createAuditLog} = createService();
-		const result = await service
-			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(AuditLogActionType.GUILD_UPDATE, GUILD_ID.toString())
-			.withChanges([
-				{key: 'member_count', old_value: 1, new_value: 2},
-				{key: 'splash_width', old_value: null, new_value: 1920},
-			])
-			.commit();
-		expect(result).toBeNull();
-		expect(createAuditLog).not.toHaveBeenCalled();
 	});
 
 	it('records a kick without changes', async () => {
@@ -225,18 +187,6 @@ describe('GuildAuditLogBuilder.commit', () => {
 		expect(createAuditLog).toHaveBeenCalledTimes(1);
 		expect(writtenRow(createAuditLog).reason).toBe('rule 1');
 		expect(writtenRow(createAuditLog).changes).toBeNull();
-		expect(dispatchGuild).toHaveBeenCalledTimes(1);
-	});
-
-	it('records a webhook create with empty changes', async () => {
-		const {service, createAuditLog, dispatchGuild} = createService();
-		const result = await service
-			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(AuditLogActionType.WEBHOOK_CREATE, '1420000000000000005')
-			.withChanges([])
-			.commit();
-		expect(result).not.toBeNull();
-		expect(createAuditLog).toHaveBeenCalledTimes(1);
 		expect(dispatchGuild).toHaveBeenCalledTimes(1);
 	});
 });

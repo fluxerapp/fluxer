@@ -4,11 +4,11 @@ import {
 	createAuthHarness,
 	createTestAccount,
 	createTotpSecret,
-	type TestAccount,
+	loginWithTotp,
 	totpCodeNow,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -20,38 +20,6 @@ interface BackupCodesResponse {
 }
 
 const SUDO_MODE_HEADER = 'X-Fluxer-Sudo-Mode-JWT';
-
-async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const loginResp = await createBuilderWithoutAuth<
-		| {
-				mfa: true;
-				ticket: string;
-		  }
-		| {
-				mfa: false;
-				token: string;
-		  }
-	>(harness)
-		.post('/auth/login')
-		.body({
-			email: account.email,
-			password: account.password,
-		})
-		.execute();
-	if (!loginResp.mfa) {
-		throw new Error('Expected MFA login');
-	}
-	const mfaLoginResp = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			ticket: loginResp.ticket,
-			code: totpCodeNow(secret),
-		})
-		.execute();
-	return {...account, token: mfaLoginResp.token};
-}
 
 describe('Auth sudo TOTP verification', () => {
 	let harness: ApiTestHarness;

@@ -9,7 +9,6 @@ import {
 	type VoiceRegionRow,
 	type VoiceServerRow,
 } from '@app/api/database/types/VoiceTypes';
-import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
 import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 function toIterable<T>(value: unknown): Array<T> {
@@ -40,7 +39,7 @@ const GET_SERVER_CQL = VoiceServers.selectCql({
 	where: [VoiceServers.where.eq('region_id'), VoiceServers.where.eq('server_id')],
 });
 
-export class VoiceRepository implements IVoiceRepository {
+export class VoiceRepository {
 	async listRegions(): Promise<Array<VoiceRegionRecord>> {
 		const rows = await fetchMany<VoiceRegionRow>(LIST_REGIONS_CQL, {});
 		return rows.map((row) => this.mapRegionRow(row));

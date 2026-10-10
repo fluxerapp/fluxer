@@ -10,7 +10,7 @@ import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {resolveMaxGuildMembersLimit} from '@app/api/guild/GuildMemberLimitUtils';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
 import type {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
 import type {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
@@ -32,7 +32,7 @@ import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
@@ -145,12 +145,12 @@ function joinSourceName(type: JoinSourceType): JoinSource {
 
 export class GuildMemberOperationsService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly channelService: ChannelService,
 		private readonly userCacheService: UserCacheService,
 		private readonly gatewayService: IGatewayService,
 		private readonly entityAssetService: EntityAssetService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly rateLimitService: IRateLimitService,
 		private readonly authService: GuildMemberAuthService,
 		private readonly validationService: GuildMemberValidationService,

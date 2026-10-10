@@ -2,7 +2,7 @@
 
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	type ChannelFollowerRemovalCopyMode,
 	scheduleDeletedChannelFollowerRemoval,
@@ -14,8 +14,8 @@ import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {guildActive, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
@@ -35,11 +35,11 @@ import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSeria
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {deleteThreadSearchDocuments} from '@app/api/search/thread/ThreadSearchService';
 import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '@app/api/Tables';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
@@ -185,18 +185,18 @@ function isSystemChannelType(type: number): boolean {
 
 export class GuildOperationsService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly channelRepository: IChannelRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly inviteRepository: InviteRepository,
 		private readonly channelService: ChannelService,
 		private readonly gatewayService: IGatewayService,
 		private readonly entityAssetService: EntityAssetService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly snowflakeService: ISnowflakeService,
-		private readonly webhookRepository: IWebhookRepository,
+		private readonly webhookRepository: WebhookRepository,
 		private readonly helpers: GuildDataHelpers,
 		private readonly limitConfigService: LimitConfigService,
-		private readonly discoveryRepository: IGuildDiscoveryRepository,
+		private readonly discoveryRepository: GuildDiscoveryRepository,
 	) {}
 
 	async getGuild({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildResponse> {
@@ -521,7 +521,7 @@ export class GuildOperationsService {
 		if (data.afk_channel_id !== undefined) {
 			if (data.afk_channel_id) {
 				const afkChannelId = createChannelID(data.afk_channel_id);
-				const afkChannel = await this.channelRepository.findUnique(afkChannelId);
+				const afkChannel = await this.channelRepository.channelData.findUnique(afkChannelId);
 				if (!afkChannel || afkChannel.guildId !== guildId) {
 					throw InputValidationError.fromCode('afk_channel_id', ValidationErrorCodes.AFK_CHANNEL_MUST_BE_IN_GUILD);
 				}
@@ -539,7 +539,7 @@ export class GuildOperationsService {
 		if (data.system_channel_id !== undefined) {
 			if (data.system_channel_id) {
 				const systemChannelId = createChannelID(data.system_channel_id);
-				const systemChannel = await this.channelRepository.findUnique(systemChannelId);
+				const systemChannel = await this.channelRepository.channelData.findUnique(systemChannelId);
 				if (!systemChannel || systemChannel.guildId !== guildId) {
 					throw InputValidationError.fromCode(
 						'system_channel_id',
@@ -768,7 +768,7 @@ export class GuildOperationsService {
 		if (!guild) {
 			throw new UnknownGuildError();
 		}
-		const channels = await this.channelRepository.listGuildChannels(guildId, 'complete');
+		const channels = await this.channelRepository.channelData.listGuildChannels(guildId, 'complete');
 		for (const channel of channels) {
 			await scheduleDeletedChannelFollowerRemoval({channel, crossposts: this.channelRepository.crossposts, copyMode});
 		}
@@ -805,7 +805,7 @@ export class GuildOperationsService {
 		for (const channel of channels) {
 			await this.channelService.attachments.purgeChannelAttachments(channel);
 		}
-		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
+		await Promise.all(channels.map((channel) => this.channelRepository.messages.deleteAllChannelMessages(channel.id)));
 		await Promise.all(
 			channels.map((channel) => deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}})),
 		);
@@ -815,7 +815,7 @@ export class GuildOperationsService {
 		}
 		if (threadIds.length > 0) {
 			const threadChannels = new Map(
-				(await this.channelRepository.listChannels(threadIds)).map((channel) => [channel.id, channel]),
+				(await this.channelRepository.channelData.listChannels(threadIds)).map((channel) => [channel.id, channel]),
 			);
 			await mapWithConcurrency(threadIds, THREAD_PURGE_CONCURRENCY, async (threadId) => {
 				const thread = threadChannels.get(threadId);

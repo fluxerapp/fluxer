@@ -5,7 +5,7 @@ import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestU
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {getCacheService, getPremiumStateReconciliationQueueService} from '@app/api/middleware/ServiceSingletons';
 import {findUser} from '@app/api/store_billing/tests/StoreBillingTestUtils';
@@ -78,7 +78,7 @@ describe('gift time around a Stripe subscription', () => {
 	const premiumService = new StripePremiumService(
 		users,
 		new NoopGatewayService(),
-		{} as IGuildRepositoryAggregate,
+		{} as GuildRepository,
 		{} as GuildService,
 	);
 

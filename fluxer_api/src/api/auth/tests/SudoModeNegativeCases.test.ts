@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomBytes} from 'node:crypto';
-import {createAuthHarness, createTestAccount, loginUser, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createAuthHarness,
+	createTestAccount,
+	createTotpSecret,
+	loginUser,
+	loginWithTotp,
+	type TestAccount,
+	totpCodeNow,
+} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {TotpGenerator} from '@app/api/utils/TotpGenerator';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const SUDO_MODE_HEADER = 'X-Fluxer-Sudo-Mode-JWT';
@@ -22,35 +28,8 @@ interface BackupCodesResponse {
 	}>;
 }
 
-function generateTotpSecret(): string {
-	const buffer = randomBytes(20);
-	const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-	let result = '';
-	for (let i = 0; i < buffer.length; i += 5) {
-		const bytes = [buffer[i]!, buffer[i + 1]!, buffer[i + 2]!, buffer[i + 3]!, buffer[i + 4]!];
-		const n = (bytes[0]! << 24) | (bytes[1]! << 16) | (bytes[2]! << 8) | bytes[3]!;
-		const indices = [
-			(n >> 3) & 0x1f,
-			((n >> 11) | ((bytes[4]! << 4) & 0xf)) & 0x1f,
-			((n >> 19) | ((bytes[4]! << 2) & 0x3c)) & 0x1f,
-			(bytes[4]! >> 1) & 0x1f,
-		];
-		result += base32Chars[indices[0]!];
-		result += base32Chars[indices[1]!];
-		result += base32Chars[indices[2]!];
-		result += base32Chars[indices[3]!];
-	}
-	return result;
-}
-
-async function generateTotpCode(secret: string): Promise<string> {
-	const totp = new TotpGenerator(secret);
-	const codes = await totp.generateTotp();
-	return codes[0]!;
-}
-
 async function enableTotpForAccount(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<void> {
-	const code = await generateTotpCode(secret);
+	const code = totpCodeNow(secret);
 	await createBuilder(harness, account.token)
 		.post('/users/@me/mfa/totp/enable')
 		.body({
@@ -61,29 +40,12 @@ async function enableTotpForAccount(harness: ApiTestHarness, account: TestAccoun
 		.execute();
 }
 
-async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const login = await loginUser(harness, {email: account.email, password: account.password});
-	if (!('mfa' in login)) {
-		throw new Error('Expected MFA login');
-	}
-	const mfaLoginResp = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			ticket: login.ticket,
-			code: await generateTotpCode(secret),
-		})
-		.execute();
-	return {...account, token: mfaLoginResp.token};
-}
-
 async function getSudoTokenViaMfa(harness: ApiTestHarness, token: string, secret: string): Promise<string> {
 	const {response} = await createBuilder<BackupCodesResponse>(harness, token)
 		.post('/users/@me/mfa/backup-codes')
 		.body({
 			mfa_method: 'totp',
-			mfa_code: await generateTotpCode(secret),
+			mfa_code: totpCodeNow(secret),
 			regenerate: false,
 		})
 		.executeWithResponse();
@@ -108,7 +70,7 @@ describe('Sudo mode negative cases', () => {
 	describe('invalid sudo token rejected', () => {
 		it('rejects malformed sudo token', async () => {
 			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
+			const secret = createTotpSecret();
 			await enableTotpForAccount(harness, account, secret);
 			const loggedIn = await loginWithTotp(harness, account, secret);
 			const invalidTokens = [
@@ -128,7 +90,7 @@ describe('Sudo mode negative cases', () => {
 		});
 		it('rejects empty sudo token header', async () => {
 			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
+			const secret = createTotpSecret();
 			await enableTotpForAccount(harness, account, secret);
 			const loggedIn = await loginWithTotp(harness, account, secret);
 			const {json: errResp} = await createBuilder<ErrorResponse>(harness, loggedIn.token)
@@ -166,7 +128,7 @@ describe('Sudo mode negative cases', () => {
 	describe('wrong MFA code rejected', () => {
 		it('rejects incorrect TOTP codes', async () => {
 			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
+			const secret = createTotpSecret();
 			await enableTotpForAccount(harness, account, secret);
 			const loggedIn = await loginWithTotp(harness, account, secret);
 			const wrongCodes = ['000000', '123456', '999999', '12345', '1234567', 'abcdef'];
@@ -185,12 +147,12 @@ describe('Sudo mode negative cases', () => {
 	describe('sudo token for wrong user rejected', () => {
 		it('rejects sudo token from different user', async () => {
 			const account1 = await createTestAccount(harness);
-			const secret1 = generateTotpSecret();
+			const secret1 = createTotpSecret();
 			await enableTotpForAccount(harness, account1, secret1);
 			const loggedIn1 = await loginWithTotp(harness, account1, secret1);
 			const user1SudoToken = await getSudoTokenViaMfa(harness, loggedIn1.token, secret1);
 			const account2 = await createTestAccount(harness);
-			const secret2 = generateTotpSecret();
+			const secret2 = createTotpSecret();
 			await enableTotpForAccount(harness, account2, secret2);
 			const loggedIn2 = await loginWithTotp(harness, account2, secret2);
 			const {json: errResp} = await createBuilder<ErrorResponse>(harness, loggedIn2.token)
@@ -243,7 +205,7 @@ describe('Sudo mode negative cases', () => {
 	describe('MFA registration without token fails', () => {
 		it('WebAuthn registration options do not issue sudo token', async () => {
 			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
+			const secret = createTotpSecret();
 			await enableTotpForAccount(harness, account, secret);
 			const loggedIn = await loginWithTotp(harness, account, secret);
 			const sudoToken = await getSudoTokenViaMfa(harness, loggedIn.token, secret);
@@ -259,7 +221,7 @@ describe('Sudo mode negative cases', () => {
 	describe('existing MFA token allows skipping MFA', () => {
 		it('sudo token from MFA allows skipping MFA verification on sensitive endpoint', async () => {
 			const account = await createTestAccount(harness);
-			const secret = generateTotpSecret();
+			const secret = createTotpSecret();
 			await enableTotpForAccount(harness, account, secret);
 			const loggedIn = await loginWithTotp(harness, account, secret);
 			const sudoToken = await getSudoTokenViaMfa(harness, loggedIn.token, secret);

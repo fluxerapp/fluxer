@@ -62,7 +62,7 @@ export function ThreadAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const thread = await ctx.get('channelRepository').findUnique(channelId);
+			const thread = await ctx.get('channelRepository').channelData.findUnique(channelId);
 			if (!thread) throw new UnknownChannelError();
 			if (!thread.isThread()) throw new InvalidChannelTypeError();
 			const adminUserId = ctx.get('adminUserId');

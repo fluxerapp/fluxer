@@ -9,7 +9,6 @@ import type {
 	GuildBanByUserIdRow,
 	GuildBanRow,
 } from '@app/api/database/types/GuildTypes';
-import {IGuildModerationRepository} from '@app/api/guild/repositories/IGuildModerationRepository';
 import {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import {GuildBan} from '@app/api/models/GuildBan';
 import {
@@ -47,7 +46,7 @@ const FETCH_GUILD_AUDIT_LOGS_BY_IDS_QUERY = GuildAuditLogs.selectCql({
 	where: [GuildAuditLogs.where.eq('guild_id'), GuildAuditLogs.where.in('log_id', 'log_ids')],
 });
 
-export class GuildModerationRepository extends IGuildModerationRepository {
+export class GuildModerationRepository {
 	async getBan(guildId: GuildID, userId: UserID): Promise<GuildBan | null> {
 		const ban = await fetchOne<GuildBanRow>(FETCH_GUILD_BAN_BY_GUILD_AND_USER_ID_QUERY, {
 			guild_id: guildId,

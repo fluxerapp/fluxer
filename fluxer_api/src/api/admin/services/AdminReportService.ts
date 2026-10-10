@@ -15,7 +15,7 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	createMessageResponseDataService,
@@ -25,7 +25,7 @@ import {
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
@@ -33,7 +33,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {describeReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {findReportReason, listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
-import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
+import type {IARMessageContext, IARSubmission} from '@app/api/report/ReportModels';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
@@ -57,8 +57,8 @@ import {seconds} from 'itty-time';
 interface AdminReportServiceDeps {
 	apiContext: ApiContext;
 	reportService: ReportService;
-	guildRepository: IGuildRepositoryAggregate;
-	channelRepository: IChannelRepository;
+	guildRepository: GuildRepository;
+	channelRepository: ChannelRepository;
 	storageService: IStorageService;
 	auditService: AdminAuditService;
 	userCacheService: UserCacheService;
@@ -541,7 +541,7 @@ export class AdminReportService {
 	}
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
 		return {...access, includeHidden: true};
 	}
@@ -628,9 +628,9 @@ export class AdminReportService {
 		if (reportLookupCache.channelNsfwByChannelId.has(channelIdString)) {
 			return reportLookupCache.channelNsfwByChannelId.get(channelIdString) ?? null;
 		}
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		const scope = channel
-			? await resolveNsfwScopeChannel(channel, (id) => this.deps.channelRepository.findUnique(id))
+			? await resolveNsfwScopeChannel(channel, (id) => this.deps.channelRepository.channelData.findUnique(id))
 			: null;
 		const channelNsfw = scope?.isNsfw ?? null;
 		reportLookupCache.channelNsfwByChannelId.set(channelIdString, channelNsfw);
@@ -665,7 +665,7 @@ export class AdminReportService {
 		if (!channelId) {
 			return null;
 		}
-		const channel = await this.deps.channelRepository.findUnique(channelId);
+		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		if (!channel?.guildId) {
 			return null;
 		}

@@ -5,7 +5,7 @@ import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {BanBy} from '@app/api/infrastructure/activity/Contract.generated';
@@ -16,7 +16,7 @@ import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildBan} from '@app/api/models/GuildBan';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -39,8 +39,8 @@ export class GuildModerationService {
 	private readonly searchIndexService: GuildMemberSearchIndexService;
 
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly userRepository: IUserRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly userRepository: UserRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly userCacheService: UserCacheService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,

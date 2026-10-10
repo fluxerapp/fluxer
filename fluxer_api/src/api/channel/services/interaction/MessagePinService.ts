@@ -2,7 +2,7 @@
 
 import type {MessageID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {MessageInteractionBase} from '@app/api/channel/services/interaction/MessageInteractionBase';
@@ -35,7 +35,7 @@ const PIN_LIST_UNBOUNDED_TIMESTAMP = new Date('9999-12-31T23:59:59.999Z');
 export class MessagePinService extends MessageInteractionBase {
 	constructor(
 		gatewayService: IGatewayService,
-		private channelRepository: IChannelRepositoryAggregate,
+		private channelRepository: ChannelRepository,
 		private snowflakeService: ISnowflakeService,
 		private messagePersistenceService: MessagePersistenceService,
 		private readonly guildAuditLogService: GuildAuditLogService,

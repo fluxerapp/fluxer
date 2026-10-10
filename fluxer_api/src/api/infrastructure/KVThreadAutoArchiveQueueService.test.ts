@@ -7,7 +7,7 @@ import {
 	createGuildID,
 	createUserID,
 } from '@app/api/BrandedTypes';
-import {ChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {

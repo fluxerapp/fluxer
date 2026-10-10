@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import {convertToSearchableAuditLog} from '@app/api/search/auditlog/AuditLogSearchSerializer';
 import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
 import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';

@@ -14,7 +14,7 @@ import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -32,7 +32,7 @@ import type Stripe from 'stripe';
 export class StripeGiftService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
 		private checkoutService: StripeCheckoutService,

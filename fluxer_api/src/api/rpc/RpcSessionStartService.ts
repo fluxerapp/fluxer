@@ -2,7 +2,7 @@
 
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -19,16 +19,16 @@ import {
 	timeRpcStepSync,
 } from '@app/api/rpc/RpcTimings';
 import type {UserData} from '@app/api/rpc/RpcTypes';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {RpcSessionTimings} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 
-interface SessionStartUserRepository extends Pick<IUserRepository, 'patchUpsert' | 'updateFlags'> {}
+interface SessionStartUserRepository extends Pick<UserRepository, 'patchUpsert' | 'updateFlags'> {}
 
-interface SessionStartGuildRepository extends Pick<IGuildRepositoryAggregate, 'getMember' | 'upsertMember'> {}
+interface SessionStartGuildRepository extends Pick<GuildRepository, 'getMember' | 'upsertMember'> {}
 
 interface SessionStartUserCacheService
 	extends Pick<UserCacheService, 'getUserPartialResponse' | 'setUserPartialResponseFromUserInBackground'> {}

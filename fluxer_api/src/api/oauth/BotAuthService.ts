@@ -2,15 +2,15 @@
 
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canOwnerRunBots} from '@app/api/user/UserHelpers';
 import {hashPassword, verifyPassword} from '@app/api/utils/PasswordUtils';
 
 export class BotAuthService {
 	constructor(
-		private readonly applicationRepository: IApplicationRepository,
-		private readonly users: Pick<IUserRepository, 'findUnique'>,
+		private readonly applicationRepository: ApplicationRepository,
+		private readonly users: Pick<UserRepository, 'findUnique'>,
 	) {}
 
 	private parseBotToken(token: string): {

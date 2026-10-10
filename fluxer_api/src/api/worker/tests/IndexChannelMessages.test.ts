@@ -35,8 +35,10 @@ function createHarness(messages: Array<Message> = []): {
 	setWorkerDependenciesForTest({
 		kvClient,
 		channelRepository: {
-			listMessages: async (_channelId: unknown, cursor: unknown) => (cursor === undefined ? messages : []),
-			findUnique: async () => null,
+			messages: {
+				listMessages: async (_channelId: unknown, cursor: unknown) => (cursor === undefined ? messages : []),
+			},
+			channelData: {findUnique: async () => null},
 		} as unknown as ChannelRepository,
 		userRepository: {listUsers: async () => []} as unknown as UserRepository,
 	});

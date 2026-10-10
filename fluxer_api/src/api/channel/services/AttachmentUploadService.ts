@@ -3,7 +3,7 @@
 import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {UploadedAttachment} from '@app/api/channel/AttachmentDTOs';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {
 	AttachmentUploadMode,
 	AttachmentUploadTraceRepository,
@@ -33,7 +33,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
@@ -111,8 +111,8 @@ const FORM_DATA_UPLOAD_CONCURRENCY = 2;
 
 export class AttachmentUploadService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private storageService: IStorageService,
 		private attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		private purgeQueue: IPurgeQueue,

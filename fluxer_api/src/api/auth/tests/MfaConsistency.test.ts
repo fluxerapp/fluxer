@@ -4,6 +4,7 @@ import {
 	createTestAccount,
 	createTotpSecret,
 	generateTotpCode,
+	loginWithTotp,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {
@@ -49,27 +50,6 @@ interface SudoModeRequiredResponse {
 		webauthn?: boolean;
 		backup_codes?: boolean;
 	};
-}
-
-async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
-	const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
-		.post('/auth/login')
-		.body({
-			email: account.email,
-			password: account.password,
-		})
-		.execute();
-	expect(login.mfa).toBe(true);
-	const mfaLogin = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			code: generateTotpCode(secret),
-			ticket: login.ticket,
-		})
-		.execute();
-	return {...account, token: mfaLogin.token};
 }
 
 async function setupWebAuthnOnlyUser(

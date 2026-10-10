@@ -6,7 +6,7 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {BotMfaMirrorService} from '@app/api/oauth/BotMfaMirrorService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -17,7 +17,7 @@ import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 export interface ApiServices {
-	users: IUserRepository;
+	users: UserRepository;
 	cache: ICacheService;
 	gateway: IGatewayService;
 	kv: IKVProvider;

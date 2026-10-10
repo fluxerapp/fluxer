@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {Logger} from '@app/api/Logger';
 import type {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {findLaneForTask, type WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -12,9 +12,9 @@ import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contract
 export class WorkerService implements IWorkerService<WorkerTaskName> {
 	private readonly queue: JetStreamWorkerQueue;
 	private readonly snowflake: ISnowflakeService;
-	private readonly ledger: IJobLedgerRepository;
+	private readonly ledger: JobLedgerRepository;
 
-	constructor(queue: JetStreamWorkerQueue, snowflake: ISnowflakeService, ledger: IJobLedgerRepository) {
+	constructor(queue: JetStreamWorkerQueue, snowflake: ISnowflakeService, ledger: JobLedgerRepository) {
 		this.queue = queue;
 		this.snowflake = snowflake;
 		this.ledger = ledger;

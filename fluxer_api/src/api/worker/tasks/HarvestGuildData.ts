@@ -235,7 +235,7 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 			let beforeMessageId: MessageID | undefined;
 			let channelDownloads: Array<PendingAttachmentDownload> = [];
 			while (messages.length < MESSAGE_LIMIT_PER_CHANNEL) {
-				const batch = await channelRepository.listMessages(channel.id, beforeMessageId, MESSAGE_BATCH_SIZE);
+				const batch = await channelRepository.messages.listMessages(channel.id, beforeMessageId, MESSAGE_BATCH_SIZE);
 				if (batch.length === 0) break;
 				for (const msg of batch) {
 					if (msg.authorId == null) continue;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, type GuildID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ThreadView} from '@app/api/channel/services/thread/ThreadMappers';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
 import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
@@ -51,10 +51,7 @@ async function readyService(): Promise<IThreadSearchService | null> {
 	return service;
 }
 
-export async function syncThreadSearchDocument(
-	repository: IChannelRepositoryAggregate,
-	threadId: ChannelID,
-): Promise<void> {
+export async function syncThreadSearchDocument(repository: ChannelRepository, threadId: ChannelID): Promise<void> {
 	const service = await readyService();
 	if (!service) return;
 	const state = await repository.threads.getState(threadId);
@@ -78,7 +75,7 @@ export async function deleteThreadSearchDocuments(threadIds: ReadonlyArray<Chann
 	}
 }
 
-export async function backfillThreadSearch(repository: IChannelRepositoryAggregate, guildId: GuildID): Promise<number> {
+export async function backfillThreadSearch(repository: ChannelRepository, guildId: GuildID): Promise<number> {
 	const service = await readyService();
 	if (!service || !guildActive(guildId)) return 0;
 	const threadIds = await repository.threads.listGuildThreadIds(guildId);

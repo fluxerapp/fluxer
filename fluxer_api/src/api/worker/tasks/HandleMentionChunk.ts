@@ -10,7 +10,7 @@ import {
 } from '@app/api/BrandedTypes';
 import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
-import type {ReadStateMarker} from '@app/api/read_state/IReadStateRepository';
+import type {ReadStateMarker} from '@app/api/read_state/ReadStateRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';

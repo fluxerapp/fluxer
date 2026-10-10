@@ -13,7 +13,6 @@ import type {WebhookRow, WebhooksBySourceChannelRow} from '@app/api/database/typ
 import {WEBHOOK_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {Webhook} from '@app/api/models/Webhook';
 import {Webhooks, WebhooksByChannel, WebhooksByGuild, WebhooksBySourceChannel} from '@app/api/Tables';
-import {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 
 const FETCH_WEBHOOK_BY_ID_CQL = Webhooks.selectCql({
 	where: Webhooks.where.eq('webhook_id'),
@@ -57,7 +56,7 @@ function createSourceChannelPageQuery(limit: number) {
 	});
 }
 
-export class WebhookRepository extends IWebhookRepository {
+export class WebhookRepository {
 	async findUnique(webhookId: WebhookID): Promise<Webhook | null> {
 		const result = await fetchOne<WebhookRow>(FETCH_WEBHOOK_BY_ID_CQL, {webhook_id: webhookId});
 		return result ? new Webhook(result) : null;

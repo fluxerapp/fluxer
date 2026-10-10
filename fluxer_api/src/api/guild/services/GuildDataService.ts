@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
 import {GuildOperationsService} from '@app/api/guild/services/data/GuildOperationsService';
 import {GuildOwnershipService} from '@app/api/guild/services/data/GuildOwnershipService';
@@ -15,43 +14,30 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
-import type {Guild} from '@app/api/models/Guild';
-import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
-import type {
-	GuildCreateRequest,
-	GuildUpdateRequest,
-	GuildVanityURLUpdateResponse,
-} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import type {
-	GuildPartialResponse,
-	GuildResponse,
-	GuildVanityURLResponse,
-} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 
 export class GuildDataService {
 	private readonly helpers: GuildDataHelpers;
-	private readonly operationsService: GuildOperationsService;
-	private readonly vanityService: GuildVanityService;
-	private readonly ownershipService: GuildOwnershipService;
+	readonly operations: GuildOperationsService;
+	readonly vanity: GuildVanityService;
+	readonly ownership: GuildOwnershipService;
 
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly channelRepository: IChannelRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly inviteRepository: InviteRepository,
 		private readonly channelService: ChannelService,
 		private readonly gatewayService: IGatewayService,
 		private readonly entityAssetService: EntityAssetService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly snowflakeService: ISnowflakeService,
-		private readonly webhookRepository: IWebhookRepository,
+		private readonly webhookRepository: WebhookRepository,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
 	) {
 		this.helpers = new GuildDataHelpers(this.gatewayService, this.guildAuditLogService, this.userRepository);
-		this.operationsService = new GuildOperationsService(
+		this.operations = new GuildOperationsService(
 			this.guildRepository,
 			this.channelRepository,
 			this.inviteRepository,
@@ -65,99 +51,7 @@ export class GuildDataService {
 			this.limitConfigService,
 			new GuildDiscoveryRepository(),
 		);
-		this.vanityService = new GuildVanityService(this.guildRepository, this.inviteRepository, this.helpers);
-		this.ownershipService = new GuildOwnershipService(this.guildRepository, this.userRepository, this.helpers);
-	}
-
-	async getGuild({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildResponse> {
-		return this.operationsService.getGuild({userId, guildId});
-	}
-
-	async getUserGuilds(
-		userId: UserID,
-		options?: {
-			before?: GuildID;
-			after?: GuildID;
-			limit?: number;
-			withCounts?: boolean;
-		},
-	): Promise<Array<GuildResponse>> {
-		return this.operationsService.getUserGuilds(userId, options);
-	}
-
-	async getPublicGuildData(guildId: GuildID): Promise<GuildPartialResponse> {
-		return this.operationsService.getPublicGuildData(guildId);
-	}
-
-	async getGuildSystem(guildId: GuildID): Promise<Guild> {
-		return this.operationsService.getGuildSystem(guildId);
-	}
-
-	async createGuild(
-		params: {
-			user: User;
-			data: GuildCreateRequest;
-			locale?: string | null;
-		},
-		auditLogReason?: string | null,
-	): Promise<GuildResponse> {
-		return this.operationsService.createGuild(params, auditLogReason);
-	}
-
-	async updateGuild(
-		params: {
-			userId: UserID;
-			guildId: GuildID;
-			data: GuildUpdateRequest;
-			requestCache: RequestCache;
-		},
-		auditLogReason?: string | null,
-	): Promise<{
-		guild: GuildResponse;
-		previousFeatures: Set<string>;
-		updatedFeatures: Set<string>;
-	}> {
-		return this.operationsService.updateGuild(params, auditLogReason);
-	}
-
-	async getVanityURL(params: {userId: UserID; guildId: GuildID}): Promise<GuildVanityURLResponse> {
-		return this.vanityService.getVanityURL(params);
-	}
-
-	async updateVanityURL(
-		params: {
-			userId: UserID;
-			guildId: GuildID;
-			code: string | null;
-			requestCache: RequestCache;
-		},
-		auditLogReason?: string | null,
-	): Promise<GuildVanityURLUpdateResponse> {
-		return this.vanityService.updateVanityURL(params, auditLogReason);
-	}
-
-	async deleteGuild(
-		params: {
-			user: User;
-			guildId: GuildID;
-		},
-		auditLogReason?: string | null,
-	): Promise<void> {
-		return this.operationsService.deleteGuild(params, auditLogReason);
-	}
-
-	async deleteGuildForAdmin(guildId: GuildID, _auditLogReason?: string | null): Promise<void> {
-		return this.operationsService.deleteGuildById(guildId);
-	}
-
-	async transferOwnership(
-		params: {
-			userId: UserID;
-			guildId: GuildID;
-			newOwnerId: UserID;
-		},
-		auditLogReason?: string | null,
-	): Promise<GuildResponse> {
-		return this.ownershipService.transferOwnership(params, auditLogReason);
+		this.vanity = new GuildVanityService(this.guildRepository, this.inviteRepository, this.helpers);
+		this.ownership = new GuildOwnershipService(this.guildRepository, this.userRepository, this.helpers);
 	}
 }

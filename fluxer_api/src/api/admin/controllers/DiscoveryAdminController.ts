@@ -13,7 +13,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import type {User} from '@app/api/models/User';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
@@ -65,13 +65,13 @@ interface GuildEnrichment {
 async function enrichGuilds(
 	rows: ReadonlyArray<GuildDiscoveryRow>,
 	guildService: GuildService,
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 ): Promise<Map<string, GuildEnrichment>> {
 	const map = new Map<string, GuildEnrichment>();
 	const guilds = await Promise.all(
 		rows.map(async (row) => {
 			try {
-				return await guildService.data.getGuildSystem(row.guild_id);
+				return await guildService.data.operations.getGuildSystem(row.guild_id);
 			} catch {
 				return null;
 			}

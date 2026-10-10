@@ -2,7 +2,7 @@
 
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	type DmSearchScope,
 	getDmChannelIdsForScope,
@@ -20,7 +20,7 @@ import type {IMessageSearchService} from '@app/api/search/IMessageSearchService'
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
 import {channelRequiresAgeVerification} from '@app/api/search/SearchNsfwUtils';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -40,9 +40,9 @@ export class GlobalSearchService {
 	private readonly responseMapper: MessageSearchResponseMapper;
 
 	constructor(
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly guildService: GuildService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 	) {
@@ -180,7 +180,7 @@ export class GlobalSearchService {
 		if (!channelId) {
 			return null;
 		}
-		const channel = await this.channelRepository.findUnique(channelId);
+		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		if (!channel || !isDmScopeChannelForUser(channel, userId)) {
 			return null;
 		}
@@ -190,7 +190,7 @@ export class GlobalSearchService {
 	private async ensureChannelsIndexed(channelIds: Array<string>): Promise<boolean> {
 		const channelBrandedIds = channelIds.map((id) => createChannelID(BigInt(id)));
 		const channels = await mapWithConcurrency(channelBrandedIds, CHANNEL_INDEX_CHECK_CONCURRENCY, (id) =>
-			this.channelRepository.findUnique(id),
+			this.channelRepository.channelData.findUnique(id),
 		);
 		const personalNotesIds = channelBrandedIds.filter((_id, i) => channels[i]?.type === ChannelTypes.DM_PERSONAL_NOTES);
 		const personalNotesData =

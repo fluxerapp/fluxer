@@ -2,14 +2,14 @@
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 interface AdminGuildManagementServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	gatewayService: IGatewayService;
 	guildService: GuildService;
 	auditService: AdminAuditService;
@@ -63,7 +63,7 @@ export class AdminGuildManagementService {
 	async deleteGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null): Promise<SuccessResponse> {
 		const {guildService, auditService} = this.deps;
 		const guildId = createGuildID(guildIdRaw);
-		await guildService.data.deleteGuildForAdmin(guildId, auditLogReason);
+		await guildService.data.operations.deleteGuildById(guildId);
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'guild',

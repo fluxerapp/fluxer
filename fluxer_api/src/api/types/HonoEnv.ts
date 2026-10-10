@@ -9,7 +9,7 @@ import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffS
 import type {SsoService} from '@app/api/auth/services/SsoService';
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import type {IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelRequestService} from '@app/api/channel/services/ChannelRequestService';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
@@ -23,7 +23,7 @@ import type {FavoriteMemeRequestService} from '@app/api/favorite_meme/FavoriteMe
 import type {FavoriteMemeService} from '@app/api/favorite_meme/FavoriteMemeService';
 import type {GatewayRequestService} from '@app/api/gateway/GatewayRequestService';
 import type {GifService} from '@app/api/gif/GifService';
-import type {IGuildDiscoveryService} from '@app/api/guild/services/GuildDiscoveryService';
+import type {GuildDiscoveryService} from '@app/api/guild/services/GuildDiscoveryService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
@@ -49,8 +49,8 @@ import type {BotAuthService} from '@app/api/oauth/BotAuthService';
 import type {OAuth2ApplicationsRequestService} from '@app/api/oauth/OAuth2ApplicationsRequestService';
 import type {OAuth2RequestService} from '@app/api/oauth/OAuth2RequestService';
 import type {OAuth2Service} from '@app/api/oauth/OAuth2Service';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {ReadStateRequestService} from '@app/api/read_state/ReadStateRequestService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {ReportRequestService} from '@app/api/report/ReportRequestService';
@@ -63,7 +63,7 @@ import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificat
 import type {ThemeService} from '@app/api/theme/ThemeService';
 import type {EntranceSoundPlayService} from '@app/api/user/entrance_sound/EntranceSoundPlayService';
 import type {EntranceSoundService} from '@app/api/user/entrance_sound/EntranceSoundService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {EmailChangeService} from '@app/api/user/services/EmailChangeService';
 import type {MfaBackupCodesChallengeService} from '@app/api/user/services/MfaBackupCodesChallengeService';
 import type {PasswordChangeService} from '@app/api/user/services/PasswordChangeService';
@@ -126,7 +126,7 @@ export interface HonoEnv {
 		channelRequestService: ChannelRequestService;
 		threadService: ThreadService;
 		messageRequestService: MessageRequestService;
-		channelRepository: IChannelRepository;
+		channelRepository: ChannelRepository;
 		connectionService: ConnectionService;
 		connectionRequestService: ConnectionRequestService;
 		blueskyOAuthService: IBlueskyOAuthService;
@@ -145,7 +145,7 @@ export interface HonoEnv {
 		favoriteMemeRequestService: FavoriteMemeRequestService;
 		gatewayService: IGatewayService;
 		gatewayRequestService: GatewayRequestService;
-		discoveryService: IGuildDiscoveryService;
+		discoveryService: GuildDiscoveryService;
 		guildService: GuildService;
 		inviteService: InviteService;
 		inviteRequestService: InviteRequestService;
@@ -167,7 +167,7 @@ export interface HonoEnv {
 		gifService: GifService;
 		themeService: ThemeService;
 		userCacheService: UserCacheService;
-		userRepository: IUserRepository;
+		userRepository: UserRepository;
 		userService: UserService;
 		userAccountRequestService: UserAccountRequestService;
 		userAuthRequestService: UserAuthRequestService;
@@ -186,8 +186,8 @@ export interface HonoEnv {
 		oauth2Service: OAuth2Service;
 		oauth2RequestService: OAuth2RequestService;
 		oauth2ApplicationsRequestService: OAuth2ApplicationsRequestService;
-		applicationRepository: IApplicationRepository;
-		oauth2TokenRepository: IOAuth2TokenRepository;
+		applicationRepository: ApplicationRepository;
+		oauth2TokenRepository: OAuth2TokenRepository;
 		botAuthService: BotAuthService;
 		sudoModeValid: boolean;
 		captchaVerified?: boolean;

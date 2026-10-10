@@ -3,10 +3,10 @@
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createAttachmentID, createChannelID, createMemeID, createMessageID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -22,11 +22,11 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 interface MessageOperationsHelpersDeps {
-	channelRepository: IChannelRepositoryAggregate;
+	channelRepository: ChannelRepository;
 	cacheService: ICacheService;
 	storageService: IStorageService;
 	snowflakeService: ISnowflakeService;
-	favoriteMemeRepository: IFavoriteMemeRepository;
+	favoriteMemeRepository: FavoriteMemeRepository;
 	mediaService: IMediaService;
 }
 

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, type MessageID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {withThreadContext} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {decrementThreadMessageCount} from '@app/api/channel/services/message/MessageHelpers';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 
 interface BulkDeleteDispatcherDeps {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	batchSize: number;
 }
@@ -30,7 +30,7 @@ export function createBulkDeleteDispatcher({channelRepository, gatewayService, b
 				continue;
 			}
 			const channelId = createChannelID(BigInt(channelIdStr));
-			const channel = await channelRepository.findUnique(channelId);
+			const channel = await channelRepository.channelData.findUnique(channelId);
 			if (channel) {
 				await decrementThreadMessageCount(channelRepository, channel, messageIdsBatch);
 				const payloadIds = messageIdsBatch.map((id) => id.toString());

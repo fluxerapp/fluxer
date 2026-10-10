@@ -2,7 +2,7 @@
 
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	enqueueChannelFollowerRemoval,
 	scheduleDeletedChannelFollowerRemoval,
@@ -35,7 +35,7 @@ import {
 import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ChannelHelpers} from '@app/api/guild/services/channel/ChannelHelpers';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import {hasThreadPermissionBits, resolveProtectedBitActor} from '@app/api/guild/services/ThreadPermissionBits';
@@ -44,7 +44,7 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -54,13 +54,13 @@ import type {Channel} from '@app/api/models/Channel';
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import type {ThreadState} from '@app/api/models/ThreadState';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES,
@@ -123,8 +123,8 @@ function assertOverwriteTarget(channel: Channel, viewer: ThreadViewer | undefine
 
 export class ChannelOperationsService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
 		private channelAuthService: ChannelAuthService,
 		private channelUtilsService: ChannelUtilsService,
@@ -132,9 +132,9 @@ export class ChannelOperationsService {
 		private liveKitService: ILiveKitService,
 		private voiceAvailabilityService: VoiceAvailabilityService | null,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private inviteRepository: IInviteRepository,
-		private webhookRepository: IWebhookRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private inviteRepository: InviteRepository,
+		private webhookRepository: WebhookRepository,
+		private guildRepository: GuildRepository,
 		private limitConfigService: LimitConfigService,
 		private rateLimitService: IRateLimitService,
 		private cacheService: ICacheService,

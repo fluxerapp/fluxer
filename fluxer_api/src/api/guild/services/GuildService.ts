@@ -3,7 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createWebhookID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {everEnabled, isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
@@ -19,7 +19,7 @@ import {
 	THREAD_AUDIT_LOG_ACTION_TYPES,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
 import {GuildDataService} from '@app/api/guild/services/GuildDataService';
@@ -38,9 +38,9 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import type {Webhook} from '@app/api/models/Webhook';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -99,25 +99,25 @@ export class GuildService {
 	public readonly content: GuildContentService;
 	public readonly channels: GuildChannelService;
 	public readonly search: GuildSearchService;
-	private readonly guildRepository: IGuildRepositoryAggregate;
+	private readonly guildRepository: GuildRepository;
 	private readonly cacheService: ICacheService;
 	private readonly userCacheService: UserCacheService;
-	private readonly webhookRepository: IWebhookRepository;
+	private readonly webhookRepository: WebhookRepository;
 	private readonly guildAuditLogService: GuildAuditLogService;
 	private readonly gatewayService: IGatewayService;
-	private readonly userRepository: IUserRepository;
+	private readonly userRepository: UserRepository;
 
 	constructor(
 		apiContext: ApiContext,
-		guildRepository: IGuildRepositoryAggregate,
-		private readonly channelRepository: IChannelRepository,
+		guildRepository: GuildRepository,
+		private readonly channelRepository: ChannelRepository,
 		inviteRepository: InviteRepository,
 		channelService: ChannelService,
 		userCacheService: UserCacheService,
 		entityAssetService: EntityAssetService,
 		avatarService: AvatarService,
 		assetDeletionQueue: IAssetDeletionQueue,
-		webhookRepository: IWebhookRepository,
+		webhookRepository: WebhookRepository,
 		guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
 	) {
@@ -218,7 +218,7 @@ export class GuildService {
 	): Promise<GuildResponse> {
 		const {guildId, requestCache} = params;
 		const {guild, previousFeatures, updatedFeatures} = await this.withGuildUpdateLock(guildId, requestCache, () =>
-			this.data.updateGuild(params, auditLogReason),
+			this.data.operations.updateGuild(params, auditLogReason),
 		);
 		if (
 			previousFeatures.has(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES) &&
@@ -258,7 +258,7 @@ export class GuildService {
 	async getEmojiMetadata(emojiId: EmojiID): Promise<GuildEmojiMetadataResponse> {
 		const emoji = await this.guildRepository.getEmojiById(emojiId);
 		if (!emoji) throw new UnknownGuildEmojiError();
-		const guild = await this.data.getGuildSystem(emoji.guildId);
+		const guild = await this.data.operations.getGuildSystem(emoji.guildId);
 		return {
 			id: emoji.id.toString(),
 			guild_id: guild.id.toString(),
@@ -271,7 +271,7 @@ export class GuildService {
 	async getStickerMetadata(stickerId: StickerID): Promise<GuildStickerMetadataResponse> {
 		const sticker = await this.guildRepository.getStickerById(stickerId);
 		if (!sticker) throw new UnknownGuildStickerError();
-		const guild = await this.data.getGuildSystem(sticker.guildId);
+		const guild = await this.data.operations.getGuildSystem(sticker.guildId);
 		return {
 			id: sticker.id.toString(),
 			guild_id: guild.id.toString(),
@@ -421,7 +421,7 @@ export class GuildService {
 		);
 		const channels =
 			candidateIds.length > 0
-				? await this.channelRepository.listChannels(candidateIds.map((id) => createChannelID(BigInt(id))))
+				? await this.channelRepository.channelData.listChannels(candidateIds.map((id) => createChannelID(BigInt(id))))
 				: [];
 		const gatedIds = new Set(
 			channels
@@ -435,7 +435,7 @@ export class GuildService {
 		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
 		if (channelIds.length === 0) return webhooks;
 		const forumIds = new Set(
-			(await this.channelRepository.listChannels(channelIds))
+			(await this.channelRepository.channelData.listChannels(channelIds))
 				.filter((channel) => channel.isThreadOnly())
 				.map((channel) => channel.id),
 		);
@@ -454,12 +454,14 @@ export class GuildService {
 			.map((id) => createChannelID(BigInt(id)));
 		if (threadIds.length === 0) return [];
 		const [channels, states, stats] = await Promise.all([
-			this.channelRepository.listChannels(threadIds),
+			this.channelRepository.channelData.listChannels(threadIds),
 			this.channelRepository.threads.getStates(threadIds),
 			this.channelRepository.threads.getStatsMany(threadIds),
 		]);
 		const stateById = new Map(states.map((state) => [state.threadId.toString(), state]));
-		const parents = await this.channelRepository.listChannels([...new Set(states.map((state) => state.parentId))]);
+		const parents = await this.channelRepository.channelData.listChannels([
+			...new Set(states.map((state) => state.parentId)),
+		]);
 		const parentTypeById = new Map(parents.map((parent) => [parent.id.toString(), parent.type]));
 		return channels.flatMap((channel) => {
 			const state = stateById.get(channel.id.toString());

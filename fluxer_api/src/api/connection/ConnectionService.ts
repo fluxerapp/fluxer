@@ -4,6 +4,12 @@ import {randomUUID} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {BlueskyCallbackResult} from '@app/api/bluesky/IBlueskyOAuthService';
 import {mapConnectionToResponse} from '@app/api/connection/ConnectionMappers';
+import type {
+	ConnectionRepository,
+	ConnectionSortOrderUpdate,
+	CreateConnectionParams,
+	UpdateConnectionParams,
+} from '@app/api/connection/ConnectionRepository';
 import {createDomainConnectionId} from '@app/api/connection/DomainConnectionId';
 import {BlueskyOAuthNotEnabledError} from '@app/api/connection/errors/BlueskyOAuthNotEnabledError';
 import {ConnectionAlreadyExistsError} from '@app/api/connection/errors/ConnectionAlreadyExistsError';
@@ -11,13 +17,6 @@ import {ConnectionInvalidTypeError} from '@app/api/connection/errors/ConnectionI
 import {ConnectionLimitReachedError} from '@app/api/connection/errors/ConnectionLimitReachedError';
 import {ConnectionNotFoundError} from '@app/api/connection/errors/ConnectionNotFoundError';
 import {ConnectionVerificationFailedError} from '@app/api/connection/errors/ConnectionVerificationFailedError';
-import type {
-	ConnectionSortOrderUpdate,
-	CreateConnectionParams,
-	IConnectionRepository,
-	UpdateConnectionParams,
-} from '@app/api/connection/IConnectionRepository';
-import {IConnectionService, type InitiateConnectionResult} from '@app/api/connection/IConnectionService';
 import {DomainConnectionVerifier} from '@app/api/connection/verification/DomainConnectionVerifier';
 import type {RevisionedUserConnectionRow, UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -30,13 +29,13 @@ import {
 } from '@fluxer/constants/src/ConnectionConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 
-export class ConnectionService extends IConnectionService {
+export type InitiateConnectionResult = Record<string, never>;
+
+export class ConnectionService {
 	constructor(
-		private readonly repository: IConnectionRepository,
+		private readonly repository: ConnectionRepository,
 		private readonly gateway: IGatewayService,
-	) {
-		super();
-	}
+	) {}
 
 	async getConnectionsForUser(userId: UserID): Promise<Array<UserConnectionRow>> {
 		return this.repository.findByUserId(userId);

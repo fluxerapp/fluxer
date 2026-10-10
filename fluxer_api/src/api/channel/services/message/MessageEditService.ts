@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createGuildID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageUpdated} from '@app/api/channel/services/message/MessageActivity';
@@ -22,8 +22,8 @@ import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation, oneToOneDmRecipient} from '@app/api/user/NewConversationLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -40,8 +40,8 @@ interface EditMessageResult {
 }
 
 interface MessageEditServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
-	userRepository: IUserRepository;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
 	validationService: MessageValidationService;
 	persistenceService: MessagePersistenceService;
 	channelAuthService: MessageChannelAuthService;

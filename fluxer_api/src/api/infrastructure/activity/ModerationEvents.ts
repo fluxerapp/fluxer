@@ -4,8 +4,7 @@ import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {anonymousActivityMeta} from '@app/api/infrastructure/activity/ActivityMeta';
 import type {BanBy, ReportOutcome, ReportTarget, ResolvedBy} from '@app/api/infrastructure/activity/Contract.generated';
-import type {IARSubmission} from '@app/api/report/IReportRepository';
-import {ReportType} from '@app/api/report/IReportRepository';
+import {type IARSubmission, ReportType} from '@app/api/report/ReportModels';
 
 interface GuildBanFacts {
 	guildId: GuildID;

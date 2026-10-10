@@ -25,7 +25,7 @@ import {
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	type Currency,
 	getCurrencyPreferences,
@@ -123,7 +123,7 @@ interface EuWithdrawalWaiverContext {
 export class StripeCheckoutService {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: ProductRegistry,
 		private cacheService: ICacheService,
 		private storeEntitlementService: StoreEntitlementService | null = null,

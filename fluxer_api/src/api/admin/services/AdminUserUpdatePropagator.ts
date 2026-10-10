@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {propagatePartialUserChange} from '@app/api/user/services/PartialUserChangePropagation';
 import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 
 interface AdminUserUpdatePropagatorDeps {
 	userCacheService: UserCacheService;
-	userRepository: IUserRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 	gatewayService: IGatewayService;
 }
 

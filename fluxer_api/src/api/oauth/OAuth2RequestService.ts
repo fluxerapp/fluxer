@@ -21,8 +21,8 @@ import {
 } from '@app/api/oauth/OAuth2Mappers';
 import {filterOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
 import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from '@app/api/oauth/OAuth2Service';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
@@ -69,8 +69,8 @@ export class OAuth2RequestService {
 	constructor(
 		private readonly apiContext: ApiContext,
 		private readonly oauth2Service: OAuth2Service,
-		private readonly applicationRepository: IApplicationRepository,
-		private readonly oauth2TokenRepository: IOAuth2TokenRepository,
+		private readonly applicationRepository: ApplicationRepository,
+		private readonly oauth2TokenRepository: OAuth2TokenRepository,
 		private readonly botAuthService: BotAuthService,
 		private readonly applicationService: ApplicationService,
 		private readonly guildService: GuildService,

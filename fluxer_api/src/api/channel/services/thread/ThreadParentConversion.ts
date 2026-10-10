@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {type ThreadDispatchEvent, threadUpdateEvent} from '@app/api/channel/services/thread/ThreadDispatch';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
 import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
@@ -19,7 +19,7 @@ export const PARENT_CONVERSION_LOCK_TTL_SECONDS = 30;
 export type ParentThreads = Array<{threadId: ChannelID; type: number}>;
 
 export async function loadConvertibleParentThreads(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	guildId: GuildID,
 	parent: Channel,
 	nextType: number,
@@ -36,7 +36,7 @@ export async function loadConvertibleParentThreads(
 }
 
 export async function retypeParentThreads<T>(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	threads: ParentThreads,
 	parentType: number,
 	writeParent: () => Promise<T>,
@@ -63,7 +63,7 @@ export async function retypeParentThreads<T>(
 }
 
 export async function retypedThreadEvents(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	parent: Channel,
 	active: Array<ThreadState>,
 ): Promise<Array<ThreadDispatchEvent>> {

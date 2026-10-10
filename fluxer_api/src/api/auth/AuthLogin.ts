@@ -31,6 +31,7 @@ import type {User} from '@app/api/models/User';
 import {findPersonByLoginHandle, type ParsedLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {type ValidationErrorCode, ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -42,7 +43,6 @@ import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/
 import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
@@ -240,10 +240,7 @@ export async function login(
 		}
 	};
 	await enforceRateLimits(identifier.rateLimits);
-	const clientIp = requireClientIp(request, {
-		trustClientIpHeader: config.proxy.trust_client_ip_header,
-		clientIpHeaderName: config.proxy.client_ip_header,
-	});
+	const clientIp = requireConfiguredClientIp(request, config.proxy);
 	const sourceKey = getSameIpDecisionKey(clientIp) ?? clientIp;
 	await enforceRateLimits([
 		...identifier.sourceRateLimits(sourceKey),

@@ -10,7 +10,7 @@ import {
 	type UserID,
 	vanityCodeToInviteCode,
 } from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -19,7 +19,7 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import type {UpdateGuildVanityRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 
 interface AdminGuildVanityServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	inviteRepository: InviteRepository;
 	auditService: AdminAuditService;
 	updatePropagator: AdminGuildUpdatePropagator;

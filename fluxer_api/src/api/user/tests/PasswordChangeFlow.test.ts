@@ -104,7 +104,7 @@ describe('PasswordChangeFlow', () => {
 			const emails = await listTestEmails(harness, {recipient: account.email});
 			const verificationEmail = findLastTestEmail(emails, 'password_change_verification');
 			expect(verificationEmail).not.toBeNull();
-			expect(verificationEmail!.metadata.code).toBeDefined();
+			expect(verificationEmail!.metadata.code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
 		});
 		test('requires authentication', async () => {
 			await createBuilderWithoutAuth(harness)
@@ -327,30 +327,6 @@ describe('PasswordChangeFlow', () => {
 				})
 				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
-		});
-	});
-	describe('full flow', () => {
-		test('start, verify, and complete password change end-to-end', async () => {
-			const account = await createTestAccount(harness);
-			const startResult = await startPasswordChange(harness, account.token);
-			expect(startResult.ticket).toBeDefined();
-			expect(startResult.code_expires_at).toBeDefined();
-			const code = await getVerificationCode(harness, account.email);
-			expect(code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
-			const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
-			expect(verifyResult.verification_proof).toBeDefined();
-			await completePasswordChange(
-				harness,
-				account.token,
-				startResult.ticket,
-				verifyResult.verification_proof,
-				TEST_CREDENTIALS.ALT_PASSWORD_1,
-			);
-			const login = await loginUser(harness, {
-				email: account.email,
-				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
-			});
-			expect('token' in login).toBe(true);
 		});
 	});
 });

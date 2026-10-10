@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {
 	type AttachmentRequestData,
 	mergeUploadWithClientData,
 	type UploadedAttachment,
 } from '@app/api/channel/AttachmentDTOs';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
 import {SYSTEM_THREAD_VIEWER, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
@@ -18,11 +17,11 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import {MAX_ATTACHMENTS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {
 	ClientAttachmentReferenceRequest,
 	ClientAttachmentRequest,
@@ -145,10 +144,7 @@ export async function parseMultipartMessageData(
 		existingAttachments.push(metadata);
 	}
 	if (filesWithIndices.length > 0) {
-		const clientIp = requireClientIp(ctx.req.raw, {
-			trustClientIpHeader: Config.proxy.trust_client_ip_header,
-			clientIpHeaderName: Config.proxy.client_ip_header,
-		});
+		const clientIp = requireRequestClientIp(ctx);
 		const inlineNewAttachments = filesWithIndices.map(({file, index}) =>
 			buildInlineAttachmentMetadata({
 				file,
@@ -331,13 +327,13 @@ async function resolveMessageAttachmentLimit(ctx: Context<HonoEnv>, user: User, 
 		return MAX_ATTACHMENTS_PER_MESSAGE;
 	}
 	let guildFeatures: Iterable<string> | null = null;
-	const channelRepository = ctx.get('channelRepository') as IChannelRepository | undefined;
+	const channelRepository = ctx.get('channelRepository') as ChannelRepository | undefined;
 	const guildService = ctx.get('guildService') as GuildService | undefined;
 	if (channelRepository) {
 		try {
-			const channel = await channelRepository.findUnique(channelId);
+			const channel = await channelRepository.channelData.findUnique(channelId);
 			if (channel?.guildId && guildService) {
-				const guild = await guildService.data.getGuildSystem(channel.guildId);
+				const guild = await guildService.data.operations.getGuildSystem(channel.guildId);
 				guildFeatures = guild.features;
 			}
 		} catch {

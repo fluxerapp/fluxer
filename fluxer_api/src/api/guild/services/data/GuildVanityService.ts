@@ -7,7 +7,7 @@ import {
 	type UserID,
 	vanityCodeToInviteCode,
 } from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -23,7 +23,7 @@ const VANITY_AUDIT_KEYS: ReadonlySet<string> = new Set(['vanity_url_code']);
 
 export class GuildVanityService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly inviteRepository: InviteRepository,
 		private readonly helpers: GuildDataHelpers,
 	) {}

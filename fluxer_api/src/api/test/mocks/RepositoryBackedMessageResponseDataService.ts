@@ -321,7 +321,9 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private async resolveMentionChannels(channelIds: Array<ChannelID>): Promise<Array<MessageChannelMentionResponse>> {
-		const channels = await Promise.all(channelIds.map((channelId) => getChannelRepository().findUnique(channelId)));
+		const channels = await Promise.all(
+			channelIds.map((channelId) => getChannelRepository().channelData.findUnique(channelId)),
+		);
 		return channels.flatMap((channel) =>
 			channel?.name
 				? [

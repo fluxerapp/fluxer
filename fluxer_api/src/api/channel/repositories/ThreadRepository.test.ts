@@ -13,9 +13,8 @@ import {
 	createUserID,
 	type GuildID,
 } from '@app/api/BrandedTypes';
-import {ChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
-import type {CreateThreadParams} from '@app/api/channel/repositories/IThreadRepository';
-import {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {type CreateThreadParams, ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {
 	type CassandraQueryExecutorForTesting,
 	deleteOneOrMany,

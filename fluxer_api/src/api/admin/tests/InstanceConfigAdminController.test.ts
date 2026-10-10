@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';

@@ -11,18 +11,40 @@ import {
 } from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {JobActiveRow, JobByDayBucketRow, JobByIdRow, JobStatus} from '@app/api/database/types/JobLedgerTypes';
-import {
-	type CreateJobInput,
-	IJobLedgerRepository,
-	type ListJobsCursor,
-	type ListJobsFilters,
-	type ListJobsResult,
-} from '@app/api/jobs/IJobLedgerRepository';
 import {JobsActive, JobsByDayBucket, JobsById} from '@app/api/Tables';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms, seconds} from 'itty-time';
+
+export interface CreateJobInput {
+	jobId: bigint;
+	taskType: string;
+	payload: Record<string, unknown>;
+	requestedByUserId: bigint | null;
+	auditLogReason: string | null;
+	maxAttempts: number;
+	runAt: Date | null;
+	jetStreamLane: string | null;
+	jetStreamSeq: string | null;
+}
+
+export interface ListJobsCursor {
+	bucketDay: string;
+	createdAt: Date;
+	jobId: bigint;
+}
+
+export interface ListJobsFilters {
+	status?: JobStatus | null;
+	taskType?: string | null;
+	requestedByUserId?: bigint | null;
+}
+
+export interface ListJobsResult {
+	jobs: Array<JobByIdRow>;
+	nextCursor: ListJobsCursor | null;
+}
 
 export const JOB_LEDGER_TTL_SECONDS = seconds('90 days');
 export const JOB_STALE_AFTER_MS = JOBS_STREAM_MAX_AGE_MS + ms('1 day');
@@ -88,7 +110,7 @@ async function fetchDayAfter(
 	return {rows: [...ties, ...older], exhausted: limit === null || older.length < limit};
 }
 
-export class JobLedgerRepository extends IJobLedgerRepository {
+export class JobLedgerRepository {
 	async createJob(input: CreateJobInput): Promise<Date> {
 		const now = new Date();
 		const status: JobStatus = 'queued';

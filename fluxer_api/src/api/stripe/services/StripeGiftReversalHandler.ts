@@ -15,7 +15,7 @@ import {
 	getGiftTrialPaidUntil,
 	getGiftTrialSeconds,
 } from '@app/api/stripe/StripeGiftTrialMetadata';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -38,7 +38,7 @@ const MIN_REMAINING_TRIAL_MS = 60_000;
 
 export class StripeGiftReversalHandler {
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
 		private premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private storeEntitlementService: StoreEntitlementService | null = null,

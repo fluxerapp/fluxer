@@ -3,7 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {Donor} from '@app/api/donation/models/Donor';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
@@ -31,8 +31,8 @@ import {extractId} from '@app/api/stripe/StripeUtils';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getPremiumPaymentRecoveryGraceMs} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -56,10 +56,10 @@ export class StripeSubscriptionWebhookHandler {
 	private readonly paymentRepository = new PaymentRepository();
 
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
 		private premiumService: StripePremiumService,
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 		private premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private reconciler: StripeSubscriptionReconciler,
 		private billingRepository: BillingRepository,

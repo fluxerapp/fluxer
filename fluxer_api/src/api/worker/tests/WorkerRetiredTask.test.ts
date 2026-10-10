@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
@@ -36,7 +36,7 @@ function createRunner(): TestWorkerRunner {
 		queue: queueStub,
 		consumerName: 'workers_lifecycle',
 		laneName: 'lifecycle',
-		ledger: ledgerStub as unknown as IJobLedgerRepository,
+		ledger: ledgerStub as unknown as JobLedgerRepository,
 		concurrency: 8,
 		maxDeliver: 25,
 		ackWaitMs: 60000,

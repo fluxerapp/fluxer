@@ -96,7 +96,6 @@ import {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
-import {EmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailConfig, UserBouncedEmailChecker} from '@pkgs/email/src/EmailProviderTypes';
 import {EmailService} from '@pkgs/email/src/EmailService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
@@ -186,7 +185,6 @@ function createEmailServiceForConfig(
 	contactEmails: ContactEmails,
 	productName: string,
 	bouncedEmailChecker: UserBouncedEmailChecker,
-	emailI18n: EmailI18nService,
 ): IEmailService {
 	const emailConfig: EmailConfig = {
 		enabled: emailConfigSource.enabled,
@@ -201,11 +199,10 @@ function createEmailServiceForConfig(
 		supportEmail: contactEmails.supportEmail,
 		productName,
 	};
-	return new EmailService(emailConfig, emailI18n, createEmailProvider(emailConfigSource), bouncedEmailChecker);
+	return new EmailService(emailConfig, createEmailProvider(emailConfigSource), bouncedEmailChecker);
 }
 
 export function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailChecker): IEmailService {
-	const emailI18n = new EmailI18nService();
 	return new Proxy({} as IEmailService, {
 		get(_target, property) {
 			return async (...args: Array<unknown>): Promise<boolean> => {
@@ -220,7 +217,6 @@ export function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailC
 					resolveContactEmails(),
 					getInstanceProductName(),
 					bouncedEmailChecker,
-					emailI18n,
 				);
 				const method = delegate[property as keyof IEmailService];
 				if (typeof method !== 'function') {

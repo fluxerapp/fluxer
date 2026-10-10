@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ThreadView} from '@app/api/channel/services/thread/ThreadMappers';
 import type {Channel} from '@app/api/models/Channel';
 import {ThreadState} from '@app/api/models/ThreadState';
@@ -9,7 +9,7 @@ import {ThreadStats} from '@app/api/models/ThreadStats';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 
 async function liveTagIds(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	guildId: GuildID,
 	parentId: ChannelID,
 ): Promise<ReadonlySet<bigint>> {
@@ -23,7 +23,7 @@ function withLiveTags(state: ThreadState, tagIds: ReadonlySet<bigint> | undefine
 }
 
 export async function loadThreadViews(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	states: Array<ThreadState>,
 	knownParents: ReadonlyArray<Channel> = [],
 ): Promise<Array<ThreadView>> {
@@ -70,7 +70,7 @@ export async function loadThreadViews(
 }
 
 export async function loadThreadView(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	channel: Channel,
 	state: ThreadState,
 	parent: Channel,

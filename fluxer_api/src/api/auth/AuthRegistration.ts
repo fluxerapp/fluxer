@@ -42,6 +42,7 @@ import * as AgeUtils from '@app/api/utils/AgeUtils';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
@@ -54,11 +55,10 @@ import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/Registrat
 import {RegistrationUrlInvalidError} from '@fluxer/errors/src/domains/auth/RegistrationUrlInvalidError';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
 
@@ -143,10 +143,7 @@ async function registerAccount(
 	}
 	const now = new Date();
 	const registrationAccess = await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
-	const clientIp = requireClientIp(request, {
-		trustClientIpHeader: config.proxy.trust_client_ip_header,
-		clientIpHeaderName: config.proxy.client_ip_header,
-	});
+	const clientIp = requireConfiguredClientIp(request, config.proxy);
 	const geoipResult = await lookupGeoip(clientIp);
 	const countryCode = geoipResult.countryCode;
 	const collectDateOfBirth = appPublicConfig.registration.collect_date_of_birth;

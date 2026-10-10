@@ -23,7 +23,7 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
+import type {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
@@ -417,7 +417,7 @@ export async function harvestMessages(
 }
 
 export async function collectThreadMemberships(
-	threads: Pick<IThreadRepository, 'listJoinedThreadIds' | 'getMember'>,
+	threads: Pick<ThreadRepository, 'listJoinedThreadIds' | 'getMember'>,
 	userId: UserID,
 	guildIds: ReadonlyArray<GuildID>,
 ): Promise<Array<ThreadMember>> {
@@ -848,13 +848,18 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			filterArgs = {
 				filter,
 				context,
-				findChannel: (channelId) => channelRepository.findUnique(channelId),
+				findChannel: (channelId) => channelRepository.channelData.findUnique(channelId),
 			};
 		}
 		Logger.debug({userId, harvestId, elapsed: Date.now() - startTime}, 'Starting user data harvest');
 		await progressReporter.updateProgress(INITIAL_PROGRESS, 'Harvesting messages');
 		Logger.debug({elapsed: Date.now() - startTime}, 'Set progress to INITIAL_PROGRESS');
-		const {channelMessagesMap, totalMessages} = await harvestMessages(channelRepository, userId, startTime, filterArgs);
+		const {channelMessagesMap, totalMessages} = await harvestMessages(
+			channelRepository.messages,
+			userId,
+			startTime,
+			filterArgs,
+		);
 		if (totalMessages > 0) {
 			const progress = Math.min(INITIAL_PROGRESS + Math.floor((totalMessages / 10000) * 50), MESSAGES_PROGRESS_MAX);
 			await progressReporter.updateProgress(progress, `Harvested ${totalMessages} messages`);

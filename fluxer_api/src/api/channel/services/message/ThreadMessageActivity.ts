@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	dispatchThreadEvents,
 	type ThreadDispatchEvent,
@@ -17,7 +17,7 @@ import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {ThreadState} from '@app/api/models/ThreadState';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {addThreadMembersWithinCap, threadRecipients} from '@app/api/worker/tasks/ThreadMentionScope';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -34,9 +34,9 @@ const INTERACTED_CAS_ATTEMPTS = 3;
 
 export class ThreadMessageActivity {
 	constructor(
-		private readonly channelRepository: IChannelRepositoryAggregate,
+		private readonly channelRepository: ChannelRepository,
 		private readonly gatewayService: IGatewayService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 	) {}
 
 	async assertCanUnarchive(state: ThreadState): Promise<void> {

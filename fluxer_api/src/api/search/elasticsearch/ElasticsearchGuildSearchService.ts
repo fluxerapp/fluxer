@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID} from '@app/api/BrandedTypes';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {Guild} from '@app/api/models/Guild';
 import {convertToSearchableGuild, type GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {resolveDiscoveryContextForIndexing} from '@app/api/search/guild/LazyDiscoveryMigration';
@@ -18,14 +18,14 @@ import {
 } from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchGuildAdapter';
 
 interface ElasticsearchGuildSearchServiceOptions extends ElasticsearchGuildAdapterOptions {
-	discoveryRepository?: IGuildDiscoveryRepository;
+	discoveryRepository?: GuildDiscoveryRepository;
 }
 
 export class ElasticsearchGuildSearchService
 	extends SearchAdapterServiceBase<GuildSearchFilters, SearchableGuild, ElasticsearchGuildAdapter>
 	implements IGuildSearchService
 {
-	private readonly discoveryRepository: IGuildDiscoveryRepository | undefined;
+	private readonly discoveryRepository: GuildDiscoveryRepository | undefined;
 
 	constructor(options: ElasticsearchGuildSearchServiceOptions) {
 		super(new ElasticsearchGuildAdapter({client: options.client, lock: options.lock}));

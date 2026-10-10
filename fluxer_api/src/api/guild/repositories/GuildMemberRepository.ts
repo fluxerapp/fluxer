@@ -5,7 +5,6 @@ import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/Ca
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {GuildMemberRow, GuildMembershipMetadataRow} from '@app/api/database/types/GuildTypes';
 import {GUILD_MEMBER_COLUMNS} from '@app/api/database/types/GuildTypes';
-import {IGuildMemberRepository} from '@app/api/guild/repositories/IGuildMemberRepository';
 import {GuildMember} from '@app/api/models/GuildMember';
 import {GuildMembers, GuildMembersByUserId, GuildMembershipMetadata} from '@app/api/Tables';
 
@@ -38,7 +37,7 @@ function createPaginatedQuery(limit: number) {
 	});
 }
 
-export class GuildMemberRepository extends IGuildMemberRepository {
+export class GuildMemberRepository {
 	async getMember(guildId: GuildID, userId: UserID): Promise<GuildMember | null> {
 		const member = await fetchOne<GuildMemberRow>(FETCH_GUILD_MEMBER_BY_GUILD_AND_USER_ID_QUERY, {
 			guild_id: guildId,

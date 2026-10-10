@@ -9,7 +9,7 @@ import {
 	THREAD_SCOPED_AUDIT_OPTION,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {AuditLogChange, GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
@@ -61,7 +61,7 @@ function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadat
 
 export class GuildAuditLogService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 		private readonly gatewayService: IGatewayService,

@@ -2,19 +2,7 @@
 
 import {type ChannelID, channelIdToMessageId, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
-import {
-	type ArchivedThreadPage,
-	type CreateThreadMember,
-	type CreateThreadParams,
-	IThreadRepository,
-	type ThreadMemberAddResult,
-	type ThreadMemberRemoveResult,
-	type ThreadMemberSettingsPatch,
-	type ThreadParentConfigPatch,
-	type ThreadStatePatch,
-	type ThreadStateTransition,
-} from '@app/api/channel/repositories/IThreadRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
@@ -37,6 +25,7 @@ import type {
 	ThreadStatsRow,
 	ThreadsByParentRow,
 } from '@app/api/database/types/ThreadTypes';
+import type {MuteConfig} from '@app/api/database/types/UserTypes';
 import {insertGuildThreadMarker, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import {ThreadMember} from '@app/api/models/ThreadMember';
@@ -69,6 +58,58 @@ import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThrea
 import {ThreadAlreadyCreatedForMessageError} from '@fluxer/errors/src/domains/channel/ThreadAlreadyCreatedForMessageError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+
+export interface CreateThreadMember {
+	userId: UserID;
+	flags: number;
+}
+
+export interface CreateThreadParams {
+	channel: ChannelRow;
+	parentType: number;
+	autoArchiveDuration: number;
+	invitable: boolean | null;
+	flags: number;
+	appliedTags: Array<bigint>;
+	hasStarter: boolean;
+	createdAt: Date;
+	members: Array<CreateThreadMember>;
+}
+
+export type ThreadStatePatch = Partial<
+	Pick<
+		ThreadStateRow,
+		'archived' | 'locked' | 'invitable' | 'auto_archive_duration' | 'archive_timestamp' | 'flags' | 'applied_tags'
+	>
+>;
+
+export interface ThreadStateTransition {
+	previous: ThreadState;
+	state: ThreadState;
+}
+
+export interface ArchivedThreadPage {
+	threads: Array<ThreadState>;
+	hasMore: boolean;
+}
+
+export interface ThreadMemberSettingsPatch {
+	flags?: number;
+	muted?: boolean;
+	muteConfig?: MuteConfig | null;
+}
+
+export interface ThreadMemberAddResult {
+	added: Array<ThreadMember>;
+	state: ThreadState;
+}
+
+export interface ThreadMemberRemoveResult {
+	removed: Array<ThreadMember>;
+	state: ThreadState | null;
+}
+
+export type ThreadParentConfigPatch = Partial<Omit<ThreadParentConfigRow, 'guild_id' | 'channel_id'>>;
 
 const STATE_CAS_ATTEMPTS = 3;
 const DANGLING_CREATE_REPAIR_MS = 30_000;
@@ -197,14 +238,12 @@ function toStateOps(patch: ThreadStatePatch): StatePatchOps {
 	return ops;
 }
 
-export class ThreadRepository extends IThreadRepository {
+export class ThreadRepository {
 	constructor(
 		private readonly channelData: ChannelDataRepository,
-		private readonly messages: IMessageRepository,
+		private readonly messages: MessageRepository,
 		private readonly onIndexDrift?: (threadIds: Array<ChannelID>) => void,
-	) {
-		super();
-	}
+	) {}
 
 	async getState(threadId: ChannelID): Promise<ThreadState | null> {
 		const row = await fetchOne<ThreadStateRow>(FETCH_STATE.bind({thread_id: threadId}));

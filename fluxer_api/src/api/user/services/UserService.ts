@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
@@ -29,16 +29,16 @@ export class UserService {
 		apiContext: ApiContext,
 		userCacheService: UserCacheService,
 		channelService: ChannelService,
-		channelRepository: IChannelRepository,
+		channelRepository: ChannelRepository,
 		guildService: GuildService,
 		entityAssetService: EntityAssetService,
 		discriminatorService: IDiscriminatorService,
-		guildRepository: IGuildRepositoryAggregate,
+		guildRepository: GuildRepository,
 		userPermissionUtils: UserPermissionUtils,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		contactChangeLogService: UserContactChangeLogService,
-		connectionRepository: IConnectionRepository,
+		connectionRepository: ConnectionRepository,
 		limitConfigService: LimitConfigService,
 	) {
 		this.accountService = new UserAccountService(

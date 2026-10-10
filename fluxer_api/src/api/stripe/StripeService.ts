@@ -3,12 +3,9 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
 import {Config} from '@app/api/Config';
-import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {GiftCode} from '@app/api/models/GiftCode';
-import type {User} from '@app/api/models/User';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getProductRegistry, type ProductRegistry} from '@app/api/stripe/ProductRegistry';
@@ -20,16 +17,9 @@ import {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
 import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
 import {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
-import type {
-	CurrentSubscriptionPriceResponse,
-	PremiumStateResponse,
-	SelfServeRefundEligibilityResponse,
-	SelfServeRefundResponse,
-	SwitchToListPriceResponse,
-} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
 
@@ -37,16 +27,16 @@ export class StripeService {
 	private stripe: Stripe | null;
 	private productRegistry: ProductRegistry;
 	private checkoutService: StripeCheckoutService;
-	private subscriptionService: StripeSubscriptionService;
-	private giftService: StripeGiftService;
-	private premiumService: StripePremiumService;
-	private premiumStateService: PremiumStateService;
-	private refundService: StripeRefundService;
+	readonly subscriptions: StripeSubscriptionService;
+	readonly gifts: StripeGiftService;
+	readonly premium: StripePremiumService;
+	readonly premiumState: PremiumStateService;
+	readonly refunds: StripeRefundService;
 
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
-		private guildRepository: IGuildRepositoryAggregate,
+		private guildRepository: GuildRepository,
 		private guildService: GuildService,
 		private cacheService: ICacheService,
 		private billingRepository: BillingRepository,
@@ -55,13 +45,13 @@ export class StripeService {
 	) {
 		this.productRegistry = getProductRegistry();
 		this.stripe = getStripeClient();
-		this.premiumService = new StripePremiumService(
+		this.premium = new StripePremiumService(
 			this.userRepository,
 			this.gatewayService,
 			this.guildRepository,
 			this.guildService,
 		);
-		this.premiumStateService = new PremiumStateService(
+		this.premiumState = new PremiumStateService(
 			this.userRepository,
 			this.gatewayService,
 			this.billingRepository,
@@ -76,7 +66,7 @@ export class StripeService {
 			this.cacheService,
 			this.storeEntitlementService,
 		);
-		this.subscriptionService = new StripeSubscriptionService(
+		this.subscriptions = new StripeSubscriptionService(
 			this.stripe,
 			this.userRepository,
 			this.productRegistry,
@@ -84,17 +74,17 @@ export class StripeService {
 			this.gatewayService,
 			this.storeEntitlementService,
 		);
-		this.giftService = new StripeGiftService(
+		this.gifts = new StripeGiftService(
 			this.stripe,
 			this.userRepository,
 			this.cacheService,
 			this.gatewayService,
 			this.checkoutService,
-			this.premiumService,
-			this.subscriptionService,
+			this.premium,
+			this.subscriptions,
 			this.storeEntitlementService,
 		);
-		this.refundService = new StripeRefundService(this.stripe, this.userRepository, this.subscriptionService);
+		this.refunds = new StripeRefundService(this.stripe, this.userRepository, this.subscriptions);
 	}
 
 	getStripe(): Stripe | null {
@@ -132,7 +122,7 @@ export class StripeService {
 		if (!user?.premiumBillingCycle || user.premiumBillingCycle === productInfo.billingCycle) {
 			return null;
 		}
-		await this.subscriptionService.changeBillingCycle(params.userId, productInfo.billingCycle, 'period_end');
+		await this.subscriptions.changeBillingCycle(params.userId, productInfo.billingCycle, 'period_end');
 		return `${Config.endpoints.webApp}/premium-callback?status=success`;
 	}
 
@@ -153,87 +143,5 @@ export class StripeService {
 		gift_1_year_amount_minor: number | null;
 	}> {
 		return this.checkoutService.getPriceIds(countryCode);
-	}
-
-	async getCurrentSubscriptionPrice(userId: UserID): Promise<CurrentSubscriptionPriceResponse> {
-		return this.subscriptionService.getCurrentSubscriptionPrice(userId);
-	}
-
-	async cancelSubscriptionAtPeriodEnd(userId: UserID): Promise<void> {
-		return this.subscriptionService.cancelSubscriptionAtPeriodEnd(userId);
-	}
-
-	async cancelSubscriptionImmediately(userId: UserID, reason?: string): Promise<void> {
-		return this.subscriptionService.cancelSubscriptionImmediately(userId, reason);
-	}
-
-	async reactivateSubscription(userId: UserID): Promise<void> {
-		return this.subscriptionService.reactivateSubscription(userId);
-	}
-
-	async changeSubscriptionBillingCycle(
-		userId: UserID,
-		billingCycle: 'monthly' | 'yearly',
-		effectiveAt: 'now' | 'period_end' = 'now',
-	): Promise<void> {
-		return this.subscriptionService.changeBillingCycle(userId, billingCycle, effectiveAt);
-	}
-
-	async switchSubscriptionToCurrentListPrice(userId: UserID): Promise<SwitchToListPriceResponse> {
-		return this.subscriptionService.switchToCurrentListPrice(userId);
-	}
-
-	async cancelPendingSubscriptionChange(userId: UserID): Promise<void> {
-		return this.subscriptionService.cancelPendingSubscriptionChange(userId);
-	}
-
-	async extendSubscriptionWithGiftTrialDuration(
-		user: User,
-		durationType: GiftCodeDurationType,
-		durationQuantity: number,
-		idempotencyKey: string,
-	): Promise<Stripe.Subscription | null> {
-		return this.subscriptionService.extendSubscriptionWithGiftTrialDuration(
-			user,
-			durationType,
-			durationQuantity,
-			idempotencyKey,
-		);
-	}
-
-	async getGiftCode(code: string): Promise<GiftCode> {
-		return this.giftService.getGiftCode(code);
-	}
-
-	async redeemGiftCode(userId: UserID, code: string): Promise<void> {
-		return this.giftService.redeemGiftCode(userId, code);
-	}
-
-	async getUserGifts(userId: UserID): Promise<Array<GiftCode>> {
-		return this.giftService.getUserGifts(userId);
-	}
-
-	async endPremiumGracePeriod(userId: UserID): Promise<boolean> {
-		return this.premiumService.endGracePeriod(userId);
-	}
-
-	async getPremiumState(userId: UserID, countryCode?: string): Promise<PremiumStateResponse> {
-		return this.premiumStateService.getState(userId, countryCode);
-	}
-
-	async setPremiumPerksDisabled(userId: UserID, disabled: boolean): Promise<PremiumStateResponse> {
-		return this.premiumStateService.setPerksDisabled(userId, disabled);
-	}
-
-	async rejoinVisionariesGuild(userId: UserID): Promise<void> {
-		return this.premiumService.rejoinVisionariesGuild(userId);
-	}
-
-	async getSelfServeRefundEligibility(userId: UserID): Promise<SelfServeRefundEligibilityResponse> {
-		return this.refundService.getEligibility(userId);
-	}
-
-	async refundLatestPurchase(userId: UserID): Promise<SelfServeRefundResponse> {
-		return this.refundService.refundLatestPurchase(userId);
 	}
 }
