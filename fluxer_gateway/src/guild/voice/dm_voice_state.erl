@@ -5,6 +5,7 @@
 
 -export([handle_dm_disconnect/4, disconnect_voice_user/2]).
 -export([resolve_call_region/1, resolve_call_region/2, voice_region_for_rpc/1]).
+-export([call_voice_states/1]).
 -export([normalize_session_id/1, resolve_effective_session_id/2]).
 -export([validate_dm_viewer_stream_keys/3]).
 -export([maybe_attach_voice_routing_metadata/3]).
@@ -210,6 +211,20 @@ call_region_from_pid(CallPid, Timeout) ->
             voice_region_for_rpc(maps:get(region, CallData, null));
         _ ->
             null
+    end.
+
+-spec call_voice_states(integer()) -> [voice_state()].
+call_voice_states(ChannelId) ->
+    case call_manager:lookup(ChannelId) of
+        {ok, CallPid} -> call_voice_states_from_pid(CallPid);
+        _ -> []
+    end.
+
+-spec call_voice_states_from_pid(pid()) -> [voice_state()].
+call_voice_states_from_pid(CallPid) ->
+    case gateway_rpc_call_lookup:safe_gen_server_call(CallPid, {get_state}, 5000) of
+        {ok, {ok, #{voice_states := VoiceStates}}} when is_list(VoiceStates) -> VoiceStates;
+        _ -> []
     end.
 
 -spec voice_region_for_rpc(term()) -> binary() | null.

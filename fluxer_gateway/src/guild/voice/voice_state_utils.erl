@@ -12,6 +12,7 @@
     voice_state_channel_id/1,
     voice_state_guild_id/1,
     voice_state_version/1,
+    channel_voice_states/2,
     initial_voice_state_version/0,
     complete_voice_state/1,
     external_voice_state/1,
@@ -81,6 +82,13 @@ voice_state_channel_id(VoiceState) ->
 voice_state_guild_id(VoiceState) ->
     snowflake_field(VoiceState, <<"guild_id">>).
 
+-spec channel_voice_states(integer() | undefined, voice_state_map()) -> voice_state_map().
+channel_voice_states(ChannelId, VoiceStates) ->
+    maps:filter(
+        fun(_ConnId, VoiceState) -> voice_state_channel_id(VoiceState) =:= ChannelId end,
+        VoiceStates
+    ).
+
 -spec voice_state_version(voice_state()) -> non_neg_integer().
 voice_state_version(VoiceState) ->
     case map_utils:get_integer(VoiceState, <<"version">>, undefined) of
@@ -117,6 +125,7 @@ default_voice_state_fields() ->
         <<"suppress">> => false,
         <<"viewer_stream_keys">> => [],
         <<"e2ee_capable">> => false,
+        <<"p2p">> => false,
         <<"region_id">> => null,
         <<"server_id">> => null,
         <<"version">> => ?INITIAL_VOICE_STATE_VERSION
@@ -389,6 +398,7 @@ complete_voice_state_fills_missing_fields_test() ->
     ?assertEqual(false, maps:get(<<"suppress">>, Completed)),
     ?assertEqual([], maps:get(<<"viewer_stream_keys">>, Completed)),
     ?assertEqual(false, maps:get(<<"e2ee_capable">>, Completed)),
+    ?assertEqual(false, maps:get(<<"p2p">>, Completed)),
     ?assertEqual(null, maps:get(<<"region_id">>, Completed)),
     ?assertEqual(null, maps:get(<<"server_id">>, Completed)),
     ?assertEqual(0, maps:get(<<"version">>, Completed)).

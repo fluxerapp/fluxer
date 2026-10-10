@@ -16,6 +16,7 @@
     dispatch_call_create/1,
     dispatch_call_update/1,
     dispatch_call_delete/1,
+    dispatch_voice_state_update/2,
     handle_ring_timeout/2,
     handle_idle_timeout/1,
     maybe_stop_or_reply/3,
@@ -249,6 +250,14 @@ dispatch_call_delete(State) ->
     Recipients = maps:get(recipients, State),
     dispatch_to_recipients(Recipients, call_delete, Event),
     notify_call_ended(cancel_all_ringing_timers(State)),
+    ok.
+
+-spec dispatch_voice_state_update(map(), map()) -> ok.
+dispatch_voice_state_update(VoiceState, State) ->
+    Event = voice_state_utils:sanitize_voice_state_for_broadcast(
+        call_state:format_voice_state(VoiceState)
+    ),
+    _ = dispatch_to_recipients(maps:get(recipients, State), voice_state_update, Event),
     ok.
 
 -spec dispatch_to_recipients([integer()], atom(), map()) -> pid().

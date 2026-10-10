@@ -36,6 +36,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
 | push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
+| voice_p2p | [peer-to-peer voice configuration](#peer-to-peer-voice-configuration-object) object | Peer-to-peer voice rollout |
 | captcha | [captcha configuration](#captcha-configuration-object) object | ALTCHA proof-of-work captcha settings |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
@@ -139,6 +140,7 @@ The instance rollout that moves the official web client from its legacy origin t
 | enabled | boolean | Whether the rollout runs at all (default false) |
 | config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
+| rollout_country_codes | array[string] | Countries the sampled share is limited to, as unique uppercase ISO 3166-1 alpha-2 codes, up to 250 (default empty) |
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `domain-migration-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
 | included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
@@ -151,12 +153,47 @@ Every field is present on read. An absent document or missing field uses the def
 
 `excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
 
+While `rollout_country_codes` is empty, `rollout_basis_points` samples every account. Once it lists a country, the sampled share only selects an account whose request comes from a listed country, and a request with an unknown country is never sampled. The list does not affect `excluded_user_ids`, `included_user_ids`, `included_guild_ids`, `include_premium_users`, or `anonymous_rollout_basis_points`.
+
 An installed Chromium desktop web app moves its data like a browser tab, then stays on the legacy origin and offers to install the app from the new one. Set `standalone_forwarding` once the web app manifest lists the new origin in `scope_extensions` and the new origin serves the matching association file. From then on the installed app forwards like a browser tab. Installed mobile and Safari web apps never forward, whatever the value.
 
 Only the official web client acts on this configuration. On any other instance it changes nothing a client does.
 
 :::caution[`enabled` is the kill switch]
 Setting `enabled` to false stops new migrations and also stops forwarding from the legacy origin for clients that already moved. Excluding an account only stops a migration that has not started yet.
+:::
+
+## Peer-to-peer voice configuration object
+
+The instance rollout that lets small voice calls connect their participants directly instead of through the voice servers. [Experiments](/http-api/experiments/#peer-to-peer-voice-assignment-object) defines what a client resolves from it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
+| rollout_country_codes | array[string] | Countries the sampled share is limited to, as unique uppercase ISO 3166-1 alpha-2 codes, up to 250 (default empty) |
+| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `voice-p2p-v1`) |
+| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
+| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
+| max_participants | integer | Most participants a peer-to-peer call holds (2-4, default 2) |
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
+
+While `rollout_country_codes` is empty, `rollout_basis_points` samples every account. Once it lists a country, the sampled share only selects an account whose request comes from a listed country, and a request with an unknown country is never sampled. The list does not affect `excluded_user_ids`, `included_user_ids`, `included_guild_ids`, or `include_premium_users`.
+
+The rules above select who may start a peer-to-peer call. Joining a call that already runs peer-to-peer needs only `enabled`, so a partial rollout does not keep unselected accounts out of running calls.
+
+`max_participants` applies to every account, selected or not. A join that would take a peer-to-peer call past it is refused as full, as [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) describes. Lowering it removes nobody from a running call.
+
+:::caution[`enabled` is the kill switch]
+Setting `enabled` to false makes every new call use the voice servers. A call that already runs peer-to-peer keeps running and refuses new joins until it ends or a participant switches it to the voice servers. Fluxer never moves a running call on its own.
 :::
 
 ## Captcha configuration object
@@ -611,6 +648,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
+| voice_p2p? | object | Any subset of the [peer-to-peer voice](#peer-to-peer-voice-configuration-object) fields |
 | captcha? | object | Any subset of the [captcha configuration](#captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
@@ -627,6 +665,8 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 `push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
 `domain_migration` takes every [domain migration configuration](#domain-migration-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
+
+`voice_p2p` works the same way, over the [peer-to-peer voice configuration](#peer-to-peer-voice-configuration-object) fields and its own `config_version`.
 
 `captcha` takes any subset of the [captcha configuration](#captcha-configuration-object) fields, each bound as documented there. Fluxer merges the supplied fields over the stored ones. The section has no `config_version`.
 
@@ -668,7 +708,7 @@ On a self-hosted deployment, billing and the `everyone` premium mode exclude eac
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `push_relay`, `domain_migration`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `push_relay`, `domain_migration`, `voice_p2p`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

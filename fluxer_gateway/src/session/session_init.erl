@@ -246,7 +246,8 @@ extract_core_fields(
         bot => Bot,
         shard => maps:get(shard, D, undefined),
         is_staff => IsStaff,
-        e2ee_capable => maps:get(e2ee_capable, D, false)
+        e2ee_capable => maps:get(e2ee_capable, D, false),
+        geoip_country_code => maps:get(geoip_country_code, D, undefined)
     }.
 
 -spec extract_extra_fields(map(), map() | undefined) -> map().

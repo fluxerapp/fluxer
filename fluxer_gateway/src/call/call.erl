@@ -25,6 +25,7 @@
     | {stop_ringing, [integer()]}
     | {join, integer(), map(), binary(), pid()}
     | {join, integer(), map(), binary(), pid(), binary() | undefined}
+    | {join, integer(), map(), binary(), pid(), binary(), pos_integer()}
     | {confirm_connection, binary()}
     | {disconnect_user_if_in_channel, integer(), integer(), binary() | undefined}
     | {leave, binary()}
@@ -33,7 +34,8 @@
     | {get_pending_connections}.
 -type cast_request() ::
     {join_async, integer(), map(), binary(), pid()}
-    | {set_caller, map()}.
+    | {set_caller, map()}
+    | {voice_signal, binary(), binary(), map()}.
 -type info_message() ::
     {'DOWN', reference(), process, pid(), term()}
     | {ring_timeout, integer()}
@@ -134,9 +136,11 @@ handle_call_request({ring_recipients, Recipients}, State) ->
 handle_call_request({stop_ringing, Recipients}, State) ->
     handle_stop_ringing(Recipients, State);
 handle_call_request({join, UserId, VS, SId, SPid}, State) ->
-    handle_join_request(UserId, VS, SId, SPid, undefined, State);
+    handle_join_request(UserId, VS, SId, SPid, undefined, undefined, State);
 handle_call_request({join, UserId, VS, SId, SPid, CId}, State) ->
-    handle_join_request(UserId, VS, SId, SPid, CId, State);
+    handle_join_request(UserId, VS, SId, SPid, CId, undefined, State);
+handle_call_request({join, UserId, VS, SId, SPid, CId, MaxParticipants}, State) ->
+    handle_join_request(UserId, VS, SId, SPid, CId, MaxParticipants, State);
 handle_call_request({confirm_connection, ConnectionId}, State) ->
     handle_confirm_connection(ConnectionId, State);
 handle_call_request({disconnect_user_if_in_channel, UserId, ExpChId, CId}, State) ->
@@ -151,14 +155,16 @@ handle_call_request({get_pending_connections}, State) ->
     handle_get_pending_connections(State).
 
 -spec handle_join_request(
-    integer(), map(), binary(), pid(), binary() | undefined, map()
-) -> {reply, ok, map()}.
-handle_join_request(UserId, VS, SId, SPid, CId, #{sessions := Sessions} = State) ->
+    integer(), map(), binary(), pid(), binary() | undefined, pos_integer() | undefined, map()
+) -> {reply, ok | {error, atom()}, map()}.
+handle_join_request(
+    UserId, VS, SId, SPid, CId, MaxParticipants, #{sessions := Sessions} = State
+) ->
     case maps:get(SId, Sessions, undefined) of
         {UserId, SPid, _Ref} ->
             {reply, ok, State};
         _ ->
-            call_voice:handle_join_internal(UserId, VS, SId, SPid, CId, State)
+            call_voice:handle_join_internal(UserId, VS, SId, SPid, CId, MaxParticipants, State)
     end.
 
 -spec handle_cast(term(), map()) -> {noreply, map()}.
@@ -168,6 +174,9 @@ handle_cast(Request, State) ->
             call_voice:handle_join_async(UserId, VoiceState, SessionId, SessionPid, State);
         {ok, {set_caller, Caller}} ->
             {noreply, call_state:put_caller(Caller, State)};
+        {ok, {voice_signal, SessionId, To, Data}} ->
+            ok = call_voice:relay_voice_signal(SessionId, To, Data, State),
+            {noreply, State};
         error ->
             {noreply, State}
     end.
@@ -269,6 +278,18 @@ decode_session_call_request(
     is_binary(ConnectionId)
 ->
     {ok, {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId}};
+decode_session_call_request(
+    {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants}
+) when
+    is_integer(UserId),
+    is_map(VoiceState),
+    is_binary(SessionId),
+    is_pid(SessionPid),
+    is_binary(ConnectionId),
+    is_integer(MaxParticipants),
+    MaxParticipants >= 1
+->
+    {ok, {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants}};
 decode_session_call_request({confirm_connection, ConnectionId}) when is_binary(ConnectionId) ->
     {ok, {confirm_connection, ConnectionId}};
 decode_session_call_request(
@@ -323,6 +344,10 @@ decode_cast_request({join_async, UserId, VoiceState, SessionId, SessionPid}) whe
     {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}};
 decode_cast_request({set_caller, Caller}) when is_map(Caller) ->
     {ok, {set_caller, Caller}};
+decode_cast_request({voice_signal, SessionId, To, Data}) when
+    is_binary(SessionId), is_binary(To), is_map(Data)
+->
+    {ok, {voice_signal, SessionId, To, Data}};
 decode_cast_request(_) ->
     error.
 
@@ -354,9 +379,15 @@ build_get_state_reply(State) ->
 handle_update_region(NewRegion, State) ->
     OldRegion = maps:get(region, State, undefined),
     NewState = State#{region => NewRegion},
-    UpdatedState = call_ringing:dispatch_call_update(NewState),
-    call_voice:maybe_spawn_region_switch(OldRegion, NewRegion, UpdatedState),
-    {reply, ok, UpdatedState}.
+    case voice_p2p:channel_mode(maps:values(maps:get(voice_states, NewState))) of
+        p2p ->
+            ConvertedState = call_voice:convert_to_sfu([], NewState),
+            {reply, ok, call_ringing:dispatch_call_update(ConvertedState)};
+        _ ->
+            UpdatedState = call_ringing:dispatch_call_update(NewState),
+            call_voice:maybe_spawn_region_switch(OldRegion, NewRegion, UpdatedState),
+            {reply, ok, UpdatedState}
+    end.
 
 -spec handle_ring_recipients([integer()], map()) -> {reply, ok, map()}.
 handle_ring_recipients(Recipients, State) ->
@@ -398,8 +429,7 @@ handle_confirm_connection(ConnectionId, State) ->
 handle_update_voice_state(UserId, VoiceState, State) ->
     case maps:is_key(UserId, maps:get(voice_states, State)) of
         true ->
-            NewVS = (maps:get(voice_states, State))#{UserId => VoiceState},
-            NewState = State#{voice_states => NewVS},
+            NewState = call_voice:update_voice_state(UserId, VoiceState, State),
             CountedState = call_state:sync_voice_state_count_diff(State, NewState),
             UpdatedState = call_ringing:dispatch_call_update(CountedState),
             {reply, ok, UpdatedState};

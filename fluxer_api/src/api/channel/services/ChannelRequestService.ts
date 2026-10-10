@@ -122,6 +122,7 @@ export class ChannelRequestService {
 		requestCache: RequestCache;
 		auditLogReason: string | null;
 		typeConversion?: ChannelTypeConversion | null;
+		countryCode?: string | null;
 	}): Promise<ChannelResponse> {
 		if (!('available_tags' in params.data) || params.data.available_tags === undefined) {
 			return this.applyChannelUpdate(params);
@@ -138,6 +139,7 @@ export class ChannelRequestService {
 		requestCache: RequestCache;
 		auditLogReason: string | null;
 		typeConversion?: ChannelTypeConversion | null;
+		countryCode?: string | null;
 	}): Promise<ChannelResponse> {
 		const channel = await this.channelService.channelData.editChannel({
 			userId: params.userId,
@@ -148,6 +150,7 @@ export class ChannelRequestService {
 			requestCache: params.requestCache,
 			auditLogReason: params.auditLogReason,
 			typeConversion: params.typeConversion,
+			countryCode: params.countryCode,
 		});
 		return this.maskedChannelResponse(channel, params);
 	}

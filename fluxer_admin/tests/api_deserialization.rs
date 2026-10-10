@@ -403,6 +403,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "enabled": true,
             "config_version": 2,
             "rollout_basis_points": 2500,
+            "rollout_country_codes": ["SE"],
             "rollout_salt": "domain-migration-v1",
             "included_user_ids": ["1500000000000000001"],
             "excluded_user_ids": [],
@@ -415,6 +416,19 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "future_list_knob": ["a", "b"],
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
+        },
+        "voice_p2p": {
+            "enabled": true,
+            "config_version": 4,
+            "rollout_basis_points": 750,
+            "rollout_country_codes": ["SE", "NO"],
+            "rollout_salt": "voice-p2p-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": ["1500000000000000002"],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
+            "max_participants": 3,
+            "future_voice_p2p_knob": true
         },
         "captcha": {
             "enabled": true,
@@ -569,10 +583,21 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert!(resp.domain_migration.enabled);
     assert_eq!(resp.domain_migration.config_version, 2);
     assert_eq!(resp.domain_migration.rollout_basis_points, 2500);
+    assert_eq!(resp.domain_migration.rollout_country_codes.len(), 1);
     assert_eq!(*resp.domain_migration.rollout_salt, "domain-migration-v1");
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.voice_p2p.enabled);
+    assert_eq!(resp.voice_p2p.config_version, 4);
+    assert_eq!(resp.voice_p2p.rollout_basis_points, 750);
+    assert_eq!(resp.voice_p2p.rollout_country_codes.len(), 2);
+    assert_eq!(*resp.voice_p2p.rollout_salt, "voice-p2p-v1");
+    assert_eq!(resp.voice_p2p.included_user_ids.len(), 1);
+    assert_eq!(resp.voice_p2p.excluded_user_ids.len(), 1);
+    assert_eq!(resp.voice_p2p.included_guild_ids.len(), 1);
+    assert!(resp.voice_p2p.include_premium_users);
+    assert_eq!(resp.voice_p2p.max_participants, 3);
     assert!(resp.push_relay.relay_consent_accepted);
     assert!(resp.captcha.enabled);
     assert_eq!(resp.captcha.max_counter, 1000);

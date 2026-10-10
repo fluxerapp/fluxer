@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceMeshRoom, holdVoiceMeshConversion} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
 import {
@@ -72,6 +74,7 @@ export interface VoiceServerUpdateData {
 	guild_id?: string;
 	channel_id?: string;
 	e2ee_key?: string | null;
+	ice_servers?: Array<Pick<RTCIceServer, 'urls'>>;
 }
 
 export interface VoiceConnectionState {
@@ -184,6 +187,12 @@ function createRoomOptions(
 		}
 	}
 	return {roomOptions, e2eeKeyProvider, e2eeWorker};
+}
+
+function requireCurrentUserId(): string {
+	const userId = Authentication.currentUserId;
+	assertNonEmptyString(userId, 'mesh room current user id');
+	return userId;
 }
 
 function createRoomConnectOptions(): RoomConnectOptions {
@@ -518,6 +527,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		if (previousRoom) {
 			shouldStopPreviousRoomTracks = isChannelMove || onBeforeReconnect?.(isChannelMove, previousRoom) !== true;
 			previousRoom.removeAllListeners();
+			holdVoiceMeshConversion(previousRoom, true);
 			if (isChannelMove) {
 				this.disconnectPreviousRoom(previousRoom);
 				previousRoom = null;
@@ -546,7 +556,15 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			return;
 		}
 		const {roomOptions, e2eeKeyProvider, e2eeWorker} = createRoomOptions(e2eeKey, subscriberVideoCodecExclusions);
-		const room = new LiveKitRoom(roomOptions);
+		const room = raw.ice_servers
+			? createVoiceMeshRoom(roomOptions, {
+					iceServers: raw.ice_servers,
+					guildId,
+					channelId: resolvedChannelId,
+					connectionId: raw.connection_id,
+					userId: requireCurrentUserId(),
+				})
+			: new LiveKitRoom(roomOptions);
 		ownE2EEWorker(room, e2eeWorker);
 		let roomClosed = false;
 		const closeRoom = () => {
@@ -695,6 +713,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'hotSwap.start', pendingRoom: newRoom, previousRoom: existingRoom});
 		});
+		holdVoiceMeshConversion(existingRoom, true);
 		this.clearHotSwapTimeout();
 		this.hotSwapTimeoutSub = timer(REGION_HOT_SWAP_TIMEOUT_MS).subscribe(() => {
 			if (this.hotSwapState.inProgress && this.hotSwapState.pendingRoom === newRoom) {
@@ -790,6 +809,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				this.update(() => {
 					this.transitionConnection({type: 'hotSwap.reset'});
 				});
+				holdVoiceMeshConversion(existingRoom, false);
 				this.clearHotSwapTimeout();
 				this.clearHotSwapQueue();
 				logger.info('Region hot-swap: keeping old room on previous endpoint');
@@ -867,7 +887,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		assert.ok(this.hotSwapOperationQueue.length <= 4096, 'abortHotSwap pre-condition: queue under cap');
 		assert.ok(this.connectionSnapshot !== null, 'abortHotSwap pre-condition: connection snapshot present');
 		if (!this.hotSwapState.inProgress) return;
-		const {pendingRoom} = this.hotSwapState;
+		const {pendingRoom, previousRoom} = this.hotSwapState;
 		logger.info('Aborting region hot-swap');
 		if (pendingRoom) {
 			try {
@@ -880,6 +900,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'hotSwap.abort'});
 		});
+		holdVoiceMeshConversion(previousRoom, false);
 		this.clearHotSwapTimeout();
 		this.clearHotSwapQueue();
 	}

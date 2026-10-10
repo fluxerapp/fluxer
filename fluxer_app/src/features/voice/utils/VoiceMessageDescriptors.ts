@@ -328,6 +328,132 @@ export const VOICE_CALL_E2EE_BROKEN_DESCRIPTOR = msg({
 	comment:
 		'Pre-join indicator shown beneath the Join button on a DM or group DM call where at least one connected participant (typically an outdated bot) does not support E2EE.',
 });
+export const VOICE_P2P_INDICATOR_DESCRIPTOR = msg({
+	message: 'P2P',
+	comment:
+		'Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.',
+});
+export const VOICE_P2P_INDICATOR_TOOLTIP_DESCRIPTOR = msg({
+	message: 'Direct connection. Media is encrypted between participants.',
+	comment: 'Tooltip on the P2P indicator of a peer-to-peer call.',
+});
+export const VOICE_P2P_START_TITLE_DESCRIPTOR = msg({
+	message: 'Start in P2P mode?',
+	comment:
+		'Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.',
+});
+export const VOICE_P2P_JOIN_TITLE_DESCRIPTOR = msg({
+	message: 'Join a P2P call?',
+	comment:
+		'Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.',
+});
+export const VOICE_P2P_DIRECT_MEDIA_DESCRIPTOR = msg({
+	message: 'Audio and video go directly between participants.',
+	comment: 'Lead sentence of the P2P call dialog explaining peer-to-peer mode.',
+});
+export const VOICE_P2P_LOWER_LATENCY_DESCRIPTOR = msg({
+	message: 'Lower latency.',
+	comment: 'Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.',
+});
+export const VOICE_P2P_STREAM_QUALITY_DESCRIPTOR = msg({
+	message: 'Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps.',
+	comment:
+		'Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.',
+});
+export const VOICE_P2P_IP_ADDRESS_DESCRIPTOR = msg({
+	message: 'Other participants can see your IP address.',
+	comment: 'Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.',
+});
+export const VOICE_P2P_MAX_PARTICIPANTS_DESCRIPTOR = msg({
+	message: 'Up to {maxParticipants, plural, one {# person} other {# people}}.',
+	comment:
+		'Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.',
+});
+export const VOICE_P2P_CONNECT_DIRECTLY_DESCRIPTOR = msg({
+	message: 'Anyone who cannot connect directly cannot take part until someone switches the call to a standard call.',
+	comment:
+		'Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.',
+});
+export const VOICE_P2P_START_CONFIRM_DESCRIPTOR = msg({
+	message: 'Start in P2P mode',
+	comment: 'Primary button in the dialog offering to start a call in peer-to-peer mode.',
+});
+export const VOICE_P2P_START_STANDARD_DESCRIPTOR = msg({
+	message: 'Start standard call',
+	comment:
+		'Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.',
+});
+export const VOICE_P2P_JOIN_CONFIRM_DESCRIPTOR = msg({
+	message: 'Join',
+	comment: 'Primary button in the dialog shown before joining a peer-to-peer call.',
+	context: 'voice-p2p-consent',
+});
+export const VOICE_P2P_ALWAYS_AGREE_DESCRIPTOR = msg({
+	message: 'Do not ask again, always agree',
+	comment:
+		'Checkbox in the dialog shown before joining a peer-to-peer call. When checked, future joins skip the dialog.',
+});
+export const VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTOR = msg({
+	message: 'Join P2P calls without asking',
+	comment:
+		'Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.',
+});
+export const VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Other participants in a P2P call can see your IP address.',
+	comment: 'Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.',
+});
+export const VOICE_P2P_SWITCH_TO_STANDARD_DESCRIPTOR = msg({
+	message: 'Switch to standard call',
+	comment:
+		'Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.',
+});
+export const VOICE_P2P_START_CALL_DESCRIPTOR = msg({
+	message: 'Start P2P call',
+	comment:
+		'Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.',
+});
+export const VOICE_P2P_PEER_FAILED_TITLE_DESCRIPTOR = msg({
+	message: "Couldn't connect to {names}",
+	comment:
+		'Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.',
+});
+export const VOICE_P2P_PEER_FAILED_DESCRIPTION_DESCRIPTOR = msg({
+	message: "A direct connection couldn't be made. You can't hear or see each other.",
+	comment: 'Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.',
+});
+export const VOICE_P2P_PEER_FAILED_SWITCH_HINT_DESCRIPTOR = msg({
+	message: 'A standard call goes through a server and works for everyone.',
+	comment:
+		'Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.',
+});
+export const VOICE_P2P_STAY_DESCRIPTOR = msg({
+	message: 'Stay',
+	comment:
+		'Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.',
+});
+export const VOICE_P2P_LEAVE_DESCRIPTOR = msg({
+	message: 'Leave call',
+	comment: 'Button in the peer-to-peer connection failure dialog that leaves the call.',
+});
+export const VOICE_P2P_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'P2P calls are unavailable right now.',
+	comment: 'Error shown when the server refuses to start or join a peer-to-peer call.',
+});
+export const VOICE_P2P_CONSENT_REQUIRED_DESCRIPTOR = msg({
+	message: "Couldn't join the P2P call. Try again.",
+	comment: 'Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.',
+});
+export const CHANNEL_RTC_P2P_SETTING_DESCRIPTOR = msg({
+	message: 'P2P calls only',
+	comment:
+		'Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.',
+});
+export const CHANNEL_RTC_P2P_SETTING_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address.",
+	comment:
+		'Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.',
+});
 
 export const SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR = msg({
 	message: 'Source',

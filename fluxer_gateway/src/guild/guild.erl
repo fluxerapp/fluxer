@@ -253,6 +253,7 @@ cast_handler(store_pending_connection) -> voice;
 cast_handler(add_virtual_channel_access) -> voice;
 cast_handler(remove_virtual_channel_access) -> voice;
 cast_handler(cleanup_virtual_access_for_user) -> voice;
+cast_handler(voice_signal) -> voice;
 cast_handler(update_member_subscriptions) -> subscription;
 cast_handler(update_dm_partners) -> dm_partners;
 cast_handler(_) -> undefined.

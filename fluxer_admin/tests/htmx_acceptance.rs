@@ -1391,6 +1391,7 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
                 "/instance-config?action=update_gateway_rollout",
                 "/instance-config?action=update_sso",
                 "/instance-config?action=update_domain_migration",
+                "/instance-config?action=update_voice_p2p",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -2423,6 +2424,16 @@ fn instance_config() -> Value {
             "excluded_user_ids": [],
             "anonymous_rollout_basis_points": 0,
             "standalone_forwarding": false
+        },
+        "voice_p2p": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_country_codes": [],
+            "rollout_salt": "voice-p2p-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": [],
+            "max_participants": 2
         },
         "experiment_delivery": {
             "poll_interval_seconds": 300,

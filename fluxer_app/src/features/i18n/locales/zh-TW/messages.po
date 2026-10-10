@@ -1114,7 +1114,7 @@ msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# 則被封鎖的訊息} other {# 則被封鎖的訊息}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:112
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# 個頻道正在追蹤} other {# 個頻道正在追蹤}}此頻道。轉換為文字頻道將會移除這些追蹤。"
 
@@ -2720,6 +2720,11 @@ msgstr "預設表情符號。您可以在 {productName} 的任何地方使用它
 msgid "A description is required."
 msgstr "必須填寫說明。"
 
+#. Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "A direct connection couldn't be made. You can't hear or see each other."
+msgstr "無法建立直接連線。你們無法互相聽到或看到對方。"
+
 #. Duration label component for a very short elapsed call.
 #: src/features/channel/components/CallMessage.tsx:63
 msgid "a few seconds"
@@ -2793,6 +2798,11 @@ msgstr "豐富的嵌入內容或連結預覽（非上傳檔案）"
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "A separate profile for each community"
 msgstr "每個社群的獨立個人檔案"
+
+#. Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:424
+msgid "A standard call goes through a server and works for everyone."
+msgstr "一般通話會透過伺服器進行，而且適用於所有人。"
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -3676,7 +3686,7 @@ msgstr "管理員已暫停邀請，您目前無法加入。"
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:519
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:546
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:138
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
@@ -4628,6 +4638,11 @@ msgstr "任何人都可以申請帳號，但必須由管理員核准。"
 msgid "Anyone in my communities"
 msgstr "我社群中的任何人"
 
+#. Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:372
+msgid "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+msgstr "若有人無法直接連線，就無法參與，直到有人將通話切換為標準通話為止。"
+
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
 msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
 msgstr "任何人找到你都可以傳送要求。關閉此選項即可選擇下方的群組。"
@@ -5112,6 +5127,16 @@ msgstr "音訊"
 msgid "Audio & video"
 msgstr "音訊與視訊"
 
+#. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:451
+msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+msgstr "音訊和視訊直接在參與者之間傳輸，最多支援 {maxParticipants, plural, one {# 人} other {# 人}}。所有人加入前都會同意，且能看到彼此的 IP 位址。"
+
+#. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:350
+msgid "Audio and video go directly between participants."
+msgstr "音訊和視訊會直接在參與者之間傳送。"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:78
 msgid "Audio boost"
@@ -5419,7 +5444,7 @@ msgstr "自動完成建議：{label}，第 {selectedOptionPosition} 項，共 {r
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
-#: src/features/voice/components/VoiceSettingsMenus.tsx:93
+#: src/features/voice/components/VoiceSettingsMenus.tsx:97
 msgid "Automatic"
 msgstr "自動"
 
@@ -6936,15 +6961,15 @@ msgstr "無法刪除帳號"
 msgid "Capture"
 msgstr "擷取"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Capture app audio"
 msgstr "擷取應用程式音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:814
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:815
 msgid "Capture desktop audio"
 msgstr "擷取桌面音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture device audio"
 msgstr "擷取裝置音訊"
 
@@ -7017,7 +7042,7 @@ msgstr "已複製類別 ID"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Form field label for the name of a favorites category.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:77
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:20
 msgid "Category name"
 msgstr "類別名稱"
@@ -7554,7 +7579,7 @@ msgstr "頻道詳細資訊區塊"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "頻道 ID 已複製"
@@ -7572,7 +7597,7 @@ msgid "channel link"
 msgstr "頻道連結"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 msgid "Channel link copied"
 msgstr "頻道連結已複製"
 
@@ -7604,7 +7629,7 @@ msgstr "頻道管理"
 #. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
 #: src/features/forum/utils/ForumMessageDescriptors.ts:331
@@ -7651,7 +7676,7 @@ msgid "Channel synced with parent category"
 msgstr "頻道已與父類別同步"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:68
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
 msgid "Channel topic is too long."
 msgstr "頻道主題過長。"
 
@@ -7668,8 +7693,8 @@ msgstr "選擇頻道類型"
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #. Toast shown after forum channel settings are saved.
 #: src/features/app/config/AuditLogConstants.ts:14
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:295
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:338
 #: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "頻道已更新"
@@ -9421,7 +9446,7 @@ msgstr "在加入語音頻道前確認"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the keyboard tab. Keep it concise.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:23
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:28
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:17
 msgid "Confirm before starting calls"
 msgstr "通話前確認"
@@ -9822,7 +9847,7 @@ msgid "Conversations"
 msgstr "對話"
 
 #. Button in the confirmation that converts an announcement channel back into a text channel. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:123
 msgid "Convert"
 msgstr "轉換"
 
@@ -9842,7 +9867,7 @@ msgid "Converted the channel to an announcement channel"
 msgstr "將頻道轉換為公告頻道"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel, used when the number of following channels could not be loaded. Channels that follow it get copies of its published messages and stop getting them after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:113
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
 msgid "Converting this channel to a text channel removes every channel that follows it."
 msgstr "將此頻道轉換為文字頻道將會移除所有追蹤它的頻道。"
 
@@ -9949,7 +9974,7 @@ msgstr "複製頻道 ID"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:213
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Copy channel link"
 msgstr "複製頻道連結"
 
@@ -10379,13 +10404,18 @@ msgstr "無法完成登入。請再試一次。"
 msgid "Couldn't connect to {domain}. Try again."
 msgstr "無法連線至 {domain}。請再試一次。"
 
+#. Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Couldn't connect to {names}"
+msgstr "無法連線至 {names}"
+
 #. Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.
 #: src/features/voice/engine/media_engine_facade/shared.ts:35
 msgid "Couldn't connect to voice. Please try again."
 msgstr "無法連線至語音。請再試一次。"
 
 #. Title of the error dialog shown when converting a channel between a text channel and an announcement channel failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:122
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
 msgid "Couldn't convert this channel"
 msgstr "無法轉換此頻道"
 
@@ -10482,7 +10512,7 @@ msgid "Couldn't download the desktop update"
 msgstr "無法下載桌面版更新"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Couldn't duplicate this channel"
 msgstr "無法複製此頻道"
 
@@ -10510,6 +10540,11 @@ msgstr "無法忽略好友邀請。請再試一次。"
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
 msgstr "無法加入社群"
+
+#. Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:442
+msgid "Couldn't join the P2P call. Try again."
+msgstr "無法加入點對點通話。請再試一次。"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
@@ -10601,7 +10636,7 @@ msgid "Couldn't open the billing portal"
 msgstr "無法開啟帳務入口網站"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Couldn't pin this conversation"
 msgstr "無法釘選此對話"
 
@@ -10708,7 +10743,7 @@ msgid "Couldn't run that command: {detail}"
 msgstr "無法執行該指令：{detail}"
 
 #. Title of the error dialog shown when saving the channel overview settings failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:132
 msgid "Couldn't save channel settings"
 msgstr "無法儲存頻道設定"
 
@@ -10805,7 +10840,7 @@ msgid "Couldn't unfollow this channel"
 msgstr "無法取消追蹤此頻道"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Couldn't unpin this conversation"
 msgstr "無法取消釘選此對話"
 
@@ -11374,7 +11409,7 @@ msgstr "自訂"
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
-#: src/features/voice/components/VoiceSettingsMenus.tsx:70
+#: src/features/voice/components/VoiceSettingsMenus.tsx:74
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "自訂"
@@ -11938,7 +11973,7 @@ msgstr "預設"
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:68
-#: src/features/voice/components/VoiceSettingsMenus.tsx:87
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
 msgid "Default"
@@ -12098,7 +12133,7 @@ msgstr "要刪除「{stickerName}」嗎？此動作無法復原。"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:103
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "要刪除「{channelLabel}」嗎？此動作無法復原。"
 
@@ -12680,7 +12715,7 @@ msgid "Device audio ({deviceLabel})"
 msgstr "裝置音訊 ({deviceLabel})"
 
 #. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:869
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:50
 msgid "Device audio only"
 msgstr "僅音訊裝置"
@@ -12694,7 +12729,7 @@ msgstr "裝置詳細資訊"
 msgid "Device revoked"
 msgstr "裝置已撤銷"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Device selection"
 msgstr "選擇裝置"
 
@@ -12757,6 +12792,11 @@ msgstr "不同尺寸和成員數"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "調暗刪除線文字"
+
+#. Tooltip on the P2P indicator of a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:336
+msgid "Direct connection. Media is encrypted between participants."
+msgstr "直接連線。媒體內容會在參與者之間加密。"
 
 #. Voice input processing profile with raw microphone audio.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:199
@@ -13282,6 +13322,11 @@ msgstr "私訊側邊欄"
 msgid "DNS TXT record"
 msgstr "DNS TXT 記錄"
 
+#. Checkbox in the dialog shown before joining a peer-to-peer call. When checked, future joins skip the dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:391
+msgid "Do not ask again, always agree"
+msgstr "不再詢問，一律同意"
+
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
@@ -13691,7 +13736,7 @@ msgstr "複製"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 msgid "Duplicate channel"
 msgstr "複製頻道"
 
@@ -13825,7 +13870,7 @@ msgstr "編輯類別"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:153
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:154
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:160
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:72
 msgid "Edit channel"
 msgstr "編輯頻道"
@@ -15004,7 +15049,7 @@ msgstr "Esc 鍵"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:15
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:20
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:197
 msgid "Escape key exits keyboard mode"
 msgstr "按下 Esc 鍵可離開鍵盤模式"
@@ -15046,6 +15091,11 @@ msgstr "所有追蹤此頻道的社群都會收到一份副本。如果您之後
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "所有人"
+
+#. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:358
+msgid "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
+msgstr "通話中的每個人都能免費享有 Plutonium 串流品質：最高可達 4K 原始解析度和 60 fps。"
 
 #. Premium model option that gives everyone the highest limits.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:428
@@ -17381,7 +17431,7 @@ msgstr "已授予 {permissions}"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "授予所有權限並繞過頻道限制。高度敏感。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:993
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Granular selection"
 msgstr "精細選取"
 
@@ -17417,7 +17467,7 @@ msgstr "希臘文"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:69
-#: src/features/voice/components/VoiceSettingsMenus.tsx:789
+#: src/features/voice/components/VoiceSettingsMenus.tsx:796
 msgid "Grid view"
 msgstr "格狀顯示"
 
@@ -17909,7 +17959,7 @@ msgstr "隱藏參與者"
 msgid "Hide password"
 msgstr "隱藏密碼"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:770
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:771
 msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
@@ -18322,11 +18372,11 @@ msgstr "忽略"
 msgid "Ignore friend request"
 msgstr "忽略好友邀請"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:984
 msgid "Ignore hardware devices"
 msgstr "忽略硬體裝置"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:959
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
 msgid "Ignore input media"
 msgstr "忽略輸入媒體"
 
@@ -18357,7 +18407,7 @@ msgstr "要忽略來自 {displayName} 的好友邀請嗎？"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "忽略此頻道的慢速模式冷卻時間。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:971
 msgid "Ignore virtual"
 msgstr "忽略虛擬裝置"
 
@@ -18853,7 +18903,7 @@ msgid "Input device"
 msgstr "輸入裝置"
 
 #. Read-only microphone input level shown in the voice device menu.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:102
+#: src/features/voice/components/VoiceSettingsMenus.tsx:106
 msgid "Input level"
 msgstr "輸入音量強度"
 
@@ -18865,7 +18915,7 @@ msgstr "輸入監控"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:134
-#: src/features/voice/components/VoiceSettingsMenus.tsx:75
+#: src/features/voice/components/VoiceSettingsMenus.tsx:79
 msgid "Input profile"
 msgstr "輸入設定檔"
 
@@ -19431,6 +19481,12 @@ msgstr "抖動："
 msgid "Join"
 msgstr "加入"
 
+#. Primary button in the dialog shown before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:386
+msgctxt "voice-p2p-consent"
+msgid "Join"
+msgstr "加入"
+
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
@@ -19454,6 +19510,11 @@ msgstr "加入社群"
 #: src/features/channel/components/StickersPicker.tsx:54
 msgid "Join a community to unlock stickers."
 msgstr "加入社群即可解鎖貼圖。"
+
+#. Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:345
+msgid "Join a P2P call?"
+msgstr "加入 P2P 通話？"
 
 #. Action label in the DM channel header pill that joins an ongoing call.
 #. Primary CTA button in the mobile direct-call lobby bottom sheet. Joins the active call.
@@ -19492,6 +19553,11 @@ msgstr "加入方式"
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:88
 msgid "Join on this device"
 msgstr "在此裝置上加入"
+
+#. Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:396
+msgid "Join P2P calls without asking"
+msgstr "直接加入點對點通話，無需詢問"
 
 #. Call-to-action button label on an in-progress call system message.
 #: src/features/channel/components/CallMessage.tsx:67
@@ -20023,8 +20089,10 @@ msgstr "離開「{threadName}」嗎？這是私人討論串，除非有人再次
 msgid "Leave blank for a random username"
 msgstr "留空以隨機產生使用者名稱"
 
+#. Button in the peer-to-peer connection failure dialog that leaves the call.
 #. Destructive button in the mobile direct-call lobby bottom sheet. Disconnects from the call.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:92
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:434
 msgid "Leave call"
 msgstr "離開通話"
 
@@ -20201,7 +20269,7 @@ msgid "Lets custom CSS reveal transparent window regions after restarting the de
 msgstr "重新啟動桌面版應用程式後，讓自訂 CSS 顯示透明視窗區域。"
 
 #. Description under the Announcement channel switch in channel settings. Turning it on converts a text channel into an announcement channel. Publishing a message sends a copy of it to every channel in other communities that follows this one.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
 msgid "Lets other communities follow this channel and get copies of what you publish."
 msgstr "讓其他社群追蹤此頻道，並取得您發佈內容的副本。"
 
@@ -20728,6 +20796,11 @@ msgstr "路易斯安那州"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:57
 msgid "Low"
 msgstr "低"
+
+#. Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:354
+msgid "Lower latency."
+msgstr "延遲更低。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:92
@@ -22003,7 +22076,7 @@ msgstr "密西根州"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/permissions/system/components/useMacPermissionControl.ts:10
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:26
-#: src/features/voice/components/VoiceSettingsMenus.tsx:79
+#: src/features/voice/components/VoiceSettingsMenus.tsx:83
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:41
 #: src/features/voice/utils/SettingsDeviceOptions.ts:16
 msgid "Microphone"
@@ -22101,7 +22174,7 @@ msgstr "明尼蘇達州"
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:114
+#: src/features/voice/components/VoiceSettingsMenus.tsx:118
 msgid "Mirror camera"
 msgstr "鏡像相機"
 
@@ -22823,7 +22896,7 @@ msgid "My awesome sticker"
 msgstr "我的超讚貼圖"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
 msgid "My category"
 msgstr "我的類別"
 
@@ -24444,7 +24517,7 @@ msgstr "請確認您是在自己控制的裝置上開始此登入流程。"
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "僅接受信用卡。簽帳金融卡和預付卡無法用於成人內容檢查。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:949
 msgid "Only default speakers"
 msgstr "僅限預設揚聲器"
 
@@ -24522,7 +24595,7 @@ msgstr "只有選定的成員和角色才能檢視此頻道。"
 msgid "Only show message previews for DMs with unread messages"
 msgstr "只顯示有未讀訊息的私訊預覽"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:938
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:939
 msgid "Only speakers"
 msgstr "僅限揚聲器"
 
@@ -24759,7 +24832,7 @@ msgstr "開啟「{channelName}」的頻道詳細資訊"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:129
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:158
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:164
 msgid "Open chat"
 msgstr "開啟聊天"
 
@@ -24840,7 +24913,7 @@ msgstr "在瀏覽器中開啟表情符號"
 msgid "Open emoji picker"
 msgstr "開啟表情符號選取器"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:863
+#: src/features/voice/components/VoiceSettingsMenus.tsx:888
 msgid "Open event sink"
 msgstr "開啟事件接收器"
 
@@ -25280,6 +25353,16 @@ msgstr "其他活躍討論串"
 msgid "Other devices"
 msgstr "其他裝置"
 
+#. Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:363
+msgid "Other participants can see your IP address."
+msgstr "其他參與者可以看到你的 IP 位址。"
+
+#. Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:401
+msgid "Other participants in a P2P call can see your IP address."
+msgstr "其他參與者在點對點通話中可以看到你的 IP 位址。"
+
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -25394,6 +25477,22 @@ msgstr "目前無法將擁有權轉移給 <0>{username}</0>。"
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "已轉移擁有權"
+
+# auto-i18n: reviewed unchanged
+#. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:331
+msgid "P2P"
+msgstr "P2P"
+
+#. Error shown when the server refuses to start or join a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:438
+msgid "P2P calls are unavailable right now."
+msgstr "目前無法進行點對點通話。"
+
+#. Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:446
+msgid "P2P calls only"
+msgstr "僅限點對點通話"
 
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
@@ -26096,7 +26195,7 @@ msgstr "已釘選群組"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "已釘選群組私訊"
@@ -26536,7 +26635,7 @@ msgstr "預覽按鈕"
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:58
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:61
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/VoiceSettingsMenus.tsx:621
 msgid "Preview camera"
 msgstr "預覽相機"
 
@@ -27107,7 +27206,7 @@ msgstr "按住說話按鍵"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
-#: src/features/voice/components/VoiceSettingsMenus.tsx:422
+#: src/features/voice/components/VoiceSettingsMenus.tsx:426
 msgid "Push-to-talk"
 msgstr "按住說話"
 
@@ -31388,7 +31487,7 @@ msgid "Shorten the message and try again."
 msgstr "請縮短訊息後再試一次。"
 
 #. Body of the error modal shown when the channel topic exceeds the maximum length.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:78
 msgid "Shorten the topic and try again."
 msgstr "縮短主題後再試一次。"
 
@@ -31488,7 +31587,7 @@ msgstr "顯示連線音量控制項"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:19
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:24
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:221
 msgid "Show context menu shortcuts"
 msgstr "顯示右鍵選單的快速鍵"
@@ -31573,7 +31672,7 @@ msgstr "顯示較少音效"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:11
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:16
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:245
 msgid "Show focus ring on chat text area"
 msgstr "在聊天文字輸入區顯示焦點框"
@@ -31701,7 +31800,7 @@ msgstr "顯示已靜音的頻道"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:819
+#: src/features/voice/components/VoiceSettingsMenus.tsx:826
 msgid "Show my own camera"
 msgstr "顯示我的相機"
 
@@ -31742,7 +31841,7 @@ msgstr "將新貼文顯示為未讀"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:103
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:77
-#: src/features/voice/components/VoiceSettingsMenus.tsx:833
+#: src/features/voice/components/VoiceSettingsMenus.tsx:840
 msgid "Show non-video participants"
 msgstr "顯示非視訊參與者"
 
@@ -32144,7 +32243,7 @@ msgstr "靜音來電"
 msgid "Silent calls"
 msgstr "靜音來電"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:874
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:875
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "當擷取裝置沒有自己的音訊輸入時保持靜音"
 
@@ -32655,8 +32754,8 @@ msgstr "發生錯誤。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:156
 msgid "Something went wrong. Please try again in a moment."
 msgstr "發生錯誤。請稍後再試一次。"
 
@@ -32750,7 +32849,7 @@ msgstr "音效"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:332
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:458
 msgid "Source"
 msgstr "來源"
 
@@ -32859,7 +32958,7 @@ msgstr "請開始說話。完成後請按「停止」，您之後可以再修剪
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:46
-#: src/features/voice/components/VoiceSettingsMenus.tsx:83
+#: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:20
 msgid "Speaker"
 msgstr "揚聲器"
@@ -33057,12 +33156,12 @@ msgid "Start a group DM"
 msgstr "發起群組私訊"
 
 #. Confirm dialog body before starting a 1:1 video call.
-#: src/features/voice/utils/CallUtils.tsx:17
+#: src/features/voice/utils/CallUtils.tsx:21
 msgid "Start a video call?"
 msgstr "要開始視訊通話嗎？"
 
 #. Confirm dialog body before starting a 1:1 voice call.
-#: src/features/voice/utils/CallUtils.tsx:21
+#: src/features/voice/utils/CallUtils.tsx:25
 msgid "Start a voice call?"
 msgstr "要開始語音通話嗎？"
 
@@ -33092,6 +33191,16 @@ msgstr "開始日期必須早於結束日期。"
 msgid "Start drag and drop"
 msgstr "開始拖放"
 
+#. Primary button in the dialog offering to start a call in peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:377
+msgid "Start in P2P mode"
+msgstr "以 P2P 模式開始"
+
+#. Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:340
+msgid "Start in P2P mode?"
+msgstr "以 P2P 模式開始？"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:231
 msgid "Start in the tray instead of opening the window when launched at login"
@@ -33117,6 +33226,11 @@ msgstr "最小化啟動"
 msgid "Start over"
 msgstr "重新開始"
 
+#. Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Start P2P call"
+msgstr "開始點對點通話"
+
 #. Button label shown before recording starts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:69
 msgid "Start recording"
@@ -33130,6 +33244,11 @@ msgstr "搜尋時以 <0>{peoplePrefix}</0>、<1>{textChannelPrefix}</1>、<2>{vo
 #: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "開始朗讀"
+
+#. Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:381
+msgid "Start standard call"
+msgstr "開始標準通話"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
@@ -33201,6 +33320,11 @@ msgstr "狀態面板"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:368
 msgid "Status:"
 msgstr "狀態："
+
+#. Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:429
+msgid "Stay"
+msgstr "保留"
 
 #. Empty state explanation in the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:198
@@ -33409,7 +33533,7 @@ msgid "Stop"
 msgstr "停止"
 
 #. Title of the confirmation shown when a member turns off the Announcement channel switch in channel settings, which converts the channel back into a normal text channel.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
 msgid "Stop being an announcement channel?"
 msgstr "停止將其設為公告頻道？"
 
@@ -33920,6 +34044,11 @@ msgstr "切換到上一個社群或私訊"
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:81
 msgid "Switch to single column"
 msgstr "切換成單欄顯示"
+
+#. Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "Switch to standard call"
+msgstr "切換至一般通話"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
@@ -37568,7 +37697,7 @@ msgstr "已取消釘選群組"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "已取消釘選群組私訊"
@@ -37726,6 +37855,11 @@ msgstr "未驗證的電子郵件"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "最多可設定 {DISCOVERY_MAX_TAGS} 個標籤，讓大家更容易找到您的社群。這些標籤會顯示在探索搜尋結果中。"
+
+#. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
+msgstr "最多 {maxParticipants, plural, one {# 位使用者} other {# 位使用者}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
@@ -38041,7 +38175,7 @@ msgstr "正在上傳表情符號"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
@@ -39035,7 +39169,7 @@ msgstr "視訊傳送："
 #. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:65
-#: src/features/voice/components/VoiceSettingsMenus.tsx:110
+#: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Video settings"
 msgstr "視訊設定"
 
@@ -39570,7 +39704,7 @@ msgstr "您的瀏覽器不支援語音訊息錄製功能。"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:98
+#: src/features/voice/components/VoiceSettingsMenus.tsx:102
 msgid "Voice region"
 msgstr "語音區域"
 
@@ -39582,7 +39716,7 @@ msgstr "語音連線還原提示列"
 #. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:53
-#: src/features/voice/components/VoiceSettingsMenus.tsx:106
+#: src/features/voice/components/VoiceSettingsMenus.tsx:110
 msgid "Voice settings"
 msgstr "語音設定"
 

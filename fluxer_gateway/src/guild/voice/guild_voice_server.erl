@@ -124,6 +124,7 @@ init(#{guild_id := GuildId, guild_pid := GuildPid} = Args) ->
     guild_voice_server_sync:ensure_registry(),
     ets:insert(?REGISTRY_TABLE, {GuildId, self()}),
     erlang:send_after(?SWEEP_INTERVAL_MS, self(), sweep_pending_joins),
+    erlang:send_after(?SEEDED_SESSION_CHECK_DELAY_MS, self(), check_p2p_sessions),
     InitialVoiceStates = voice_state_utils:ensure_voice_states(
         maps:get(initial_voice_states, Args, #{})
     ),
@@ -254,6 +255,12 @@ handle_info(sweep_pending_joins, State) ->
             NewGuildState = guild_voice_connection:sweep_expired_pending_joins(GuildState),
             {noreply, guild_voice_server_state:apply_guild_state(NewGuildState, State2)}
     end;
+handle_info(check_p2p_sessions, State) ->
+    erlang:send_after(?SEEDED_SESSION_CHECK_DELAY_MS, self(), check_p2p_sessions),
+    ok = spawn_seeded_session_check(
+        first, seeded_sessions(p2p_connection_ids(State), State), State
+    ),
+    {noreply, State};
 handle_info({check_seeded_sessions, Round, ConnectionIds}, State) ->
     ok = spawn_seeded_session_check(Round, seeded_sessions(ConnectionIds, State), State),
     {noreply, State};
@@ -312,6 +319,15 @@ schedule_seeded_session_check(Round, ConnectionIds) ->
         ?SEEDED_SESSION_CHECK_DELAY_MS, self(), {check_seeded_sessions, Round, ConnectionIds}
     ),
     ok.
+
+-spec p2p_connection_ids(server_state()) -> [binary()].
+p2p_connection_ids(State) ->
+    maps:keys(
+        maps:filter(
+            fun(_ConnectionId, VoiceState) -> voice_p2p:is_p2p(VoiceState) end,
+            maps:get(voice_states, State, #{})
+        )
+    ).
 
 -spec seeded_sessions([binary()], server_state()) -> #{binary() => {integer(), binary()}}.
 seeded_sessions(ConnectionIds, State) ->
@@ -572,6 +588,24 @@ seeded_session_check_reports_only_gone_sessions_test() ->
     receive
         {seeded_sessions_gone, first, Gone} ->
             ?assertEqual(#{<<"a">> => {5, <<"dead">>}}, Gone)
+    after 1000 -> ?assert(false)
+    end.
+
+p2p_session_check_reports_only_gone_p2p_sessions_test() ->
+    State0 = seeded_test_state(self()),
+    #{<<"ghost">> := Ghost, <<"live">> := Live} = VoiceStates = maps:get(voice_states, State0),
+    State = State0#{
+        voice_states => VoiceStates#{
+            <<"ghost">> => Ghost#{<<"p2p">> => true},
+            <<"live">> => Live#{<<"p2p">> => true},
+            <<"sfu-ghost">> => Ghost#{<<"connection_id">> => <<"sfu-ghost">>}
+        },
+        test_session_gone_fun => fun(SessionId) -> SessionId =:= <<"dead">> end
+    },
+    {noreply, State} = handle_info(check_p2p_sessions, State),
+    receive
+        {seeded_sessions_gone, first, Gone} ->
+            ?assertEqual(#{<<"ghost">> => {5, <<"dead">>}}, Gone)
     after 1000 -> ?assert(false)
     end.
 

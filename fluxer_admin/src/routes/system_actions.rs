@@ -8,18 +8,19 @@ use crate::{
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
             CaptchaConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
-            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
-            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
-            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
-            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
-            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
-            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
-            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
-            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
-            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, PremiumMode, PushRelayConfigUpdateRequest, RegistrationMode,
-            SsoConfigUpdateRequest, VoiceE2eeScope,
+            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES,
+            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
+            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
+            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceConfigUpdateRequest,
+            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
+            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
+            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
+            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
+            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
+            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, PremiumMode,
+            PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
+            VOICE_P2P_MAX_PARTICIPANTS_RANGE, VoiceE2eeScope, VoiceP2pConfigUpdateRequest,
         },
     },
     config::AdminConfig,
@@ -217,6 +218,10 @@ pub async fn instance_config_post(
             instance_config_result(client.update_instance_config(&update).await)
         }
         "update_domain_migration" => match build_domain_migration_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_voice_p2p" => match build_voice_p2p_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -557,6 +562,32 @@ fn parse_experiment_user_ids(value: &str, label: &str) -> Result<Vec<String>, St
     Ok(ids)
 }
 
+fn parse_experiment_country_codes(value: &str) -> Result<Vec<String>, String> {
+    let mut codes: Vec<String> = Vec::new();
+    let candidates = value
+        .split(|character: char| character == ',' || character.is_whitespace())
+        .filter(|candidate| !candidate.is_empty());
+    for (index, candidate) in candidates.enumerate() {
+        if candidate.len() != 2 || !candidate.bytes().all(|byte| byte.is_ascii_alphabetic()) {
+            return Err(format!(
+                "Rollout countries entry {} must be a two-letter country code",
+                index + 1
+            ));
+        }
+        let code = candidate.to_ascii_uppercase();
+        if codes.contains(&code) {
+            continue;
+        }
+        if codes.len() == EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES {
+            return Err(format!(
+                "Rollout countries must contain at most {EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES} unique codes"
+            ));
+        }
+        codes.push(code);
+    }
+    Ok(codes)
+}
+
 fn build_push_relay_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
     InstanceConfigUpdateRequest {
         push_relay: Some(PushRelayConfigUpdateRequest {
@@ -579,6 +610,10 @@ fn build_domain_migration_update(
                 0,
                 EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
+            rollout_country_codes: Some(parse_experiment_country_codes(
+                form.first("domain_migration_rollout_country_codes")
+                    .unwrap_or_default(),
+            )?),
             rollout_salt: parse_experiment_rollout_salt(form, "domain_migration_rollout_salt")?,
             included_user_ids: Some(parse_experiment_user_ids(
                 form.first("domain_migration_included_user_ids")
@@ -604,6 +639,50 @@ fn build_domain_migration_update(
                 EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
             standalone_forwarding: Some(form.bool_value("domain_migration_standalone_forwarding")),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_voice_p2p_update(form: &MultiValueForm) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        voice_p2p: Some(VoiceP2pConfigUpdateRequest {
+            enabled: Some(form.bool_value("voice_p2p_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "voice_p2p_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_country_codes: Some(parse_experiment_country_codes(
+                form.first("voice_p2p_rollout_country_codes")
+                    .unwrap_or_default(),
+            )?),
+            rollout_salt: parse_experiment_rollout_salt(form, "voice_p2p_rollout_salt")?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("voice_p2p_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("voice_p2p_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("voice_p2p_include_premium_users")),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("voice_p2p_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+            max_participants: parse_form_number(
+                form,
+                "voice_p2p_max_participants",
+                "Maximum participants",
+                *VOICE_P2P_MAX_PARTICIPANTS_RANGE.start(),
+                *VOICE_P2P_MAX_PARTICIPANTS_RANGE.end(),
+            )?,
         }),
         ..Default::default()
     })
@@ -1341,9 +1420,61 @@ mod tests {
     }
 
     #[test]
+    fn parse_experiment_country_codes_splits_uppercases_and_dedupes() {
+        assert_eq!(
+            parse_experiment_country_codes("  se ,NO\nbr\r\n fi\tSE ,, no ").expect("valid codes"),
+            vec![
+                "SE".to_owned(),
+                "NO".to_owned(),
+                "BR".to_owned(),
+                "FI".to_owned()
+            ]
+        );
+        assert_eq!(
+            parse_experiment_country_codes(" \n ").expect("valid codes"),
+            Vec::<String>::new()
+        );
+    }
+
+    #[test]
+    fn parse_experiment_country_codes_rejects_malformed_codes() {
+        for value in ["S", "SWE", "S1", "5E", "<>", "ÅL"] {
+            assert_eq!(
+                parse_experiment_country_codes(&format!("SE,{value}")).expect_err("invalid code"),
+                "Rollout countries entry 2 must be a two-letter country code",
+                "{value}"
+            );
+        }
+    }
+
+    #[test]
+    fn parse_experiment_country_codes_rejects_exceeding_the_cap() {
+        let codes = (b'A'..=b'Z')
+            .flat_map(|first| {
+                (b'A'..=b'Z').map(move |second| format!("{}{}", first as char, second as char))
+            })
+            .collect::<Vec<_>>();
+        let at_cap = codes[..EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES].join(" ");
+        assert_eq!(
+            parse_experiment_country_codes(&format!("{at_cap} aa"))
+                .expect("valid codes at cap")
+                .len(),
+            EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES
+        );
+        assert_eq!(
+            parse_experiment_country_codes(&format!(
+                "{at_cap} {}",
+                codes[EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES]
+            ))
+            .expect_err("too many codes"),
+            "Rollout countries must contain at most 250 unique codes"
+        );
+    }
+
+    #[test]
     fn build_domain_migration_update_reads_the_rollout_fields() {
         let form = MultiValueForm::parse(
-            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true&domain_migration_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&domain_migration_include_premium_users=true",
+            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true&domain_migration_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&domain_migration_include_premium_users=true&domain_migration_rollout_country_codes=se%2C%20NO%0Ase",
         );
         let update = build_domain_migration_update(&form)
             .expect("valid form")
@@ -1370,6 +1501,10 @@ mod tests {
         assert_eq!(update.standalone_forwarding, Some(true));
         assert_eq!(update.include_premium_users, Some(true));
         assert_eq!(
+            update.rollout_country_codes,
+            Some(vec!["SE".to_owned(), "NO".to_owned()])
+        );
+        assert_eq!(
             update.included_guild_ids,
             Some(vec![
                 "1500000000000000005".to_owned(),
@@ -1386,6 +1521,7 @@ mod tests {
             serde_json::to_value(request).expect("serializable update"),
             serde_json::json!({"domain_migration": {
                 "enabled": false,
+                "rollout_country_codes": [],
                 "included_user_ids": [],
                 "included_guild_ids": [],
                 "include_premium_users": false,
@@ -1429,6 +1565,10 @@ mod tests {
             (
                 "domain_migration_excluded_user_ids=123%2Cinvalid",
                 "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
+            ),
+            (
+                "domain_migration_rollout_country_codes=SE%2CSWE",
+                "Rollout countries entry 2 must be a two-letter country code",
             ),
         ] {
             let form = MultiValueForm::parse(form.as_bytes());
@@ -1517,6 +1657,90 @@ mod tests {
             build_domain_migration_update(&form).expect_err("invalid guild id"),
             "Included guild IDs entry 2 must contain 1 to 20 decimal digits"
         );
+    }
+
+    #[test]
+    fn build_voice_p2p_update_reads_the_rollout_fields() {
+        let form = MultiValueForm::parse(
+            b"voice_p2p_enabled=true&voice_p2p_rollout_basis_points=%20500%20&voice_p2p_rollout_salt=%20voice-p2p-v2%20&voice_p2p_included_user_ids=1500000000000000001&voice_p2p_excluded_user_ids=1500000000000000002&voice_p2p_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&voice_p2p_include_premium_users=true&voice_p2p_rollout_country_codes=se%2C%20NO%0Ase&voice_p2p_max_participants=%203%20",
+        );
+        let update = build_voice_p2p_update(&form)
+            .expect("valid form")
+            .voice_p2p
+            .expect("voice p2p update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.rollout_basis_points, Some(500));
+        assert_eq!(update.rollout_salt, Some("voice-p2p-v2".to_owned()));
+        assert_eq!(update.include_premium_users, Some(true));
+        assert_eq!(update.max_participants, Some(3));
+        assert_eq!(
+            update.rollout_country_codes,
+            Some(vec!["SE".to_owned(), "NO".to_owned()])
+        );
+        assert_eq!(
+            update.included_guild_ids,
+            Some(vec![
+                "1500000000000000005".to_owned(),
+                "1500000000000000006".to_owned()
+            ])
+        );
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec!["1500000000000000001".to_owned()])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec!["1500000000000000002".to_owned()])
+        );
+    }
+
+    #[test]
+    fn build_voice_p2p_update_leaves_the_feature_inert_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_voice_p2p_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"voice_p2p": {
+                "enabled": false,
+                "rollout_country_codes": [],
+                "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
+                "excluded_user_ids": [],
+            }})
+        );
+    }
+
+    #[test]
+    fn build_voice_p2p_update_rejects_invalid_rollout_fields() {
+        for (form, message) in [
+            (
+                "voice_p2p_rollout_basis_points=10001",
+                "Rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "voice_p2p_included_guild_ids=1500000000000000005%0Anot-a-guild",
+                "Included guild IDs entry 2 must contain 1 to 20 decimal digits",
+            ),
+            (
+                "voice_p2p_rollout_country_codes=SE%2CSWE",
+                "Rollout countries entry 2 must be a two-letter country code",
+            ),
+            (
+                "voice_p2p_max_participants=5",
+                "Maximum participants must be a whole number between 2 and 4",
+            ),
+            (
+                "voice_p2p_max_participants=1",
+                "Maximum participants must be a whole number between 2 and 4",
+            ),
+        ] {
+            let form = MultiValueForm::parse(form.as_bytes());
+            assert_eq!(
+                build_voice_p2p_update(&form).expect_err("invalid field"),
+                message
+            );
+        }
     }
 
     #[test]

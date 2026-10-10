@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 
 -export([get_dm_voice_token_and_create_state/1, get_voice_token/6]).
--export([join_or_create_call/5, join_or_create_call/6]).
+-export([join_or_create_call/6]).
 -export([maybe_spawn_join_call/6, dispatch_to_session/4]).
 
 -export_type([
@@ -35,9 +35,42 @@ get_dm_voice_token_and_create_state(Req) ->
         "dm_voice_token_create_request: user_id=~p channel_id=~p rtc_region=~p",
         [UserId, ChannelId, Region]
     ),
-    case rpc_client:call(ReqWithRegion) of
+    case dm_join_decision(Req) of
+        {reject, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), State};
+        Decision ->
+            request_dm_token(
+                voice_p2p:add_to_token_request(
+                    ReqWithRegion, Decision, maps:get(country_code, Req, undefined)
+                ),
+                Decision,
+                Req
+            )
+    end.
+
+-spec dm_join_decision(token_request()) -> voice_p2p:join_decision().
+dm_join_decision(Req) ->
+    UserId = maps:get(user_id, Req),
+    voice_p2p:join_decision(
+        voice_p2p:agreed(maps:get(p2p, Req, undefined), maps:get(bot, Req, false)),
+        [
+            VoiceState
+         || VoiceState <- dm_voice_state:call_voice_states(maps:get(channel_id, Req)),
+            not guild_voice_state:user_matches_voice_state(VoiceState, UserId)
+        ],
+        false,
+        false
+    ).
+
+-spec request_dm_token(map(), voice_p2p:join_decision(), token_request()) ->
+    {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
+request_dm_token(TokenReq, Decision, Req) ->
+    UserId = maps:get(user_id, Req),
+    ChannelId = maps:get(channel_id, Req),
+    State = maps:get(state, Req),
+    case rpc_client:call(TokenReq) of
         {ok, Data} ->
-            handle_dm_token_success(Data, Req);
+            handle_dm_token_success(Decision, Data, Req);
         {error, {rpc_error, _Status, Body}} ->
             handle_token_rpc_error(UserId, ChannelId, Body, State);
         {error, Reason} ->
@@ -60,8 +93,40 @@ handle_token_rpc_error(UserId, ChannelId, Body, State) ->
         false -> {reply, gateway_errors:error(voice_token_failed), State}
     end.
 
--spec handle_dm_token_success(map(), token_request()) -> {reply, map(), dm_state()}.
-handle_dm_token_success(Data, Req) ->
+-spec handle_dm_token_success(voice_p2p:join_decision(), map(), token_request()) ->
+    {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
+handle_dm_token_success(Decision, Data, Req) ->
+    case voice_p2p:admit(Decision, voice_p2p:grant(Data)) of
+        {reject, ErrorAtom} ->
+            {reply, gateway_errors:error(ErrorAtom), maps:get(state, Req)};
+        {p2p, ConnectionId, IceServers, MaxParticipants} ->
+            handle_dm_p2p_grant(ConnectionId, IceServers, MaxParticipants, Req);
+        sfu ->
+            handle_dm_sfu_token(Data, Req)
+    end.
+
+-spec handle_dm_p2p_grant(binary(), [map()], pos_integer(), token_request()) ->
+    {reply, map(), dm_state()}.
+handle_dm_p2p_grant(ConnectionId, IceServers, MaxParticipants, Req) ->
+    UserId = maps:get(user_id, Req),
+    ChannelId = maps:get(channel_id, Req),
+    SessionId = maps:get(session_id, Req),
+    State = maps:get(state, Req),
+    EffE2EE = maps:get(e2ee_capable, Req) andalso guild_voice_e2ee:is_e2ee_enabled_for_dm(),
+    VoiceState = build_voice_state(Req, ConnectionId, EffE2EE, true),
+    NewState = store_and_broadcast(ConnectionId, ChannelId, VoiceState, State),
+    SessionPid = maps:get(session_pid, State),
+    dispatch_to_session(
+        SessionPid,
+        voice_server_update,
+        voice_p2p:voice_server_update(ConnectionId, ChannelId, null, IceServers),
+        null
+    ),
+    spawn_join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants),
+    {reply, #{success => true, needs_token => false, connection_id => ConnectionId}, NewState}.
+
+-spec handle_dm_sfu_token(map(), token_request()) -> {reply, map(), dm_state()}.
+handle_dm_sfu_token(Data, Req) ->
     UserId = maps:get(user_id, Req),
     ChannelId = maps:get(channel_id, Req),
     SessionId = maps:get(session_id, Req),
@@ -71,7 +136,7 @@ handle_dm_token_success(Data, Req) ->
     Endpoint = maps:get(<<"endpoint">>, Data),
     ConnectionId = maps:get(<<"connectionId">>, Data),
     EffE2EE = E2EECapable andalso guild_voice_e2ee:is_e2ee_enabled_for_dm(),
-    VoiceState0 = build_voice_state(Req, ConnectionId, EffE2EE),
+    VoiceState0 = build_voice_state(Req, ConnectionId, EffE2EE, false),
     VoiceState = dm_voice_state:maybe_attach_voice_routing_metadata(
         VoiceState0,
         maps:get(<<"regionId">>, Data, undefined),
@@ -82,11 +147,11 @@ handle_dm_token_success(Data, Req) ->
     VSUpdate = build_voice_server_update(Token, Endpoint, ChannelId, ConnectionId, E2EEKey),
     SessionPid = maps:get(session_pid, State),
     dispatch_to_session(SessionPid, voice_server_update, VSUpdate, null),
-    spawn_join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid),
+    spawn_join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, undefined),
     {reply, #{success => true, needs_token => false, connection_id => ConnectionId}, NewState}.
 
--spec build_voice_state(token_request(), binary(), boolean()) -> voice_state().
-build_voice_state(Req, ConnectionId, EffE2EE) ->
+-spec build_voice_state(token_request(), binary(), boolean(), boolean()) -> voice_state().
+build_voice_state(Req, ConnectionId, EffE2EE, P2p) ->
     voice_state_utils:complete_voice_state(#{
         <<"guild_id">> => null,
         <<"user_id">> => integer_to_binary(maps:get(user_id, Req)),
@@ -102,7 +167,8 @@ build_voice_state(Req, ConnectionId, EffE2EE) ->
         <<"self_stream">> => maps:get(self_stream, Req),
         <<"suppress">> => false,
         <<"viewer_stream_keys">> => maps:get(viewer_stream_keys, Req),
-        <<"e2ee_capable">> => EffE2EE
+        <<"e2ee_capable">> => EffE2EE,
+        <<"p2p">> => P2p
     }).
 
 -spec store_and_broadcast(binary(), integer(), voice_state(), dm_state()) -> dm_state().
@@ -162,17 +228,27 @@ dispatch_to_session_with_relay(SessionPid, Event, Payload, GuildId) ->
         error:undef -> gen_server:cast(SessionPid, {dispatch, Event, Payload})
     end.
 
--spec spawn_join_call(integer(), integer(), voice_state(), binary(), pid()) -> ok.
-spawn_join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) ->
+-spec spawn_join_call(
+    integer(), integer(), voice_state(), binary(), pid(), pos_integer() | undefined
+) -> ok.
+spawn_join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants) ->
     spawn(fun() ->
-        safe_join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid)
+        safe_join_or_create_call(
+            ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants
+        )
     end),
     ok.
 
--spec safe_join_or_create_call(integer(), integer(), voice_state(), binary(), pid()) -> ok.
-safe_join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) ->
+-spec safe_join_or_create_call(
+    integer(), integer(), voice_state(), binary(), pid(), pos_integer() | undefined
+) -> ok.
+safe_join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants) ->
     _ = shard_utils:safe_apply(
-        fun() -> join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) end,
+        fun() ->
+            join_or_create_call(
+                ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants
+            )
+        end,
         ok
     ),
     ok.
@@ -187,7 +263,7 @@ maybe_spawn_join_call(true, ChannelId, UserId, VoiceState, SessionId, State) whe
 ->
     case maps:get(session_pid, State, undefined) of
         Pid when is_pid(Pid) ->
-            spawn_join_call(ChannelId, UserId, VoiceState, SessionId, Pid);
+            spawn_join_call(ChannelId, UserId, VoiceState, SessionId, Pid, undefined);
         _ ->
             ok
     end;
@@ -246,21 +322,33 @@ handle_get_voice_token_ok(Data, UserId, ChannelId, SessionPid) ->
         }},
     ok.
 
--spec join_or_create_call(integer(), integer(), voice_state(), binary(), pid()) -> ok.
-join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) ->
-    join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, 10).
+-spec join_or_create_call(
+    integer(), integer(), voice_state(), binary(), pid(), pos_integer() | undefined
+) -> ok.
+join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants) ->
+    join_or_create_call(
+        ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, 10
+    ).
 
 -spec join_or_create_call(
-    integer(), integer(), voice_state(), binary(), pid(), non_neg_integer()
+    integer(),
+    integer(),
+    voice_state(),
+    binary(),
+    pid(),
+    pos_integer() | undefined,
+    non_neg_integer()
 ) -> ok.
-join_or_create_call(ChannelId, UserId, VoiceState, _SessId, SessionPid, 0) ->
+join_or_create_call(ChannelId, UserId, VoiceState, _SessId, SessionPid, _MaxParticipants, 0) ->
     logger:warning(
         "dm_voice_join_or_create_call_exhausted_retries: user_id=~p channel_id=~p",
         [UserId, ChannelId]
     ),
     rollback_ghost_voice_state(ChannelId, VoiceState, SessionPid),
     ok;
-join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries) ->
+join_or_create_call(
+    ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, Retries
+) ->
     ConnectionId = maps:get(<<"connection_id">>, VoiceState, undefined),
     case call_manager:lookup(ChannelId) of
         {ok, CallPid} ->
@@ -272,10 +360,13 @@ join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retrie
                 SessionId,
                 SessionPid,
                 ConnectionId,
+                MaxParticipants,
                 Retries
             );
         _ ->
-            retry_join(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries)
+            retry_join(
+                ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, Retries
+            )
     end.
 
 -spec do_join_call(
@@ -286,15 +377,28 @@ join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retrie
     binary(),
     pid(),
     term(),
+    pos_integer() | undefined,
     non_neg_integer()
 ) -> ok.
 do_join_call(
-    CallPid, ChannelId, UserId, VoiceState, SessionId, SessionPid, ConnectionId, Retries
+    CallPid,
+    ChannelId,
+    UserId,
+    VoiceState,
+    SessionId,
+    SessionPid,
+    ConnectionId,
+    MaxParticipants,
+    Retries
 ) ->
     JoinMsg =
-        case ConnectionId of
-            undefined -> {join, UserId, VoiceState, SessionId, SessionPid};
-            _ -> {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId}
+        case {ConnectionId, MaxParticipants} of
+            {undefined, _} ->
+                {join, UserId, VoiceState, SessionId, SessionPid};
+            {_, undefined} ->
+                {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId};
+            _ ->
+                {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants}
         end,
     case gateway_rpc_call_lookup:safe_gen_server_call(CallPid, JoinMsg, 5000) of
         {ok, ok} ->
@@ -304,12 +408,17 @@ do_join_call(
                 [UserId, ChannelId, Retries]
             ),
             ok;
+        {ok, {error, ErrorAtom}} ->
+            gen_server:cast(SessionPid, {voice_rejected, ErrorAtom}),
+            rollback_ghost_voice_state(ChannelId, VoiceState, SessionPid);
         Error ->
             logger:warning(
                 dm_join_call_failed_log_message(),
                 [UserId, ChannelId, Retries, Error]
             ),
-            retry_join(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries)
+            retry_join(
+                ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, Retries
+            )
     end.
 
 -spec dm_join_call_failed_log_message() -> string().
@@ -317,14 +426,24 @@ dm_join_call_failed_log_message() ->
     "dm_voice_join_or_create_call_failed: user_id=~p channel_id=~p "
     "retries_left=~p error=~p".
 
--spec retry_join(integer(), integer(), voice_state(), binary(), pid(), non_neg_integer()) -> ok.
-retry_join(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries) ->
+-spec retry_join(
+    integer(),
+    integer(),
+    voice_state(),
+    binary(),
+    pid(),
+    pos_integer() | undefined,
+    non_neg_integer()
+) -> ok.
+retry_join(ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, Retries) ->
     logger:warning(
         "dm_voice_join_or_create_call_lookup_not_found: user_id=~p channel_id=~p retries_left=~p",
         [UserId, ChannelId, Retries]
     ),
     ok = gateway_retry_timer:wait(300),
-    join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries - 1).
+    join_or_create_call(
+        ChannelId, UserId, VoiceState, SessionId, SessionPid, MaxParticipants, Retries - 1
+    ).
 
 -spec rollback_ghost_voice_state(integer(), voice_state(), pid()) -> ok.
 rollback_ghost_voice_state(ChannelId, VoiceState, SessionPid) ->
@@ -357,7 +476,9 @@ do_join_call_dead_pid_exhausts_without_crash_test() ->
     VoiceState = #{<<"connection_id">> => <<"connection">>},
     ?assertEqual(
         ok,
-        do_join_call(DeadPid, 1234, 42, VoiceState, <<"session">>, self(), <<"connection">>, 1)
+        do_join_call(
+            DeadPid, 1234, 42, VoiceState, <<"session">>, self(), <<"connection">>, undefined, 1
+        )
     ),
     receive
         {'$gen_cast', {call_monitor, 1234, DeadPid}} ->
@@ -370,7 +491,7 @@ exhausted_retries_casts_force_disconnect_test() ->
     VoiceState = #{<<"connection_id">> => <<"conn-x">>},
     ?assertEqual(
         ok,
-        join_or_create_call(1234, 42, VoiceState, <<"session">>, self(), 0)
+        join_or_create_call(1234, 42, VoiceState, <<"session">>, self(), undefined, 0)
     ),
     receive
         {'$gen_cast', {call_force_disconnect, 1234, <<"conn-x">>}} ->
@@ -382,7 +503,7 @@ exhausted_retries_casts_force_disconnect_test() ->
 exhausted_retries_without_connection_id_casts_undefined_test() ->
     ?assertEqual(
         ok,
-        join_or_create_call(1234, 42, #{}, <<"session">>, self(), 0)
+        join_or_create_call(1234, 42, #{}, <<"session">>, self(), undefined, 0)
     ),
     receive
         {'$gen_cast', {call_force_disconnect, 1234, undefined}} ->

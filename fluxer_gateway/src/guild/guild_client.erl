@@ -19,7 +19,9 @@
     endpoint => binary(),
     connection_id => binary(),
     voice_state => map(),
-    needs_token => boolean()
+    needs_token => boolean(),
+    p2p => true,
+    ice_servers => [map()]
 }.
 
 -type voice_state_update_rejection() :: #{

@@ -90,7 +90,7 @@ A replayed Dispatch keeps its original sequence, and a replayed run can have gap
 
 ## Framing
 
-One inbound WebSocket message is limited to 4,096 bytes on the wire, and a compressed inbound message is limited to a further 4,096 bytes after decompression. A message past either bound closes with `4002` and reason `Payload too large`. An inbound message that cannot be decompressed closes with `4002` and reason `Decompression failed`.
+One inbound WebSocket message is limited to 16,384 bytes on the wire, and a compressed inbound message is limited to a further 16,384 bytes after decompression. A message past either bound closes with `4002` and reason `Payload too large`. An inbound message that cannot be decompressed closes with `4002` and reason `Decompression failed`.
 
 JSON payloads are UTF-8 objects. An uncompressed client payload is sent in a text frame, and a payload the client compressed with the negotiated zstd stream is sent in a binary frame.
 

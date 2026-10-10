@@ -180,4 +180,8 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'voice:entrance_sound:play::user_id::channel_id',
 		config: {limit: 3, windowMs: ms('30 seconds')},
 	} as RouteRateLimitConfig,
+	VOICE_P2P_CONNECTION_REPORTS: {
+		bucket: 'voice:p2p:connection_reports',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 } as const;

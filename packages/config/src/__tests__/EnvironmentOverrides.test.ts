@@ -86,6 +86,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				FLUXER_API_IP_BAN_EXEMPT_IPS: blank,
 				FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: blank,
 				FLUXER_LIVEKIT_DEFAULT_REGION: blank,
+				FLUXER_VOICE_P2P_STUN_URLS: blank,
 				FLUXER_AUTH_BLUESKY_KEYS: blank,
 				FLUXER_EMAIL_FROM_NAME: blank,
 				FLUXER_EMAIL_REPLY_TO_EMAIL: blank,
@@ -143,6 +144,20 @@ describe('buildNamedFluxerEnvOverrides', () => {
 		).toMatchObject({
 			internal: {media_proxy: 'http://alias'},
 			services: {nats: {core_url: 'nats://alias'}},
+		});
+	});
+
+	test('maps the peer-to-peer STUN urls onto integrations.voice', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_VOICE_P2P_STUN_URLS: 'stun:stun.example.com:3478, stun:stun2.example.com:3478',
+			}),
+		).toEqual({
+			integrations: {
+				voice: {
+					p2p_stun_urls: ['stun:stun.example.com:3478', 'stun:stun2.example.com:3478'],
+				},
+			},
 		});
 	});
 

@@ -86,6 +86,7 @@ import {
 	PinIcon,
 	SendInvitesIcon,
 	SettingsIcon,
+	VoiceCallIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -94,7 +95,12 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {MenuActionEvent, MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {VoiceP2pConsentModal} from '@app/features/voice/components/alerts/VoiceP2pConsentModal';
+import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import CompactVoiceCallHeight, {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
+import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
+import VoiceP2pRollout from '@app/features/voice/state/VoiceP2pRollout';
+import {VOICE_P2P_START_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getMutedText} from '@app/lib/overlay/OverlayContextMenu';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -182,6 +188,7 @@ interface ChannelMenuHandlers {
 	handleOpenChannelLink: () => void;
 	handleCopyLinkChannelUrl: () => Promise<void>;
 	handleOpenChat: () => void;
+	handleStartP2pCall: () => void;
 	handleOpenMuteSheet: () => void;
 	handleNotificationSettings: () => void;
 	handleDuplicateChannel: (event?: MenuActionEvent) => void;
@@ -212,6 +219,7 @@ interface ChannelMenuState {
 	canManageChannels: boolean;
 	canEditChannel: boolean;
 	canInvite: boolean;
+	canStartP2pCall: boolean;
 	canFollow: boolean;
 	developerMode: boolean;
 	isPinned: boolean;
@@ -246,6 +254,12 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		});
 	const canEditChannel = canManageChannels || canUpdateRtcRegion;
 	const canInvite = InviteUtils.canInviteToChannel(channel.id, channel.guildId);
+	const canStartP2pCall =
+		isVoiceChannel &&
+		!channel.rtcP2p &&
+		VoiceP2pRollout.enabled &&
+		Object.keys(MediaEngine.getAllVoiceStatesInChannel(channel.guildId ?? ME, channel.id)).length === 0 &&
+		Permission.can(Permissions.CONNECT, {channelId: channel.id, guildId: channel.guildId});
 	const canFollow = canFollowAnnouncementChannel(channel);
 	const developerMode = UserSettings.developerMode;
 	const isPinned = channel.isPinned;
@@ -262,6 +276,7 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		canManageChannels,
 		canEditChannel,
 		canInvite,
+		canStartP2pCall,
 		canFollow,
 		developerMode,
 		isPinned,
@@ -352,6 +367,24 @@ export function useChannelMenuData(
 					NavigationCommands.selectChannel(channel.guildId, channel.id);
 				}
 				onClose();
+			},
+			handleStartP2pCall: () => {
+				const guildId = channel.guildId ?? null;
+				ModalCommands.pushAfterBottomSheetClose(
+					onClose,
+					modal(() => (
+						<VoiceP2pConsentModal
+							intent="start"
+							allowStandard={false}
+							onP2p={() => {
+								VoiceP2pConsent.agree(channel.id);
+								void MediaEngine.connectToVoiceChannel(guildId, channel.id);
+							}}
+							onCancel={() => {}}
+							data-flx="ui.action-menu.items.channel-menu-data.handle-start-p2p-call.voice-p2p-consent-modal"
+						/>
+					)),
+				);
 			},
 			handleOpenMuteSheet: () => {
 				onOpenMuteSheet?.();
@@ -654,18 +687,25 @@ export function useChannelMenuData(
 			return menuGroups;
 		}
 		if (guild && (state.isTextChannel || state.isVoiceChannel || state.isLinkChannel || channel.isThreadOnly())) {
+			const voiceItems: Array<MenuItemType> = [];
 			if (state.isVoiceChannel && !Accessibility.voiceChannelJoinRequiresDoubleClick) {
-				menuGroups.push({
-					items: [
-						{
-							icon: (
-								<MessageUserIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.open-chat-icon" />
-							),
-							label: i18n._(OPEN_CHAT_DESCRIPTOR),
-							onClick: handlers.handleOpenChat,
-						},
-					],
+				voiceItems.push({
+					icon: <MessageUserIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.open-chat-icon" />,
+					label: i18n._(OPEN_CHAT_DESCRIPTOR),
+					onClick: handlers.handleOpenChat,
 				});
+			}
+			if (state.canStartP2pCall) {
+				voiceItems.push({
+					icon: (
+						<VoiceCallIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.start-p2p-call-icon" />
+					),
+					label: i18n._(VOICE_P2P_START_CALL_DESCRIPTOR),
+					onClick: handlers.handleStartP2pCall,
+				});
+			}
+			if (voiceItems.length > 0) {
+				menuGroups.push({items: voiceItems});
 			}
 			const metaItems: Array<MenuItemType> = [];
 			if (showMarkAsReadItem) {

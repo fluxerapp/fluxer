@@ -32,6 +32,7 @@ import {
 	type ThreadViewer,
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -48,6 +49,7 @@ import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import type {ThreadState} from '@app/api/models/ThreadState';
@@ -81,6 +83,7 @@ import {CannotExecuteOnDmError} from '@fluxer/errors/src/domains/core/CannotExec
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -105,6 +108,7 @@ export interface ChannelUpdateData {
 		deny?: bigint;
 	}> | null;
 	rtc_region?: string | null;
+	rtc_p2p?: boolean;
 	icon?: string | null;
 	owner_id?: bigint | null;
 	nicks?: Record<string, string | null> | null;
@@ -136,6 +140,21 @@ export class ChannelOperationsService {
 		private cacheService: ICacheService,
 		private snowflakeService: ISnowflakeService,
 	) {}
+
+	private async assertVoiceP2pAssigned(userId: UserID, countryCode: string | null): Promise<void> {
+		const config = await getInstanceConfigRepository().getVoiceP2pConfig();
+		const user = config.enabled ? await this.userRepository.findUnique(userId) : null;
+		if (
+			user === null ||
+			!resolveVoiceP2pAssignment(
+				config,
+				userId.toString(),
+				await resolveExperimentTargeting(user, countryCode, [config]),
+			).enabled
+		) {
+			throw InputValidationError.fromCode('rtc_p2p', ValidationErrorCodes.GUILD_FEATURE_NOT_TOGGLEABLE);
+		}
+	}
 
 	async getChannel({
 		userId,
@@ -183,6 +202,7 @@ export class ChannelOperationsService {
 		auditLogReason,
 		typeConversion,
 		threadParent,
+		countryCode,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -193,6 +213,7 @@ export class ChannelOperationsService {
 		auditLogReason: string | null;
 		typeConversion?: ChannelTypeConversion | null;
 		threadParent?: ThreadParentSettingsInput | null;
+		countryCode?: string | null;
 	}): Promise<Channel> {
 		const {channel, guild, checkPermission} = await this.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -266,6 +287,9 @@ export class ChannelOperationsService {
 					}
 				}
 			}
+		}
+		if (data.rtc_p2p === true && !channel.rtcP2p && channel.type === ChannelTypes.GUILD_VOICE) {
+			await this.assertVoiceP2pAssigned(userId, countryCode ?? null);
 		}
 		const previousPermissionOverwrites = channel.permissionOverwrites;
 		let permissionOverwrites = channel.permissionOverwrites;
@@ -378,6 +402,7 @@ export class ChannelOperationsService {
 				data.rtc_region !== undefined && channel.type === ChannelTypes.GUILD_VOICE
 					? data.rtc_region
 					: channel.rtcRegion,
+			rtc_p2p: data.rtc_p2p !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.rtc_p2p : channel.rtcP2p,
 			permission_overwrites: new Map(
 				Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [
 					targetId,

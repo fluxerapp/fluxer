@@ -39,6 +39,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -120,6 +123,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -284,6 +290,9 @@
       },
       {
         "msgid": "Online"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -782,6 +791,9 @@
       },
       {
         "msgid": "Output"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "Permanent"
@@ -1449,6 +1461,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -1922,6 +1937,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -2063,6 +2081,9 @@
         "msgid": "A default emoji. You can use it anywhere on {productName}."
       },
       {
+        "msgid": "A direct connection couldn't be made. You can't hear or see each other."
+      },
+      {
         "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
       },
       {
@@ -2070,6 +2091,9 @@
       },
       {
         "msgid": "A separate profile for each community"
+      },
+      {
+        "msgid": "A standard call goes through a server and works for everyone."
       },
       {
         "msgid": "AV1"
@@ -2201,6 +2225,9 @@
         "msgid": "Anyone in my communities"
       },
       {
+        "msgid": "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+      },
+      {
         "msgid": "Anyone who finds you can send a request. Turn this off to pick groups below."
       },
       {
@@ -2244,6 +2271,12 @@
       },
       {
         "msgid": "Attachment {pendingFilename}"
+      },
+      {
+        "msgid": "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+      },
+      {
+        "msgid": "Audio and video go directly between participants."
       },
       {
         "msgid": "Audio muted"
@@ -2606,6 +2639,9 @@
         "msgid": "Couldn't connect to {domain}. Try again."
       },
       {
+        "msgid": "Couldn't connect to {names}"
+      },
+      {
         "msgid": "Couldn't convert this channel"
       },
       {
@@ -2619,6 +2655,9 @@
       },
       {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't join the P2P call. Try again."
       },
       {
         "msgid": "Couldn't load posts. Try again later."
@@ -2790,6 +2829,9 @@
       },
       {
         "msgid": "Device volume"
+      },
+      {
+        "msgid": "Direct connection. Media is encrypted between participants."
       },
       {
         "msgid": "Disable direct messages and friend requests"
@@ -2964,6 +3006,9 @@
       },
       {
         "msgid": "Every community that follows this channel gets a copy. If you edit or delete it later, the copies change too."
+      },
+      {
+        "msgid": "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
       },
       {
         "msgid": "Expires in {remainingSeconds}s"
@@ -3263,6 +3308,12 @@
         "msgid": "Italic"
       },
       {
+        "msgid": "Join P2P calls without asking"
+      },
+      {
+        "msgid": "Join a P2P call?"
+      },
+      {
         "msgid": "Join this thread to follow it in your channel list and get notifications."
       },
       {
@@ -3399,6 +3450,9 @@
       },
       {
         "msgid": "Logo"
+      },
+      {
+        "msgid": "Lower latency."
       },
       {
         "msgid": "Make sure this code matches the one in the {PRODUCT_NAME} app."
@@ -3696,6 +3750,21 @@
       },
       {
         "msgid": "Other active threads"
+      },
+      {
+        "msgid": "Other participants can see your IP address."
+      },
+      {
+        "msgid": "Other participants in a P2P call can see your IP address."
+      },
+      {
+        "msgid": "P2P"
+      },
+      {
+        "msgid": "P2P calls are unavailable right now."
+      },
+      {
+        "msgid": "P2P calls only"
       },
       {
         "msgid": "Passkey sign-in is unavailable here."
@@ -4427,13 +4496,28 @@
         "msgid": "Stack traces"
       },
       {
+        "msgid": "Start P2P call"
+      },
+      {
+        "msgid": "Start in P2P mode"
+      },
+      {
+        "msgid": "Start in P2P mode?"
+      },
+      {
         "msgid": "Start in the tray instead of opening the window when launched at login"
+      },
+      {
+        "msgid": "Start standard call"
       },
       {
         "msgid": "Started by {name}"
       },
       {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Stay"
       },
       {
         "msgid": "Stay focused on a conversation with a thread, a temporary text channel."
@@ -4494,6 +4578,9 @@
       },
       {
         "msgid": "Switch to account {slot}"
+      },
+      {
+        "msgid": "Switch to standard call"
       },
       {
         "msgid": "Switch to the new price?"
@@ -4803,6 +4890,9 @@
       },
       {
         "msgid": "Up to 720p at 30 FPS"
+      },
+      {
+        "msgid": "Up to {maxParticipants, plural, one {# person} other {# people}}."
       },
       {
         "msgid": "Update available"
@@ -5481,6 +5571,10 @@
       {
         "msgctxt": "voice-connection-status",
         "msgid": "Dismiss"
+      },
+      {
+        "msgctxt": "voice-p2p-consent",
+        "msgid": "Join"
       }
     ],
     "es-419": [
@@ -5594,6 +5688,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PiP"
@@ -5988,6 +6085,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PiP"
       },
       {
@@ -6323,6 +6423,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -6815,6 +6918,9 @@
         "msgid": "Options"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Participants"
       },
       {
@@ -7230,6 +7336,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7344,6 +7453,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -7466,6 +7578,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -7833,6 +7948,9 @@
       },
       {
         "msgid": "Online"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -8328,6 +8446,9 @@
       },
       {
         "msgid": "Output"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "Passkey"
@@ -8896,6 +9017,9 @@
         "msgid": "Output"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Passkey"
       },
       {
@@ -9294,6 +9418,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -9413,6 +9540,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -9540,6 +9670,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -9926,6 +10059,9 @@
       },
       {
         "msgid": "Open {productName}"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "Passkey"
@@ -10508,6 +10644,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Pause"
       },
       {
@@ -10952,6 +11091,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -11326,6 +11468,9 @@
       },
       {
         "msgid": "Online"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -11828,6 +11973,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -12245,6 +12393,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -12418,6 +12569,9 @@
       },
       {
         "msgid": "Online"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "Permanent"
@@ -12846,6 +13000,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -13007,6 +13164,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -13345,6 +13505,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -13512,6 +13675,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"
@@ -13848,6 +14014,9 @@
         "msgid": "OP"
       },
       {
+        "msgid": "P2P"
+      },
+      {
         "msgid": "Searching..."
       },
       {
@@ -13963,6 +14132,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "P2P"
       },
       {
         "msgid": "PgDn"

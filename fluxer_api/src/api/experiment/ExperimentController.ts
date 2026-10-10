@@ -8,9 +8,11 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveChannelThreadsAssignment} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 
 export function ExperimentController(app: HonoApp) {
@@ -30,20 +32,26 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, domainMigrationConfig, channelThreadsConfig] = await Promise.all([
+			const [delivery, domainMigrationConfig, channelThreadsConfig, voiceP2pConfig, geoip] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getDomainMigrationConfig(),
 				instanceConfigRepository.getCompiledChannelThreadsConfig(),
+				instanceConfigRepository.getVoiceP2pConfig(),
+				lookupGeoip(ctx.req.raw),
 			]);
 			const user = ctx.get('user');
 			const userId = user.id.toString();
-			const targeting = await resolveExperimentTargeting(user, domainMigrationConfig);
+			const targeting = await resolveExperimentTargeting(user, geoip.countryCode, [
+				domainMigrationConfig,
+				voiceP2pConfig,
+			]);
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
 					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId, targeting),
 					plutonium_page: {enabled: true},
+					voice_p2p: resolveVoiceP2pAssignment(voiceP2pConfig, userId, targeting),
 				},
 			};
 			const channelThreads = resolveChannelThreadsAssignment(channelThreadsConfig, userId);

@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout. For each account, Fluxer works out whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration`, `plutonium_page`, and `channel_threads`. Only `domain_migration` is configured by an operator. `plutonium_page` and `channel_threads` are on for every account.
+An experiment is an instance-wide rollout. For each account, Fluxer works out whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration`, `plutonium_page`, `channel_threads`, and `voice_p2p`. Only `domain_migration` and `voice_p2p` are configured by an operator. `plutonium_page` and `channel_threads` are on for every account.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -35,6 +35,7 @@ One entry per experiment. The envelope reports this object even when it is empty
 | domain_migration? | [domain migration assignment](#domain-migration-assignment-object) object | The caller's web domain migration assignment |
 | plutonium_page? | [Plutonium page assignment](#plutonium-page-assignment-object) object | The caller's Plutonium page assignment |
 | channel_threads? | [channel threads assignment](#channel-threads-assignment-object) object | The caller's channel threads assignment |
+| voice_p2p? | [peer-to-peer voice assignment](#peer-to-peer-voice-assignment-object) object | The caller's peer-to-peer voice assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
@@ -48,7 +49,7 @@ One resolution of the instance web domain migration rollout against one account.
 | --- | --- | --- |
 | enabled | boolean | Whether the caller's web client moves to the new web origin |
 
-A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. When the operator lists rollout countries, the sampled share only draws a caller whose request comes from a listed country. `enabled` is false in every other case, the rollout being off included.
 
 Only the official web client acts on this assignment, and only on its legacy origins. Every other client ignores it. The logged-out share and the instance-wide switch are published in the [instance discovery document](/http-api/instance/#domain-migration-object) instead, because a client that holds no credential cannot read this route.
 
@@ -78,6 +79,25 @@ The channel threads state for one account. This server version writes the key on
 | config_version | integer | A non-negative version number, the same for every account |
 
 The key stays for clients that still read it. Threads, forum channels, and media channels need the [`channel_threads` client capability](/http-api/threads/#client-capability).
+
+## Peer-to-peer voice assignment object
+
+One resolution of the instance peer-to-peer voice rollout against one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the caller may start a peer-to-peer voice call |
+| max_participants | integer | Most participants a peer-to-peer call holds (2-4) |
+
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. When the operator lists rollout countries, the sampled share only draws a caller whose request comes from a listed country. `enabled` is false in every other case, the rollout being off included.
+
+A selected client may ask for a peer-to-peer connection when it starts a voice call, and shows the peer-to-peer setting of a guild voice channel. It offers a peer-to-peer call in a direct message or group direct message only when the channel has at most `max_participants` members, the caller included. `max_participants` is the same for every account, selected or not, and a join past it is [refused as full](/gateway/events/#peer-to-peer-voice). The assignment does not decide who joins. While the rollout is on, any account that agrees to a direct connection may join a peer-to-peer call that is already running. The server checks the rollout again when a call starts, so a client that ignores this assignment gains nothing.
+
+## Request country
+
+Fluxer resolves the country of each request to this route from the client address. An account can receive a different assignment from another network when an operator lists rollout countries. A request whose country is unknown matches no listed country.
 
 ## Get experiment assignments
 
@@ -112,7 +132,7 @@ A client sends the `ETag` it last received. Fluxer compares it against the tag o
 | Cache-Control | string | The literal value `private, no-cache` |
 | Vary | string | The literal value `Authorization`, replaced by `Origin` where the [cross-origin policy](/http-api/#cross-origin-requests) echoed an allowed origin |
 
-The `ETag` changes when the response changes. Treat it as an opaque value.
+The `ETag` changes when the response changes, which includes a change of [request country](#request-country). Treat it as an opaque value.
 
 `ETag` is listed in `Access-Control-Expose-Headers` and `If-None-Match` in `Access-Control-Allow-Headers`, so a cross-origin client reads the tag and revalidates with it.
 

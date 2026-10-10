@@ -192,6 +192,7 @@ export interface APIConfig {
 			latitude: number;
 			longitude: number;
 		};
+		p2pStunUrls?: Array<string>;
 	};
 	stripe: {
 		enabled: boolean;

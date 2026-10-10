@@ -1114,7 +1114,7 @@ msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {ข้อความที่ถูกบล็อก # รายการ} other {ข้อความที่ถูกบล็อก # รายการ}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:112
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
 msgstr "{count, plural, one {# ช่องทางติดตาม} other {# ช่องทางติดตาม}} ช่องทางนี้ การแปลงเป็นช่องทางข้อความจะลบการติดตามเหล่านั้นออก"
 
@@ -2720,6 +2720,11 @@ msgstr "อิโมจิเริ่มต้น คุณสามารถ�
 msgid "A description is required."
 msgstr "ต้องระบุคำอธิบาย"
 
+#. Body of the dialog shown when a direct connection to a participant of a peer-to-peer call failed.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "A direct connection couldn't be made. You can't hear or see each other."
+msgstr "ไม่สามารถเชื่อมต่อโดยตรงได้ คุณจึงไม่ได้ยินหรือเห็นกัน"
+
 #. Duration label component for a very short elapsed call.
 #: src/features/channel/components/CallMessage.tsx:63
 msgid "a few seconds"
@@ -2793,6 +2798,11 @@ msgstr "การฝังเนื้อหาแบบสมบูรณ์ห
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "A separate profile for each community"
 msgstr "โปรไฟล์แยกสำหรับแต่ละชุมชน"
+
+#. Second sentence of the peer-to-peer connection failure dialog, shown when the call can be switched to an ordinary call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:424
+msgid "A standard call goes through a server and works for everyone."
+msgstr "การโทรแบบปกติจะผ่านเซิร์ฟเวอร์และใช้งานได้กับทุกคน"
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -3676,7 +3686,7 @@ msgstr "ผู้ดูแลระบบหยุดคำเชิญชั่
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:519
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:546
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:138
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
@@ -4628,6 +4638,11 @@ msgstr "ทุกคนสามารถขอบัญชีได้ แต�
 msgid "Anyone in my communities"
 msgstr "ทุกคนในชุมชนของฉัน"
 
+#. Bullet point in the P2P call dialog. Some networks block direct connections. A standard call goes through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:372
+msgid "Anyone who cannot connect directly cannot take part until someone switches the call to a standard call."
+msgstr "หากใครไม่สามารถเชื่อมต่อโดยตรงได้ จะเข้าร่วมไม่ได้จนกว่าจะมีคนเปลี่ยนสายเป็นการโทรแบบมาตรฐาน"
+
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
 msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
 msgstr "ทุกคนที่เจอคุณสามารถส่งคำขอได้ ปิดสิ่งนี้เพื่อเลือกกลุ่มด้านล่าง"
@@ -5112,6 +5127,16 @@ msgstr "เสียง"
 msgid "Audio & video"
 msgstr "เสียงและวิดีโอ"
 
+#. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:451
+msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
+msgstr "เสียงและวิดีโอจะส่งตรงระหว่างผู้เข้าร่วม สูงสุด {maxParticipants, plural, one {# คน} other {# คน}} ทุกคนจะตกลงกันก่อนเข้าร่วมและสามารถเห็นที่อยู่ IP ของกันและกันได้"
+
+#. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:350
+msgid "Audio and video go directly between participants."
+msgstr "เสียงและวิดีโอจะส่งตรงระหว่างผู้เข้าร่วม"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:78
 msgid "Audio boost"
@@ -5419,7 +5444,7 @@ msgstr "คำแนะนำการเติมข้อความอัต
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
-#: src/features/voice/components/VoiceSettingsMenus.tsx:93
+#: src/features/voice/components/VoiceSettingsMenus.tsx:97
 msgid "Automatic"
 msgstr "อัตโนมัติ"
 
@@ -6936,15 +6961,15 @@ msgstr "ไม่สามารถลบบัญชีได้"
 msgid "Capture"
 msgstr "บันทึกเสียง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Capture app audio"
 msgstr "บันทึกเสียงจากแอป"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:814
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:815
 msgid "Capture desktop audio"
 msgstr "บันทึกเสียงเดสก์ท็อป"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture device audio"
 msgstr "บันทึกเสียงจากอุปกรณ์"
 
@@ -7017,7 +7042,7 @@ msgstr "คัดลอก ID หมวดหมู่แล้ว"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Form field label for the name of a favorites category.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:77
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:20
 msgid "Category name"
 msgstr "ชื่อหมวดหมู่"
@@ -7554,7 +7579,7 @@ msgstr "ส่วนต่างๆ ของรายละเอียดช�
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "คัดลอก ID ช่องแล้ว"
@@ -7572,7 +7597,7 @@ msgid "channel link"
 msgstr "ลิงก์ช่อง"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 msgid "Channel link copied"
 msgstr "คัดลอกลิงก์ช่องแล้ว"
 
@@ -7604,7 +7629,7 @@ msgstr "การจัดการช่อง"
 #. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
 #: src/features/forum/utils/ForumMessageDescriptors.ts:331
@@ -7651,7 +7676,7 @@ msgid "Channel synced with parent category"
 msgstr "ช่องซิงค์กับหมวดหมู่หลักแล้ว"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:68
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
 msgid "Channel topic is too long."
 msgstr "หัวข้อช่องยาวเกินไป"
 
@@ -7668,8 +7693,8 @@ msgstr "เลือกประเภทช่อง"
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #. Toast shown after forum channel settings are saved.
 #: src/features/app/config/AuditLogConstants.ts:14
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:295
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:338
 #: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "อัปเดตช่องแล้ว"
@@ -9421,7 +9446,7 @@ msgstr "ยืนยันก่อนเข้าร่วมช่องเส
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the keyboard tab. Keep it concise.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:23
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:28
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:17
 msgid "Confirm before starting calls"
 msgstr "ยืนยันก่อนเริ่มการโทร"
@@ -9822,7 +9847,7 @@ msgid "Conversations"
 msgstr "การสนทนา"
 
 #. Button in the confirmation that converts an announcement channel back into a text channel. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:123
 msgid "Convert"
 msgstr "แปลง"
 
@@ -9842,7 +9867,7 @@ msgid "Converted the channel to an announcement channel"
 msgstr "แปลงช่องเป็นช่องประกาศ"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel, used when the number of following channels could not be loaded. Channels that follow it get copies of its published messages and stop getting them after the conversion.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:113
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:118
 msgid "Converting this channel to a text channel removes every channel that follows it."
 msgstr "การแปลงช่องนี้เป็นช่องข้อความจะลบทุกช่องที่ติดตามช่องนี้"
 
@@ -9949,7 +9974,7 @@ msgstr "คัดลอก ID ช่อง"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:213
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Copy channel link"
 msgstr "คัดลอกลิงก์ช่อง"
 
@@ -10379,13 +10404,18 @@ msgstr "ลงชื่อเข้าใช้ไม่สำเร็จ โ�
 msgid "Couldn't connect to {domain}. Try again."
 msgstr "ไม่สามารถเชื่อมต่อกับ {domain} ได้ ลองอีกครั้ง"
 
+#. Title of the dialog shown when a direct connection to one or more participants of a peer-to-peer call failed. names is a localized list of display names.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Couldn't connect to {names}"
+msgstr "ไม่สามารถเชื่อมต่อกับ {names} ได้"
+
 #. Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.
 #: src/features/voice/engine/media_engine_facade/shared.ts:35
 msgid "Couldn't connect to voice. Please try again."
 msgstr "เชื่อมต่อเสียงไม่ได้ โปรดลองอีกครั้ง"
 
 #. Title of the error dialog shown when converting a channel between a text channel and an announcement channel failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:122
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
 msgid "Couldn't convert this channel"
 msgstr "ไม่สามารถแปลงช่องนี้ได้"
 
@@ -10482,7 +10512,7 @@ msgid "Couldn't download the desktop update"
 msgstr "ดาวน์โหลดการอัปเดตเดสก์ท็อปไม่ได้"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Couldn't duplicate this channel"
 msgstr "ไม่สามารถทำซ้ำช่องนี้ได้"
 
@@ -10510,6 +10540,11 @@ msgstr "ไม่สามารถเพิกเฉยคำขอเป็น
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
 msgstr "ไม่สามารถเข้าร่วมคอมมูนิตี้ได้"
+
+#. Error shown when the server refused to join a peer-to-peer call even though the user agreed to it.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:442
+msgid "Couldn't join the P2P call. Try again."
+msgstr "เข้าร่วมการโทรแบบ P2P ไม่สำเร็จ ลองอีกครั้ง"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
@@ -10601,7 +10636,7 @@ msgid "Couldn't open the billing portal"
 msgstr "ไม่สามารถเปิดพอร์ทัลการเรียกเก็บเงินได้"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Couldn't pin this conversation"
 msgstr "ปักหมุดการสนทนานี้ไม่ได้"
 
@@ -10708,7 +10743,7 @@ msgid "Couldn't run that command: {detail}"
 msgstr "ไม่สามารถเรียกใช้คำสั่งนั้นได้: {detail}"
 
 #. Title of the error dialog shown when saving the channel overview settings failed.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:127
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:132
 msgid "Couldn't save channel settings"
 msgstr "ไม่สามารถบันทึกการตั้งค่าช่องได้"
 
@@ -10805,7 +10840,7 @@ msgid "Couldn't unfollow this channel"
 msgstr "ไม่สามารถเลิกติดตามช่องนี้ได้"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Couldn't unpin this conversation"
 msgstr "ไม่สามารถเลิกปักหมุดการสนทนานี้ได้"
 
@@ -11374,7 +11409,7 @@ msgstr "กำหนดเอง"
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
-#: src/features/voice/components/VoiceSettingsMenus.tsx:70
+#: src/features/voice/components/VoiceSettingsMenus.tsx:74
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "กำหนดเอง"
@@ -11938,7 +11973,7 @@ msgstr "ค่าเริ่มต้น"
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:68
-#: src/features/voice/components/VoiceSettingsMenus.tsx:87
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
 msgid "Default"
@@ -12098,7 +12133,7 @@ msgstr "ลบ \"{stickerName}\" ใช่หรือไม่ การดำ�
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:103
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "ลบ {channelLabel} ใช่หรือไม่ การดำเนินการนี้จะยกเลิกไม่ได้"
 
@@ -12680,7 +12715,7 @@ msgid "Device audio ({deviceLabel})"
 msgstr "เสียงอุปกรณ์ ({deviceLabel})"
 
 #. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:869
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:50
 msgid "Device audio only"
 msgstr "เสียงอุปกรณ์เท่านั้น"
@@ -12694,7 +12729,7 @@ msgstr "รายละเอียดอุปกรณ์"
 msgid "Device revoked"
 msgstr "ยกเลิกอุปกรณ์แล้ว"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Device selection"
 msgstr "การเลือกอุปกรณ์"
 
@@ -12757,6 +12792,11 @@ msgstr "ขนาดและจำนวนสมาชิกต่างกั
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Dim strikethrough text"
 msgstr "หรี่ข้อความขีดทับ"
+
+#. Tooltip on the P2P indicator of a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:336
+msgid "Direct connection. Media is encrypted between participants."
+msgstr "การเชื่อมต่อโดยตรง สื่อถูกเข้ารหัสระหว่างผู้เข้าร่วม"
 
 #. Voice input processing profile with raw microphone audio.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:199
@@ -13282,6 +13322,11 @@ msgstr "แถบด้านข้าง DM"
 msgid "DNS TXT record"
 msgstr "ระเบียน DNS TXT"
 
+#. Checkbox in the dialog shown before joining a peer-to-peer call. When checked, future joins skip the dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:391
+msgid "Do not ask again, always agree"
+msgstr "ไม่ต้องถามอีกต่อไป ตกลงเสมอ"
+
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
@@ -13691,7 +13736,7 @@ msgstr "ทำซ้ำ"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 msgid "Duplicate channel"
 msgstr "ทำซ้ำช่อง"
 
@@ -13825,7 +13870,7 @@ msgstr "แก้ไขหมวดหมู่"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:153
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:154
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:160
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:72
 msgid "Edit channel"
 msgstr "แก้ไขช่อง"
@@ -15004,7 +15049,7 @@ msgstr "ปุ่ม Esc"
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:15
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:20
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:197
 msgid "Escape key exits keyboard mode"
 msgstr "ปุ่ม Esc ออกจากโหมดแป้นพิมพ์"
@@ -15046,6 +15091,11 @@ msgstr "ทุกชุมชนที่ติดตามช่องนี้
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "ทุกคน"
+
+#. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:358
+msgid "Everyone in the call gets Plutonium stream quality for free: up to 4K source resolution and 60 fps."
+msgstr "ทุกคนในสายจะได้รับคุณภาพสตรีม Plutonium ฟรี: ความละเอียดสูงสุด 4K และ 60 fps"
 
 #. Premium model option that gives everyone the highest limits.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:428
@@ -17381,7 +17431,7 @@ msgstr "ได้รับสิทธิ์ {permissions} แล้ว"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "ให้สิทธิ์ทั้งหมดและข้ามข้อจำกัดของช่อง มีความละเอียดอ่อนสูง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:993
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Granular selection"
 msgstr "เลือกแบบละเอียด"
 
@@ -17417,7 +17467,7 @@ msgstr "กรีก"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:69
-#: src/features/voice/components/VoiceSettingsMenus.tsx:789
+#: src/features/voice/components/VoiceSettingsMenus.tsx:796
 msgid "Grid view"
 msgstr "มุมมองตาราง"
 
@@ -17909,7 +17959,7 @@ msgstr "ซ่อนผู้เข้าร่วม"
 msgid "Hide password"
 msgstr "ซ่อนรหัสผ่าน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:770
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:771
 msgid "Hide preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่าง"
 
@@ -18322,11 +18372,11 @@ msgstr "ไม่สนใจ"
 msgid "Ignore friend request"
 msgstr "ไม่สนใจคำขอเป็นเพื่อน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:984
 msgid "Ignore hardware devices"
 msgstr "ไม่สนใจอุปกรณ์ฮาร์ดแวร์"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:959
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
 msgid "Ignore input media"
 msgstr "ไม่สนใจสื่อนำเข้า"
 
@@ -18357,7 +18407,7 @@ msgstr "ไม่สนใจคำขอเป็นเพื่อนจาก
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "ข้ามช่วงรอของโหมดจำกัดเวลาในช่องนี้"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:971
 msgid "Ignore virtual"
 msgstr "ไม่สนใจอุปกรณ์เสมือน"
 
@@ -18853,7 +18903,7 @@ msgid "Input device"
 msgstr "อุปกรณ์อินพุต"
 
 #. Read-only microphone input level shown in the voice device menu.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:102
+#: src/features/voice/components/VoiceSettingsMenus.tsx:106
 msgid "Input level"
 msgstr "ระดับอินพุต"
 
@@ -18865,7 +18915,7 @@ msgstr "การควบคุมอินพุต"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:134
-#: src/features/voice/components/VoiceSettingsMenus.tsx:75
+#: src/features/voice/components/VoiceSettingsMenus.tsx:79
 msgid "Input profile"
 msgstr "โปรไฟล์อินพุต"
 
@@ -19431,6 +19481,12 @@ msgstr "จิตเตอร์:"
 msgid "Join"
 msgstr "เข้าร่วม"
 
+#. Primary button in the dialog shown before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:386
+msgctxt "voice-p2p-consent"
+msgid "Join"
+msgstr "เข้าร่วม"
+
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
@@ -19454,6 +19510,11 @@ msgstr "เข้าร่วมคอมมูนิตี้"
 #: src/features/channel/components/StickersPicker.tsx:54
 msgid "Join a community to unlock stickers."
 msgstr "เข้าร่วมคอมมูนิตี้เพื่อปลดล็อกสติกเกอร์"
+
+#. Title of the dialog shown before joining a peer-to-peer call, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:345
+msgid "Join a P2P call?"
+msgstr "เข้าร่วมการโทรแบบ P2P ไหม"
 
 #. Action label in the DM channel header pill that joins an ongoing call.
 #. Primary CTA button in the mobile direct-call lobby bottom sheet. Joins the active call.
@@ -19492,6 +19553,11 @@ msgstr "วิธีเข้าร่วม"
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:88
 msgid "Join on this device"
 msgstr "เข้าร่วมบนอุปกรณ์นี้"
+
+#. Switch label in the keyboard accessibility settings. When on, joining a peer-to-peer call skips the confirmation dialog.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:396
+msgid "Join P2P calls without asking"
+msgstr "เข้าร่วมการโทรแบบ P2P โดยไม่ต้องยืนยัน"
 
 #. Call-to-action button label on an in-progress call system message.
 #: src/features/channel/components/CallMessage.tsx:67
@@ -20023,8 +20089,10 @@ msgstr "ออกจาก {threadName} ไหม? เป็นส่วนต�
 msgid "Leave blank for a random username"
 msgstr "เว้นว่างไว้เพื่อสุ่มชื่อผู้ใช้"
 
+#. Button in the peer-to-peer connection failure dialog that leaves the call.
 #. Destructive button in the mobile direct-call lobby bottom sheet. Disconnects from the call.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:92
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:434
 msgid "Leave call"
 msgstr "ออกจากการโทร"
 
@@ -20201,7 +20269,7 @@ msgid "Lets custom CSS reveal transparent window regions after restarting the de
 msgstr "ให้ CSS ที่กำหนดเองแสดงพื้นที่หน้าต่างโปร่งใสหลังจากรีสตาร์ทแอปเดสก์ท็อป"
 
 #. Description under the Announcement channel switch in channel settings. Turning it on converts a text channel into an announcement channel. Publishing a message sends a copy of it to every channel in other communities that follows this one.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
 msgid "Lets other communities follow this channel and get copies of what you publish."
 msgstr "ให้ชุมชนอื่นติดตามช่องนี้และรับสำเนาข้อความที่คุณเผยแพร่"
 
@@ -20728,6 +20796,11 @@ msgstr "ลุยเซียนา"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:57
 msgid "Low"
 msgstr "ต่ำ"
+
+#. Bullet point in the P2P call dialog. A benefit of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:354
+msgid "Lower latency."
+msgstr "ความหน่วงต่ำ"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:92
@@ -22003,7 +22076,7 @@ msgstr "มิชิแกน"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/permissions/system/components/useMacPermissionControl.ts:10
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:26
-#: src/features/voice/components/VoiceSettingsMenus.tsx:79
+#: src/features/voice/components/VoiceSettingsMenus.tsx:83
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:41
 #: src/features/voice/utils/SettingsDeviceOptions.ts:16
 msgid "Microphone"
@@ -22101,7 +22174,7 @@ msgstr "มินนิโซตา"
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:114
+#: src/features/voice/components/VoiceSettingsMenus.tsx:118
 msgid "Mirror camera"
 msgstr "กลับด้านกล้อง"
 
@@ -22823,7 +22896,7 @@ msgid "My awesome sticker"
 msgstr "สติกเกอร์สุดเจ๋งของฉัน"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:87
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
 msgid "My category"
 msgstr "หมวดหมู่ของฉัน"
 
@@ -24444,7 +24517,7 @@ msgstr "ดำเนินการต่อก็ต่อเมื่อคุ
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "รับเฉพาะบัตรเครดิตเท่านั้น ไม่สามารถใช้บัตรเดบิตและบัตรเติมเงินในการตรวจสอบเนื้อหาสำหรับผู้ใหญ่ได้"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:949
 msgid "Only default speakers"
 msgstr "ลำโพงเริ่มต้นเท่านั้น"
 
@@ -24522,7 +24595,7 @@ msgstr "เฉพาะสมาชิกและบทบาทที่เล
 msgid "Only show message previews for DMs with unread messages"
 msgstr "แสดงตัวอย่างข้อความเฉพาะในข้อความส่วนตัวที่มีข้อความยังไม่ได้อ่าน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:938
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:939
 msgid "Only speakers"
 msgstr "เฉพาะลำโพง"
 
@@ -24759,7 +24832,7 @@ msgstr "เปิดรายละเอียดช่อง {channelName}"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:129
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:158
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:164
 msgid "Open chat"
 msgstr "เปิดแชท"
 
@@ -24840,7 +24913,7 @@ msgstr "เปิดอิโมจิในเบราว์เซอร์"
 msgid "Open emoji picker"
 msgstr "เปิดตัวเลือกอิโมจิ"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:863
+#: src/features/voice/components/VoiceSettingsMenus.tsx:888
 msgid "Open event sink"
 msgstr "เปิด Event Sink"
 
@@ -25280,6 +25353,16 @@ msgstr "กระทู้ที่ใช้งานอื่นๆ"
 msgid "Other devices"
 msgstr "อุปกรณ์อื่น"
 
+#. Bullet point in the P2P call dialog. A privacy drawback of peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:363
+msgid "Other participants can see your IP address."
+msgstr "ผู้เข้าร่วมคนอื่น ๆ สามารถเห็นที่อยู่ IP ของคุณได้"
+
+#. Description under the switch that skips the confirmation dialog before joining a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:401
+msgid "Other participants in a P2P call can see your IP address."
+msgstr "ผู้เข้าร่วมคนอื่น ๆ ในการโทรแบบ P2P จะเห็นที่อยู่ IP ของคุณ"
+
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -25394,6 +25477,22 @@ msgstr "ไม่สามารถโอนสิทธิ์การเป็
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "โอนสิทธิ์การเป็นเจ้าของแล้ว"
+
+# auto-i18n: reviewed unchanged
+#. Short indicator shown beneath the Join button and in the call footer when the call is peer-to-peer. P2P means peer-to-peer: audio and video go directly between participants instead of through a server.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:331
+msgid "P2P"
+msgstr "P2P"
+
+#. Error shown when the server refuses to start or join a peer-to-peer call.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:438
+msgid "P2P calls are unavailable right now."
+msgstr "ขณะนี้ไม่สามารถโทรแบบ P2P ได้"
+
+#. Switch label in voice channel settings. When on, every call in this channel is peer-to-peer, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:446
+msgid "P2P calls only"
+msgstr "การโทรแบบ P2P เท่านั้น"
 
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
@@ -26096,7 +26195,7 @@ msgstr "ปักหมุดกลุ่มแล้ว"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "ปักหมุดแชทกลุ่มแล้ว"
@@ -26536,7 +26635,7 @@ msgstr "ปุ่มดูตัวอย่าง"
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:58
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:61
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/VoiceSettingsMenus.tsx:621
 msgid "Preview camera"
 msgstr "ดูตัวอย่างกล้อง"
 
@@ -27107,7 +27206,7 @@ msgstr "ปุ่มกดเพื่อพูด"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
-#: src/features/voice/components/VoiceSettingsMenus.tsx:422
+#: src/features/voice/components/VoiceSettingsMenus.tsx:426
 msgid "Push-to-talk"
 msgstr "กดเพื่อพูด"
 
@@ -31388,7 +31487,7 @@ msgid "Shorten the message and try again."
 msgstr "ย่อข้อความแล้วลองอีกครั้ง"
 
 #. Body of the error modal shown when the channel topic exceeds the maximum length.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:73
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:78
 msgid "Shorten the topic and try again."
 msgstr "ย่อหัวข้อแล้วลองอีกครั้ง"
 
@@ -31488,7 +31587,7 @@ msgstr "แสดงการควบคุมระดับเสียงก
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:19
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:24
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:221
 msgid "Show context menu shortcuts"
 msgstr "แสดงปุ่มลัดเมนูบริบท"
@@ -31573,7 +31672,7 @@ msgstr "แสดงเอฟเฟกต์เสียงให้น้อย
 
 #. Label in the keyboard tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:11
+#: src/features/user/components/modals/tabs/accessibility_tab/KeyboardTab.tsx:16
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:245
 msgid "Show focus ring on chat text area"
 msgstr "แสดงวงแหวนโฟกัสบนช่องข้อความแชท"
@@ -31701,7 +31800,7 @@ msgstr "แสดงช่องที่ปิดเสียง"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:73
-#: src/features/voice/components/VoiceSettingsMenus.tsx:819
+#: src/features/voice/components/VoiceSettingsMenus.tsx:826
 msgid "Show my own camera"
 msgstr "แสดงกล้องของฉัน"
 
@@ -31742,7 +31841,7 @@ msgstr "แสดงโพสต์ใหม่เป็นยังไม่อ
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:103
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:77
-#: src/features/voice/components/VoiceSettingsMenus.tsx:833
+#: src/features/voice/components/VoiceSettingsMenus.tsx:840
 msgid "Show non-video participants"
 msgstr "แสดงผู้เข้าร่วมที่ไม่ได้เปิดกล้อง"
 
@@ -32144,7 +32243,7 @@ msgstr "โทรแบบไร้เสียง"
 msgid "Silent calls"
 msgstr "สายเรียกเข้าแบบไม่มีเสียง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:874
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:875
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "เงียบเมื่ออุปกรณ์บันทึกไม่มีอินพุตเสียงของตัวเอง"
 
@@ -32655,8 +32754,8 @@ msgstr "เกิดข้อผิดพลาด"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:156
 msgid "Something went wrong. Please try again in a moment."
 msgstr "เกิดข้อผิดพลาด โปรดลองอีกครั้งในภายหลัง"
 
@@ -32750,7 +32849,7 @@ msgstr "เสียง"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:332
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:458
 msgid "Source"
 msgstr "ต้นฉบับ"
 
@@ -32859,7 +32958,7 @@ msgstr "พูดได้เลย กดหยุดเมื่อเสร�
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:46
-#: src/features/voice/components/VoiceSettingsMenus.tsx:83
+#: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:20
 msgid "Speaker"
 msgstr "ลำโพง"
@@ -33057,12 +33156,12 @@ msgid "Start a group DM"
 msgstr "เริ่มแชทกลุ่ม"
 
 #. Confirm dialog body before starting a 1:1 video call.
-#: src/features/voice/utils/CallUtils.tsx:17
+#: src/features/voice/utils/CallUtils.tsx:21
 msgid "Start a video call?"
 msgstr "เริ่มวิดีโอคอลไหม"
 
 #. Confirm dialog body before starting a 1:1 voice call.
-#: src/features/voice/utils/CallUtils.tsx:21
+#: src/features/voice/utils/CallUtils.tsx:25
 msgid "Start a voice call?"
 msgstr "เริ่มการโทรด้วยเสียงไหม"
 
@@ -33092,6 +33191,16 @@ msgstr "วันที่เริ่มต้นต้องเร็วกว
 msgid "Start drag and drop"
 msgstr "เริ่มลากและวาง"
 
+#. Primary button in the dialog offering to start a call in peer-to-peer mode.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:377
+msgid "Start in P2P mode"
+msgstr "เริ่มในโหมด P2P"
+
+#. Title of the dialog offering to start a call in peer-to-peer mode, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:340
+msgid "Start in P2P mode?"
+msgstr "เริ่มในโหมด P2P ไหม"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:231
 msgid "Start in the tray instead of opening the window when launched at login"
@@ -33117,6 +33226,11 @@ msgstr "เริ่มแบบย่อ"
 msgid "Start over"
 msgstr "เริ่มใหม่"
 
+#. Context-menu action on an empty voice channel that starts a peer-to-peer call there, where audio and video go directly between participants.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Start P2P call"
+msgstr "เริ่มการโทรแบบ P2P"
+
 #. Button label shown before recording starts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:69
 msgid "Start recording"
@@ -33130,6 +33244,11 @@ msgstr "เริ่มค้นหาด้วย <0>{peoplePrefix}</0> <1>{tex
 #: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "เริ่มพูด"
+
+#. Button in the dialog offering to start a call in peer-to-peer mode. Starts an ordinary call that goes through a server instead.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:381
+msgid "Start standard call"
+msgstr "เริ่มการโทรแบบมาตรฐาน"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
@@ -33201,6 +33320,11 @@ msgstr "แผงสถานะ"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:368
 msgid "Status:"
 msgstr "สถานะ:"
+
+#. Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:429
+msgid "Stay"
+msgstr "อยู่ต่อ"
 
 #. Empty state explanation in the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:198
@@ -33409,7 +33533,7 @@ msgid "Stop"
 msgstr "หยุด"
 
 #. Title of the confirmation shown when a member turns off the Announcement channel switch in channel settings, which converts the channel back into a normal text channel.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:102
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:107
 msgid "Stop being an announcement channel?"
 msgstr "หยุดเป็นช่องประกาศหรือไม่"
 
@@ -33920,6 +34044,11 @@ msgstr "สลับไปคอมมูนิตี้หรือข้อค
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:81
 msgid "Switch to single column"
 msgstr "เปลี่ยนเป็นคอลัมน์เดียว"
+
+#. Action that converts the current peer-to-peer call into an ordinary call that goes through a server. Everyone in the call moves over.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "Switch to standard call"
+msgstr "สลับไปเป็นการโทรแบบมาตรฐาน"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
@@ -37568,7 +37697,7 @@ msgstr "เลิกปักหมุดกลุ่มแล้ว"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "เลิกปักหมุดแชทกลุ่มแล้ว"
@@ -37726,6 +37855,11 @@ msgstr "อีเมลที่ยังไม่ได้ยืนยัน"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "เพิ่มแท็กได้สูงสุด {DISCOVERY_MAX_TAGS} แท็กเพื่อให้คนอื่นค้นหาคอมมูนิตี้ของคุณเจอ แท็กจะแสดงในการค้นหาของ Discovery"
+
+#. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
+msgstr "สูงสุด {maxParticipants, plural, one {# คน} other {# คน}}"
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
@@ -38041,7 +38175,7 @@ msgstr "กำลังอัปโหลดอิโมจิ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:97
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
@@ -39035,7 +39169,7 @@ msgstr "ส่งวิดีโอ:"
 #. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:65
-#: src/features/voice/components/VoiceSettingsMenus.tsx:110
+#: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Video settings"
 msgstr "การตั้งค่าวิดีโอ"
 
@@ -39570,7 +39704,7 @@ msgstr "เบราว์เซอร์นี้ไม่รองรับก
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:98
+#: src/features/voice/components/VoiceSettingsMenus.tsx:102
 msgid "Voice region"
 msgstr "ภูมิภาคเสียง"
 
@@ -39582,7 +39716,7 @@ msgstr "แถบแจ้งเตือนการกู้คืนเซส
 #. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:53
-#: src/features/voice/components/VoiceSettingsMenus.tsx:106
+#: src/features/voice/components/VoiceSettingsMenus.tsx:110
 msgid "Voice settings"
 msgstr "การตั้งค่าเสียง"
 

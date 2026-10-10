@@ -32,6 +32,7 @@ A channel object always has its identity and type. Every other field is present 
 | user_limit?<sup>4</sup> | ?integer | The configured member occupancy limit, present only for a guild voice channel |
 | voice_connection_limit?<sup>5</sup> | ?integer | The number of simultaneous voice connections one user may hold, present only for a guild voice channel |
 | rtc_region?<sup>6</sup> | ?string | The ID of the selected RTC region, present only for a guild voice channel |
+| rtc_p2p? | boolean | Whether the channel is pinned to [peer-to-peer voice](/gateway/events/#peer-to-peer-voice), present only for a guild voice channel |
 | last_message_id? | ?snowflake | The ID of the most recent message, null when the channel has none |
 | last_pin_timestamp? | ?ISO8601 timestamp | The time a message was most recently pinned, or null when nothing has ever been pinned |
 | permission_overwrites?<sup>7</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The overwrites applied to this channel, present only for a guild channel other than a thread |
@@ -464,6 +465,7 @@ Every field is optional, and an omitted field preserves its current value. Every
 | content_warning_text?<sup>10</sup> | ?string | The content warning text (max 200 characters) |
 | rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) |
 | rtc_region?<sup>12</sup> | ?string | The ID of the RTC region (1-64 characters) for a guild voice channel, where null selects automatic routing |
+| rtc_p2p? | boolean | Whether to pin a guild voice channel to [peer-to-peer voice](/gateway/events/#peer-to-peer-voice). Ignored on every other channel type |
 
 <sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text, announcement, forum, or media channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
 
@@ -572,7 +574,7 @@ A group marked for mature content accepts media the scanner flags as sensitive, 
 
 A guild channel change emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to its guild. For a forum or media channel the event reaches only a session with [thread access](/gateway/threads/#session-flag). Replacing a category's permission overwrites also replaces them on each child whose overwrites still exactly match the category's previous values, with one Dispatch per changed child. A child whose overwrites had differed is left unchanged.
 
-Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel. Each user's next message is then checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
+Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel. Each user's next message is then checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region. A [peer-to-peer](/gateway/events/#peer-to-peer-voice) call in the channel moves to a voice server with that change, unless the channel stores `rtc_p2p` true. Changing `rtc_p2p` leaves a running call as it is and applies to the next call that starts after the channel empties. Changing it to true fails with the field code `GUILD_FEATURE_NOT_TOGGLEABLE` unless the caller's [peer-to-peer voice assignment](/http-api/experiments/#peer-to-peer-voice-assignment-object) is enabled.
 
 Converting an announcement channel into a text channel deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it. The deletion runs in the background after the response, emits [Webhooks Update](/gateway/events/#webhooks-update) for each target channel, and writes no audit log entry. Copies already delivered stay in the target channels, and later edits and deletions of the published messages still reach them.
 

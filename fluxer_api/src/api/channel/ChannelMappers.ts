@@ -120,6 +120,7 @@ function serializeGuildVoiceChannel(channel: Channel, ctx: ContentWarningCtx): C
 		user_limit: channel.userLimit,
 		voice_connection_limit: channel.voiceConnectionLimit,
 		rtc_region: channel.rtcRegion,
+		rtc_p2p: channel.rtcP2p,
 		...serializeContentWarningFields(channel, ctx),
 		rate_limit_per_user: channel.rateLimitPerUser,
 	};

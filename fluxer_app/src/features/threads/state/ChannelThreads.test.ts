@@ -470,6 +470,7 @@ describe('control arm', () => {
 				'position',
 				'rate_limit_per_user',
 				'recipients',
+				'rtc_p2p',
 				'rtc_region',
 				'topic',
 				'type',

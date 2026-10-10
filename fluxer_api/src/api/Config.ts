@@ -318,6 +318,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			url: master.integrations.voice.url,
 			internalUrl: master.integrations.voice.internal_url,
 			defaultRegion: master.integrations.voice.default_region,
+			p2pStunUrls: master.integrations.voice.p2p_stun_urls,
 		},
 		stripe: {
 			enabled: master.integrations.stripe.enabled,
