@@ -35,6 +35,9 @@
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
 /fluxer_gateway/priv/
+/fluxer_static/desktop/spellcheck/dictionaries/*/*
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
 
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
