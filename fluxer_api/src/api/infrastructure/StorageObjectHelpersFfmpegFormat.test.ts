@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ffmpegMetadataStripArgs} from '@app/api/infrastructure/StorageObjectHelpers';
-import {describe, expect, it} from 'vitest';
+import {execFileSync, spawnSync} from 'node:child_process';
+import fs from 'node:fs';
+import {
+	ffmpegContainerMatchesContentType,
+	ffmpegMetadataStripArgs,
+	processMediaFile,
+} from '@app/api/infrastructure/StorageObjectHelpers';
+import {temporaryFile} from 'tempy';
+import {afterEach, describe, expect, it} from 'vitest';
 
 const INPUT_PATH = '/tmp/0123456789abcdef';
 const OUTPUT_PATH = '/tmp/fedcba9876543210';
@@ -57,5 +64,125 @@ describe('ffmpegMetadataStripArgs', () => {
 		expect(() => ffmpegMetadataStripArgs(INPUT_PATH, OUTPUT_PATH, 'video/x-unknown-container')).toThrow(
 			/output format/,
 		);
+	});
+
+	it('keeps video, audio and subtitle streams and leaves data streams behind', () => {
+		const args = ffmpegMetadataStripArgs(INPUT_PATH, OUTPUT_PATH, 'video/quicktime');
+		const maps = args.flatMap((arg, index) => (arg === '-map' ? [args[index + 1]] : []));
+		expect(maps).toEqual(['0:v?', '0:a?', '0:s?']);
+	});
+});
+
+describe('ffmpegContainerMatchesContentType', () => {
+	it.each([
+		['mov,mp4,m4a,3gp,3g2,mj2\n', 'video/mp4'],
+		['mov,mp4,m4a,3gp,3g2,mj2\n', 'video/quicktime'],
+		['mov,mp4,m4a,3gp,3g2,mj2\n', 'video/3gpp'],
+		['mov,mp4,m4a,3gp,3g2,mj2\n', 'audio/mp4'],
+		['matroska,webm\n', 'video/webm'],
+		['matroska,webm\n', 'video/x-matroska'],
+		['matroska,webm\n', 'audio/webm'],
+		['avi\n', 'video/x-msvideo'],
+		['flv\n', 'video/x-flv'],
+		['mpegts\n', 'video/mp2t'],
+		['mpeg\n', 'video/mpeg'],
+		['asf\n', 'video/x-ms-wmv'],
+		['ogg\n', 'video/ogg'],
+		['mp3\n', 'audio/mpeg'],
+		['ogg\n', 'audio/ogg'],
+		['wav\n', 'audio/wav'],
+		['flac\n', 'audio/flac'],
+		['aac\n', 'audio/aac'],
+		['aiff\n', 'audio/aiff'],
+	])('accepts the %s container for %s', (formatNames, contentType) => {
+		expect(ffmpegContainerMatchesContentType(formatNames, contentType)).toBe(true);
+	});
+
+	it.each([
+		['mov,mp4,m4a,3gp,3g2,mj2\n', 'video/x-matroska'],
+		['matroska,webm\n', 'video/mp4'],
+		['mp3\n', 'video/mpeg'],
+		['mpeg\n', 'audio/mpeg'],
+		['mpegts\n', 'video/mpeg'],
+		['wav\n', 'audio/flac'],
+	])('refuses the %s container for %s', (formatNames, contentType) => {
+		expect(ffmpegContainerMatchesContentType(formatNames, contentType)).toBe(false);
+	});
+});
+
+const hasFfmpeg = ['ffmpeg', 'ffprobe'].every((tool) => spawnSync(tool, ['-version']).status === 0);
+
+describe.skipIf(!hasFfmpeg)('processMediaFile with ffmpeg', () => {
+	const paths: Array<string> = [];
+
+	function tempPath(): string {
+		const path = temporaryFile();
+		paths.push(path);
+		return path;
+	}
+
+	function generate(args: ReadonlyArray<string>): string {
+		const path = tempPath();
+		execFileSync('ffmpeg', [
+			'-loglevel',
+			'error',
+			'-f',
+			'lavfi',
+			'-i',
+			'testsrc=s=64x48:r=5',
+			'-f',
+			'lavfi',
+			'-i',
+			'sine=f=440',
+			'-t',
+			'1',
+			'-c:v',
+			'mpeg4',
+			'-c:a',
+			'aac',
+			'-metadata',
+			'title=private-title',
+			...args,
+			'-y',
+			path,
+		]);
+		return path;
+	}
+
+	function probe(path: string): {
+		format: {format_name: string; tags?: Record<string, string>};
+		streams: Array<{codec_type: string}>;
+	} {
+		return JSON.parse(
+			execFileSync('ffprobe', ['-v', 'error', '-show_format', '-show_streams', '-of', 'json', path]).toString(),
+		);
+	}
+
+	afterEach(() => {
+		for (const path of paths.splice(0)) {
+			fs.rmSync(path, {force: true});
+		}
+	});
+
+	it('rewrites a QuickTime file without its tags and data stream at paths that have no extension', async () => {
+		const input = generate(['-timecode', '01:00:00:00', '-f', 'mov']);
+		expect(probe(input).format.tags?.title).toBe('private-title');
+		expect(probe(input).streams.map((stream) => stream.codec_type)).toContain('data');
+		const output = tempPath();
+
+		const processed = await processMediaFile(input, output, 'video/quicktime');
+
+		const stripped = probe(output);
+		expect(processed?.contentType).toBe('video/quicktime');
+		expect(processed?.contentLength).toBe(fs.statSync(output).size);
+		expect(stripped.format.format_name).toContain('mov');
+		expect(stripped.format.tags?.title).toBeUndefined();
+		expect(stripped.streams.map((stream) => stream.codec_type).sort()).toEqual(['audio', 'video']);
+	});
+
+	it('refuses a file whose container is not the one its content type names', async () => {
+		const input = generate(['-f', 'matroska']);
+
+		await expect(processMediaFile(input, tempPath(), 'video/mp4')).rejects.toThrow(/does not match content type/);
 	});
 });

@@ -248,20 +248,39 @@ function ffmpegMuxerForContentType(contentType: string): string | null {
 }
 
 const FFMPEG_FAST_START_MUXERS = new Set(['mp4', 'mov', '3gp']);
+const FFMPEG_DEMUXER_FOR_MUXER: Readonly<Record<string, string>> = {
+	'3gp': 'mp4',
+	mov: 'mp4',
+	webm: 'matroska',
+	adts: 'aac',
+};
+const FFMPEG_STRIP_TIMEOUT_MS = 10 * 60 * 1000;
+const FFMPEG_MAX_BUFFER_BYTES = 8 * 1024 * 1024;
+const FFPROBE_TIMEOUT_MS = 30 * 1000;
+const FFPROBE_MAX_BUFFER_BYTES = 64 * 1024;
 
-export function ffmpegMetadataStripArgs(inputPath: string, outputPath: string, contentType: string): Array<string> {
+function requireFfmpegMuxer(contentType: string): string {
 	const muxer = ffmpegMuxerForContentType(contentType);
 	if (!muxer) {
 		throw new Error(`No ffmpeg output format for content type ${contentType}`);
 	}
+	return muxer;
+}
+
+export function ffmpegMetadataStripArgs(inputPath: string, outputPath: string, contentType: string): Array<string> {
+	const muxer = requireFfmpegMuxer(contentType);
 	return [
 		'-hide_banner',
 		'-loglevel',
-		'warning',
+		'error',
 		'-i',
 		inputPath,
 		'-map',
-		'0',
+		'0:v?',
+		'-map',
+		'0:a?',
+		'-map',
+		'0:s?',
 		'-map_metadata',
 		'-1',
 		'-map_metadata:s',
@@ -278,6 +297,23 @@ export function ffmpegMetadataStripArgs(inputPath: string, outputPath: string, c
 		'-y',
 		outputPath,
 	];
+}
+
+export function ffmpegContainerMatchesContentType(formatNames: string, contentType: string): boolean {
+	const muxer = requireFfmpegMuxer(contentType);
+	return formatNames
+		.trim()
+		.split(',')
+		.includes(FFMPEG_DEMUXER_FOR_MUXER[muxer] ?? muxer);
+}
+
+async function probeFfmpegContainer(inputPath: string): Promise<string> {
+	const {stdout} = await execFilePromise(
+		'ffprobe',
+		['-v', 'error', '-show_entries', 'format=format_name', '-of', 'default=nw=1:nk=1', inputPath],
+		{timeout: FFPROBE_TIMEOUT_MS, maxBuffer: FFPROBE_MAX_BUFFER_BYTES},
+	);
+	return stdout;
 }
 
 async function cleanupTempFiles(paths: ReadonlyArray<string>): Promise<
@@ -421,7 +457,14 @@ async function stripVideoFileToFile(
 	contentType: string,
 ): Promise<{contentType: string; width?: number; height?: number}> {
 	const normalizedContentType = normalizeContentType(contentType);
-	await execFilePromise('ffmpeg', ffmpegMetadataStripArgs(inputPath, outputPath, normalizedContentType));
+	const container = await probeFfmpegContainer(inputPath);
+	if (!ffmpegContainerMatchesContentType(container, normalizedContentType)) {
+		throw new Error(`Container ${container.trim()} does not match content type ${normalizedContentType}`);
+	}
+	await execFilePromise('ffmpeg', ffmpegMetadataStripArgs(inputPath, outputPath, normalizedContentType), {
+		timeout: FFMPEG_STRIP_TIMEOUT_MS,
+		maxBuffer: FFMPEG_MAX_BUFFER_BYTES,
+	});
 	return {contentType: normalizedContentType};
 }
 
