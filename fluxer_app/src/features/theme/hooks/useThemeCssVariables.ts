@@ -2,6 +2,7 @@
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
 import {useLayoutEffect} from 'react';
 
 interface ThemeCssVariablesOptions {
@@ -14,6 +15,7 @@ interface ThemeCssVariablesOptions {
 	messageGutter: number;
 	messageGroupSpacing: number;
 	hdrDisplayMode: HdrDisplayMode;
+	instanceThemeColor: string | null;
 }
 
 export function useThemeCssVariables({
@@ -26,6 +28,7 @@ export function useThemeCssVariables({
 	messageGutter,
 	messageGroupSpacing,
 	hdrDisplayMode,
+	instanceThemeColor,
 }: ThemeCssVariablesOptions): void {
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
@@ -63,6 +66,20 @@ export function useThemeCssVariables({
 		messageGroupSpacing,
 		hdrDisplayMode,
 	]);
+	useLayoutEffect(() => {
+		if (instanceThemeColor === null) return;
+		const variables = getInstanceBrandVariables(instanceThemeColor);
+		if (variables === null) return;
+		const htmlNode = document.documentElement;
+		for (const name of INSTANCE_BRAND_VARIABLES) {
+			htmlNode.style.setProperty(name, variables[name]);
+		}
+		return () => {
+			for (const name of INSTANCE_BRAND_VARIABLES) {
+				htmlNode.style.removeProperty(name);
+			}
+		};
+	}, [instanceThemeColor]);
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		return () => {

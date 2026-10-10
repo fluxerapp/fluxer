@@ -8,6 +8,7 @@ import {applyPatchToRow, buildPatchFromData, executeVersionedUpdate} from '@app/
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
 import {emitAccountChangedIfRelevant} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {User} from '@app/api/models/User';
 import {Users} from '@app/api/Tables';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
@@ -67,7 +68,7 @@ export class UserDataRepository {
 			return new User({
 				...EMPTY_USER_ROW,
 				user_id: createUserID(FLUXER_BOT_USER_ID),
-				username: 'Fluxer',
+				username: getInstanceProductName(),
 				discriminator: 0,
 				bot: true,
 				system: true,
