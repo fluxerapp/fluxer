@@ -9,6 +9,13 @@ import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandi
 import {createRootRoute, createRoute} from '@app/features/platform/components/router/RouterBuilder';
 import {Redirect} from '@app/features/platform/components/router/RouterTypes';
 
+const enterDefaultLanding = afterSessionInitialization(() => {
+	if (readAuthenticatedRuntimeContext() === null) {
+		return new Redirect(Routes.LOGIN);
+	}
+	return new Redirect(getDefaultLandingPath());
+});
+
 export const rootRoute = createRootRoute({
 	layout: ({children}) => (
 		<RootComponent data-flx="app.router.root-routes.layout.root-component">{children}</RootComponent>
@@ -23,16 +30,11 @@ export const homeRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'home',
 	path: '/',
-	onEnter: afterSessionInitialization(() => {
-		if (readAuthenticatedRuntimeContext() === null) {
-			return new Redirect(Routes.LOGIN);
-		}
-		return new Redirect(getDefaultLandingPath());
-	}),
+	onEnter: enterDefaultLanding,
 });
 export const appRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'app',
 	path: Routes.APP,
-	onEnter: () => new Redirect(getDefaultLandingPath()),
+	onEnter: enterDefaultLanding,
 });
