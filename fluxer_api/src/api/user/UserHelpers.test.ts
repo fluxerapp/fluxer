@@ -3,6 +3,7 @@
 import {
 	canOwnerRunBots,
 	checkIsPremium,
+	getBadgePremiumType,
 	getEffectivePremiumUntil,
 	getPremiumPaymentRecoveryGraceMs,
 	isSignInRefused,
@@ -58,6 +59,31 @@ describe('checkIsPremium', () => {
 			premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
 		};
 		expect(checkIsPremium(user)).toBe(false);
+	});
+});
+
+describe('getBadgePremiumType', () => {
+	it('shows a subscription badge for a backend premium override', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+		expect(getBadgePremiumType({premiumType: UserPremiumTypes.NONE, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+	});
+	it('keeps the stored premium type', () => {
+		expect(
+			getBadgePremiumType({premiumType: UserPremiumTypes.LIFETIME, premiumFlags: PremiumFlags.ENABLED_OVERRIDE}),
+		).toBe(UserPremiumTypes.LIFETIME);
+	});
+	it('shows no badge without premium or while perks are disabled', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: 0})).toBeUndefined();
+		expect(
+			getBadgePremiumType({
+				premiumType: null,
+				premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
+			}),
+		).toBeUndefined();
 	});
 });
 

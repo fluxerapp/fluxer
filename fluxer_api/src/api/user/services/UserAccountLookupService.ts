@@ -11,6 +11,7 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
+import {getBadgePremiumType} from '@app/api/user/UserHelpers';
 import {hasFixedDiscriminator} from '@app/api/user/UserTag';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -100,7 +101,7 @@ export class UserAccountLookupService {
 				}
 			}
 		}
-		let premiumType = user.premiumType ?? undefined;
+		let premiumType = getBadgePremiumType(user);
 		let premiumSince = user.premiumSince ?? undefined;
 		let premiumLifetimeSequence = user.premiumLifetimeSequence ?? undefined;
 		if (restrictProfile || user.premiumFlags & PremiumFlags.BADGE_HIDDEN) {
