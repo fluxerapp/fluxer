@@ -9,7 +9,7 @@ export function getGiftTrialMetadataKey(giftCode: string): string {
 	return `${GIFT_TRIAL_KEY_PREFIX}${giftCode}`;
 }
 
-function isGiftTrialRunning(subscription: Stripe.Subscription, nowMs: number): boolean {
+export function isGiftTrialRunning(subscription: Stripe.Subscription, nowMs: number): boolean {
 	return subscription.trial_end != null && subscription.trial_end * 1000 > nowMs;
 }
 

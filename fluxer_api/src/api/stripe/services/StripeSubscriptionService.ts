@@ -10,7 +10,11 @@ import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {ProductInfo, RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
-import {buildGiftTrialMetadata, getGiftTrialPaidUntil} from '@app/api/stripe/StripeGiftTrialMetadata';
+import {
+	buildGiftTrialMetadata,
+	getGiftTrialPaidUntil,
+	isGiftTrialRunning,
+} from '@app/api/stripe/StripeGiftTrialMetadata';
 import {
 	getPrimarySubscriptionItem,
 	getSubscriptionEntitlementPeriodEndUnix,
@@ -1293,7 +1297,8 @@ export class StripeSubscriptionService {
 			const currentTrialEnd = subscription.trial_end;
 			const item = getPrimarySubscriptionItem(subscription);
 			const currentPeriodEnd = getSubscriptionItemPeriodEndUnix(item);
-			const baseUnix = currentTrialEnd ?? currentPeriodEnd;
+			const nowMs = Date.now();
+			const baseUnix = isGiftTrialRunning(subscription, nowMs) ? currentTrialEnd : currentPeriodEnd;
 			Logger.debug(
 				{
 					userId: user.id,
@@ -1331,7 +1336,7 @@ export class StripeSubscriptionService {
 				{
 					trial_end: newTrialEndUnix,
 					proration_behavior: 'none',
-					metadata: buildGiftTrialMetadata(subscription, idempotencyKey, baseUnix, newTrialEndUnix, Date.now()),
+					metadata: buildGiftTrialMetadata(subscription, idempotencyKey, baseUnix, newTrialEndUnix, nowMs),
 				},
 				{idempotencyKey: stripeIdempotencyKey},
 			);

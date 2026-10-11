@@ -749,5 +749,45 @@ describe('gift time around a Stripe subscription', () => {
 			const afterWebhook = await findUser(account.userId);
 			expect(afterWebhook.premiumGiftExtensionEndsAt?.getTime()).toBe(trialEnd.getTime());
 		});
+
+		test('stacks from the paid period end when an earlier gift trial has ended', async () => {
+			const subscriptionId = 'sub_shift_stale_trial';
+			const periodEnd = Math.floor((Date.now() + ms('20 days')) / 1000);
+			const staleTrialEnd = periodEnd - 60 * 24 * 60 * 60;
+			useStripe({
+				subscriptions: {
+					[subscriptionId]: {
+						current_period_start: periodEnd - 30 * 24 * 60 * 60,
+						current_period_end: periodEnd,
+						trial_end: staleTrialEnd,
+						metadata: giftTrialMetadata('OLDGIFT', 30, staleTrialEnd - 30 * 24 * 60 * 60),
+					},
+				},
+			});
+			const {account} = await createUser({
+				premium_type: UserPremiumTypes.SUBSCRIPTION,
+				stripe_subscription_id: subscriptionId,
+				stripe_customer_id: 'cus_test_1',
+				premium_billing_cycle: 'monthly',
+				premium_until: new Date(periodEnd * 1000),
+			});
+			const gifter = await createTestAccount(harness);
+			await createBuilder(harness, gifter.token)
+				.post('/test/gifts/SHIFTSTALEGIFT')
+				.body({duration_type: 'days', duration_quantity: 30, created_by_user_id: gifter.userId})
+				.execute();
+
+			await createBuilder(harness, account.token).post('/gifts/SHIFTSTALEGIFT/redeem').expect(204).execute();
+
+			const update = stripeHandlers.spies.updatedSubscriptions[0]?.params;
+			expect(Number(update?.trial_end)).toBe(periodEnd + 30 * 24 * 60 * 60);
+			expect(update?.metadata).toEqual({
+				gtrial_OLDGIFT: '',
+				gtrial_paid_until: String(periodEnd),
+				gtrial_SHIFTSTALEGIFT: String(30 * 24 * 60 * 60),
+			});
+			const redeemed = await findUser(account.userId);
+			expect(redeemed.premiumUntil?.getTime()).toBe((periodEnd + 30 * 24 * 60 * 60) * 1000);
+		});
 	});
 });
