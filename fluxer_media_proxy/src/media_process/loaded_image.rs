@@ -66,7 +66,13 @@ pub(crate) fn validate_jxl_decode_pixels(
     let pixels = (dims.width as usize)
         .saturating_mul(dims.height as usize)
         .saturating_mul(dims.pages.max(1) as usize);
-    if pixels > constants::MAX_JXL_DECODE_PIXELS {
+    let simple = dims.pages == 1 && matches!(dims.bands, 1 | 3) && dims.eight_bit;
+    let cap = if simple {
+        constants::MAX_JXL_SIMPLE_DECODE_PIXELS
+    } else {
+        constants::MAX_JXL_DECODE_PIXELS
+    };
+    if pixels > cap {
         return Err(MediaError::TooLargeToProcess);
     }
     Ok(())

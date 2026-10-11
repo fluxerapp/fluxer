@@ -57,7 +57,9 @@ fn animated_apng_input_transforms_through_ffmpeg_decode_path() {
         ImageDimensions {
             width: 8,
             height: 8,
-            pages: 1
+            pages: 1,
+            bands: 3,
+            eight_bit: true,
         },
         probe_image_dims(&test_media_limits(), &static_webp.bytes).unwrap()
     );

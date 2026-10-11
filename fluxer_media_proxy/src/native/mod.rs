@@ -130,6 +130,8 @@ unsafe extern "C" {
         width: *mut c_int,
         height: *mut c_int,
         pages: *mut c_int,
+        bands: *mut c_int,
+        format: *mut c_int,
     ) -> c_int;
     pub fn fluxer_apng_probe(
         buf: *const c_void,

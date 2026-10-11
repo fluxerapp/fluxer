@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::MediaError;
 use super::image_probe::probe_image_dims;
 use super::loaded_image::static_output_pixels;
 use super::native_runtime::ensure_vips_init;
+use super::{ImageDimensions, MediaError};
 use crate::{
     constants, image_quality::ImageQuality, image_transform::ImageOptions,
     media_limits::MediaLimits, mime, output_format::OutputFormat,
@@ -48,7 +48,8 @@ pub fn image_transform_cost(
     let sniffed_mime = mime::sniff(input).mime;
     let dims = probe_image_dims(media_limits, input)?;
     let source_pixels = dims.width as usize * dims.height as usize;
-    let output_pixels = static_output_pixels(options, dims);
+    let options = fit_jxl_output(input.len(), sniffed_mime, options, dims, media_limits);
+    let output_pixels = static_output_pixels(&options, dims);
     let encode = encode_bytes_per_pixel(options.format, options.quality);
     let pixel_cost = if options.is_animated() && dims.pages > 1 {
         source_pixels.max(output_pixels) * RGBA_BYTES_PER_PIXEL * ANIMATED_CANVAS_BUFFERS
@@ -57,6 +58,38 @@ pub fn image_transform_cost(
         source_pixels * decode_bytes_per_pixel(sniffed_mime) + output_pixels * encode
     };
     Ok(NativeCost::Bytes(input.len().saturating_add(pixel_cost)))
+}
+
+pub(super) fn fit_jxl_output(
+    input_len: usize,
+    sniffed_mime: &str,
+    options: &ImageOptions,
+    dims: ImageDimensions,
+    media_limits: &MediaLimits,
+) -> ImageOptions {
+    let mut fitted = *options;
+    if sniffed_mime != "image/jxl" || options.is_animated() {
+        return fitted;
+    }
+    let source_pixels = dims.width as usize * dims.height as usize;
+    let affordable_pixels = media_limits
+        .native_memory_budget_bytes()
+        .saturating_sub(input_len)
+        .saturating_sub(source_pixels * decode_bytes_per_pixel(sniffed_mime))
+        / encode_bytes_per_pixel(options.format, options.quality);
+    let max_pixels = affordable_pixels.min(constants::MAX_STATIC_OUTPUT_PIXELS);
+    if max_pixels == 0 || static_output_pixels(options, dims) <= max_pixels {
+        return fitted;
+    }
+    let (width, height) = match (options.wants_cover_crop(), options.width, options.height) {
+        (true, Some(width), Some(height)) => (width, height),
+        _ => (dims.width, dims.height),
+    };
+    let (width, height) = (f64::from(width), f64::from(height));
+    let shrink = (max_pixels as f64 / (width * height)).sqrt();
+    fitted.width = Some(((width * shrink).floor() as u32).max(1));
+    fitted.height = Some(((height * shrink).floor() as u32).max(1));
+    fitted
 }
 
 pub fn av_native_cost(input_len: usize) -> NativeCost {

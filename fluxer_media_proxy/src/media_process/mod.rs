@@ -138,6 +138,8 @@ pub struct ImageDimensions {
     pub width: u32,
     pub height: u32,
     pub pages: u32,
+    pub bands: u32,
+    pub eight_bit: bool,
 }
 
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]

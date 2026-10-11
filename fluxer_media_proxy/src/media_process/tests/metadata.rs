@@ -14,9 +14,11 @@ use crate::{
     nsfw::{NSFWClient, NSFWPolicy},
     output_format::OutputFormat,
     test_fixtures::{
-        fixture_audio_mp3_with_png_cover_art, fixture_audio_mp4_with_attached_picture,
-        fixture_audio_only_mp4, fixture_h264_mp4, fixture_mkv_with_png_video_stream,
-        fixture_mp4_with_undecodable_video, synthetic_png, synthetic_wav,
+        JXL_3000_LOSSY_2_FRAMES, JXL_4100_LOSSLESS_RGB16, JXL_4100_LOSSY_ALPHA,
+        JXL_4100_LOSSY_RGB_DEPTH, JXL_7000X4000_LOSSY_RGB, fixture_audio_mp3_with_png_cover_art,
+        fixture_audio_mp4_with_attached_picture, fixture_audio_only_mp4, fixture_h264_mp4,
+        fixture_mkv_with_png_video_stream, fixture_mp4_with_undecodable_video, synthetic_png,
+        synthetic_wav,
     },
 };
 use std::{io::Write as _, sync::Arc};
@@ -252,22 +254,38 @@ fn metadata_succeeds_without_a_placeholder_when_thumbhash_generation_fails() {
 
 #[test]
 fn metadata_refuses_jxl_above_the_decode_pixel_cap() {
-    let err = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(async {
-            metadata_json_with_options(
-                crate::test_fixtures::JXL_4100_LOSSY_ALPHA,
-                "big.jxl",
-                MetadataOptions::default(),
-                &test_media_limits(),
-                &NSFWClient::disabled(),
-                &TransformMetrics::new(),
-            )
-            .await
-            .unwrap_err()
-        });
-    assert_eq!(MediaError::TooLargeToProcess, err);
+    for jxl in [
+        JXL_4100_LOSSY_ALPHA,
+        JXL_4100_LOSSY_RGB_DEPTH,
+        JXL_4100_LOSSLESS_RGB16,
+        JXL_3000_LOSSY_2_FRAMES,
+    ] {
+        let err = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                metadata_json_with_options(
+                    jxl,
+                    "big.jxl",
+                    MetadataOptions::default(),
+                    &test_media_limits(),
+                    &NSFWClient::disabled(),
+                    &TransformMetrics::new(),
+                )
+                .await
+                .unwrap_err()
+            });
+        assert_eq!(MediaError::TooLargeToProcess, err);
+    }
+}
+
+#[test]
+fn metadata_admits_8_bit_rgb_jxl_above_the_decode_pixel_cap() {
+    let value = metadata_value(JXL_7000X4000_LOSSY_RGB, "big.jxl");
+    assert_eq!("image/jxl", value["content_type"]);
+    assert_eq!(7000, value["width"]);
+    assert_eq!(4000, value["height"]);
+    assert!(value["placeholder"].as_str().is_some_and(|p| !p.is_empty()));
 }
 
 #[test]

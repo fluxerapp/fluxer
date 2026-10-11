@@ -37,7 +37,9 @@ fn animated_heic_sequence_decodes_every_frame_and_encodes_an_animation() {
         ImageDimensions {
             width: 64,
             height: 64,
-            pages: 4
+            pages: 4,
+            bands: 3,
+            eight_bit: true,
         },
         probe_image_dims(&test_media_limits(), &animated.bytes).expect("probes webp")
     );
@@ -85,7 +87,9 @@ fn still_heic_decodes_as_a_single_frame_when_animation_is_requested() {
         ImageDimensions {
             width: 64,
             height: 64,
-            pages: 1
+            pages: 1,
+            bands: 3,
+            eight_bit: true,
         },
         probe_image_dims(&test_media_limits(), &still.bytes).expect("probes webp")
     );
@@ -113,7 +117,9 @@ fn avif_direct_decode_applies_resize_and_crop() {
         ImageDimensions {
             width: 32,
             height: 24,
-            pages: 1
+            pages: 1,
+            bands: 3,
+            eight_bit: true,
         },
         probe_image_dims(&test_media_limits(), &resized.bytes).unwrap()
     );
@@ -135,7 +141,9 @@ fn avif_direct_decode_applies_resize_and_crop() {
         ImageDimensions {
             width: 32,
             height: 32,
-            pages: 1
+            pages: 1,
+            bands: 3,
+            eight_bit: true,
         },
         probe_image_dims(&test_media_limits(), &cropped.bytes).unwrap()
     );

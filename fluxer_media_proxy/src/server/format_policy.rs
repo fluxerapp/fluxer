@@ -42,7 +42,12 @@ pub(in crate::server) fn transform_static_quality_default(
 ) -> ImageQuality {
     if matches!(
         source_ext,
-        Some(AssetExtension::Jpeg | AssetExtension::Heic | AssetExtension::Heif)
+        Some(
+            AssetExtension::Jpeg
+                | AssetExtension::Heic
+                | AssetExtension::Heif
+                | AssetExtension::Jxl
+        )
     ) {
         ImageQuality::High
     } else {

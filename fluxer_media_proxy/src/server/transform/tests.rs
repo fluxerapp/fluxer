@@ -4,7 +4,10 @@ use super::*;
 use crate::{
     constants::AssetExtension,
     server::format_policy::{default_transform_quality, transform_static_quality_default},
-    test_fixtures::{JXL_4100_LOSSY_ALPHA, fixture_h264_mp4, fixture_jpeg, synthetic_png},
+    test_fixtures::{
+        JXL_64_LOSSY_ALPHA, JXL_4100_LOSSY_ALPHA, JXL_7000X4000_LOSSY_RGB, fixture_h264_mp4,
+        fixture_jpeg, synthetic_png,
+    },
 };
 use axum::body::to_bytes;
 
@@ -95,6 +98,7 @@ fn lossy_source_transform_defaults_to_lossy_output() {
         AssetExtension::Jpeg,
         AssetExtension::Heic,
         AssetExtension::Heif,
+        AssetExtension::Jxl,
     ] {
         assert_eq!(
             ImageQuality::High,
@@ -149,6 +153,16 @@ async fn image_transform_route_sends_lossy_sources_to_a_lossy_encode() {
         vec![ImageQuality::High],
         transform_qualities_reaching_the_encoder(fixture_jpeg(), "image/jpeg", "photo.jpg").await,
         "a jpeg attachment must not be re-encoded losslessly"
+    );
+    assert_eq!(
+        vec![ImageQuality::High],
+        transform_qualities_reaching_the_encoder(
+            JXL_64_LOSSY_ALPHA.to_vec(),
+            "image/jxl",
+            "photo.jxl"
+        )
+        .await,
+        "a jxl attachment must not be re-encoded losslessly"
     );
     assert_eq!(
         vec![ImageQuality::Lossless],
@@ -305,6 +319,20 @@ async fn a_full_size_transform_too_large_to_process_never_serves_an_undisplayabl
     let response =
         attachment_transform(JXL_4100_LOSSY_ALPHA, "big.jxl", &[("format", "webp")]).await;
     assert_eq!(StatusCode::BAD_REQUEST, response.status());
+}
+
+#[tokio::test]
+async fn a_full_size_jxl_above_the_static_output_cap_is_downscaled() {
+    let response =
+        attachment_transform(JXL_7000X4000_LOSSY_RGB, "big.jxl", &[("format", "webp")]).await;
+    assert_eq!(StatusCode::OK, response.status());
+    assert_eq!(
+        Some("image/webp"),
+        response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+    );
 }
 
 #[test]

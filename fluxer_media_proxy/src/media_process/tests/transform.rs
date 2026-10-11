@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::super::image_probe::load_image;
+use super::super::image_probe::{load_image, probe_image_dims};
+use super::super::loaded_image::validate_jxl_decode_pixels;
 use super::super::native_runtime::ensure_vips_init;
 use super::super::transform::source_supports_pages;
-use super::super::{ImageOptions, MediaError, NativeCost, image_transform_cost};
-use super::fixtures::{animated_mode, metadata_value, png_zlib_level, transform_image};
+use super::super::{ImageDimensions, ImageOptions, MediaError, NativeCost, image_transform_cost};
+use super::fixtures::{
+    animated_mode, metadata_value, png_zlib_level, test_media_limits, transform_image,
+};
 use crate::{
+    constants,
+    metrics::transform::TransformMetrics,
     mime, native,
     output_format::OutputFormat,
     test_fixtures::{
-        JPEG_ROTATED_MISMATCHED_SCAN, JXL_64_LOSSY_ALPHA, JXL_4100_LOSSY_ALPHA, png_dimensions,
-        synthetic_bmp, synthetic_png,
+        JPEG_ROTATED_MISMATCHED_SCAN, JXL_64_LOSSY_ALPHA, JXL_3000_LOSSY_2_FRAMES,
+        JXL_4100_LOSSLESS_RGB16, JXL_4100_LOSSY_ALPHA, JXL_4100_LOSSY_RGB_DEPTH,
+        JXL_7000X4000_LOSSY_RGB, png_dimensions, synthetic_bmp, synthetic_png,
     },
 };
 
@@ -109,18 +115,130 @@ fn source_supports_pages_matches_libvips_loader_list() {
 
 #[test]
 fn refuses_jxl_above_the_decode_pixel_cap_before_decoding() {
-    for width in [None, Some(128)] {
-        let err = transform_image(
-            JXL_4100_LOSSY_ALPHA,
-            &ImageOptions {
-                width,
-                format: OutputFormat::WebP,
-                ..Default::default()
-            },
-        )
-        .unwrap_err();
-        assert_eq!(MediaError::TooLargeToProcess, err);
+    for jxl in [
+        JXL_4100_LOSSY_ALPHA,
+        JXL_4100_LOSSY_RGB_DEPTH,
+        JXL_4100_LOSSLESS_RGB16,
+        JXL_3000_LOSSY_2_FRAMES,
+    ] {
+        for width in [None, Some(128)] {
+            let err = transform_image(
+                jxl,
+                &ImageOptions {
+                    width,
+                    format: OutputFormat::WebP,
+                    ..Default::default()
+                },
+            )
+            .unwrap_err();
+            assert_eq!(MediaError::TooLargeToProcess, err);
+        }
     }
+}
+
+#[test]
+fn jxl_decode_cap_depends_on_the_header_layout() {
+    let dims = |width, height, pages, bands, eight_bit| ImageDimensions {
+        width,
+        height,
+        pages,
+        bands,
+        eight_bit,
+    };
+    let simple_cap = (8192, 6144);
+    let complex_cap = (4096, 4096);
+    for bands in [1, 3] {
+        let (width, height) = simple_cap;
+        assert_eq!(
+            Ok(()),
+            validate_jxl_decode_pixels("image/jxl", dims(width, height, 1, bands, true))
+        );
+        assert_eq!(
+            Err(MediaError::TooLargeToProcess),
+            validate_jxl_decode_pixels("image/jxl", dims(width, height + 1, 1, bands, true))
+        );
+    }
+    for (pages, bands, eight_bit) in [(1, 2, true), (1, 4, true), (1, 3, false), (2, 3, true)] {
+        let (width, height) = complex_cap;
+        assert_eq!(
+            Ok(()),
+            validate_jxl_decode_pixels(
+                "image/jxl",
+                dims(width, height / pages, pages, bands, eight_bit)
+            )
+        );
+        assert_eq!(
+            Err(MediaError::TooLargeToProcess),
+            validate_jxl_decode_pixels(
+                "image/jxl",
+                dims(width, height / pages + 1, pages, bands, eight_bit)
+            )
+        );
+    }
+    assert_eq!(
+        Ok(()),
+        validate_jxl_decode_pixels("image/png", dims(16384, 16384, 1, 4, false))
+    );
+}
+
+#[test]
+fn thumbnails_8_bit_rgb_jxl_above_the_decode_pixel_cap() {
+    let out = transform_image(
+        JXL_7000X4000_LOSSY_RGB,
+        &ImageOptions {
+            width: Some(550),
+            format: OutputFormat::WebP,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!("image/webp", out.content_type);
+    let dims = probe_image_dims(&test_media_limits(), &out.bytes).unwrap();
+    assert_eq!((550, 314), (dims.width, dims.height));
+}
+
+#[test]
+fn full_size_jxl_above_the_static_output_cap_is_downscaled_to_fit() {
+    let options = ImageOptions {
+        format: OutputFormat::WebP,
+        ..Default::default()
+    };
+    let out = transform_image(JXL_7000X4000_LOSSY_RGB, &options).unwrap();
+    assert_eq!("image/webp", out.content_type);
+    let dims = probe_image_dims(&test_media_limits(), &out.bytes).unwrap();
+    assert_eq!((6636, 3792), (dims.width, dims.height));
+    assert!(dims.width as usize * dims.height as usize <= constants::MAX_STATIC_OUTPUT_PIXELS);
+
+    let cost =
+        image_transform_cost(JXL_7000X4000_LOSSY_RGB, &options, &test_media_limits()).unwrap();
+    assert_eq!(
+        NativeCost::Bytes(JXL_7000X4000_LOSSY_RGB.len() + 7000 * 4000 * 40 + 6636 * 3792 * 28),
+        cost
+    );
+}
+
+#[test]
+fn full_size_jxl_is_downscaled_to_fit_the_native_memory_budget() {
+    let options = ImageOptions {
+        format: OutputFormat::WebP,
+        ..Default::default()
+    };
+    let decode = JXL_7000X4000_LOSSY_RGB.len() + 7000 * 4000 * 40;
+    let budget = decode + 10_000_000 * 28;
+    let media_limits = test_media_limits().with_native_memory_budget(budget);
+    let out = super::super::transform_image(
+        JXL_7000X4000_LOSSY_RGB,
+        &options,
+        &media_limits,
+        &TransformMetrics::new(),
+    )
+    .unwrap();
+    let dims = probe_image_dims(&test_media_limits(), &out.bytes).unwrap();
+    assert_eq!((4183, 2390), (dims.width, dims.height));
+    assert_eq!(
+        NativeCost::Bytes(decode + 4183 * 2390 * 28),
+        image_transform_cost(JXL_7000X4000_LOSSY_RGB, &options, &media_limits).unwrap()
+    );
 }
 
 #[test]

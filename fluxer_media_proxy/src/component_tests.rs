@@ -171,11 +171,13 @@ fn gif_animation_status(input: &[u8]) -> NativeStatus {
     })
 }
 
-fn probe_animated_status(input: &[u8]) -> (NativeStatus, c_int, c_int, c_int) {
+fn probe_animated_status(input: &[u8]) -> (NativeStatus, c_int, c_int, c_int, c_int) {
     ensure_vips_init().expect("libvips initialises");
     let mut width = c_int::MAX;
     let mut height = c_int::MAX;
     let mut pages = c_int::MAX;
+    let mut bands = c_int::MAX;
+    let mut format = c_int::MAX;
     let status = NativeStatus::from_code(unsafe {
         native::fluxer_vips_probe_animated(
             input.as_ptr().cast(),
@@ -183,10 +185,12 @@ fn probe_animated_status(input: &[u8]) -> (NativeStatus, c_int, c_int, c_int) {
             &mut width,
             &mut height,
             &mut pages,
+            &mut bands,
+            &mut format,
         )
     });
     unsafe { native::fluxer_vips_error_clear() };
-    (status, width, height, pages)
+    (status, width, height, pages, bands)
 }
 
 fn apng_decode_status(input: &[u8]) -> (NativeStatus, *mut native::VipsImage, u32) {
@@ -286,16 +290,18 @@ fn every_remaining_native_validator_zeroes_its_out_params_on_failure() {
             "input {bytes:?}"
         );
 
-        let (status, width, height, pages) = probe_animated_status(&bytes);
+        let (status, width, height, pages, bands) = probe_animated_status(&bytes);
         assert_eq!(decodable, status == NativeStatus::Ok, "input {bytes:?}");
         if decodable {
             assert_eq!(1, width, "input {bytes:?}");
             assert_eq!(1, height, "input {bytes:?}");
             assert_eq!(1, pages, "input {bytes:?}");
+            assert!(bands > 0, "input {bytes:?}");
         } else {
             assert_eq!(0, width, "input {bytes:?}");
             assert_eq!(0, height, "input {bytes:?}");
             assert_eq!(0, pages, "input {bytes:?}");
+            assert_eq!(0, bands, "input {bytes:?}");
         }
 
         let (status, out, num_plays) = apng_decode_status(&bytes);

@@ -39,7 +39,7 @@ int fluxer_vips_init(const char *argv0);
 void fluxer_vips_error_clear(void);
 const char *fluxer_vips_error_buffer(void);
 void fluxer_vips_tune_for_server(int per_pipeline_threads);
-int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *height, int *pages);
+int fluxer_vips_probe_animated(const void *buf, size_t len, int *width, int *height, int *pages, int *bands, int *format);
 int fluxer_apng_probe(const void *buf, size_t len, int max_frames,
                       size_t max_total_pixels, int *width, int *height, int *frames);
 VipsImage *fluxer_vips_image_new_from_buffer(const void *buf, size_t len, const char *option_string);
