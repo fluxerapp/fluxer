@@ -28,9 +28,7 @@ mod tests {
             crate::local_files::LocalFileStore::load_blocking(std::path::Path::new("."), &budgets)
                 .expect("the test static directory must exist");
         AppState {
-            branding_image_origins: crate::branding_images::BrandingImageOrigins::from_config(
-                &config,
-            ),
+            branding: crate::branding_images::InstanceBranding::from_config(&config),
             config: Arc::new(config),
             csp,
             http_client: build_http_client().unwrap(),

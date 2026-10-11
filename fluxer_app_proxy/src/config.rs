@@ -360,6 +360,7 @@ pub struct AppProxyConfig {
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
     pub branding_image_origins: Vec<HttpEndpoint>,
+    pub branding_favicon_url: Option<String>,
     pub discovery_upstream_url: String,
     pub discovery_refresh_interval_ms: u64,
     pub release_channel: ReleaseChannel,
@@ -486,6 +487,9 @@ impl AppProxyConfig {
             s3_public_endpoint,
             s3_uploads_endpoint,
             branding_image_origins: crate::branding_images::origins_from_environment(
+                cfg::env_value,
+            ),
+            branding_favicon_url: crate::branding_images::favicon_url_from_environment(
                 cfg::env_value,
             ),
             discovery_upstream_url: cfg::read_env(

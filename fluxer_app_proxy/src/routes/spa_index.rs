@@ -27,6 +27,7 @@ const CSP_NONCE_PLACEHOLDER_ATTRIBUTE: &str = r#" nonce="{{CSP_NONCE_PLACEHOLDER
 const MEDIA_PRECONNECT_TAG: &str = r#"<link rel="preconnect" href="{{MEDIA_ENDPOINT}}">"#;
 const SAME_ORIGIN_API_META_TAG: &str = r#"<meta name="fluxer-api-origin" content="self">"#;
 const HEAD_CLOSE_TAG: &str = "</head>";
+const FAVICON_LINK_START: &str = r#"<link rel="icon""#;
 const STATIC_PRECONNECT_TAGS: [&str; 2] = [
     r#"<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">"#,
     r#"<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}" crossorigin>"#,
@@ -181,7 +182,11 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
         Err(response) => return response,
     };
     let raw_html = if state.config.self_hosted {
-        strip_link_preview_metadata(&raw_html)
+        let html = strip_link_preview_metadata(&raw_html);
+        match state.branding.favicon_url() {
+            Some(favicon_url) => apply_branded_favicon(&html, &favicon_url),
+            None => html,
+        }
     } else {
         raw_html
     };
@@ -206,7 +211,7 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
     };
     let csp = state.csp.spa_headers(
         &inline_script_hashes(&html),
-        &state.branding_image_origins.current(),
+        &state.branding.image_origins(),
     );
     build_spa_response(html.into_boxed_str(), &csp, should_bust_dev_assets)
 }
@@ -319,6 +324,35 @@ fn apply_media_preconnect(html: &str, media: &str, static_cdn: &str) -> String {
 fn strip_link_preview_metadata(html: &str) -> String {
     let html = remove_elements(html, "<title", "</title>");
     remove_elements(&html, r#"<meta name="description""#, ">")
+}
+
+fn apply_branded_favicon(html: &str, favicon_url: &str) -> String {
+    let link = format!(
+        r#"<link rel="icon" href="{}">"#,
+        escape_attribute_value(favicon_url)
+    );
+    let mut rest = html;
+    let mut output = String::with_capacity(html.len() + link.len());
+
+    while let Some(index) = rest.find(FAVICON_LINK_START) {
+        let Some(length) = rest[index..].find('>') else {
+            break;
+        };
+        output.push_str(&rest[..index]);
+        output.push_str(&link);
+        rest = &rest[index + length + 1..];
+    }
+
+    output.push_str(rest);
+    output
+}
+
+fn escape_attribute_value(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 fn remove_elements(html: &str, start: &str, end: &str) -> String {
@@ -916,8 +950,8 @@ mod tests {
         let plain_document = read_document(plain).await;
         assert!(!plain_images.contains(&"https://example.test".to_owned()));
 
-        state.branding_image_origins =
-            crate::branding_images::BrandingImageOrigins::new(vec![branding_origin()]);
+        state.branding =
+            crate::branding_images::InstanceBranding::new(vec![branding_origin()], None);
         let branded = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
         let branded_policy = policy_of(&branded);
         let branded_document = read_document(branded).await;
@@ -936,14 +970,58 @@ mod tests {
         config.self_hosted = false;
         config.branding_image_origins = vec![branding_origin()];
         let mut state = spa_state_serving(SHIPPED_APP_SHELL);
-        state.branding_image_origins =
-            crate::branding_images::BrandingImageOrigins::from_config(&config);
+        state.branding = crate::branding_images::InstanceBranding::from_config(&config);
 
         let response = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
 
         assert!(
             !image_sources_of(&policy_of(&response)).contains(&"https://example.test".to_owned())
         );
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_serves_its_branded_favicon() {
+        let mut state = assemble_spa_state(SpaIndexSource::bundled(SHIPPED_APP_SHELL), None, true);
+        state.branding = crate::branding_images::InstanceBranding::new(
+            vec![branding_origin()],
+            Some("https://example.test/favicon.png?v=1&size=32".to_owned()),
+        );
+
+        let response = serve_spa_index(&state, &HeaderMap::new(), "/").await;
+        let served = read_document(response).await;
+
+        assert_eq!(served.matches(r#"<link rel="icon""#).count(), 1);
+        assert!(served.contains(
+            r#"<link rel="icon" href="https://example.test/favicon.png?v=1&amp;size=32">"#
+        ));
+        assert!(!served.contains("/web/favicon-32x32.png"));
+        assert!(served.contains("/web/apple-touch-icon.png"));
+    }
+
+    #[test]
+    fn a_branded_favicon_cannot_break_out_of_its_attribute() {
+        let html =
+            r#"<head><link rel="icon" type="image/png" href="/web/favicon-32x32.png"></head>"#;
+
+        assert_eq!(
+            apply_branded_favicon(html, r#"https://example.test/"><script>x()</script>"#),
+            r#"<head><link rel="icon" href="https://example.test/&quot;&gt;&lt;script&gt;x()&lt;/script&gt;"></head>"#
+        );
+    }
+
+    #[tokio::test]
+    async fn the_official_instance_keeps_its_default_favicon() {
+        let mut config = AppProxyConfig::from_env();
+        config.self_hosted = false;
+        config.branding_favicon_url = Some("https://example.test/favicon.png".to_owned());
+        let mut state = spa_state_serving(SHIPPED_APP_SHELL);
+        state.branding = crate::branding_images::InstanceBranding::from_config(&config);
+
+        let response = serve_spa_index(&state, &HeaderMap::new(), "/").await;
+        let served = read_document(response).await;
+
+        assert!(served.contains("/web/favicon-32x32.png"));
+        assert!(!served.contains("https://example.test/favicon.png"));
     }
 
     #[tokio::test]
@@ -1137,9 +1215,7 @@ mod tests {
             crate::local_files::LocalFileStore::load_blocking(std::path::Path::new("."), &budgets)
                 .expect("the test static directory must exist");
         AppState {
-            branding_image_origins: crate::branding_images::BrandingImageOrigins::from_config(
-                &config,
-            ),
+            branding: crate::branding_images::InstanceBranding::from_config(&config),
             config: Arc::new(config),
             csp,
             http_client: reqwest::Client::new(),

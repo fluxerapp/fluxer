@@ -39,7 +39,7 @@ fn main() -> anyhow::Result<()> {
             .context("failed to load the Fluxer app proxy static directory")?;
 
         let branding_refresh = state.config.self_hosted.then(|| {
-            state.branding_image_origins.start_background_refresh(
+            state.branding.start_background_refresh(
                 state.http_client.clone(),
                 state.config.discovery_upstream_url.clone(),
                 Duration::from_millis(state.config.discovery_refresh_interval_ms),

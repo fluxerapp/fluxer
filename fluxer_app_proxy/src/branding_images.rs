@@ -14,6 +14,10 @@ const BRANDING_IMAGES: [(&str, &str); 5] = [
     ("wordmark_url", "FLUXER_APP_WORDMARK_URL"),
     ("favicon_url", "FLUXER_APP_FAVICON_URL"),
 ];
+const FAVICON_SOURCES: [(&str, &str); 2] = [
+    ("favicon_url", "FLUXER_APP_FAVICON_URL"),
+    ("icon_url", "FLUXER_APP_ICON_URL"),
+];
 const DISCOVERY_FETCH_TIMEOUT: Duration = Duration::from_secs(5);
 const DISCOVERY_BODY_BYTES_MAX: usize = 1024 * 1024;
 const REFRESH_INTERVAL_MIN: Duration = Duration::from_secs(1);
@@ -30,11 +34,38 @@ where
     )
 }
 
+pub fn favicon_url_from_environment<F>(mut read_var: F) -> Option<String>
+where
+    F: FnMut(&str) -> Option<String>,
+{
+    first_favicon_url(FAVICON_SOURCES.iter().map(|(_, name)| read_var(name)))
+}
+
 pub fn origins_from_discovery(discovery: &serde_json::Value) -> Option<Vec<HttpEndpoint>> {
     let branding = discovery.pointer("/app_public/branding")?.as_object()?;
     Some(distinct_origins(BRANDING_IMAGES.iter().filter_map(
         |(key, _)| Some((*key, branding.get(*key)?.as_str()?.to_owned())),
     )))
+}
+
+pub fn favicon_url_from_discovery(discovery: &serde_json::Value) -> Option<String> {
+    let branding = discovery.pointer("/app_public/branding")?.as_object()?;
+    first_favicon_url(FAVICON_SOURCES.iter().map(|(key, _)| {
+        branding
+            .get(*key)
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_owned)
+    }))
+}
+
+fn first_favicon_url(candidates: impl Iterator<Item = Option<String>>) -> Option<String> {
+    let url = candidates
+        .flatten()
+        .map(|url| url.trim().to_owned())
+        .find(|url| !url.is_empty())?;
+    HttpEndpoint::origin_of("FLUXER_APP_FAVICON_URL", &url)
+        .is_ok()
+        .then_some(url)
 }
 
 fn distinct_origins(urls: impl Iterator<Item = (&'static str, String)>) -> Vec<HttpEndpoint> {
@@ -80,24 +111,40 @@ async fn fetch_discovery(
     Ok(serde_json::from_slice(&body)?)
 }
 
-#[derive(Clone, Debug)]
-pub struct BrandingImageOrigins(watch::Sender<Arc<[HttpEndpoint]>>);
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct BrandingSnapshot {
+    image_origins: Arc<[HttpEndpoint]>,
+    favicon_url: Option<Arc<str>>,
+}
 
-impl BrandingImageOrigins {
-    pub fn new(origins: Vec<HttpEndpoint>) -> Self {
-        Self(watch::Sender::new(origins.into()))
+#[derive(Clone, Debug)]
+pub struct InstanceBranding(watch::Sender<Arc<BrandingSnapshot>>);
+
+impl InstanceBranding {
+    pub fn new(image_origins: Vec<HttpEndpoint>, favicon_url: Option<String>) -> Self {
+        Self(watch::Sender::new(Arc::new(BrandingSnapshot {
+            image_origins: image_origins.into(),
+            favicon_url: favicon_url.map(Into::into),
+        })))
     }
 
     pub fn from_config(config: &AppProxyConfig) -> Self {
         if config.self_hosted {
-            Self::new(config.branding_image_origins.clone())
+            Self::new(
+                config.branding_image_origins.clone(),
+                config.branding_favicon_url.clone(),
+            )
         } else {
-            Self::new(Vec::new())
+            Self::new(Vec::new(), None)
         }
     }
 
-    pub fn current(&self) -> Arc<[HttpEndpoint]> {
-        self.0.borrow().clone()
+    pub fn image_origins(&self) -> Arc<[HttpEndpoint]> {
+        self.0.borrow().image_origins.clone()
+    }
+
+    pub fn favicon_url(&self) -> Option<Arc<str>> {
+        self.0.borrow().favicon_url.clone()
     }
 
     pub async fn refresh(
@@ -109,16 +156,28 @@ impl BrandingImageOrigins {
         let Some(origins) = origins_from_discovery(&discovery) else {
             anyhow::bail!("upstream discovery has no app_public.branding object");
         };
+        let snapshot = BrandingSnapshot {
+            image_origins: origins.into(),
+            favicon_url: favicon_url_from_discovery(&discovery).map(Into::into),
+        };
         let changed = self.0.send_if_modified(|current| {
-            if **current == *origins {
+            if **current == snapshot {
                 return false;
             }
-            *current = origins.as_slice().into();
+            *current = Arc::new(snapshot.clone());
             true
         });
         if changed {
-            let origins: Vec<&str> = origins.iter().map(HttpEndpoint::csp_origin).collect();
-            tracing::info!(?origins, "branding image origins updated");
+            let origins: Vec<&str> = snapshot
+                .image_origins
+                .iter()
+                .map(HttpEndpoint::csp_origin)
+                .collect();
+            tracing::info!(
+                ?origins,
+                favicon_url = snapshot.favicon_url.as_deref(),
+                "instance branding updated"
+            );
         }
         Ok(())
     }
@@ -138,11 +197,11 @@ impl BrandingImageOrigins {
         upstream_url: String,
         interval: Duration,
     ) -> JoinHandle<()> {
-        let origins = self.clone();
+        let branding = self.clone();
         tokio::spawn(async move {
             let mut consecutive_failures: u32 = 0;
             loop {
-                let wait = match origins.refresh(&client, &upstream_url).await {
+                let wait = match branding.refresh(&client, &upstream_url).await {
                     Ok(()) => {
                         consecutive_failures = 0;
                         interval
@@ -157,7 +216,7 @@ impl BrandingImageOrigins {
                             url = %upstream_url,
                             consecutive_failures,
                             backoff_ms = backoff.as_millis() as u64,
-                            "branding image origin refresh failed, keeping the previous origins"
+                            "instance branding refresh failed, keeping the previous branding"
                         );
                         backoff
                     }
@@ -265,6 +324,60 @@ mod tests {
     }
 
     #[test]
+    fn the_favicon_falls_back_to_the_icon_like_the_app() {
+        let favicon = |branding: serde_json::Value| {
+            favicon_url_from_discovery(&serde_json::json!({"app_public": {"branding": branding}}))
+        };
+
+        assert_eq!(
+            favicon(serde_json::json!({
+                "icon_url": "https://example.test/icon.png",
+                "favicon_url": " https://example.test/favicon.png "
+            })),
+            Some("https://example.test/favicon.png".to_owned())
+        );
+        assert_eq!(
+            favicon(serde_json::json!({
+                "icon_url": "https://example.test/icon.png",
+                "favicon_url": null
+            })),
+            Some("https://example.test/icon.png".to_owned())
+        );
+        assert_eq!(
+            favicon(serde_json::json!({"icon_url": null, "favicon_url": null})),
+            None
+        );
+        assert_eq!(
+            favicon(serde_json::json!({"favicon_url": "javascript:alert(1)"})),
+            None
+        );
+    }
+
+    #[test]
+    fn the_environment_favicon_falls_back_to_the_icon() {
+        let favicon = |favicon: Option<&str>, icon: Option<&str>| {
+            favicon_url_from_environment(|name| match name {
+                "FLUXER_APP_FAVICON_URL" => favicon.map(str::to_owned),
+                "FLUXER_APP_ICON_URL" => icon.map(str::to_owned),
+                _ => None,
+            })
+        };
+
+        assert_eq!(
+            favicon(
+                Some("https://example.test/favicon.png"),
+                Some("https://example.test/icon.png")
+            ),
+            Some("https://example.test/favicon.png".to_owned())
+        );
+        assert_eq!(
+            favicon(Some("  "), Some("https://example.test/icon.png")),
+            Some("https://example.test/icon.png".to_owned())
+        );
+        assert_eq!(favicon(None, None), None);
+    }
+
+    #[test]
     fn environment_branding_images_yield_their_distinct_origins() {
         let origins = origins_from_environment(|name| match name {
             "FLUXER_APP_ICON_URL" => Some("https://example.test/logo.png".to_owned()),
@@ -288,14 +401,14 @@ mod tests {
 
         config.self_hosted = false;
         assert!(
-            BrandingImageOrigins::from_config(&config)
-                .current()
+            InstanceBranding::from_config(&config)
+                .image_origins()
                 .is_empty()
         );
 
         config.self_hosted = true;
         assert_eq!(
-            sources(&BrandingImageOrigins::from_config(&config).current()),
+            sources(&InstanceBranding::from_config(&config).image_origins()),
             ["https://example.test"]
         );
     }
@@ -310,36 +423,52 @@ mod tests {
             })),
         )])
         .await;
-        let origins = BrandingImageOrigins::new(vec![endpoint("https://env.example.test")]);
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        let origins = InstanceBranding::new(vec![endpoint("https://env.example.test")], None);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
 
         origins.refresh(&fast_client(), &upstream).await.unwrap();
 
         assert_eq!(
-            sources(&origins.current()),
+            sources(&origins.image_origins()),
             ["https://dashboard.example.test"]
+        );
+        assert_eq!(
+            origins.favicon_url().as_deref(),
+            Some("https://dashboard.example.test/icon.png")
         );
     }
 
     #[tokio::test]
     async fn a_failed_refresh_keeps_the_previous_origins() {
-        let seeded = || BrandingImageOrigins::new(vec![endpoint("https://env.example.test")]);
+        let seeded = || InstanceBranding::new(vec![endpoint("https://env.example.test")], None);
 
         let origins = seeded();
         let unavailable =
             serve_discovery(vec![(StatusCode::SERVICE_UNAVAILABLE, String::new())]).await;
         assert!(origins.refresh(&fast_client(), &unavailable).await.is_err());
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
 
         let origins = seeded();
         let not_json = serve_discovery(vec![(StatusCode::OK, "<html>".to_owned())]).await;
         assert!(origins.refresh(&fast_client(), &not_json).await.is_err());
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
 
         let origins = seeded();
         let no_branding = serve_discovery(vec![(StatusCode::OK, "{}".to_owned())]).await;
         assert!(origins.refresh(&fast_client(), &no_branding).await.is_err());
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
 
         let origins = seeded();
         let oversized = serve_discovery(vec![(
@@ -353,7 +482,10 @@ mod tests {
         )])
         .await;
         assert!(origins.refresh(&fast_client(), &oversized).await.is_err());
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
 
         let origins = seeded();
         assert!(
@@ -362,7 +494,10 @@ mod tests {
                 .await
                 .is_err()
         );
-        assert_eq!(sources(&origins.current()), ["https://env.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://env.example.test"]
+        );
     }
 
     #[tokio::test]
@@ -383,16 +518,22 @@ mod tests {
             ),
         ])
         .await;
-        let origins = BrandingImageOrigins::new(Vec::new());
+        let origins = InstanceBranding::new(Vec::new(), None);
         let mut changes = origins.0.subscribe();
 
         let refresh =
             origins.spawn_refresh_loop(fast_client(), upstream, Duration::from_millis(10));
 
         changes.changed().await.unwrap();
-        assert_eq!(sources(&origins.current()), ["https://first.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://first.example.test"]
+        );
         changes.changed().await.unwrap();
-        assert_eq!(sources(&origins.current()), ["https://second.example.test"]);
+        assert_eq!(
+            sources(&origins.image_origins()),
+            ["https://second.example.test"]
+        );
         refresh.abort();
     }
 }
