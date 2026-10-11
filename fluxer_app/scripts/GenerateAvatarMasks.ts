@@ -145,7 +145,8 @@ function calculateStatusGeometry(avatarSize: number, isMobile: boolean = false):
 		return baseGeometry;
 	}
 	const phoneWidth = statusSize;
-	const phoneHeight = Math.round(phoneWidth / DESIGN_RULES.mobileAspectRatio) + DESIGN_RULES.mobilePhoneExtraHeight;
+	const phoneHeight =
+		Math.round((phoneWidth / DESIGN_RULES.mobileAspectRatio + DESIGN_RULES.mobilePhoneExtraHeight) / 2) * 2;
 	const phoneRx = Math.round(phoneWidth * DESIGN_RULES.mobileCornerRadius);
 	const bezelHeight = Math.max(1, Math.round(phoneHeight * 0.05));
 	const phoneX = cutoutCenter - phoneWidth / 2;
