@@ -284,6 +284,20 @@ export function bindRoomEvents(
 		participantSpeakingDisposers.get(identity)?.dispose();
 		participantSpeakingDisposers.delete(identity);
 	};
+	const observeRemoteScreenSharePublication = (participant: Participant, pub: RemoteTrackPublication): void => {
+		reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
+		const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
+		if (streamKey) {
+			cancelDeferredStopWatchingStreamKey(streamKey);
+		}
+	};
+	const observeExistingRemoteScreenSharePublications = (): void => {
+		room.remoteParticipants.forEach((participant) => {
+			for (const pub of participant.trackPublications.values()) {
+				if (pub.source === Track.Source.ScreenShare) observeRemoteScreenSharePublication(participant, pub);
+			}
+		});
+	};
 	const endScreenShareIfPublicationDidNotReturn = (): void => {
 		const publication = screenSharePublicationAwaitingReconnect;
 		screenSharePublicationAwaitingReconnect = null;
@@ -305,6 +319,7 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
+			observeExistingRemoteScreenSharePublications();
 			bindScreenShareNegotiation();
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
@@ -596,11 +611,7 @@ export function bindRoomEvents(
 					pub.setSubscribed(true);
 				}
 				if (pub.source === Track.Source.ScreenShare && !participant.isLocal) {
-					reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
-					const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
-					if (streamKey) {
-						cancelDeferredStopWatchingStreamKey(streamKey);
-					}
+					observeRemoteScreenSharePublication(participant, pub);
 					dependencies.subscriptions.reattachScreenShareAfterPublish(participant.identity, pub);
 					dependencies.subscriptions.reconcileSubscriptions();
 				}
@@ -615,6 +626,7 @@ export function bindRoomEvents(
 		}),
 	);
 	if (room.state === ConnectionState.Connected) {
+		guard(attemptId, observeExistingRemoteScreenSharePublications)();
 		guard(attemptId, bindScreenShareNegotiation)();
 	}
 }

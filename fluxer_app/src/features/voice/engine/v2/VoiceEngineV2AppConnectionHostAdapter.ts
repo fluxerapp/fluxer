@@ -3,7 +3,11 @@
 import assert from 'node:assert/strict';
 import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {createVoiceMeshRoom, holdVoiceMeshConversion} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
+import {
+	createVoiceMeshRoom,
+	holdVoiceMeshConversion,
+	isVoiceMeshRoom,
+} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
 import {
@@ -785,8 +789,13 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			logger.warn('Region hot-swap: missing participant for track republishing');
 			return;
 		}
+		const isMeshConversion = isVoiceMeshRoom(oldRoom);
 		const publications = selectLocalMediaPublicationsForConnectionRepublish(
 			Array.from(oldParticipant.trackPublications.values()),
+		).filter(
+			(publication) =>
+				!isMeshConversion ||
+				(publication.source !== Track.Source.ScreenShare && publication.source !== Track.Source.ScreenShareAudio),
 		);
 		const errors: Array<{source: string; error: unknown}> = [];
 		let codecPolicyFailure: Error | null = null;

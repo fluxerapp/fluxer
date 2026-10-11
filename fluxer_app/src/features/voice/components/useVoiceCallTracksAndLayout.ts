@@ -468,9 +468,11 @@ export function useVoiceCallTracksAndLayout({channel, expandedUserIds}: UseVoice
 	useEffect(() => {
 		if (!pinnedParticipantIdentity) return;
 		if (cameraTracksAll.length === 0) return;
-		const stillExists = cameraTracksAll.some((tr) => tr.participant.identity === pinnedParticipantIdentity);
-		if (!stillExists) VoiceCallLayoutCommands.setPinnedParticipant(null);
-	}, [cameraTracksAll, pinnedParticipantIdentity]);
+		if (cameraTracksAll.some((tr) => tr.participant.identity === pinnedParticipantIdentity)) return;
+		const {connectionId} = parseVoiceParticipantIdentity(pinnedParticipantIdentity);
+		if (connectionVoiceStates[connectionId]?.channel_id === channel.id) return;
+		VoiceCallLayoutCommands.setPinnedParticipant(null);
+	}, [cameraTracksAll, channel.id, connectionVoiceStates, pinnedParticipantIdentity]);
 	const {
 		mainTrack: focusMainTrack,
 		carouselTracks,

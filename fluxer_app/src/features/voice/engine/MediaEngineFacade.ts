@@ -801,6 +801,7 @@ class MediaEngineFacade extends Store {
 		restoreStream: boolean;
 		screenShareSnapshot: ScreenShareReconnectSnapshot | null;
 		toastWhenStreamNotRestored: boolean;
+		sendUpdateWhenStreamNotRestored: boolean;
 	}): Promise<void> {
 		assert.equal(typeof args.restoreCamera, 'boolean', 'restoreLocalMedia requires a camera flag');
 		assert.equal(typeof args.restoreStream, 'boolean', 'restoreLocalMedia requires a stream flag');
@@ -828,7 +829,9 @@ class MediaEngineFacade extends Store {
 		}
 		if (restored) return;
 		if (streamRestoreFailed || args.screenShareSnapshot !== null) {
-			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
+			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {
+				sendUpdate: args.sendUpdateWhenStreamNotRestored,
+			});
 		}
 		if (args.toastWhenStreamNotRestored && this.i18n) {
 			ToastCommands.createToast({
@@ -1690,7 +1693,7 @@ class MediaEngineFacade extends Store {
 				}
 				voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 				this.reconcileLocalAudioStateInBackground('region hot-swap complete');
-				if (isConversion) void this.reapplyVideoQualityLimits(newRoom);
+				if (isConversion) void this.finishMeshConversion(currentRoom, newRoom);
 			},
 			(_guildId, _channelId, _connectionId, _attemptId, error) => {
 				logger.warn('LiveKit connect failed, clearing gateway voice state', {error});
@@ -2715,6 +2718,19 @@ class MediaEngineFacade extends Store {
 		}
 	}
 
+	private async finishMeshConversion(meshRoom: Room, room: Room): Promise<void> {
+		await this.restoreLocalMedia({
+			reason: 'mesh conversion',
+			room,
+			restoreCamera: false,
+			restoreStream: false,
+			screenShareSnapshot: voiceEngineV2AppScreenShareExecutionAdapter.prepareScreenShareReconnect(meshRoom),
+			toastWhenStreamNotRestored: true,
+			sendUpdateWhenStreamNotRestored: true,
+		});
+		await this.reapplyVideoQualityLimits(room);
+	}
+
 	private async restoreLocalMediaState(roomOverride?: Room | null): Promise<void> {
 		const room = roomOverride ?? voiceEngineV2AppConnectionHostAdapter.room;
 		const participant = room?.localParticipant ?? null;
@@ -2728,6 +2744,7 @@ class MediaEngineFacade extends Store {
 			restoreStream: LocalVoiceState.getSelfStream() && !participant.isScreenShareEnabled,
 			screenShareSnapshot: pendingScreenShareReconnect,
 			toastWhenStreamNotRestored: false,
+			sendUpdateWhenStreamNotRestored: false,
 		});
 	}
 
@@ -2744,6 +2761,7 @@ class MediaEngineFacade extends Store {
 			restoreStream: pendingRestore.restoreStream,
 			screenShareSnapshot: null,
 			toastWhenStreamNotRestored: true,
+			sendUpdateWhenStreamNotRestored: false,
 		});
 	}
 

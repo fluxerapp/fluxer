@@ -320,6 +320,7 @@ export class VoiceMeshEngine extends RTCEngine {
 	handlePeerStatus(peer: VoiceMeshPeer): void {
 		if (this.peers.get(peer.connectionId) !== peer) return;
 		const {status} = peer;
+		if (status === 'failed' && this.ownP2p() === false) return;
 		VoiceMeshPeers.setStatus(peer.connectionId, status);
 		if (status === 'connecting') return;
 		this.reportPeer(peer, status);
@@ -395,28 +396,30 @@ export class VoiceMeshEngine extends RTCEngine {
 		const serverMuted =
 			src === 'microphone' &&
 			voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(peer.connectionId)?.mute === true;
-		if (receiver && receiver.track.readyState === 'live' && publication.isDesired && !serverMuted) {
-			if (publication.track?.mediaStreamTrack !== receiver.track) {
-				participant.addSubscribedMediaTrack(receiver.track, info.sid, new MediaStream([receiver.track]), receiver);
-			}
-			return;
+		const live = receiver !== null && receiver.track.readyState === 'live' && publication.isDesired && !serverMuted;
+		if (live && publication.track?.mediaStreamTrack === receiver.track) return;
+		if (publication.track) {
+			publication.track.stop();
+			publication.setTrack(undefined);
 		}
-		if (!publication.track) return;
-		publication.track.stop();
-		publication.setTrack(undefined);
+		if (live) {
+			participant.addSubscribedMediaTrack(receiver.track, info.sid, new MediaStream([receiver.track]), receiver);
+		}
 	}
 
 	private readonly syncRoster = (): void => {
 		if (!this.room) return;
 		const {connectionId, channelId, guildId} = this.target;
-		const own = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId);
-		const ownP2p = own?.channel_id === channelId ? own.p2p : undefined;
+		const ownP2p = this.ownP2p();
 		this.syncConversionWatchdog(ownP2p === false && !this.conversionHeld);
 		const roster = new Map<string, NormalizedVoiceState>();
-		if (ownP2p === true) {
+		if (ownP2p !== undefined) {
 			const states = voiceEngineV2AppVoiceStateAdapter.getAllVoiceStatesInChannel(guildId ?? ME, channelId);
 			for (const state of Object.values(states)) {
-				if (state.p2p === true && state.connection_id !== connectionId) roster.set(state.connection_id, state);
+				if (state.connection_id === connectionId) continue;
+				if (this.peers.has(state.connection_id) || (ownP2p && state.p2p === true)) {
+					roster.set(state.connection_id, state);
+				}
 			}
 		}
 		const before = this.peers.size;
@@ -430,6 +433,12 @@ export class VoiceMeshEngine extends RTCEngine {
 		if (kept !== before || this.peers.size !== kept) this.syncAllSenders();
 		for (const peer of this.peers.values()) this.syncPeerReceiver(peer, 'microphone');
 	};
+
+	private ownP2p(): boolean | undefined {
+		const {connectionId, channelId} = this.target;
+		const own = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId);
+		return own?.channel_id === channelId ? own.p2p : undefined;
+	}
 
 	private addPeer(state: NormalizedVoiceState): void {
 		const peer = new VoiceMeshPeer(this, state.connection_id, state.user_id, this.target.connectionId);
