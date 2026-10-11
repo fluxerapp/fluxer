@@ -106,6 +106,25 @@ pub async fn browserconfig_xml(State(state): State<AppState>, headers: HeaderMap
     .await
 }
 
+pub async fn favicon_ico(State(state): State<AppState>) -> Response {
+    let location = match state.branding.snapshot().favicon_url.as_deref() {
+        Some(favicon_url) => favicon_url.to_owned(),
+        None => format!(
+            "{}/web/favicon.ico",
+            state
+                .config
+                .static_cdn_endpoint
+                .as_ref()
+                .map_or("", HttpEndpoint::as_str)
+                .trim_end_matches('/')
+        ),
+    };
+    match HeaderValue::from_str(&location) {
+        Ok(location) => (StatusCode::FOUND, [(header::LOCATION, location)]).into_response(),
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
 pub async fn service_worker(State(state): State<AppState>, headers: HeaderMap) -> Response {
     serve_static_text_file(
         &state,
@@ -461,6 +480,51 @@ mod tests {
         assert_eq!(manifest["name"], "Example");
         assert_eq!(manifest["icons"][0]["src"], "https://example.test/icon.png");
         assert_installable_shape(&manifest);
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    fn location_of(response: &Response) -> &str {
+        assert_eq!(response.status(), StatusCode::FOUND);
+        response
+            .headers()
+            .get(header::LOCATION)
+            .expect("the favicon redirect has no location")
+            .to_str()
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn the_favicon_ico_redirects_to_the_bundled_icon_on_the_official_instance() {
+        let root = static_dir_with_generated_files();
+        let mut state = state_serving(&root, false);
+
+        let response = fetch(state.clone(), "/favicon.ico").await;
+        assert_eq!(location_of(&response), "/web/favicon.ico");
+
+        std::sync::Arc::make_mut(&mut state.config).static_cdn_endpoint = Some(
+            HttpEndpoint::parse("TEST_STATIC_CDN_ENDPOINT", "https://fluxerstatic.com").unwrap(),
+        );
+        let response = fetch(state, "/favicon.ico").await;
+        assert_eq!(
+            location_of(&response),
+            "https://fluxerstatic.com/web/favicon.ico"
+        );
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[tokio::test]
+    async fn the_favicon_ico_redirects_to_the_instance_favicon_when_self_hosted() {
+        let root = static_dir_with_generated_files();
+        let mut state = state_serving(&root, true);
+
+        let response = fetch(state.clone(), "/favicon.ico").await;
+        assert_eq!(location_of(&response), "https://example.test/favicon.png");
+
+        state.branding = crate::branding_images::InstanceBranding::new(BrandingSnapshot::default());
+        let response = fetch(state, "/favicon.ico").await;
+        assert_eq!(location_of(&response), "/web/favicon.ico");
 
         std::fs::remove_dir_all(root).unwrap();
     }

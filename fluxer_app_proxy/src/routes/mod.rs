@@ -53,6 +53,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/version.json", get(spa_static::version_json))
         .route("/manifest.json", get(spa_static::manifest_json))
         .route("/browserconfig.xml", get(spa_static::browserconfig_xml))
+        .route("/favicon.ico", get(spa_static::favicon_ico))
         .route("/sw.js", get(spa_static::service_worker))
         .route("/sw.js.map", get(spa_static::service_worker_map))
         .fallback(get(spa_index::spa_catch_all))
