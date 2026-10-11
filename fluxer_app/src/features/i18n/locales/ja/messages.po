@@ -5414,8 +5414,10 @@ msgstr "入力候補: {label}、{resultCount}件中{selectedOptionPosition}番�
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
+#. SMTP encryption option that picks the mode from the port.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -14556,6 +14558,11 @@ msgstr "新しい画面共有のエンコーダー設定"
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "エンコーダー、SVC、ビットレートプリセット"
 
+#. Label for the choice of how the SMTP connection is encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Encryption"
+msgstr "暗号化"
+
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -18419,6 +18426,16 @@ msgstr "画像"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "クリップボードから貼り付けた画像は添付ファイルとして送信されますが、このチャンネルではファイルを添付する権限がありません。"
+
+#. SMTP encryption option where the connection starts encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS"
+msgstr "暗黙的TLS"
+
+#. Description of the automatic SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS on port 465, required STARTTLS on any other port."
+msgstr "ポート465では暗黙的なTLS、それ以外のポートではSTARTTLSが必須です。"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -23948,8 +23965,10 @@ msgstr "無変換"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Library picker entry meaning no sound is selected for this scope.
 #. Member verification level option in the community moderation settings tab. Short standalone label for the lowest level (no verification).
+#. SMTP encryption option that never uses TLS.
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -33153,6 +33172,16 @@ msgstr "{name}さんが開始しました"
 msgid "Started displaying members with this role separately"
 msgstr "このロールを持つメンバーを個別に表示するようにしました"
 
+#. SMTP encryption option where a plain connection must upgrade with STARTTLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#. SMTP encryption option where STARTTLS is used only if the server offers it.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS when offered"
+msgstr "提供されている場合にSTARTTLS"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Startup"
@@ -34624,6 +34653,26 @@ msgstr "このコミュニティではクローン作成が無効になってい
 #: src/features/app/components/layout/GuildLayout.tsx
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "お探しのコミュニティは削除されたか、アクセス権がない可能性があります。"
+
+#. Description of the implicit TLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is encrypted from the start. Usually port 465."
+msgstr "接続は最初から暗号化されます。通常はポート465です。"
+
+#. Description of the SMTP encryption option that never uses TLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is never encrypted. Only for a mail server on a network you trust."
+msgstr "接続は暗号化されません。信頼できるネットワーク上のメールサーバーでのみ使用してください。"
+
+#. Description of the required STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection must upgrade to TLS before signing in. Usually port 587."
+msgstr "接続はサインイン前にTLSにアップグレードする必要があります。通常はポート587です。"
+
+#. Description of the opportunistic STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection upgrades to TLS only if the server offers it."
+msgstr "サーバーが提供する場合にのみ、接続はTLSにアップグレードされます。"
 
 #. Modal body shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -38363,11 +38412,6 @@ msgstr "このデバイスのシステムの視差効果設定を使用する"
 #: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "このデバイスのシステムの視差効果設定に従うか、以下でカスタマイズしてください。"
-
-#. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Use TLS"
-msgstr "TLSを使用"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts

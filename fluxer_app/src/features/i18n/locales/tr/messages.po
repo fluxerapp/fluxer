@@ -5414,8 +5414,10 @@ msgstr "Otomatik tamamlama önerisi: {label}, {resultCount} sonuçtan {selectedO
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
+#. SMTP encryption option that picks the mode from the port.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -14556,6 +14558,11 @@ msgstr "Yeni ekran paylaşımları için kodlayıcı tercihi."
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "Kodlayıcı, SVC ve bit hızı ön ayarları"
 
+#. Label for the choice of how the SMTP connection is encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Encryption"
+msgstr "Şifreleme"
+
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -18419,6 +18426,16 @@ msgstr "Görseller"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Panodan yapıştırdığınız görseller ek olarak gönderilir ve bu kanalda dosya ekleme izniniz yok."
+
+#. SMTP encryption option where the connection starts encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS"
+msgstr "Açık TLS"
+
+#. Description of the automatic SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS on port 465, required STARTTLS on any other port."
+msgstr "465 numaralı bağlantı noktasında örtük TLS, diğer herhangi bir bağlantı noktasında STARTTLS gerektirir."
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -23948,8 +23965,10 @@ msgstr "Dönüştürme yok"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Library picker entry meaning no sound is selected for this scope.
 #. Member verification level option in the community moderation settings tab. Short standalone label for the lowest level (no verification).
+#. SMTP encryption option that never uses TLS.
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -33153,6 +33172,16 @@ msgstr "{name} başlattı"
 msgid "Started displaying members with this role separately"
 msgstr "Bu role sahip üyeler ayrı olarak gösterilmeye başlandı"
 
+#. SMTP encryption option where a plain connection must upgrade with STARTTLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#. SMTP encryption option where STARTTLS is used only if the server offers it.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS when offered"
+msgstr "Sunulursa STARTTLS"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Startup"
@@ -34624,6 +34653,26 @@ msgstr "Bu ifadenin geldiği topluluk kopyalamayı kapattığı için kopyalanam
 #: src/features/app/components/layout/GuildLayout.tsx
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Aradığınız topluluk silinmiş olabilir veya erişim izniniz olmayabilir."
+
+#. Description of the implicit TLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is encrypted from the start. Usually port 465."
+msgstr "Bağlantı en başından itibaren şifrelenir. Genellikle 465 numaralı bağlantı noktası kullanılır."
+
+#. Description of the SMTP encryption option that never uses TLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is never encrypted. Only for a mail server on a network you trust."
+msgstr "Bağlantı asla şifrelenmez. Yalnızca güvendiğiniz bir ağdaki posta sunucusu için."
+
+#. Description of the required STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection must upgrade to TLS before signing in. Usually port 587."
+msgstr "Bağlantı, oturum açmadan önce TLS'ye yükseltilmelidir. Genellikle 587 numaralı bağlantı noktası kullanılır."
+
+#. Description of the opportunistic STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection upgrades to TLS only if the server offers it."
+msgstr "Sunucu teklif ederse bağlantı TLS'ye yükseltilir."
 
 #. Modal body shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -38363,11 +38412,6 @@ msgstr "Bu cihazın sistem azaltılmış hareket tercihini kullan"
 #: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "Bu cihazın sistem azaltılmış hareket tercihini kullanın veya aşağıdan özelleştirin."
-
-#. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Use TLS"
-msgstr "TLS kullan"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts

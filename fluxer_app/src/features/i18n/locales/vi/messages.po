@@ -5414,8 +5414,10 @@ msgstr "Gợi ý tự động hoàn tất: {label}, {selectedOptionPosition} tr�
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
+#. SMTP encryption option that picks the mode from the port.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -14556,6 +14558,11 @@ msgstr "Ưu tiên bộ mã hóa cho các lần chia sẻ màn hình mới."
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "Bộ mã hóa, SVC và cài đặt trước tốc độ bit"
 
+#. Label for the choice of how the SMTP connection is encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Encryption"
+msgstr "Mã hóa"
+
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -18419,6 +18426,16 @@ msgstr "Hình ảnh"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Ảnh dán từ bảng nhớ tạm sẽ được gửi dưới dạng tệp đính kèm và bạn không có quyền đính kèm tệp trong kênh này."
+
+#. SMTP encryption option where the connection starts encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS"
+msgstr "TLS ngầm"
+
+#. Description of the automatic SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS on port 465, required STARTTLS on any other port."
+msgstr "TLS ngầm định trên cổng 465, yêu cầu STARTTLS trên bất kỳ cổng nào khác."
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -23948,8 +23965,10 @@ msgstr "Không chuyển đổi"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Library picker entry meaning no sound is selected for this scope.
 #. Member verification level option in the community moderation settings tab. Short standalone label for the lowest level (no verification).
+#. SMTP encryption option that never uses TLS.
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -33153,6 +33172,16 @@ msgstr "Bắt đầu bởi {name}"
 msgid "Started displaying members with this role separately"
 msgstr "Đã bắt đầu hiển thị riêng các thành viên có vai trò này"
 
+#. SMTP encryption option where a plain connection must upgrade with STARTTLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#. SMTP encryption option where STARTTLS is used only if the server offers it.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS when offered"
+msgstr "STARTTLS khi được cung cấp"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Startup"
@@ -34624,6 +34653,26 @@ msgstr "Cộng đồng nguồn đã tắt tính năng nhân bản, nên không t
 #: src/features/app/components/layout/GuildLayout.tsx
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Cộng đồng bạn tìm kiếm có thể đã bị xóa hoặc bạn không có quyền truy cập."
+
+#. Description of the implicit TLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is encrypted from the start. Usually port 465."
+msgstr "Kết nối được mã hóa ngay từ đầu. Thường là cổng 465."
+
+#. Description of the SMTP encryption option that never uses TLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is never encrypted. Only for a mail server on a network you trust."
+msgstr "Kết nối này không bao giờ được mã hóa. Chỉ dành cho máy chủ thư trên mạng mà bạn tin cậy."
+
+#. Description of the required STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection must upgrade to TLS before signing in. Usually port 587."
+msgstr "Kết nối phải nâng cấp lên TLS trước khi đăng nhập. Thường là cổng 587."
+
+#. Description of the opportunistic STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection upgrades to TLS only if the server offers it."
+msgstr "Kết nối sẽ nâng cấp lên TLS chỉ khi máy chủ cung cấp tùy chọn này."
 
 #. Modal body shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -38363,11 +38412,6 @@ msgstr "Sử dụng tùy chọn giảm chuyển động của hệ thống trên
 #: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "Sử dụng tùy chọn giảm chuyển động của hệ thống trên thiết bị này hoặc tùy chỉnh bên dưới."
-
-#. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Use TLS"
-msgstr "Sử dụng TLS"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts

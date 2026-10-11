@@ -5414,8 +5414,10 @@ msgstr "Suggestion de saisie semi-automatique : {label}, {selectedOptionPosition
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
+#. SMTP encryption option that picks the mode from the port.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -14556,6 +14558,11 @@ msgstr "Préférence d’encodeur pour les nouveaux partages d’écran."
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "Encodeur, SVC et préréglages de débit"
 
+#. Label for the choice of how the SMTP connection is encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Encryption"
+msgstr "Chiffrement"
+
 #: src/features/input/utils/KeybindUtils.ts
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -18419,6 +18426,16 @@ msgstr "Images"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Les images collées depuis votre presse-papiers sont envoyées en tant que pièces jointes, et vous n'avez pas l'autorisation de joindre des fichiers dans ce salon."
+
+#. SMTP encryption option where the connection starts encrypted.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS"
+msgstr "TLS implicite"
+
+#. Description of the automatic SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Implicit TLS on port 465, required STARTTLS on any other port."
+msgstr "TLS implicite sur le port 465, STARTTLS requis sur tout autre port."
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -23948,8 +23965,10 @@ msgstr "Sans conversion"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Library picker entry meaning no sound is selected for this scope.
 #. Member verification level option in the community moderation settings tab. Short standalone label for the lowest level (no verification).
+#. SMTP encryption option that never uses TLS.
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -33153,6 +33172,16 @@ msgstr "Commencé par {name}"
 msgid "Started displaying members with this role separately"
 msgstr "A commencé à afficher séparément les membres ayant ce rôle"
 
+#. SMTP encryption option where a plain connection must upgrade with STARTTLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#. SMTP encryption option where STARTTLS is used only if the server offers it.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "STARTTLS when offered"
+msgstr "STARTTLS si proposé"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Startup"
@@ -34624,6 +34653,26 @@ msgstr "La communauté d’origine a désactivé le clonage, il est donc impossi
 #: src/features/app/components/layout/GuildLayout.tsx
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "La communauté que vous recherchez a peut-être été supprimée ou vous n'y avez peut-être pas accès."
+
+#. Description of the implicit TLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is encrypted from the start. Usually port 465."
+msgstr "La connexion est chiffrée dès le départ. Généralement le port 465."
+
+#. Description of the SMTP encryption option that never uses TLS.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection is never encrypted. Only for a mail server on a network you trust."
+msgstr "La connexion n'est jamais chiffrée. Uniquement pour un serveur de messagerie sur un réseau de confiance."
+
+#. Description of the required STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection must upgrade to TLS before signing in. Usually port 587."
+msgstr "La connexion doit passer à TLS avant de vous connecter. Généralement le port 587."
+
+#. Description of the opportunistic STARTTLS SMTP encryption option.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The connection upgrades to TLS only if the server offers it."
+msgstr "La connexion passe à TLS uniquement si le serveur le propose."
 
 #. Modal body shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -38363,11 +38412,6 @@ msgstr "Utiliser la préférence système de cet appareil pour la réduction des
 #: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx
 msgid "Use this device's system reduced motion preference, or customize it below."
 msgstr "Utilisez la préférence de réduction des animations du système de cet appareil ou personnalisez-la ci-dessous."
-
-#. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Use TLS"
-msgstr "Utiliser TLS"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
