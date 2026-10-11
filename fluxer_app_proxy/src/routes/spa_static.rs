@@ -96,6 +96,9 @@ fn apply_manifest_branding(
 }
 
 pub async fn browserconfig_xml(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    if state.config.self_hosted {
+        return StatusCode::NOT_FOUND.into_response();
+    }
     serve_static_text_file_with_cdn(
         &state,
         &headers,
@@ -407,6 +410,7 @@ mod tests {
             std::env::temp_dir().join(format!("fluxer-spa-static-{}-{unique}", std::process::id()));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::write(root.join("manifest.json"), GENERATED_MANIFEST).unwrap();
+        std::fs::write(root.join("browserconfig.xml"), GENERATED_BROWSERCONFIG).unwrap();
         root
     }
 
@@ -525,6 +529,33 @@ mod tests {
         state.branding = crate::branding_images::InstanceBranding::new(BrandingSnapshot::default());
         let response = fetch(state, "/favicon.ico").await;
         assert_eq!(location_of(&response), "/web/favicon.ico");
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    const GENERATED_BROWSERCONFIG: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square150x150logo src="{{STATIC_CDN_ENDPOINT}}/web/mstile-150x150.png"/>
+      <TileColor>#4641D9</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>"#;
+
+    #[tokio::test]
+    async fn the_fluxer_tile_is_served_only_on_the_official_instance() {
+        let root = static_dir_with_generated_files();
+
+        let official = fetch(state_serving(&root, false), "/browserconfig.xml").await;
+        assert_eq!(official.status(), StatusCode::OK);
+        assert_eq!(
+            body_of(official).await,
+            GENERATED_BROWSERCONFIG.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+
+        let self_hosted = fetch(state_serving(&root, true), "/browserconfig.xml").await;
+        assert_eq!(self_hosted.status(), StatusCode::NOT_FOUND);
 
         std::fs::remove_dir_all(root).unwrap();
     }
