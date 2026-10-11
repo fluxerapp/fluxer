@@ -18,6 +18,7 @@ mod encoding;
 mod image_probe;
 mod loaded_image;
 mod metadata;
+mod native_cost;
 pub(crate) mod native_runtime;
 mod nsfw_processing;
 mod placeholder;
@@ -32,7 +33,11 @@ mod tests;
 pub use av_metadata::{
     AVMetadata, AVMetadataFrame, AVProbe, NSFW_PREVIEW_MAX_DIMENSION, probe_av_metadata,
 };
-pub use metadata::{MetadataOptions, metadata_json_with_options};
+pub use metadata::{
+    MetadataOptions, PreparedMetadata, finish_metadata, metadata_json_with_options,
+    prepare_metadata,
+};
+pub use native_cost::{AV_NATIVE_COST_BYTES, image_transform_cost, metadata_cost};
 pub use nsfw_processing::encode_static_image_for_nsfw;
 pub use transform::transform_image;
 pub use video_thumbnail::{

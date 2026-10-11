@@ -64,6 +64,7 @@ fn metadata_json_returns_unavailable_when_nsfw_service_fails() {
                 MetadataOptions {
                     placeholder: false,
                     nsfw: NSFWPolicy::enabled(0.85).expect("valid threshold"),
+                    deadline_ms: None,
                 },
                 &test_media_limits(),
                 &client,
@@ -236,4 +237,24 @@ fn metadata_succeeds_without_a_placeholder_when_thumbhash_generation_fails() {
     assert_eq!(64, value["width"]);
     assert_eq!(64, value["height"]);
     assert_eq!(None, value.get("placeholder"));
+}
+
+#[test]
+fn metadata_refuses_jxl_above_the_decode_pixel_cap() {
+    let err = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(async {
+            metadata_json_with_options(
+                crate::test_fixtures::JXL_4100_LOSSY_ALPHA,
+                "big.jxl",
+                MetadataOptions::default(),
+                &test_media_limits(),
+                &NSFWClient::disabled(),
+                &TransformMetrics::new(),
+            )
+            .await
+            .unwrap_err()
+        });
+    assert_eq!(MediaError::InvalidImageDimensions, err);
 }
