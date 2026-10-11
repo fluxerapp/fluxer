@@ -11,7 +11,7 @@ use crate::{
             },
             page_container::{card, page_header},
         },
-        layout::admin_layout,
+        layout::{admin_layout, product_name},
     },
 };
 use maud::{Markup, html};
@@ -37,9 +37,9 @@ pub fn system_dm_page(
                     "Send a system DM"
                 }
                 p class="text-sm text-neutral-500" {
-                    "Sent from the official Fluxer system account. Each recipient \
-                     will receive the same content as a DM. Progress is observable \
-                     on the "
+                    "Sent from the official " (product_name(auth.branding.as_ref()))
+                    " system account. Each recipient will receive the same content \
+                     as a DM. Progress is observable on the "
                     a href=(jobs_url) class="font-medium text-neutral-900 hover:underline" {
                         "Jobs page"
                     }

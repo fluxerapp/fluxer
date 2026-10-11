@@ -49,6 +49,15 @@ impl AdminApiClient {
         Self { generated }
     }
 
+    pub fn anonymous(http_client: &reqwest::Client, config: &AdminConfig) -> Self {
+        let generated = GeneratedClient::new_with_client(
+            &config.api_endpoint,
+            http_client.clone(),
+            build_proxy_client_ip_headers(config),
+        );
+        Self { generated }
+    }
+
     fn build_url(&self, path: &str, query_params: Option<&[(&str, &str)]>) -> String {
         let mut url = format!("{}{}", self.generated.baseurl(), path);
         let query = query_params

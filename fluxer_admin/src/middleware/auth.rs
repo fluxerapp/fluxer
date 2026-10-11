@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::AdminUser,
+    api::types::{AdminUser, PremiumBranding},
     middleware::flash,
     session::{self, Session},
     state::AppState,
@@ -16,6 +16,7 @@ use axum::{
 pub struct AuthContext {
     pub session: Session,
     pub admin_user: Option<AdminUser>,
+    pub branding: Option<PremiumBranding>,
 }
 
 pub async fn require_auth(
@@ -28,27 +29,19 @@ pub async fn require_auth(
     let Some(session) = session else {
         return Redirect::to(&format!("{}/auth/start", config.base_path)).into_response();
     };
-    let admin_result = fetch_admin_user(state.http_client(), config, &session).await;
-    match admin_result {
+    let admin_user = match fetch_admin_user(state.http_client(), config, &session).await {
         AdminFetchResult::Unauthorized => {
             let login_url = format!("{}/login", config.base_path);
             return clear_session_and_redirect(&login_url, config);
         }
-        AdminFetchResult::Ok(admin_user) => {
-            let auth_context = AuthContext {
-                session,
-                admin_user: Some(*admin_user),
-            };
-            request.extensions_mut().insert(auth_context);
-        }
-        AdminFetchResult::None => {
-            let auth_context = AuthContext {
-                session,
-                admin_user: None,
-            };
-            request.extensions_mut().insert(auth_context);
-        }
-    }
+        AdminFetchResult::Ok(admin_user) => Some(*admin_user),
+        AdminFetchResult::None => None,
+    };
+    request.extensions_mut().insert(AuthContext {
+        session,
+        admin_user,
+        branding: state.self_hosted_branding().await,
+    });
 
     let had_flash = flash::extract_flash(&request);
     if let Some(ref fd) = had_flash {

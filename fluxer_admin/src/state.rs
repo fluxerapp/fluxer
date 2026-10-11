@@ -88,6 +88,17 @@ impl AppState {
         Some(branding)
     }
 
+    pub async fn self_hosted_branding(&self) -> Option<PremiumBranding> {
+        if !self.config().self_hosted {
+            return None;
+        }
+        self.premium_branding(&AdminApiClient::anonymous(
+            self.http_client(),
+            self.config(),
+        ))
+        .await
+    }
+
     pub async fn account_identity(&self, client: &AdminApiClient) -> AccountIdentityMode {
         self.account_identity_settings(client).await.mode
     }

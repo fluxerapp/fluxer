@@ -87,7 +87,8 @@ async fn login_page(
         Some(_) => Some("Login error. Please try again."),
         None => None,
     };
-    Html(login::login_page(config, error_msg).into_string()).into_response()
+    let branding = state.self_hosted_branding().await;
+    Html(login::login_page(config, branding.as_ref(), error_msg).into_string()).into_response()
 }
 
 async fn auth_start(State(state): State<AppState>) -> Response {

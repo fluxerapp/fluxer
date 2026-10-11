@@ -480,11 +480,13 @@ mod tests {
         let gold = PremiumBranding {
             name: Some("Gold".to_owned()),
             premium_enabled: true,
+            ..PremiumBranding::default()
         };
         assert_eq!(premium_badge_name(Some(&gold)).as_deref(), Some("Gold"));
         let unnamed = PremiumBranding {
             name: None,
             premium_enabled: true,
+            ..PremiumBranding::default()
         };
         assert_eq!(
             premium_badge_name(Some(&unnamed)).as_deref(),
@@ -493,6 +495,7 @@ mod tests {
         let everyone = PremiumBranding {
             name: Some("Gold".to_owned()),
             premium_enabled: false,
+            ..PremiumBranding::default()
         };
         assert_eq!(premium_badge_name(Some(&everyone)), None);
         assert_eq!(premium_badge_name(None).as_deref(), Some("Premium"));
