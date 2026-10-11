@@ -28,6 +28,7 @@ load() ->
 env_config() ->
     #{
         <<"env">> => env_binary("FLUXER_ENV", <<"development">>),
+        <<"instance">> => #{<<"self_hosted">> => env_bool("FLUXER_SELF_HOSTED", false)},
         <<"internal">> => env_internal_config(),
         <<"public">> => env_public_config(),
         <<"proxy">> => env_proxy_config(),
@@ -147,9 +148,10 @@ build_config(RawConfig) ->
     Nats = get_map(RawConfig, [<<"services">>, <<"nats">>]),
     Proxy = get_map(RawConfig, [<<"proxy">>]),
     Public = get_map(RawConfig, [<<"public">>]),
+    Instance = get_map(RawConfig, [<<"instance">>]),
     lists:foldl(fun maps:merge/2, #{}, [
         build_core_config(Service, Internal, Nats, Proxy),
-        build_push_config(Service, Public),
+        build_push_config(Service, Public, Instance),
         build_sharding_config(Service),
         build_http_config(Service),
         build_cluster_config(Service, Public),
@@ -176,10 +178,11 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         )
     }.
 
--spec build_push_config(map(), map()) -> config().
-build_push_config(Service, Public) ->
+-spec build_push_config(map(), map(), map()) -> config().
+build_push_config(Service, Public, Instance) ->
     #{
         push_enabled => get_bool(Service, <<"push_enabled">>, true),
+        self_hosted => get_bool(Instance, <<"self_hosted">>, false),
         static_cdn_endpoint => public_endpoint(
             get_binary(Service, <<"static_cdn_endpoint">>, <<"http://localhost:8088">>), Public
         ),

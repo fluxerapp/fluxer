@@ -74,6 +74,14 @@ blank_env_values_fall_back_to_the_defaults_test() ->
         end
     ).
 
+self_hosted_follows_the_fluxer_self_hosted_env_test() ->
+    with_env("FLUXER_SELF_HOSTED", "", fun() ->
+        ?assertEqual(false, maps:get(self_hosted, fluxer_gateway_config:load()))
+    end),
+    with_env("FLUXER_SELF_HOSTED", "true", fun() ->
+        ?assertEqual(true, maps:get(self_hosted, fluxer_gateway_config:load()))
+    end).
+
 pinned_guild_ids_reject_non_snowflakes_test() ->
     with_env("FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001,ab", fun() ->
         ?assertError({invalid_pinned_guild_id, "ab"}, fluxer_gateway_config:load())

@@ -231,7 +231,7 @@ notification_fields(
     ),
     ChannelIdBin = integer_to_binary(ChannelId),
     MessageIdBin = integer_to_binary(MessageId),
-    #{
+    with_badge(#{
         <<"title">> => push_notification:build_notification_title(
             AuthorName, MessageData, GuildId, GuildName, ChannelName
         ),
@@ -239,14 +239,24 @@ notification_fields(
             MessageData, MarkdownContext
         ),
         <<"icon">> => push_notification_format:resolve_author_avatar_url(AuthorData),
-        <<"badge">> => push_utils:construct_static_asset_url(
-            <<"marketing/branding/symbol-white.svg">>
-        ),
         <<"tag">> => <<"channel:", ChannelIdBin/binary, ":", MessageIdBin/binary>>,
         <<"notification_tag">> => <<"channel:", ChannelIdBin/binary>>,
         <<"url">> => push_notification_format:build_url(GuildId, ChannelId, MessageId),
         <<"image_url">> => nullable(push_notification_format:extract_image_url(MessageData))
-    }.
+    }).
+
+-spec with_badge(map()) -> map().
+with_badge(Fields) ->
+    case fluxer_gateway_env:get(self_hosted) of
+        true ->
+            Fields;
+        _ ->
+            Fields#{
+                <<"badge">> => push_utils:construct_static_asset_url(
+                    <<"marketing/branding/symbol-white.svg">>
+                )
+            }
+    end.
 
 -spec thread_job_fields(map(), binary() | undefined) -> map().
 thread_job_fields(MessageData, ChannelName) ->
@@ -329,9 +339,15 @@ outbox_job(Subject, Job, Body, Meta) ->
 -include_lib("eunit/include/eunit.hrl").
 
 with_endpoint_env(Fun) ->
+    with_endpoint_env(false, Fun).
+
+with_endpoint_env(SelfHosted, Fun) ->
     ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
     try
-        ok = meck:expect(fluxer_gateway_env, get, fun endpoint_env_meck/1),
+        ok = meck:expect(fluxer_gateway_env, get, fun
+            (self_hosted) -> SelfHosted;
+            (Key) -> endpoint_env_meck(Key)
+        end),
         Fun()
     after
         meck:unload(fluxer_gateway_env)
@@ -397,7 +413,9 @@ encoded_message_job(MessageData, ChannelName) ->
             push_notification_format, resolve_author_avatar_url, fun(_) -> <<"icon">> end
         ),
         ok = meck:expect(push_utils, construct_static_asset_url, fun(_) -> <<"badge">> end),
-        Job = message_job(MessageData, #{}, 5, 6, 7, <<"Guild">>, ChannelName),
+        Job = with_endpoint_env(fun() ->
+            message_job(MessageData, #{}, 5, 6, 7, <<"Guild">>, ChannelName)
+        end),
         json:decode(iolist_to_binary(json:encode(Job)))
     after
         meck:unload(push_utils),
@@ -507,12 +525,34 @@ notification_fields_omit_sensitive_attachment_image_test() ->
     Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>),
     ?assertEqual(null, maps:get(<<"image_url">>, Fields)).
 
+notification_fields_include_the_fluxer_badge_test() ->
+    MessageData = #{<<"content">> => <<"Hi">>, <<"mentions">> => []},
+    Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>),
+    ?assertEqual(
+        <<"https://static.example/marketing/branding/symbol-white.svg">>,
+        maps:get(<<"badge">>, Fields)
+    ).
+
+notification_fields_omit_the_badge_on_self_hosted_instances_test() ->
+    MessageData = #{<<"content">> => <<"Hi">>, <<"mentions">> => []},
+    Fields = test_notification_fields(
+        MessageData, 123, <<"Server">>, <<"general">>, #{}, true
+    ),
+    ?assertNot(maps:is_key(<<"badge">>, Fields)).
+
 test_notification_fields(MessageData, GuildId, GuildName, ChannelName) ->
     test_notification_fields(MessageData, GuildId, GuildName, ChannelName, #{}).
 
 test_notification_fields(MessageData, GuildId, GuildName, ChannelName, MarkdownContext) ->
+    test_notification_fields(
+        MessageData, GuildId, GuildName, ChannelName, MarkdownContext, false
+    ).
+
+test_notification_fields(
+    MessageData, GuildId, GuildName, ChannelName, MarkdownContext, SelfHosted
+) ->
     Author = #{<<"id">> => <<"42">>, <<"username">> => <<"Alice">>, <<"avatar">> => null},
-    with_endpoint_env(fun() ->
+    with_endpoint_env(SelfHosted, fun() ->
         notification_fields(
             MessageData#{<<"author">> => Author},
             MarkdownContext,
