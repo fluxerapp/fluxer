@@ -1797,10 +1797,6 @@ msgstr "{premiumProductName}-Abonnement"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} online"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} konnte nicht richtig starten. Das kann an beschädigten Daten oder einem vorübergehenden Problem liegen."
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} hat ein neues Audiogerät namens <0>{deviceName}</0> gefunden. Möchtest du dazu wechseln?"
@@ -1915,6 +1911,10 @@ msgstr "{productName} hat einen potenziellen Raid in dieser Community erkannt. E
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} hat einen potenziellen Raid erkannt. Neue Nutzer können deshalb derzeit nicht beitreten."
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} konnte nicht richtig gestartet werden. Dies kann an beschädigten Daten oder einem vorübergehenden Problem liegen."
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "Statusmeldungen findest du auf unserem Profil bei <0>{BLUESKY_PROVIDER_N
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "Sieh dir mein individuelles Design an!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "Überprüfe die <0>Statusseite</0> für Updates."
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "Bildschirmfreigabe-Vorschau im Hintergrund pausieren"
 msgid "Pause notifications"
 msgstr "Benachrichtigungen pausieren"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Vorschau pausieren, wenn Fluxer nicht aktiv ist"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "Vorschau pausieren, wenn {productName} nicht aktiv ist"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "Codec für die Bildschirmfreigabe"
 msgid "Screen sharing failed"
 msgstr "Bildschirmfreigabe fehlgeschlagen"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "Bildschirmfreigabe fehlgeschlagen, aber Fluxer konnte nicht bestätigen, dass alle Erfassungspfade gestoppt wurden. Verwende \"Freigabe beenden\" oder trenne die Verbindung zum Anruf, bevor du fortfährst."
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "Bildschirmfreigabe fehlgeschlagen, aber {productName} konnte nicht bestätigen, dass alle Erfassungspfade gestoppt wurden. Beende die Freigabe oder trenne die Verbindung zum Anruf, bevor du fortfährst."
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

@@ -1797,10 +1797,6 @@ msgstr "{premiumProductName} 订阅"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} 人在线"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} 未能正常启动。这可能是由于数据损坏或临时问题导致的。"
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} 检测到名为 <0>{deviceName}</0> 的新音频设备。要切换到此设备吗？"
@@ -1915,6 +1911,10 @@ msgstr "{productName} 在此社区中检测到潜在的突袭。邀请已暂停�
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} 检测到潜在的突袭，因此新用户暂时无法加入。"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} 未能正常启动。这可能是由于数据损坏或暂时性问题。"
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "请查看我们的<0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "快来看看我的自定义主题！"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "请查看 <0>状态页</0>获取最新信息。"
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "在后台暂停我的屏幕共享预览"
 msgid "Pause notifications"
 msgstr "暂停通知"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Fluxer 未获得焦点时暂停预览"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "暂停 {productName} 未聚焦时的预览"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "屏幕共享编解码器"
 msgid "Screen sharing failed"
 msgstr "屏幕共享失败"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "屏幕共享失败，但 Fluxer 无法确认所有捕获路径都已停止。请在继续前停止共享或断开通话连接。"
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "屏幕共享失败，但 {productName} 无法确认所有捕获路径都已停止。请在继续之前停止共享或断开通话。"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

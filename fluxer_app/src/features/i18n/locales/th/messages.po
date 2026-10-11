@@ -1797,10 +1797,6 @@ msgstr "การสมัครสมาชิก {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "ออนไลน์ {presenceCount} คน"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} เริ่มทำงานไม่สำเร็จ อาจเกิดจากข้อมูลเสียหายหรือปัญหาชั่วคราว"
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ตรวจพบอุปกรณ์เสียงใหม่ชื่อ <0>{deviceName}</0> คุณต้องการเปลี่ยนไปใช้อุปกรณ์นี้หรือไม่"
@@ -1915,6 +1911,10 @@ msgstr "{productName} ตรวจพบการโจมตีที่อา�
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} ตรวจพบการโจมตีที่อาจเกิดขึ้น ผู้ใช้ใหม่จึงไม่สามารถเข้าร่วมได้ในขณะนี้"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} เริ่มต้นไม่สำเร็จ อาจเกิดจากข้อมูลเสียหายหรือปัญหาชั่วคราว"
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "ตรวจสอบ <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "มาดูธีมที่ฉันปรับแต่งสิ!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "ตรวจสอบหน้า <0>สถานะ</0> เพื่อดูการอัปเดต"
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "หยุดแสดงตัวอย่างการแชร์ห
 msgid "Pause notifications"
 msgstr "หยุดการแจ้งเตือนชั่วคราว"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "หยุดแสดงตัวอย่างชั่วคราวเมื่อไม่ได้โฟกัสที่ Fluxer"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "หยุดแสดงตัวอย่างเมื่อ {productName} ไม่ได้โฟกัส"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "ตัวแปลงสัญญาณการแชร์หน้า
 msgid "Screen sharing failed"
 msgstr "แชร์หน้าจอไม่สำเร็จ"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "การแชร์หน้าจอขัดข้อง แต่ Fluxer ไม่สามารถยืนยันได้ว่าทุกเส้นทางการจับภาพหยุดทำงานแล้ว หยุดแชร์หน้าจอหรือออกจากสายก่อนดำเนินการต่อ"
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "การแชร์หน้าจอขัดข้อง แต่ {productName} ไม่สามารถยืนยันได้ว่าทุกเส้นทางการจับภาพหยุดทำงานแล้ว โปรดหยุดแชร์หรือวางสายก่อนดำเนินการต่อ"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

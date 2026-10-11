@@ -1797,10 +1797,6 @@ msgstr "{premiumProductName} aboneliği"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} çevrimiçi"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} düzgün başlatılamadı. Bunun nedeni bozuk veriler veya geçici bir sorun olabilir."
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}, <0>{deviceName}</0> adında yeni bir ses cihazı buldu. Buna geçmek ister misiniz?"
@@ -1915,6 +1911,10 @@ msgstr "{productName}, bu toplulukta olası bir baskın algıladı. Davetler dur
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} olası bir baskın tespit ettiğinden, yeni kullanıcılar şu anda katılamaz."
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} düzgün başlatılamadı. Bu, bozuk verilerden veya geçici bir sorundan kaynaklanıyor olabilir."
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "Durum güncellemeleri için <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "Özel temama göz at!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "Güncellemeler için <0>durum sayfasına</0> bakın."
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "Arka planda ekran paylaşımı önizlememi duraklat"
 msgid "Pause notifications"
 msgstr "Bildirimleri duraklat"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Fluxer odakta değilken önizlemeyi duraklat"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "{productName} odaklanmadığında önizlemeyi duraklat"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "Ekran paylaşımı kodeği"
 msgid "Screen sharing failed"
 msgstr "Ekran paylaşımı başarısız oldu"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "Ekran paylaşımı başarısız oldu ancak Fluxer tüm yakalama yollarının durdurulduğunu doğrulayamadı. Devam etmeden önce paylaşımı durdurun veya aramadan ayrılın."
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "Ekran paylaşımı başarısız oldu ancak {productName} her yakalama yolunun durdurulduğunu doğrulayamadı. Devam etmeden önce paylaşımı durdurun veya aramadan bağlantıyı kesin."
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

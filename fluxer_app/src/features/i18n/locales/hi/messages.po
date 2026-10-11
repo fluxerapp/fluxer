@@ -1797,10 +1797,6 @@ msgstr "{premiumProductName} सदस्यता"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} ऑनलाइन"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} ठीक से शुरू नहीं हो पाया। यह खराब डेटा या किसी अस्थायी समस्या के कारण हो सकता है।"
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} को <0>{deviceName}</0> नाम का एक नया ऑडियो डिवाइस मिला है। क्या आप इस पर स्विच करना चाहते हैं?"
@@ -1915,6 +1911,10 @@ msgstr "{productName} ने इस कम्युनिटी में सं
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} ने संभावित रेड का पता लगाया है, इसलिए नए यूज़र अभी शामिल नहीं हो सकते।"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} ठीक से शुरू नहीं हो सका। यह दूषित डेटा या किसी अस्थायी समस्या के कारण हो सकता है।"
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "स्टेटस अपडेट के लिए हमारा <0>{
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "मेरी कस्टम थीम देखें!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "<0>स्थिति पृष्ठ</0> पर अपडेट देखें।"
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "बैकग्राउंड में मेरा स्क्री
 msgid "Pause notifications"
 msgstr "सूचनाएं रोकें"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "जब Fluxer फ़ोकस में न हो तो प्रीव्यू रोकें"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "जब {productName} फ़ोकस में न हो तो प्रीव्यू रोकें"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "स्क्रीन शेयरिंग कोडेक"
 msgid "Screen sharing failed"
 msgstr "स्क्रीन शेयरिंग विफल रही"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "स्क्रीन शेयरिंग विफल रही, लेकिन Fluxer यह पुष्टि नहीं कर सका कि हर कैप्चर पाथ बंद हो गया है। जारी रखने से पहले शेयरिंग रोकें या कॉल से डिस्कनेक्ट करें।"
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "स्क्रीन शेयरिंग विफल रही, लेकिन {productName} यह पुष्टि नहीं कर सका कि हर कैप्चर पाथ बंद हो गया है। जारी रखने से पहले शेयरिंग बंद करें या कॉल से डिस्कनेक्ट करें।"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

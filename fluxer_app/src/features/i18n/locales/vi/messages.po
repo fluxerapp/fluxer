@@ -1797,10 +1797,6 @@ msgstr "Gói đăng ký {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} đang hoạt động"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} không khởi động được. Có thể do dữ liệu bị lỗi hoặc sự cố tạm thời."
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} đã tìm thấy một thiết bị âm thanh mới có tên <0>{deviceName}</0>. Bạn có muốn chuyển sang thiết bị này không?"
@@ -1915,6 +1911,10 @@ msgstr "{productName} đã phát hiện một cuộc tấn công tiềm ẩn tro
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} đã phát hiện một cuộc tấn công tiềm ẩn, vì vậy người dùng mới không thể tham gia ngay bây giờ."
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} đã gặp sự cố khi khởi động. Điều này có thể do dữ liệu bị hỏng hoặc một vấn đề tạm thời."
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "Kiểm tra <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> củ
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "Xem chủ đề tùy chỉnh của tôi nè!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "Kiểm tra <0>trang trạng thái</0> để biết thông tin cập nhật."
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "Tạm dừng xem trước chia sẻ màn hình của tôi khi chạy n�
 msgid "Pause notifications"
 msgstr "Tạm dừng thông báo"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Tạm dừng xem trước khi Fluxer không được lấy nét"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "Tạm dừng xem trước khi {productName} không hoạt động"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "Codec chia sẻ màn hình"
 msgid "Screen sharing failed"
 msgstr "Chia sẻ màn hình không thành công"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "Chia sẻ màn hình thất bại, nhưng Fluxer không thể xác nhận mọi luồng chụp đã dừng. Hãy dừng chia sẻ hoặc ngắt kết nối khỏi cuộc gọi trước khi tiếp tục."
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "Chia sẻ màn hình thất bại, nhưng {productName} không thể xác nhận mọi luồng chụp đã dừng. Hãy dừng chia sẻ hoặc ngắt kết nối khỏi cuộc gọi trước khi tiếp tục."
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

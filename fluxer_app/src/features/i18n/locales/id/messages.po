@@ -1797,10 +1797,6 @@ msgstr "Langganan {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} online"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME} gagal memulai dengan benar. Ini mungkin karena data yang rusak atau masalah sementara."
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} menemukan perangkat audio baru bernama <0>{deviceName}</0>. Mau beralih ke perangkat tersebut?"
@@ -1915,6 +1911,10 @@ msgstr "{productName} mendeteksi potensi serangan di komunitas ini. Undangan dij
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} mendeteksi potensi serangan, jadi pengguna baru tidak bisa bergabung sekarang."
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} gagal dimulai dengan benar. Ini bisa disebabkan oleh data yang rusak atau masalah sementara."
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "Cek <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> kami untuk 
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "Lihat tema kustom saya!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "Periksa <0>halaman status</0> untuk pembaruan."
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "Jeda pratinjau berbagi layar saya di latar belakang"
 msgid "Pause notifications"
 msgstr "Jeda notifikasi"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Jeda pratinjau saat Fluxer tidak aktif"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "Jeda pratinjau saat {productName} tidak fokus"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "Codec berbagi layar"
 msgid "Screen sharing failed"
 msgstr "Berbagi layar gagal"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "Berbagi layar gagal, tetapi Fluxer tidak dapat memastikan semua jalur penangkapan sudah berhenti. Hentikan berbagi layar atau putuskan sambungan dari panggilan sebelum melanjutkan."
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "Berbagi layar gagal, tetapi {productName} tidak dapat mengonfirmasi bahwa setiap jalur tangkapan berhenti. Berhenti berbagi atau putuskan sambungan dari panggilan sebelum melanjutkan."
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

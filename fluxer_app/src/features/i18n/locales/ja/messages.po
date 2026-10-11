@@ -1797,10 +1797,6 @@ msgstr "{premiumProductName}のサブスクリプション"
 msgid "{presenceCount} online"
 msgstr "{presenceCount}人オンライン"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "{PRODUCT_NAME}を正常に起動できませんでした。データが破損しているか、一時的な問題である可能性があります。"
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}が<0>{deviceName}</0>という新しいオーディオデバイスを検出しました。このデバイスに切り替えますか？"
@@ -1915,6 +1911,10 @@ msgstr "{productName}がこのコミュニティで潜在的なレイドを検�
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName}がレイドの可能性を検出したため、現在新しいユーザーは参加できません。"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "{productName} を正常に起動できませんでした。データが破損しているか、一時的な問題が原因である可能性があります。"
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "ステータス更新は<0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HAND
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "カスタムテーマをチェック！"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "<0>ステータスページ</0>で最新情報をご確認ください。"
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "バックグラウンドで画面共有プレビューを一時停止す
 msgid "Pause notifications"
 msgstr "通知を一時停止"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Fluxerがフォーカスされていないときはプレビューを一時停止"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "{productName} がフォーカスされていないときにプレビューを一時停止"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "画面共有コーデック"
 msgid "Screen sharing failed"
 msgstr "画面共有に失敗しました"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "画面共有に失敗しましたが、すべてのキャプチャパスが停止したことを確認できませんでした。続行する前に、共有を停止するか通話から切断してください。"
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "画面共有に失敗しましたが、{productName} がすべてのキャプチャ パスを停止したことを確認できませんでした。続行する前に、共有を停止するか、通話から切断してください。"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx

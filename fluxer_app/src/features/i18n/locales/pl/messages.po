@@ -1797,10 +1797,6 @@ msgstr "Subskrypcja {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} online"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
-msgstr "Aplikacja {PRODUCT_NAME} nie uruchomiła się prawidłowo. Może to być spowodowane uszkodzeniem danych lub tymczasowym problemem."
-
 #: src/features/auth/state/NewDeviceMonitoring.tsx
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "Aplikacja {PRODUCT_NAME} wykryła nowe urządzenie audio o nazwie <0>{deviceName}</0>. Czy chcesz się na nie przełączyć?"
@@ -1915,6 +1911,10 @@ msgstr "Aplikacja {productName} wykryła potencjalny nalot na tę społeczność
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "Aplikacja {productName} wykryła potencjalny nalot, więc nowi użytkownicy nie mogą teraz dołączyć."
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "{productName} failed to start properly. This could be due to corrupted data or a temporary issue."
+msgstr "Aplikacja {productName} nie uruchomiła się poprawnie. Może to być spowodowane uszkodzonymi danymi lub tymczasowym problemem."
 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx
@@ -7740,6 +7740,10 @@ msgstr "Na naszym profilu <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"
 msgstr "Zobacz mój niestandardowy motyw!"
+
+#: src/features/app/components/BootstrapErrorScreen.tsx
+msgid "Check the <0>status page</0> for updates."
+msgstr "Sprawdź <0>stronę statusu</0> po aktualizacje."
 
 #. Error-state description in the channel and chat gif picker view.
 #: src/features/app/components/BootstrapErrorScreen.tsx
@@ -25656,10 +25660,10 @@ msgstr "Wstrzymaj podgląd udostępniania ekranu w tle"
 msgid "Pause notifications"
 msgstr "Wstrzymaj powiadomienia"
 
-#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused. {productName} is the app name.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
-msgid "Pause preview when Fluxer isn’t focused"
-msgstr "Wstrzymaj podgląd, gdy Fluxer nie jest aktywny"
+msgid "Pause preview when {productName} isn’t focused"
+msgstr "Wstrzymaj podgląd, gdy {productName} nie jest aktywny"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
@@ -29844,10 +29848,10 @@ msgstr "Kodek udostępniania ekranu"
 msgid "Screen sharing failed"
 msgstr "Nie udało się udostępnić ekranu"
 
-#. Body shown when a failed screen share could not be fully stopped.
+#. Body shown when a failed screen share could not be fully stopped. {productName} is the app name.
 #: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx
-msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
-msgstr "Udostępnianie ekranu nie powiodło się, ale Fluxer nie mógł potwierdzić zatrzymania wszystkich ścieżek przechwytywania. Zatrzymaj udostępnianie lub rozłącz się z rozmową, zanim przejdziesz dalej."
+msgid "Screen sharing failed, but {productName} could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing."
+msgstr "Udostępnianie ekranu nie powiodło się, ale {productName} nie mógł potwierdzić zatrzymania wszystkich ścieżek przechwytywania. Zatrzymaj udostępnianie lub rozłącz się z rozmowy przed kontynuowaniem."
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx
