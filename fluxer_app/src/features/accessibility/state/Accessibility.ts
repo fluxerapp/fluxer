@@ -784,9 +784,6 @@ class Accessibility {
 			persistLocalMotionSettings(this.localMotionSettingsSnapshot);
 		}
 		this.customThemeCss = readLocalCustomThemeCss();
-		if (this.customThemeCss !== null) {
-			persistLocalCustomThemeCss(this.customThemeCss);
-		}
 		this.customThemeCssSyncAcrossDevices = readLocalCustomThemeCssSyncAcrossDevices();
 		this.showNeko = readAndMigrateLocalShowNeko();
 		this.keepNekoStill = readAndMigrateLocalKeepNekoStill();
@@ -798,6 +795,7 @@ class Accessibility {
 		this.initializeShowNekoSessionSync();
 		this.initializeShowNekoStorageSync();
 		this.initializeVideoSeekPreviewThumbnailsStorageSync();
+		this.initializeCustomThemeCssStorageSync();
 		this.applyStartupPresentationSettings();
 		initializeStore(this, () => this.initPersistence());
 	}
@@ -1021,7 +1019,6 @@ class Accessibility {
 			},
 		});
 		await this.applyStoredZoom();
-		this.applyStoredCustomThemeCss();
 	}
 
 	private initializeMotionDetection() {
@@ -1498,12 +1495,23 @@ class Accessibility {
 		await this.applyZoom(zoomLevel);
 	}
 
-	applyStoredCustomThemeCss(): void {
-		const customThemeCss = readLocalCustomThemeCss();
-		if (customThemeCss !== null) {
-			this.customThemeCss = customThemeCss;
-			persistLocalCustomThemeCss(customThemeCss);
-		}
+	private initializeCustomThemeCssStorageSync(): void {
+		AppStorage.subscribe(
+			(event) => {
+				if (
+					event.key !== null &&
+					event.key !== ACCESSIBILITY_CUSTOM_THEME_STORAGE_KEY &&
+					event.key !== ACCESSIBILITY_CUSTOM_THEME_SYNC_STORAGE_KEY
+				) {
+					return;
+				}
+				runInAction(() => {
+					this.customThemeCss = readLocalCustomThemeCss();
+					this.customThemeCssSyncAcrossDevices = readLocalCustomThemeCssSyncAcrossDevices();
+				});
+			},
+			{source: 'external'},
+		);
 	}
 
 	private applyStartupPresentationSettings(): void {
