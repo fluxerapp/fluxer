@@ -18,20 +18,20 @@ use std::{
     time::Instant,
 };
 use tokio::sync::{Notify, oneshot};
-use tracing::error;
+use tracing::{error, warn};
 
 pub(in crate::server) struct NativeTaskExecutorSettings {
     pub(in crate::server) max_native_transforms: usize,
     pub(in crate::server) worker_queue_capacity: usize,
-    pub(in crate::server) decoded_bytes_per_transform: usize,
+    pub(in crate::server) memory_budget_bytes: usize,
     pub(in crate::server) native_metrics: Arc<NativeTransformMetrics>,
     pub(in crate::server) transform_metrics: Arc<TransformMetrics>,
 }
 
 pub(in crate::server) struct NativeTaskExecutor {
     native_transforms: TimedSemaphore,
-    decoded_bytes: ByteBudget,
-    decoded_bytes_per_transform: usize,
+    memory: ByteBudget,
+    memory_budget_bytes: usize,
     tasks: NativeTaskTracker,
     native_metrics: Arc<NativeTransformMetrics>,
     transform_metrics: Arc<TransformMetrics>,
@@ -70,34 +70,33 @@ impl NativeTaskExecutor {
         let NativeTaskExecutorSettings {
             max_native_transforms,
             worker_queue_capacity,
-            decoded_bytes_per_transform,
+            memory_budget_bytes,
             native_metrics,
             transform_metrics,
         } = settings;
-        assert!(decoded_bytes_per_transform > 0);
-        let decoded_bytes_capacity = decoded_bytes_per_transform
-            .checked_mul(max_native_transforms)
-            .expect("native decoded image budget must not overflow");
+        assert!(memory_budget_bytes > 0);
         Self {
             native_transforms: TimedSemaphore::with_queue_capacity(
                 max_native_transforms,
                 worker_queue_capacity,
             ),
-            decoded_bytes: ByteBudget::new(decoded_bytes_capacity),
-            decoded_bytes_per_transform,
+            memory: ByteBudget::new(memory_budget_bytes),
+            memory_budget_bytes,
             tasks: NativeTaskTracker::default(),
             native_metrics,
             transform_metrics,
         }
     }
 
-    pub(in crate::server) async fn run_native<T, F>(
+    pub(in crate::server) async fn run_native<T, C, F>(
         &self,
         deadline: Option<Instant>,
+        cost: C,
         work: F,
     ) -> anyhow::Result<T>
     where
         T: Send + 'static,
+        C: FnOnce() -> anyhow::Result<usize> + Send + 'static,
         F: FnOnce() -> anyhow::Result<T> + Send + 'static,
     {
         let admission = match self.native_transforms.try_admit() {
@@ -116,13 +115,24 @@ impl NativeTaskExecutor {
         self.native_metrics
             .observe_wait(metrics::duration_millis(wait_started.elapsed()));
         let permit = permit?;
-        let decoded_bytes = self
-            .decoded_bytes
-            .try_reserve(self.decoded_bytes_per_transform)
-            .ok_or(MediaError::AllocationFailed)?;
+        let memory = self.memory.clone();
+        let capacity = self.memory_budget_bytes;
+        let span = tracing::Span::current();
         self.run_task(deadline, move || {
+            let _span = span.enter();
             let _permit = permit;
-            let _decoded_bytes = decoded_bytes;
+            let bytes = cost()?;
+            if bytes > capacity {
+                warn!(
+                    bytes,
+                    capacity, "native work refused, larger than the memory budget"
+                );
+                return Err(MediaError::InvalidImageDimensions.into());
+            }
+            let Some(_reserved) = memory.try_reserve(bytes) else {
+                warn!(bytes, capacity, "native work refused, memory budget in use");
+                return Err(MediaError::AllocationFailed.into());
+            };
             work()
         })
         .await
@@ -266,7 +276,7 @@ mod tests {
         NativeTaskExecutor::new(NativeTaskExecutorSettings {
             max_native_transforms: permits,
             worker_queue_capacity: queue,
-            decoded_bytes_per_transform: 1024,
+            memory_budget_bytes: 1024,
             native_metrics: metrics.native_transform(),
             transform_metrics: metrics.transform(),
         })
@@ -288,6 +298,7 @@ mod tests {
         let error = executor
             .run_native(
                 Some(Instant::now() + Duration::from_millis(30)),
+                || Ok(0),
                 move || {
                     released.blocking_recv();
                     let _ = finished.blocking_send(());
@@ -338,7 +349,11 @@ mod tests {
         let metrics = metrics::Metrics::new();
         let executor = executor(&metrics, 1, 0);
         let value = executor
-            .run_native(Some(Instant::now() + Duration::from_secs(30)), || Ok(7u32))
+            .run_native(
+                Some(Instant::now() + Duration::from_secs(30)),
+                || Ok(0),
+                || Ok(7u32),
+            )
             .await
             .expect("the task completes");
         assert_eq!(7, value);
@@ -361,15 +376,19 @@ mod tests {
         let holder = Arc::clone(&executor);
         let held = tokio::spawn(async move {
             holder
-                .run_native(None, move || {
-                    released.blocking_recv();
-                    Ok(())
-                })
+                .run_native(
+                    None,
+                    || Ok(0),
+                    move || {
+                        released.blocking_recv();
+                        Ok(())
+                    },
+                )
                 .await
         });
         tokio::time::sleep(Duration::from_millis(50)).await;
         let error = executor
-            .run_native(None, || Ok(()))
+            .run_native(None, || Ok(0), || Ok(()))
             .await
             .expect_err("the admission queue is full");
         assert_eq!(
@@ -393,7 +412,7 @@ mod tests {
         let executor = executor(&metrics, 2, 4);
         executor.begin_shutdown();
         let error = executor
-            .run_native(None, || Ok(()))
+            .run_native(None, || Ok(0), || Ok(()))
             .await
             .expect_err("a closed executor admits nothing");
         assert_eq!(
@@ -401,5 +420,60 @@ mod tests {
             error.downcast_ref::<TimedSemaphoreError>()
         );
         executor.wait_for_shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn work_larger_than_the_memory_budget_is_refused_before_it_runs() {
+        let metrics = metrics::Metrics::new();
+        let executor = executor(&metrics, 1, 0);
+        let error = executor
+            .run_native(
+                None,
+                || Ok(1025),
+                || -> anyhow::Result<()> { panic!("refused work must not run") },
+            )
+            .await
+            .expect_err("the job exceeds the whole budget");
+        assert_eq!(
+            Some(&MediaError::InvalidImageDimensions),
+            error.downcast_ref::<MediaError>()
+        );
+    }
+
+    #[tokio::test]
+    async fn work_that_does_not_fit_beside_a_running_job_fails_fast_and_the_budget_frees() {
+        let metrics = metrics::Metrics::new();
+        let executor = Arc::new(executor(&metrics, 2, 0));
+        let (release, mut released) = mpsc::channel::<()>(1);
+        let (started, mut has_started) = mpsc::channel::<()>(1);
+        let holder = Arc::clone(&executor);
+        let held = tokio::spawn(async move {
+            holder
+                .run_native(
+                    None,
+                    || Ok(1000),
+                    move || {
+                        let _ = started.blocking_send(());
+                        released.blocking_recv();
+                        Ok(())
+                    },
+                )
+                .await
+        });
+        has_started.recv().await;
+        let error = executor
+            .run_native(None, || Ok(100), || Ok(()))
+            .await
+            .expect_err("the budget is in use");
+        assert_eq!(
+            Some(&MediaError::AllocationFailed),
+            error.downcast_ref::<MediaError>()
+        );
+        drop(release);
+        held.await.expect("held task").expect("held work");
+        executor
+            .run_native(None, || Ok(1024), || Ok(()))
+            .await
+            .expect("the released budget admits a job of the full size");
     }
 }

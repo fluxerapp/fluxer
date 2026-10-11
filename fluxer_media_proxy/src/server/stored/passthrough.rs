@@ -272,6 +272,8 @@ async fn serve_stored_svg_rasterized(
     let format = OutputFormat::WebP;
     let quality = ImageQuality::Lossless;
     let options = media_process::ImageOptions {
+        width: Some(constants::SVG_RASTER_MAX_DIMENSION),
+        height: Some(constants::SVG_RASTER_MAX_DIMENSION),
         format,
         quality,
         animation: AnimationMode::Static,
@@ -282,8 +284,8 @@ async fn serve_stored_svg_rasterized(
         route: TransformRoute::Stored,
         asset_kind: None,
         cache_identity,
-        width: None,
-        height: None,
+        width: options.width,
+        height: options.height,
         format,
         quality: Some(quality),
         animated: false,

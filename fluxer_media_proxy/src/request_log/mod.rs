@@ -23,7 +23,7 @@ use fluxer_common::attachment_url_signature::is_signature_parameter_name;
 use rand::RngExt;
 use stage::{StageTimingSnapshot, StageTimings};
 use std::{future::Future, sync::Arc, time::Instant};
-use tracing::{Level, event};
+use tracing::{Instrument, Level, event};
 
 const ID_ALPHABET: &[u8] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const ID_LEN: usize = 12;
@@ -179,7 +179,10 @@ where
     } = observation;
     let stages = Arc::new(StageTimings::default());
     let started = Instant::now();
-    let response = stage::scope(Arc::clone(&stages), future).await;
+    let span = tracing::info_span!("request", req = %id.as_str(), path = %path);
+    let response = stage::scope(Arc::clone(&stages), future)
+        .instrument(span)
+        .await;
     let elapsed_ms = metrics::duration_millis(started.elapsed());
     let StageTimingSnapshot {
         fetch_ms,

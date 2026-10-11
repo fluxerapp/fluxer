@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::native_runtime::clear_vips_error;
-use super::{MediaError, native_status_error};
+use super::{ImageDimensions, MediaError, native_status_error};
 use crate::{
+    constants,
     image_transform::{ImageOptions, ResizeMode},
     media_limits::MediaLimits,
     native,
@@ -50,6 +51,51 @@ pub(crate) fn validate_dimensions_u32(
         return Err(MediaError::InvalidImageDimensions);
     }
     if width as usize * height as usize > media_limits.image_pixels() {
+        return Err(MediaError::InvalidImageDimensions);
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_jxl_decode_pixels(
+    sniffed_mime: &str,
+    dims: ImageDimensions,
+) -> Result<(), MediaError> {
+    if sniffed_mime != "image/jxl" {
+        return Ok(());
+    }
+    let pixels = (dims.width as usize)
+        .saturating_mul(dims.height as usize)
+        .saturating_mul(dims.pages.max(1) as usize);
+    if pixels > constants::MAX_JXL_DECODE_PIXELS {
+        return Err(MediaError::InvalidImageDimensions);
+    }
+    Ok(())
+}
+
+pub(crate) fn static_output_pixels(options: &ImageOptions, dims: ImageDimensions) -> usize {
+    let source_width = dims.width as f64;
+    let source_height = dims.height as f64;
+    let source_pixels = dims.width as usize * dims.height as usize;
+    if options.wants_cover_crop()
+        && let (Some(width), Some(height)) = (options.width, options.height)
+    {
+        return (width as usize * height as usize).min(source_pixels);
+    }
+    let width_scale = options
+        .width
+        .map_or(1.0, |width| width as f64 / source_width);
+    let height_scale = options
+        .height
+        .map_or(1.0, |height| height as f64 / source_height);
+    let scale = width_scale.min(height_scale).min(1.0);
+    ((source_width * scale).round() * (source_height * scale).round()) as usize
+}
+
+pub(crate) fn validate_static_output_pixels(
+    options: &ImageOptions,
+    dims: ImageDimensions,
+) -> Result<(), MediaError> {
+    if static_output_pixels(options, dims) > constants::MAX_STATIC_OUTPUT_PIXELS {
         return Err(MediaError::InvalidImageDimensions);
     }
     Ok(())

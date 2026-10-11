@@ -59,8 +59,12 @@ use axum::{
 use bytes::Bytes;
 use std::{collections::HashMap, sync::Arc};
 
-const DECODED_BYTES_PER_PIXEL: usize = 4;
-const DECODED_PIXEL_BUFFERS_PER_TRANSFORM: usize = 2;
+const NATIVE_MEMORY_HEADROOM_BYTES: usize = 512 << 20;
+const NATIVE_MEMORY_FLOOR_BYTES: usize = 128 << 20;
+const CGROUP_MEMORY_LIMIT_PATHS: [&str; 2] = [
+    "/sys/fs/cgroup/memory.max",
+    "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+];
 const CONTENT_TYPE_SNIFF_PREFIX_BYTES: usize = 8192;
 
 pub(in crate::server) struct TransformRuntime {
@@ -89,6 +93,18 @@ impl TransformRuntime {
         metrics: &Arc<metrics::Metrics>,
     ) -> anyhow::Result<Self> {
         let limits = MediaLimits::default_from_config();
+        let memory_limit_bytes = process_memory_limit_bytes();
+        let memory_budget_bytes = native_memory_budget_bytes(
+            memory_limit_bytes,
+            cfg.media.transform_cache_capacity_bytes,
+        );
+        tracing::info!(
+            memory_limit_bytes,
+            transform_cache_bytes = cfg.media.transform_cache_capacity_bytes,
+            memory_budget_bytes,
+            max_native_transforms = cfg.media.max_native_transforms,
+            "native memory budget"
+        );
         Ok(Self {
             limits,
             animation: AnimationLimits::new(
@@ -99,7 +115,7 @@ impl TransformRuntime {
             tasks: NativeTaskExecutor::new(NativeTaskExecutorSettings {
                 max_native_transforms: cfg.media.max_native_transforms,
                 worker_queue_capacity: cfg.media.worker_queue_capacity,
-                decoded_bytes_per_transform: decoded_bytes_per_transform(&limits),
+                memory_budget_bytes,
                 native_metrics: metrics.native_transform(),
                 transform_metrics: metrics.transform(),
             }),
@@ -144,12 +160,36 @@ impl TransformRuntime {
     }
 }
 
-fn decoded_bytes_per_transform(limits: &MediaLimits) -> usize {
-    limits
-        .image_pixels()
-        .max(limits.animated_total_pixels())
-        .checked_mul(DECODED_BYTES_PER_PIXEL * DECODED_PIXEL_BUFFERS_PER_TRANSFORM)
-        .expect("the native decoded image budget must not overflow")
+fn native_memory_budget_bytes(memory_limit_bytes: usize, transform_cache_bytes: usize) -> usize {
+    let cache = transform_cache_bytes.min(memory_limit_bytes / 2);
+    let headroom = NATIVE_MEMORY_HEADROOM_BYTES.min(memory_limit_bytes / 8);
+    memory_limit_bytes
+        .saturating_sub(cache)
+        .saturating_sub(headroom)
+        .max(NATIVE_MEMORY_FLOOR_BYTES)
+}
+
+fn process_memory_limit_bytes() -> usize {
+    let physical = physical_memory_bytes();
+    CGROUP_MEMORY_LIMIT_PATHS
+        .iter()
+        .find_map(|path| {
+            std::fs::read_to_string(path)
+                .ok()?
+                .trim()
+                .parse::<usize>()
+                .ok()
+        })
+        .filter(|limit| *limit < physical)
+        .unwrap_or(physical)
+}
+
+fn physical_memory_bytes() -> usize {
+    let pages = unsafe { libc::sysconf(libc::_SC_PHYS_PAGES) };
+    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
+    usize::try_from(pages)
+        .unwrap_or(0)
+        .saturating_mul(usize::try_from(page_size).unwrap_or(0))
 }
 
 pub(in crate::server) async fn serve_bytes_or_transform(

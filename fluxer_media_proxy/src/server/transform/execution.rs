@@ -35,17 +35,32 @@ pub(in crate::server) async fn run_transform(
     let deadline = deadline_instant(options.deadline_ms);
     let media_limits = runtime.limits();
     let transform_metrics = runtime.metrics();
+    let cost_data = data.clone();
     let timed = runtime
         .tasks()
-        .run_native(deadline, move || {
-            let started = Instant::now();
-            let media =
-                media_process::transform_image(&data, &options, &media_limits, &transform_metrics)?;
-            Ok(TimedMedia {
-                media,
-                elapsed_ms: metrics::duration_millis(started.elapsed()),
-            })
-        })
+        .run_native(
+            deadline,
+            move || {
+                Ok(media_process::image_transform_cost(
+                    &cost_data,
+                    &options,
+                    &media_limits,
+                )?)
+            },
+            move || {
+                let started = Instant::now();
+                let media = media_process::transform_image(
+                    &data,
+                    &options,
+                    &media_limits,
+                    &transform_metrics,
+                )?;
+                Ok(TimedMedia {
+                    media,
+                    elapsed_ms: metrics::duration_millis(started.elapsed()),
+                })
+            },
+        )
         .await?;
     runtime.metrics().observe_image_duration(timed.elapsed_ms);
     request_log::record_stage(Stage::Transform, timed.elapsed_ms);
@@ -67,34 +82,42 @@ pub(in crate::server) async fn run_video_transform(
     let deadline = deadline_instant(deadline_ms);
     let media_limits = runtime.limits();
     let transform_metrics = runtime.metrics();
+    let cost_bytes = data
+        .len()
+        .saturating_add(media_process::AV_NATIVE_COST_BYTES);
     let timed = runtime
         .tasks()
-        .run_native(deadline, move || {
-            let started = Instant::now();
-            let thumbnail = media_process::extract_video_thumbnail(&data, format, &media_limits)?;
-            let media = if width.is_none() && height.is_none() {
-                thumbnail
-            } else {
-                media_process::transform_image(
-                    &thumbnail.bytes,
-                    &ImageOptions {
-                        width,
-                        height,
-                        format,
-                        quality,
-                        animation: AnimationMode::Static,
-                        deadline_ms,
-                        ..Default::default()
-                    },
-                    &media_limits,
-                    &transform_metrics,
-                )?
-            };
-            Ok(TimedMedia {
-                media,
-                elapsed_ms: metrics::duration_millis(started.elapsed()),
-            })
-        })
+        .run_native(
+            deadline,
+            move || Ok(cost_bytes),
+            move || {
+                let started = Instant::now();
+                let thumbnail =
+                    media_process::extract_video_thumbnail(&data, format, &media_limits)?;
+                let media = if width.is_none() && height.is_none() {
+                    thumbnail
+                } else {
+                    media_process::transform_image(
+                        &thumbnail.bytes,
+                        &ImageOptions {
+                            width,
+                            height,
+                            format,
+                            quality,
+                            animation: AnimationMode::Static,
+                            deadline_ms,
+                            ..Default::default()
+                        },
+                        &media_limits,
+                        &transform_metrics,
+                    )?
+                };
+                Ok(TimedMedia {
+                    media,
+                    elapsed_ms: metrics::duration_millis(started.elapsed()),
+                })
+            },
+        )
         .await?;
     runtime.metrics().observe_video_duration(timed.elapsed_ms);
     request_log::record_stage(Stage::Transform, timed.elapsed_ms);

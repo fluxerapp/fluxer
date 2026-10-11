@@ -30,6 +30,9 @@ pub fn apng_header(frames: u32) -> Vec<u8> {
     data
 }
 
+pub const JXL_4100_LOSSY_ALPHA: &[u8] = include_bytes!("jxl_4100_lossy_alpha.jxl");
+pub const JXL_64_LOSSY_ALPHA: &[u8] = include_bytes!("jxl_64_lossy_alpha.jxl");
+
 pub fn synthetic_png(width: u32, height: u32) -> Vec<u8> {
     ensure_vips_init().unwrap();
     let mut pixels = vec![0u8; width as usize * height as usize * 4];

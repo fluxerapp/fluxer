@@ -199,3 +199,22 @@ async fn a_redundant_format_parameter_shares_the_implicit_transform_cache_entry(
         );
     }
 }
+
+#[test]
+fn the_budget_leaves_room_for_the_cache_and_headroom() {
+    assert_eq!(
+        2560 << 20,
+        native_memory_budget_bytes(4096 << 20, 1024 << 20)
+    );
+}
+
+#[test]
+fn a_cache_larger_than_the_pod_takes_at_most_half_of_it() {
+    assert_eq!(192 << 20, native_memory_budget_bytes(512 << 20, 1 << 30));
+    assert_eq!(384 << 20, native_memory_budget_bytes(1 << 30, 1 << 30));
+}
+
+#[test]
+fn the_budget_never_drops_below_its_floor() {
+    assert_eq!(128 << 20, native_memory_budget_bytes(64 << 20, 0));
+}
