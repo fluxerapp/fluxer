@@ -8,22 +8,40 @@ use reqwest_retry::{
 };
 use std::io::ErrorKind;
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 pub(super) struct ObservableRetryPolicy {
     inner: ExponentialBackoff,
+    retry_window: Option<Duration>,
     metrics: Arc<HTTPClientMetrics>,
 }
 
 impl ObservableRetryPolicy {
-    pub(super) fn new(inner: ExponentialBackoff, metrics: Arc<HTTPClientMetrics>) -> Self {
-        Self { inner, metrics }
+    pub(super) fn new(
+        inner: ExponentialBackoff,
+        retry_window: Option<Duration>,
+        metrics: Arc<HTTPClientMetrics>,
+    ) -> Self {
+        Self {
+            inner,
+            retry_window,
+            metrics,
+        }
     }
 }
 
 impl RetryPolicy for ObservableRetryPolicy {
     fn should_retry(&self, request_start_time: SystemTime, n_past_retries: u32) -> RetryDecision {
-        let decision = self.inner.should_retry(request_start_time, n_past_retries);
+        let window_spent = self.retry_window.is_some_and(|window| {
+            request_start_time
+                .elapsed()
+                .is_ok_and(|elapsed| elapsed >= window)
+        });
+        let decision = if window_spent {
+            RetryDecision::DoNotRetry
+        } else {
+            self.inner.should_retry(request_start_time, n_past_retries)
+        };
         match decision {
             RetryDecision::Retry { .. } => self.metrics.record_retry(),
             RetryDecision::DoNotRetry => self.metrics.record_retries_exhausted(),
@@ -263,7 +281,7 @@ mod tests {
         let backoff = ExponentialBackoff::builder()
             .retry_bounds(Duration::from_millis(1), Duration::from_millis(2))
             .build_with_max_retries(1);
-        let policy = ObservableRetryPolicy::new(backoff, metrics.http_client());
+        let policy = ObservableRetryPolicy::new(backoff, None, metrics.http_client());
         let started = SystemTime::now();
         assert!(matches!(
             policy.should_retry(started, 0),
@@ -327,6 +345,40 @@ mod tests {
         assert!(matches!(
             retryable_error(&MiddlewareError::Reqwest(error)),
             Some(Retryable::Transient)
+        ));
+    }
+
+    fn policy(window: Option<Duration>) -> ObservableRetryPolicy {
+        ObservableRetryPolicy::new(
+            ExponentialBackoff::builder().build_with_max_retries(2),
+            window,
+            Arc::new(HTTPClientMetrics::new()),
+        )
+    }
+
+    #[test]
+    fn a_request_past_its_retry_window_is_not_retried() {
+        let started = SystemTime::now() - Duration::from_secs(20);
+        assert!(matches!(
+            policy(Some(Duration::from_secs(15))).should_retry(started, 0),
+            RetryDecision::DoNotRetry
+        ));
+    }
+
+    #[test]
+    fn a_request_inside_its_retry_window_is_retried() {
+        assert!(matches!(
+            policy(Some(Duration::from_secs(15))).should_retry(SystemTime::now(), 0),
+            RetryDecision::Retry { .. }
+        ));
+    }
+
+    #[test]
+    fn a_policy_without_a_window_keeps_retrying_slow_requests() {
+        let started = SystemTime::now() - Duration::from_secs(60);
+        assert!(matches!(
+            policy(None).should_retry(started, 0),
+            RetryDecision::Retry { .. }
         ));
     }
 }
