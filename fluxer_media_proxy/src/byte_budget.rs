@@ -43,7 +43,7 @@ impl ByteBudgetInner {
         assert!(amount <= self.limit);
         let released = self
             .used
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |used| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |used| {
                 used.checked_sub(amount)
             });
         assert!(released.is_ok());

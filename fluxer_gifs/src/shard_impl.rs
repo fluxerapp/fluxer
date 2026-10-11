@@ -175,7 +175,7 @@ impl CacheTelemetry {
 
     fn next_generation(&self) -> u64 {
         self.next_generation
-            .fetch_update(METRICS_ORDERING, METRICS_ORDERING, |generation| {
+            .try_update(METRICS_ORDERING, METRICS_ORDERING, |generation| {
                 generation.checked_add(1)
             })
             .expect("GIF cache generation exhausted")

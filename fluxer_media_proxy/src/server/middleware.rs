@@ -63,7 +63,7 @@ impl HttpRequestDrain {
     fn begin_request(&self) -> ActiveHttpRequest {
         self.inner
             .active_requests
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |active| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |active| {
                 active.checked_add(1)
             })
             .expect("http active request count must not overflow");
