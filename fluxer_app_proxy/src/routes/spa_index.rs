@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::branding_images::BrandingSnapshot;
 use crate::config::HttpEndpoint;
 use crate::csp::{CspHeaderValues, inline_script_hashes};
 use crate::state::{
@@ -27,7 +28,16 @@ const CSP_NONCE_PLACEHOLDER_ATTRIBUTE: &str = r#" nonce="{{CSP_NONCE_PLACEHOLDER
 const MEDIA_PRECONNECT_TAG: &str = r#"<link rel="preconnect" href="{{MEDIA_ENDPOINT}}">"#;
 const SAME_ORIGIN_API_META_TAG: &str = r#"<meta name="fluxer-api-origin" content="self">"#;
 const HEAD_CLOSE_TAG: &str = "</head>";
+const TITLE_START: &str = "<title";
+const TITLE_END: &str = "</title>";
 const FAVICON_LINK_START: &str = r#"<link rel="icon""#;
+const APPLE_TOUCH_ICON_LINK_START: &str = r#"<link rel="apple-touch-icon""#;
+const APPLE_TITLE_META_START: &str = r#"<meta name="apple-mobile-web-app-title""#;
+const THEME_COLOR_META_STARTS: [&str; 3] = [
+    r#"<meta name="theme-color""#,
+    r#"<meta name="msapplication-navbutton-color""#,
+    r#"<meta name="msapplication-TileColor""#,
+];
 const STATIC_PRECONNECT_TAGS: [&str; 2] = [
     r#"<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">"#,
     r#"<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}" crossorigin>"#,
@@ -182,11 +192,10 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
         Err(response) => return response,
     };
     let raw_html = if state.config.self_hosted {
-        let html = strip_link_preview_metadata(&raw_html);
-        match state.branding.favicon_url() {
-            Some(favicon_url) => apply_branded_favicon(&html, &favicon_url),
-            None => html,
-        }
+        apply_instance_branding(
+            strip_link_preview_metadata(&raw_html),
+            &state.branding.snapshot(),
+        )
     } else {
         raw_html
     };
@@ -322,32 +331,62 @@ fn apply_media_preconnect(html: &str, media: &str, static_cdn: &str) -> String {
 }
 
 fn strip_link_preview_metadata(html: &str) -> String {
-    let html = remove_elements(html, "<title", "</title>");
-    remove_elements(&html, r#"<meta name="description""#, ">")
+    replace_elements(html, r#"<meta name="description""#, ">", "")
 }
 
-fn apply_branded_favicon(html: &str, favicon_url: &str) -> String {
-    let link = format!(
-        r#"<link rel="icon" href="{}">"#,
-        escape_attribute_value(favicon_url)
-    );
-    let mut rest = html;
-    let mut output = String::with_capacity(html.len() + link.len());
-
-    while let Some(index) = rest.find(FAVICON_LINK_START) {
-        let Some(length) = rest[index..].find('>') else {
-            break;
-        };
-        output.push_str(&rest[..index]);
-        output.push_str(&link);
-        rest = &rest[index + length + 1..];
+fn apply_instance_branding(mut html: String, branding: &BrandingSnapshot) -> String {
+    if let Some(product_name) = &branding.product_name {
+        let product_name = escape_html(product_name);
+        html = replace_elements(
+            &html,
+            TITLE_START,
+            TITLE_END,
+            &format!("{TITLE_START}>{product_name}{TITLE_END}"),
+        );
+        html = replace_elements(
+            &html,
+            APPLE_TITLE_META_START,
+            ">",
+            &format!(r#"{APPLE_TITLE_META_START} content="{product_name}">"#),
+        );
     }
-
-    output.push_str(rest);
-    output
+    if let Some(favicon_url) = &branding.favicon_url {
+        html = replace_elements(
+            &html,
+            FAVICON_LINK_START,
+            ">",
+            &format!(
+                r#"{FAVICON_LINK_START} href="{}">"#,
+                escape_html(favicon_url)
+            ),
+        );
+    }
+    if let Some(touch_icon_url) = branding.icon_url.as_ref().or(branding.favicon_url.as_ref()) {
+        html = replace_elements(
+            &html,
+            APPLE_TOUCH_ICON_LINK_START,
+            ">",
+            &format!(
+                r#"{APPLE_TOUCH_ICON_LINK_START} href="{}">"#,
+                escape_html(touch_icon_url)
+            ),
+        );
+    }
+    if let Some(theme_color) = &branding.theme_color {
+        let theme_color = escape_html(theme_color);
+        for start in THEME_COLOR_META_STARTS {
+            html = replace_elements(
+                &html,
+                start,
+                ">",
+                &format!(r#"{start} content="{theme_color}">"#),
+            );
+        }
+    }
+    html
 }
 
-fn escape_attribute_value(value: &str) -> String {
+fn escape_html(value: &str) -> String {
     value
         .replace('&', "&amp;")
         .replace('"', "&quot;")
@@ -355,16 +394,20 @@ fn escape_attribute_value(value: &str) -> String {
         .replace('>', "&gt;")
 }
 
-fn remove_elements(html: &str, start: &str, end: &str) -> String {
+fn replace_elements(html: &str, start: &str, end: &str, replacement: &str) -> String {
     let mut rest = html;
-    let mut output = String::with_capacity(html.len());
+    let mut output = String::with_capacity(html.len() + replacement.len());
 
     while let Some(index) = rest.find(start) {
         let Some(length) = rest[index..].find(end) else {
             break;
         };
         output.push_str(&rest[..index]);
-        rest = rest[index + length + end.len()..].trim_start_matches('\n');
+        output.push_str(replacement);
+        rest = &rest[index + length + end.len()..];
+        if replacement.is_empty() {
+            rest = rest.trim_start_matches('\n');
+        }
     }
 
     output.push_str(rest);
@@ -656,6 +699,7 @@ mod tests {
         static_root_file_cache_control(request_path).is_some()
     }
 
+    use crate::branding_images::InstanceBranding;
     use crate::config::{AppProxyConfig, ReleaseChannel};
     use crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX;
     use axum::Router;
@@ -814,12 +858,10 @@ mod tests {
 
     #[test]
     fn the_shipped_shell_loses_every_link_preview_field_when_stripped() {
-        assert!(SHIPPED_APP_SHELL.contains("<title>"));
         assert!(SHIPPED_APP_SHELL.contains(r#"<meta name="description""#));
 
         let stripped = strip_link_preview_metadata(SHIPPED_APP_SHELL);
 
-        assert!(!stripped.contains("<title"));
         assert!(!stripped.contains(r#"name="description""#));
         assert!(!stripped.contains("og:"));
         assert!(!stripped.contains("twitter:"));
@@ -921,9 +963,10 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let served = read_document(response).await;
 
-        assert!(!served.contains("<title"));
         assert!(!served.contains(r#"name="description""#));
         assert!(served.contains(r#"<meta name="viewport""#));
+        assert_eq!(served.matches("<title").count(), 1);
+        assert!(served.contains("<title>Fluxer</title>"));
     }
 
     fn image_sources_of(policy: &str) -> Vec<String> {
@@ -950,8 +993,10 @@ mod tests {
         let plain_document = read_document(plain).await;
         assert!(!plain_images.contains(&"https://example.test".to_owned()));
 
-        state.branding =
-            crate::branding_images::InstanceBranding::new(vec![branding_origin()], None);
+        state.branding = InstanceBranding::new(BrandingSnapshot {
+            image_origins: Arc::from([branding_origin()]),
+            ..BrandingSnapshot::default()
+        });
         let branded = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
         let branded_policy = policy_of(&branded);
         let branded_document = read_document(branded).await;
@@ -968,9 +1013,12 @@ mod tests {
     async fn the_official_instance_allows_no_branding_image_origins() {
         let mut config = AppProxyConfig::from_env();
         config.self_hosted = false;
-        config.branding_image_origins = vec![branding_origin()];
+        config.branding = BrandingSnapshot {
+            image_origins: Arc::from([branding_origin()]),
+            ..BrandingSnapshot::default()
+        };
         let mut state = spa_state_serving(SHIPPED_APP_SHELL);
-        state.branding = crate::branding_images::InstanceBranding::from_config(&config);
+        state.branding = InstanceBranding::from_config(&config);
 
         let response = serve_spa_index(&state, &HeaderMap::new(), "/login").await;
 
@@ -979,49 +1027,124 @@ mod tests {
         );
     }
 
+    fn full_branding() -> BrandingSnapshot {
+        BrandingSnapshot {
+            image_origins: Arc::from([branding_origin()]),
+            product_name: Some(Arc::from("Example")),
+            icon_url: Some(Arc::from("https://example.test/icon.png")),
+            favicon_url: Some(Arc::from("https://example.test/favicon.png")),
+            theme_color: Some(Arc::from("#7b2ce4")),
+        }
+    }
+
+    async fn served_self_hosted_head(branding: BrandingSnapshot) -> (String, String) {
+        let mut state = assemble_spa_state(SpaIndexSource::bundled(SHIPPED_APP_SHELL), None, true);
+        state.branding = InstanceBranding::new(branding);
+        let response = serve_spa_index(&state, &HeaderMap::new(), "/").await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let policy = policy_of(&response);
+        (read_document(response).await, policy)
+    }
+
     #[tokio::test]
     async fn a_self_hosted_instance_serves_its_branded_favicon() {
-        let mut state = assemble_spa_state(SpaIndexSource::bundled(SHIPPED_APP_SHELL), None, true);
-        state.branding = crate::branding_images::InstanceBranding::new(
-            vec![branding_origin()],
-            Some("https://example.test/favicon.png?v=1&size=32".to_owned()),
-        );
-
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/").await;
-        let served = read_document(response).await;
+        let (served, _) = served_self_hosted_head(BrandingSnapshot {
+            image_origins: Arc::from([branding_origin()]),
+            favicon_url: Some(Arc::from("https://example.test/favicon.png?v=1&size=32")),
+            ..BrandingSnapshot::default()
+        })
+        .await;
 
         assert_eq!(served.matches(r#"<link rel="icon""#).count(), 1);
         assert!(served.contains(
             r#"<link rel="icon" href="https://example.test/favicon.png?v=1&amp;size=32">"#
         ));
         assert!(!served.contains("/web/favicon-32x32.png"));
-        assert!(served.contains("/web/apple-touch-icon.png"));
+        assert_eq!(served.matches(r#"<link rel="apple-touch-icon""#).count(), 1);
+        assert!(served.contains(
+            r#"<link rel="apple-touch-icon" href="https://example.test/favicon.png?v=1&amp;size=32">"#
+        ));
+        assert!(!served.contains("/web/apple-touch-icon.png"));
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_serves_its_branded_head() {
+        let (served, policy) = served_self_hosted_head(full_branding()).await;
+
+        assert_eq!(served.matches("<title").count(), 1);
+        assert!(served.contains("<title>Example</title>"));
+        assert!(served.contains(r#"<meta name="apple-mobile-web-app-title" content="Example">"#));
+        assert!(served.contains(r#"<link rel="icon" href="https://example.test/favicon.png">"#));
+        assert!(
+            served
+                .contains(r#"<link rel="apple-touch-icon" href="https://example.test/icon.png">"#)
+        );
+        for name in [
+            "theme-color",
+            "msapplication-navbutton-color",
+            "msapplication-TileColor",
+        ] {
+            assert_eq!(
+                served.matches(&format!(r#"<meta name="{name}""#)).count(),
+                1
+            );
+            assert!(served.contains(&format!(r##"<meta name="{name}" content="#7b2ce4">"##)));
+        }
+        assert!(!served.contains("4641D9"));
+        assert!(!served.contains("Fluxer</title>"));
+        assert!(!served.contains(r#"name="description""#));
+        assert_every_inline_script_is_granted(&served, &policy);
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_without_branding_keeps_the_default_head() {
+        let (served, _) = served_self_hosted_head(BrandingSnapshot::default()).await;
+
+        assert_eq!(
+            served,
+            strip_link_preview_metadata(
+                &render_spa_document(SHIPPED_APP_SHELL, "", "", None).unwrap()
+            )
+        );
     }
 
     #[test]
-    fn a_branded_favicon_cannot_break_out_of_its_attribute() {
-        let html =
-            r#"<head><link rel="icon" type="image/png" href="/web/favicon-32x32.png"></head>"#;
+    fn branded_head_values_cannot_break_out_of_their_markup() {
+        let html = r#"<head><title>Fluxer</title><meta name="apple-mobile-web-app-title" content="Fluxer"><link rel="icon" type="image/png" href="/web/favicon-32x32.png"><link rel="apple-touch-icon" href="/web/apple-touch-icon.png"></head>"#;
+        let branding = BrandingSnapshot {
+            product_name: Some(Arc::from(r#"A & B</title><script>x()</script>""#)),
+            favicon_url: Some(Arc::from(r#"https://example.test/"><script>x()</script>"#)),
+            ..BrandingSnapshot::default()
+        };
 
         assert_eq!(
-            apply_branded_favicon(html, r#"https://example.test/"><script>x()</script>"#),
-            r#"<head><link rel="icon" href="https://example.test/&quot;&gt;&lt;script&gt;x()&lt;/script&gt;"></head>"#
+            apply_instance_branding(html.to_owned(), &branding),
+            r#"<head><title>A &amp; B&lt;/title&gt;&lt;script&gt;x()&lt;/script&gt;&quot;</title><meta name="apple-mobile-web-app-title" content="A &amp; B&lt;/title&gt;&lt;script&gt;x()&lt;/script&gt;&quot;"><link rel="icon" href="https://example.test/&quot;&gt;&lt;script&gt;x()&lt;/script&gt;"><link rel="apple-touch-icon" href="https://example.test/&quot;&gt;&lt;script&gt;x()&lt;/script&gt;"></head>"#
         );
     }
 
     #[tokio::test]
-    async fn the_official_instance_keeps_its_default_favicon() {
+    async fn the_official_instance_ignores_every_branding_setting() {
+        let plain = read_document(
+            serve_spa_index(
+                &spa_state_serving(SHIPPED_APP_SHELL),
+                &HeaderMap::new(),
+                "/",
+            )
+            .await,
+        )
+        .await;
         let mut config = AppProxyConfig::from_env();
         config.self_hosted = false;
-        config.branding_favicon_url = Some("https://example.test/favicon.png".to_owned());
+        config.branding = full_branding();
         let mut state = spa_state_serving(SHIPPED_APP_SHELL);
-        state.branding = crate::branding_images::InstanceBranding::from_config(&config);
+        state.branding = InstanceBranding::from_config(&config);
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/").await;
-        let served = read_document(response).await;
+        let served = read_document(serve_spa_index(&state, &HeaderMap::new(), "/").await).await;
 
+        assert_eq!(served, plain);
         assert!(served.contains("/web/favicon-32x32.png"));
-        assert!(!served.contains("https://example.test/favicon.png"));
+        assert!(!served.contains("https://example.test/"));
     }
 
     #[tokio::test]
@@ -1215,7 +1338,7 @@ mod tests {
             crate::local_files::LocalFileStore::load_blocking(std::path::Path::new("."), &budgets)
                 .expect("the test static directory must exist");
         AppState {
-            branding: crate::branding_images::InstanceBranding::from_config(&config),
+            branding: InstanceBranding::from_config(&config),
             config: Arc::new(config),
             csp,
             http_client: reqwest::Client::new(),
