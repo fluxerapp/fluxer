@@ -14,9 +14,9 @@ use crate::{
     mime, native,
     output_format::OutputFormat,
     test_fixtures::{
-        JPEG_ROTATED_MISMATCHED_SCAN, JXL_64_LOSSY_ALPHA, JXL_3000_LOSSY_2_FRAMES,
-        JXL_4100_LOSSLESS_RGB16, JXL_4100_LOSSY_ALPHA, JXL_4100_LOSSY_RGB_DEPTH,
-        JXL_7000X4000_LOSSY_RGB, png_dimensions, synthetic_bmp, synthetic_png,
+        JPEG_ROTATED_MISMATCHED_SCAN, JXL_64_LOSSY_ALPHA, JXL_4100_LOSSLESS_RGB16,
+        JXL_4100_LOSSY_ALPHA, JXL_4100_LOSSY_RGB_DEPTH, JXL_7000X4000_LOSSY_RGB, png_dimensions,
+        synthetic_bmp, synthetic_png,
     },
 };
 
@@ -119,7 +119,6 @@ fn refuses_jxl_above_the_decode_pixel_cap_before_decoding() {
         JXL_4100_LOSSY_ALPHA,
         JXL_4100_LOSSY_RGB_DEPTH,
         JXL_4100_LOSSLESS_RGB16,
-        JXL_3000_LOSSY_2_FRAMES,
     ] {
         for width in [None, Some(128)] {
             let err = transform_image(

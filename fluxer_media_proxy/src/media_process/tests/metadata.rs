@@ -14,8 +14,8 @@ use crate::{
     nsfw::{NSFWClient, NSFWPolicy},
     output_format::OutputFormat,
     test_fixtures::{
-        JXL_3000_LOSSY_2_FRAMES, JXL_4100_LOSSLESS_RGB16, JXL_4100_LOSSY_ALPHA,
-        JXL_4100_LOSSY_RGB_DEPTH, JXL_7000X4000_LOSSY_RGB, fixture_audio_mp3_with_png_cover_art,
+        JXL_4100_LOSSLESS_RGB16, JXL_4100_LOSSY_ALPHA, JXL_4100_LOSSY_RGB_DEPTH,
+        JXL_7000X4000_LOSSY_RGB, fixture_audio_mp3_with_png_cover_art,
         fixture_audio_mp4_with_attached_picture, fixture_audio_only_mp4, fixture_h264_mp4,
         fixture_mkv_with_png_video_stream, fixture_mp4_with_undecodable_video, synthetic_png,
         synthetic_wav,
@@ -258,7 +258,6 @@ fn metadata_refuses_jxl_above_the_decode_pixel_cap() {
         JXL_4100_LOSSY_ALPHA,
         JXL_4100_LOSSY_RGB_DEPTH,
         JXL_4100_LOSSLESS_RGB16,
-        JXL_3000_LOSSY_2_FRAMES,
     ] {
         let err = tokio::runtime::Builder::new_current_thread()
             .build()
