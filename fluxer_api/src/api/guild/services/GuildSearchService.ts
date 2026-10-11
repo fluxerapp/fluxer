@@ -51,6 +51,7 @@ export class GuildSearchService {
 		channelIds: Array<ChannelID>;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const {userId, guildId, searchParams, requestCache} = params;
 		let {channelIds} = params;
@@ -156,7 +157,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache, params.personaFallbackBehavior);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,
@@ -172,6 +173,7 @@ export class GuildSearchService {
 		channelIds: Array<ChannelID>;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const {userId, channelIds, searchParams, requestCache} = params;
 		const searchService = getMessageSearchService();
@@ -238,7 +240,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache, params.personaFallbackBehavior);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,

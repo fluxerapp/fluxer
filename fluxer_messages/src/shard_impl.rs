@@ -404,6 +404,7 @@ struct ResponseBuildOptions {
     nonce: Option<String>,
     tts: bool,
     include_hidden: bool,
+		persona_fallback_behavior: bool,
 }
 
 #[derive(Debug, Default)]
@@ -1471,6 +1472,74 @@ impl<T: Transport> MessagesShard<T> {
         } else {
             None
         };
+				if options.persona_fallback_behavior && message.webhook_id.is_none() && message.persona.is_some() {
+					let persona_id = {
+						let pid = persona.clone().and_then(|p| p.id).clone().unwrap_or("0".to_string());
+						if pid.len() >= 1 {
+							pid
+						} else {
+							"0".to_string()
+						}
+					};
+					return ApiMessageResponse {
+							id: message.message_id.to_string(),
+							channel_id: message.channel_id.to_string(),
+							author: ApiUserPartialResponse {
+								bot: author.bot,
+								avatar: persona.clone().and_then(|p| p.avatar).or(message.persona.as_ref().and_then(|p| p.avatar.clone())),
+								username: format!("{} ~ @{}#{}", persona.and_then(|p| p.name).unwrap_or(DELETED_PERSONA_GLOBAL_NAME.to_string()), author.username, author.discriminator),
+								discriminator: "0000".to_string(),
+								id: persona_id.clone(),
+								flags: 0,
+								avatar_color: None,
+								global_name: None,
+								mention_flags: None,
+								system: Some(false),
+							},
+							webhook_id: Some(persona_id),
+							message_type: message.message_type,
+							flags: message.flags.unwrap_or_default(),
+							content: message.content.clone().unwrap_or_default(),
+							timestamp: epoch_millis_to_iso(snowflake_to_epoch_millis(message.message_id)),
+							edited_timestamp: message.edited_timestamp.map(epoch_millis_to_iso),
+							pinned: message.pinned.unwrap_or(false),
+							mention_everyone: message.mention_everyone.unwrap_or(false),
+							tts: options.tts,
+							mentions,
+							mention_roles,
+							mention_channels: (!mention_channels.is_empty()).then_some(mention_channels),
+							users: (!users.is_empty()).then_some(users),
+							embeds,
+							attachments,
+							stickers,
+							reactions: context.reactions.get(&message.message_id).cloned(),
+							message_reference: message
+									.message_reference
+									.as_ref()
+									.and_then(map_message_reference),
+							message_snapshots: message.message_snapshots.as_ref().and_then(|snapshots| {
+									let mapped: Vec<_> = snapshots
+											.iter()
+											.enumerate()
+											.map(|(index, snapshot)| {
+													self.map_snapshot(
+															message.message_id,
+															message.channel_id,
+															index,
+															snapshot,
+															options,
+															context,
+													)
+											})
+											.collect();
+									(!mapped.is_empty()).then_some(mapped)
+							}),
+							nonce: options.nonce.clone(),
+							call: message.call.as_ref().map(map_call),
+							referenced_message,
+							persona: None
+					}
+				}
         ApiMessageResponse {
             id: message.message_id.to_string(),
             channel_id: message.channel_id.to_string(),
@@ -2603,6 +2672,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+        				persona_fallback_behavior,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let message_id = parse_i64(&message_id, "message_id")?;
@@ -2629,6 +2699,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+														persona_fallback_behavior,
                         },
                     )
                     .await?;
@@ -2650,6 +2721,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+								persona_fallback_behavior,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2673,6 +2745,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+														persona_fallback_behavior,
                         },
                     )
                     .await?;
@@ -2692,6 +2765,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 attachment_url_secret_base64,
                 include_reactions,
                 include_hidden,
+								persona_fallback_behavior,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2715,6 +2789,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+														persona_fallback_behavior,
                         },
                     )
                     .await?;
@@ -2735,6 +2810,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 attachment_url_secret_base64,
                 include_reactions,
                 include_hidden,
+								persona_fallback_behavior,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
@@ -2775,6 +2851,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+														persona_fallback_behavior,
                         },
                     )
                     .await?;
@@ -4252,6 +4329,7 @@ mod tests {
             nonce: None,
             tts: false,
             include_hidden: false,
+						persona_fallback_behavior: false,
         }
     }
 

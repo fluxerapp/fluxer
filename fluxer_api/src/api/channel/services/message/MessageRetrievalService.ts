@@ -144,11 +144,13 @@ export class MessageRetrievalService {
 		channelId,
 		searchParams,
 		requestCache,
+		...params
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
 		const {channel} = authChannel;
@@ -207,6 +209,7 @@ export class MessageRetrievalService {
 			userId,
 			messages: result.messages,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior
 		});
 		const messageResponses = builtMessages.map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,

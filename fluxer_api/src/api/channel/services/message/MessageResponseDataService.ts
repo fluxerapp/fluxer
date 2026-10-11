@@ -92,6 +92,7 @@ export class MessageResponseDataService {
 		after?: MessageID;
 		around?: MessageID;
 		access: MessageResponseAccessContext;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const response = await this.request({
 			op: 'ListResponses',
@@ -111,6 +112,7 @@ export class MessageResponseDataService {
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 			include_reactions: true,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (typeof response === 'object' && 'FoundApiMany' in response) {
 			return response.FoundApiMany;
@@ -137,6 +139,7 @@ export class MessageResponseDataService {
 		access: MessageResponseAccessContext;
 		nonce?: string;
 		tts?: boolean;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse | null> {
 		const response = await this.request({
 			op: 'GetResponseById',
@@ -155,6 +158,7 @@ export class MessageResponseDataService {
 			include_reactions: true,
 			nonce: params.nonce,
 			tts: params.tts,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (response === 'NotFound') return null;
 		if (typeof response === 'object' && 'FoundApi' in response) {
@@ -170,6 +174,7 @@ export class MessageResponseDataService {
 		nonce?: string;
 		tts?: boolean;
 		includeReactions?: boolean;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		const response = await this.request({
 			op: 'BuildResponse',
@@ -187,6 +192,7 @@ export class MessageResponseDataService {
 			include_reactions: params.includeReactions ?? true,
 			nonce: params.nonce,
 			tts: params.tts,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (typeof response === 'object' && 'FoundApi' in response) {
 			return response.FoundApi;
@@ -236,6 +242,7 @@ export class MessageResponseDataService {
 		messages: Array<Message>;
 		access: MessageResponseAccessContext;
 		includeReactions?: boolean;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		if (params.messages.length === 0) return [];
 		const responses: Array<MessageResponse> = [];
@@ -254,6 +261,7 @@ export class MessageResponseDataService {
 				media_proxy_secret_key: Config.mediaProxy.secretKey,
 				attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 				include_reactions: params.includeReactions ?? true,
+				persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 			});
 			if (typeof response !== 'object' || !('FoundApiMany' in response)) {
 				throw new Error(`[message-response-service] unexpected BuildResponses response: ${JSON.stringify(response)}`);
@@ -268,6 +276,7 @@ export class MessageResponseDataService {
 		messages: Array<Message>;
 		channelById: ReadonlyMap<string, Pick<Channel, 'guildId'>>;
 		includeReactions?: boolean;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const responses = new Array<MessageResponse | undefined>(params.messages.length);
 		const groups = new Map<
@@ -298,6 +307,7 @@ export class MessageResponseDataService {
 					messages: group.entries.map((entry) => entry.message),
 					access: group.access,
 					includeReactions: params.includeReactions,
+					personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 				});
 				const mappedByMessageId = new Map(mapped.map((response) => [response.id, response] as const));
 				for (const entry of group.entries) {

@@ -64,12 +64,14 @@ export class MessagePinService extends MessageInteractionBase {
 		userId,
 		beforeTimestamp,
 		limit,
+		...props
 	}: {
 		authChannel: AuthenticatedChannel;
 		userId: UserID;
 		requestCache: RequestCache;
 		beforeTimestamp?: Date;
 		limit?: number;
+		personaFallbackBehavior?: boolean;
 	}): Promise<{
 		items: Array<ChannelPinResponse>;
 		has_more: boolean;
@@ -119,6 +121,7 @@ export class MessagePinService extends MessageInteractionBase {
 			userId,
 			messages: trimmed,
 			access,
+			personaFallbackBehavior: props.personaFallbackBehavior ?? true,
 		});
 		const responseByMessageId = new Map(messageResponses.map((response) => [response.id, response]));
 		const items = trimmed.flatMap((message: Message) => {

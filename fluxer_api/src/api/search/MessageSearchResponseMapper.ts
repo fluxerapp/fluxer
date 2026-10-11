@@ -24,6 +24,7 @@ export class MessageSearchResponseMapper {
 		messages: Array<Message>,
 		userId: UserID,
 		requestCache: RequestCache,
+		personaFallbackBehavior?: boolean,
 	): Promise<{
 		messages: Array<MessageSearchResultsResponse['messages'][number]>;
 		channels: Array<MessageSearchResultsResponse['channels'][number]>;
@@ -42,6 +43,7 @@ export class MessageSearchResponseMapper {
 			userId,
 			messages: renderableMessages,
 			channelById,
+			personaFallbackBehavior,
 		});
 		const searchMessages = messageResponses.map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,

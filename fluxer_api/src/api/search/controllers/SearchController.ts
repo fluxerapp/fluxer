@@ -35,7 +35,8 @@ export function SearchController(app: HonoApp) {
 			}
 			const userId = user.id;
 			const requestCache = ctx.get('requestCache');
-			const result = await ctx.get('searchService').searchMessages({userId, requestCache, data: params});
+			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const result = await ctx.get('searchService').searchMessages({userId, requestCache, data: params, personaFallbackBehavior});
 			return ctx.json(result);
 		},
 	);

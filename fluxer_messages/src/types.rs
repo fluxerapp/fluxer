@@ -105,6 +105,8 @@ pub enum MessageRequest {
         tts: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+				#[serde(default)]
+        persona_fallback_behavior: bool,
     },
     BuildResponse {
         message: Message,
@@ -121,6 +123,8 @@ pub enum MessageRequest {
         tts: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+				#[serde(default)]
+        persona_fallback_behavior: bool,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -135,6 +139,8 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+				#[serde(default)]
+        persona_fallback_behavior: bool,
     },
     ListResponses {
         channel_id: String,
@@ -153,6 +159,8 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+				#[serde(default)]
+        persona_fallback_behavior: bool,
     },
     ExtractMentions {
         contents: Vec<String>,

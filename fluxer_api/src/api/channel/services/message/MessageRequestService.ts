@@ -34,6 +34,7 @@ export class MessageRequestService {
 			around?: MessageID;
 		};
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
 			userId: params.userId,
@@ -47,6 +48,7 @@ export class MessageRequestService {
 			after: params.query.after,
 			around: params.query.around,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior
 		});
 	}
 
@@ -62,6 +64,7 @@ export class MessageRequestService {
 			};
 		}>;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<BulkMessageFetchResponse> {
 		const channels = await mapWithConcurrency(params.requests, 4, async (request) => ({
 			channel_id: request.channelId.toString(),
@@ -70,6 +73,7 @@ export class MessageRequestService {
 				channelId: request.channelId,
 				query: request.query,
 				requestCache: params.requestCache,
+				personaFallbackBehavior: params.personaFallbackBehavior,
 			}),
 		}));
 		return {channels};
@@ -80,6 +84,7 @@ export class MessageRequestService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
 			userId: params.userId,
@@ -91,6 +96,7 @@ export class MessageRequestService {
 			channelId: params.channelId,
 			messageId: params.messageId,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		});
 		if (response === null) {
 			throw new UnknownMessageError();
@@ -137,6 +143,7 @@ export class MessageRequestService {
 			access: {...access, messageHistoryCutoff: null, canReadMessageHistory: true},
 			nonce: params.data.nonce,
 			tts: params.data.tts ?? false,
+			personaFallbackBehavior: false,
 		});
 	}
 
@@ -157,6 +164,7 @@ export class MessageRequestService {
 			userId: params.userId,
 			message,
 			access,
+			personaFallbackBehavior: false,
 		});
 	}
 
@@ -184,6 +192,7 @@ export class MessageRequestService {
 			userId: params.userId,
 			message,
 			access,
+			personaFallbackBehavior: false,
 		});
 	}
 }

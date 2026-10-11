@@ -70,6 +70,7 @@ export function MessageController(app: HonoApp) {
 			const {limit, before, after, around} = ctx.req.valid('query');
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
+			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
 			return ctx.json(
 				await messageRequestService.listMessages({
 					userId,
@@ -81,6 +82,7 @@ export function MessageController(app: HonoApp) {
 						around: around ? createMessageID(around) : undefined,
 					},
 					requestCache,
+					personaFallbackBehavior
 				}),
 			);
 		},
@@ -107,6 +109,7 @@ export function MessageController(app: HonoApp) {
 			const {requests} = ctx.req.valid('json');
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
+			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
 			return ctx.json(
 				await messageRequestService.listMessagesBulk({
 					userId,
@@ -120,6 +123,7 @@ export function MessageController(app: HonoApp) {
 						},
 					})),
 					requestCache,
+					personaFallbackBehavior,
 				}),
 			);
 		},
@@ -147,12 +151,14 @@ export function MessageController(app: HonoApp) {
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
+			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
 			return ctx.json(
 				await messageRequestService.getMessage({
 					userId,
 					channelId,
 					messageId,
 					requestCache,
+					personaFallbackBehavior,
 				}),
 			);
 		},

@@ -63,6 +63,7 @@ export class GlobalSearchService {
 		requestCache: RequestCache;
 		includeChannelId?: ChannelID | null;
 		requestedChannelIds?: Array<ChannelID>;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const includeChannel = await this.findDmScopeContextChannel(params.userId, params.includeChannelId);
 		const dmChannelIds = await getDmChannelIdsForScope({
@@ -87,7 +88,7 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache);
+		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache, params.personaFallbackBehavior);
 	}
 
 	async searchAcrossGuildsAndDms(params: {
@@ -97,6 +98,7 @@ export class GlobalSearchService {
 		requestCache: RequestCache;
 		includeChannelId?: ChannelID | null;
 		requestedChannelIds?: Array<ChannelID>;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const [guildAccess, includeChannel] = await Promise.all([
 			this.guildService.search.collectAccessibleGuildChannels(params.userId),
@@ -154,7 +156,7 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache);
+		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache, params.personaFallbackBehavior);
 	}
 
 	private filterRequestedChannelIds(available: Array<string>, requested?: Array<ChannelID>): Array<string> {
@@ -237,6 +239,7 @@ export class GlobalSearchService {
 		userId: UserID,
 		searchParams: MessageSearchRequest,
 		requestCache: RequestCache,
+		personaFallbackBehavior?: boolean,
 	): Promise<MessageSearchResponse> {
 		const searchService = this.getMessageSearchService();
 		const normalizedSearchParams = {...searchParams, channel_id: undefined};
@@ -253,7 +256,7 @@ export class GlobalSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache, personaFallbackBehavior);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,

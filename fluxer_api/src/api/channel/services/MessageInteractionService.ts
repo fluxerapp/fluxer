@@ -29,6 +29,7 @@ import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants'
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import props from 'lodash/fp/props';
 
 export class MessageInteractionService {
 	readonly authService: MessageInteractionAuthService;
@@ -85,18 +86,20 @@ export class MessageInteractionService {
 		requestCache,
 		beforeTimestamp,
 		limit,
+		...props
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		requestCache: RequestCache;
 		beforeTimestamp?: Date;
 		limit?: number;
+		personaFallbackBehavior?: boolean;
 	}): Promise<{
 		items: Array<ChannelPinResponse>;
 		has_more: boolean;
 	}> {
 		const authChannel = await this.pinAuthService.getChannelAuthenticated({userId, channelId});
-		return this.pinService.getChannelPins({authChannel, userId, requestCache, beforeTimestamp, limit});
+		return this.pinService.getChannelPins({authChannel, userId, requestCache, beforeTimestamp, limit, ...props});
 	}
 
 	async pinMessage({

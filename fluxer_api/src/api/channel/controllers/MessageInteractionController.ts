@@ -52,10 +52,11 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const requestCache = ctx.get('requestCache');
 			const {limit, before} = ctx.req.valid('query');
+			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
 			return ctx.json(
 				await ctx
 					.get('channelService')
-					.interactions.getChannelPins({userId, channelId, requestCache, limit, beforeTimestamp: before}),
+					.interactions.getChannelPins({userId, channelId, requestCache, limit, beforeTimestamp: before, personaFallbackBehavior}),
 			);
 		},
 	);

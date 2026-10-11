@@ -57,8 +57,9 @@ export class SearchService {
 		userId: UserID;
 		requestCache: RequestCache;
 		data: GlobalSearchMessagesRequest;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
-		const {userId, requestCache, data} = params;
+		const {userId, requestCache, data, personaFallbackBehavior} = params;
 		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...rawSearchParams} = data;
 		const searchParams = normalizeQuotedPhrases(rawSearchParams);
 		const contextChannelId = context_channel_id ? createChannelID(context_channel_id) : null;
@@ -73,6 +74,7 @@ export class SearchService {
 					channelIds,
 					searchParams,
 					requestCache,
+					personaFallbackBehavior,
 				});
 				break;
 			case 'all_dms':
@@ -84,6 +86,7 @@ export class SearchService {
 					requestCache,
 					includeChannelId: contextChannelId,
 					requestedChannelIds: channelIds,
+					personaFallbackBehavior,
 				});
 				break;
 			case 'all':
@@ -94,6 +97,7 @@ export class SearchService {
 					requestCache,
 					includeChannelId: contextChannelId,
 					requestedChannelIds: channelIds,
+					personaFallbackBehavior,
 				});
 				break;
 			case 'open_dms_and_all_guilds':
@@ -104,6 +108,7 @@ export class SearchService {
 					requestCache,
 					includeChannelId: contextChannelId,
 					requestedChannelIds: channelIds,
+					personaFallbackBehavior,
 				});
 				break;
 			default:
@@ -114,6 +119,7 @@ export class SearchService {
 						channelIds,
 						searchParams,
 						requestCache,
+						personaFallbackBehavior,
 					});
 				} else if (contextChannelId) {
 					result = await this.channelService.messages.retrieval.searchMessages({
@@ -121,6 +127,7 @@ export class SearchService {
 						channelId: contextChannelId,
 						searchParams,
 						requestCache,
+						personaFallbackBehavior,
 					});
 				} else {
 					throw InputValidationError.fromCode('context', ValidationErrorCodes.CONTEXT_CHANNEL_OR_GUILD_ID_REQUIRED);
