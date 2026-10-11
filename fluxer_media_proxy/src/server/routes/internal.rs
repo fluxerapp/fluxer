@@ -685,7 +685,7 @@ mod tests {
                 .tasks()
                 .run_native(
                     None,
-                    || Ok(0),
+                    || Ok(media_process::NativeCost::Bytes(0)),
                     move || {
                         let _ = started.blocking_send(());
                         let _ = released.blocking_recv();

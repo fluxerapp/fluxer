@@ -3,7 +3,7 @@
 use super::super::image_probe::load_image;
 use super::super::native_runtime::ensure_vips_init;
 use super::super::transform::source_supports_pages;
-use super::super::{ImageOptions, MediaError, image_transform_cost};
+use super::super::{ImageOptions, MediaError, NativeCost, image_transform_cost};
 use super::fixtures::{animated_mode, metadata_value, transform_image};
 use crate::{
     mime, native,
@@ -188,6 +188,9 @@ fn transform_cost_charges_the_full_source_decode_for_jxl() {
         &super::fixtures::test_media_limits(),
     )
     .unwrap();
+    let NativeCost::Bytes(cost) = cost else {
+        panic!("an image is charged exact bytes")
+    };
     assert!(cost >= 4100 * 4100 * 40, "cost {cost}");
 }
 
@@ -205,5 +208,8 @@ fn transform_cost_charges_svg_at_its_output_size() {
         &super::fixtures::test_media_limits(),
     )
     .unwrap();
+    let NativeCost::Bytes(cost) = cost else {
+        panic!("an image is charged exact bytes")
+    };
     assert!(cost < 1 << 20, "cost {cost}");
 }

@@ -37,7 +37,9 @@ pub use metadata::{
     MetadataOptions, PreparedMetadata, finish_metadata, metadata_json_with_options,
     prepare_metadata,
 };
-pub use native_cost::{AV_NATIVE_COST_BYTES, av_native_cost, image_transform_cost, metadata_cost};
+pub use native_cost::{
+    AV_NATIVE_COST_BYTES, NativeCost, av_native_cost, image_transform_cost, metadata_cost,
+};
 pub use nsfw_processing::encode_static_image_for_nsfw;
 pub use transform::transform_image;
 pub use video_thumbnail::{

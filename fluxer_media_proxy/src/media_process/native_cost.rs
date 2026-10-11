@@ -10,6 +10,12 @@ use crate::{
 };
 
 pub const AV_NATIVE_COST_BYTES: usize = 256 << 20;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum NativeCost {
+    Bytes(usize),
+    UpToBudget(usize),
+}
 const ANIMATED_CANVAS_BUFFERS: usize = 8;
 const RGBA_BYTES_PER_PIXEL: usize = 4;
 
@@ -37,7 +43,7 @@ pub fn image_transform_cost(
     input: &[u8],
     options: &ImageOptions,
     media_limits: &MediaLimits,
-) -> Result<usize, MediaError> {
+) -> Result<NativeCost, MediaError> {
     ensure_vips_init()?;
     let sniffed_mime = mime::sniff(input).mime;
     let dims = probe_image_dims(media_limits, input)?;
@@ -50,27 +56,29 @@ pub fn image_transform_cost(
     } else {
         source_pixels * decode_bytes_per_pixel(sniffed_mime) + output_pixels * encode
     };
-    Ok(input.len().saturating_add(pixel_cost))
+    Ok(NativeCost::Bytes(input.len().saturating_add(pixel_cost)))
 }
 
-pub fn av_native_cost(input_len: usize) -> usize {
-    input_len
-        .min(constants::MAX_MEDIA_PROXY_BYTES)
-        .saturating_add(AV_NATIVE_COST_BYTES)
+pub fn av_native_cost(input_len: usize) -> NativeCost {
+    NativeCost::UpToBudget(
+        input_len
+            .min(constants::MAX_MEDIA_PROXY_BYTES)
+            .saturating_add(AV_NATIVE_COST_BYTES),
+    )
 }
 
-pub fn metadata_cost(input: &[u8], media_limits: &MediaLimits) -> Result<usize, MediaError> {
+pub fn metadata_cost(input: &[u8], media_limits: &MediaLimits) -> Result<NativeCost, MediaError> {
     let sniffed_mime = mime::sniff(input).mime;
     match mime::category(sniffed_mime) {
         Some(mime::Category::Image) => {
             ensure_vips_init()?;
             let dims = probe_image_dims(media_limits, input)?;
             let source_pixels = dims.width as usize * dims.height as usize;
-            Ok(input
-                .len()
-                .saturating_add(source_pixels * decode_bytes_per_pixel(sniffed_mime)))
+            Ok(NativeCost::Bytes(input.len().saturating_add(
+                source_pixels * decode_bytes_per_pixel(sniffed_mime),
+            )))
         }
         Some(mime::Category::Video | mime::Category::Audio) => Ok(av_native_cost(input.len())),
-        _ => Ok(input.len()),
+        _ => Ok(NativeCost::Bytes(input.len())),
     }
 }

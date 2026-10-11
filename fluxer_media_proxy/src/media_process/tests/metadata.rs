@@ -3,7 +3,7 @@
 use super::super::nsfw_processing::{VideoNSFWFramesRequest, extract_video_frames_for_nsfw};
 use super::super::placeholder::{encode_thumbhash, optional_thumbhash};
 use super::super::{
-    AV_NATIVE_COST_BYTES, MediaError, MetadataOptions, NSFW_PREVIEW_MAX_DIMENSION,
+    AV_NATIVE_COST_BYTES, MediaError, MetadataOptions, NSFW_PREVIEW_MAX_DIMENSION, NativeCost,
     extract_video_thumbnail, metadata_cost, metadata_json_with_options, probe_av_metadata,
 };
 use super::fixtures::{metadata_value, test_media_limits};
@@ -296,7 +296,7 @@ fn metadata_refuses_an_image_past_the_buffer_bound() {
 fn native_cost_of_a_video_past_the_buffer_bound_leaves_out_the_mapped_tail() {
     let mp4 = mapped_past_the_buffer_bound(&fixture_h264_mp4());
     assert_eq!(
-        constants::MAX_MEDIA_PROXY_BYTES + AV_NATIVE_COST_BYTES,
+        NativeCost::UpToBudget(constants::MAX_MEDIA_PROXY_BYTES + AV_NATIVE_COST_BYTES),
         metadata_cost(&mp4, &test_media_limits()).expect("video cost")
     );
 }
