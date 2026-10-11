@@ -574,8 +574,8 @@ async fn serve_image_transform(
             requested_download: transform.requested_download,
         });
     }
-    let can_serve_original = transform.width.is_none()
-        && transform.height.is_none()
+    let can_serve_original = ((transform.width.is_none() && transform.height.is_none())
+        || options.is_animated())
         && is_browser_displayable_image(sniffed.mime);
     let mut too_large_original = None;
     let leader_original = &mut too_large_original;

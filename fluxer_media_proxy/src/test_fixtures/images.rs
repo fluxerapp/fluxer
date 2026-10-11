@@ -32,6 +32,7 @@ pub fn apng_header(frames: u32) -> Vec<u8> {
 
 pub const JXL_4100_LOSSY_ALPHA: &[u8] = include_bytes!("jxl_4100_lossy_alpha.jxl");
 pub const JXL_64_LOSSY_ALPHA: &[u8] = include_bytes!("jxl_64_lossy_alpha.jxl");
+pub const ANIMATED_WEBP_1024_17_FRAMES: &[u8] = include_bytes!("animated_webp_1024_17_frames.webp");
 pub const JPEG_ROTATED_MISMATCHED_SCAN: &[u8] = include_bytes!("jpeg_rotated_mismatched_scan.jpg");
 
 pub fn synthetic_png(width: u32, height: u32) -> Vec<u8> {

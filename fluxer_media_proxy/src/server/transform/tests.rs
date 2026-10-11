@@ -325,3 +325,35 @@ fn a_cache_larger_than_the_pod_takes_at_most_half_of_it() {
 fn the_budget_never_drops_below_its_floor() {
     assert_eq!(128 << 20, native_memory_budget_bytes(64 << 20, 0));
 }
+
+#[tokio::test]
+async fn an_animated_transform_over_the_work_budget_serves_the_original() {
+    let webp = crate::test_fixtures::ANIMATED_WEBP_1024_17_FRAMES;
+    let response = attachment_transform(
+        webp,
+        "anim.webp",
+        &[("format", "webp"), ("animated", "true"), ("width", "1000")],
+    )
+    .await;
+    assert_eq!(StatusCode::OK, response.status());
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("body");
+    assert_eq!(webp, body.as_ref());
+}
+
+#[tokio::test]
+async fn an_animated_transform_within_the_work_budget_is_transformed() {
+    let webp = crate::test_fixtures::ANIMATED_WEBP_1024_17_FRAMES;
+    let response = attachment_transform(
+        webp,
+        "anim.webp",
+        &[("format", "webp"), ("animated", "true"), ("width", "128")],
+    )
+    .await;
+    assert_eq!(StatusCode::OK, response.status());
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("body");
+    assert_ne!(webp, body.as_ref());
+}

@@ -182,7 +182,7 @@ impl GifResizeDims {
         (self.width as usize)
             .saturating_mul(self.height as usize)
             .saturating_mul(frames.max(1) as usize)
-            <= constants::MAX_GIF_RESIZE_OUTPUT_PIXELS
+            <= constants::MAX_ANIMATED_OUTPUT_PIXELS
     }
 }
 
