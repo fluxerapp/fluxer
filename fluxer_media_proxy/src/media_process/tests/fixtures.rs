@@ -69,6 +69,12 @@ pub(super) fn png_ihdr_dimensions(ihdr: &[u8]) -> Option<(u32, u32)> {
     ))
 }
 
+pub(super) fn png_zlib_level(bytes: &[u8]) -> Option<u8> {
+    let chunks = parse_png_chunks(bytes).ok()?;
+    let idat = chunks.iter().find(|chunk| chunk.kind == *b"IDAT")?;
+    Some(idat.data.get(1)? >> 6)
+}
+
 pub(super) fn test_media_limits() -> MediaLimits {
     MediaLimits::default_from_config()
 }

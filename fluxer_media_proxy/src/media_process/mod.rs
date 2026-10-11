@@ -154,6 +154,8 @@ pub enum MediaError {
     MediaTransformFailed,
     #[error("invalid image dimensions")]
     InvalidImageDimensions,
+    #[error("media too large to process")]
+    TooLargeToProcess,
     #[error("unsupported media type")]
     UnsupportedMediaType,
     #[error("stream too long")]

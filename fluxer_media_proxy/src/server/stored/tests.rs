@@ -2,7 +2,9 @@
 
 use super::*;
 use crate::{
-    config::Config, output_format::OutputFormat, server::asset_path::parse_standard_asset_path,
+    config::Config,
+    output_format::OutputFormat,
+    server::asset_path::{parse_simple_asset_path, parse_standard_asset_path},
     storage::Object,
 };
 use axum::{body::to_bytes, http::header};
@@ -48,6 +50,7 @@ fn asset_transform_failure(error: CoalescerError) -> Response {
         object: asset_source_object(),
         range_header: None,
         source_format: AssetExtension::Png,
+        sniffed_content_type: "image/png",
         detail: "asset key=avatars/1/abc".to_owned(),
     })
 }
@@ -239,6 +242,7 @@ fn a_transform_failure_on_a_source_the_browser_cannot_show_stays_an_error() {
             },
             range_header: None,
             source_format: AssetExtension::Svg,
+            sniffed_content_type: "image/svg+xml",
             detail: "asset key=avatars/1/abc".to_owned(),
         })
     };
@@ -250,6 +254,56 @@ fn a_transform_failure_on_a_source_the_browser_cannot_show_stays_an_error() {
         StatusCode::SERVICE_UNAVAILABLE,
         svg_failure(CoalescerError::AllocationFailed).status()
     );
+}
+
+#[test]
+fn an_octet_stream_asset_sniffed_as_an_image_browsers_cannot_show_stays_an_error() {
+    let response = asset_transform_failure_response(AssetTransformFailure {
+        method: Method::GET,
+        error: CoalescerError::TooLargeToProcess,
+        object: Object {
+            data: Bytes::from_static(&[0xff, 0x0a, 0x00, 0x00]),
+            content_type: "application/octet-stream".to_owned(),
+        },
+        range_header: None,
+        source_format: AssetExtension::Jxl,
+        sniffed_content_type: "image/jxl",
+        detail: "asset key=avatars/1/abc".to_owned(),
+    });
+    assert_eq!(StatusCode::INTERNAL_SERVER_ERROR, response.status());
+}
+
+#[tokio::test]
+async fn an_untransformable_asset_stored_as_octet_stream_serves_the_original_as_its_sniffed_type() {
+    let fake = crate::storage::tests::fake_s3().await;
+    let tmp = tempfile::tempdir().unwrap();
+    let mut cfg = fake.config(tmp.path());
+    cfg.media.transform_timeout_ms = 60_000;
+    let app = test_app_state(cfg);
+    let asset =
+        parse_simple_asset_path("/emojis/1554531234351165442.webp", AssetKind::Emoji).unwrap();
+    let mut corrupt_gif = crate::test_fixtures::minimal_gif();
+    corrupt_gif.truncate(corrupt_gif.len() - 6);
+    corrupt_gif.extend_from_slice(&[0x02, 0x02, 0xff, 0xff, 0x00, 0x3b]);
+    fake.put_object(
+        &format!("{}/{}", app.cfg.storage.bucket_cdn, asset.storage_key),
+        crate::storage::tests::FakeObject {
+            body: corrupt_gif.clone(),
+            content_type: Some("application/octet-stream".to_owned()),
+            ..crate::storage::tests::FakeObject::default()
+        },
+    );
+    let response =
+        serve_asset_image(&app, Method::GET, asset, &HashMap::new(), &HeaderMap::new()).await;
+    assert_eq!(StatusCode::OK, response.status());
+    assert_eq!(
+        Some("image/gif"),
+        response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+    );
+    assert_eq!(&corrupt_gif[..], &response_body(response).await[..]);
 }
 
 #[tokio::test]

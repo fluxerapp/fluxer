@@ -112,8 +112,10 @@ impl NativeTaskExecutor {
             .native_transforms
             .wait_until_admitted(&admission, deadline)
             .await;
+        let admitted = Instant::now();
+        let waited = admitted.duration_since(wait_started);
         self.native_metrics
-            .observe_wait(metrics::duration_millis(wait_started.elapsed()));
+            .observe_wait(metrics::duration_millis(waited));
         let permit = permit?;
         let memory = self.memory.clone();
         let capacity = self.memory_budget_bytes;
@@ -127,7 +129,7 @@ impl NativeTaskExecutor {
                         bytes,
                         capacity, "native work refused, larger than the memory budget"
                     );
-                    return Err(MediaError::InvalidImageDimensions.into());
+                    return Err(MediaError::TooLargeToProcess.into());
                 }
                 NativeCost::Bytes(bytes) => bytes,
                 NativeCost::UpToBudget(bytes) => bytes.min(capacity),
@@ -139,6 +141,15 @@ impl NativeTaskExecutor {
             work()
         })
         .await
+        .map_err(|error| {
+            let ran_short = deadline
+                .is_some_and(|deadline| deadline.saturating_duration_since(admitted) < waited);
+            if ran_short && error.downcast_ref() == Some(&MediaError::RequestTimeout) {
+                TimedSemaphoreError::RequestTimeout.into()
+            } else {
+                error
+            }
+        })
     }
 
     pub(in crate::server) fn begin_shutdown(&self) {
@@ -200,7 +211,7 @@ impl NativeTaskExecutor {
         let completion = match deadline {
             Some(deadline) => match tokio::time::timeout_at(deadline.into(), receiver).await {
                 Ok(completion) => completion,
-                Err(_) => return Err(TimedSemaphoreError::RequestTimeout.into()),
+                Err(_) => return Err(MediaError::RequestTimeout.into()),
             },
             None => receiver.await,
         };
@@ -311,8 +322,8 @@ mod tests {
             .await
             .expect_err("the task outlives its deadline");
         assert_eq!(
-            Some(&TimedSemaphoreError::RequestTimeout),
-            error.downcast_ref::<TimedSemaphoreError>()
+            Some(&MediaError::RequestTimeout),
+            error.downcast_ref::<MediaError>()
         );
         let rendered = metrics.render();
         assert_eq!(
@@ -345,6 +356,49 @@ mod tests {
             counter(&rendered, "fluxer_media_proxy_native_tasks_detached_active"),
             "a detached task decrements the active gauge when it finishes"
         );
+    }
+
+    #[tokio::test]
+    async fn a_task_admitted_late_times_out_as_an_admission_timeout() {
+        let metrics = metrics::Metrics::new();
+        let executor = Arc::new(executor(&metrics, 1, 1));
+        let (release_holder, mut holder_released) = mpsc::channel::<()>(1);
+        let (release_queued, mut queued_released) = mpsc::channel::<()>(1);
+        let holder = Arc::clone(&executor);
+        let held = tokio::spawn(async move {
+            holder
+                .run_native(
+                    None,
+                    || Ok(NativeCost::Bytes(0)),
+                    move || {
+                        holder_released.blocking_recv();
+                        Ok(())
+                    },
+                )
+                .await
+        });
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        let deadline = Instant::now() + Duration::from_millis(300);
+        let queued = executor.run_native(
+            Some(deadline),
+            || Ok(NativeCost::Bytes(0)),
+            move || {
+                queued_released.blocking_recv();
+                Ok(())
+            },
+        );
+        let release = async {
+            tokio::time::sleep(Duration::from_millis(240)).await;
+            drop(release_holder);
+        };
+        let (error, ()) = tokio::join!(queued, release);
+        let error = error.expect_err("the queued task outlives its deadline");
+        assert_eq!(
+            Some(&TimedSemaphoreError::RequestTimeout),
+            error.downcast_ref::<TimedSemaphoreError>()
+        );
+        drop(release_queued);
+        held.await.expect("held task").expect("held work");
     }
 
     #[tokio::test]
@@ -438,7 +492,7 @@ mod tests {
             .await
             .expect_err("the job exceeds the whole budget");
         assert_eq!(
-            Some(&MediaError::InvalidImageDimensions),
+            Some(&MediaError::TooLargeToProcess),
             error.downcast_ref::<MediaError>()
         );
     }

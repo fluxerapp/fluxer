@@ -25,10 +25,43 @@ fn webp_suffix(requested: EncodeEffort) -> String {
         ResolvedImageQuality::High,
         None,
         Some(requested),
+        0,
     )
     .expect("webp output suffix")
     .into_string()
     .expect("utf8 output suffix")
+}
+
+#[test]
+fn png_compression_drops_for_outputs_above_a_megapixel() {
+    let png_suffix = |output_pixels| {
+        output_suffix(
+            OutputFormat::PNG,
+            ResolvedImageQuality::High,
+            None,
+            None,
+            output_pixels,
+        )
+        .expect("png output suffix")
+        .into_string()
+        .expect("utf8 output suffix")
+    };
+    assert_eq!(
+        ".png[strip,compression=9,filter=all]",
+        png_suffix(160 * 160)
+    );
+    assert_eq!(
+        ".png[strip,compression=9,filter=all]",
+        png_suffix(1024 * 1024)
+    );
+    assert_eq!(
+        ".png[strip,compression=6,filter=all]",
+        png_suffix(1024 * 1024 + 1)
+    );
+    assert_eq!(
+        ".png[strip,compression=6,filter=all]",
+        png_suffix(3024 * 4032)
+    );
 }
 
 #[test]

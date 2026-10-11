@@ -193,7 +193,7 @@ int fluxer_read_gif_frame_delays(const uint8_t *bytes, size_t len,
         block_count++;
         uint8_t introducer = bytes[offset++];
         if (introducer == 0x3b) {
-            if (offset != len || has_pending_delay || frame_count != expected_frames) {
+            if (has_pending_delay || frame_count != expected_frames) {
                 return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
             }
             if (out_loop_count != NULL) *out_loop_count = loop_count;

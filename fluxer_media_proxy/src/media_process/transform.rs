@@ -161,10 +161,23 @@ pub fn transform_image(
         && !options.wants_cover_crop()
         && sniffed.mime == "image/gif"
     {
-        let bytes = if let Some(dims) = gif_resize_dims(sniffed, options) {
-            resize_animated_gif_with_ffmpeg(input, dims, options, media_limits)?
-        } else {
-            input.to_vec()
+        let bytes = match gif_resize_dims(sniffed, options) {
+            Some(dims) => {
+                let frames = probe_animated(media_limits, input)?.map_or(1, |probe| probe.pages);
+                if dims.fits_work_budget(frames) {
+                    resize_animated_gif_with_ffmpeg(input, dims, options, media_limits)?
+                } else {
+                    tracing::info!(
+                        input_bytes = input.len(),
+                        width = dims.width,
+                        height = dims.height,
+                        frames,
+                        "animated gif resize over the work budget, serving the source"
+                    );
+                    input.to_vec()
+                }
+            }
+            None => input.to_vec(),
         };
         return Ok(ProcessedMedia {
             bytes,
@@ -382,13 +395,9 @@ pub fn transform_image(
     }
 
     let loader_options = if animated && source_supports_pages(sniffed.mime) {
-        if sniffed.mime == "image/jpeg" {
-            "n=-1,access=sequential"
-        } else {
-            "n=-1,access=sequential,fail=true"
-        }
+        "n=-1,access=sequential,fail=true"
     } else if sniffed.mime == "image/jpeg" {
-        "access=sequential"
+        ""
     } else {
         "access=sequential,fail=true"
     };

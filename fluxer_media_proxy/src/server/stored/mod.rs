@@ -17,7 +17,8 @@ use crate::{
         attachment_signature,
         format_policy::{
             OriginalImageRequest, default_transform_quality,
-            effective_animated_image_output_format, extension_from_mime, is_svg_content_type,
+            effective_animated_image_output_format, extension_from_mime,
+            is_browser_displayable_image, is_svg_content_type,
             same_format_loaded_image_request_can_use_original_with_sniff,
         },
         media_operations::spool_stored_media,
@@ -196,6 +197,7 @@ pub(in crate::server) async fn serve_asset_image(
                 object,
                 range_header,
                 source_format,
+                sniffed_content_type: sniffed.mime,
                 detail,
             });
         }
@@ -219,11 +221,19 @@ struct AssetTransformFailure<'a> {
     object: storage::Object,
     range_header: Option<&'a str>,
     source_format: AssetExtension,
+    sniffed_content_type: &'static str,
     detail: String,
 }
 
 fn asset_transform_failure_response(failure: AssetTransformFailure<'_>) -> Response {
-    let src_ct = failure.object.content_type.as_str();
+    let stored_ct = failure.object.content_type.as_str();
+    let src_ct = if !stored_ct.starts_with("image/")
+        && is_browser_displayable_image(failure.sniffed_content_type)
+    {
+        failure.sniffed_content_type
+    } else {
+        stored_ct
+    };
     let src_is_displayable = src_ct.starts_with("image/")
         && src_ct != "image/avif"
         && src_ct != "image/heic"
@@ -234,7 +244,7 @@ fn asset_transform_failure_response(failure: AssetTransformFailure<'_>) -> Respo
         return media_response(MediaResponse {
             method: failure.method,
             data: failure.object.data.into(),
-            content_type: &failure.object.content_type,
+            content_type: src_ct,
             range_header: failure.range_header,
             disposition: None,
         });

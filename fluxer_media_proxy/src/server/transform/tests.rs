@@ -4,8 +4,9 @@ use super::*;
 use crate::{
     constants::AssetExtension,
     server::format_policy::{default_transform_quality, transform_static_quality_default},
-    test_fixtures::{fixture_h264_mp4, fixture_jpeg, synthetic_png},
+    test_fixtures::{JXL_4100_LOSSY_ALPHA, fixture_h264_mp4, fixture_jpeg, synthetic_png},
 };
+use axum::body::to_bytes;
 
 const TRANSFORM_WIDTH: u32 = 32;
 
@@ -198,6 +199,112 @@ async fn a_redundant_format_parameter_shares_the_implicit_transform_cache_entry(
             "naming the format the url already implies must not mint a second cache key"
         );
     }
+}
+
+async fn attachment_transform(data: &[u8], filename: &str, params: &[(&str, &str)]) -> Response {
+    let params = params
+        .iter()
+        .map(|(name, value)| ((*name).to_owned(), (*value).to_owned()))
+        .collect::<HashMap<_, _>>();
+    serve_bytes_or_transform(
+        &test_runtime(),
+        ServeBytesRequest {
+            method: Method::GET,
+            data: Bytes::copy_from_slice(data),
+            content_type: "application/octet-stream".to_owned(),
+            cache_identity: filename,
+            filename,
+            route: TransformRoute::Attachment,
+            params: &params,
+            headers: &HeaderMap::new(),
+        },
+    )
+    .await
+}
+
+#[tokio::test]
+async fn a_full_size_transform_too_large_to_process_serves_the_original() {
+    let png = synthetic_png(6145, 4097);
+    let response = attachment_transform(&png, "big.png", &[("format", "webp")]).await;
+    assert_eq!(StatusCode::OK, response.status());
+    assert_eq!(
+        Some("image/png"),
+        response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+    );
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("body");
+    assert_eq!(png, body);
+}
+
+#[tokio::test]
+async fn a_waiter_releases_its_source_while_the_leader_runs() {
+    const KEY: &str = "attachment:art.png|asset_kind=not-applicable|w=none|h=none|fmt=webp|q=lossless|anim=false|effort=none|resize=fit";
+    let runtime = test_runtime();
+    let params = HashMap::from([("format".to_owned(), "webp".to_owned())]);
+    let headers = HeaderMap::new();
+    let source = Bytes::from(synthetic_png(48, 48));
+    let probe = source.clone();
+    let (release, released) = tokio::sync::oneshot::channel::<()>();
+    let leader =
+        runtime
+            .cache()
+            .get_or_run(KEY.to_owned(), OutputFormat::WebP, None, || async move {
+                let _ = released.await;
+                Ok(MediaBytes::from(vec![0u8; 4]))
+            });
+    let waiter = async {
+        let response = serve_bytes_or_transform(
+            &runtime,
+            ServeBytesRequest {
+                method: Method::GET,
+                data: source,
+                content_type: "application/octet-stream".to_owned(),
+                cache_identity: "art.png",
+                filename: "art.png",
+                route: TransformRoute::Attachment,
+                params: &params,
+                headers: &headers,
+            },
+        );
+        tokio::pin!(response);
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(100), response.as_mut())
+                .await
+                .is_err(),
+            "the request waits on the running leader"
+        );
+        assert!(
+            probe.is_unique(),
+            "a waiter must not pin its source while the leader runs"
+        );
+        let _ = release.send(());
+        response.await
+    };
+    let (leader, response) = tokio::join!(leader, waiter);
+    leader.expect("leader publishes");
+    assert_eq!(StatusCode::OK, response.status());
+}
+
+#[tokio::test]
+async fn a_resized_transform_too_large_to_process_still_fails() {
+    let response = attachment_transform(
+        &synthetic_png(6145, 4097),
+        "big.png",
+        &[("format", "webp"), ("width", "6145")],
+    )
+    .await;
+    assert_eq!(StatusCode::BAD_REQUEST, response.status());
+}
+
+#[tokio::test]
+async fn a_full_size_transform_too_large_to_process_never_serves_an_undisplayable_original() {
+    let response =
+        attachment_transform(JXL_4100_LOSSY_ALPHA, "big.jxl", &[("format", "webp")]).await;
+    assert_eq!(StatusCode::BAD_REQUEST, response.status());
 }
 
 #[test]

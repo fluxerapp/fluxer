@@ -7,6 +7,7 @@ use super::{
     MediaError, native_animated_frame_limit, native_buffer_to_media_bytes, native_status_error,
 };
 use crate::{
+    constants,
     image_transform::ImageOptions,
     media_limits::MediaLimits,
     metrics::transform::TransformMetrics,
@@ -174,6 +175,15 @@ pub(super) fn decode_heif_sequence(
 pub(super) struct GifResizeDims {
     pub(super) width: c_int,
     pub(super) height: c_int,
+}
+
+impl GifResizeDims {
+    pub(super) fn fits_work_budget(self, frames: c_int) -> bool {
+        (self.width as usize)
+            .saturating_mul(self.height as usize)
+            .saturating_mul(frames.max(1) as usize)
+            <= constants::MAX_GIF_RESIZE_OUTPUT_PIXELS
+    }
 }
 
 pub(super) fn gif_resize_dims(

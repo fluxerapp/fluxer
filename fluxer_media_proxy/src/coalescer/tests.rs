@@ -50,6 +50,78 @@ async fn failure_propagates() {
 }
 
 #[tokio::test]
+async fn work_that_ran_out_its_deadline_answers_retries_without_running_again() {
+    let coalescer = coalescer();
+    let runs = AtomicU32::new(0);
+    for _ in 0..2 {
+        let err = coalescer
+            .run_once_until(
+                "slow-gif",
+                None,
+                || async {
+                    runs.fetch_add(1, Ordering::SeqCst);
+                    Err::<MediaBytes, _>(MediaError::RequestTimeout.into())
+                },
+                |_| {},
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(CoalescerError::RequestTimeout, err);
+    }
+    assert_eq!(1, runs.load(Ordering::SeqCst));
+    coalescer
+        .run_once_until(
+            "another-gif",
+            None,
+            || async { Ok(MediaBytes::from(b"fresh".to_vec())) },
+            |_| {},
+        )
+        .await
+        .expect("other keys still run");
+}
+
+#[tokio::test]
+async fn shed_admissions_and_other_failures_are_not_remembered() {
+    let coalescer = coalescer();
+    let runs = AtomicU32::new(0);
+    for error in [
+        CoalescerError::RequestTimeout,
+        CoalescerError::RequestTimeout,
+        CoalescerError::AllocationFailed,
+    ] {
+        assert_eq!(
+            error,
+            coalescer
+                .run_once_until(
+                    "shed",
+                    None,
+                    || async {
+                        runs.fetch_add(1, Ordering::SeqCst);
+                        Err::<MediaBytes, _>(error.into())
+                    },
+                    |_| {},
+                )
+                .await
+                .unwrap_err()
+        );
+    }
+    for _ in 0..2 {
+        let _ = coalescer
+            .run_once_until(
+                "broken",
+                None,
+                || async {
+                    runs.fetch_add(1, Ordering::SeqCst);
+                    Err::<MediaBytes, _>(MediaError::MediaDecodeFailed.into())
+                },
+                |_| {},
+            )
+            .await;
+    }
+    assert_eq!(5, runs.load(Ordering::SeqCst));
+}
+
+#[tokio::test]
 async fn waiter_can_time_out_behind_a_slow_leader() {
     let coalescer = coalescer();
     let leader = coalescer.clone();

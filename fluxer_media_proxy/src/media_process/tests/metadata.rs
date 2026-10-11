@@ -267,7 +267,7 @@ fn metadata_refuses_jxl_above_the_decode_pixel_cap() {
             .await
             .unwrap_err()
         });
-    assert_eq!(MediaError::InvalidImageDimensions, err);
+    assert_eq!(MediaError::TooLargeToProcess, err);
 }
 
 #[test]

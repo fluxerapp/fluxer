@@ -67,7 +67,7 @@ pub(crate) fn validate_jxl_decode_pixels(
         .saturating_mul(dims.height as usize)
         .saturating_mul(dims.pages.max(1) as usize);
     if pixels > constants::MAX_JXL_DECODE_PIXELS {
-        return Err(MediaError::InvalidImageDimensions);
+        return Err(MediaError::TooLargeToProcess);
     }
     Ok(())
 }
@@ -96,7 +96,7 @@ pub(crate) fn validate_static_output_pixels(
     dims: ImageDimensions,
 ) -> Result<(), MediaError> {
     if static_output_pixels(options, dims) > constants::MAX_STATIC_OUTPUT_PIXELS {
-        return Err(MediaError::InvalidImageDimensions);
+        return Err(MediaError::TooLargeToProcess);
     }
     Ok(())
 }

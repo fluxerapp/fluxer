@@ -123,19 +123,17 @@ pub(in crate::server) async fn run_video_transform(
 }
 
 pub(in crate::server) fn coalesced_work_result<T>(result: anyhow::Result<T>) -> anyhow::Result<T> {
-    match result {
-        Ok(value) => Ok(value),
-        Err(error) if transform_error_is_timeout(&error) => {
-            Err(anyhow::Error::new(CoalescerError::RequestTimeout))
+    let Err(error) = result else {
+        return result;
+    };
+    let retyped = match error.downcast_ref::<TimedSemaphoreError>() {
+        Some(TimedSemaphoreError::QueueFull | TimedSemaphoreError::RequestTimeout) => {
+            CoalescerError::RequestTimeout
         }
-        Err(error)
-            if error.downcast_ref::<TimedSemaphoreError>()
-                == Some(&TimedSemaphoreError::Closed) =>
-        {
-            Err(anyhow::Error::new(CoalescerError::Unavailable))
-        }
-        Err(error) => Err(error),
-    }
+        Some(TimedSemaphoreError::Closed) => CoalescerError::Unavailable,
+        None => return Err(error),
+    };
+    Err(anyhow::Error::new(retyped))
 }
 
 pub(in crate::server) fn transform_error_is_timeout(error: &anyhow::Error) -> bool {
@@ -186,6 +184,12 @@ mod tests {
         assert_eq!(
             Some(&MediaError::MediaDecodeFailed),
             failed.downcast_ref::<MediaError>()
+        );
+        let ran_out = coalesced_work_result::<()>(Err(MediaError::RequestTimeout.into()))
+            .expect_err("work that ran out its deadline passes through");
+        assert_eq!(
+            Some(&MediaError::RequestTimeout),
+            ran_out.downcast_ref::<MediaError>()
         );
     }
 

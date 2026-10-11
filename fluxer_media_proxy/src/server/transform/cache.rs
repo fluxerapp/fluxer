@@ -52,7 +52,10 @@ where
         .cache()
         .get_or_run(cache_key, format, deadline, work)
         .await;
-    if matches!(result, Err(CoalescerError::WorkFailed)) {
+    if matches!(
+        result,
+        Err(CoalescerError::WorkFailed | CoalescerError::TooLargeToProcess)
+    ) {
         runtime.metrics().record_transform_failure();
     }
     result
@@ -63,7 +66,7 @@ pub(in crate::server) fn coalescer_failure_response(
     timeout_code: &'static str,
 ) -> Option<Response> {
     let reason = match error {
-        CoalescerError::WorkFailed => return None,
+        CoalescerError::WorkFailed | CoalescerError::TooLargeToProcess => return None,
         CoalescerError::RequestTimeout => {
             return Some(text_with_reason(
                 StatusCode::GATEWAY_TIMEOUT,
