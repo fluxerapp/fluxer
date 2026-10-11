@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::branding_images::BrandingSnapshot;
 use crate::config::HttpEndpoint;
 use crate::local_files::{LocalFileResponseOptions, serve_text_file};
 use crate::state::{AppState, MAX_STATIC_TEXT_FILE_BYTES};
@@ -28,33 +29,70 @@ pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> 
 }
 
 pub async fn manifest_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    let branding = state.config.self_hosted.then(|| state.branding.snapshot());
     serve_static_text_file_with_substitutions(
         &state,
         &headers,
         "manifest.json",
         "application/manifest+json",
         state.config.static_cdn_endpoint.as_ref(),
-        Some(&state.config.manifest_scope_extensions),
+        |text| {
+            finish_manifest(
+                text,
+                &state.config.manifest_scope_extensions,
+                branding.as_deref(),
+            )
+        },
     )
     .await
 }
 
-fn with_scope_extensions(text: String, origins: &[String]) -> String {
-    if origins.is_empty() {
+fn finish_manifest(
+    text: String,
+    scope_extension_origins: &[String],
+    branding: Option<&BrandingSnapshot>,
+) -> String {
+    if scope_extension_origins.is_empty() && branding.is_none() {
         return text;
     }
     let Ok(serde_json::Value::Object(mut manifest)) = serde_json::from_str(&text) else {
         return text;
     };
-    let scope_extensions = origins
-        .iter()
-        .map(|origin| serde_json::json!({ "type": "origin", "origin": origin }))
-        .collect();
-    manifest.insert(
-        "scope_extensions".to_owned(),
-        serde_json::Value::Array(scope_extensions),
-    );
+    if !scope_extension_origins.is_empty() {
+        let scope_extensions = scope_extension_origins
+            .iter()
+            .map(|origin| serde_json::json!({ "type": "origin", "origin": origin }))
+            .collect();
+        manifest.insert(
+            "scope_extensions".to_owned(),
+            serde_json::Value::Array(scope_extensions),
+        );
+    }
+    if let Some(branding) = branding {
+        apply_manifest_branding(&mut manifest, branding);
+    }
     serde_json::to_string_pretty(&manifest).unwrap_or(text)
+}
+
+fn apply_manifest_branding(
+    manifest: &mut serde_json::Map<String, serde_json::Value>,
+    branding: &BrandingSnapshot,
+) {
+    manifest.remove("description");
+    if let Some(product_name) = &branding.product_name {
+        for key in ["name", "short_name"] {
+            manifest.insert(key.to_owned(), serde_json::json!(&**product_name));
+        }
+    }
+    if let Some(theme_color) = &branding.theme_color {
+        manifest.insert("theme_color".to_owned(), serde_json::json!(&**theme_color));
+    }
+    if let Some(icon_url) = &branding.icon_url {
+        manifest.insert(
+            "icons".to_owned(),
+            serde_json::json!([{ "src": &**icon_url, "sizes": "any", "purpose": "any" }]),
+        );
+    }
 }
 
 pub async fn browserconfig_xml(State(state): State<AppState>, headers: HeaderMap) -> Response {
@@ -104,7 +142,7 @@ async fn serve_static_text_file_with_cdn(
         filename,
         content_type,
         static_cdn_endpoint,
-        None,
+        |text| text,
     )
     .await
 }
@@ -115,7 +153,7 @@ async fn serve_static_text_file_with_substitutions(
     filename: &str,
     content_type: &'static str,
     static_cdn_endpoint: Option<&HttpEndpoint>,
-    scope_extensions: Option<&[String]>,
+    finish: impl FnOnce(String) -> String,
 ) -> Response {
     let replacement = static_cdn_endpoint.map_or("", HttpEndpoint::as_str);
     let mut response = serve_text_file(
@@ -129,10 +167,7 @@ async fn serve_static_text_file_with_substitutions(
             max_bytes: MAX_STATIC_TEXT_FILE_BYTES,
         },
         &[("{{STATIC_CDN_ENDPOINT}}", replacement)],
-        |text| match scope_extensions {
-            Some(origins) => with_scope_extensions(text, origins),
-            None => text,
-        },
+        finish,
     )
     .await;
     apply_static_resource_security_policy(response.headers_mut(), state.csp.asset_header());
@@ -150,7 +185,7 @@ mod tests {
     ) -> String {
         let text = text.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn_endpoint);
         match scope_extensions {
-            Some(origins) => with_scope_extensions(text, origins),
+            Some(origins) => finish_manifest(text, origins, None),
             None => text,
         }
     }
@@ -227,5 +262,206 @@ mod tests {
             substitute_placeholders(BUILT_MANIFEST, "", None),
             BUILT_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "")
         );
+    }
+
+    const GENERATED_MANIFEST: &str = r##"{
+  "name": "Fluxer",
+  "short_name": "Fluxer",
+  "description": "Fluxer is a free and open source instant messaging and VoIP platform built for friends, groups, and communities.",
+  "id": "/",
+  "start_url": "/app",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#4641D9",
+  "background_color": "#2b2d31",
+  "categories": ["social", "communication"],
+  "lang": "en",
+  "scope": "/",
+  "scope_extensions": [],
+  "icons": [
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}"##;
+
+    fn branded_manifest(branding: &BrandingSnapshot) -> serde_json::Value {
+        let text = finish_manifest(
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", ""),
+            &[],
+            Some(branding),
+        );
+        serde_json::from_str(&text).expect("a branded manifest must stay valid JSON")
+    }
+
+    fn assert_installable_shape(manifest: &serde_json::Value) {
+        for key in ["name", "short_name", "id", "start_url", "scope", "display"] {
+            assert!(
+                manifest[key]
+                    .as_str()
+                    .is_some_and(|value| !value.is_empty()),
+                "the manifest lost its {key}"
+            );
+        }
+        let icons = manifest["icons"]
+            .as_array()
+            .expect("the manifest lost its icons");
+        assert!(icons.iter().any(|icon| {
+            icon["src"].as_str().is_some_and(|src| !src.is_empty())
+                && icon["purpose"]
+                    .as_str()
+                    .is_some_and(|purpose| purpose.split(' ').any(|purpose| purpose == "any"))
+        }));
+    }
+
+    #[test]
+    fn a_self_hosted_manifest_takes_the_instance_branding() {
+        let manifest = branded_manifest(&BrandingSnapshot {
+            product_name: Some("Example Chat".into()),
+            icon_url: Some("https://example.test/icon.png".into()),
+            favicon_url: Some("https://example.test/favicon.png".into()),
+            theme_color: Some("#7b2ce4".into()),
+            ..BrandingSnapshot::default()
+        });
+
+        assert_eq!(manifest["name"], "Example Chat");
+        assert_eq!(manifest["short_name"], "Example Chat");
+        assert_eq!(manifest["theme_color"], "#7b2ce4");
+        assert_eq!(
+            manifest["icons"],
+            serde_json::json!([{
+                "src": "https://example.test/icon.png",
+                "sizes": "any",
+                "purpose": "any"
+            }])
+        );
+        assert!(manifest.get("description").is_none());
+        assert_eq!(manifest["background_color"], "#2b2d31");
+        assert_eq!(manifest["start_url"], "/app");
+        assert_installable_shape(&manifest);
+    }
+
+    #[test]
+    fn an_unbranded_self_hosted_manifest_only_loses_its_description() {
+        let manifest = branded_manifest(&BrandingSnapshot::default());
+
+        let mut expected: serde_json::Value =
+            serde_json::from_str(&GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", ""))
+                .unwrap();
+        expected.as_object_mut().unwrap().remove("description");
+        assert_eq!(manifest, expected);
+        assert_installable_shape(&manifest);
+    }
+
+    #[test]
+    fn a_branded_product_name_stays_a_json_string() {
+        let product_name = "A \"quoted\" \\ name</script>\n\u{2028}";
+        let manifest = branded_manifest(&BrandingSnapshot {
+            product_name: Some(product_name.into()),
+            ..BrandingSnapshot::default()
+        });
+
+        assert_eq!(manifest["name"], product_name);
+        assert_eq!(manifest["short_name"], product_name);
+    }
+
+    #[test]
+    fn the_official_manifest_is_left_byte_identical() {
+        let text =
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "https://fluxerstatic.com");
+        assert_eq!(finish_manifest(text.clone(), &[], None), text);
+    }
+
+    fn static_dir_with_generated_files() -> std::path::PathBuf {
+        static NEXT_DIR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let unique = NEXT_DIR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let root =
+            std::env::temp_dir().join(format!("fluxer-spa-static-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("manifest.json"), GENERATED_MANIFEST).unwrap();
+        root
+    }
+
+    fn state_serving(root: &std::path::Path, self_hosted: bool) -> AppState {
+        let mut config = crate::config::AppProxyConfig::from_env();
+        config.static_dir = root.to_str().unwrap().to_owned();
+        config.static_cdn_endpoint = None;
+        config.manifest_scope_extensions = Vec::new();
+        config.self_hosted = self_hosted;
+        config.branding = BrandingSnapshot {
+            product_name: Some("Example".into()),
+            icon_url: Some("https://example.test/icon.png".into()),
+            favicon_url: Some("https://example.test/favicon.png".into()),
+            theme_color: Some("#7b2ce4".into()),
+            ..BrandingSnapshot::default()
+        };
+        let csp = std::sync::Arc::new(
+            crate::csp::CompiledCspPolicy::from_config(&config)
+                .expect("the test configuration must compile to a valid CSP"),
+        );
+        let budgets = crate::state::AppProxyBudgets::default();
+        let local_files = crate::local_files::LocalFileStore::load_blocking(root, &budgets)
+            .expect("the test static directory must load");
+        AppState {
+            branding: crate::branding_images::InstanceBranding::from_config(&config),
+            config: std::sync::Arc::new(config),
+            csp,
+            http_client: reqwest::Client::new(),
+            spa_index_source: crate::state::SpaIndexSource::bundled(""),
+            local_asset_prefixes: None,
+            budgets,
+            local_files,
+        }
+    }
+
+    async fn fetch(state: AppState, path: &str) -> Response {
+        use tower::ServiceExt as _;
+        crate::routes::build_router(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri(path)
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap()
+    }
+
+    async fn body_of(response: Response) -> String {
+        let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        String::from_utf8(bytes.to_vec()).unwrap()
+    }
+
+    #[tokio::test]
+    async fn the_served_manifest_is_branded_only_on_a_self_hosted_instance() {
+        let root = static_dir_with_generated_files();
+
+        let official = fetch(state_serving(&root, false), "/manifest.json").await;
+        assert_eq!(official.status(), StatusCode::OK);
+        assert_eq!(
+            body_of(official).await,
+            GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+
+        let self_hosted = fetch(state_serving(&root, true), "/manifest.json").await;
+        assert_eq!(self_hosted.status(), StatusCode::OK);
+        let manifest: serde_json::Value =
+            serde_json::from_str(&body_of(self_hosted).await).unwrap();
+        assert_eq!(manifest["name"], "Example");
+        assert_eq!(manifest["icons"][0]["src"], "https://example.test/icon.png");
+        assert_installable_shape(&manifest);
+
+        std::fs::remove_dir_all(root).unwrap();
     }
 }

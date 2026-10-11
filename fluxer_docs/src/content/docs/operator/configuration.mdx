@@ -1236,7 +1236,7 @@ Compose forwards every name below from `.env`. The admin dashboard also sets the
 
 A brand asset on another origin than the instance needs no CSP setting. `app-proxy` adds the origin of each of the five image URLs below to `img-src`, whether the URL is set here or in the dashboard. [Content Security Policy](#content-security-policy) has the timing.
 
-`app-proxy` on a self-hosted instance also writes the product name, the icon, the favicon and the theme colour into the page it serves, so a browser shows them before the web app starts. The page title and the home screen name use the product name. The home screen icon uses the icon, or the favicon when no icon is set. The browser favicon uses the favicon, or the icon when no favicon is set. It takes these values the same way as the image origins, from this environment at start and then from the dashboard.
+`app-proxy` on a self-hosted instance also writes the product name, the icon, the favicon and the theme colour into the page it serves, so a browser shows them before the web app starts. The page title and the home screen name use the product name. The home screen icon uses the icon, or the favicon when no icon is set. The browser favicon uses the favicon, or the icon when no favicon is set. The install manifest at `/manifest.json` takes the product name, the theme colour and the icon, and leaves out the Fluxer description. It takes these values the same way as the image origins, from this environment at start and then from the dashboard.
 
 #### `FLUXER_APP_PRODUCT_NAME`
 
