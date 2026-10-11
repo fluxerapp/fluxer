@@ -36,7 +36,8 @@ pub struct NotificationFields {
     pub title: String,
     pub body: String,
     pub icon: String,
-    pub badge: String,
+    #[serde(default)]
+    pub badge: Option<String>,
     pub tag: String,
     pub notification_tag: String,
     pub url: String,
@@ -163,6 +164,15 @@ mod tests {
         assert_eq!(job.parent_id, None);
         assert_eq!(job.parent_name, None);
         assert_eq!(job.channel_name, None);
+    }
+
+    #[test]
+    fn a_job_without_a_badge_decodes() {
+        let job = decode_message(
+            br#"{"v":1,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"t","body":"b","icon":"i","tag":"x","notification_tag":"y","url":"/u"},"user_ids":["8"]}"#,
+        )
+        .expect("the job decodes");
+        assert_eq!(job.notification.badge, None);
     }
 
     #[test]

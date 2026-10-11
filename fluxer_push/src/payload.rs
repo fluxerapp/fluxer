@@ -65,27 +65,28 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
         "has_media": image_url.is_some(),
     });
     merge_thread_fields(&mut data, job);
-    let notification = json!({
+    let badge = fields.badge.as_deref();
+    let mut notification = json!({
         "title": fields.title,
         "body": fields.body,
         "icon": fields.icon,
-        "badge": fields.badge,
         "tag": fields.tag,
         "navigate": fields.url,
         "app_badge": badge_count.to_string(),
         "data": data,
     });
+    insert_present(&mut notification, "badge", badge);
     let mut envelope = json!({
         "web_push": WEB_PUSH_MARKER,
         "notification": notification,
         "title": fields.title,
         "body": fields.body,
         "icon": fields.icon,
-        "badge": fields.badge,
         "tag": fields.tag,
         "data": data,
     });
-    merge_image_fields(&mut envelope, image_url);
+    insert_present(&mut envelope, "badge", badge);
+    insert_present(&mut envelope, "image_url", image_url);
     envelope
 }
 
@@ -617,11 +618,11 @@ fn first_text<'a>(envelope: &'a Value, key: &str) -> Option<&'a str> {
         .or_else(|| envelope.get("notification")?.get(key).and_then(non_empty))
 }
 
-fn merge_image_fields(target: &mut Value, image_url: Option<&str>) {
-    let (Some(image_url), Some(object)) = (image_url, target.as_object_mut()) else {
+fn insert_present(target: &mut Value, key: &str, value: Option<&str>) {
+    let (Some(value), Some(object)) = (value, target.as_object_mut()) else {
         return;
     };
-    object.insert("image_url".to_owned(), image_url.into());
+    object.insert(key.to_owned(), value.into());
 }
 
 fn non_empty(value: &Value) -> Option<&str> {
@@ -651,7 +652,7 @@ mod tests {
                 title: "Elias".to_owned(),
                 body: "see you tomorrow".to_owned(),
                 icon: "https://media.fluxer.app/avatars/1/a.webp".to_owned(),
-                badge: "https://media.fluxer.app/badge.png".to_owned(),
+                badge: Some("https://media.fluxer.app/badge.png".to_owned()),
                 tag: format!("channel:{CHANNEL_ID}:{MESSAGE_ID}"),
                 notification_tag: format!("channel:{CHANNEL_ID}"),
                 url: format!("/channels/@me/{CHANNEL_ID}"),
@@ -724,6 +725,28 @@ mod tests {
             message["message"]["android"]["notification"]["click_action"],
             json!("FLUXER_MESSAGE")
         );
+    }
+
+    #[test]
+    fn a_message_with_a_badge_sends_it_in_both_places() {
+        let envelope = web_push_message(&message_job(None), USER_ID, 3);
+        assert_eq!(
+            envelope["badge"],
+            json!("https://media.fluxer.app/badge.png")
+        );
+        assert_eq!(
+            envelope["notification"]["badge"],
+            json!("https://media.fluxer.app/badge.png")
+        );
+    }
+
+    #[test]
+    fn a_message_without_a_badge_leaves_the_key_out() {
+        let mut job = message_job(None);
+        job.notification.badge = None;
+        let envelope = web_push_message(&job, USER_ID, 3);
+        assert!(envelope.get("badge").is_none());
+        assert!(envelope["notification"].get("badge").is_none());
     }
 
     #[test]
