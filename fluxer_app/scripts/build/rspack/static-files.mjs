@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import {sources} from '@rspack/core';
+import {HtmlRspackPlugin, sources} from '@rspack/core';
 
 const STATIC_CDN_ENDPOINT_PLACEHOLDER = '{{STATIC_CDN_ENDPOINT}}';
 
@@ -104,22 +105,41 @@ export class StaticFilesPlugin {
 	}
 
 	emitLicenseFiles(compilation, dir, files, subject) {
+		const assetNames = new Map();
 		if (!dir) {
-			return;
+			return assetNames;
 		}
 		for (const {source, asset} of files) {
 			const sourcePath = path.join(dir, source);
+			compilation.fileDependencies.add(sourcePath);
 			if (!fs.existsSync(sourcePath)) {
 				throw new Error(
 					`StaticFilesPlugin: ${sourcePath} is missing. The bundled ${subject} may not be redistributed without it.`,
 				);
 			}
-			compilation.emitAsset(asset, new sources.RawSource(fs.readFileSync(sourcePath)));
+			const content = fs.readFileSync(sourcePath);
+			const extension = path.extname(asset);
+			const hash = createHash('sha256').update(content).digest('hex').slice(0, 16);
+			const name = `${asset.slice(0, -extension.length)}.${hash}${extension}`;
+			compilation.emitAsset(name, new sources.RawSource(content));
+			assetNames.set(source, name);
 		}
+		return assetNames;
 	}
 
 	apply(compiler) {
 		compiler.hooks.thisCompilation.tap('StaticFilesPlugin', (compilation) => {
+			let fontNoticeAsset;
+			HtmlRspackPlugin.getCompilationHooks(compilation).alterAssetTagGroups.tap('StaticFilesPlugin', (data) => {
+				if (fontNoticeAsset) {
+					data.headTags.push({
+						tagName: 'link',
+						voidTag: true,
+						attributes: {rel: 'license', href: `${data.publicPath}${fontNoticeAsset}`},
+					});
+				}
+				return data;
+			});
 			compilation.hooks.processAssets.tap(
 				{
 					name: 'StaticFilesPlugin',
@@ -132,7 +152,9 @@ export class StaticFilesPlugin {
 						new sources.RawSource(generateBrowserConfig(this.staticCdnEndpoint)),
 					);
 					compilation.emitAsset('robots.txt', new sources.RawSource(generateRobotsTxt()));
-					this.emitLicenseFiles(compilation, this.fontsDir, FONT_LICENSE_FILES, 'fonts');
+					fontNoticeAsset = this.emitLicenseFiles(compilation, this.fontsDir, FONT_LICENSE_FILES, 'fonts').get(
+						'NOTICE.md',
+					);
 					this.emitLicenseFiles(compilation, this.wasmCratesDir, WASM_LICENSE_FILES, 'WebAssembly modules');
 				},
 			);
