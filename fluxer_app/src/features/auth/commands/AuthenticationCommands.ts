@@ -9,7 +9,7 @@ import {type InstanceHTTPTarget, instanceRequest} from '@app/features/platform/t
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode, ipAuthorizationRequiredResponseFromError} from '@app/features/platform/utils/ResponseInspection';
-import UserSettings from '@app/features/user/state/UserSettings';
+import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {
@@ -27,7 +27,7 @@ import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} 
 
 const logger = new Logger('AuthService');
 const withAuthLocaleHeader = (headers?: Record<string, string>): Record<string, string> => ({
-	'Accept-Language': UserSettings.locale,
+	'Accept-Language': getCurrentOrDetectedLocale(),
 	...(headers ?? {}),
 });
 
