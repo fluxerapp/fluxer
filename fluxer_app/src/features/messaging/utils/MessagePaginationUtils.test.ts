@@ -1,21 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	calculateAroundPaginationState,
-	getAroundWindowCounts,
-	mergeAscendingById,
-} from '@app/features/messaging/utils/MessagePaginationUtils';
+import {calculateAroundPaginationState, mergeAscendingById} from '@app/features/messaging/utils/MessagePaginationUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('MessagePaginationUtils', () => {
-	it('splits around windows with the newer side receiving the extra item for even limits', () => {
-		expect(getAroundWindowCounts(0)).toEqual({newer: 0, older: 0});
-		expect(getAroundWindowCounts(1)).toEqual({newer: 0, older: 0});
-		expect(getAroundWindowCounts(2)).toEqual({newer: 1, older: 0});
-		expect(getAroundWindowCounts(50)).toEqual({newer: 25, older: 24});
-		expect(getAroundWindowCounts(51)).toEqual({newer: 25, older: 25});
-	});
-
 	it('keeps newer pagination open when an oldest-edge around response fills the newer side', () => {
 		const state = calculateAroundPaginationState({
 			limit: 50,
@@ -50,16 +38,6 @@ describe('MessagePaginationUtils', () => {
 describe('mergeAscendingById', () => {
 	const ID = {a: '1519773906704011264', b: '1519773906708205568', c: '1519773906712399872'};
 
-	it('appends when every incoming message is newer than the tail', () => {
-		const existing = [{id: ID.a}];
-		expect(mergeAscendingById(existing, [{id: ID.b}, {id: ID.c}])).toEqual([{id: ID.a}, {id: ID.b}, {id: ID.c}]);
-	});
-
-	it('returns the existing list untouched for an empty page', () => {
-		const existing = [{id: ID.a}];
-		expect(mergeAscendingById(existing, [])).toBe(existing);
-	});
-
 	it('interleaves a recovered message that is older than a live message already at the tail', () => {
 		expect(mergeAscendingById([{id: ID.a}, {id: ID.c}], [{id: ID.b}])).toEqual([{id: ID.a}, {id: ID.b}, {id: ID.c}]);
 	});
@@ -67,9 +45,5 @@ describe('mergeAscendingById', () => {
 	it('keeps the whole page in order when it spans a live message already at the tail', () => {
 		expect(mergeAscendingById([{id: ID.a}, {id: ID.b}], [{id: ID.c}])).toEqual([{id: ID.a}, {id: ID.b}, {id: ID.c}]);
 		expect(mergeAscendingById([{id: ID.b}], [{id: ID.a}, {id: ID.c}])).toEqual([{id: ID.a}, {id: ID.b}, {id: ID.c}]);
-	});
-
-	it('appends onto an empty window', () => {
-		expect(mergeAscendingById([], [{id: ID.a}])).toEqual([{id: ID.a}]);
 	});
 });

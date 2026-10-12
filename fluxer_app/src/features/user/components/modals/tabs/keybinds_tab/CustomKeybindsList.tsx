@@ -4,6 +4,7 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
+import {combosLooseEqual} from '@app/features/input/utils/KeybindComboUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {RetryIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {Button} from '@app/features/ui/button/Button';
@@ -13,11 +14,12 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {getCustomKeybindActionLabelMap} from '@app/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions';
 import {CustomKeybindRow} from '@app/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow';
+import {comboMatchesQuery, normalizeQuery} from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
 import {
-	comboMatchesQuery,
-	combosLooseEqual,
-	normalizeQuery,
-} from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+	CUSTOM_SHORTCUTS_DESCRIPTOR,
+	RESET_TO_DEFAULTS_DESCRIPTOR,
+	SYNC_SHORTCUTS_DESCRIPTOR as SYNC_SHORTCUTS_ACROSS_DEVICES_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
@@ -37,22 +39,12 @@ const THIS_REMOVES_EVERY_CUSTOM_SHORTCUT_AND_RE_ENABLES_DESCRIPTOR = msg({
 	message: 'This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone.',
 	comment: 'Error message in the keybinds tab. Keep the tone plain and specific.',
 });
-const RESET_TO_DEFAULTS_DESCRIPTOR = msg({
-	message: 'Reset to defaults',
-	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
-});
+
 const DISABLE_BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
 	message: 'Disable built-ins',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
-const SYNC_SHORTCUTS_ACROSS_DEVICES_DESCRIPTOR = msg({
-	message: 'Sync shortcuts',
-	comment: 'Label in the keybinds tab.',
-});
-const CUSTOM_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Custom shortcuts',
-	comment: 'Short heading in the keybinds tab.',
-});
+
 const SHORTCUTS_ARE_PAUSED_WHILE_RECORDING_DESCRIPTOR = msg({
 	message: 'Shortcuts are paused while recording.',
 	comment: 'Short helper text in the keybinds tab.',

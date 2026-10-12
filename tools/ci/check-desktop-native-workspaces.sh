@@ -13,10 +13,7 @@ mode="${1:-}"
 
 linux_workspaces=(
 	"app-store/Cargo.toml"
-	"audio-apm/Cargo.toml"
-	"encoder-ring/Cargo.toml"
 	"gateway-socket/Cargo.toml"
-	"gpu-rebuild/Cargo.toml"
 	"hardware-encoder/Cargo.toml"
 	"linux-audio-capture/Cargo.toml"
 	"linux-evdev/Cargo.toml"
@@ -25,8 +22,7 @@ linux_workspaces=(
 	"linux-portals/Cargo.toml"
 	"platform-info/Cargo.toml"
 	"rt-thread/Cargo.toml"
-	"rust/Cargo.toml"
-	"screen-frame-bus/Cargo.toml"
+	"sample-pool/Cargo.toml"
 	"system-hunspell/Cargo.toml"
 	"webauthn/Cargo.toml"
 )

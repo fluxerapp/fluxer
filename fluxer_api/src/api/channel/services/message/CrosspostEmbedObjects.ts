@@ -3,6 +3,8 @@
 import type {ChannelID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {MessageEmbed, MessageEmbedChild, MessageEmbedMedia} from '@app/api/database/types/MessageTypes';
+import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {Message} from '@app/api/models/Message';
 
 const EMBED_MEDIA_FIELDS = ['image', 'thumbnail', 'video', 'audio'] as const;
@@ -55,4 +57,28 @@ export function collectEmbedContentHashes(message: Message): Array<string> {
 		},
 	);
 	return hashes;
+}
+
+export function scanMessageForModeration(message: Message, context: Omit<ModerationContext, 'surface'>): void {
+	const textContext = {...context, surface: 'message_content' as const};
+	contentModerationService.scanText(message.content, textContext);
+	for (const embed of message.embeds) {
+		if (embed.type !== 'rich') continue;
+		contentModerationService.scanText(embed.title, textContext);
+		contentModerationService.scanText(embed.description, textContext);
+		for (const field of embed.fields) {
+			contentModerationService.scanText(field.name, textContext);
+			contentModerationService.scanText(field.value, textContext);
+		}
+		contentModerationService.scanText(embed.footer?.text, textContext);
+		contentModerationService.scanText(embed.author?.name, textContext);
+	}
+	for (const attachment of message.attachments) {
+		if (attachment.contentHash) {
+			contentModerationService.scanSha256(attachment.contentHash, {...context, surface: 'message_attachment'});
+		}
+	}
+	for (const contentHash of collectEmbedContentHashes(message)) {
+		contentModerationService.scanSha256(contentHash, {...context, surface: 'message_attachment'});
+	}
 }

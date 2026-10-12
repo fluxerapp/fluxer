@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "बहुत ज़्यादा फ़ाइलें। अधिकतम {maxFiles} {maxFiles, plural, one {फ़ाइल} other {फ़ाइल}} की अनुमति है।",
 	"attachments_and_uploads.unresolved_attachment_url": "अनसुलझा `attachment://` URL पाया गया। इसे एम्बेड प्रोसेसिंग से पहले हल किया जाना चाहिए था।",
 	"attachments_and_uploads.uploaded_attachment_not_found": "अपलोड किया गया अटैचमेंट {filename} नहीं मिला।",
-	"auth_and_oauth.application_not_owned": "आप इस एप्लीकेशन के मालिक नहीं हैं।",
 	"auth_and_oauth.bot_already_in_guild": "यह बॉट पहले से ही कम्युनिटी में है।",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "बॉट यूज़र ऑथेंटिकेशन सेशन नहीं बना सकते हैं।",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "बॉट यूज़र ऑथेंटिकेशन एंडपॉइंट का इस्तेमाल नहीं कर सकते।",

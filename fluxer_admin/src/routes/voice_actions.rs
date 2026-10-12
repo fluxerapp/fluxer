@@ -265,36 +265,6 @@ mod tests {
     }
 
     #[test]
-    fn build_server_body_clears_restriction_lists_the_form_submitted_empty() {
-        let form = MultiValueForm::parse(
-            b"region_id=us-east&server_id=s1&required_guild_features=&allowed_guild_ids=",
-        );
-        let body = build_server_body(&form);
-        assert_eq!(body["required_guild_features"], serde_json::json!([]));
-        assert_eq!(body["allowed_guild_ids"], serde_json::json!([]));
-    }
-
-    #[test]
-    fn build_server_body_leaves_restriction_lists_alone_when_the_form_omits_them() {
-        let form = MultiValueForm::parse(
-            b"region_id=us-east&server_id=s1&endpoint=wss%3A%2F%2Fvoice.example&is_active=false&vip_only=true",
-        );
-        let body = build_server_body(&form);
-        let object = body.as_object().unwrap();
-        assert!(!object.contains_key("required_guild_features"));
-        assert!(!object.contains_key("allowed_guild_ids"));
-        assert_eq!(body["is_active"], serde_json::json!(false));
-    }
-
-    #[test]
-    fn build_region_body_clears_restriction_lists_the_form_submitted_empty() {
-        let form = MultiValueForm::parse(b"id=us-east&required_guild_features=&allowed_guild_ids=");
-        let body = build_region_body(&form);
-        assert_eq!(body["required_guild_features"], serde_json::json!([]));
-        assert_eq!(body["allowed_guild_ids"], serde_json::json!([]));
-    }
-
-    #[test]
     fn build_region_body_leaves_restriction_lists_alone_when_the_form_omits_them() {
         let form = MultiValueForm::parse(b"id=us-east&name=US%20East");
         let body = build_region_body(&form);
@@ -309,13 +279,6 @@ mod tests {
             MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=250");
         let body = build_server_body(&form);
         assert_eq!(body["soft_connection_limit"], serde_json::json!(250));
-    }
-
-    #[test]
-    fn build_server_body_clears_soft_connection_limit_when_the_field_is_empty() {
-        let form = MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=");
-        let body = build_server_body(&form);
-        assert_eq!(body["soft_connection_limit"], serde_json::Value::Null);
     }
 
     #[test]

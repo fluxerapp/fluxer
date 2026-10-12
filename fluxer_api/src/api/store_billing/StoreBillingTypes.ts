@@ -105,3 +105,7 @@ export interface StorePurchaseSnapshot {
 	region: string | null;
 	lastEventAt: Date;
 }
+
+export function normalizeAccountToken(token: string | null | undefined): string | null {
+	return token ? token.toLowerCase() : null;
+}

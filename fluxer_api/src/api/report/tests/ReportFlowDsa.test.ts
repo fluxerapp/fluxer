@@ -31,7 +31,6 @@ import {
 } from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -39,6 +38,7 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {ReportFlowResponse, ReportFlowTargetType} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {TestEmailService} from '@pkgs/email/src/TestEmailService';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ReportResponse {

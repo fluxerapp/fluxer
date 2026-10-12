@@ -6,7 +6,6 @@ import {DIRECT_MESSAGES_DESCRIPTOR, FAVORITES_DESCRIPTOR} from '@app/features/i1
 import Navigation from '@app/features/navigation/state/Navigation';
 import {isInternalChannelHost} from '@app/features/navigation/utils/DeepLinkUtils';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import type {I18n} from '@lingui/core';
@@ -67,13 +66,11 @@ function findPageByPath(pathname: string): AppPageDefinition | null {
 }
 
 export function parseAppPagePath(path: string): AppPageId | null {
-	if (!PlutoniumPageRollout.enabled) return null;
 	const pathname = path.split(/[?#]/, 1)[0] ?? '';
 	return findPageByPath(pathname)?.id ?? null;
 }
 
 export function parseAppPageLink(rawUrl: string): AppPageId | null {
-	if (!PlutoniumPageRollout.enabled) return null;
 	let parsed: URL;
 	try {
 		parsed = new URL(rawUrl);

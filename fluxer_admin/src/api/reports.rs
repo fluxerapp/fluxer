@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::{snowflake, types::UpdateReportRequestResolution};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -51,7 +53,8 @@ impl AdminApiClient {
             body["public_comment"] = serde_json::Value::from(public_comment);
         }
         body["notify_reporter"] = serde_json::Value::from(notify_reporter);
-        self.patch_with_reason(
+        self.send(
+            Method::PATCH,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),
             audit_log_reason,
@@ -69,7 +72,8 @@ impl AdminApiClient {
             "legal_hold_until": legal_hold_until,
             "legal_hold_reason": legal_hold_until.and(legal_hold_reason),
         });
-        self.post_with_reason(
+        self.send(
+            Method::POST,
             &format!(
                 "/admin/reports/{}/legal-hold",
                 urlencoding::encode(report_id)
@@ -85,9 +89,10 @@ impl AdminApiClient {
         report_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        self.delete_void_with_reason(
+        self.send_void(
+            Method::DELETE,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
-            None,
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await

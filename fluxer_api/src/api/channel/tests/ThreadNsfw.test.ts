@@ -12,12 +12,8 @@ import {
 	createGuild,
 	updateChannel,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {EmbedService} from '@app/api/infrastructure/EmbedService';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
@@ -47,7 +43,7 @@ describe('thread nsfw scope', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -55,12 +51,11 @@ describe('thread nsfw scope', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'nsfw');

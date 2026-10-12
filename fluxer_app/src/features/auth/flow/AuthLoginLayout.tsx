@@ -12,7 +12,13 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import {AccountSelector} from '@app/features/auth/components/accounts/AccountSelector';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {AuthSsoPanel, CONTINUE_WITH_SSO_DESCRIPTOR, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {
+	AuthSsoPanel,
+	CONTINUE_WITH_SSO_DESCRIPTOR,
+	isInstanceSsoAvailable,
+	isSsoLoginEnforced,
+	resolveAuthPanelSso,
+} from '@app/features/auth/flow/AuthSsoPanel';
 import {
 	AuthLoginBrowserStep,
 	resolveShouldOfferBrowserStep,
@@ -32,7 +38,7 @@ import {
 	DesktopHandoffMode,
 	selectAuthLoginStep,
 } from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
-import {useAuthLoginFlow} from '@app/features/auth/flow/auth_login_core/useAuthLoginFlow';
+import {hasInitialIdentifier, useAuthLoginFlow} from '@app/features/auth/flow/auth_login_core/useAuthLoginFlow';
 import {useDesktopHandoffFlow} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import {
 	SIGN_IN_WITH_OLD_APP_DESCRIPTOR,
@@ -119,7 +125,6 @@ export interface AuthLoginLayoutProps {
 	readonly forceCredentials?: boolean;
 	readonly startWithAddAccount?: boolean;
 	readonly runtimeTarget: AuthRuntimeTarget;
-	readonly showInstanceSelector?: boolean | null;
 	readonly ssoRedirectPath?: string | null;
 	readonly suppressInlineBackButtons?: boolean;
 	readonly initialIdentifier?: string | null;
@@ -174,17 +179,6 @@ function getInitialInstanceUrl(snapshot: RuntimeConfigSnapshot | null): string |
 	return describeAPIEndpoint(snapshot.apiEndpoint);
 }
 
-function isInstanceSsoAvailable(ssoConfig: InstanceSsoConfig | null): boolean {
-	return ssoConfig?.enabled === true;
-}
-
-function isSsoLoginEnforced(ssoConfig: InstanceSsoConfig | null): boolean {
-	if (!isInstanceSsoAvailable(ssoConfig)) {
-		return false;
-	}
-	return ssoConfig?.enforced === true;
-}
-
 function resolveEmailsEnabled(snapshot: RuntimeConfigSnapshot | null): boolean {
 	return snapshot?.features.emails_enabled ?? false;
 }
@@ -234,13 +228,6 @@ function resolveSsoRedirectPath({
 		return handoffLocationPath;
 	}
 	return redirectPath;
-}
-
-function hasInitialIdentifier(initialIdentifier: string | null): boolean {
-	if (initialIdentifier == null) {
-		return false;
-	}
-	return initialIdentifier !== '';
 }
 
 function resolveShouldUseDesktopClientSetup({
@@ -417,7 +404,6 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	forceCredentials = false,
 	startWithAddAccount = false,
 	runtimeTarget,
-	showInstanceSelector = null,
 	ssoRedirectPath: explicitSsoRedirectPath = null,
 	suppressInlineBackButtons = false,
 	initialIdentifier = null,
@@ -428,7 +414,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	const currentAccountKey = Accounts.currentAccountKey;
 	const accounts = switcherAccounts();
 	const hasStoredAccounts = accounts.length > 0;
-	const shouldShowInstanceSelector = shouldRenderInstanceStep(showInstanceSelector);
+	const shouldShowInstanceSelector = shouldRenderInstanceStep();
 	const [isStartingSso, setIsStartingSso] = useState(false);
 	const resolvedAuthRuntimeSnapshot = runtimeTarget.snapshot;
 	const initialInstanceSelected = runtimeTarget.initialSnapshot != null;

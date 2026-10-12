@@ -1,36 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {ChannelOverwriteResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import type {GuildInviteMetadataResponse} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-
-export async function createGuild(harness: ApiTestHarness, token: string, name: string): Promise<GuildResponse> {
-	return createBuilder<GuildResponse>(harness, token).post('/guilds').body({name}).execute();
-}
-
-export async function createChannel(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	name: string,
-	type = 0,
-): Promise<ChannelResponse> {
-	return createBuilder<ChannelResponse>(harness, token)
-		.post(`/guilds/${guildId}/channels`)
-		.body({name, type})
-		.execute();
-}
-
-export async function getChannel(harness: ApiTestHarness, token: string, channelId: string): Promise<ChannelResponse> {
-	return createBuilder<ChannelResponse>(harness, token).get(`/channels/${channelId}`).execute();
-}
 
 export async function updateChannel(
 	harness: ApiTestHarness,
@@ -48,93 +25,6 @@ export async function updateChannel(
 
 export async function deleteChannel(harness: ApiTestHarness, token: string, channelId: string): Promise<void> {
 	return createBuilder<void>(harness, token).delete(`/channels/${channelId}`).expect(204).execute();
-}
-
-export async function createChannelInvite(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-): Promise<GuildInviteMetadataResponse> {
-	return createBuilder<GuildInviteMetadataResponse>(harness, token)
-		.post(`/channels/${channelId}/invites`)
-		.body({})
-		.execute();
-}
-
-export async function acceptInvite(
-	harness: ApiTestHarness,
-	token: string,
-	inviteCode: string,
-): Promise<{
-	guild: GuildResponse;
-}> {
-	return createBuilder<{
-		guild: GuildResponse;
-	}>(harness, token)
-		.post(`/invites/${inviteCode}`)
-		.body(null)
-		.execute();
-}
-
-export async function createRole(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	role: Partial<Omit<GuildRoleResponse, 'id' | 'position'>>,
-): Promise<GuildRoleResponse> {
-	return createBuilder<GuildRoleResponse>(harness, token).post(`/guilds/${guildId}/roles`).body(role).execute();
-}
-
-export async function updateRole(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	roleId: string,
-	updates: Partial<GuildRoleResponse>,
-): Promise<GuildRoleResponse> {
-	return createBuilder<GuildRoleResponse>(harness, token)
-		.patch(`/guilds/${guildId}/roles/${roleId}`)
-		.body(updates)
-		.execute();
-}
-
-export async function addMemberRole(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	userId: string,
-	roleId: string,
-): Promise<void> {
-	return createBuilder<void>(harness, token)
-		.put(`/guilds/${guildId}/members/${userId}/roles/${roleId}`)
-		.expect(204)
-		.execute();
-}
-
-export async function getMember(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	userId: string,
-): Promise<GuildMemberResponse> {
-	return createBuilder<GuildMemberResponse>(harness, token).get(`/guilds/${guildId}/members/${userId}`).execute();
-}
-
-export async function getGuild(harness: ApiTestHarness, token: string, guildId: string): Promise<GuildResponse> {
-	return createBuilder<GuildResponse>(harness, token).get(`/guilds/${guildId}`).execute();
-}
-
-export async function updateGuild(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	updates: Partial<GuildResponse>,
-): Promise<GuildResponse> {
-	return createBuilder<GuildResponse>(harness, token).patch(`/guilds/${guildId}`).body(updates).execute();
-}
-
-export async function leaveGuild(harness: ApiTestHarness, token: string, guildId: string): Promise<void> {
-	return createBuilder<void>(harness, token).delete(`/users/@me/guilds/${guildId}`).expect(204).execute();
 }
 
 export async function createPermissionOverwrite(
@@ -191,14 +81,6 @@ export interface MinimalChannelResponse {
 		id: string;
 		username: string;
 	}>;
-}
-
-export async function createFriendship(harness: ApiTestHarness, user1: TestAccount, user2: TestAccount): Promise<void> {
-	await createBuilder<unknown>(harness, user1.token)
-		.post(`/users/@me/relationships/${user2.userId}`)
-		.body({})
-		.execute();
-	await createBuilder<unknown>(harness, user2.token).put(`/users/@me/relationships/${user1.userId}`).body({}).execute();
 }
 
 export async function createDmChannel(
@@ -351,4 +233,26 @@ export async function seedPrivateChannels(
 		.post(`/test/users/${userId}/private-channels`)
 		.body(params)
 		.execute();
+}
+
+export {
+	acceptInvite,
+	addMemberRole,
+	createChannel,
+	createChannelInvite,
+	createGuild,
+	createRole,
+	getChannel,
+	getGuild,
+	getMember,
+	leaveGuild,
+	updateGuild,
+	updateRole,
+} from '@app/api/guild/tests/GuildTestUtils';
+export async function createFriendship(harness: ApiTestHarness, user1: TestAccount, user2: TestAccount): Promise<void> {
+	await createBuilder<unknown>(harness, user1.token)
+		.post(`/users/@me/relationships/${user2.userId}`)
+		.body({})
+		.execute();
+	await createBuilder<unknown>(harness, user2.token).put(`/users/@me/relationships/${user1.userId}`).body({}).execute();
 }

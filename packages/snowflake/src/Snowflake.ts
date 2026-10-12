@@ -164,10 +164,6 @@ export function createSnowflake(options: CreateSnowflakeOptions): bigint {
 	return createSnowflakeBigInt(relativeTimestamp, workerId, sequence);
 }
 
-export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
-	return createSnowflake({timestamp, workerId});
-}
-
 export function snowflakeToDate(snowflake: bigint): Date {
 	return new Date(Number(toEpochTimestamp(snowflake >> TIMESTAMP_SHIFT)));
 }
@@ -193,4 +189,8 @@ export function isValidSnowflake(value: unknown): value is bigint {
 		return false;
 	}
 	return true;
+}
+
+export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
+	return createSnowflake({timestamp, workerId});
 }

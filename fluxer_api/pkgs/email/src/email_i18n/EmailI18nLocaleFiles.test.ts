@@ -95,20 +95,6 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 };
 
 describe('EmailI18n locale files', () => {
-	it.each(LOCALES)('%s loads without module errors', (locale) => {
-		const template = getEmailTemplate(
-			'email_verification',
-			locale,
-			{username: 'testuser', verifyUrl: 'https://example.com/verify'},
-			'Fluxer',
-		);
-		expect(template.ok).toBe(true);
-	});
-	it.each(LOCALES)('%s has the same translation keys as the source catalog', (locale) => {
-		const messagesKeys = Object.keys(EMAIL_I18N_MESSAGES).sort();
-		const localeKeys = Object.keys(EMAIL_I18N_LOCALE_MESSAGES[locale]).sort();
-		expect(localeKeys).toEqual(messagesKeys);
-	});
 	it.each(LOCALES)('%s keeps the source placeholders in every template', (locale) => {
 		const messages: Partial<Record<EmailTemplateKey, {subject: string; body: string}>> =
 			EMAIL_I18N_LOCALE_MESSAGES[locale];

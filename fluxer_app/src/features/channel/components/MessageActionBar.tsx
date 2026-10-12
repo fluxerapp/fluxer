@@ -14,8 +14,8 @@ import {REACT_WITH_EMOJI_DESCRIPTOR} from '@app/features/channel/components/Quic
 import type {Channel} from '@app/features/channel/models/Channel';
 import {useQuickReactionEmojis} from '@app/features/channel/state/QuickReactionStore';
 import {MessageDebugModal} from '@app/features/devtools/components/debug/MessageDebugModal';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
+import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiDisplayData} from '@app/features/expressions/utils/SkinToneUtils';
@@ -179,7 +179,7 @@ const QuickReactionButton = observer(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
 				event.preventDefault();
 				event.stopPropagation();
-				EmojiPickerCommands.trackEmojiUsage(emoji);
+				EmojiPicker.trackEmoji(emoji);
 				onReact(emoji);
 			},
 			[emoji, onReact],

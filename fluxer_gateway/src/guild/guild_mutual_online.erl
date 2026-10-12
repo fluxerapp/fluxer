@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_mutual_online).
--typing([eqwalizer]).
-
--export([compute_count/2]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([compute_count/2]).
 
 -export_type([user_id/0, guild_state/0]).
 
@@ -21,7 +21,7 @@
 compute_count(UserId, State) when is_integer(UserId), UserId > 0 ->
     case viewer_sees_everything(UserId, State) of
         true ->
-            guild_member_list:get_online_count(State);
+            guild_member_list_read:get_online_count(State);
         false ->
             slow_count(UserId, State)
     end;
@@ -31,11 +31,11 @@ compute_count(_, _) ->
 -spec viewer_sees_everything(user_id(), guild_state()) -> boolean().
 viewer_sees_everything(UserId, State) ->
     Perms = guild_permissions:get_member_permissions(UserId, undefined, State),
-    permission_bits:has(Perms, constants:administrator_permission()).
+    bitset:has(Perms, constants:administrator_permission()).
 
 -spec slow_count(user_id(), guild_state()) -> non_neg_integer().
 slow_count(UserId, State) ->
-    ViewerSet = guild_visibility:viewable_channel_set(UserId, State),
+    ViewerSet = guild_visibility_channels:viewable_channel_set(UserId, State),
     case sets:is_empty(ViewerSet) of
         true ->
             self_online_count(UserId, State);
@@ -115,7 +115,7 @@ viewer_channel_map(ViewerSet, State) ->
         false ->
             sets:fold(fun(ChannelId, Acc) -> Acc#{ChannelId => true} end, #{}, ViewerSet);
         true ->
-            Index = guild_data_index:channel_index(maps:get(data, State, #{})),
+            Index = guild_data_index_channels:channel_index(maps:get(data, State, #{})),
             sets:fold(
                 fun(ChannelId, Acc) -> put_shared(ChannelId, Index, Acc) end, #{}, ViewerSet
             )
@@ -373,7 +373,7 @@ disconnected_online_row_is_not_counted_test() ->
     State = Base#{connected_user_ids => sets:from_list([10, 20, 40])},
     ?assertNot(guild_member_list_connected:user_is_online(30, State)),
     ?assertEqual(1, compute_count(10, State)),
-    ViewerSet = guild_visibility:viewable_channel_set(10, State),
+    ViewerSet = guild_visibility_channels:viewable_channel_set(10, State),
     ?assertEqual(
         reference_count_mutually_visible(10, ViewerSet, State), compute_count(10, State)
     ).
@@ -388,7 +388,7 @@ counts_only_members_the_member_list_shows_online_test() ->
     lists:foreach(
         fun(Connected) ->
             State = Base#{connected_user_ids => sets:from_list(Connected)},
-            ViewerSet = guild_visibility:viewable_channel_set(10, State),
+            ViewerSet = guild_visibility_channels:viewable_channel_set(10, State),
             Expected = length([
                 U
              || U <- [10, 20, 30, 40],
@@ -396,7 +396,7 @@ counts_only_members_the_member_list_shows_online_test() ->
                 U =:= 10 orelse
                     not sets:is_empty(
                         sets:intersection(
-                            ViewerSet, guild_visibility:viewable_channel_set(U, State)
+                            ViewerSet, guild_visibility_channels:viewable_channel_set(U, State)
                         )
                     )
             ]),
@@ -443,7 +443,7 @@ reference_count_online_member(_UserId, _ViewerSet, _State, _OtherUserId, _Presen
     user_id(), sets:set(), guild_state(), non_neg_integer()
 ) -> non_neg_integer().
 reference_count_if_mutually_visible(OtherUserId, ViewerSet, State, Acc) ->
-    OtherSet = guild_visibility:viewable_channel_set(OtherUserId, State),
+    OtherSet = guild_visibility_channels:viewable_channel_set(OtherUserId, State),
     case sets:is_empty(sets:intersection(ViewerSet, OtherSet)) of
         true -> Acc;
         false -> Acc + 1
@@ -543,7 +543,7 @@ overwrite(Id, Type, Allow, Deny) ->
     }.
 
 reference_slow_count(UserId, State) ->
-    ViewerSet = guild_visibility:viewable_channel_set(UserId, State),
+    ViewerSet = guild_visibility_channels:viewable_channel_set(UserId, State),
     case sets:is_empty(ViewerSet) of
         true -> self_online_count(UserId, State);
         false -> reference_count_mutually_visible(UserId, ViewerSet, State)

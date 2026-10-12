@@ -6,26 +6,24 @@ import {mapGuildStickersWithUsersToResponse, mapGuildStickerToResponse} from '@a
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ContentHelpers} from '@app/api/guild/services/content/ContentHelpers';
 import type {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
+import {getLocalizedBulkCreateError, resolveGuildLimit} from '@app/api/guild/services/content/ExpressionHelpers';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import type {User} from '@app/api/models/User';
+import {serializeStickerForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GUILD_EXPRESSION_SLOTS_UNLIMITED, MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MaxGuildStickersStaticError} from '@fluxer/errors/src/domains/guild/MaxGuildStickersStaticError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
-import {FluxerError} from '@fluxer/errors/src/FluxerError';
-import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
-import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {
 	GuildStickerResponse,
 	GuildStickerWithUserResponse,
@@ -43,31 +41,13 @@ export class StickerService {
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
-	private resolveGuildLimit(key: LimitKey, fallback: number, guildFeatures: Iterable<string> | null): number {
-		const ctx = createLimitMatchContext({user: null, guildFeatures});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, key, {
-			evaluationContext: 'guild',
-		});
-		if (!Number.isFinite(resolved) || resolved < 0) {
-			return fallback;
-		}
-		return Math.floor(resolved);
-	}
-
-	private getLocalizedBulkCreateError(error: unknown, locale: string | null | undefined): string {
-		if (error instanceof FluxerError) {
-			return getErrorMessageUnsafe(error.code, locale, error.messageVariables, error.message);
-		}
-		return getContentMessage('guild.bulk_create.unknown_error', locale);
-	}
-
 	async getStickers(params: {
 		userId: UserID;
 		guildId: GuildID;
 		requestCache: RequestCache;
 	}): Promise<Array<GuildStickerWithUserResponse>> {
 		const {userId, guildId, requestCache} = params;
-		await this.contentHelpers.getGuildData({userId, guildId});
+		await this.gatewayService.getGuildData({userId, guildId});
 		const stickers = await this.guildRepository.listStickers(guildId);
 		return await mapGuildStickersWithUsersToResponse(stickers, this.userCacheService, requestCache);
 	}
@@ -94,15 +74,15 @@ export class StickerService {
 		contentModerationService.scanText(name, stickerModCtx);
 		contentModerationService.scanText(description, stickerModCtx);
 		contentModerationService.scanText(tags.join(' '), stickerModCtx);
-		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});
-		await this.contentHelpers.checkCreateExpressionsPermission({userId: user.id, guildId});
+		const guildData = await this.gatewayService.getGuildData({userId: user.id, guildId});
+		await this.contentHelpers.checkPermission({userId: user.id, guildId, permission: Permissions.CREATE_EXPRESSIONS});
 		const allStickers = await this.guildRepository.listStickers(guildId);
 		const stickerCount = allStickers.length;
 		const guildFeatures = guildData.features;
 		const hasUnlimitedStickers = guildFeatures.includes(GuildFeatures.UNLIMITED_STICKERS);
 		const maxStickers = hasUnlimitedStickers
 			? MAX_GUILD_EXPRESSION_SLOTS_UNLIMITED
-			: this.resolveGuildLimit('max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
+			: resolveGuildLimit(this.limitConfigService, 'max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
 		if (stickerCount >= maxStickers) {
 			throw new MaxGuildStickersStaticError(maxStickers);
 		}
@@ -125,16 +105,13 @@ export class StickerService {
 		});
 		const updatedStickers = [...allStickers, sticker];
 		await this.dispatchGuildStickersUpdate({guildId, stickers: updatedStickers});
-		await this.contentHelpers.recordAuditLog({
+		await this.contentHelpers.guildAuditLogService.record({
 			guildId,
 			userId: user.id,
 			action: AuditLogActionType.STICKER_CREATE,
 			targetId: sticker.id,
 			auditLogReason: auditLogReason ?? null,
-			changes: this.contentHelpers.guildAuditLogService.computeChanges(
-				null,
-				this.contentHelpers.serializeStickerForAudit(sticker),
-			),
+			changes: this.contentHelpers.guildAuditLogService.computeChanges(null, serializeStickerForAudit(sticker)),
 		});
 		return mapGuildStickerToResponse(sticker);
 	}
@@ -154,15 +131,15 @@ export class StickerService {
 		if (!sourceGuild?.features.has(GuildFeatures.CLONE_STICKER_ENABLED)) {
 			throw new MissingAccessError();
 		}
-		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});
-		await this.contentHelpers.checkCreateExpressionsPermission({userId: user.id, guildId});
+		const guildData = await this.gatewayService.getGuildData({userId: user.id, guildId});
+		await this.contentHelpers.checkPermission({userId: user.id, guildId, permission: Permissions.CREATE_EXPRESSIONS});
 		const allStickers = await this.guildRepository.listStickers(guildId);
 		const stickerCount = allStickers.length;
 		const guildFeatures = guildData.features;
 		const hasUnlimitedStickers = guildFeatures.includes(GuildFeatures.UNLIMITED_STICKERS);
 		const maxStickers = hasUnlimitedStickers
 			? MAX_GUILD_EXPRESSION_SLOTS_UNLIMITED
-			: this.resolveGuildLimit('max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
+			: resolveGuildLimit(this.limitConfigService, 'max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
 		if (stickerCount >= maxStickers) {
 			throw new MaxGuildStickersStaticError(maxStickers);
 		}
@@ -180,16 +157,13 @@ export class StickerService {
 		});
 		const updatedStickers = [...allStickers, sticker];
 		await this.dispatchGuildStickersUpdate({guildId, stickers: updatedStickers});
-		await this.contentHelpers.recordAuditLog({
+		await this.contentHelpers.guildAuditLogService.record({
 			guildId,
 			userId: user.id,
 			action: AuditLogActionType.STICKER_CREATE,
 			targetId: sticker.id,
 			auditLogReason: auditLogReason ?? null,
-			changes: this.contentHelpers.guildAuditLogService.computeChanges(
-				null,
-				this.contentHelpers.serializeStickerForAudit(sticker),
-			),
+			changes: this.contentHelpers.guildAuditLogService.computeChanges(null, serializeStickerForAudit(sticker)),
 		});
 		return mapGuildStickerToResponse(sticker);
 	}
@@ -214,14 +188,14 @@ export class StickerService {
 		}>;
 	}> {
 		const {user, guildId, stickers} = params;
-		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});
-		await this.contentHelpers.checkCreateExpressionsPermission({userId: user.id, guildId});
+		const guildData = await this.gatewayService.getGuildData({userId: user.id, guildId});
+		await this.contentHelpers.checkPermission({userId: user.id, guildId, permission: Permissions.CREATE_EXPRESSIONS});
 		const allStickers = await this.guildRepository.listStickers(guildId);
 		const guildFeatures = guildData.features;
 		const hasUnlimitedStickers = guildFeatures.includes(GuildFeatures.UNLIMITED_STICKERS);
 		const maxStickers = hasUnlimitedStickers
 			? MAX_GUILD_EXPRESSION_SLOTS_UNLIMITED
-			: this.resolveGuildLimit('max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
+			: resolveGuildLimit(this.limitConfigService, 'max_guild_stickers', MAX_GUILD_STICKERS, guildFeatures);
 		let stickerCount = allStickers.length;
 		const success: Array<GuildStickerResponse> = [];
 		const failed: Array<{
@@ -271,7 +245,7 @@ export class StickerService {
 				newStickers.push(sticker);
 				success.push(mapGuildStickerToResponse(sticker));
 			} catch (error) {
-				failed.push({name: stickerData.name, error: this.getLocalizedBulkCreateError(error, user.locale)});
+				failed.push({name: stickerData.name, error: getLocalizedBulkCreateError(error, user.locale)});
 			}
 		}
 		if (newStickers.length > 0) {
@@ -279,16 +253,13 @@ export class StickerService {
 			await this.dispatchGuildStickersUpdate({guildId, stickers: updatedStickers});
 			await Promise.all(
 				newStickers.map((sticker) =>
-					this.contentHelpers.recordAuditLog({
+					this.contentHelpers.guildAuditLogService.record({
 						guildId,
 						userId: user.id,
 						action: AuditLogActionType.STICKER_CREATE,
 						targetId: sticker.id,
 						auditLogReason: auditLogReason ?? null,
-						changes: this.contentHelpers.guildAuditLogService.computeChanges(
-							null,
-							this.contentHelpers.serializeStickerForAudit(sticker),
-						),
+						changes: this.contentHelpers.guildAuditLogService.computeChanges(null, serializeStickerForAudit(sticker)),
 					}),
 				),
 			);
@@ -322,7 +293,7 @@ export class StickerService {
 		const sticker = allStickers.find((e) => e.id === stickerId);
 		if (!sticker) throw new UnknownGuildStickerError();
 		await this.contentHelpers.checkModifyExpressionPermission({userId, guildId, creatorId: sticker.creatorId});
-		const previousSnapshot = this.contentHelpers.serializeStickerForAudit(sticker);
+		const previousSnapshot = serializeStickerForAudit(sticker);
 		const updatedSticker = await this.guildRepository.upsertSticker({
 			...sticker.toRow(),
 			name,
@@ -331,7 +302,7 @@ export class StickerService {
 		});
 		const updatedStickers = allStickers.map((e) => (e.id === stickerId ? updatedSticker : e));
 		await this.dispatchGuildStickersUpdate({guildId, stickers: updatedStickers});
-		await this.contentHelpers.recordAuditLog({
+		await this.contentHelpers.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.STICKER_UPDATE,
@@ -339,7 +310,7 @@ export class StickerService {
 			auditLogReason: auditLogReason ?? null,
 			changes: this.contentHelpers.guildAuditLogService.computeChanges(
 				previousSnapshot,
-				this.contentHelpers.serializeStickerForAudit(updatedSticker),
+				serializeStickerForAudit(updatedSticker),
 			),
 		});
 		return mapGuildStickerToResponse(updatedSticker);
@@ -355,7 +326,7 @@ export class StickerService {
 		auditLogReason?: string | null,
 	): Promise<void> {
 		const {userId, guildId, stickerId, purge = false} = params;
-		const guildData = await this.contentHelpers.getGuildData({userId, guildId});
+		const guildData = await this.gatewayService.getGuildData({userId, guildId});
 		if (purge && !guildData.features.includes(GuildFeatures.EXPRESSION_PURGE_ALLOWED)) {
 			throw new MissingAccessError();
 		}
@@ -363,14 +334,14 @@ export class StickerService {
 		const sticker = allStickers.find((e) => e.id === stickerId);
 		if (!sticker) throw new UnknownGuildStickerError();
 		await this.contentHelpers.checkModifyExpressionPermission({userId, guildId, creatorId: sticker.creatorId});
-		const previousSnapshot = this.contentHelpers.serializeStickerForAudit(sticker);
+		const previousSnapshot = serializeStickerForAudit(sticker);
 		await this.guildRepository.deleteSticker(guildId, stickerId);
 		const updatedStickers = allStickers.filter((e) => e.id !== stickerId);
 		await this.dispatchGuildStickersUpdate({guildId, stickers: updatedStickers});
 		if (purge) {
 			await this.assetPurger.purgeSticker(sticker.id.toString());
 		}
-		await this.contentHelpers.recordAuditLog({
+		await this.contentHelpers.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.STICKER_DELETE,

@@ -96,7 +96,7 @@ viewable_thread(Session, ThreadId, State) ->
 
 -spec session_can_view(map(), map(), guild_state()) -> boolean().
 session_can_view(#{user_id := UserId}, Thread, State) when is_integer(UserId) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> false;
         Member -> guild_thread_view:can_view(UserId, Thread, Member, State)
     end;
@@ -261,7 +261,7 @@ needs_resync(_Session, _Tab) ->
 
 -spec send_list_sync(pid(), integer(), [integer()] | all | joined, guild_state()) -> ok.
 send_list_sync(Pid, UserId, Parents, #{id := GuildId} = State) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     Payload = guild_thread_view:list_sync(GuildId, UserId, Parents, Member, State),
     gateway_dispatch_relay:dispatch(Pid, thread_list_sync, Payload, GuildId).
 
@@ -527,7 +527,7 @@ list_member(UserId, ThreadMember, Ctx, State) ->
         #{}, UserId, Ctx
     ),
     GuildMember =
-        case guild_data_members:find_member_by_user_id(UserId, State) of
+        case guild_permissions_check:find_member_by_user_id(UserId, State) of
             undefined -> null;
             M -> M
         end,

@@ -55,7 +55,7 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 	const user = Users.currentUser;
 	const showPremium = shouldShowPremiumFeatures();
 	const maxAttachmentFileSize = user?.maxAttachmentFileSize ?? 25 * 1024 * 1024;
-	const premiumMaxAttachmentFileSize = Limits.getPremiumValue('max_attachment_file_size', ATTACHMENT_MAX_SIZE_PREMIUM);
+	const premiumMaxAttachmentFileSize = Limits.getStockValue('max_attachment_file_size', ATTACHMENT_MAX_SIZE_PREMIUM);
 	const canUpgradeAttachmentLimit = maxAttachmentFileSize < premiumMaxAttachmentFileSize;
 	const maxSizeFormatted = formatFileSize(i18n.locale, maxAttachmentFileSize);
 	const hasKnownOversizedFileCount = oversizedFileCount != null;

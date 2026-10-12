@@ -18,7 +18,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.ACLS_MUST_BE_NON_EMPTY]: 'admin_and_system.acls_must_be_non_empty',
 	[APIErrorCodes.ADMIN_API_KEY_NOT_FOUND]: 'admin_and_system.admin_api_key_not_found',
 	[APIErrorCodes.ANNOUNCEMENT_CHANNEL_REQUIRED]: 'channels_and_guilds.announcement_channel_required',
-	[APIErrorCodes.APPLICATION_NOT_OWNED]: 'auth_and_oauth.application_not_owned',
 	[APIErrorCodes.ALREADY_FRIENDS]: 'friends_and_dms.already_friends',
 	[APIErrorCodes.CHANNEL_ALREADY_FOLLOWED]: 'channels_and_guilds.channel_already_followed',
 	[APIErrorCodes.CHANNEL_HAS_FOLLOWED_CHANNELS]: 'channels_and_guilds.channel_has_followed_channels',

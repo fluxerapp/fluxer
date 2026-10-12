@@ -153,6 +153,8 @@ export const ListUserDmChannelsRequest = z
 
 export type ListUserDmChannelsRequest = z.infer<typeof ListUserDmChannelsRequest>;
 
+export type AdminResolvedUser = z.infer<typeof AdminResolvedUserSchema>;
+
 const AdminResolvedUserSchema = z.object({
 	id: SnowflakeStringType,
 	username: z.string(),

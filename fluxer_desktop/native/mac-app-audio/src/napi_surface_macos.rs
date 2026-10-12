@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use core::ffi::c_void;
-use core::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
 use std::time::Duration;
 
 use block2::RcBlock;
-use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSinkHandleRef};
-use napi::JsValue;
 use napi::Status;
-use napi::bindgen_prelude::{Float32Array, Function, Result, Unknown, ValueType};
+use napi::bindgen_prelude::{Float32Array, Function, Result};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 
@@ -93,7 +90,6 @@ unsafe impl Sync for SckRefresherStream {}
 struct LoopbackInner {
     state: Mutex<LoopbackState>,
     frame_tsfn: parking_lot::RwLock<Option<FrameTsfn>>,
-    screen_audio_sink: parking_lot::RwLock<Option<Arc<NativeScreenFrameSinkHandleRef>>>,
     pcm_pool: PcmFramePool,
     pcm_frames_dropped: AtomicU64,
     running: std::sync::atomic::AtomicBool,
@@ -117,36 +113,6 @@ fn note_tsfn_status(inner: &LoopbackInner, status: Status) {
             .tsfn_aborted
             .store(true, std::sync::atomic::Ordering::Release);
     }
-}
-
-fn retain_screen_audio_sink_handle(
-    value: Unknown<'_>,
-) -> Result<Arc<NativeScreenFrameSinkHandleRef>> {
-    if value.get_type()? != ValueType::External {
-        return Err(napi::Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink expects a native external sink handle",
-        ));
-    }
-    let raw_value = value.value();
-    let mut data: *mut c_void = ptr::null_mut();
-    let status =
-        unsafe { napi::sys::napi_get_value_external(raw_value.env, raw_value.value, &mut data) };
-    if status != napi::sys::Status::napi_ok || data.is_null() {
-        return Err(napi::Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
-        ));
-    }
-    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
-        .and_then(NativeScreenFrameSinkHandle::retain_ref)
-        .ok_or_else(|| {
-            napi::Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-            )
-        })?;
-    Ok(Arc::new(handle))
 }
 
 #[napi(js_name = "ProcessLoopback")]
@@ -196,20 +162,6 @@ unsafe extern "C" fn on_pcm_trampoline(
     }
     if !inner.running.load(std::sync::atomic::Ordering::Acquire) {
         inner.pcm_frames_dropped.fetch_add(1, Ordering::Relaxed);
-        return;
-    }
-    if let Some(sink) = inner.screen_audio_sink.read().as_ref().cloned() {
-        let Some(frame) = (unsafe { &mut *slot }).take() else {
-            return;
-        };
-        assert_eq!(frame.filled_len(), total);
-        sink.enqueue_screen_audio_f32(
-            frame.data_slice(),
-            frames,
-            PCM_CALLBACK_CHANNELS as u32,
-            48_000,
-            0,
-        );
         return;
     }
     if inner
@@ -302,7 +254,7 @@ fn build_stream_for_pid(
     let mut target_app: Option<Retained<SCRunningApplication>> = None;
     for i in 0..app_count {
         let app = apps.objectAtIndex(i);
-        if sck::sc_running_application_process_id(&app) == pid {
+        if unsafe { app.processID() } == pid {
             target_app = Some(app);
             break;
         }
@@ -331,15 +283,15 @@ fn build_stream_for_pid(
     };
 
     let cfg: Retained<SCStreamConfiguration> = unsafe { SCStreamConfiguration::new() };
-    sck::cfg_set_captures_audio(&cfg, true);
-    sck::cfg_set_excludes_current_process_audio(&cfg, true);
-    sck::cfg_set_sample_rate(&cfg, 48_000);
-    sck::cfg_set_channel_count(&cfg, 2);
-    sck::cfg_set_queue_depth(&cfg, 8);
-    sck::cfg_set_width(&cfg, 2);
-    sck::cfg_set_height(&cfg, 2);
-    sck::cfg_set_minimum_frame_interval(&cfg, sck::cmtime_seconds(1, 1));
-    sck::cfg_set_shows_cursor(&cfg, false);
+    unsafe { cfg.setCapturesAudio(true) };
+    unsafe { cfg.setExcludesCurrentProcessAudio(true) };
+    unsafe { cfg.setSampleRate(48_000) };
+    unsafe { cfg.setChannelCount(2) };
+    unsafe { cfg.setQueueDepth(8) };
+    unsafe { cfg.setWidth(2) };
+    unsafe { cfg.setHeight(2) };
+    unsafe { cfg.setMinimumFrameInterval(sck::cmtime_seconds(1, 1)) };
+    unsafe { cfg.setShowsCursor(false) };
     sck::cfg_set_capture_dynamic_range_sdr_if_available(&cfg);
 
     let stream_name = format!("Fluxer ProcessLoopback Audio (pid {pid})");
@@ -358,22 +310,24 @@ fn build_stream_for_pid(
         )
     };
 
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Screen,
-        None,
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Screen,
+            None,
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
     }
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Audio,
-        Some(source.output_queue()),
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Audio,
+            Some(source.output_queue()),
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
@@ -399,7 +353,7 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
     let mut excluded_apps: Vec<Retained<SCRunningApplication>> = Vec::new();
     for i in 0..apps.count() {
         let app = apps.objectAtIndex(i);
-        if is_self_or_related_process(sck::sc_running_application_process_id(&app)) {
+        if is_self_or_related_process(unsafe { app.processID() }) {
             excluded_apps.push(app);
         }
     }
@@ -418,15 +372,15 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
     };
 
     let cfg: Retained<SCStreamConfiguration> = unsafe { SCStreamConfiguration::new() };
-    sck::cfg_set_captures_audio(&cfg, true);
-    sck::cfg_set_excludes_current_process_audio(&cfg, true);
-    sck::cfg_set_sample_rate(&cfg, 48_000);
-    sck::cfg_set_channel_count(&cfg, 2);
-    sck::cfg_set_queue_depth(&cfg, 8);
-    sck::cfg_set_width(&cfg, 2);
-    sck::cfg_set_height(&cfg, 2);
-    sck::cfg_set_minimum_frame_interval(&cfg, sck::cmtime_seconds(1, 1));
-    sck::cfg_set_shows_cursor(&cfg, false);
+    unsafe { cfg.setCapturesAudio(true) };
+    unsafe { cfg.setExcludesCurrentProcessAudio(true) };
+    unsafe { cfg.setSampleRate(48_000) };
+    unsafe { cfg.setChannelCount(2) };
+    unsafe { cfg.setQueueDepth(8) };
+    unsafe { cfg.setWidth(2) };
+    unsafe { cfg.setHeight(2) };
+    unsafe { cfg.setMinimumFrameInterval(sck::cmtime_seconds(1, 1)) };
+    unsafe { cfg.setShowsCursor(false) };
     sck::cfg_set_capture_dynamic_range_sdr_if_available(&cfg);
 
     let nsname = NSString::from_str("Fluxer System Audio");
@@ -444,22 +398,24 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
         )
     };
 
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Screen,
-        None,
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Screen,
+            None,
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
     }
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Audio,
-        Some(source.output_queue()),
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Audio,
+            Some(source.output_queue()),
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
@@ -478,10 +434,10 @@ fn collect_capture_apps(
     let mut chosen: Vec<Retained<SCRunningApplication>> = Vec::with_capacity(capacity);
     let mut pids: Vec<i32> = Vec::with_capacity(capacity);
 
-    let target_pid = sck::sc_running_application_process_id(target_app);
+    let target_pid = unsafe { target_app.processID() };
     let target_info = process_tree::info_for_pid(target_pid);
-    let target_bundle = sck::sc_running_application_bundle_identifier(target_app).to_string();
-    let target_name = sck::sc_running_application_name(target_app).to_string();
+    let target_bundle = unsafe { target_app.bundleIdentifier() }.to_string();
+    let target_name = unsafe { target_app.applicationName() }.to_string();
 
     if include_tree {
         for i in 0..count {
@@ -489,10 +445,9 @@ fn collect_capture_apps(
                 break;
             }
             let candidate = apps.objectAtIndex(i);
-            let candidate_pid = sck::sc_running_application_process_id(&candidate);
-            let candidate_bundle =
-                sck::sc_running_application_bundle_identifier(&candidate).to_string();
-            let candidate_name = sck::sc_running_application_name(&candidate).to_string();
+            let candidate_pid = unsafe { candidate.processID() };
+            let candidate_bundle = unsafe { candidate.bundleIdentifier() }.to_string();
+            let candidate_name = unsafe { candidate.applicationName() }.to_string();
             let same_tree =
                 process_tree::is_same_launch_tree(candidate_pid, target_pid, target_info);
             let related = candidate_pid == target_pid
@@ -510,7 +465,7 @@ fn collect_capture_apps(
     }
 
     if pids.is_empty() {
-        let pid = sck::sc_running_application_process_id(target_app);
+        let pid = unsafe { target_app.processID() };
         chosen.push(target_app.retain());
         pids.push(pid);
     }
@@ -541,20 +496,20 @@ fn best_display_for_selection(
 
     for d in 0..display_count {
         let display = displays.objectAtIndex(d);
-        let display_frame = sck::sc_display_frame(&display);
+        let display_frame = unsafe { display.frame() };
         let mut area = 0.0;
         for w in 0..window_count {
             let window = windows.objectAtIndex(w);
-            let owner = match sck::sc_window_owning_application(&window) {
+            let owner = match unsafe { window.owningApplication() } {
                 Some(o) => o,
                 None => continue,
             };
-            let owner_pid = sck::sc_running_application_process_id(&owner);
+            let owner_pid = unsafe { owner.processID() };
             if !pids.contains(&owner_pid) {
                 continue;
             }
             saw_app_window = true;
-            area += sck::cgrect_intersection_area(display_frame, sck::sc_window_frame(&window));
+            area += sck::cgrect_intersection_area(display_frame, unsafe { window.frame() });
         }
         if area > best_area {
             best_area = area;
@@ -623,7 +578,7 @@ fn run_sck_late_spawn_refresher(
         let mut target_app: Option<Retained<SCRunningApplication>> = None;
         for i in 0..app_count {
             let app = apps.objectAtIndex(i);
-            if sck::sc_running_application_process_id(&app) == target_pid {
+            if unsafe { app.processID() } == target_pid {
                 target_app = Some(app);
                 break;
             }
@@ -733,7 +688,6 @@ impl ProcessLoopback {
                     sck_refresher: None,
                 }),
                 frame_tsfn: parking_lot::RwLock::new(None),
-                screen_audio_sink: parking_lot::RwLock::new(None),
                 pcm_pool,
                 pcm_frames_dropped: AtomicU64::new(0),
                 running: std::sync::atomic::AtomicBool::new(false),
@@ -753,24 +707,6 @@ impl ProcessLoopback {
             .tsfn_aborted
             .store(false, std::sync::atomic::Ordering::Release);
         Ok(())
-    }
-
-    #[napi(js_name = "setScreenAudioSink")]
-    pub fn set_screen_audio_sink(&self, sink_handle: Unknown<'_>) -> Result<()> {
-        let sink = retain_screen_audio_sink_handle(sink_handle)?;
-        if !sink.supports_screen_audio() {
-            return Err(napi::Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink handle does not support screen audio",
-            ));
-        }
-        *self.inner.screen_audio_sink.write() = Some(sink);
-        Ok(())
-    }
-
-    #[napi(js_name = "clearScreenAudioSink")]
-    pub fn clear_screen_audio_sink(&self) {
-        self.inner.screen_audio_sink.write().take();
     }
 
     #[napi]
@@ -1033,9 +969,9 @@ pub async fn list_audible_applications() -> Result<Vec<AppDescriptor>> {
     let n = apps.count();
     for i in 0..n {
         let app = apps.objectAtIndex(i);
-        let pid = sck::sc_running_application_process_id(&app);
-        let bundle = sck::sc_running_application_bundle_identifier(&app).to_string();
-        let name = sck::sc_running_application_name(&app).to_string();
+        let pid = unsafe { app.processID() };
+        let bundle = unsafe { app.bundleIdentifier() }.to_string();
+        let name = unsafe { app.applicationName() }.to_string();
         out.push(AppDescriptor {
             pid,
             bundle_id: Some(bundle),

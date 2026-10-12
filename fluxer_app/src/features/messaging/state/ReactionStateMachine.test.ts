@@ -1,20 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	applyAdd,
-	applyRemove,
-	applyRemoveAll,
-	applyRemoveEmoji,
 	emptyMap,
 	getEmojiKey,
-	getRecord,
-	hydrate,
-	mapToReactions,
-	sameEmoji,
-	trackReactor,
-	untrackReactor,
+	type ReactionMap,
+	transitionReactionMap,
 } from '@app/features/messaging/state/ReactionStateMachine';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
+import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {describe, expect, it} from 'vitest';
 
 const ME = 'me-user-id';
@@ -23,86 +16,13 @@ const BOB = 'bob-id';
 const CAROL = 'carol-id';
 const FIRE: ReactionEmoji = {name: '🔥'};
 const HEART: ReactionEmoji = {name: '❤️'};
-const CUSTOM: ReactionEmoji = {id: '1234567890', name: 'custom_emoji'};
-const CUSTOM_OTHER: ReactionEmoji = {id: '9999999999', name: 'custom_emoji'};
-const add = (map: any, emoji: ReactionEmoji, userId: string, isMe = userId === ME) =>
-	applyAdd(map, emoji, userId, isMe);
-const remove = (map: any, emoji: ReactionEmoji, userId: string, isMe = userId === ME) =>
-	applyRemove(map, emoji, userId, isMe);
-
-describe('ReactionStateMachine: emoji identity', () => {
-	it('same unicode emoji is equal', () => {
-		expect(sameEmoji({name: '🔥'}, {name: '🔥'})).toBe(true);
-	});
-	it('different unicode emoji not equal', () => {
-		expect(sameEmoji({name: '🔥'}, {name: '❤️'})).toBe(false);
-	});
-	it('custom emoji equal by id+name', () => {
-		expect(sameEmoji({id: '1', name: 'x'}, {id: '1', name: 'x'})).toBe(true);
-	});
-	it('custom emoji with same name but different id not equal', () => {
-		expect(sameEmoji({id: '1', name: 'x'}, {id: '2', name: 'x'})).toBe(false);
-	});
-	it('null and undefined ids treated equivalently', () => {
-		expect(sameEmoji({id: null, name: '🔥'}, {name: '🔥'})).toBe(true);
-	});
-	it('emoji key collision-free for different emojis', () => {
-		const k1 = getEmojiKey({name: '🔥'});
-		const k2 = getEmojiKey({name: '❤️'});
-		expect(k1).not.toBe(k2);
-	});
-});
-
-describe('ReactionStateMachine: applyAdd', () => {
-	it('creates record on first add', () => {
-		const m = add(emptyMap(), FIRE, ALICE);
-		const rec = getRecord(m, FIRE);
-		expect(rec).toBeDefined();
-		expect(rec!.count).toBe(1);
-		expect(rec!.me).toBe(false);
-		expect(rec!.knownReactors.has(ALICE)).toBe(true);
-	});
-	it('increments count for second distinct reactor', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, FIRE, BOB);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-	});
-	it('is idempotent for same userId (no double count)', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, FIRE, ALICE);
-		m = add(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-	});
-	it('sets me=true when current user adds', () => {
-		const m = add(emptyMap(), FIRE, ME);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-	});
-	it('preserves me=true when other user adds after me', () => {
-		let m = add(emptyMap(), FIRE, ME);
-		m = add(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-	});
-	it('upgrades me=false to me=true if current user re-adds (recovery)', () => {
-		let m = add(emptyMap(), FIRE, ME, false);
-		expect(getRecord(m, FIRE)!.me).toBe(false);
-		m = add(m, FIRE, ME, true);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-	});
-	it('different emojis tracked independently', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, HEART, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-		expect(getRecord(m, HEART)!.count).toBe(1);
-	});
-	it('custom emojis with different ids are tracked separately', () => {
-		let m = add(emptyMap(), CUSTOM, ALICE);
-		m = add(m, CUSTOM_OTHER, ALICE);
-		expect(getRecord(m, CUSTOM)!.count).toBe(1);
-		expect(getRecord(m, CUSTOM_OTHER)!.count).toBe(1);
-	});
-});
+const add = (map: ReactionMap, emoji: ReactionEmoji, userId: string, isCurrentUser = userId === ME) =>
+	transitionReactionMap(map, {type: 'reaction.add', emoji, userId, isCurrentUser});
+const remove = (map: ReactionMap, emoji: ReactionEmoji, userId: string, isCurrentUser = userId === ME) =>
+	transitionReactionMap(map, {type: 'reaction.remove', emoji, userId, isCurrentUser});
+const getRecord = (map: ReactionMap, emoji: ReactionEmoji) => map.get(getEmojiKey(emoji));
+const hydrate = (map: ReactionMap, reactions: ReadonlyArray<MessageReaction>, currentUserId?: string) =>
+	transitionReactionMap(map, {type: 'reaction.hydrate', reactions, currentUserId}, currentUserId);
 
 describe('ReactionStateMachine: applyRemove (PRIMARY BUG)', () => {
 	it('REGRESSION: 2 reactors, one removes → reaction is preserved with count 1', () => {
@@ -175,42 +95,7 @@ describe('ReactionStateMachine: applyRemove (PRIMARY BUG)', () => {
 	});
 });
 
-describe('ReactionStateMachine: applyRemoveAll / applyRemoveEmoji', () => {
-	it('removeAll clears every reaction on message', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, HEART, BOB);
-		m = applyRemoveAll(m);
-		expect(m.size).toBe(0);
-	});
-	it('removeAll on empty map is identity', () => {
-		const m = emptyMap();
-		expect(applyRemoveAll(m)).toBe(m);
-	});
-	it('removeEmoji removes only the targeted emoji', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, HEART, BOB);
-		m = applyRemoveEmoji(m, FIRE);
-		expect(getRecord(m, FIRE)).toBeUndefined();
-		expect(getRecord(m, HEART)!.count).toBe(1);
-	});
-	it('removeEmoji for missing emoji is no-op', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		const before = m;
-		m = applyRemoveEmoji(m, HEART);
-		expect(m).toBe(before);
-	});
-});
-
 describe('ReactionStateMachine: hydrate', () => {
-	it('hydrates an empty map from wire reactions', () => {
-		const m = hydrate(emptyMap(), [{emoji: FIRE, count: 5, me: true}]);
-		expect(getRecord(m, FIRE)!.count).toBe(5);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-	});
-	it('drops zero-count wire reactions', () => {
-		const m = hydrate(emptyMap(), [{emoji: FIRE, count: 0}]);
-		expect(m.size).toBe(0);
-	});
 	it('replaces existing reactions but preserves knownReactors', () => {
 		let m = add(emptyMap(), FIRE, ALICE);
 		m = add(m, FIRE, BOB);
@@ -231,12 +116,6 @@ describe('ReactionStateMachine: hydrate', () => {
 		m = hydrate(m, [{emoji: FIRE, count: 1}]);
 		expect(getRecord(m, FIRE)).toBeDefined();
 		expect(getRecord(m, HEART)).toBeUndefined();
-	});
-	it('hydrate with null/empty wipes when present', () => {
-		const m = add(emptyMap(), FIRE, ALICE);
-		expect(hydrate(m, null).size).toBe(0);
-		expect(hydrate(m, []).size).toBe(0);
-		expect(hydrate(m, undefined).size).toBe(0);
 	});
 	it('hydrate is identity when nothing changes', () => {
 		const m = hydrate(emptyMap(), [{emoji: FIRE, count: 3}]);
@@ -272,135 +151,5 @@ describe('ReactionStateMachine: hydrate', () => {
 		expect(getRecord(m, FIRE)!.count).toBe(1);
 		expect(getRecord(m, FIRE)!.knownReactors.has(BOB)).toBe(true);
 		expect(getRecord(m, FIRE)!.knownReactors.has(ALICE)).toBe(false);
-	});
-});
-
-describe('ReactionStateMachine: mapToReactions', () => {
-	it('produces a frozen array', () => {
-		const m = add(emptyMap(), FIRE, ALICE);
-		const arr = mapToReactions(m);
-		expect(Object.isFrozen(arr)).toBe(true);
-	});
-	it('omits me when me=false', () => {
-		const m = add(emptyMap(), FIRE, ALICE);
-		const arr = mapToReactions(m);
-		expect(arr[0].me).toBeUndefined();
-	});
-	it('includes me=true when me reacted', () => {
-		const m = add(emptyMap(), FIRE, ME);
-		const arr = mapToReactions(m);
-		expect(arr[0].me).toBe(true);
-	});
-});
-
-describe('ReactionStateMachine: trackReactor / untrackReactor', () => {
-	it('trackReactor adds known userId without changing count if count already reflects', () => {
-		let m = hydrate(emptyMap(), [{emoji: FIRE, count: 3}]);
-		m = trackReactor(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(3);
-		expect(getRecord(m, FIRE)!.knownReactors.has(ALICE)).toBe(true);
-	});
-	it('trackReactor bumps count if known reactors exceed reported count', () => {
-		let m = hydrate(emptyMap(), [{emoji: FIRE, count: 1}]);
-		m = trackReactor(m, FIRE, ALICE);
-		m = trackReactor(m, FIRE, BOB);
-		m = trackReactor(m, FIRE, CAROL);
-		expect(getRecord(m, FIRE)!.count).toBe(3);
-	});
-	it('trackReactor is idempotent', () => {
-		let m = hydrate(emptyMap(), [{emoji: FIRE, count: 3}]);
-		m = trackReactor(m, FIRE, ALICE);
-		const before = m;
-		m = trackReactor(m, FIRE, ALICE);
-		expect(m).toBe(before);
-	});
-	it('untrackReactor removes from knownReactors without changing count', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, FIRE, BOB);
-		m = untrackReactor(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-		expect(getRecord(m, FIRE)!.knownReactors.has(ALICE)).toBe(false);
-	});
-	it('untrackReactor on unknown user is no-op', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		const before = m;
-		m = untrackReactor(m, FIRE, BOB);
-		expect(m).toBe(before);
-	});
-});
-
-describe('ReactionStateMachine: complex scenarios', () => {
-	it('full lifecycle: add me, add 2 others, others leave one by one, me leaves', () => {
-		let m = emptyMap();
-		m = add(m, FIRE, ME);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-		m = add(m, FIRE, ALICE);
-		m = add(m, FIRE, BOB);
-		expect(getRecord(m, FIRE)!.count).toBe(3);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-		m = remove(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-		m = remove(m, FIRE, BOB);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-		m = remove(m, FIRE, ME);
-		expect(getRecord(m, FIRE)).toBeUndefined();
-	});
-	it('optimistic + gateway echo do not double-count', () => {
-		let m = emptyMap();
-		m = add(m, FIRE, ME);
-		m = add(m, FIRE, ME);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-		expect(getRecord(m, FIRE)!.me).toBe(true);
-	});
-	it('out-of-order remove + add gateway events', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = remove(m, FIRE, ALICE);
-		m = add(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-	});
-	it('two emojis with overlapping reactors stay independent', () => {
-		let m = emptyMap();
-		m = add(m, FIRE, ALICE);
-		m = add(m, FIRE, BOB);
-		m = add(m, HEART, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-		expect(getRecord(m, HEART)!.count).toBe(1);
-		m = remove(m, HEART, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(2);
-		expect(getRecord(m, HEART)).toBeUndefined();
-	});
-	it('hydrate after concurrent local adds keeps locally-known reactors', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = add(m, FIRE, BOB);
-		m = hydrate(m, [{emoji: FIRE, count: 2}]);
-		expect(getRecord(m, FIRE)!.knownReactors.size).toBe(2);
-		m = remove(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-	});
-	it('reactor leaves then rejoins via gateway', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = remove(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)).toBeUndefined();
-		m = add(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
-		expect(getRecord(m, FIRE)!.knownReactors.has(ALICE)).toBe(true);
-	});
-	it('frozen output: original map not mutated by operations', () => {
-		const m1 = add(emptyMap(), FIRE, ALICE);
-		const snap1 = mapToReactions(m1);
-		const m2 = add(m1, FIRE, BOB);
-		const snap1AfterMutation = mapToReactions(m1);
-		expect(snap1).toEqual(snap1AfterMutation);
-		expect(getRecord(m1, FIRE)!.count).toBe(1);
-		expect(getRecord(m2, FIRE)!.count).toBe(2);
-	});
-	it('removeEmoji wipes a reaction that user re-added immediately', () => {
-		let m = add(emptyMap(), FIRE, ALICE);
-		m = applyRemoveEmoji(m, FIRE);
-		expect(m.size).toBe(0);
-		m = add(m, FIRE, ALICE);
-		expect(getRecord(m, FIRE)!.count).toBe(1);
 	});
 });

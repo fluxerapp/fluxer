@@ -31,7 +31,7 @@ function canViewArchive(adminAcls: Set<string>, subjectType: ArchiveSubjectType)
 }
 
 function requireArchiveSubjectAccess(adminAcls: Set<string>, subjectType: 'user' | 'guild'): void {
-	if (canViewArchive(adminAcls, subjectType) || adminAcls.has(AdminACLs.WILDCARD)) return;
+	if (canViewArchive(adminAcls, subjectType)) return;
 	throw new MissingACLError(subjectType === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD);
 }
 

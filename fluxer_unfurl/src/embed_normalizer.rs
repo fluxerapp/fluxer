@@ -136,34 +136,6 @@ mod tests {
     }
 
     #[test]
-    fn short_titles_are_unchanged() {
-        let result = normalize_embeds(vec![embed_with_title("Short")], &test_proxy());
-        assert_eq!(result[0].title.as_deref(), Some("Short"));
-    }
-
-    #[test]
-    fn empty_author_name_strips_author() {
-        let mut e = MessageEmbed::new("rich");
-        e.author = Some(EmbedAuthor {
-            name: "".into(),
-            ..Default::default()
-        });
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert!(result[0].author.is_none());
-    }
-
-    #[test]
-    fn empty_footer_text_strips_footer() {
-        let mut e = MessageEmbed::new("rich");
-        e.footer = Some(EmbedFooter {
-            text: "".into(),
-            ..Default::default()
-        });
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert!(result[0].footer.is_none());
-    }
-
-    #[test]
     fn fields_limited_to_max() {
         let mut e = MessageEmbed::new("rich");
         let fields: Vec<EmbedField> = (0..50)
@@ -176,36 +148,6 @@ mod tests {
         e.fields = Some(fields);
         let result = normalize_embeds(vec![e], &test_proxy());
         assert!(result[0].fields.as_ref().unwrap().len() <= MAX_FIELDS);
-    }
-
-    #[test]
-    fn empty_field_names_are_removed() {
-        let mut e = MessageEmbed::new("rich");
-        e.fields = Some(vec![
-            EmbedField {
-                name: "".into(),
-                value: "v".into(),
-                inline: false,
-            },
-            EmbedField {
-                name: "ok".into(),
-                value: "v".into(),
-                inline: false,
-            },
-        ]);
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert_eq!(result[0].fields.as_ref().unwrap().len(), 1);
-    }
-
-    #[test]
-    fn provider_with_empty_name_string_is_removed() {
-        let mut e = MessageEmbed::new("rich");
-        e.provider = Some(EmbedProvider {
-            name: String::new(),
-            url: Some("https://example.com".to_owned()),
-        });
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert!(result[0].provider.is_none());
     }
 
     #[test]
@@ -298,19 +240,6 @@ mod tests {
         let result = normalize_embeds(vec![e], &test_proxy());
         let val = &result[0].fields.as_ref().unwrap()[0].value;
         assert!(val.chars().count() <= FIELD_VALUE_MAX);
-    }
-
-    #[test]
-    fn none_fields_remain_none() {
-        let e = MessageEmbed::new("rich");
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert!(result[0].title.is_none());
-        assert!(result[0].description.is_none());
-        assert!(result[0].author.is_none());
-        assert!(result[0].provider.is_none());
-        assert!(result[0].footer.is_none());
-        assert!(result[0].fields.is_none());
-        assert!(result[0].children.is_none());
     }
 
     #[test]

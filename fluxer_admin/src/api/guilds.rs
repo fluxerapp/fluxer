@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::guild_features;
+
+use reqwest::Method;
+
 use crate::api::generated::{snowflake, types as generated_types};
 use serde::Deserialize;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::reports::SearchReportsParams;
 use super::types::{
-    GuildAuditLogResponse, GuildDetailInfo, GuildInfo, GuildUpdateResponse,
-    ListGuildMembersResponse, LookupGuildResponse, SearchGuildsResponse, SearchReportsResponse,
-    SuccessResponse,
+    GuildAuditLogResponse, GuildDetailInfo, GuildInfo, ListGuildMembersResponse,
+    LookupGuildResponse, SearchGuildsResponse, SearchReportsResponse, SuccessResponse,
 };
 
 impl AdminApiClient {
@@ -53,18 +56,17 @@ impl AdminApiClient {
         guild_id: &str,
         add_features: &[String],
         remove_features: &[String],
-    ) -> ApiResult<GuildUpdateResponse> {
+    ) -> ApiResult<()> {
         let body = generated_types::UpdateGuildRequest {
             add_features: guild_features(add_features),
             remove_features: guild_features(remove_features),
             ..Default::default()
         };
-        let response = self
-            .generated()
+        self.generated()
             .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        Ok(())
     }
 
     pub async fn delete_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
@@ -80,17 +82,16 @@ impl AdminApiClient {
         &self,
         guild_id: &str,
         new_owner_id: &str,
-    ) -> ApiResult<GuildUpdateResponse> {
+    ) -> ApiResult<()> {
         let body = generated_types::UpdateGuildRequest {
             new_owner_id: Some(snowflake(new_owner_id)),
             ..Default::default()
         };
-        let response = self
-            .generated()
+        self.generated()
             .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        Ok(())
     }
 
     pub async fn list_guild_members(
@@ -177,44 +178,37 @@ impl AdminApiClient {
         &self,
         guild_id: &str,
         settings: &serde_json::Value,
-    ) -> ApiResult<GuildUpdateResponse> {
+    ) -> ApiResult<()> {
         let body = guild_settings_request(settings)?;
-        let response = self
-            .generated()
+        self.generated()
             .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
-        guild_update_response(response.into_inner())
+        Ok(())
     }
 
-    pub async fn update_guild_name(
-        &self,
-        guild_id: &str,
-        name: &str,
-    ) -> ApiResult<GuildUpdateResponse> {
+    pub async fn update_guild_name(&self, guild_id: &str, name: &str) -> ApiResult<()> {
         let body = generated_types::UpdateGuildRequest {
             name: Some(name.to_owned()),
             ..Default::default()
         };
-        let response = self
-            .generated()
+        self.generated()
             .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        Ok(())
     }
 
-    pub async fn update_guild_vanity(
-        &self,
-        guild_id: &str,
-        vanity: Option<&str>,
-    ) -> ApiResult<GuildUpdateResponse> {
+    pub async fn update_guild_vanity(&self, guild_id: &str, vanity: Option<&str>) -> ApiResult<()> {
         let body = serde_json::json!({"vanity_url_code": vanity});
-        self.patch(
+        self.send::<serde::de::IgnoredAny, _>(
+            Method::PATCH,
             &format!("/admin/guilds/{}", urlencoding::encode(guild_id)),
             Some(&body),
+            None,
         )
         .await
+        .map(drop)
     }
 
     pub async fn reload_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
@@ -316,36 +310,6 @@ fn guild_admin_response(response: generated_types::GuildAdminResponse) -> ApiRes
     })
 }
 
-fn guild_update_response(
-    response: generated_types::GuildUpdateResponse,
-) -> ApiResult<GuildUpdateResponse> {
-    let guild = response.guild;
-    Ok(GuildUpdateResponse {
-        guild: GuildInfo {
-            id: String::from(guild.id),
-            name: String::from(guild.name),
-            icon: guild.icon.map(String::from),
-            banner: guild.banner.map(String::from),
-            owner_id: String::from(guild.owner_id),
-            owner_username: None,
-            owner_global_name: None,
-            owner_discriminator: None,
-            member_count: crate::api::generated::i64_to_u64(
-                i64::from(i32::from(guild.member_count)),
-                "member_count",
-            )
-            .map_err(ApiError::Parse)?,
-            features: guild.features.into_iter().map(String::from).collect(),
-            nsfw_level: guild.nsfw_level.map(i32::from),
-            nsfw: None,
-            content_warning_level: None,
-            content_warning_text: None,
-            description: None,
-            vanity_url_code: None,
-        },
-    })
-}
-
 fn guild_settings_request(
     settings: &serde_json::Value,
 ) -> ApiResult<generated_types::UpdateGuildRequest> {
@@ -363,14 +327,6 @@ fn guild_settings_request(
         verification_level: patch.verification_level,
         ..Default::default()
     })
-}
-
-fn guild_features(values: &[String]) -> Vec<generated_types::GuildFeatureSchema> {
-    values
-        .iter()
-        .cloned()
-        .map(generated_types::GuildFeatureSchema::from)
-        .collect()
 }
 
 #[cfg(test)]

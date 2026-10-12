@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
-import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
+import {showCloseDMConfirmation} from '@app/features/channel/components/alerts/CloseDMConfirmation';
 import {ChangeGroupDMNicknameModal} from '@app/features/channel/components/modals/ChangeGroupDMNicknameModal';
 import Channels from '@app/features/channel/state/Channels';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
-import {DM_CLOSED_DESCRIPTOR, TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
@@ -27,10 +23,14 @@ import {
 	ViewDetailsIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import {RingUserMenuItem, StartVoiceCallMenuItem} from '@app/features/ui/action_menu/items/CallMenuItems';
-import {CopyChannelIdMenuItem, FavoriteChannelMenuItem} from '@app/features/ui/action_menu/items/ChannelMenuItems';
+import {
+	CopyChannelIdMenuItem,
+	FavoriteChannelMenuItem,
+	MarkChannelAsReadMenuItem,
+} from '@app/features/ui/action_menu/items/ChannelMenuItems';
 import {CopyUserIdMenuItem} from '@app/features/ui/action_menu/items/CopyMenuItems';
 import {DebugUserMenuItem} from '@app/features/ui/action_menu/items/DebugMenuItems';
-import {MarkDMAsReadMenuItem, MuteDMMenuItem} from '@app/features/ui/action_menu/items/DMMenuItems';
+import {MuteDMMenuItem} from '@app/features/ui/action_menu/items/DMMenuItems';
 import {InviteToCommunityMenuItem} from '@app/features/ui/action_menu/items/InviteMenuItems';
 import {MentionUserMenuItem} from '@app/features/ui/action_menu/items/MentionUserMenuItem';
 import {MessageUserMenuItem} from '@app/features/ui/action_menu/items/MessageUserMenuItem';
@@ -63,7 +63,7 @@ import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -76,7 +76,7 @@ import PopoutWindowManager, {isVoicePopoutSupported} from '@app/features/voice/s
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {hasActiveDirectCallWithUser, isActiveCallParticipant} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
-import {ME} from '@fluxer/constants/src/AppConstants';
+
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -105,10 +105,6 @@ const ARE_YOU_SURE_YOU_WANT_TO_TRANSFER_OWNERSHIP_DESCRIPTOR = msg({
 	message: 'Transfer group ownership to {userName}?',
 	comment: 'Confirm dialog body before transferring ownership of a group DM.',
 });
-const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
-	message: 'Close your DM with {displayName}? You can reopen it anytime.',
-	comment: 'Confirm dialog body before closing a DM channel.',
-});
 const CHANGE_GROUP_NICKNAME_DESCRIPTOR = msg({
 	message: 'Change group nickname',
 	comment: 'Group DM action that opens the change-nickname modal for the selected user.',
@@ -117,8 +113,6 @@ const MAKE_GROUP_OWNER_DESCRIPTOR = msg({
 	message: 'Make group owner',
 	comment: 'Group DM action that transfers ownership of the group to the selected member.',
 });
-const logger = new Logger('UserContextMenu');
-
 interface PrivateCallMenuContext {
 	connectionId?: string;
 	isConnected: boolean;
@@ -343,39 +337,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			if (!channel?.isDM()) return;
 			onClose();
 			const displayName = dmPartner ? NicknameUtils.getNickname(dmPartner) : NicknameUtils.getNickname(user);
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(CLOSE_DM_DESCRIPTOR)}
-						description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {displayName})}
-						primaryText={i18n._(CLOSE_DM_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={async () => {
-							try {
-								await ChannelCommands.remove(channel.id);
-								const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
-								if (selectedChannel === channel.id) {
-									RouterUtils.transitionTo(Routes.ME);
-								}
-								ToastCommands.createToast({
-									type: 'success',
-									children: i18n._(DM_CLOSED_DESCRIPTOR),
-								});
-							} catch (error) {
-								logger.error('Failed to close DM:', error);
-								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<DMCloseFailedModal data-flx="ui.action-menu.user-context-menu.handle-close-dm.dm-close-failed-modal" />
-										)),
-									);
-								}, 0);
-							}
-						}}
-						data-flx="ui.action-menu.user-context-menu.handle-close-dm.confirm-modal"
-					/>
-				)),
-			);
+			showCloseDMConfirmation({i18n, channelId: channel.id, displayName});
 		}, [channel, dmPartner, i18n, onClose, user]);
 		const renderAdvancedMenuGroup = (includeChannelId = false) => (
 			<MenuGroup data-flx="ui.action-menu.user-context-menu.render-advanced-menu-group.menu-group">
@@ -423,7 +385,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			return (
 				<>
 					<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.menu-group">
-						<MarkDMAsReadMenuItem
+						<MarkChannelAsReadMenuItem
 							channel={channel}
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-self-menu.mark-dm-as-read-menu-item"
@@ -473,7 +435,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			return (
 				<>
 					<MenuGroup data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.menu-group">
-						<MarkDMAsReadMenuItem
+						<MarkChannelAsReadMenuItem
 							channel={channel}
 							onClose={onClose}
 							data-flx="ui.action-menu.user-context-menu.render-dm-other-menu.mark-dm-as-read-menu-item"

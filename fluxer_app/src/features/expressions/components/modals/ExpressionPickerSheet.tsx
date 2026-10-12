@@ -5,7 +5,7 @@ import {MobileEmojiPicker} from '@app/features/channel/components/MobileEmojiPic
 import {MobileMemesPicker} from '@app/features/channel/components/MobileMemesPicker';
 import {MobileStickersPicker} from '@app/features/channel/components/MobileStickersPicker';
 import {GifPicker} from '@app/features/channel/components/pickers/gif/GifPicker';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+
 import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import styles from '@app/features/expressions/components/modals/ExpressionPickerSheet.module.css';
@@ -128,8 +128,6 @@ interface ExpressionPickerSheetProps {
 	channelId?: string;
 	onEmojiSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	visibleTabs?: Array<ExpressionPickerTabType>;
-	selectedTab?: ExpressionPickerTabType;
-	onTabChange?: (tab: ExpressionPickerTabType) => void;
 	zIndex?: number;
 }
 
@@ -140,8 +138,6 @@ export const ExpressionPickerSheet = observer(
 		channelId,
 		onEmojiSelect,
 		visibleTabs = ['gifs', 'memes', 'stickers', 'emojis'],
-		selectedTab: controlledSelectedTab,
-		onTabChange,
 		zIndex,
 	}: ExpressionPickerSheetProps) => {
 		const {i18n} = useLingui();
@@ -156,33 +152,21 @@ export const ExpressionPickerSheet = observer(
 				})),
 			[visibleTabs, i18n.locale, RuntimeConfig.gifEnabled],
 		);
-		const [internalSelectedTab, setInternalSelectedTab] = useState<ExpressionPickerTabType>(
-			() => categories[0]?.type || 'emojis',
-		);
+
 		const [emojiSearchTerm, setEmojiSearchTerm] = useState('');
 		const [_hoveredEmoji, setHoveredEmoji] = useState<FlatEmoji | null>(null);
-		const storeSelectedTab = ExpressionPicker.selectedTab;
-		const selectedTab = storeSelectedTab ?? controlledSelectedTab ?? internalSelectedTab;
-		const setSelectedTab = useCallback(
-			(tab: ExpressionPickerTabType) => {
-				if (onTabChange) {
-					onTabChange(tab);
-					return;
-				}
-				const pickerChannelId = ExpressionPicker.channelId;
-				if (pickerChannelId) {
-					ExpressionPickerCommands.setTab(tab);
-				} else {
-					setInternalSelectedTab(tab);
-				}
-			},
-			[onTabChange],
-		);
+		const selectedTab = ExpressionPicker.selectedTab;
+		const setSelectedTab = useCallback((tab: ExpressionPickerTabType) => {
+			const pickerChannelId = ExpressionPicker.channelId;
+			if (pickerChannelId) {
+				ExpressionPicker.setTab(tab);
+			}
+		}, []);
 		const selectedCategory = categories.find((category) => category.type === selectedTab) || categories[0];
 		useEffect(() => {
 			if (!isOpen) return;
 			if (channelId && ExpressionPicker.channelId !== channelId) {
-				ExpressionPickerCommands.open(channelId, selectedTab);
+				ExpressionPicker.open(channelId, selectedTab);
 			}
 		}, [isOpen, channelId, selectedTab]);
 		const handleEmojiSelect = useCallback(

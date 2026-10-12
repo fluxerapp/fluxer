@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {
 	type AccountScopedWorkSuspension,
@@ -105,7 +105,10 @@ export interface AuthSessionLifecycleState {
 	readonly markAccountInvalid: (accountKey: string, expectedToken?: string) => void;
 }
 
-function requireRuntimeSnapshot(snapshot: RuntimeConfigSnapshot | null, operation: string): RuntimeConfigSnapshot {
+export function requireRuntimeSnapshot(
+	snapshot: RuntimeConfigSnapshot | null,
+	operation: string,
+): RuntimeConfigSnapshot {
 	if (snapshot == null) {
 		throw new AuthSessionRuntimeUnavailableError(operation);
 	}

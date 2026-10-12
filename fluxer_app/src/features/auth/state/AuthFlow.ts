@@ -2,8 +2,7 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
-import {type AuthRequestTarget, authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {isValidOAuthState, storeSsoPendingContext} from '@app/features/auth/state/SsoPendingContext';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
@@ -11,10 +10,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
 
 const logger = new Logger('AuthFlow');
-
-export function authCommandTarget(runtimeSnapshot: RuntimeConfigSnapshot): InstanceHTTPTarget {
-	return instanceTargetFromSnapshot(runtimeSnapshot);
-}
 
 export interface LoginSuccessPayload {
 	token: string;
@@ -70,7 +65,7 @@ export async function loginWithPassword({
 }): Promise<LoginResult> {
 	const response = await AuthenticationCommands.login({
 		...params,
-		target: authRequestTargetFromSnapshot(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	if (AuthenticationCommands.isIpAuthorizationRequiredResponse(response)) {
 		return {
@@ -115,7 +110,7 @@ export async function loginWithMfaCode({
 		code,
 		ticket,
 		inviteCode,
-		target: authCommandTarget(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	return toLoginSuccessPayload(response);
 }
@@ -124,7 +119,7 @@ export async function getWebAuthnMfaOptions(
 	ticket: string,
 	runtimeSnapshot: RuntimeConfigSnapshot,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
-	return AuthenticationCommands.getWebAuthnMfaOptions({ticket, target: authCommandTarget(runtimeSnapshot)});
+	return AuthenticationCommands.getWebAuthnMfaOptions({ticket, target: instanceTargetFromSnapshot(runtimeSnapshot)});
 }
 
 export async function authenticateMfaWithWebAuthn({
@@ -145,7 +140,7 @@ export async function authenticateMfaWithWebAuthn({
 		challenge,
 		ticket,
 		inviteCode,
-		target: authCommandTarget(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	return toLoginSuccessPayload(result);
 }
@@ -153,7 +148,7 @@ export async function authenticateMfaWithWebAuthn({
 export async function getWebAuthnAuthenticationOptions(
 	runtimeSnapshot: RuntimeConfigSnapshot,
 ): Promise<PublicKeyCredentialRequestOptionsJSON> {
-	return AuthenticationCommands.getWebAuthnAuthenticationOptions({target: authCommandTarget(runtimeSnapshot)});
+	return AuthenticationCommands.getWebAuthnAuthenticationOptions({target: instanceTargetFromSnapshot(runtimeSnapshot)});
 }
 
 export async function authenticateWithWebAuthn({
@@ -171,7 +166,7 @@ export async function authenticateWithWebAuthn({
 		response,
 		challenge,
 		inviteCode,
-		target: authCommandTarget(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	return toLoginSuccessPayload(result);
 }
@@ -205,7 +200,7 @@ export async function startSsoLogin({
 	const result = await AuthenticationCommands.startSso({
 		redirectTo: safeRedirectTo ?? undefined,
 		redirectUri,
-		target: authCommandTarget(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	const state = result.state ?? ssoStateFromAuthorizationUrl(result.authorization_url);
 	if (state != null && isValidOAuthState(state)) {
@@ -233,7 +228,7 @@ export async function completeSsoLogin({
 	const result = await AuthenticationCommands.completeSso({
 		code,
 		state,
-		target: authCommandTarget(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	return {
 		...toLoginSuccessPayload(result),
@@ -248,7 +243,7 @@ export type PasswordResetResult =
 export async function resetPassword(
 	token: string,
 	password: string,
-	target: AuthRequestTarget,
+	target: InstanceHTTPTarget,
 ): Promise<PasswordResetResult> {
 	const response = await AuthenticationCommands.resetPassword(token, password, target);
 	if ('token' in response) {
@@ -285,7 +280,7 @@ export async function recoverAccount({
 		login,
 		recoveryKey,
 		password,
-		target: authRequestTargetFromSnapshot(runtimeSnapshot),
+		target: instanceTargetFromSnapshot(runtimeSnapshot),
 	});
 	const kit = {recoveryKey: response.recovery_key, createdAt: response.recovery_kit_created_at};
 	if ('token' in response) {

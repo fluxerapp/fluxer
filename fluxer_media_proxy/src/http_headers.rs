@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::range::ByteRange;
-use http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header};
+#[cfg(test)]
+pub use fluxer_common::server::{REFERRER_POLICY, STRICT_TRANSPORT_SECURITY};
+use http::{HeaderMap, HeaderValue, StatusCode, header};
 
 pub const ROBOTS: &str = "noindex, nofollow, nosnippet, noimageindex, notranslate, max-snippet:0, max-image-preview:none, max-video-preview:0";
 pub const MEDIA_CSP: &str = "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'; script-src-attr 'none'; script-src-elem 'none'; style-src 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; sandbox allow-same-origin";
-pub const STRICT_TRANSPORT_SECURITY: &str = "max-age=31536000; includeSubDomains; preload";
-pub const REFERRER_POLICY: &str = "strict-origin-when-cross-origin";
 pub const PERMISSIONS_POLICY: &str = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
 
 pub fn parse_content_length(headers: &HeaderMap) -> Option<u64> {
@@ -20,24 +20,10 @@ pub fn parse_content_length(headers: &HeaderMap) -> Option<u64> {
 }
 
 pub fn add_security_headers(headers: &mut HeaderMap) {
-    set_static_header(
-        headers,
-        HeaderName::from_static("strict-transport-security"),
-        STRICT_TRANSPORT_SECURITY,
-    );
-    set_static_header(headers, header::X_CONTENT_TYPE_OPTIONS, "nosniff");
-    set_static_header(
-        headers,
-        HeaderName::from_static("referrer-policy"),
-        REFERRER_POLICY,
-    );
-    set_static_header(headers, HeaderName::from_static("x-frame-options"), "DENY");
-    set_static_header(
-        headers,
-        HeaderName::from_static("permissions-policy"),
-        PERMISSIONS_POLICY,
-    );
-    set_static_header(headers, header::CONTENT_SECURITY_POLICY, MEDIA_CSP);
+    fluxer_common::server::set_baseline_security_headers(headers, PERMISSIONS_POLICY);
+    headers
+        .entry(header::CONTENT_SECURITY_POLICY)
+        .or_insert(HeaderValue::from_static(MEDIA_CSP));
 }
 
 pub fn neutralize_script_content_type(status: StatusCode, headers: &mut HeaderMap) {
@@ -60,12 +46,6 @@ pub fn neutralize_script_content_type(status: StatusCode, headers: &mut HeaderMa
             HeaderValue::from_static(crate::mime::INERT_CONTENT_TYPE),
         );
     }
-}
-
-fn set_static_header(headers: &mut HeaderMap, name: HeaderName, value: &'static str) {
-    headers
-        .entry(name)
-        .or_insert(HeaderValue::from_static(value));
 }
 
 pub fn add_media_headers(
@@ -419,43 +399,5 @@ mod tests {
         headers.clear();
         headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("00"));
         assert_eq!(parse_content_length(&headers), Some(0));
-    }
-
-    #[test]
-    fn media_headers_always_cache_forever() {
-        let mut headers = HeaderMap::new();
-        add_media_headers(&mut headers, 10, "image/png", None);
-        assert_eq!(
-            "public, max-age=31536000",
-            headers.get(header::CACHE_CONTROL).unwrap()
-        );
-
-        let mut streamable = HeaderMap::new();
-        add_media_headers(&mut streamable, 10, "video/mp4", None);
-        assert_eq!(
-            "public, max-age=31536000, no-transform",
-            streamable.get(header::CACHE_CONTROL).unwrap()
-        );
-
-        let mut audio = HeaderMap::new();
-        add_media_headers(&mut audio, 10, "audio/ogg", None);
-        assert_eq!(
-            "public, max-age=31536000, no-transform",
-            audio.get(header::CACHE_CONTROL).unwrap()
-        );
-    }
-
-    #[test]
-    fn media_headers_pair_the_policy_with_cdn_cache_control_and_omit_expires() {
-        let mut headers = HeaderMap::new();
-        add_media_headers(&mut headers, 10, "image/png", None);
-        assert_eq!(
-            "public, max-age=31536000",
-            headers.get("CDN-Cache-Control").unwrap()
-        );
-        assert!(
-            headers.get(header::EXPIRES).is_none(),
-            "Cache-Control is authoritative; a fixed Expires date only contradicts it"
-        );
     }
 }

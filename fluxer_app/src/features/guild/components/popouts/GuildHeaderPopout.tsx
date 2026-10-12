@@ -190,7 +190,6 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 	);
 	const listRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-roving-focus="true"]',
-		manageTabIndex: true,
 	});
 	const leaveGuild = useLeaveGuild();
 	const deleteMyMessagesInGuild = useDeleteMyMessagesInGuild();

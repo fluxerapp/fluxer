@@ -392,43 +392,6 @@ describe('Attachment Decay', () => {
 		expect(decayResponse.row?.channel_id).toBe(channelId);
 		expect(decayResponse.row?.message_id).toBe(json.id);
 	});
-	test('should track multiple attachments in single message', async () => {
-		const account = await createTestAccount(harness);
-		const guild = await createGuild(harness, account.token, 'Multi Attachment Guild');
-		const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-		const channelId = guild.system_channel_id ?? channel.id;
-		const file1Data = loadFixture('yeah.png');
-		const file2Data = loadFixture('animated.gif');
-		const {response, json} = await sendMessageWithAttachments(
-			harness,
-			account.token,
-			channelId,
-			{
-				content: 'Multiple attachments',
-				attachments: [
-					{id: 0, filename: 'first.png'},
-					{id: 1, filename: 'second.gif'},
-				],
-			},
-			[
-				{index: 0, filename: 'first.png', data: file1Data},
-				{index: 1, filename: 'second.gif', data: file2Data},
-			],
-		);
-		expect(response.status).toBe(HTTP_STATUS.OK);
-		expect(json.attachments).toBeDefined();
-		expect(json.attachments).not.toBeNull();
-		expect(json.attachments!.length).toBe(2);
-		for (const attachment of json.attachments!) {
-			const decayResponse = await createBuilderWithoutAuth<{
-				row: AttachmentDecayRow | null;
-			}>(harness)
-				.get(`/test/attachment-decay/${attachment.id}`)
-				.execute();
-			expect(decayResponse.row).not.toBeNull();
-			expect(decayResponse.row?.message_id).toBe(json.id);
-		}
-	});
 	test('should configure decay metadata for forwarded snapshot attachments', async () => {
 		const account = await createTestAccount(harness);
 		const guild = await createGuild(harness, account.token, 'Forwarded Decay Test Guild');

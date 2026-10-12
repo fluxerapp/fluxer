@@ -11,6 +11,7 @@ import {
 	generateChangeVerificationCode,
 	getActiveChangeTicketForUser,
 } from '@app/api/user/services/UserChangeChallengeUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
@@ -127,7 +128,7 @@ export class PasswordChangeService {
 		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
 			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
-		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		const newPasswordHash = await hashPassword(newPassword);
 		await users.patchUpsert(user.id, {
 			password_hash: newPasswordHash,
 			password_last_changed_at: new Date(),
@@ -143,7 +144,7 @@ export class PasswordChangeService {
 		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
 			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
-		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		const newPasswordHash = await hashPassword(newPassword);
 		return await users.patchUpsert(
 			user.id,
 			{

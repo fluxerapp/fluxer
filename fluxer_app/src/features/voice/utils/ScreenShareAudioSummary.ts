@@ -13,6 +13,7 @@ import {
 	supportsWindowShareAudioScope,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {MICROPHONE_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {VirtmicNode} from '@app/types/electron.d';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -38,10 +39,7 @@ const SHARED_WINDOW_DESCRIPTOR = msg({
 	message: 'Shared window',
 	comment: 'Screen-share audio summary shown when a window share captures only the audio of the window it shares.',
 });
-export const MICROPHONE_DESCRIPTOR = msg({
-	message: 'Microphone',
-	comment: 'Screen-share audio summary on a video device share whose audio comes from an unnamed microphone.',
-});
+
 export const MICROPHONE_WITH_DEVICE_DESCRIPTOR = msg({
 	message: 'Microphone ({deviceLabel})',
 	comment:

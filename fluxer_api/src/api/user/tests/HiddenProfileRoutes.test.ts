@@ -104,10 +104,6 @@ describe('hidden profiles', () => {
 			.filter((member) => member.user.id === target.userId);
 	}
 
-	test('a normal account shows its stored profile', async () => {
-		await expectShown();
-	});
-
 	test('a staff ban hides the profile until the unban restores it, and clients are told both ways', async () => {
 		vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		const presence = vi.spyOn(NoopGatewayService.prototype, 'dispatchPresence');

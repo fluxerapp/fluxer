@@ -66,10 +66,6 @@ class RouterImpl implements Router {
 		return this.state;
 	}
 
-	getRoutes(): Array<Route> {
-		return this.routes;
-	}
-
 	subscribe(listener: () => void): () => void {
 		this.listeners.add(listener);
 		return () => {

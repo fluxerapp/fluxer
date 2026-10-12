@@ -27,7 +27,7 @@ export function requireWebCameraEffectCustomMediaURL(URL: string): void {
 	}
 }
 
-function throwIfCustomMediaOperationAborted(signal: AbortSignal): void {
+export function throwIfAborted(signal: AbortSignal): void {
 	if (signal.aborted) {
 		throw signal.reason ?? new Error('Custom camera background operation was aborted');
 	}
@@ -35,7 +35,7 @@ function throwIfCustomMediaOperationAborted(signal: AbortSignal): void {
 
 export async function readWebCameraEffectCustomMediaBlob(URL: string, signal: AbortSignal): Promise<Blob> {
 	requireWebCameraEffectCustomMediaURL(URL);
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	let response: Response;
 	try {
 		response = await fetch(URL, {
@@ -61,14 +61,14 @@ export async function readWebCameraEffectCustomMediaBlob(URL: string, signal: Ab
 		maximumChunks: MAX_CUSTOM_MEDIA_RESPONSE_CHUNKS,
 		description: 'Custom camera background response',
 	});
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	if (blob.size === 0) {
 		throw new Error('Custom camera background response is empty');
 	}
 	return blob;
 }
 
-function normalizedMediaType(value: string): string {
+export function normalizedMediaType(value: string): string {
 	return value.split(';', 1)[0]?.trim().toLowerCase() ?? '';
 }
 
@@ -93,7 +93,7 @@ function sniffImageMediaType(bytes: Uint8Array): string | null {
 
 async function resolveWebCameraEffectCustomImageMediaType(blob: Blob, signal: AbortSignal): Promise<string> {
 	const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	const detectedMediaType = sniffImageMediaType(header);
 	if (detectedMediaType == null) {
 		throw new Error('Custom camera background is not a supported image format');

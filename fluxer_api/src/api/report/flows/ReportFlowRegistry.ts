@@ -18,11 +18,13 @@ import {
 	type ReportFlowScreenDef,
 } from '@app/api/report/flows/ReportFlowScreens';
 import {getLegacyCategory, isReportReasonKey, type ReportReasonKey} from '@app/api/report/flows/ReportReasonCatalog';
+import {isStringArray} from '@app/api/utils/JsonBoundaryUtils';
 import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidReportFlowAnswersError} from '@fluxer/errors/src/domains/moderation/InvalidReportFlowAnswersError';
 import {ReportFlowOutdatedError} from '@fluxer/errors/src/domains/moderation/ReportFlowOutdatedError';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import type {
 	ReportFlowOutcome,
 	ReportFlowResponse,
@@ -30,7 +32,6 @@ import type {
 	ReportFlowSurface,
 	ReportFlowTargetType,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
-import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 
 export interface ReportFlowLibrary {
 	flows: Record<ReportFlowTargetType, ReportFlowDef>;
@@ -748,10 +749,6 @@ export function resolveReportFlowAnswers(params: {
 		currentRevisionHash: variant.revisionHash,
 		isCurrentRevision,
 	};
-}
-
-function isStringArray(value: unknown): value is Array<string> {
-	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
 
 export function parseReportFlowSteps(json: string | null | undefined): Array<ReportFlowStepRecord> | null {

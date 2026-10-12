@@ -465,8 +465,6 @@ export class JetStreamWorkerQueue {
 		payload: WorkerJobPayload,
 		options?: {
 			runAt?: Date;
-			maxAttempts?: number;
-			priority?: number;
 			jobKey?: string;
 		},
 	): Promise<{seq: string; duplicate: boolean}> {
@@ -475,8 +473,6 @@ export class JetStreamWorkerQueue {
 		const body = JSON.stringify({
 			payload,
 			run_at: options?.runAt?.toISOString(),
-			max_attempts: options?.maxAttempts ?? 5,
-			priority: options?.priority ?? 0,
 			created_at: new Date().toISOString(),
 		});
 		const msgID = options?.jobKey ? `${taskType}:${options.jobKey}` : randomUUID();

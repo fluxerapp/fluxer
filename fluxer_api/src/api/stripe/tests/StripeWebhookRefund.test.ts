@@ -612,65 +612,6 @@ describe('Stripe Webhook Refund', () => {
 			});
 			expect(result.received).toBe(true);
 		});
-		test('preserves remaining premium when another redeemed gift is still active', async () => {
-			const purchaser = await createTestAccount(harness);
-			const redeemer = await createTestAccount(harness);
-			const userRepository = new UserRepository();
-			await userRepository.createGiftCode({
-				code: 'GIFT_REFUND_FIRST',
-				duration_months: null,
-				duration_type: 'months',
-				duration_quantity: 1,
-				created_at: new Date(),
-				created_by_user_id: createUserID(BigInt(purchaser.userId)),
-				redeemed_at: new Date(),
-				redeemed_by_user_id: createUserID(BigInt(redeemer.userId)),
-				stripe_payment_intent_id: 'pi_test_gift_refund_first',
-				visionary_sequence_number: null,
-				checkout_session_id: null,
-				version: 1,
-			});
-			await userRepository.createGiftCode({
-				code: 'GIFT_REFUND_SECOND',
-				duration_months: null,
-				duration_type: 'months',
-				duration_quantity: 1,
-				created_at: new Date(),
-				created_by_user_id: createUserID(BigInt(purchaser.userId)),
-				redeemed_at: new Date(),
-				redeemed_by_user_id: createUserID(BigInt(redeemer.userId)),
-				stripe_payment_intent_id: 'pi_test_gift_refund_second',
-				visionary_sequence_number: null,
-				checkout_session_id: null,
-				version: 1,
-			});
-			await createBuilder(harness, redeemer.token)
-				.post(`/test/users/${redeemer.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-				})
-				.execute();
-			useRefundListHandler('ch_test_refund_gift_multi_123');
-			await sendStripeWebhook(harness, {
-				type: 'charge.refunded',
-				data: {
-					object: {
-						id: 'ch_test_refund_gift_multi_123',
-						payment_intent: 'pi_test_gift_refund_first',
-						amount_refunded: 2500,
-					},
-				},
-			});
-			const updatedRedeemer = await createBuilder<{
-				premium_type: number;
-				premium_until: string | null;
-			}>(harness, redeemer.token)
-				.get('/users/@me')
-				.execute();
-			expect(updatedRedeemer.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(updatedRedeemer.premium_until).not.toBeNull();
-		});
 		test('handles gift refund when redeemer has stripe_customer_id but no active subscription', async () => {
 			const purchaser = await createTestAccount(harness);
 			const redeemer = await createTestAccount(harness);

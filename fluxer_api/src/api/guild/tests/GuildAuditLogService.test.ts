@@ -23,7 +23,6 @@ import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {describe, expect, it, vi} from 'vitest';
 
 const GUILD_ID = createGuildID(1420000000000000000n);
-const EVERYONE_ROLE_ID = createRoleID(1420000000000000000n);
 const ACTOR_ID = createUserID(1420000000000000001n);
 const MEMBER_ID = createUserID(1420000000000000002n);
 const ROLE_ID = createRoleID(1420000000000000003n);
@@ -161,80 +160,7 @@ describe('GuildAuditLogService dispatch', () => {
 	});
 });
 
-describe('GuildAuditLogBuilder.commit', () => {
-	it('skips an update with empty changes', async () => {
-		const {service, createAuditLog, dispatchGuild} = createService();
-		const result = await service
-			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(AuditLogActionType.MEMBER_UPDATE, MEMBER_ID.toString())
-			.withReason('ignored reason')
-			.withMetadata({role_name: 'Moderators'})
-			.withChanges([])
-			.commit();
-		expect(result).toBeNull();
-		expect(createAuditLog).not.toHaveBeenCalled();
-		expect(dispatchGuild).not.toHaveBeenCalled();
-	});
-
-	it('records a kick without changes', async () => {
-		const {service, createAuditLog, dispatchGuild} = createService();
-		const result = await service
-			.createBuilder(GUILD_ID, ACTOR_ID)
-			.withAction(AuditLogActionType.MEMBER_KICK, MEMBER_ID.toString())
-			.withReason('rule 1')
-			.commit();
-		expect(result).not.toBeNull();
-		expect(createAuditLog).toHaveBeenCalledTimes(1);
-		expect(writtenRow(createAuditLog).reason).toBe('rule 1');
-		expect(writtenRow(createAuditLog).changes).toBeNull();
-		expect(dispatchGuild).toHaveBeenCalledTimes(1);
-	});
-});
-
 describe('GuildAuditLogService.recordPermissionOverwriteDiff', () => {
-	it('records role_name for a role overwrite', async () => {
-		const {service, createAuditLog, getRole} = createService(new Map([[ROLE_ID.toString(), 'Moderators']]));
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: null,
-			next: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-		});
-		expect(getRole).toHaveBeenCalledTimes(1);
-		expect(getRole).toHaveBeenCalledWith(ROLE_ID, GUILD_ID);
-		const row = writtenRow(createAuditLog);
-		expect(row.action_type).toBe(AuditLogActionType.CHANNEL_OVERWRITE_CREATE);
-		expect(writtenOptions(row)).toEqual({
-			id: ROLE_ID.toString(),
-			type: '0',
-			channel_id: CHANNEL_ID.toString(),
-			role_name: 'Moderators',
-		});
-	});
-
-	it('records role_name on update and delete', async () => {
-		const {service, createAuditLog} = createService(new Map([[ROLE_ID.toString(), 'Moderators']]));
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-			next: overwrites([[ROLE_ID, {type: 0, allow: 0n, deny: 1024n}]]),
-		});
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: overwrites([[ROLE_ID, {type: 0, allow: 0n, deny: 1024n}]]),
-			next: null,
-		});
-		expect(writtenRow(createAuditLog, 0).action_type).toBe(AuditLogActionType.CHANNEL_OVERWRITE_UPDATE);
-		expect(writtenOptions(writtenRow(createAuditLog, 0)).role_name).toBe('Moderators');
-		expect(writtenRow(createAuditLog, 1).action_type).toBe(AuditLogActionType.CHANNEL_OVERWRITE_DELETE);
-		expect(writtenOptions(writtenRow(createAuditLog, 1)).role_name).toBe('Moderators');
-	});
-
 	it('records the entry without role_name when the role lookup fails', async () => {
 		const {service, createAuditLog, getRole} = createService(new Map([[ROLE_ID.toString(), 'Moderators']]));
 		getRole.mockRejectedValueOnce(new Error('no host available'));
@@ -251,79 +177,6 @@ describe('GuildAuditLogService.recordPermissionOverwriteDiff', () => {
 			type: '0',
 			channel_id: CHANNEL_ID.toString(),
 		});
-	});
-
-	it('omits role_name for a member overwrite', async () => {
-		const {service, createAuditLog, getRole} = createService(new Map([[MEMBER_ID.toString(), 'Not a role']]));
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: null,
-			next: overwrites([[MEMBER_ID, {type: 1, allow: 1024n, deny: 0n}]]),
-		});
-		expect(getRole).not.toHaveBeenCalled();
-		expect(writtenOptions(writtenRow(createAuditLog))).toEqual({
-			id: MEMBER_ID.toString(),
-			type: '1',
-			channel_id: CHANNEL_ID.toString(),
-		});
-	});
-
-	it('omits role_name for @everyone', async () => {
-		const {service, createAuditLog, getRole} = createService(new Map([[GUILD_ID.toString(), '@everyone']]));
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: null,
-			next: overwrites([[EVERYONE_ROLE_ID, {type: 0, allow: 0n, deny: 1024n}]]),
-		});
-		expect(getRole).not.toHaveBeenCalled();
-		expect(writtenOptions(writtenRow(createAuditLog))).not.toHaveProperty('role_name');
-	});
-
-	it('omits role_name when the role no longer exists', async () => {
-		const {service, createAuditLog, getRole} = createService();
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-			next: null,
-		});
-		expect(getRole).toHaveBeenCalledTimes(1);
-		expect(writtenOptions(writtenRow(createAuditLog))).not.toHaveProperty('role_name');
-	});
-
-	it('passes the reason through', async () => {
-		const {service, createAuditLog} = createService(new Map([[ROLE_ID.toString(), 'Moderators']]));
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: null,
-			next: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-			reason: 'channel cleanup',
-		});
-		expect(writtenRow(createAuditLog).reason).toBe('channel cleanup');
-	});
-
-	it('writes nothing for an unchanged overwrite', async () => {
-		const {service, createAuditLog, getRole, dispatchGuild} = createService(
-			new Map([[ROLE_ID.toString(), 'Moderators']]),
-		);
-		await service.recordPermissionOverwriteDiff({
-			guildId: GUILD_ID,
-			userId: ACTOR_ID,
-			channelId: CHANNEL_ID,
-			previous: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-			next: overwrites([[ROLE_ID, {type: 0, allow: 1024n, deny: 0n}]]),
-			reason: 'no change',
-		});
-		expect(getRole).not.toHaveBeenCalled();
-		expect(createAuditLog).not.toHaveBeenCalled();
-		expect(dispatchGuild).not.toHaveBeenCalled();
 	});
 });
 

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage as describeError} from '@electron/common/ErrorMessage';
+
 import {
 	DESKTOP_LEGACY_HARVEST_BLOB_REF_KEY,
 	DESKTOP_LEGACY_HARVEST_CHANNELS,
@@ -78,10 +80,6 @@ interface LegacyHarvestContext {
 	readonly truncated: Array<string>;
 	readonly criticalFailures: Array<string>;
 	totalBlobBytes: number;
-}
-
-function describeError(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operation: string): Promise<T> {

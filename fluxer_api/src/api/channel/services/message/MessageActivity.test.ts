@@ -8,8 +8,8 @@ import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivityS
 import type {Channel} from '@app/api/models/Channel';
 import {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const HASH = '3F'.repeat(32);

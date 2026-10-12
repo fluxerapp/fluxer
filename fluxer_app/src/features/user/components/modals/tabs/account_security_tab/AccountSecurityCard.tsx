@@ -76,21 +76,14 @@ interface AccountSecurityRowProps {
 	label: React.ReactNode;
 	description?: React.ReactNode;
 	warning?: React.ReactNode;
-	labelClassName?: string;
 	children?: React.ReactNode;
 	'data-flx'?: string;
 }
 
-export const AccountSecurityRow: React.FC<AccountSecurityRowProps> = ({
-	label,
-	description,
-	warning,
-	labelClassName,
-	children,
-}) => (
+export const AccountSecurityRow: React.FC<AccountSecurityRowProps> = ({label, description, warning, children}) => (
 	<div className={styles.row} data-flx="user.account-security-card.row">
 		<div className={styles.rowText} data-flx="user.account-security-card.row-text">
-			<span className={labelClassName ?? styles.rowLabel} data-flx="user.account-security-card.row-label">
+			<span className={styles.rowLabel} data-flx="user.account-security-card.row-label">
 				{label}
 			</span>
 			{description ? (

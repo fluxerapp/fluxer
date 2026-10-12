@@ -13,7 +13,6 @@ import {
 	EmbedSkeletonTitle,
 } from '@app/features/messaging/components/embeds/embed_card/EmbedCard';
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
-import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -79,7 +78,6 @@ export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 	const gift = giftState?.data;
 	const creator = Users.getUser(gift?.created_by?.id ?? '');
 	const isUnclaimed = !(Users.currentUser?.isClaimed() ?? false);
-	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	useEffect(() => {
 		if (!giftState) {
 			void GiftCommands.fetchWithCoalescing(code, target).catch(() => {});
@@ -93,7 +91,7 @@ export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 		}
 		prevLoadingRef.current = isLoading;
 	}, [giftState?.loading]);
-	if (shouldForceSkeleton || !giftState || giftState.loading) {
+	if (!giftState || giftState.loading) {
 		return <GiftLoadingState data-flx="channel.gift-embed.gift-loading-state" />;
 	}
 	if (giftState.invalid || giftState.error || !gift) {

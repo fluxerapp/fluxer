@@ -8,7 +8,11 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import styles from '@app/features/voice/components/media_player/MediaVolumeControl.module.css';
-import {msg} from '@lingui/core/macro';
+import {
+	MUTE_DESCRIPTOR_2 as MUTE_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR_2 as UNMUTE_DESCRIPTOR,
+	VOLUME_CONTROL_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {SpeakerHighIcon, SpeakerLowIcon, SpeakerNoneIcon, SpeakerXIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -16,21 +20,6 @@ import {motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
-
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	context: 'playback-control-action',
-	comment: 'Mute toggle button label in the media player volume control (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	context: 'playback-control-action',
-	comment: 'Mute toggle button label in the media player volume control (currently unmuted).',
-});
-const VOLUME_CONTROL_DESCRIPTOR = msg({
-	message: 'Volume control',
-	comment: 'Aria label for the volume control container in the media player.',
-});
 
 interface MediaVolumeControlProps {
 	volume: number;

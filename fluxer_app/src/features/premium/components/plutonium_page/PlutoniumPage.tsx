@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BACK_DESCRIPTOR, SAVE_PERCENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import '@app/app/fonts/radio_canada_big/radio-canada-big.css';
 import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
@@ -27,7 +28,6 @@ import {
 import {PlutoniumPageIcon} from '@app/features/premium/components/plutonium_page/PlutoniumPageIcons';
 import {CROWN_AVIF, CROWN_WEBP} from '@app/features/premium/components/plutonium_page/PlutoniumPageMedia';
 import {
-	BACK_DESCRIPTOR,
 	CLOSING_BODY_DESCRIPTOR,
 	CLOSING_GIFT_BODY_DESCRIPTOR,
 	CLOSING_GIFT_TITLE_DESCRIPTOR,
@@ -51,7 +51,6 @@ import {
 	PURCHASE_BLOCKED_VERIFY_DESCRIPTOR,
 	REDEEM_GIFT_CODE_DESCRIPTOR,
 	REDEEM_ONLY_DESCRIPTOR,
-	SAVE_PERCENT_DESCRIPTOR,
 	SUBSCRIBE_MONTHLY_DESCRIPTOR,
 	SUBSCRIBE_YEARLY_DESCRIPTOR,
 	TAG_FOOTNOTE_DESCRIPTOR,

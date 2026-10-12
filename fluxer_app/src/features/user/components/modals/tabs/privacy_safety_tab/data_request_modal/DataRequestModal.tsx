@@ -8,8 +8,10 @@ import {
 	CANCEL_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
 	GO_BACK_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as KIND_COMMUNITIES_LABEL_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as SUMMARY_COMMUNITIES_INCLUDED_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as SUMMARY_COMMUNITIES_LABEL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getCachedDateTimeFormat} from '@app/features/i18n/utils/IntlCache';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -21,7 +23,19 @@ import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel
 import type {BulkDeleteMyMessagesFilter} from '@app/features/user/commands/UserCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.module.css';
+import {
+	SUMMARY_ALL_TIME_DESCRIPTOR as DATE_MODE_ALL_TIME_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR,
+	DELETE_MESSAGES_DESCRIPTOR as DELETE_SUBMIT_DESCRIPTOR,
+	KIND_GROUP_DMS_LABEL_DESCRIPTOR,
+	SUMMARY_ALL_TIME_DESCRIPTOR,
+	KIND_GROUP_DMS_LABEL_DESCRIPTOR as SUMMARY_GROUP_DMS_DESCRIPTOR,
+	SUMMARY_NONE_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR as SUMMARY_TIME_RANGE_LABEL_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR as WHEN_STEP_TITLE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
+import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -106,10 +120,7 @@ const COMMUNITIES_STEP_TITLE_DESCRIPTOR = msg({
 	message: 'Which communities',
 	comment: 'Heading of the communities step in the data-request carousel modal.',
 });
-const WHEN_STEP_TITLE_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Heading of the time-range step in the data-request carousel modal.',
-});
+
 const CONFIRM_STEP_TITLE_DESCRIPTOR = msg({
 	message: 'Review and confirm',
 	comment: 'Heading of the final confirm step in the data-request carousel modal showing a summary.',
@@ -154,14 +165,7 @@ const KIND_DMS_CLOSED_LABEL_DESCRIPTOR = msg({
 	comment:
 		'Switch label for including 1:1 direct messages the user has previously closed. Independent companion to the Open DMs switch.',
 });
-const KIND_GROUP_DMS_LABEL_DESCRIPTOR = msg({
-	message: 'Group DMs',
-	comment: 'Switch label for including group DMs (3+ participants) in a data export / deletion scope.',
-});
-const KIND_COMMUNITIES_LABEL_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Switch label for including community (guild) channels in a data export / deletion scope.',
-});
+
 const GUILD_FILTER_MODE_LABEL_DESCRIPTOR = msg({
 	message: 'Community filter',
 	comment: 'Form label for the dropdown that switches the community filter between exclude and include-only modes.',
@@ -178,14 +182,7 @@ const COMMUNITIES_EMPTY_DESCRIPTOR = msg({
 	message: "You aren't in any communities right now.",
 	comment: 'Placeholder shown when the user has no communities to filter.',
 });
-const DATE_MODE_LABEL_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Form label for the dropdown that picks between all-time and a custom date range.',
-});
-const DATE_MODE_ALL_TIME_DESCRIPTOR = msg({
-	message: 'All time',
-	comment: 'Dropdown option that applies the action to every message.',
-});
+
 const DATE_MODE_CUSTOM_DESCRIPTOR = msg({
 	message: 'Custom range',
 	comment: 'Dropdown option that lets the user pick a start and end date.',
@@ -214,10 +211,7 @@ const EXPORT_SUBMIT_DESCRIPTOR = msg({
 	message: 'Request export',
 	comment: 'Footer submit button label on the confirm step of the data-export modal.',
 });
-const DELETE_SUBMIT_DESCRIPTOR = msg({
-	message: 'Delete messages',
-	comment: 'Footer submit button label on the confirm step of the data-deletion modal.',
-});
+
 const SUMMARY_SCOPE_LABEL_DESCRIPTOR = msg({
 	message: 'Scope',
 	comment: 'Summary row label on the confirm step showing the user-picked scope.',
@@ -226,22 +220,7 @@ const SUMMARY_CONVERSATIONS_LABEL_DESCRIPTOR = msg({
 	message: 'Conversations',
 	comment: 'Summary row label on the confirm step showing the user-picked conversation kinds.',
 });
-const SUMMARY_COMMUNITIES_LABEL_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Summary row label on the confirm step showing the community filter selection.',
-});
-const SUMMARY_TIME_RANGE_LABEL_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Summary row label on the confirm step showing the chosen time range.',
-});
-const SUMMARY_NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Summary row value on the confirm step when no items in the category were selected.',
-});
-const SUMMARY_ALL_TIME_DESCRIPTOR = msg({
-	message: 'All time',
-	comment: 'Summary row value on the confirm step indicating no date filter is applied.',
-});
+
 const SUMMARY_FROM_DESCRIPTOR = msg({
 	message: 'From {start}',
 	comment: 'Summary row value on the confirm step when only a start date is set. {start} is a localized date.',
@@ -274,14 +253,7 @@ const SUMMARY_DMS_WITH_CLOSED_DESCRIPTOR = msg({
 	message: 'Direct messages (open and closed)',
 	comment: 'Summary chip on the confirm step indicating both open and closed 1:1 DMs are included.',
 });
-const SUMMARY_GROUP_DMS_DESCRIPTOR = msg({
-	message: 'Group DMs',
-	comment: 'Summary chip on the confirm step indicating that group DMs are included.',
-});
-const SUMMARY_COMMUNITIES_INCLUDED_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Summary chip on the confirm step indicating that community channels are included.',
-});
+
 const EXPORT_TAB_DESCRIPTION_DESCRIPTOR = msg({
 	message:
 		'Build a downloadable archive of your account data, including messages and attachment URLs. Most people want everything, but you can narrow the scope below.',
@@ -368,7 +340,7 @@ function getVariantConfig(variant: DataRequestVariant, usesUsernameSignIn: boole
 }
 
 function formatDateForSummary(date: Date, locale: string): string {
-	return getCachedDateTimeFormat(locale, {year: 'numeric', month: 'short', day: 'numeric'}).format(date);
+	return getDateFormatter(locale, {year: 'numeric', month: 'short', day: 'numeric'}).format(date);
 }
 
 interface DataRequestModalProps {

@@ -8,7 +8,6 @@
 	},
 	"scripts": {
 		"test": "vitest run",
-		"test:coverage": "vitest run --coverage",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
 		"generate": "cd proto && buf generate && ../../../tools/ci/run.sh clean-schema-generated-files --root ../src/gen && cd .. && pnpm exec biome check --write --unsafe --no-errors-on-unmatched src/gen"

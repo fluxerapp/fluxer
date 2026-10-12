@@ -156,7 +156,7 @@ fn hdr_pq_avif_tone_maps_to_sdr_pixels() {
         .decode(hdr_b64)
         .expect("fixture decodes");
     assert_eq!("image/avif", mime::sniff(&avif).mime);
-    let metrics = TransformMetrics::new();
+    let metrics = TransformMetrics::default();
     let png = super::super::transform_image(
         &avif,
         &ImageOptions {
@@ -229,7 +229,7 @@ fn hdr_pq_avif_tone_maps_even_when_the_colour_signal_is_one_libheif_cannot_model
         cases.push((label, mutated));
     }
     for (label, bytes) in cases {
-        let metrics = TransformMetrics::new();
+        let metrics = TransformMetrics::default();
         let png = super::super::transform_image(
             &bytes,
             &ImageOptions {

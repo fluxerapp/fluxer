@@ -31,7 +31,7 @@ export interface AuthLoginFlowInit extends AuthLoginFlowSync {
 	hasStoredAccounts: boolean;
 }
 
-function hasInitialIdentifier(initialIdentifier: string | null): boolean {
+export function hasInitialIdentifier(initialIdentifier: string | null): boolean {
 	if (initialIdentifier == null) {
 		return false;
 	}

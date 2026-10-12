@@ -30,7 +30,9 @@ do_broadcast_voice_state_update(VoiceState, State, OldChannelIdBin) ->
     FilterChannelId = utils:binary_to_integer_safe(FilterChannelIdBin),
     FilteredSessions = filter_sessions_for_voice_channel(Sessions, FilterChannelId, State),
     Pids = [maps:get(pid, S) || {_Sid, S} <- FilteredSessions],
-    maybe_dispatch_voice_state_update(Pids, sanitize_voice_state(VoiceState), State),
+    maybe_dispatch_voice_state_update(
+        Pids, voice_state_utils:sanitize_voice_state_for_broadcast(VoiceState), State
+    ),
     maybe_persist_voice_state_update(VoiceState, State),
     maybe_sync_guild_voice_state(VoiceState, OldChannelIdBin, State),
     ok.
@@ -41,10 +43,6 @@ filter_channel_id_bin(VoiceState, OldChannelIdBin) ->
         null -> OldChannelIdBin;
         ChannelIdBin -> ChannelIdBin
     end.
-
--spec sanitize_voice_state(voice_state()) -> voice_state().
-sanitize_voice_state(VoiceState) ->
-    voice_state_utils:sanitize_voice_state_for_broadcast(VoiceState).
 
 -spec filter_sessions_for_voice_channel(map(), integer() | undefined, guild_state()) ->
     [{term(), map()}].

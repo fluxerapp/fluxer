@@ -7,7 +7,7 @@ import {THREAD_AWARE_ALL_PERMISSIONS, THREAD_PERMISSIONS} from '@fluxer/constant
 export const CLIENT_FEATURES_HEADER = Headers.X_FLUXER_FEATURES;
 export const CHANNEL_THREADS_CLIENT_FEATURE = 'channel_threads';
 
-export type ThreadPermissionMode = 'control' | 'active' | 'retired';
+export type ThreadPermissionMode = 'active';
 
 export interface ProtectedBitActor {
 	clientFeatures: ReadonlySet<string>;
@@ -16,8 +16,7 @@ export interface ProtectedBitActor {
 
 function threadBitsWritable(actor: ProtectedBitActor): boolean {
 	const threadBits = actor.threadBits;
-	if (!threadBits || threadBits.mode === 'control') return true;
-	return threadBits.mode === 'active' && threadBits.writer;
+	return !threadBits || threadBits.writer;
 }
 
 export function protectedThreadBits(actor: ProtectedBitActor): bigint {
@@ -25,7 +24,7 @@ export function protectedThreadBits(actor: ProtectedBitActor): bigint {
 }
 
 export function permissionWriteMask(actor: ProtectedBitActor): bigint {
-	return !actor.threadBits || actor.threadBits.mode === 'control' ? ALL_PERMISSIONS : THREAD_AWARE_ALL_PERMISSIONS;
+	return !actor.threadBits ? ALL_PERMISSIONS : THREAD_AWARE_ALL_PERMISSIONS;
 }
 
 const PERMISSION_BIT_CLIENT_FEATURES: ReadonlyArray<{

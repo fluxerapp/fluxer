@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {timingSafeEqual} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {
@@ -16,7 +15,8 @@ import {Logger} from '@app/api/Logger';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
-import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
+import {constantTimeEquals} from '@app/api/utils/SecretHash';
 import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -111,15 +111,6 @@ interface AvailableMfaMethods {
 interface SetWebAuthnTwoFactorResult {
 	user: User;
 	backupCodes: Array<MfaBackupCode> | null;
-}
-
-function constantTimeEquals(a: string, b: string): boolean {
-	const bufferA = Buffer.from(a);
-	const bufferB = Buffer.from(b);
-	if (bufferA.length !== bufferB.length) {
-		return false;
-	}
-	return timingSafeEqual(bufferA, bufferB);
 }
 
 function normalizeBackupCode(code: string): string {
@@ -333,7 +324,7 @@ export async function deleteWebAuthnCredential(ctx: ApiContext, userId: UserID, 
 			if (!userHasMfa(updatedUser)) {
 				await users.clearMfaBackupCodes(userId);
 			}
-			await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
+			await dispatchUserUpdate(gateway, updatedUser);
 			await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 		}
 	}
@@ -370,7 +361,7 @@ export async function setWebAuthnTwoFactor(
 	} else if (!userHasMfa(updatedUser)) {
 		await users.clearMfaBackupCodes(userId);
 	}
-	await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
+	await dispatchUserUpdate(gateway, updatedUser);
 	await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	return {user: updatedUser, backupCodes};
 }

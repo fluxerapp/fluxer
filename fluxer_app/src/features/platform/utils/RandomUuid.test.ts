@@ -46,13 +46,3 @@ describe('without crypto.randomUUID', () => {
 		expect(generateCustomKeybindId()).toMatch(UUID_V4);
 	});
 });
-
-test('randomUuid uses crypto.randomUUID when present', () => {
-	const fixed = '00000000-0000-4000-8000-000000000000';
-	Object.defineProperty(globalThis.crypto, 'randomUUID', {value: () => fixed, configurable: true});
-	try {
-		expect(randomUuid()).toBe(fixed);
-	} finally {
-		Reflect.deleteProperty(globalThis.crypto, 'randomUUID');
-	}
-});

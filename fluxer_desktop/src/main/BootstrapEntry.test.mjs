@@ -40,38 +40,9 @@ describe('Bootstrap entry point', () => {
 		const sites = source.split('\n').filter((line) => line.includes('import(MAIN_PROCESS_ENTRY_URL)'));
 		assert.equal(
 			sites.length,
-			3,
-			'a new MainApp import site must be justified here before it is added. The three are: the launch permit, the flag off branch, and the instance module preference, which only fires once decideModuleSystemDisableRequest has confirmed an offline renderer can take over.',
+			2,
+			'a new MainApp import site must be justified here before it is added. The two are: the launch permit and the flag off branch.',
 		);
-	});
-
-	test('the instance module preference can only be honoured through the offline renderer guard', () => {
-		assert.match(
-			source,
-			/const instancePreference = decideModuleSystemDisableRequest\(\n\t\tinstanceTurnedModulesOff\(userDataConfig\.base\),\n\t\tCAN_TURN_MODULE_SYSTEM_OFF,\n\t\);/,
-			'A server side switch that could turn the module system off on a build with no renderer would brick the install, so it goes through the same guard the launch flag does.',
-		);
-		assert.match(source, /case ModuleSystemDisableDecision\.HONOURED:\n\t\t\tlogger\.warn\(/);
-		assert.match(
-			source,
-			/const CAN_TURN_MODULE_SYSTEM_OFF = HAS_OFFLINE_RENDERER && BUILD_CHANNEL === 'development';/,
-			'Every release shell bundles a renderer now, so the switch and the launch flag would otherwise skip updates, floors and on-demand assets on stable and canary.',
-		);
-	});
-
-	test('the instance module preference is read from the module store root, never from the app store database', () => {
-		assert.doesNotMatch(source, /getDesktopAppStorage/);
-		assert.match(source, /instanceTurnedModulesOff\(userDataConfig\.base\)/);
-	});
-
-	test('the instance module preference is read once during the boot, so flipping it mid session only reaches the next boot', () => {
-		assert.equal(
-			source.split('instanceTurnedModulesOff(').length - 1,
-			1,
-			'instanceTurnedModulesOff re-reads the file off disk on every call, so a second read from the module poll or from any later re-check would tear the module system out from under a running session. The switch is a boot decision.',
-		);
-		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
-		assert.ok(bootstrap.indexOf('instanceTurnedModulesOff(') < bootstrap.indexOf('await app.whenReady()'));
 	});
 
 	test('an ignored disable override is logged rather than silently swallowed', () => {
@@ -79,7 +50,6 @@ describe('Bootstrap entry point', () => {
 			source,
 			/if \(MODULE_SYSTEM_LAUNCH\.kind === ModuleSystemLaunchDecision\.ENABLED_WITH_IGNORED_DISABLE_REQUEST\) \{/,
 		);
-		assert.match(source, /case ModuleSystemDisableDecision\.IGNORED_WITHOUT_OFFLINE_RENDERER:\n\t\t\tlogger\.warn\(/);
 	});
 
 	test('the deliberate floor bypass on the rollback path reaches the log', () => {

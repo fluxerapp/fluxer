@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {
 	resolveEffectiveScreenShareDimensions,
 	type ScreenShareTarget,
@@ -8,13 +9,10 @@ import {
 	getVoiceAudioDeviceMetadata,
 	type VoiceAudioDefaultDevicePlatform,
 } from '@app/features/voice/utils/VoiceDeviceManager';
+import {SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-const CAMERA_DESCRIPTOR = msg({
-	message: 'Camera',
-	comment: 'Fallback video device label when the browser or operating system does not provide a camera name.',
-});
 const WINDOWS_DEFAULT_AUDIO_DEVICE_DESCRIPTOR = msg({
 	message: 'Windows default',
 	comment: 'Audio device label prefix for the operating system default audio device on Windows.',
@@ -431,10 +429,6 @@ export const VOICE_P2P_STAY_DESCRIPTOR = msg({
 	comment:
 		'Button in the peer-to-peer connection failure dialog that closes the dialog and keeps the user in the call with the participants they can reach.',
 });
-export const VOICE_P2P_LEAVE_DESCRIPTOR = msg({
-	message: 'Leave call',
-	comment: 'Button in the peer-to-peer connection failure dialog that leaves the call.',
-});
 export const VOICE_P2P_UNAVAILABLE_DESCRIPTOR = msg({
 	message: 'P2P calls are unavailable right now.',
 	comment: 'Error shown when the server refuses to start or join a peer-to-peer call.',
@@ -453,12 +447,6 @@ export const CHANNEL_RTC_P2P_SETTING_DESCRIPTION_DESCRIPTOR = msg({
 		"Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address.",
 	comment:
 		'Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.',
-});
-
-const SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR = msg({
-	message: 'Source',
-	comment:
-		'Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.',
 });
 
 const RESOLUTION_LABEL_HEIGHTS = [480, 720, 1080, 1440, 2160];

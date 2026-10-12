@@ -3,17 +3,18 @@
 
 import Initialization from '@app/features/app/state/Initialization';
 import {
+	MAX_BACKGROUND_GATEWAY_CONNECTIONS,
+	readMaxBackgroundGatewayConnections,
+} from '@app/features/gateway/transport/BackgroundGatewaySessionManager';
+import {
 	ForegroundGatewayConnectionRecoverableError,
 	ForegroundGatewayRecoveryCause,
 } from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
-import GatewaySessions, {
-	MAX_BACKGROUND_GATEWAY_CONNECTIONS,
-	readMaxBackgroundGatewayConnections,
-} from '@app/features/gateway/transport/GatewaySessionPool';
 import {
 	GATEWAY_FOREGROUND_READY_TIMEOUT_MS,
 	GatewayReadyTimeoutError,
-} from '@app/features/gateway/transport/PooledGatewayConnection';
+} from '@app/features/gateway/transport/GatewayReadinessWaiters';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import {runInAction} from 'mobx';
@@ -57,10 +58,6 @@ vi.mock('@app/features/app/state/RuntimeConfig', () => ({
 
 vi.mock('@app/features/gateway/transport/ForegroundGatewayHandoff', () => ({
 	ForegroundGatewayHandoff: class ForegroundGatewayHandoff {},
-}));
-
-vi.mock('@app/features/gateway/transport/BackgroundAccountPresence', () => ({
-	default: {appearOffline: true},
 }));
 
 vi.mock('@app/features/gateway/events/EventRouter', () => ({createHandlerRegistry: () => new Map()}));
@@ -167,7 +164,7 @@ vi.mock('@app/features/presence/state/Presence', () => ({default: {handleSession
 
 vi.mock('@app/features/search/state/QuickSwitcher', () => ({default: {recomputeIfOpen: vi.fn()}}));
 
-vi.mock('@app/features/typing/state/TypingIndicator', () => ({default: {reset: vi.fn()}}));
+vi.mock('@app/features/typing/rolling/RollingTypingStore', () => ({default: {reset: vi.fn()}}));
 
 vi.mock('@app/features/ui/state/MobileLayout', () => ({default: {isMobileLayout: () => false}}));
 
@@ -267,20 +264,6 @@ describe('background connection cap', () => {
 });
 
 describe('web inertness', () => {
-	test('no background transport is available without an electron bridge', () => {
-		expect(window.electron).toBeUndefined();
-		expect(GatewaySessions.isBackgroundTransportAvailable()).toBe(false);
-	});
-
-	test('bootstrapBackground returns early and creates no background session', () => {
-		GatewaySessions.start();
-
-		GatewaySessions.bootstrapBackground();
-
-		expect(GatewaySessions.isBackgroundBootstrapped).toBe(false);
-		expect(GatewaySessions.backgroundConnectionCount).toBe(0);
-	});
-
 	test('a full account switch keeps exactly one live WebSocket and installs no desktop router', async () => {
 		GatewaySessions.start();
 

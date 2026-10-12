@@ -5,7 +5,7 @@ mod parse;
 mod tests;
 
 use crate::constants;
-use crate::secret::{SecretBytes, SecretString};
+use fluxer_common::secret::{SecretBytes, SecretString};
 use http::HeaderValue;
 use parse::{
     EnvMap, decode_upload_relay_secret, default_native_transform_concurrency,
@@ -150,7 +150,7 @@ impl Config {
         K: Into<String>,
         V: Into<String>,
     {
-        let env = EnvMap::from_iter(vars);
+        let env = EnvMap::from_pairs(vars);
 
         let mode =
             parse_mode_env(env.get("FLUXER_MEDIA_PROXY_MODE"))?.unwrap_or(DeploymentMode::Mp);

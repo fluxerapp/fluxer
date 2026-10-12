@@ -13,8 +13,7 @@
     shard_pid_from_table/1,
     handle_owner_call/5,
     forward_call/4,
-    execute_owner_request/4,
-    start_call_with_drain_guard/4
+    execute_owner_request/4
 ]).
 
 -export_type([session_id/0, state/0]).

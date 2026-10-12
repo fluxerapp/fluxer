@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type AutocompleteOption, isMeme} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
 import {AutocompleteMemePreview} from '@app/features/channel/components/AutocompleteMemePreview';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
+import {isMeme} from '@app/features/channel/components/AutocompleteTypes';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
 
 export const AutocompleteMeme = observer(
 	({
@@ -17,16 +17,7 @@ export const AutocompleteMeme = observer(
 		onMouseLeave,
 		rowRefs,
 		getOptionId,
-	}: {
-		onSelect: (option: AutocompleteOption) => void;
-		keyboardFocusIndex: number;
-		hoverIndex: number;
-		options: Array<AutocompleteOption>;
-		onMouseEnter: (index: number) => void;
-		onMouseLeave: () => void;
-		rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
-		getOptionId?: (index: number) => string;
-	}) => {
+	}: AutocompleteListProps) => {
 		const memes = options.filter(isMeme);
 		return memes.map((option, index) => (
 			<AutocompleteItem

@@ -2,7 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GifPicker.module.css';
-import {safePause, safePlay, useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
+import {useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
 import {resolvesToVideo} from '@app/features/channel/components/pickers/gif/GifPickerMediaKind';
 import type {GifPickerGridItemData} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
 import {PickerThumbnail} from '@app/features/channel/components/pickers/shared/PickerThumbnail';
@@ -60,7 +60,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onClose,
 	selectGif,
 	autoSendKlipyGifs,
-	gifAutoPlay,
 	searchTerm,
 	onShowFavorites,
 	onShowTrending,
@@ -80,7 +79,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onClose?: () => void;
 	selectGif?: (gif: Gif) => void;
 	autoSendKlipyGifs: boolean;
-	gifAutoPlay: boolean;
 	searchTerm: string;
 	onShowFavorites: () => void;
 	onShowTrending: () => void;
@@ -121,31 +119,13 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		resolvesToVideo(mediaContentType, proxySrc, mediaSourceUrl);
 	const videoThumbHashURL = decodeThumbHashDataURL(usesVideoElement ? thumbnailPlaceholder : null);
 	const hasThumbnailContent = (proxySrc !== null && proxySrc.length > 0) || thumbnailPlaceholder !== null;
-	const videoRef = usePooledVideo({
+	usePooledVideo({
 		src: usesVideoElement ? proxySrc : null,
 		containerRef: videoContainerRef,
 		videoPool,
-		autoPlay: gifAutoPlay,
+		autoPlay: true,
 		enabled: usesVideoElement,
 	});
-	const playOnHover = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (event.pointerType !== 'mouse') return;
-			const v = videoRef.current;
-			if (!v) return;
-			void safePlay(v);
-		},
-		[videoRef],
-	);
-	const stopOnHoverEnd = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (event.pointerType !== 'mouse') return;
-			const v = videoRef.current;
-			if (!v) return;
-			safePause(v);
-		},
-		[videoRef],
-	);
 	const handleClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {
 			if (isSkeleton) return;
@@ -213,13 +193,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		},
 		[handleClick],
 	);
-	const hoverPlaybackHandlers =
-		gifAutoPlay || !usesVideoElement
-			? null
-			: {
-					onPointerEnter: playOnHover,
-					onPointerLeave: stopOnHoverEnd,
-				};
 	if (isSkeleton) {
 		return (
 			<div
@@ -273,7 +246,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 				data-grid-item={itemKey}
 				aria-label={i18n._(OPEN_DESCRIPTOR, {title: item.title})}
 				data-flx="channel.pickers.gif.gif-picker-grid-item.grid-item.click"
-				{...(hoverPlaybackHandlers ?? {})}
 			>
 				{hasPreview && (
 					<div
@@ -412,7 +384,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 						: i18n._(SEND_GIF_DESCRIPTOR, {title: gif.title})
 				}
 				data-flx="channel.pickers.gif.gif-picker-grid-item.grid-item.click--2"
-				{...(hoverPlaybackHandlers ?? {})}
 			>
 				<div
 					className={clsx(styles.gifMediaContainer, styles.gifMediaContainerPlaceholder)}

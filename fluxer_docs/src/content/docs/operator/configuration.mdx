@@ -1132,10 +1132,6 @@ Falls back to `FLUXER_GATEWAY_LOGGER_LEVEL`. The Gateway log level at runtime. O
 
 Default `dev`. The reported build. Baked into the images, so Compose does not set it. When `BUILD_VERSION` is unset or empty outside development, the process prints a warning.
 
-#### `RELEASE_CHANNEL`
-
-Default `stable`. The reported channel. Only `canary` is recognised as non-stable. Read by `app-proxy` only. It describes the shipped build, so Compose does not set it.
-
 #### `HOSTNAME`
 
 Set by Docker. Node identity in metrics and logs.
@@ -1746,7 +1742,7 @@ Compose writes each of these from the `.env` name given, so setting the name its
 
 #### Build and platform metadata
 
-`BUILD_VERSION`, `FLUXER_BUILD_VERSION` and `RELEASE_CHANNEL` describe the shipped build. `POD_NAME` and `HOSTNAME` come from the platform.
+`BUILD_VERSION` and `FLUXER_BUILD_VERSION` describe the shipped build. `POD_NAME` and `HOSTNAME` come from the platform.
 
 #### Test and development switches
 

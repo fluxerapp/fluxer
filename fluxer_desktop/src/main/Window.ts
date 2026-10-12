@@ -352,7 +352,7 @@ export function getActiveAllowTransparency(): boolean {
 	return initialAllowTransparency ?? false;
 }
 
-function isAliveWindow(window: BrowserWindow | null): window is BrowserWindow {
+export function isAliveWindow(window: BrowserWindow | null): window is BrowserWindow {
 	return Boolean(window && !window.isDestroyed());
 }
 
@@ -413,15 +413,6 @@ export function focusThemeStudioPopoutWindow(): boolean {
 		return false;
 	}
 	focusWindow(window);
-	return true;
-}
-
-export function closeThemeStudioPopoutWindow(): boolean {
-	const window = getThemeStudioPopoutWindow();
-	if (!window) {
-		return false;
-	}
-	window.close();
 	return true;
 }
 

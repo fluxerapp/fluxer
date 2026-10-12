@@ -6,7 +6,6 @@
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
 -export([
-    determine_count/0,
     start/1,
     restart/2,
     forward_call/3,
@@ -17,10 +16,7 @@
     sync_table/1,
     put_pid/2,
     clear_pid/1,
-    pid_from_table/1,
-    find_by_ref/2,
-    find_by_pid/2,
-    default_count/0
+    pid_from_table/1
 ]).
 
 -export_type([user_id/0, shard/0, state/0]).
@@ -33,10 +29,6 @@
 -type state() :: #{
     shards := #{non_neg_integer() => shard()}, shard_count := pos_integer(), _ => _
 }.
-
--spec determine_count() -> {pos_integer(), configured | auto}.
-determine_count() ->
-    shard_utils:determine_shard_count(presence_shards).
 
 -spec start(non_neg_integer()) -> {ok, shard()} | {error, term()}.
 start(Index) ->
@@ -150,20 +142,6 @@ pid_from_table(Key) ->
     catch
         error:badarg -> error
     end.
-
--spec find_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_by_ref(Ref, Shards) ->
-    shard_utils:find_shard_by_ref(Ref, Shards).
-
--spec find_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_by_pid(Pid, Shards) ->
-    shard_utils:find_shard_by_pid(Pid, Shards).
-
--spec default_count() -> pos_integer().
-default_count() ->
-    clustered_ets_cache:default_shard_count().
 
 -spec ensure_shard(user_id(), state()) -> {non_neg_integer(), state()}.
 ensure_shard(Key, State) ->

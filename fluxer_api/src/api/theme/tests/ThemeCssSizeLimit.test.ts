@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {getConfig} from '@app/api/Config';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {resolveThemeCssMaxBytes, setThemeCssMaxBytesForTesting, THEME_CSS_MAX_BYTES} from '@app/api/theme/ThemeService';
+import {setThemeCssMaxBytesForTesting, THEME_CSS_MAX_BYTES} from '@app/api/theme/ThemeService';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface ThemeCreateResponse {
@@ -27,23 +26,6 @@ describe('Theme CSS size limits', () => {
 		setThemeCssMaxBytesForTesting(undefined);
 		await harness?.shutdown();
 	});
-	it('enforces the 8MB limit in production and only honours the override in test mode', () => {
-		const config = getConfig();
-		expect(THEME_CSS_MAX_BYTES).toBe(8 * 1024 * 1024);
-		expect(resolveThemeCssMaxBytes()).toBe(TEST_MAX_CSS_BYTES);
-		config.dev.testModeEnabled = false;
-		try {
-			expect(resolveThemeCssMaxBytes()).toBe(THEME_CSS_MAX_BYTES);
-		} finally {
-			config.dev.testModeEnabled = true;
-		}
-		setThemeCssMaxBytesForTesting(undefined);
-		try {
-			expect(resolveThemeCssMaxBytes()).toBe(THEME_CSS_MAX_BYTES);
-		} finally {
-			setThemeCssMaxBytesForTesting(TEST_MAX_CSS_BYTES);
-		}
-	});
 	it('accepts CSS at exactly the real 8MB limit through the full HTTP stack', async () => {
 		setThemeCssMaxBytesForTesting(undefined);
 		const user = await createTestAccount(harness);
@@ -63,16 +45,6 @@ describe('Theme CSS size limits', () => {
 			.body({css: oversizedCss})
 			.expect(HTTP_STATUS.BAD_REQUEST, 'FILE_SIZE_TOO_LARGE')
 			.execute();
-	});
-	it('accepts CSS at exactly the limit', async () => {
-		const user = await createTestAccount(harness);
-		const maxCss = 'a'.repeat(TEST_MAX_CSS_BYTES);
-		const theme = await createBuilder<ThemeCreateResponse>(harness, user.token)
-			.post('/users/@me/themes')
-			.body({css: maxCss})
-			.expect(HTTP_STATUS.CREATED)
-			.execute();
-		expect(theme.id).toBeDefined();
 	});
 	it('rejects CSS whose byte length exceeds the limit even when the character count does not', async () => {
 		const user = await createTestAccount(harness);

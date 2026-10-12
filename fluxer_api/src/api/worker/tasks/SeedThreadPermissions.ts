@@ -4,7 +4,6 @@ import {createGuildID, type GuildID, guildIdToRoleId} from '@app/api/BrandedType
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {withThreadParentFieldsMany} from '@app/api/channel/services/thread/ThreadParentSettings';
-import {getCompiledChannelThreadsConfig, guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -18,7 +17,6 @@ import {z} from 'zod';
 
 const PayloadSchema = z.object({
 	guildId: z.string(),
-	configVersion: z.number().int().min(0).optional(),
 });
 
 const SEEDED_GUILD_CACHE_MAX_ENTRIES = 10_000;
@@ -34,11 +32,7 @@ export function seedThreadOverwriteValue(value: bigint): bigint {
 }
 
 async function enqueueThreadPermissionSeed(guildId: string): Promise<void> {
-	await getWorkerService().addJob(
-		'seedThreadPermissions',
-		{guildId, configVersion: getCompiledChannelThreadsConfig().config.config_version},
-		{jobKey: `seed-thread-permissions-${guildId}`},
-	);
+	await getWorkerService().addJob('seedThreadPermissions', {guildId}, {jobKey: `seed-thread-permissions-${guildId}`});
 }
 
 export async function ensureGuildThreadPermissionsSeeded(threads: ThreadRepository, guildId: GuildID): Promise<void> {
@@ -54,21 +48,11 @@ export async function ensureGuildThreadPermissionsSeeded(threads: ThreadReposito
 	await enqueueThreadPermissionSeed(key);
 }
 
-export async function ensureChannelThreadsConfigVersion(requiredVersion: number | undefined): Promise<void> {
-	if (requiredVersion === undefined || getCompiledChannelThreadsConfig().config.config_version >= requiredVersion)
-		return;
-	const refreshed = await getWorkerDependencies().instanceConfigRepository.refreshChannelThreadsConfig();
-	if (refreshed.config.config_version < requiredVersion) {
-		throw new Error(`Channel threads config ${refreshed.config.config_version} is older than ${requiredVersion}`);
-	}
-}
-
 const seedThreadPermissions: WorkerTaskHandler = async (payload) => {
 	const validated = PayloadSchema.parse(payload);
 	const guildId = createGuildID(BigInt(validated.guildId));
 	const {channelRepository, guildRepository, gatewayService, userCacheService} = getWorkerDependencies();
-	await ensureChannelThreadsConfigVersion(validated.configVersion);
-	if (!guildActive(guildId)) return;
+
 	const marker = await channelRepository.threads.getGuildMarker(guildId);
 	if (marker?.perms_seeded_at) return;
 	const guild = await guildRepository.findUnique(guildId);

@@ -4,7 +4,7 @@ import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
+import {NatsConfigPublisher} from '@app/api/instance/NatsConfigPublisher';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -55,8 +55,7 @@ describe('instance config admin PATCH under concurrent writes', () => {
 	const patchConfig = (admin: TestAccount, body: Record<string, unknown>) =>
 		createBuilder<InstanceConfigResponse>(harness, admin.token).patch('/admin/instance/config').body(body);
 
-	const spyOnPushRelayPublishes = () =>
-		vi.spyOn(PushRelayConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
+	const spyOnPushRelayPublishes = () => vi.spyOn(NatsConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
 
 	async function readStoredPushRelay(): Promise<LegacyPushServiceDeliveryWire> {
 		const raw = await executor.readDirectly(PUSH_RELAY_CONFIG_KEY);

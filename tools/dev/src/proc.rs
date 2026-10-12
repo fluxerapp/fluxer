@@ -3,10 +3,14 @@
 use crate::env::merge_default_env_with_current;
 use crate::paths::{DEV_ENV_FILE, DEV_LOCAL_ENV_FILE, ROOT, ROOT_LOCAL_ENV_FILE};
 use anyhow::{Context, Result, bail};
+#[cfg(target_os = "linux")]
+use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
+#[cfg(target_os = "linux")]
+use std::fs;
 use std::future::Future;
 use std::io::{BufRead, BufReader, Read};
-use std::net::{TcpStream, ToSocketAddrs};
+use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
 use std::path::Path;
 use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};
@@ -449,4 +453,279 @@ impl ShutdownSignal {
         let _ = tokio::signal::ctrl_c().await;
         "signal"
     }
+}
+
+pub fn can_bind_tcp_port(port: u16) -> bool {
+    TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], port))).is_ok()
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct ProcessGroupLeader {
+    pid: i32,
+    members: Vec<ProcessIdentity>,
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ProcessIdentity {
+    pid: i32,
+    starttime: u64,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ProcProcess {
+    pub pid: i32,
+    pub ppid: i32,
+    pub pgid: i32,
+    pub state: char,
+    pub starttime: u64,
+}
+
+#[cfg(target_os = "linux")]
+pub async fn cleanup_orphaned_process_groups(
+    label: &str,
+    is_orphan_root: impl Fn(&ProcProcess, &[String]) -> bool,
+    is_supervisor: impl Fn(&[String], &Path) -> bool,
+) -> Result<()> {
+    let leaders = orphaned_process_leaders(is_orphan_root, is_supervisor)?;
+    if leaders.is_empty() {
+        return Ok(());
+    }
+    let pids = leaders.iter().map(|leader| leader.pid).collect::<Vec<_>>();
+
+    println!(
+        "Stopping orphaned {label} process group(s): {}",
+        format_pids(&pids)
+    );
+    let term_failed = signal_process_groups(&leaders, libc::SIGTERM);
+    if !term_failed.is_empty() {
+        println!(
+            "SIGTERM delivery failed for orphaned {label} pid(s): {}",
+            format_pids(&term_failed)
+        );
+    }
+
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let remaining = surviving_group_pids(&leaders)?;
+        if remaining.is_empty() {
+            return Ok(());
+        }
+        if Instant::now() >= deadline {
+            let remaining_leaders = leaders
+                .iter()
+                .filter(|leader| remaining.contains(&leader.pid))
+                .cloned()
+                .collect::<Vec<_>>();
+            let kill_failed = signal_process_groups(&remaining_leaders, libc::SIGKILL);
+            sleep(Duration::from_millis(200)).await;
+            let survivors = surviving_group_pids(&leaders)?;
+            if survivors.is_empty() {
+                return Ok(());
+            }
+            let delivery_failed = kill_failed
+                .into_iter()
+                .filter(|pid| survivors.contains(pid))
+                .collect::<Vec<_>>();
+            if delivery_failed.is_empty() {
+                bail!(
+                    "orphaned {label} process(es) survived SIGKILL: {}",
+                    format_pids(&survivors)
+                );
+            }
+            bail!(
+                "orphaned {label} process(es) survived SIGKILL: {} (signal delivery failed for: {})",
+                format_pids(&survivors),
+                format_pids(&delivery_failed)
+            );
+        }
+        sleep(Duration::from_millis(200)).await;
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+pub async fn cleanup_orphaned_process_groups(
+    _label: &str,
+    _is_orphan_root: impl Fn(&ProcProcess, &[String]) -> bool,
+    _is_supervisor: impl Fn(&[String], &Path) -> bool,
+) -> Result<()> {
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn orphaned_process_leaders(
+    is_orphan_root: impl Fn(&ProcProcess, &[String]) -> bool,
+    is_supervisor: impl Fn(&[String], &Path) -> bool,
+) -> Result<Vec<ProcessGroupLeader>> {
+    let current_exe = std::env::current_exe().context("failed to resolve fluxer-dev executable")?;
+    let processes = process_snapshot()?;
+    let mut owned_pids = BTreeSet::new();
+    for process in &processes {
+        if process.ppid != 1 || proc_stat_state_is_dead(process.state) {
+            continue;
+        }
+        let args = proc_cmdline(process.pid);
+        if is_supervisor(&args, &current_exe) || is_orphan_root(process, &args) {
+            owned_pids.insert(process.pid);
+        }
+    }
+    loop {
+        let previous_count = owned_pids.len();
+        for process in &processes {
+            if owned_pids.contains(&process.ppid) {
+                owned_pids.insert(process.pid);
+            }
+        }
+        if owned_pids.len() == previous_count {
+            break;
+        }
+    }
+    let group_pids = processes
+        .iter()
+        .filter(|process| owned_pids.contains(&process.pid) && process.pgid > 1)
+        .map(|process| process.pgid)
+        .collect::<BTreeSet<_>>();
+    let leaders = group_pids
+        .into_iter()
+        .map(|pid| ProcessGroupLeader {
+            pid,
+            members: processes
+                .iter()
+                .filter(|process| owned_pids.contains(&process.pid) && process.pgid == pid)
+                .map(|process| ProcessIdentity {
+                    pid: process.pid,
+                    starttime: process.starttime,
+                })
+                .collect(),
+        })
+        .collect::<Vec<_>>();
+    Ok(leaders)
+}
+
+#[cfg(target_os = "linux")]
+fn format_pids(pids: &[i32]) -> String {
+    if pids.is_empty() {
+        return "none".to_owned();
+    }
+    pids.iter()
+        .map(i32::to_string)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+#[cfg(target_os = "linux")]
+fn process_snapshot() -> Result<Vec<ProcProcess>> {
+    let mut processes = Vec::new();
+    for entry in fs::read_dir("/proc").context("failed to read /proc")? {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        let Some(pid) = entry
+            .file_name()
+            .to_str()
+            .and_then(|name| name.parse::<i32>().ok())
+        else {
+            continue;
+        };
+        let Ok(stat) = fs::read_to_string(format!("/proc/{pid}/stat")) else {
+            continue;
+        };
+        let Some((state, ppid, pgid, starttime)) = parse_proc_stat_process(&stat) else {
+            continue;
+        };
+        processes.push(ProcProcess {
+            pid,
+            ppid,
+            pgid,
+            state,
+            starttime,
+        });
+    }
+    Ok(processes)
+}
+
+#[cfg(target_os = "linux")]
+fn proc_cmdline(pid: i32) -> Vec<String> {
+    fs::read(format!("/proc/{pid}/cmdline"))
+        .unwrap_or_default()
+        .split(|byte| *byte == 0)
+        .filter(|arg| !arg.is_empty())
+        .map(|arg| String::from_utf8_lossy(arg).into_owned())
+        .collect()
+}
+
+#[cfg(target_os = "linux")]
+fn parse_proc_stat_state_and_pgid(stat: &str) -> Option<(char, i32)> {
+    let (_, after_comm) = stat.rsplit_once(')')?;
+    let mut fields = after_comm.split_ascii_whitespace();
+    let state = fields.next()?.chars().next()?;
+    let _ppid: i32 = fields.next()?.parse().ok()?;
+    let pgid: i32 = fields.next()?.parse().ok()?;
+    Some((state, pgid))
+}
+
+#[cfg(target_os = "linux")]
+fn parse_proc_stat_process(stat: &str) -> Option<(char, i32, i32, u64)> {
+    let (_, after_comm) = stat.rsplit_once(')')?;
+    let mut fields = after_comm.split_ascii_whitespace();
+    let state = fields.next()?.chars().next()?;
+    let ppid = fields.next()?.parse().ok()?;
+    let pgid = fields.next()?.parse().ok()?;
+    Some((state, ppid, pgid, parse_proc_stat_starttime(stat)?))
+}
+
+#[cfg(target_os = "linux")]
+fn parse_proc_stat_starttime(stat: &str) -> Option<u64> {
+    let (_, after_comm) = stat.rsplit_once(')')?;
+    after_comm.split_ascii_whitespace().nth(19)?.parse().ok()
+}
+
+#[cfg(target_os = "linux")]
+fn proc_stat_state_is_dead(state: char) -> bool {
+    state == 'Z' || state == 'X' || state == 'x'
+}
+
+#[cfg(target_os = "linux")]
+fn surviving_group_pids(leaders: &[ProcessGroupLeader]) -> Result<Vec<i32>> {
+    Ok(leaders
+        .iter()
+        .filter(|leader| group_has_owned_member(leader))
+        .map(|leader| leader.pid)
+        .collect())
+}
+
+#[cfg(target_os = "linux")]
+fn group_has_owned_member(leader: &ProcessGroupLeader) -> bool {
+    leader.members.iter().any(|member| {
+        let Ok(stat) = fs::read_to_string(format!("/proc/{}/stat", member.pid)) else {
+            return false;
+        };
+        let Some((state, pgid)) = parse_proc_stat_state_and_pgid(&stat) else {
+            return false;
+        };
+        !proc_stat_state_is_dead(state)
+            && pgid == leader.pid
+            && parse_proc_stat_starttime(&stat) == Some(member.starttime)
+    })
+}
+
+#[cfg(target_os = "linux")]
+fn signal_process_groups(leaders: &[ProcessGroupLeader], signal: i32) -> Vec<i32> {
+    assert!(signal == libc::SIGTERM || signal == libc::SIGKILL);
+    let mut failed = Vec::with_capacity(leaders.len());
+    for leader in leaders {
+        assert!(leader.pid > 1);
+        if !group_has_owned_member(leader) {
+            continue;
+        }
+        let group_result = unsafe { libc::kill(-leader.pid, signal) };
+        if group_result == 0 {
+            continue;
+        }
+        if group_has_owned_member(leader) {
+            failed.push(leader.pid);
+        }
+    }
+    failed
 }

@@ -13,6 +13,10 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/Notifications.module.css';
 import {PushSettings} from '@app/features/user/components/modals/tabs/notifications_tab/PushSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR,
+	UNKNOWN_DEVICE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -50,10 +54,7 @@ const GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR = msg({
 		'Get notified when you receive messages. You may need to allow notifications in your browser settings. For per-channel/per-community controls, right-click a community icon and open notification settings.',
 	comment: 'Label in the notifications.',
 });
-const ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR = msg({
-	message: 'Enable unread message badge',
-	comment: 'Button or menu action label in the notifications. Keep it concise.',
-});
+
 const PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 	message: 'Push subscriptions for this device',
 	comment: 'Label in the notifications.',
@@ -73,10 +74,6 @@ const ENABLE_PUSH_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 });
 const FORGET_SUBSCRIPTIONS_DESCRIPTOR = msg({
 	message: 'Forget subscriptions',
-	comment: 'Short label in the notifications. Keep it concise.',
-});
-const UNKNOWN_DEVICE_DESCRIPTOR = msg({
-	message: 'Unknown device',
 	comment: 'Short label in the notifications. Keep it concise.',
 });
 

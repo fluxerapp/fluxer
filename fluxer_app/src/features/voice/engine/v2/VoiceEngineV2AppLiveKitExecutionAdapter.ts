@@ -4,10 +4,12 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {buildVoiceEngineV2AppCameraPermissionDeniedError} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraPermissionDeniedError';
 import type {VoiceEngineV2AppCameraTransitionOutcome} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraTransition';
 import {beginMicrophoneSession} from '@app/features/voice/utils/noise_suppression/DeepFilter';
+import {
+	assertVoiceEngineV2BridgeAudioOptionsInvariants,
+	assertVoiceEngineV2BridgeVideoOptionsInvariants,
+} from '@fluxer/voice_engine_v2/bridge';
+import type {LiveKitMediaPort} from '@fluxer/voice_engine_v2/src/ports';
 import type {
-	LiveKitPort,
-	StatsPort,
-	SubscriptionPort,
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
 	VoiceEngineV2ConnectOptions,
@@ -15,17 +17,10 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2OutputDeviceOptions,
-	VoiceEngineV2ParticipantVolumeOptions,
-	VoiceEngineV2RemoteTrackSubscriptionOptions,
 	VoiceEngineV2ScreenAudioOptions,
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
-	VoiceEngineV2Stats,
-} from '@fluxer/voice_engine_v2';
-import {
-	assertVoiceEngineV2BridgeAudioOptionsInvariants,
-	assertVoiceEngineV2BridgeVideoOptionsInvariants,
-} from '@fluxer/voice_engine_v2/bridge';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room, ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
 
 export interface VoiceEngineV2AppLiveKitMediaDelegate {
@@ -74,8 +69,7 @@ export interface VoiceEngineV2AppLiveKitExecutionAdapterOptions {
 	screenShare: VoiceEngineV2AppLiveKitScreenShareDelegate;
 	getRoom: VoiceEngineV2AppLiveKitRoomAccessor;
 	audioOutputStore?: VoiceEngineV2AppLiveKitAudioOutputStore | null;
-	subscriptions?: SubscriptionPort | null;
-	stats?: StatsPort | null;
+
 	logger?: VoiceEngineV2AppLiveKitLogger;
 	getActiveChannelId?: () => string | null;
 	getActiveGuildId?: () => string | null;
@@ -131,14 +125,13 @@ function buildScreenPublishOptions(options: VoiceEngineV2ScreenEncodingOptions):
 	return Object.keys(publishOptions).length > 0 ? publishOptions : undefined;
 }
 
-export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitPort {
+export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitMediaPort {
 	private readonly media: VoiceEngineV2AppLiveKitMediaDelegate;
 	private readonly connection: VoiceEngineV2AppLiveKitConnectionDelegate;
 	private readonly screenShare: VoiceEngineV2AppLiveKitScreenShareDelegate;
 	private readonly getRoom: VoiceEngineV2AppLiveKitRoomAccessor;
 	private readonly audioOutputStore: VoiceEngineV2AppLiveKitAudioOutputStore | null;
-	private readonly subscriptions: SubscriptionPort | null;
-	private readonly stats: StatsPort | null;
+
 	private readonly logger: VoiceEngineV2AppLiveKitLogger;
 	private readonly getActiveChannelId: () => string | null;
 	private readonly getActiveGuildId: () => string | null;
@@ -179,8 +172,7 @@ export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitPort {
 		this.screenShare = options.screenShare;
 		this.getRoom = options.getRoom;
 		this.audioOutputStore = options.audioOutputStore ?? null;
-		this.subscriptions = options.subscriptions ?? null;
-		this.stats = options.stats ?? null;
+
 		this.logger = options.logger ?? new Logger(ADAPTER_NAME);
 		this.getActiveChannelId = options.getActiveChannelId ?? (() => null);
 		this.getActiveGuildId = options.getActiveGuildId ?? (() => null);
@@ -457,77 +449,6 @@ export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitPort {
 			this.logger.warn('setOutputDevice store threw', {error});
 			throw error instanceof Error ? error : buildOperatingError('setOutputDevice', String(error));
 		}
-	}
-
-	async setParticipantVolume(options: VoiceEngineV2ParticipantVolumeOptions): Promise<void> {
-		if (typeof options !== 'object' || options === null) {
-			throw buildOperatingError('setParticipantVolume', 'options is not an object');
-		}
-		if (typeof options.participantIdentity !== 'string' || options.participantIdentity.length === 0) {
-			throw buildOperatingError('setParticipantVolume', 'options.participantIdentity is missing');
-		}
-		if (typeof options.volume !== 'number' || !Number.isFinite(options.volume)) {
-			throw buildOperatingError('setParticipantVolume', 'options.volume is not a finite number');
-		}
-		const delegate = this.subscriptions;
-		if (delegate === null) {
-			throw buildOperatingError('setParticipantVolume', 'no subscriptions adapter configured');
-		}
-		try {
-			await delegate.setParticipantVolume(options);
-		} catch (error) {
-			this.logger.warn('setParticipantVolume delegate threw', {error});
-			throw error instanceof Error ? error : buildOperatingError('setParticipantVolume', String(error));
-		}
-	}
-
-	async setRemoteTrackSubscription(options: VoiceEngineV2RemoteTrackSubscriptionOptions): Promise<void> {
-		if (typeof options !== 'object' || options === null) {
-			throw buildOperatingError('setRemoteTrackSubscription', 'options is not an object');
-		}
-		if (typeof options.participantIdentity !== 'string' || options.participantIdentity.length === 0) {
-			throw buildOperatingError('setRemoteTrackSubscription', 'options.participantIdentity is missing');
-		}
-		if (typeof options.source !== 'string' || options.source.length === 0) {
-			throw buildOperatingError('setRemoteTrackSubscription', 'options.source is missing');
-		}
-		if (typeof options.subscribed !== 'boolean') {
-			throw buildOperatingError('setRemoteTrackSubscription', 'options.subscribed is not a boolean');
-		}
-		const delegate = this.subscriptions;
-		if (delegate === null) {
-			throw buildOperatingError('setRemoteTrackSubscription', 'no subscriptions adapter configured');
-		}
-		try {
-			await delegate.setRemoteTrackSubscription(options);
-		} catch (error) {
-			this.logger.warn('setRemoteTrackSubscription delegate threw', {error});
-			throw error instanceof Error ? error : buildOperatingError('setRemoteTrackSubscription', String(error));
-		}
-	}
-
-	async collectStats(): Promise<VoiceEngineV2Stats> {
-		const delegate = this.stats;
-		if (delegate === null) {
-			throw buildOperatingError('collectStats', 'no stats adapter configured');
-		}
-		let snapshot: VoiceEngineV2Stats;
-		try {
-			snapshot = await delegate.collectStats();
-		} catch (error) {
-			this.logger.warn('collectStats delegate threw', {error});
-			throw error instanceof Error ? error : buildOperatingError('collectStats', String(error));
-		}
-		if (typeof snapshot !== 'object' || snapshot === null) {
-			throw buildOperatingError('collectStats', 'delegate returned non-object snapshot');
-		}
-		if (!Array.isArray(snapshot.outbound)) {
-			throw buildOperatingError('collectStats', 'snapshot.outbound is not an array');
-		}
-		if (!Array.isArray(snapshot.inbound)) {
-			throw buildOperatingError('collectStats', 'snapshot.inbound is not an array');
-		}
-		return snapshot;
 	}
 
 	async publishData(options: VoiceEngineV2DataOptions): Promise<void> {

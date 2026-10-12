@@ -219,23 +219,23 @@ do_handle_cast_call(_, State) ->
 handle_info({presence_connect, Attempt}, #{presence_pid := undefined} = State) when
     is_integer(Attempt), Attempt >= 0
 ->
-    session_connection:handle_presence_connect(Attempt, State);
+    session_connection_presence:handle_presence_connect(Attempt, State);
 handle_info({presence_connect, _Attempt}, State) ->
     {noreply, State};
 handle_info({guild_connect, GuildId, Attempt}, State) when
     is_integer(GuildId), is_integer(Attempt), Attempt >= 0
 ->
-    session_connection:handle_guild_connect(GuildId, Attempt, State);
+    session_connection_guild:handle_guild_connect(GuildId, Attempt, State);
 handle_info({guild_connect_result, _, _, _} = Msg, State) ->
     handle_info_guild_connect_result(Msg, State);
 handle_info({guild_connect_timeout, GuildId, Attempt, Token}, State) when
     is_integer(GuildId), is_integer(Attempt), Attempt >= 0, is_reference(Token)
 ->
-    session_connection:handle_guild_connect_timeout(GuildId, Attempt, Token, State);
+    session_connection_guild:handle_guild_connect_timeout(GuildId, Attempt, Token, State);
 handle_info({call_reconnect, ChannelId, Attempt}, State) when
     is_integer(ChannelId), is_integer(Attempt), Attempt >= 0
 ->
-    session_connection:handle_call_reconnect(ChannelId, Attempt, State);
+    session_connection_retry:handle_call_reconnect(ChannelId, Attempt, State);
 handle_info({gateway_timing_update, Timings}, State) ->
     {noreply, gateway_timings:merge_state(Timings, State)};
 handle_info({thread_user_flip, _Version}, State) ->
@@ -277,7 +277,7 @@ cast_thread_user_flip(SessionId, State) ->
 handle_info_guild_connect_result(
     {guild_connect_result, GuildId, Attempt, Result}, State
 ) when is_integer(GuildId), is_integer(Attempt), Attempt >= 0 ->
-    session_connection:handle_guild_connect_result(
+    session_connection_guild:handle_guild_connect_result(
         GuildId, Attempt, Result, State
     );
 handle_info_guild_connect_result(_, State) ->
@@ -337,7 +337,7 @@ do_handle_info_misc({'DOWN', Ref, process, _Pid, Reason}, State) when
 do_handle_info_misc(check_ack_lag, State) ->
     erlang:send_after(60000, self(), check_ack_lag),
     State1 = session_connection_guild:repair_stalled_guild_connects(State),
-    {noreply, session_connection:repair_presence_connection(State1)};
+    {noreply, session_connection_presence:repair_presence_connection(State1)};
 do_handle_info_misc({presence_rejoin_check}, State) ->
     handle_presence_rejoin_check(State);
 do_handle_info_misc(_Info, State) ->
@@ -345,7 +345,7 @@ do_handle_info_misc(_Info, State) ->
 
 -spec handle_presence_rejoin_check(session_state()) -> {noreply, session_state()}.
 handle_presence_rejoin_check(State) ->
-    RepairedState = session_connection:repair_presence_connection(State),
+    RepairedState = session_connection_presence:repair_presence_connection(State),
     {noreply, session_dispatch_presence:sync_presence_targets(RepairedState)}.
 
 -spec terminate(term(), session_state()) -> ok.

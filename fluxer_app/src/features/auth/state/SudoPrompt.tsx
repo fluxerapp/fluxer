@@ -6,6 +6,7 @@ import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTyp
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -40,16 +41,6 @@ export enum SudoVerificationMethod {
 	PASSWORD = 'password',
 	TOTP = 'totp',
 	WEBAUTHN = 'webauthn',
-}
-
-export function isAbortError(error: unknown): boolean {
-	if (error instanceof DOMException && error.name === 'AbortError') {
-		return true;
-	}
-	if (error instanceof Error && error.name === 'AbortError') {
-		return true;
-	}
-	return false;
 }
 
 export const SUDO_MODAL_KEY = 'sudo-verification-modal';

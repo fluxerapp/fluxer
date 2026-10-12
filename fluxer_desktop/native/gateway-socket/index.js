@@ -3,7 +3,20 @@
 const {existsSync} = require('node:fs');
 const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
-const {nativeFileName} = require('./pure.cjs');
+function nativeFileName(platform = process.platform, arch = process.arch) {
+	switch (platform) {
+		case 'darwin':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.darwin-${arch}.node`;
+			break;
+		case 'win32':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.win32-${arch}-msvc.node`;
+			break;
+		case 'linux':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.linux-${arch}-gnu.node`;
+			break;
+	}
+	throw new Error(`Unsupported gateway-socket target: ${platform}/${arch}`);
+}
 const MODULE_NAME = '@fluxer/gateway-socket';
 const SKIP_NATIVE_PROBE_ENV = 'FLUXER_GATEWAY_SOCKET_SKIP_NATIVE_PROBE';
 
@@ -46,7 +59,4 @@ module.exports = {
 	connect: binding ? binding.connect : null,
 	warmup: binding && typeof binding.warmup === 'function' ? binding.warmup : null,
 	loadError,
-	_private: {
-		nativeFileName,
-	},
 };

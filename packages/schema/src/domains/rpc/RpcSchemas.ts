@@ -96,11 +96,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		connection_id: createStringType(1, 255).describe('Connection ID to remove from the snapshot'),
 	}),
 	z.object({
-		type: z.literal('log_guild_crash').describe('Request type for logging guild crashes'),
-		guild_id: SnowflakeType.describe('ID of the guild that crashed'),
-		stacktrace: z.string().describe('Error stacktrace from the crash'),
-	}),
-	z.object({
 		type: z.literal('get_user_guild_settings').describe('Request type for fetching user guild settings'),
 		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch settings for'),
 		guild_id: SnowflakeType.describe('ID of the guild'),
@@ -112,10 +107,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('get_badge_counts').describe('Request type for fetching notification badge counts'),
 		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch badge counts for'),
-	}),
-	z.object({
-		type: z.literal('geoip_lookup').describe('Request type for IP geolocation lookup'),
-		ip: createStringType(1, 45).describe('IP address to lookup'),
 	}),
 	z.object({
 		type: z.literal('delete_push_subscriptions').describe('Request type for deleting push notification subscriptions'),
@@ -191,20 +182,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z
-			.literal('voice_force_disconnect_channel')
-			.describe('Request type for force disconnecting all participants from a channel'),
-		guild_id: SnowflakeType.optional().describe('ID of the guild'),
-		channel_id: SnowflakeType.describe('ID of the voice channel to clear'),
-	}),
-	z.object({
-		type: z.literal('voice_list_participants').describe('Request type for listing voice participants on one server'),
-		guild_id: SnowflakeType.optional().describe('ID of the guild'),
-		channel_id: SnowflakeType.describe('ID of the voice channel'),
-		region_id: createStringType(1, 64).describe('Voice region that hosts the room'),
-		server_id: createStringType(1, 128).describe('Voice server that hosts the room'),
-	}),
-	z.object({
-		type: z
 			.literal('voice_update_participant_permissions')
 			.describe('Request type for updating voice participant permissions'),
 		guild_id: SnowflakeType.optional().describe('ID of the guild'),
@@ -248,11 +225,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('get_channel_threads_config').describe('Request type for fetching channel threads configuration'),
-	}),
-	z.object({
-		type: z.literal('get_thread_memberships').describe('Request type for fetching the thread memberships of a user'),
-		guild_id: SnowflakeType.describe('ID of the guild'),
-		user_id: SnowflakeType.describe('ID of the user'),
 	}),
 	z.object({
 		type: z.literal('list_thread_members').describe('Request type for listing the members of a thread'),
@@ -418,14 +390,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 		data: RpcResponseSessionData.describe('Session initialization data'),
 	}),
 	z.object({
-		type: z.literal('log_guild_crash').describe('Response type for guild crash logging'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether the crash was logged successfully'),
-			})
-			.describe('Crash logging result'),
-	}),
-	z.object({
 		type: z.literal('guild_collection').describe('Response type for guild collection chunks'),
 		data: RpcResponseGuildCollectionData.describe('Guild collection chunk data'),
 	}),
@@ -545,35 +509,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('Update result'),
 	}),
 	z.object({
-		type: z.literal('voice_force_disconnect_channel').describe('Response type for force disconnect channel'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether the operation was successful'),
-				disconnected_count: z.number().optional().describe('Number of participants disconnected'),
-			})
-			.describe('Channel disconnect result'),
-	}),
-	z.object({
-		type: z.literal('voice_list_participants').describe('Response type for voice participant listing'),
-		data: z
-			.object({
-				status: z.enum(['ok', 'error']).describe('Whether the participant snapshot is authoritative'),
-				participants: z
-					.array(
-						z.object({
-							identity: z.string().describe('LiveKit participant identity'),
-							user_id: SnowflakeStringType.describe('Participant user ID'),
-							connection_id: createStringType(1, 255).describe('Participant voice connection ID'),
-						}),
-					)
-					.describe('Participants currently present on this voice server'),
-				error_code: z.string().optional().describe('Voice server lookup error code'),
-				retryable: z.boolean().optional().describe('Whether the lookup can be retried'),
-				server_missing: z.boolean().optional().describe('Whether the pinned server no longer exists'),
-			})
-			.describe('Voice participant listing result'),
-	}),
-	z.object({
 		type: z.literal('voice_update_participant_permissions').describe('Response type for voice permissions update'),
 		data: z
 			.object({
@@ -592,16 +527,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('validate_custom_status').describe('Response type for custom status validation'),
 		data: RpcResponseValidateCustomStatus.describe('Custom status validation result'),
-	}),
-	z.object({
-		type: z.literal('geoip_lookup').describe('Response type for IP geolocation lookup'),
-		data: z
-			.object({
-				country_code: z.string().describe('Two-letter country code'),
-				latitude: createStringType(1, 32).optional().describe('Latitude from IP geolocation'),
-				longitude: createStringType(1, 32).optional().describe('Longitude from IP geolocation'),
-			})
-			.describe('Geolocation result'),
 	}),
 	z.object({
 		type: z.literal('get_dm_channel').describe('Response type for DM channel fetch'),
@@ -644,14 +569,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 				config: ChannelThreadsConfigResponse.describe('Channel threads configuration'),
 			})
 			.describe('Channel threads config result'),
-	}),
-	z.object({
-		type: z.literal('get_thread_memberships').describe('Response type for the thread memberships of a user'),
-		data: z
-			.object({
-				members: z.array(ThreadMemberRpcResponse).describe('Thread memberships of the user in the guild'),
-			})
-			.describe('Thread memberships result'),
 	}),
 	z.object({
 		type: z.literal('list_thread_members').describe('Response type for a page of thread members'),

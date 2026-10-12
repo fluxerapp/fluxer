@@ -11,10 +11,10 @@ import {
 	postAndPublish,
 	setupFanoutWorld,
 	sourceIndex,
-	workerHelpers,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
@@ -74,7 +74,13 @@ describe('crosspost tasks against storage', () => {
 		await patchChannelRow(world.a.ann.id, {type: ChannelTypes.GUILD_TEXT});
 		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		const payload = {sourceChannelId: world.a.ann.id, reason: 'converted'};
-		await removeChannelFollowers(payload, workerHelpers(world.worker));
+		await removeChannelFollowers(
+			payload,
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
 		expect(await followerIds()).toHaveLength(0);
 		const updates = dispatchSpy.mock.calls
 			.map(([params]) => params)
@@ -84,7 +90,13 @@ describe('crosspost tasks against storage', () => {
 		);
 		expect(updates.every((params) => params.guildId.toString() === world.b.guild.id)).toBe(true);
 		dispatchSpy.mockClear();
-		await removeChannelFollowers(payload, workerHelpers(world.worker));
+		await removeChannelFollowers(
+			payload,
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
 		expect(dispatchSpy.mock.calls.filter(([params]) => params.event === 'WEBHOOKS_UPDATE')).toHaveLength(0);
 		const webhooks = await new WebhookRepository().listByChannel(createChannelID(BigInt(world.b.t1.id)));
 		expect(webhooks.filter((webhook) => webhook.type === WebhookTypes.CHANNEL_FOLLOWER)).toHaveLength(0);
@@ -92,7 +104,13 @@ describe('crosspost tasks against storage', () => {
 
 	test('removeChannelFollowers keeps followers when the channel is an announcement channel again', async () => {
 		await followInto(harness, world, world.b.t1.id);
-		await removeChannelFollowers({sourceChannelId: world.a.ann.id, reason: 'converted'}, workerHelpers(world.worker));
+		await removeChannelFollowers(
+			{sourceChannelId: world.a.ann.id, reason: 'converted'},
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
 		expect(await followerIds()).toHaveLength(1);
 	});
 
@@ -107,7 +125,10 @@ describe('crosspost tasks against storage', () => {
 		const before = world.worker.recorded.length;
 		await removeChannelFollowers(
 			{sourceChannelId: world.a.ann.id, reason: 'deleted', copyMode: 'purge'},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		const queued = world.worker.recorded.slice(before);
 		expect(queued.every((job) => job.taskType === CrosspostTaskNames.SYNC_CROSSPOSTED_MESSAGE)).toBe(true);
@@ -150,7 +171,10 @@ describe('crosspost tasks against storage', () => {
 		const before = world.worker.recorded.length;
 		await syncCrosspostedMessage(
 			{channelId: world.a.ann.id, messageId: source.id, mode: 'source_deleted'},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		const chunks = world.worker.recorded.slice(before);
 		expect(chunks.map((job) => job.taskType)).toEqual(Array(5).fill(CrosspostTaskNames.SYNC_CROSSPOST_COPIES));
@@ -173,7 +197,13 @@ describe('crosspost tasks against storage', () => {
 		await follow(harness, world.b.owner.token, world.a.ann.id, world.b.t1.id);
 		await world.worker.drain();
 		const before = world.worker.recorded.length;
-		await crosspostMessage({channelId: world.a.ann.id, messageId: '123456789012345678'}, workerHelpers(world.worker));
+		await crosspostMessage(
+			{channelId: world.a.ann.id, messageId: '123456789012345678'},
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
 		expect(world.worker.recorded.length).toBe(before);
 	});
 });

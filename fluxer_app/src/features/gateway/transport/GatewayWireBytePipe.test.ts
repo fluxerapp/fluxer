@@ -286,28 +286,3 @@ describe('deployed zstd-stream frames decode over both transports', () => {
 		}
 	});
 });
-
-describe('web inertness', () => {
-	test('with no electron API a full account switch keeps exactly one live WebSocket', async () => {
-		const firstAccount = createSocket();
-		const secondAccount = createSocket();
-
-		try {
-			firstAccount.connect();
-			await waitFor(() => FakeWebSocket.instances.length === 1);
-			FakeWebSocket.instances[0].openSocket();
-
-			firstAccount.reset(false);
-			secondAccount.connect();
-			await waitFor(() => FakeWebSocket.instances.length === 2);
-			FakeWebSocket.instances[1].openSocket();
-
-			const live = FakeWebSocket.instances.filter((wire) => wire.readyState !== FakeWebSocket.CLOSED);
-			expect(live).toEqual([FakeWebSocket.instances[1]]);
-			expect(FakeWebSocket.instances[0].closeCalls).toEqual([{code: 1000, reason: 'Disposing stale socket'}]);
-			expect(Reflect.get(globalThis, '__fluxerDesktopGatewayTransport')).toBeUndefined();
-		} finally {
-			secondAccount.reset(false);
-		}
-	});
-});

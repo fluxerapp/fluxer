@@ -92,7 +92,7 @@ guild_join_decision(Agreed, ChannelId, State) ->
         fun(Pending) -> maps:get(channel_id, Pending, undefined) =:= ChannelId end,
         maps:values(guild_voice_connection_pending:pending_voice_connections(State))
     ),
-    Pinned = pinned(guild_voice_member:find_channel_by_id(ChannelId, State)),
+    Pinned = pinned(guild_permissions_check:find_channel_by_id(ChannelId, State)),
     join_decision(Agreed, ChannelVoiceStates, HasPendingJoins, Pinned).
 
 -spec admit(join_decision(), token_grant() | term()) -> grant() | sfu | rejection().

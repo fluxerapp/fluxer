@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import type {User} from '@app/api/models/User';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import type {SudoModeMethods} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
+import {type SudoModeMethods, SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 
 interface SudoMethodsUser {
 	totpSecret?: string | null;
@@ -33,4 +36,17 @@ export function deriveSudoMethods(
 		webauthn: hasPasskeyCredentials,
 		backup_codes: hasBackupCodes,
 	};
+}
+
+export async function createSudoModeRequiredError(
+	ctx: ApiContext,
+	user: User,
+	hasPasskeyCredentials?: boolean,
+): Promise<SudoModeRequiredError> {
+	const hasPasskeys = hasPasskeyCredentials ?? (await ctx.services.users.listWebAuthnCredentials(user.id)).length > 0;
+	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
+	return new SudoModeRequiredError(
+		userHasSudoCapability(user, hasPasskeys),
+		deriveSudoMethods(user, hasPasskeys, hasBackupCodes),
+	);
 }

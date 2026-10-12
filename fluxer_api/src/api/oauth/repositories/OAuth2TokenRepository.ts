@@ -84,17 +84,15 @@ export class OAuth2TokenRepository {
 	async createAccessToken(data: OAuth2AccessTokenRow): Promise<OAuth2AccessToken> {
 		const batch = new BatchBuilder();
 		batch.addPrepared(OAuth2AccessTokens.insertWithTtl(data, ACCESS_TOKEN_TTL_SECONDS));
-		if (data.user_id !== null) {
-			batch.addPrepared(
-				OAuth2AccessTokensByUser.insertWithTtl(
-					{
-						user_id: data.user_id,
-						token_: data.token_,
-					},
-					ACCESS_TOKEN_TTL_SECONDS,
-				),
-			);
-		}
+		batch.addPrepared(
+			OAuth2AccessTokensByUser.insertWithTtl(
+				{
+					user_id: data.user_id,
+					token_: data.token_,
+				},
+				ACCESS_TOKEN_TTL_SECONDS,
+			),
+		);
 		await batch.execute();
 		return new OAuth2AccessToken(data);
 	}
@@ -108,15 +106,6 @@ export class OAuth2TokenRepository {
 			return null;
 		}
 		return new OAuth2AccessToken(row);
-	}
-
-	async deleteAccessToken(token: string, _applicationId: ApplicationID, userId: UserID | null): Promise<void> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(OAuth2AccessTokens.deleteByPk({token_: token}));
-		if (userId !== null) {
-			batch.addPrepared(OAuth2AccessTokensByUser.deleteByPk({user_id: userId, token_: token}));
-		}
-		await batch.execute();
 	}
 
 	async deleteAllAccessTokensForUser(userId: UserID): Promise<void> {

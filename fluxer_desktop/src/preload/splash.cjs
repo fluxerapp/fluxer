@@ -19,13 +19,6 @@ const COUNTDOWN_INTERVAL_MS = 1000;
 const SPLASH_BRANDING_WAIT_MS = 400;
 const SPLASH_FONT_FACES = Object.freeze(['400 12px "Fluxer Sans"', '500 16px "Fluxer Sans"']);
 const NON_BREAKING_SPACE = '\u00a0';
-const SPLASH_ACTION_LABEL_MAX_LENGTH = 48;
-const SPLASH_MESSAGE_MAX_LENGTH = 160;
-const SPLASH_VERSION_LABEL_MAX_LENGTH = 64;
-const SPLASH_OPTION_LABEL_MAX_LENGTH = 48;
-const SPLASH_OPTION_BUTTON_LABEL_MAX_LENGTH = 24;
-const SPLASH_OPTION_MAX_COUNT = 8;
-const SPLASH_OPTION_VALUE_PATTERN = /^[a-z0-9_]{1,32}$/;
 const DIAGNOSTICS_REVEAL_MS = 30000;
 const DIAGNOSTICS_COPIED_MS = 2000;
 const BYTES_PER_MEGABYTE = 1000000;
@@ -57,8 +50,6 @@ const SplashStatus = Object.freeze({
 	WAITING_LOCAL_NETWORK: 'waiting-local-network',
 });
 
-const KNOWN_LAYOUTS = new Set(Object.values(SplashLayout));
-const KNOWN_STATUSES = new Set(Object.values(SplashStatus));
 const PROGRESS_STATUSES = new Set([
 	SplashStatus.DOWNLOADING_UPDATES,
 	SplashStatus.DOWNLOAD_STALLED,
@@ -81,7 +72,22 @@ const ACTION_CHANNELS = new Map([
 	['download', SPLASH_OPEN_DOWNLOAD_CHANNEL],
 	['quit', SPLASH_QUIT_CHANNEL],
 ]);
-const SPLASH_FALLBACK_ACTION = Object.freeze({kind: 'quit', label: 'Quit'});
+const DEFAULT_STATE = Object.freeze({
+	layout: SplashLayout.SPLASH,
+	status: SplashStatus.CHECKING_FOR_UPDATES,
+	requiredSecurityUpdate: false,
+	current: null,
+	total: null,
+	progress: null,
+	seconds: null,
+	receivedBytes: null,
+	totalBytes: null,
+	bytesPerSecond: null,
+	action: null,
+	message: null,
+	versionLabel: null,
+	options: null,
+});
 
 let splashState = null;
 let renderedLayout = null;
@@ -91,92 +97,6 @@ let selectedOption = null;
 let splashStartedAt = Number.POSITIVE_INFINITY;
 let diagnosticsRevealTimer = null;
 let diagnosticsCopiedTimer = null;
-
-function toCount(value) {
-	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-	return Math.max(0, Math.trunc(value));
-}
-
-function toText(value, maxLength) {
-	if (typeof value !== 'string') return null;
-	const trimmed = value.trim();
-	if (trimmed.length === 0) return null;
-	return trimmed.slice(0, maxLength);
-}
-
-function normalizeAction(value) {
-	if (value == null || typeof value !== 'object') return null;
-	if (typeof value.kind !== 'string' || !ACTION_CHANNELS.has(value.kind)) return null;
-	const label = toText(value.label, SPLASH_ACTION_LABEL_MAX_LENGTH);
-	if (label == null) return null;
-	return {kind: value.kind, label};
-}
-
-function normalizeOption(value) {
-	if (value == null || typeof value !== 'object') return null;
-	if (typeof value.value !== 'string' || !SPLASH_OPTION_VALUE_PATTERN.test(value.value)) return null;
-	if (typeof value.kind !== 'string' || !ACTION_CHANNELS.has(value.kind)) return null;
-	const label = toText(value.label, SPLASH_OPTION_LABEL_MAX_LENGTH);
-	if (label == null) return null;
-	const buttonLabel = toText(value.buttonLabel, SPLASH_OPTION_BUTTON_LABEL_MAX_LENGTH);
-	if (buttonLabel == null) return null;
-	return {value: value.value, label, buttonLabel, kind: value.kind};
-}
-
-function normalizeOptions(value) {
-	if (!Array.isArray(value)) return null;
-	const accepted = [];
-	for (const entry of value.slice(0, SPLASH_OPTION_MAX_COUNT)) {
-		const option = normalizeOption(entry);
-		if (option != null) {
-			accepted.push(option);
-		}
-	}
-	return accepted.length === 0 ? null : accepted;
-}
-
-function withManualUpdateAffordance(state) {
-	if (state.layout !== SplashLayout.MANUAL_UPDATE) return state;
-	if (state.options != null || state.action != null) return state;
-	return {...state, action: SPLASH_FALLBACK_ACTION};
-}
-
-function normalizeState(payload) {
-	if (payload == null || typeof payload !== 'object') {
-		return {
-			layout: SplashLayout.SPLASH,
-			status: SplashStatus.CHECKING_FOR_UPDATES,
-			requiredSecurityUpdate: false,
-			current: null,
-			total: null,
-			progress: null,
-			seconds: null,
-			receivedBytes: null,
-			totalBytes: null,
-			bytesPerSecond: null,
-			action: null,
-			message: null,
-			versionLabel: null,
-			options: null,
-		};
-	}
-	return withManualUpdateAffordance({
-		layout: KNOWN_LAYOUTS.has(payload.layout) ? payload.layout : SplashLayout.SPLASH,
-		status: KNOWN_STATUSES.has(payload.status) ? payload.status : SplashStatus.CHECKING_FOR_UPDATES,
-		requiredSecurityUpdate: payload.requiredSecurityUpdate === true,
-		current: toCount(payload.current),
-		total: toCount(payload.total),
-		progress: typeof payload.progress === 'number' && Number.isFinite(payload.progress) ? payload.progress : null,
-		seconds: toCount(payload.seconds),
-		receivedBytes: toCount(payload.receivedBytes),
-		totalBytes: toCount(payload.totalBytes),
-		bytesPerSecond: toCount(payload.bytesPerSecond),
-		action: normalizeAction(payload.action),
-		message: toText(payload.message, SPLASH_MESSAGE_MAX_LENGTH),
-		versionLabel: toText(payload.versionLabel, SPLASH_VERSION_LABEL_MAX_LENGTH),
-		options: normalizeOptions(payload.options),
-	});
-}
 
 function getStatusText(state) {
 	switch (state.status) {
@@ -499,7 +419,7 @@ function buildManualUpdatePicker(state) {
 function render() {
 	const mount = document.getElementById(SPLASH_MOUNT_ID);
 	if (mount == null) return;
-	const state = splashState ?? normalizeState(null);
+	const state = splashState ?? DEFAULT_STATE;
 	if (state.layout === SplashLayout.MANUAL_UPDATE) {
 		const signature = manualUpdateSignature(state);
 		if (renderedLayout !== SplashLayout.MANUAL_UPDATE || renderedManualSignature !== signature) {
@@ -562,7 +482,7 @@ function syncCountdown(state) {
 }
 
 ipcRenderer.on(SPLASH_STATE_CHANNEL, (_event, payload) => {
-	splashState = normalizeState(payload);
+	splashState = payload ?? DEFAULT_STATE;
 	syncCountdown(splashState);
 	render();
 });

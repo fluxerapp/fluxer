@@ -16,6 +16,7 @@ name = "fluxer-push"
 path = "src/main.rs"
 
 [dependencies]
+fluxer_common = { path = "../fluxer_common", features = ["healthcheck"] }
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 anyhow = "1.0.104"
 axum = { version = "0.8.9", default-features = false, features = ["http1", "http2", "tokio"] }

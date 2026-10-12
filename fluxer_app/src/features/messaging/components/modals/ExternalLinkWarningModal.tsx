@@ -4,7 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import styles from '@app/features/messaging/components/modals/ExternalLinkWarningModal.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
+import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -36,7 +36,7 @@ export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
 	}, [url]);
 	const handleContinue = useCallback(async () => {
 		if (trustDomain) {
-			await TrustedDomainCommands.addTrustedDomain(hostname);
+			await TrustedDomain.addTrustedDomain(hostname);
 		}
 		void openExternalUrl(url);
 		ModalCommands.pop();

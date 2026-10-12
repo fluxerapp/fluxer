@@ -15,6 +15,7 @@
 		"@fluxer/constants": "workspace:*",
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
+		"@fluxer/record_utils": "workspace:*",
 		"@fluxer/schema": "workspace:*",
 		"hono": "catalog:"
 	},

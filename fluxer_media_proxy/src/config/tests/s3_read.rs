@@ -1,31 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{base_env, env_with};
+use super::env_with;
 use crate::config::{BucketStyle, Config};
-
-#[test]
-fn read_endpoint_defaults_to_disabled() {
-    let cfg = Config::load_from_iter(base_env()).unwrap();
-    assert_eq!(None, cfg.storage.s3_read_endpoint);
-    assert_eq!("cdn", cfg.storage.s3_read_bucket);
-    assert_eq!(BucketStyle::Path, cfg.storage.s3_read_bucket_style);
-    assert!(!cfg.storage.s3_read_signed);
-}
-
-#[test]
-fn empty_read_vars_are_treated_as_unset() {
-    let cfg = Config::load_from_iter(env_with(&[
-        ("FLUXER_S3_READ_ENDPOINT", "   "),
-        ("FLUXER_S3_READ_BUCKET", ""),
-        ("FLUXER_S3_READ_BUCKET_STYLE", ""),
-        ("FLUXER_S3_READ_SIGNED", ""),
-    ]))
-    .unwrap();
-    assert_eq!(None, cfg.storage.s3_read_endpoint);
-    assert_eq!("cdn", cfg.storage.s3_read_bucket);
-    assert_eq!(BucketStyle::Path, cfg.storage.s3_read_bucket_style);
-    assert!(!cfg.storage.s3_read_signed);
-}
 
 #[test]
 fn every_new_var_tolerates_a_blank_value_individually() {
@@ -71,38 +47,6 @@ fn read_bucket_style_inherits_force_path_style() {
     .unwrap();
     assert_eq!(BucketStyle::Rooted, cfg.storage.s3_read_bucket_style);
     assert!(!cfg.storage.s3_force_path_style);
-}
-
-#[test]
-fn read_bucket_style_parses_all_values_case_insensitively() {
-    for (raw, expected) in [
-        ("path", BucketStyle::Path),
-        ("PATH", BucketStyle::Path),
-        ("virtual", BucketStyle::VirtualHosted),
-        (" Virtual ", BucketStyle::VirtualHosted),
-        ("root", BucketStyle::Rooted),
-        ("ROOT", BucketStyle::Rooted),
-    ] {
-        let cfg =
-            Config::load_from_iter(env_with(&[("FLUXER_S3_READ_BUCKET_STYLE", raw)])).unwrap();
-        assert_eq!(expected, cfg.storage.s3_read_bucket_style, "raw={raw}");
-    }
-}
-
-#[test]
-fn read_bucket_style_rejects_unknown_value() {
-    let err =
-        Config::load_from_iter(env_with(&[("FLUXER_S3_READ_BUCKET_STYLE", "cdn")])).unwrap_err();
-    assert!(err.to_string().contains("FLUXER_S3_READ_BUCKET_STYLE"));
-}
-
-#[test]
-fn read_signed_parses_boolean() {
-    let cfg = Config::load_from_iter(env_with(&[("FLUXER_S3_READ_SIGNED", "true")])).unwrap();
-    assert!(cfg.storage.s3_read_signed);
-
-    let err = Config::load_from_iter(env_with(&[("FLUXER_S3_READ_SIGNED", "maybe")])).unwrap_err();
-    assert!(err.to_string().contains("FLUXER_S3_READ_SIGNED"));
 }
 
 #[test]

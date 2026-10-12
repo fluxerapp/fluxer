@@ -6,28 +6,9 @@
 -export([
     normalize_data/1,
     normalize_map/1,
-    member_map/1,
-    member_values/1,
-    member_list/1,
-    member_count/1,
-    member_ids/1,
-    member_role_index/1,
-    get_member/2,
-    put_member/2,
-    put_member_map/2,
-    put_member_list/2,
-    remove_member/2,
-    role_list/1,
-    role_index/1,
     put_roles/2,
-    channel_list/1,
-    channel_index/1,
     put_channels/2,
     build_id_index/1,
-    build_role_perms_cache/1,
-    build_overwrite_perms_cache/1,
-    ensure_list/1,
-    extract_integer_list/1,
     ensure_data_map/1
 ]).
 
@@ -71,65 +52,13 @@ normalize_map(Data) ->
             guild_data_index_channels:build_overwrite_perms_cache(Channels)
     }.
 
--spec member_map(term()) -> map().
-member_map(Data) -> guild_data_index_members:member_map(Data).
-
--spec member_values(term()) -> [map()].
-member_values(Data) -> guild_data_index_members:member_values(Data).
-
--spec member_list(term()) -> [map()].
-member_list(Data) -> guild_data_index_members:member_list(Data).
-
--spec member_count(term()) -> non_neg_integer().
-member_count(Data) -> guild_data_index_members:member_count(Data).
-
--spec member_ids(term()) -> [integer()].
-member_ids(Data) -> guild_data_index_members:member_ids(Data).
-
--spec member_role_index(term()) -> map().
-member_role_index(Data) -> guild_data_index_members:member_role_index(Data).
-
--spec get_member(term(), term()) -> map() | undefined.
-get_member(UserId, Data) -> guild_data_index_members:get_member(UserId, Data).
-
--spec put_member(term(), guild_data()) -> guild_data().
-put_member(Member, Data) -> guild_data_index_members:put_member(Member, Data).
-
--spec put_member_map(term(), guild_data()) -> guild_data().
-put_member_map(MemberMap, Data) -> guild_data_index_members:put_member_map(MemberMap, Data).
-
--spec put_member_list(term(), guild_data()) -> guild_data().
-put_member_list(Members, Data) -> guild_data_index_members:put_member_list(Members, Data).
-
--spec remove_member(term(), guild_data()) -> guild_data().
-remove_member(UserId, Data) -> guild_data_index_members:remove_member(UserId, Data).
-
--spec role_list(term()) -> [map()].
-role_list(Data) -> guild_data_index_roles:role_list(Data).
-
--spec role_index(term()) -> map().
-role_index(Data) -> guild_data_index_roles:role_index(Data).
-
 -spec put_roles(term(), guild_data()) -> guild_data().
 put_roles(Roles, Data) ->
     ensure_guild_data(guild_data_index_roles:put_roles(Roles, Data)).
 
--spec channel_list(term()) -> [map()].
-channel_list(Data) -> guild_data_index_channels:channel_list(Data).
-
--spec channel_index(term()) -> map().
-channel_index(Data) -> guild_data_index_channels:channel_index(Data).
-
 -spec put_channels(term(), guild_data()) -> guild_data().
 put_channels(Channels, Data) ->
     ensure_guild_data(guild_data_index_channels:put_channels(Channels, Data)).
-
--spec build_role_perms_cache([map()]) -> map().
-build_role_perms_cache(Roles) -> guild_data_index_roles:build_role_perms_cache(Roles).
-
--spec build_overwrite_perms_cache([map()]) -> map().
-build_overwrite_perms_cache(Channels) ->
-    guild_data_index_channels:build_overwrite_perms_cache(Channels).
 
 -spec build_id_index([map()]) -> #{integer() => map()}.
 build_id_index(Items) ->
@@ -141,19 +70,6 @@ add_item_to_id_index(Item, Acc) ->
         undefined -> Acc;
         Id -> Acc#{Id => Item}
     end.
-
--spec ensure_list(term()) -> list().
-ensure_list(Value) -> map_utils:ensure_list(Value).
-
--spec extract_integer_list(term()) -> [integer()].
-extract_integer_list(List) when is_list(List) ->
-    snowflake_id:parse_list(List);
-extract_integer_list(undefined) ->
-    [];
-extract_integer_list(null) ->
-    [];
-extract_integer_list(Value) ->
-    erlang:error({invalid_snowflake_list, Value}).
 
 -spec ensure_data_map(map()) -> map().
 ensure_data_map(State) ->
@@ -170,10 +86,14 @@ member_list_revision_rotates_on_every_member_writer_test() ->
     Member = #{<<"user">> => #{<<"id">> => 1}},
     Data0 = normalize_map(#{<<"members">> => [Member]}),
     Data1 = normalize_map(Data0),
-    Data2 = put_member(Member#{<<"nick">> => <<"renamed">>}, Data1),
-    Data3 = put_member_map(member_map(Data2), Data2),
-    Data4 = put_member_list(member_list(Data3), Data3),
-    Data5 = remove_member(1, Data4),
+    Data2 = guild_data_index_members:put_member(Member#{<<"nick">> => <<"renamed">>}, Data1),
+    Data3 = guild_data_index_members:put_member_map(
+        guild_data_index_members:member_map(Data2), Data2
+    ),
+    Data4 = guild_data_index_members:put_member_list(
+        guild_data_index_members:member_list(Data3), Data3
+    ),
+    Data5 = guild_data_index_members:remove_member(1, Data4),
     Revisions = [
         maps:get(member_list_revision, D)
      || D <- [Data0, Data1, Data2, Data3, Data4, Data5]

@@ -3,9 +3,10 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -16,13 +17,12 @@ export class MessageSystemService {
 		private guildRepository: GuildRepository,
 		private snowflakeService: ISnowflakeService,
 		private persistenceService: MessagePersistenceService,
-		private dispatchService: MessageDispatchService,
+		private gatewayService: IGatewayService,
 	) {}
 
 	async sendJoinSystemMessage({
 		guildId,
 		userId,
-		requestCache,
 	}: {
 		guildId: GuildID;
 		userId: UserID;
@@ -43,6 +43,6 @@ export class MessageSystemService {
 			guildId,
 			channel: systemChannel,
 		});
-		await this.dispatchService.dispatchMessageCreate({channel: systemChannel, message, requestCache});
+		await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: systemChannel, message});
 	}
 }

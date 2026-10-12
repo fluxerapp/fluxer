@@ -150,7 +150,7 @@ user_nicknames(_MessageData, _GuildId, GuildData) ->
 
 -spec guild_user_nicknames(map()) -> map().
 guild_user_nicknames(GuildData) when is_map(GuildData) ->
-    maps:fold(fun put_member_nickname/3, #{}, guild_data_index:member_map(GuildData));
+    maps:fold(fun put_member_nickname/3, #{}, guild_data_index_members:member_map(GuildData));
 guild_user_nicknames(_GuildData) ->
     #{}.
 
@@ -289,7 +289,7 @@ maybe_prepend_snowflake(IdBin, Acc) ->
 channel_names_from_guild_data([], _GuildData) ->
     #{};
 channel_names_from_guild_data(ChannelIds, GuildData) when is_map(GuildData) ->
-    ChannelIndex = guild_data_index:channel_index(GuildData),
+    ChannelIndex = guild_data_index_channels:channel_index(GuildData),
     lists:foldl(
         fun(ChannelId, Acc) -> put_index_channel_name(ChannelId, ChannelIndex, Acc) end,
         #{},

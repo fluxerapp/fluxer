@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_unified_subscriptions).
--typing([eqwalizer]).
-
--export([handle_subscriptions/3, replay_guild_subscription/6]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([handle_subscriptions/3, replay_guild_subscription/6]).
 
 -type session_state() :: map().
 -type session_id() :: binary() | undefined.

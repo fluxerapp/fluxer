@@ -3,7 +3,11 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
-import {EXPIRES_DESCRIPTOR, NEVER_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	EXPIRES_DESCRIPTOR,
+	NEVER_DESCRIPTOR,
+	UNKNOWN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey, stopPropagationOnEnterSpace} from '@app/features/input/utils/KeyboardUtils';
 import styles from '@app/features/invite/components/InviteListItem.module.css';
@@ -33,10 +37,7 @@ const EXPIRED_DESCRIPTOR = msg({
 	message: 'Expired',
 	comment: 'Error message in the invite list item.',
 });
-const UNKNOWN_DESCRIPTOR = msg({
-	message: 'Unknown',
-	comment: 'Short label in the invite list item. Keep it concise.',
-});
+
 const NO_CATEGORY_DESCRIPTOR = msg({
 	message: 'No category',
 	comment: 'Empty-state text in the invite list item.',

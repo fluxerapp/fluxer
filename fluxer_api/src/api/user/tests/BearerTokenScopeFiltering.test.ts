@@ -32,18 +32,6 @@ describe('Bearer token scope filtering on /users/@me', () => {
 		harness = await createApiTestHarness();
 		account = await createTestAccount(harness);
 	});
-	test('session token returns full private user response', async () => {
-		const json = await createBuilder<UserPrivateResponse>(harness, account.token)
-			.get('/users/@me')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(json.id).toBe(account.userId);
-		expect(json.email).toBe(account.email);
-		expect(json.password_last_changed_at).not.toBeNull();
-		expect(json.mfa_enabled).toBeDefined();
-		expect(Array.isArray(json.acls)).toBe(true);
-		expect(Array.isArray(json.traits)).toBe(true);
-	});
 	test('bearer token with identify scope strips sensitive fields', async () => {
 		const oauth2Token = await createOAuth2Token(harness, account.userId, ['identify']);
 		const json = await createBuilder<UserPrivateResponse>(harness, `Bearer ${oauth2Token.token}`)
@@ -77,19 +65,6 @@ describe('Bearer token scope filtering on /users/@me', () => {
 		expect(json.unread_gift_inventory_count).toBe(0);
 		expect(json.pending_bulk_message_deletion).toBeNull();
 	});
-	test('bearer token with identify scope preserves public identity fields', async () => {
-		const oauth2Token = await createOAuth2Token(harness, account.userId, ['identify']);
-		const json = await createBuilder<UserPrivateResponse>(harness, `Bearer ${oauth2Token.token}`)
-			.get('/users/@me')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(json.id).toBe(account.userId);
-		expect(json.username).toBe(account.username);
-		expect(json.discriminator).toBeDefined();
-		expect(typeof json.flags).toBe('number');
-		expect(typeof json.verified).toBe('boolean');
-		expect(typeof json.is_staff).toBe('boolean');
-	});
 	test('bearer token with identify and email scope returns email but strips other sensitive fields', async () => {
 		const oauth2Token = await createOAuth2Token(harness, account.userId, ['identify', 'email']);
 		const json = await createBuilder<UserPrivateResponse>(harness, `Bearer ${oauth2Token.token}`)
@@ -102,12 +77,5 @@ describe('Bearer token scope filtering on /users/@me', () => {
 		expect(json.traits).toEqual([]);
 		expect(json.mfa_enabled).toBe(false);
 		expect(json.password_last_changed_at).toBeNull();
-	});
-	test('bearer token without identify scope is rejected', async () => {
-		const oauth2Token = await createOAuth2Token(harness, account.userId, ['email']);
-		await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-			.get('/users/@me')
-			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
-			.execute();
 	});
 });

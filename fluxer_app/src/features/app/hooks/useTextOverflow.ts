@@ -48,7 +48,3 @@ function useOverflow(target: HTMLElement | RefObject<HTMLElement | null> | null,
 export function useElementOverflow(element: HTMLElement | null, axis: OverflowAxis = 'horizontal'): boolean {
 	return useOverflow(element, axis);
 }
-
-export function useTextOverflow(ref: RefObject<HTMLElement | null>, axis: OverflowAxis = 'horizontal'): boolean {
-	return useOverflow(ref, axis);
-}

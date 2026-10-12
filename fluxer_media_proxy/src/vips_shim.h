@@ -29,6 +29,7 @@ enum fluxer_native_status {
     FLUXER_NATIVE_STATUS_ALLOCATION_FAILED = -6
 };
 
+int fluxer_native_deadline_status(long long deadline_monotonic_ms);
 int fluxer_monotonic_deadline_status(long long deadline_monotonic_ms);
 
 extern const int fluxer_vips_format_uchar;
@@ -63,8 +64,6 @@ int fluxer_vips_resize(VipsImage *in, VipsImage **out, double scale);
 int fluxer_vips_join_animation_pages(
     VipsImage *source, VipsImage **pages, int n_pages, int max_pages,
     size_t max_total_pixels, VipsImage **out);
-int fluxer_vips_image_copy_memory(
-    VipsImage *in, long long deadline_monotonic_ms, VipsImage **out);
 #define FLUXER_THUMB_CROP_NONE   0
 #define FLUXER_THUMB_CROP_CENTRE 1
 int fluxer_vips_thumbnail_buffer_ex(
@@ -97,15 +96,6 @@ int fluxer_heif_decode_primary_still(
     VipsImage **out, size_t max_pixels, int max_dimension,
     struct fluxer_heif_primary_still_decode_facts *facts);
 
-int fluxer_ffmpeg_count_heif_sequence_frames(
-    const void *heif_data,
-    size_t heif_len,
-    int decoder_threads,
-    long long deadline_monotonic_ms,
-    int max_frames,
-    size_t max_total_pixels,
-    int *out_frame_count
-);
 
 int fluxer_ffmpeg_decode_heif_sequence(
     const void *heif_data,

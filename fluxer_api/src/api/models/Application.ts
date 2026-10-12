@@ -51,12 +51,4 @@ export class Application {
 			version: this.version,
 		};
 	}
-
-	hasBotUser(): boolean {
-		return this.botUserId !== null;
-	}
-
-	getBotUserId(): UserID | null {
-		return this.botUserId;
-	}
 }

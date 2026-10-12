@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::bool_param;
+
+use reqwest::Method;
+
 use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -57,7 +61,8 @@ impl AdminApiClient {
         let region_id = required_field(params, "id")?;
         let body = voice_request_body(params, &["id"])?;
         validate_against::<generated_types::UpdateVoiceRegionRequestBody>(&body)?;
-        self.patch_with_reason(
+        self.send(
+            Method::PATCH,
             &format!("/admin/voice/regions/{}", urlencoding::encode(&region_id)),
             Some(&body),
             None,
@@ -110,7 +115,8 @@ impl AdminApiClient {
         paired_coordinates(params)?;
         let body = voice_request_body(params, &["region_id", "server_id"])?;
         validate_against::<generated_types::UpdateVoiceServerRequestBody>(&body)?;
-        self.patch_with_reason(
+        self.send(
+            Method::PATCH,
             &format!(
                 "/admin/voice/regions/{}/servers/{}",
                 urlencoding::encode(&region_id),
@@ -134,10 +140,6 @@ impl AdminApiClient {
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
-}
-
-fn bool_param(value: bool) -> &'static str {
-    if value { "true" } else { "false" }
 }
 
 fn validate_against<T: serde::de::DeserializeOwned>(params: &serde_json::Value) -> ApiResult<()> {

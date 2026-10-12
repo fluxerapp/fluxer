@@ -13,10 +13,8 @@ import type {
 	VoiceEngineV2E2eeState,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayDesiredVoiceState,
-	VoiceEngineV2GatewayVoiceServer,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2InboundVideoTrack,
 	VoiceEngineV2LifecycleReason,
 	VoiceEngineV2LiveKitRoomState,
@@ -27,9 +25,7 @@ import type {
 	VoiceEngineV2NativeFrameSinkOptions,
 	VoiceEngineV2OperationId,
 	VoiceEngineV2Participant,
-	VoiceEngineV2PermissionName,
 	VoiceEngineV2PermissionResult,
-	VoiceEngineV2PermissionStatus,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
 	VoiceEngineV2ResourceKey,
 	VoiceEngineV2ScreenAudioOptions,
@@ -86,7 +82,6 @@ export interface VoiceEngineV2GatewayState {
 	desiredVoiceState: VoiceEngineV2GatewayDesiredVoiceState | null;
 	desiredVoiceStateWrite: VoiceEngineV2GatewayVoiceStateWrite | null;
 	selfVoiceState: VoiceEngineV2GatewayVoiceState | null;
-	voiceServer: VoiceEngineV2GatewayVoiceServer | null;
 	operationId: VoiceEngineV2OperationId | null;
 	failure: VoiceEngineV2Error | null;
 }
@@ -103,12 +98,6 @@ export interface VoiceEngineV2PermissionState {
 
 export interface VoiceEngineV2DeviceState {
 	inventory: VoiceEngineV2DeviceInventory;
-	operationId: VoiceEngineV2OperationId | null;
-	failure: VoiceEngineV2Error | null;
-}
-
-export interface VoiceEngineV2HardwareEncoderState {
-	capabilities: VoiceEngineV2HardwareEncoderCapabilities | null;
 	operationId: VoiceEngineV2OperationId | null;
 	failure: VoiceEngineV2Error | null;
 }
@@ -171,7 +160,6 @@ export interface VoiceEngineV2Snapshot {
 	stats: VoiceEngineV2Stats | null;
 	statsOperationId: VoiceEngineV2OperationId | null;
 	statsFailure: VoiceEngineV2Error | null;
-	hardwareEncoder: VoiceEngineV2HardwareEncoderState;
 	permissions: VoiceEngineV2PermissionState;
 	devices: VoiceEngineV2DeviceState;
 	e2ee: VoiceEngineV2E2eeLifecycleState;
@@ -240,17 +228,6 @@ export function emptyVoiceEngineV2DeviceInventory(): VoiceEngineV2DeviceInventor
 	};
 }
 
-export function createVoiceEngineV2PermissionResult(
-	name: VoiceEngineV2PermissionName,
-	status: VoiceEngineV2PermissionStatus = 'unknown',
-): VoiceEngineV2PermissionResult {
-	return {
-		name,
-		status,
-		canPrompt: status === 'prompt' || status === 'unknown',
-	};
-}
-
 export function createVoiceEngineV2InitialSnapshot(
 	capabilities: VoiceEngineV2Capabilities = unavailableVoiceEngineV2Capabilities(),
 ): VoiceEngineV2Snapshot {
@@ -270,7 +247,6 @@ export function createVoiceEngineV2InitialSnapshot(
 			desiredVoiceState: null,
 			desiredVoiceStateWrite: null,
 			selfVoiceState: null,
-			voiceServer: null,
 			operationId: null,
 			failure: null,
 		},
@@ -338,11 +314,6 @@ export function createVoiceEngineV2InitialSnapshot(
 		stats: null,
 		statsOperationId: null,
 		statsFailure: null,
-		hardwareEncoder: {
-			capabilities: null,
-			operationId: null,
-			failure: null,
-		},
 		permissions: {
 			results: {},
 			operationIds: {},

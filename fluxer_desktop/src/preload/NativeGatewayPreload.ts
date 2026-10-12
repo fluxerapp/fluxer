@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {reconstructNativeGatewayTransportEvent} from '@electron/preload/PreloadNativeGatewayEvent';
+import {parseNativeGatewayTransportEvent} from '@electron/common/NativeGatewayTransportEvent';
 import {
 	NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG,
 	NATIVE_GATEWAY_TRANSPORT_CHANNELS,
@@ -72,7 +72,7 @@ export function createNativeGatewayPreloadAPI(
 				const listener = (_event: unknown, payload: unknown): void => {
 					let reconstructed: NativeGatewayTransportEvent;
 					try {
-						reconstructed = reconstructNativeGatewayTransportEvent(payload);
+						reconstructed = parseNativeGatewayTransportEvent(payload);
 					} catch {
 						return;
 					}

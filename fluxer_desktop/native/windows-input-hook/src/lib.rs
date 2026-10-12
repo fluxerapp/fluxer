@@ -2,6 +2,12 @@
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod keymap;
+#[cfg(target_os = "windows")]
+mod modifiers;
+#[cfg(target_os = "windows")]
+mod windows_mouse;
+
 use napi::{
     Env,
     bindgen_prelude::{Function, Object, Result, ToNapiValue},
@@ -139,7 +145,7 @@ fn scan_aware_key_name(vk: u16, flags: u32) -> Option<&'static str> {
 }
 
 pub fn write_key_name(buf: &mut [u8; KEY_NAME_BUF], len_out: &mut u8, vk: u16) {
-    use fluxer_desktop_native::input::keymap::{fallback_name, windows::vk_to_name};
+    use crate::keymap::{fallback_name, windows::vk_to_name};
     if let Some(name) = vk_to_name(vk) {
         write_ascii_key_name(buf, len_out, name);
     } else {
@@ -208,7 +214,7 @@ mod platform {
         EventKind, EventThreadsafeFunction, HeldInputs, QueuedEvent, VK_PACKET,
         write_key_name_from_hook, write_packet_key_name,
     };
-    use fluxer_desktop_native::input::modifiers::{
+    use crate::modifiers::{
         Modifiers,
         windows::{from_sampled, with_pressed_key},
     };
@@ -395,7 +401,7 @@ mod platform {
     }
 
     unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-        use fluxer_desktop_native::input::windows_mouse::{Action, classify};
+        use crate::windows_mouse::{Action, classify};
         if code >= 0
             && let Some(handle) = current_handle()
         {
@@ -771,23 +777,6 @@ pub fn is_available() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fluxer_desktop_native::input::ring::Ring;
-
-    #[test]
-    fn write_key_name_known_vk() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x41);
-        assert_eq!(&buf[..len as usize], b"A");
-    }
-
-    #[test]
-    fn write_key_name_function_keys() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x7b);
-        assert_eq!(&buf[..len as usize], b"F12");
-    }
 
     #[test]
     fn write_key_name_from_hook_distinguishes_keypad_navigation() {
@@ -806,14 +795,6 @@ mod tests {
         len = 0;
         write_key_name_from_hook(&mut buf, &mut len, 0x0d, LLKHF_EXTENDED_FLAG);
         assert_eq!(&buf[..len as usize], b"NumpadEnter");
-    }
-
-    #[test]
-    fn write_key_name_fallback() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x0fff);
-        assert_eq!(&buf[..len as usize], b"Key4095");
     }
 
     #[test]
@@ -886,22 +867,5 @@ mod tests {
             ]
         );
         assert!(held.take_releases().is_empty());
-    }
-
-    #[test]
-    fn ring_holds_queued_events() {
-        let ring: Ring<QueuedEvent, 4> = Ring::new();
-        let idx = ring.claim().expect("claim slot") as usize;
-
-        unsafe {
-            let slots = ring.slots.as_ptr() as *mut QueuedEvent;
-            (*slots.add(idx)).kind = EventKind::MouseUp;
-            (*slots.add(idx)).button = 4;
-        }
-        let pop_idx = ring.pop().expect("pop slot") as usize;
-        assert_eq!(ring.slots[pop_idx].kind, EventKind::MouseUp);
-        assert_eq!(ring.slots[pop_idx].button, 4);
-        ring.release();
-        assert!(ring.pop().is_none());
     }
 }

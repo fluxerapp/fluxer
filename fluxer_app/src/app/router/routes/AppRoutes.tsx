@@ -18,7 +18,7 @@ import {ChannelIndexPage} from '@app/features/channel/components/ChannelIndexPag
 import {ChannelLayout} from '@app/features/channel/components/ChannelLayout';
 import {DMLayout} from '@app/features/channel/components/direct_message/DirectMessageLayout';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {navigateToLinkedUserProfile} from '@app/features/navigation/utils/DeepLinkUtils';
 import {getDirectMessagesFallbackPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -348,7 +348,7 @@ const messageRoute = createRoute({
 });
 const ThreadPanelRoutePage = observer(() => {
 	const {guildId} = useParams() as {guildId?: string};
-	if (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId)) {
+	if (GatewaySessions.foregroundConnection.isReady && !ThreadGuilds.isActive(guildId)) {
 		return <NotFoundPage data-flx="app.router.app-routes.thread-panel-not-found-page" />;
 	}
 	return (
@@ -363,7 +363,7 @@ const threadPanelRoute = createRoute({
 	path: '/channels/:guildId/:channelId/threads/:threadId/:threadMessageId?',
 	onEnter: (ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME || (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId))) {
+		if (guildId === ME || (GatewaySessions.foregroundConnection.isReady && !ThreadGuilds.isActive(guildId))) {
 			return notFound();
 		}
 		const channel = Channels.getChannel(channelId);

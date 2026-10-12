@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Zbyt wiele plików. {maxFiles, plural, one {Dozwolony jest maksymalnie # plik.} few {Dozwolone są maksymalnie # pliki.} many {Dozwolonych jest maksymalnie # plików.} other {Dozwolone jest maksymalnie # pliku.}}",
 	"attachments_and_uploads.unresolved_attachment_url": "Wykryto nierozwiązany adres URL `attachment://`. Powinien zostać rozwiązany przed przetwarzaniem elementów osadzonych.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Nie znaleziono przesłanego załącznika {filename}.",
-	"auth_and_oauth.application_not_owned": "Nie jesteś właścicielem tej aplikacji.",
 	"auth_and_oauth.bot_already_in_guild": "Ten bot już należy do społeczności.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Konta botów nie mogą tworzyć sesji uwierzytelniania.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Konta botów nie mogą korzystać z punktów końcowych uwierzytelniania.",

@@ -78,9 +78,9 @@ handle_role_create_test() ->
     },
     EventData = #{<<"role">> => #{<<"id">> => <<"2">>, <<"name">> => <<"New">>}},
     Result = guild_state_roles:handle_role_create(EventData, Data),
-    Roles = guild_data_index:role_list(Result),
+    Roles = guild_data_index_roles:role_list(Result),
     ?assertEqual(2, length(Roles)),
-    RoleIndex = guild_data_index:role_index(Result),
+    RoleIndex = guild_data_index_roles:role_index(Result),
     ?assertMatch(#{2 := _}, RoleIndex).
 
 handle_role_update_replaces_role_test() ->
@@ -94,7 +94,7 @@ handle_role_update_replaces_role_test() ->
     },
     EventData = #{<<"role">> => #{<<"id">> => <<"1">>, <<"name">> => <<"Updated">>}},
     Result = guild_state_roles:handle_role_update(EventData, Data),
-    Roles = guild_data_index:role_list(Result),
+    Roles = guild_data_index_roles:role_list(Result),
     [R1, R2] = Roles,
     ?assertEqual(<<"Updated">>, maps:get(<<"name">>, R1)),
     ?assertEqual(<<"Keep">>, maps:get(<<"name">>, R2)).
@@ -116,7 +116,7 @@ handle_role_update_bulk_test() ->
         ]
     },
     Result = guild_state_roles:handle_role_update_bulk(EventData, Data),
-    Roles = guild_data_index:role_list(Result),
+    Roles = guild_data_index_roles:role_list(Result),
     [R1, R2, R3] = Roles,
     ?assertEqual(<<"A2">>, maps:get(<<"name">>, R1)),
     ?assertEqual(<<"B">>, maps:get(<<"name">>, R2)),
@@ -133,7 +133,7 @@ handle_role_delete_removes_role_from_list_test() ->
     },
     EventData = #{<<"role_id">> => <<"2">>},
     Result = guild_state_roles:handle_role_delete(EventData, Data),
-    Roles = guild_data_index:role_list(Result),
+    Roles = guild_data_index_roles:role_list(Result),
     ?assertEqual(1, length(Roles)),
     ?assertEqual(<<"Keep">>, maps:get(<<"name">>, hd(Roles))).
 
@@ -146,7 +146,7 @@ strip_role_from_members_no_affected_users_test() ->
         <<"channels">> => []
     }),
     Result = guild_state_roles_delete:strip_role_from_members(999, Data),
-    #{<<"roles">> := Roles} = guild_data_index:get_member(1, Result),
+    #{<<"roles">> := Roles} = guild_data_index_members:get_member(1, Result),
     ?assertEqual([100], Roles).
 
 strip_role_from_channel_overwrites_preserves_user_overwrites_test() ->
@@ -172,7 +172,7 @@ strip_role_from_channel_overwrites_preserves_user_overwrites_test() ->
         ]
     },
     Result = guild_state_roles_delete:strip_role_from_channel_overwrites(100, Data),
-    [Ch] = guild_data_index:channel_list(Result),
+    [Ch] = guild_data_index_channels:channel_list(Result),
     Overwrites = maps:get(<<"permission_overwrites">>, Ch),
     ?assertEqual(1, length(Overwrites)),
     ?assertEqual(1, maps:get(<<"type">>, hd(Overwrites))).

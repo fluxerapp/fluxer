@@ -14,7 +14,10 @@ import {
 	type VoiceRemoteSpeakingEvent,
 	type VoiceRemoteSpeakingSnapshot,
 } from '@app/features/voice/engine/VoiceParticipantStateMachine';
-import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
+import {
+	getSharedVoiceAudioContext,
+	resolveAudioContextConstructor,
+} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {getRemoteSpeakingThresholdRms} from '@app/features/voice/engine/VoiceSpeakingThreshold';
 import {VoiceTrackKind, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {
@@ -137,13 +140,7 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 			assert.notEqual(shared.state, 'closed', 'shared voice AudioContext for analyser must not be closed');
 			return shared;
 		}
-		const AudioContextCtor =
-			window.AudioContext ||
-			(
-				window as typeof window & {
-					webkitAudioContext?: typeof AudioContext;
-				}
-			).webkitAudioContext;
+		const AudioContextCtor = resolveAudioContextConstructor();
 		if (!AudioContextCtor) return null;
 		try {
 			this.audioContext = new AudioContextCtor({latencyHint: 'interactive'});

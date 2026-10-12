@@ -1,22 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/app/components/dialogs/components/MobileGuildSettingsView.module.css';
-import {
-	MobileHeader,
-	MobileHeaderWithBanner,
-	MobileSettingsDangerItem,
-	MobileSettingsList,
-} from '@app/features/app/components/dialogs/shared/MobileSettingsComponents';
-import {usePreservedScrollerPosition} from '@app/features/app/components/dialogs/shared/UsePreservedScrollerPosition';
+import {MobileEntitySettingsView} from '@app/features/app/components/dialogs/shared/MobileEntitySettingsView';
+import {MobileSettingsDangerItem} from '@app/features/app/components/dialogs/shared/MobileSettingsComponents';
+
 import Authentication from '@app/features/auth/state/Authentication';
 import {GuildDeleteModal} from '@app/features/guild/components/modals/GuildDeleteModal';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {Scroller} from '@app/features/ui/components/Scroller';
-import userSettingsStyles from '@app/features/user/components/modals/UserSettingsModal.module.css';
+
 import type {
 	GuildSettingsTab,
 	GuildSettingsTabType,
@@ -24,11 +18,11 @@ import type {
 import {getGuildSettingsCategoryLabel} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
 import {getGuildSettingsTabComponent} from '@app/features/user/components/settings_utils/GuildSettingsTabComponents';
 import type {MobileNavigationState} from '@app/features/user/hooks/useMobileNavigation';
-import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
+
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {TrashIcon} from '@phosphor-icons/react';
-import {AnimatePresence, motion} from 'framer-motion';
+
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback} from 'react';
@@ -47,35 +41,10 @@ interface MobileGuildSettingsViewProps {
 	onTabSelect: (tabType: string, title: string) => void;
 }
 
-const contentFadeVariants = {
-	enter: {
-		opacity: 0,
-	},
-	center: {
-		opacity: 1,
-	},
-	exit: {
-		opacity: 0,
-	},
-};
-const headerFadeVariants = {
-	enter: {
-		opacity: 0,
-	},
-	center: {
-		opacity: 1,
-	},
-	exit: {
-		opacity: 0,
-	},
-};
 export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = observer(
 	({guild, groupedSettingsTabs, currentTab, mobileNav, onBack, onTabSelect}) => {
 		const {i18n} = useLingui();
 		const CurrentTabComponent = currentTab ? getGuildSettingsTabComponent(currentTab.type) : null;
-		const reducedMotion = Accessibility.useReducedMotion;
-		const currentTabId = mobileNav.currentView?.tab;
-		const {showUnsavedBanner, flashBanner, tabData, checkUnsavedChanges} = useUnsavedChangesFlash(currentTabId);
 		const CATEGORY_LABELS = {
 			expressions: getGuildSettingsCategoryLabel(i18n, 'expressions'),
 			community: getGuildSettingsCategoryLabel(i18n, 'community'),
@@ -92,20 +61,6 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 				)),
 			);
 		}, [guild.id]);
-		const handleBack = useCallback(() => {
-			if (checkUnsavedChanges()) return;
-			onBack();
-		}, [checkUnsavedChanges, onBack]);
-		const handleTabSelect = useCallback(
-			(tabType: string, title: string) => {
-				if (checkUnsavedChanges()) return;
-				onTabSelect(tabType, title);
-			},
-			[checkUnsavedChanges, onTabSelect],
-		);
-		const showMobileList = mobileNav.isRootView;
-		const showMobileContent = !mobileNav.isRootView;
-		const {scrollerRef: listScrollerRef, handleScroll: handleListScroll} = usePreservedScrollerPosition(showMobileList);
 		const dangerAction =
 			guild.isOwner(Authentication.currentUserId) && !isStockCommunityGuild(guild.id) ? (
 				<MobileSettingsDangerItem
@@ -116,113 +71,27 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 				/>
 			) : null;
 		return (
-			<div className={userSettingsStyles.mobileWrapper} data-flx="app.mobile-guild-settings-view.div">
-				<div className={userSettingsStyles.mobileHeaderContainer} data-flx="app.mobile-guild-settings-view.div--2">
-					<AnimatePresence
-						mode="wait"
-						custom={mobileNav.direction}
-						data-flx="app.mobile-guild-settings-view.animate-presence"
-					>
-						{showMobileList && (
-							<motion.div
-								key="mobile-list-header"
-								variants={reducedMotion ? undefined : headerFadeVariants}
-								initial="center"
-								animate="center"
-								exit={reducedMotion ? 'center' : 'exit'}
-								transition={{duration: reducedMotion ? 0 : 0.08, ease: 'easeInOut'}}
-								className={userSettingsStyles.mobileHeaderContent}
-								data-flx="app.mobile-guild-settings-view.div--3"
-							>
-								<MobileHeader
-									title={guild.name}
-									onBack={handleBack}
-									data-flx="app.mobile-guild-settings-view.mobile-header"
-								/>
-							</motion.div>
-						)}
-						{showMobileContent && currentTab && (
-							<motion.div
-								key={`mobile-content-header-${mobileNav.currentView?.tab}`}
-								variants={reducedMotion ? undefined : headerFadeVariants}
-								initial={reducedMotion ? 'center' : 'enter'}
-								animate="center"
-								exit={reducedMotion ? 'center' : 'exit'}
-								transition={{duration: reducedMotion ? 0 : 0.08, ease: 'easeInOut'}}
-								className={userSettingsStyles.mobileHeaderContent}
-								data-flx="app.mobile-guild-settings-view.div--4"
-							>
-								<MobileHeaderWithBanner
-									title={currentTab.label || mobileNav.currentView?.title}
-									onBack={handleBack}
-									showUnsavedBanner={showUnsavedBanner}
-									flashBanner={flashBanner}
-									tabData={tabData}
-									data-flx="app.mobile-guild-settings-view.mobile-header-with-banner"
-								/>
-							</motion.div>
-						)}
-					</AnimatePresence>
-				</div>
-				<div className={userSettingsStyles.mobileContentContainer} data-flx="app.mobile-guild-settings-view.div--5">
-					<AnimatePresence
-						mode="wait"
-						custom={mobileNav.direction}
-						data-flx="app.mobile-guild-settings-view.animate-presence--2"
-					>
-						{showMobileList && (
-							<motion.div
-								key="mobile-list-content"
-								custom={mobileNav.direction}
-								variants={reducedMotion ? undefined : contentFadeVariants}
-								initial="center"
-								animate="center"
-								exit={reducedMotion ? 'center' : 'exit'}
-								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
-								className={userSettingsStyles.mobileContentPane}
-								data-flx="app.mobile-guild-settings-view.div--6"
-							>
-								<MobileSettingsList
-									groupedTabs={groupedSettingsTabs}
-									onTabSelect={handleTabSelect}
-									categoryLabels={CATEGORY_LABELS}
-									hiddenCategories={['guild_settings']}
-									dangerContent={dangerAction}
-									scrollRef={listScrollerRef}
-									onScroll={handleListScroll}
-									data-flx="app.mobile-guild-settings-view.mobile-settings-list"
-								/>
-							</motion.div>
-						)}
-						{showMobileContent && CurrentTabComponent && (
-							<motion.div
-								key={`mobile-content-${mobileNav.currentView?.tab}`}
-								custom={mobileNav.direction}
-								variants={reducedMotion ? undefined : contentFadeVariants}
-								initial={reducedMotion ? 'center' : 'enter'}
-								animate="center"
-								exit={reducedMotion ? 'center' : 'exit'}
-								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
-								className={userSettingsStyles.mobileContentPane}
-								data-flx="app.mobile-guild-settings-view.div--7"
-							>
-								<Scroller
-									className={styles.scrollerFlex}
-									key="mobile-guild-settings-content-scroller"
-									data-flx="app.mobile-guild-settings-view.scroller-flex"
-								>
-									<div className={styles.contentContainer} data-flx="app.mobile-guild-settings-view.content-container">
-										<CurrentTabComponent
-											guildId={guild.id}
-											data-flx="app.mobile-guild-settings-view.current-tab-component"
-										/>
-									</div>
-								</Scroller>
-							</motion.div>
-						)}
-					</AnimatePresence>
-				</div>
-			</div>
+			<MobileEntitySettingsView
+				groupedSettingsTabs={groupedSettingsTabs}
+				currentTab={currentTab}
+				mobileNav={mobileNav}
+				onBack={onBack}
+				onTabSelect={onTabSelect}
+				rootTitle={guild.name}
+				mobileTitle={currentTab?.label || mobileNav.currentView?.title}
+				content={
+					CurrentTabComponent ? (
+						<CurrentTabComponent guildId={guild.id} data-flx="app.mobile-guild-settings-view.current-tab-component" />
+					) : null
+				}
+				dangerAction={dangerAction}
+				categoryLabels={CATEGORY_LABELS}
+				hiddenCategories={['guild_settings']}
+				contentScrollerClassName={styles.scrollerFlex}
+				contentInnerClassName={styles.contentContainer}
+				contentScrollerKey="mobile-guild-settings-content-scroller"
+				data-flx="app.mobile-guild-settings-view.mobile-entity-settings-view"
+			/>
 		);
 	},
 );

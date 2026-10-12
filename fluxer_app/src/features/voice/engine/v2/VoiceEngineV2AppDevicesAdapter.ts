@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {
-	type DevicePort,
-	emptyVoiceEngineV2DeviceInventory,
-	type VoiceEngineV2DeviceChangeReason,
-	type VoiceEngineV2DeviceInventory,
-	type VoiceEngineV2Error,
-} from '@fluxer/voice_engine_v2';
+import {emptyVoiceEngineV2DeviceInventory} from '@fluxer/voice_engine_v2/src/core/state';
+import type {DevicePort} from '@fluxer/voice_engine_v2/src/ports';
+import type {
+	VoiceEngineV2DeviceChangeReason,
+	VoiceEngineV2DeviceInventory,
+	VoiceEngineV2Error,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const VOICE_ENGINE_V2_APP_DEVICES_MAX_DEVICES_PER_KIND = 256;
 

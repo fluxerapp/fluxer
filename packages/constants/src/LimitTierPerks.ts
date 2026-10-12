@@ -44,10 +44,6 @@ export function isNumericTierPerk(perk: LimitTierPerk): perk is NumericTierPerk 
 	return perk.type === 'numeric';
 }
 
-export function isTextTierPerk(perk: LimitTierPerk): perk is TextTierPerk {
-	return perk.type === 'text';
-}
-
 export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 	{
 		id: 'custom_discriminator',

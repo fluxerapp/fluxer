@@ -12,9 +12,6 @@ crate-type = ["cdylib", "rlib"]
 wasm-bindgen = "=0.2.128"
 zstd = {version = "0.14.0", default-features = false, features = ["no_asm", "thin", "wasm"]}
 
-[dev-dependencies]
-proptest = "1.11.0"
-
 [profile.release]
 codegen-units = 1
 lto = true

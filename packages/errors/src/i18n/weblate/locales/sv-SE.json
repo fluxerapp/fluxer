@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "För många filer. Högst {maxFiles, plural, one {# fil} other {# filer}} tillåts.",
 	"attachments_and_uploads.unresolved_attachment_url": "En olöst `attachment://`-URL upptäcktes. Detta skulle ha lösts innan inbäddningarna behandlades.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Den uppladdade bilagan {filename} hittades inte.",
-	"auth_and_oauth.application_not_owned": "Du äger inte denna applikation.",
 	"auth_and_oauth.bot_already_in_guild": "Denna bot finns redan i communityn.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botanvändare kan inte skapa inloggningssessioner.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botanvändare kan inte använda autentiseringsslutpunkter.",

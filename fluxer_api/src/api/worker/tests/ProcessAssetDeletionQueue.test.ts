@@ -3,10 +3,10 @@
 import {AssetDeletionQueue} from '@app/api/infrastructure/AssetDeletionQueue';
 import {NoopPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import processAssetDeletionQueue from '@app/api/worker/tasks/ProcessAssetDeletionQueue';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 

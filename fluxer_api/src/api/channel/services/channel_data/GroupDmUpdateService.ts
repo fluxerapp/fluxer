@@ -4,20 +4,20 @@ import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import {requireGroupDmMember} from '@app/api/channel/services/group_dm/GroupDmHelpers';
+import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
-import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {GroupDmMatureContentIneligibleError} from '@fluxer/errors/src/domains/channel/GroupDmMatureContentIneligibleError';
-import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
-import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
-import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {CannotTransferOwnershipToBotError} from '@fluxer/errors/src/domains/guild/CannotTransferOwnershipToBotError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -30,6 +30,7 @@ export class GroupDmUpdateService {
 		private snowflakeService: ISnowflakeService,
 		private channelUtilsService: ChannelUtilsService,
 		private messagePersistenceService: MessagePersistenceService,
+		private gatewayService: IGatewayService,
 	) {}
 
 	async updateGroupDmChannel({
@@ -51,14 +52,7 @@ export class GroupDmUpdateService {
 		nsfw?: boolean;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
-		if (!channel) throw new UnknownChannelError();
-		if (channel.type !== ChannelTypes.GROUP_DM) {
-			throw new InvalidChannelTypeError();
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
+		const channel = await requireGroupDmMember(this.channelRepository, channelId, userId);
 		const dmModCtx = {
 			userId,
 			guildId: null,
@@ -155,11 +149,7 @@ export class GroupDmUpdateService {
 				type: MessageTypes.CHANNEL_NAME_CHANGE,
 				content: name,
 			});
-			await this.channelUtilsService.dispatchMessageCreate({
-				channel: updatedChannel,
-				message,
-				requestCache,
-			});
+			await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: updatedChannel, message});
 		}
 		if (icon !== undefined && iconHash !== channel.iconHash) {
 			const messageId = createMessageID(await this.snowflakeService.generateForChannel(channelId));
@@ -170,11 +160,7 @@ export class GroupDmUpdateService {
 				type: MessageTypes.CHANNEL_ICON_CHANGE,
 				content: iconHash,
 			});
-			await this.channelUtilsService.dispatchMessageCreate({
-				channel: updatedChannel,
-				message,
-				requestCache,
-			});
+			await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: updatedChannel, message});
 		}
 		await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChannel, requestCache});
 		return updatedChannel;

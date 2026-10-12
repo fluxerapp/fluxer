@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
 import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import type {ExpressionPickerTabType} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
@@ -44,7 +43,7 @@ export const useTextareaExpressionPicker = ({
 	const closeExpressionPicker = useCallback(() => {
 		const popoutKey = getExpressionPickerPopoutKey();
 		PopoutCommands.close(popoutKey);
-		ExpressionPickerCommands.close();
+		ExpressionPicker.close();
 		setExpressionPickerOpen(false);
 	}, [getExpressionPickerPopoutKey]);
 	const openExpressionPicker = useCallback(
@@ -53,7 +52,7 @@ export const useTextareaExpressionPicker = ({
 			const triggerElement = expressionPickerTriggerRef.current || invisibleExpressionPickerTriggerRef.current;
 			if (!triggerElement) return;
 			const popoutKey = getExpressionPickerPopoutKey();
-			ExpressionPickerCommands.open(channelId, tab);
+			ExpressionPicker.open(channelId, tab);
 			openPopout(
 				triggerElement,
 				{
@@ -104,7 +103,7 @@ export const useTextareaExpressionPicker = ({
 		(tab: ExpressionPickerTabType) => {
 			if (!enabled) return;
 			if (mobileLayout.enabled) {
-				ExpressionPickerCommands.open(channelId, tab);
+				ExpressionPicker.open(channelId, tab);
 				setExpressionPickerOpen(true);
 				return;
 			}
@@ -116,7 +115,7 @@ export const useTextareaExpressionPicker = ({
 			} else if (!isOpen) {
 				openExpressionPicker(tab);
 			} else {
-				ExpressionPickerCommands.setTab(tab);
+				ExpressionPicker.setTab(tab);
 			}
 		},
 		[

@@ -46,7 +46,7 @@ export const MaxBookmarksModal = observer(({user}: MaxBookmarksModalProps) => {
 	const {i18n} = useLingui();
 	const showPremium = shouldShowPremiumFeatures();
 	const maxBookmarks = user.maxBookmarks;
-	const premiumBookmarks = Limits.getPremiumValue('max_bookmarks', MAX_BOOKMARKS_PREMIUM);
+	const premiumBookmarks = Limits.getStockValue('max_bookmarks', MAX_BOOKMARKS_PREMIUM);
 	const canUpgradeBookmarks = maxBookmarks < premiumBookmarks;
 	if (!showPremium) {
 		return (

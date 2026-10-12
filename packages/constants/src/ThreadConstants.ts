@@ -48,8 +48,6 @@ export const ChannelFlags = {
 	HIDE_MEDIA_DOWNLOAD_OPTIONS: 1 << 15,
 } as const;
 
-export type ChannelFlag = ValueOf<typeof ChannelFlags>;
-
 export function settableChannelFlags(type: number, parentType?: number | null): number {
 	switch (type) {
 		case ChannelTypes.PUBLIC_THREAD:
@@ -120,10 +118,6 @@ export const THREAD_AUTO_ARCHIVE_DURATIONS = [60, 1440, 4320, 10080] as const;
 export type ThreadAutoArchiveDuration = (typeof THREAD_AUTO_ARCHIVE_DURATIONS)[number];
 
 export const DEFAULT_THREAD_AUTO_ARCHIVE_DURATION: ThreadAutoArchiveDuration = 4320;
-
-export function isThreadAutoArchiveDuration(value: number): value is ThreadAutoArchiveDuration {
-	return (THREAD_AUTO_ARCHIVE_DURATIONS as ReadonlyArray<number>).includes(value);
-}
 
 export const THREAD_NAME_MIN_LENGTH = 1;
 export const THREAD_NAME_MAX_LENGTH = 100;

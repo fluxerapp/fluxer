@@ -10,13 +10,26 @@ import {
 import {ADD_FRIEND_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
+	ACTIVE_NOW_DESCRIPTOR,
+	BIO_DESCRIPTOR,
 	DELETE_DESCRIPTOR,
 	DIRECT_MESSAGE_DESCRIPTOR,
 	DM_DESCRIPTOR,
 	FRIENDS_DESCRIPTOR,
+	PRIVACY_DESCRIPTOR,
+	PRONOUNS_DESCRIPTOR,
 	REMOVE_DESCRIPTOR,
+	VOICE_ACTIVITY_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	ACTIVITY_SHARING_DESCRIPTOR,
+	DELETE_MESSAGES_DESCRIPTOR,
+	MUTUAL_FRIENDS_DESCRIPTOR,
+	MUTUAL_GUILDS_DESCRIPTOR,
+	PROFILE_PRIVACY_LABEL_DESCRIPTOR as PROFILE_PRIVACY_DESCRIPTOR,
+	SENSITIVE_CONTENT_2_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
 const FRIEND_REQUESTS_DESCRIPTOR = msg({
@@ -31,14 +44,7 @@ const WHO_CAN_FRIEND_DESCRIPTOR = msg({
 	message: 'Who can friend',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MUTUAL_FRIENDS_DESCRIPTOR = msg({
-	message: 'Mutual friends',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const MUTUAL_GUILDS_DESCRIPTOR = msg({
-	message: 'Mutual communities',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DM_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'DM permissions',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -57,10 +63,6 @@ const COMMUNITY_DM_DESCRIPTOR = msg({
 });
 const INCOMING_DM_DESCRIPTOR = msg({
 	message: 'Incoming DM',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const PRIVACY_DESCRIPTOR = msg({
-	message: 'Privacy',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const REQUESTS_DESCRIPTOR = msg({
@@ -139,30 +141,17 @@ const GUILD_MEMBERS_DESCRIPTOR = msg({
 	message: 'Community members',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const PROFILE_PRIVACY_DESCRIPTOR = msg({
-	message: 'Profile privacy',
-	comment: 'Privacy settings section for who can see full profile details.',
-});
+
 const CHOOSE_WHO_CAN_SEE_YOUR_PROFILE_DETAILS_DESCRIPTOR = msg({
 	message: 'Choose who can see your profile details',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
-const BIO_DESCRIPTOR = msg({
-	message: 'Bio',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const PRONOUNS_DESCRIPTOR = msg({
-	message: 'Pronouns',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CONTROL_HOW_MATURE_OR_SENSITIVE_MEDIA_IS_FILTERED_DESCRIPTOR = msg({
 	message: 'Control how mature or sensitive media is filtered in different contexts.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
-const SENSITIVE_CONTENT_2_DESCRIPTOR = msg({
-	message: 'Sensitive content',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SAFETY_DESCRIPTOR = msg({
 	message: 'Safety',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -231,10 +220,7 @@ const BULK_DELETE_DESCRIPTOR = msg({
 	message: 'Bulk delete',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DELETE_MESSAGES_DESCRIPTOR = msg({
-	message: 'Delete messages',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DELETE_ALL_MESSAGES_DESCRIPTOR = msg({
 	message: 'Delete all messages',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -276,22 +262,12 @@ const DATA_DELETION_DESCRIPTOR = msg({
 	context: 'privacy-settings-section',
 	comment: 'Privacy settings section for deleting account data.',
 });
-const ACTIVITY_SHARING_DESCRIPTOR = msg({
-	message: 'Activity sharing',
-	comment: 'Privacy settings section for sharing voice activity with friends in active now.',
-});
-const ACTIVE_NOW_DESCRIPTOR = msg({
-	message: 'Active now',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CHOOSE_WHAT_FRIENDS_SEE_ON_THEIR_ACTIVE_NOW_PANEL_DESCRIPTOR = msg({
 	message: 'Choose what friends see in their active now panel',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
-const VOICE_ACTIVITY_DESCRIPTOR = msg({
-	message: 'Voice activity',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 export const privacySafetySections = [
 	{
 		id: 'profile-privacy',

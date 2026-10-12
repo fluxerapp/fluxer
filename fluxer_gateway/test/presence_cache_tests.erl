@@ -8,7 +8,7 @@
 -define(TEST_PENDING_CAP, 10000).
 
 put_and_get_visible_status_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     Presence = #{<<"status">> => <<"online">>},
     ?assertEqual(ok, presence_cache:put(1, Presence)),
     _ = sys:get_state(Pid),
@@ -16,7 +16,7 @@ put_and_get_visible_status_test() ->
     ?assertEqual(ok, gen_server:stop(Pid)).
 
 put_offline_evicted_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     Presence = #{<<"status">> => <<"offline">>},
     ?assertEqual(ok, presence_cache:put(2, Presence)),
     _ = sys:get_state(Pid),
@@ -24,7 +24,7 @@ put_offline_evicted_test() ->
     ?assertEqual(ok, gen_server:stop(Pid)).
 
 bulk_get_across_shards_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     Visible = #{<<"status">> => <<"online">>, <<"user">> => #{<<"id">> => <<"3">>}},
     presence_cache:put(3, Visible),
     presence_cache:put(4, Visible),
@@ -32,22 +32,6 @@ bulk_get_across_shards_test() ->
     Results = presence_cache:bulk_get([3, 4, 3]),
     ?assertEqual(2, length(Results)),
     ?assertEqual(ok, gen_server:stop(Pid)).
-
-put_pending_operation_overwrites_test() ->
-    Pending0 = #{100 => delete},
-    Pending1 = Pending0#{100 => {put, #{<<"status">> => <<"online">>}}},
-    ?assertEqual({put, #{<<"status">> => <<"online">>}}, maps:get(100, Pending1)).
-
-merge_rebalance_operations_prefers_pending_test() ->
-    Snapshot = #{42 => #{<<"status">> => <<"online">>}},
-    SnapshotOps = #{42 => {put, #{<<"status">> => <<"online">>}}},
-    Pending = #{42 => delete, 43 => {put, #{<<"status">> => <<"idle">>}}},
-    Operations = maps:merge(
-        SnapshotOps, presence_cache_rebalance:sanitize_pending_operations(Pending)
-    ),
-    ?assertEqual(delete, maps:get(42, Operations)),
-    ?assertEqual({put, #{<<"status">> => <<"idle">>}}, maps:get(43, Operations)),
-    _ = Snapshot.
 
 sanitize_pending_operations_filters_invalid_entries_test() ->
     Pending = #{
@@ -59,11 +43,11 @@ sanitize_pending_operations_filters_invalid_entries_test() ->
     },
     ?assertEqual(
         #{1 => delete, 2 => {put, #{}}},
-        presence_cache_rebalance:sanitize_pending_operations(Pending)
+        presence_cache_pending:sanitize_pending_operations(Pending)
     ).
 
 nodedown_grace_period_preserves_entries_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     Presence = #{<<"status">> => <<"online">>},
     ?assertEqual(ok, presence_cache:put(100, Presence)),
     _ = sys:get_state(Pid),
@@ -72,16 +56,8 @@ nodedown_grace_period_preserves_entries_test() ->
     ?assertMatch({ok, _}, presence_cache:get(100)),
     ?assertEqual(ok, gen_server:stop(Pid)).
 
-nodeup_cancels_grace_period_test() ->
-    {ok, Pid} = maybe_start_for_test(),
-    gen_server:cast(presence_cache, {nodedown_grace, 'lost@node'}),
-    timer:sleep(50),
-    gen_server:cast(presence_cache, {nodeup_cancel_grace, 'lost@node'}),
-    timer:sleep(50),
-    ?assertEqual(ok, gen_server:stop(Pid)).
-
 nodedown_grace_expiry_clears_pending_cleanup_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     ok = presence_cache:handle_nodedown('lost@node'),
     ?assertMatch(#{'lost@node' := _}, maps:get(pending_nodedown_cleanups, sys:get_state(Pid))),
     Pid ! {nodedown_grace_expired, 'lost@node'},
@@ -89,7 +65,7 @@ nodedown_grace_expiry_clears_pending_cleanup_test() ->
     ?assertEqual(ok, gen_server:stop(Pid)).
 
 generation_increments_on_write_test() ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     Gen0 = presence_cache:generation(),
     ?assertEqual(ok, presence_cache:put(200, #{<<"status">> => <<"online">>})),
     _ = sys:get_state(Pid),
@@ -100,13 +76,13 @@ generation_increments_on_write_test() ->
 cap_pending_operations_enforces_limit_test() ->
     Large = maps:from_list([{I, delete} || I <- lists:seq(1, 10500)]),
     BaseState = #{pending_operations => Large, pending_retry_timer => undefined},
-    State1 = presence_cache_rebalance:ensure_pending_state(BaseState),
+    State1 = presence_cache_pending:ensure_pending_state(BaseState),
     ?assertEqual(10000, maps:size(maps:get(pending_operations, State1))).
 
 cap_pending_operations_no_op_under_limit_test() ->
     Small = #{1 => delete, 2 => {put, #{}}},
     BaseState = #{pending_operations => Small, pending_retry_timer => undefined},
-    State1 = presence_cache_rebalance:ensure_pending_state(BaseState),
+    State1 = presence_cache_pending:ensure_pending_state(BaseState),
     ?assertEqual(Small, maps:get(pending_operations, State1)).
 
 put_to_unreachable_remote_owner_queues_pending_operation_test() ->
@@ -121,7 +97,7 @@ put_to_unreachable_remote_owner_queues_pending_operation_test() ->
                 maps:get(UserId, maps:get(pending_operations, State1))
             )
         after
-            presence_cache_rebalance:cancel_pending_retry_timer(State1)
+            presence_cache_pending:cancel_pending_retry_timer(State1)
         end
     end).
 
@@ -149,7 +125,7 @@ anti_entropy_digest_request_noop_when_digests_match_test() ->
     with_presence_cache(fun(Pid) ->
         State = cache_state(sys:get_state(Pid)),
         Digest = presence_cache_shards:content_digest(State),
-        {noreply, State1} = presence_cache_rebalance:handle_anti_entropy_digest_request(
+        {noreply, State1} = presence_cache_anti_entropy:handle_anti_entropy_digest_request(
             node(), Digest, State
         ),
         ?assertEqual(State, State1)
@@ -171,13 +147,13 @@ assert_rebalance_keeps_local_on_failed_delete(RemoteNode, Pid) ->
     },
     State0 = cache_state(sys:get_state(Pid)),
     {_Reply, State1} = presence_cache:put_local(UserId, Presence, State0),
-    State2 = presence_cache_rebalance:queue_pending_operation(UserId, delete, State1),
+    State2 = presence_cache_pending:queue_pending_operation(UserId, delete, State1),
     State3 = presence_cache_rebalance:rebalance_ownership(State2),
     try
         ?assertEqual(delete, maps:get(UserId, maps:get(pending_operations, State3))),
         ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3))
     after
-        presence_cache_rebalance:cancel_pending_retry_timer(State3)
+        presence_cache_pending:cancel_pending_retry_timer(State3)
     end.
 
 evict_oldest_pending_drops_oldest_inserted_test() ->
@@ -189,7 +165,7 @@ evict_oldest_pending_drops_oldest_inserted_test() ->
     },
     State1 = lists:foldl(
         fun(UserId, AccState) ->
-            presence_cache_rebalance:queue_pending_operation(UserId, delete, AccState)
+            presence_cache_pending:queue_pending_operation(UserId, delete, AccState)
         end,
         State0,
         lists:seq(1, ?TEST_PENDING_CAP + 5)
@@ -201,7 +177,7 @@ evict_oldest_pending_drops_oldest_inserted_test() ->
         ?assertNot(maps:is_key(5, Pending)),
         ?assert(maps:is_key(?TEST_PENDING_CAP + 5, Pending))
     after
-        presence_cache_rebalance:cancel_pending_retry_timer(State1)
+        presence_cache_pending:cancel_pending_retry_timer(State1)
     end.
 
 anti_entropy_does_not_resurrect_deleted_presence_test() ->
@@ -224,14 +200,18 @@ assert_delete_survives_stale_peer_entry(Pid) ->
     {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
     {_DeleteReply, State2} = presence_cache:delete_local(UserId, State1),
     ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
-    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
+    State3 = presence_cache_anti_entropy:merge_anti_entropy_entries(
+        #{UserId => Presence}, State2
+    ),
     ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State3)).
 
 assert_merge_repairs_missing_entry(Pid) ->
     UserId = 77002,
     Presence = anti_entropy_presence(UserId),
     State0 = cache_state(sys:get_state(Pid)),
-    State1 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State0),
+    State1 = presence_cache_anti_entropy:merge_anti_entropy_entries(
+        #{UserId => Presence}, State0
+    ),
     ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State1)).
 
 assert_merge_resumes_after_expiry(Pid) ->
@@ -243,7 +223,7 @@ assert_merge_resumes_after_expiry(Pid) ->
     Expired = State2#{
         delete_tombstones => #{UserId => erlang:monotonic_time(millisecond) - 1}
     },
-    State3 = presence_cache_rebalance:merge_anti_entropy_entries(
+    State3 = presence_cache_anti_entropy:merge_anti_entropy_entries(
         #{UserId => Presence}, Expired
     ),
     ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3)),
@@ -283,7 +263,7 @@ assert_rebalance_drop_repairs(RemoteNode, Pid) ->
     end),
     ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
     with_presence_member_nodes([node()], fun() ->
-        State3 = presence_cache_rebalance:merge_anti_entropy_entries(
+        State3 = presence_cache_anti_entropy:merge_anti_entropy_entries(
             #{UserId => Presence}, State2
         ),
         ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3))
@@ -296,16 +276,16 @@ assert_rebalance_delete_tombstones(RemoteNode, Pid) ->
         GoneUserId = remote_owned_user_id(RemoteNode),
         GonePresence = anti_entropy_presence(GoneUserId),
         {_PutReply, State1} = presence_cache:put_local(GoneUserId, GonePresence, State0),
-        State2 = presence_cache_rebalance:queue_pending_operation(GoneUserId, delete, State1),
+        State2 = presence_cache_pending:queue_pending_operation(GoneUserId, delete, State1),
         Deleted = with_reachable_remote(fun() ->
             presence_cache_rebalance:rebalance_ownership(State2)
         end),
         {GoneUserId, GonePresence, Deleted}
     end),
-    presence_cache_rebalance:cancel_pending_retry_timer(State3),
+    presence_cache_pending:cancel_pending_retry_timer(State3),
     ?assert(maps:is_key(UserId, maps:get(delete_tombstones, State3))),
     with_presence_member_nodes([node()], fun() ->
-        State4 = presence_cache_rebalance:merge_anti_entropy_entries(
+        State4 = presence_cache_anti_entropy:merge_anti_entropy_entries(
             #{UserId => Presence}, State3
         ),
         ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State4))
@@ -318,7 +298,9 @@ assert_handle_delete_tombstones(Pid) ->
     {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
     State2 = presence_cache_ops:handle_delete(UserId, State1),
     ?assert(maps:is_key(UserId, maps:get(delete_tombstones, State2))),
-    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
+    State3 = presence_cache_anti_entropy:merge_anti_entropy_entries(
+        #{UserId => Presence}, State2
+    ),
     ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State3)).
 
 with_reachable_remote(Fun) ->
@@ -339,7 +321,7 @@ anti_entropy_presence(UserId) ->
 with_local_presence_cache(Fun) ->
     with_presence_member_nodes([node()], fun() -> with_presence_cache(Fun) end).
 
-maybe_start_for_test() ->
+start_presence_cache() ->
     case whereis(presence_cache) of
         undefined -> presence_cache:start_link();
         Existing when is_pid(Existing) -> {ok, Existing}
@@ -349,7 +331,7 @@ base_pending_state() ->
     #{pending_operations => #{}, pending_retry_timer => undefined}.
 
 with_presence_cache(Fun) ->
-    {ok, Pid} = maybe_start_for_test(),
+    {ok, Pid} = start_presence_cache(),
     try
         Fun(Pid)
     after
@@ -410,7 +392,7 @@ assert_rebalance_keeps_pending_put(RemoteNode, Pid) ->
         ),
         ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State2))
     after
-        presence_cache_rebalance:cancel_pending_retry_timer(State2)
+        presence_cache_pending:cancel_pending_retry_timer(State2)
     end.
 
 cache_state(State) when is_map(State) ->

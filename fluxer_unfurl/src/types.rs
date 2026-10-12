@@ -18,9 +18,6 @@ pub enum UnfurlRequest {
         #[serde(default)]
         klipy_api_key: Option<String>,
     },
-    Invalidate {
-        url: String,
-    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -35,13 +32,7 @@ pub enum NsfwMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UnfurlResponse {
     Resolved(Arc<UnfurlResult>),
-    Invalidated(InvalidatedResponse),
     Failed { message: String },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InvalidatedResponse {
-    pub invalidated: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -213,7 +204,6 @@ mod tests {
                 assert!(youtube_api_key.is_none());
                 assert!(klipy_api_key.is_none());
             }
-            UnfurlRequest::Invalidate { .. } => panic!("expected unfurl request"),
         }
     }
 

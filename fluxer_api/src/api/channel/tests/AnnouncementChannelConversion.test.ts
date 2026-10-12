@@ -26,6 +26,7 @@ import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {createWebhook, getChannelWebhooks} from '@app/api/webhook/tests/WebhookTestUtils';
@@ -34,37 +35,7 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, WebhookTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
-
-interface RecordedJob {
-	taskType: string;
-	payload: WorkerJobPayload;
-	options: WorkerJobOptions | undefined;
-}
-
-class RecordingWorkerService implements IWorkerService {
-	readonly jobs: Array<RecordedJob> = [];
-	private nextJobId = 1n;
-
-	async addJob<TPayload extends WorkerJobPayload = WorkerJobPayload>(
-		taskType: string,
-		payload: TPayload,
-		options?: WorkerJobOptions,
-	): Promise<bigint> {
-		this.jobs.push({taskType, payload, options});
-		return this.nextJobId++;
-	}
-
-	async cancelJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
-	followerRemovals(): Array<RecordedJob> {
-		return this.jobs.filter((job) => job.taskType === 'removeChannelFollowers');
-	}
-}
 
 interface AuditLogResponse {
 	audit_log_entries: Array<{
@@ -137,7 +108,7 @@ describe('Announcement channel conversion', () => {
 		const typeChange = entry?.changes?.find((change) => change.key === 'type');
 		expect(typeChange?.old_value).toBe(ChannelTypes.GUILD_TEXT);
 		expect(typeChange?.new_value).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
-		expect(worker.followerRemovals()).toHaveLength(0);
+		expect(worker.byTask('removeChannelFollowers')).toHaveLength(0);
 	});
 
 	test('converts an announcement channel back to text and schedules follower removal', async () => {
@@ -150,7 +121,7 @@ describe('Announcement channel conversion', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(converted.type).toBe(ChannelTypes.GUILD_TEXT);
-		const removals = worker.followerRemovals();
+		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals).toHaveLength(1);
 		expect(removals[0]?.payload).toEqual({sourceChannelId: announcement.id, reason: 'converted'});
 		expect(removals[0]?.options?.jobKey).toMatch(new RegExp(`^remove-followers:${announcement.id}:converted:\\d+$`));
@@ -176,7 +147,7 @@ describe('Announcement channel conversion', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(nulled.type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
-		expect(worker.followerRemovals()).toHaveLength(0);
+		expect(worker.byTask('removeChannelFollowers')).toHaveLength(0);
 	});
 
 	test('rejects conversions outside text and announcement', async () => {
@@ -253,7 +224,7 @@ describe('Announcement channel conversion', () => {
 			.execute();
 		expect((await getChannel(harness, owner.token, text.id)).type).toBe(ChannelTypes.GUILD_TEXT);
 		expect((await getChannel(harness, owner.token, announcement.id)).type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
-		expect(worker.followerRemovals()).toHaveLength(0);
+		expect(worker.byTask('removeChannelFollowers')).toHaveLength(0);
 	});
 
 	test('refuses to convert a channel that receives follows until the follow is removed', async () => {
@@ -310,7 +281,7 @@ describe('Announcement channel conversion', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		}
-		const removals = worker.followerRemovals();
+		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals).toHaveLength(2);
 		const jobKeys = new Set(removals.map((job) => job.options?.jobKey));
 		expect(jobKeys.size).toBe(2);
@@ -322,9 +293,9 @@ describe('Announcement channel conversion', () => {
 		const announcement = await createChannel(harness, owner.token, guild.id, 'news', ChannelTypes.GUILD_ANNOUNCEMENT);
 		const text = await createChannel(harness, owner.token, guild.id, 'text', ChannelTypes.GUILD_TEXT);
 		await deleteChannel(harness, owner.token, text.id);
-		expect(worker.followerRemovals()).toHaveLength(0);
+		expect(worker.byTask('removeChannelFollowers')).toHaveLength(0);
 		await deleteChannel(harness, owner.token, announcement.id);
-		const removals = worker.followerRemovals();
+		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals).toHaveLength(1);
 		expect(removals[0]?.payload).toEqual({
 			sourceChannelId: announcement.id,
@@ -344,7 +315,7 @@ describe('Announcement channel conversion', () => {
 			.body({password: owner.password})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.executeWithResponse();
-		const removals = worker.followerRemovals();
+		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals.map((job) => job.payload.sourceChannelId).sort()).toEqual([first.id, second.id].sort());
 		for (const job of removals) {
 			expect(job.payload.reason).toBe('deleted');
@@ -362,7 +333,7 @@ describe('Announcement channel conversion', () => {
 			.body(null)
 			.expect(HTTP_STATUS.OK)
 			.execute();
-		const removals = worker.followerRemovals();
+		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals).toHaveLength(1);
 		expect(removals[0]?.payload).toEqual({
 			sourceChannelId: announcement.id,

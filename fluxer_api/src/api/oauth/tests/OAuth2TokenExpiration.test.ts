@@ -2,7 +2,6 @@
 
 import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
 import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
-import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {
 	authorizeOAuth2,
@@ -12,6 +11,7 @@ import {
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {randomBase64Url} from '@app/api/utils/SecretHash';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Token Expiration', () => {
@@ -25,7 +25,7 @@ describe('OAuth2 Token Expiration', () => {
 	test('should reject userinfo access with an expired access token', async () => {
 		const {endUser, application} = await createOAuth2TestSetup(harness);
 		const repository = new OAuth2TokenRepository();
-		const token = generateOAuthTokenSecret();
+		const token = randomBase64Url(32);
 		const expiredCreatedAt = new Date(Date.now() - (ACCESS_TOKEN_TTL_SECONDS + 60) * 1000);
 		await repository.createAccessToken({
 			token_: token,

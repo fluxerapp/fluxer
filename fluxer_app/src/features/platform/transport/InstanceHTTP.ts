@@ -7,19 +7,16 @@ import InstanceSnapshotStore, {
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {desktopLocalApiEndpoint, isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
-import {createBrowserInstanceHTTP} from '@app/features/platform/transport/BrowserInstanceHTTP';
-import {http} from '@app/features/platform/transport/RestTransport';
+import {http, withoutTrailingSlashes} from '@app/features/platform/transport/RestTransport';
 import type {
 	HttpMethod,
 	RestAuthMode,
-	RestInterceptor,
+	RestRequestOptions,
 	RestResponse,
 } from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
 const logger = Logger.create('InstanceHTTP');
-
-export type InstanceHTTPKind = 'browser';
 
 export interface InstanceHTTPTarget {
 	readonly instanceKey: string;
@@ -37,28 +34,6 @@ export interface InstanceHTTPRequest {
 	readonly retries?: number;
 	readonly timeoutMs?: number;
 	readonly signal?: AbortSignal;
-	readonly intercept?: RestInterceptor;
-}
-
-export interface InstanceHTTPDelivery {
-	readonly method: HttpMethod;
-	readonly path: string;
-	readonly target: InstanceHTTPTarget;
-	readonly body?: unknown;
-	readonly headers?: Record<string, string>;
-	readonly auth?: RestAuthMode;
-	readonly retries?: number;
-	readonly timeoutMs?: number;
-	readonly signal?: AbortSignal;
-	readonly intercept?: RestInterceptor;
-	readonly accountScopedWork:
-		| {readonly kind: 'standard'}
-		| {readonly kind: 'account-transition'; readonly suspension: AccountScopedWorkSuspension};
-}
-
-export interface InstanceHTTP {
-	readonly kind: InstanceHTTPKind;
-	send<T>(delivery: InstanceHTTPDelivery): Promise<RestResponse<T>>;
 }
 
 export class InvalidInstanceHTTPTargetError extends Error {
@@ -66,10 +41,6 @@ export class InvalidInstanceHTTPTargetError extends Error {
 		super(message);
 		this.name = 'InvalidInstanceHTTPTargetError';
 	}
-}
-
-function withoutTrailingSlashes(value: string): string {
-	return value.replace(/\/+$/u, '');
 }
 
 export function instanceTargetFromSnapshot(snapshot: RuntimeConfigSnapshot): InstanceHTTPTarget {
@@ -121,13 +92,6 @@ export function composeInstanceRequestPath(target: InstanceHTTPTarget, path: str
 	return `${withoutTrailingSlashes(target.apiEndpoint)}/v${target.apiVersion}${path}`;
 }
 
-let selected: InstanceHTTP | null = null;
-
-export function selectedInstanceHTTP(): InstanceHTTP {
-	selected ??= createBrowserInstanceHTTP();
-	return selected;
-}
-
 async function ensureDesktopRuntimeRoute(target: InstanceHTTPTarget, signal: AbortSignal | undefined): Promise<void> {
 	try {
 		await InstanceSnapshotStore.resolve({input: target.apiEndpoint, signal: signal ?? null});
@@ -142,7 +106,7 @@ async function ensureDesktopRuntimeRoute(target: InstanceHTTPTarget, signal: Abo
 
 async function sendInstanceRequest<T>(
 	request: InstanceHTTPRequest,
-	accountScopedWork: InstanceHTTPDelivery['accountScopedWork'],
+	suspension?: AccountScopedWorkSuspension,
 ): Promise<RestResponse<T>> {
 	const target = request.target;
 	const path = composeInstanceRequestPath(target, request.path);
@@ -150,23 +114,21 @@ async function sendInstanceRequest<T>(
 	if (crossInstance && isDesktopLocalAppDocument()) {
 		await ensureDesktopRuntimeRoute(target, request.signal);
 	}
-	return await selectedInstanceHTTP().send<T>({
-		method: request.method,
-		path,
-		target,
-		body: request.body,
+	const shared = {
 		headers: request.headers,
-		auth: crossInstance ? 'none' : request.auth,
+		auth: crossInstance ? ('none' as const) : request.auth,
 		retries: request.retries,
 		timeoutMs: request.timeoutMs,
 		signal: request.signal,
-		intercept: request.intercept,
-		accountScopedWork,
-	});
+	};
+	const options: RestRequestOptions = request.body === undefined ? shared : {...shared, body: request.body};
+	return suspension
+		? http.dispatchWithinAccountTransition<T>(suspension, request.method, path, options)
+		: http.dispatch<T>(request.method, path, options);
 }
 
 export function instanceRequest<T = unknown>(request: InstanceHTTPRequest): Promise<RestResponse<T>> {
-	return sendInstanceRequest<T>(request, {kind: 'standard'});
+	return sendInstanceRequest<T>(request);
 }
 
 export function instanceRequestWithinAccountTransition<T = unknown>(
@@ -174,5 +136,5 @@ export function instanceRequestWithinAccountTransition<T = unknown>(
 	suspension: AccountScopedWorkSuspension,
 ): Promise<RestResponse<T>> {
 	suspension.assertActive(suspension.reason);
-	return sendInstanceRequest<T>(request, {kind: 'account-transition', suspension});
+	return sendInstanceRequest<T>(request, suspension);
 }

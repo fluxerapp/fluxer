@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
 use crate::utils::plural::noun_for;
 use crate::{
     api::types::AuditLogsListResponse,
@@ -14,7 +16,7 @@ use crate::{
         layout::admin_layout,
     },
 };
-use maud::{Markup, PreEscaped, html};
+use maud::{Markup, html};
 
 use super::audit_logs_table::{audit_log_table_body, audit_log_table_headers};
 
@@ -141,23 +143,7 @@ pub fn audit_logs_page(
                     })))
                 }
                 @if total > params.limit as u64 {
-                    div class="mt-4 flex items-center justify-between" {
-                        @if params.current_page > 0 {
-                            a href=(build_pagination_url(base, params.current_page - 1, params))
-                                class="text-sm text-neutral-900 underline" {
-                                (PreEscaped("&larr; Previous"))
-                            }
-                        } @else { span {} }
-                        span class="text-sm text-neutral-500" {
-                            "Page " (page_number) " of " (total_pages)
-                        }
-                        @if let Some(page) = next_page {
-                            a href=(build_pagination_url(base, page, params))
-                                class="text-sm text-neutral-900 underline" {
-                                (PreEscaped("Next &rarr;"))
-                            }
-                        } @else { span {} }
-                    }
+                    (pager_with_missing((params.current_page > 0).then(|| build_pagination_url(base, params.current_page - 1, params)), Some(format!("Page {page_number} of {total_pages}")), next_page.map(|page| build_pagination_url(base, page, params)), true))
                 }
             }
         }

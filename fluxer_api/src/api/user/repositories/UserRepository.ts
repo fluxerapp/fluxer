@@ -40,7 +40,7 @@ import {
 	UserAccountRepository,
 	type UserDeletionScheduleUpdate,
 } from '@app/api/user/repositories/account/UserAccountRepository';
-import {UserDeletionRepository} from '@app/api/user/repositories/account/UserDeletionRepository';
+
 import {UserGuildRepository} from '@app/api/user/repositories/account/UserGuildRepository';
 import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
@@ -67,7 +67,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 export class UserRepository {
 	private accountRepo: UserAccountRepository;
 	private lookupRepo: UserLookupRepository;
-	private deletionRepo = new UserDeletionRepository();
+
 	private guildRepo = new UserGuildRepository();
 	private tokenRepo = new TokenRepository();
 	private settingsRepo = new UserSettingsRepository();
@@ -93,10 +93,6 @@ export class UserRepository {
 
 	async create(data: UserRow): Promise<User> {
 		return this.accountRepo.create(data);
-	}
-
-	async upsert(data: UserRow, oldData?: UserRow | null): Promise<User> {
-		return this.accountRepo.upsert(data, oldData);
 	}
 
 	async patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User> {
@@ -196,37 +192,12 @@ export class UserRepository {
 		return result ?? {last_active_at: null, last_active_ip: null};
 	}
 
-	async addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void> {
-		return this.deletionRepo.addPendingDeletion(userId, pendingDeletionAt, deletionReasonCode);
-	}
-
-	async removePendingDeletion(userId: UserID, pendingDeletionAt: Date): Promise<void> {
-		return this.deletionRepo.removePendingDeletion(userId, pendingDeletionAt);
-	}
-
-	async findUsersPendingDeletionByDate(deletionDate: string): Promise<
-		Array<{
-			user_id: bigint;
-			deletion_reason_code: number;
-		}>
-	> {
-		return this.deletionRepo.findUsersPendingDeletionByDate(deletionDate);
-	}
-
-	async scheduleDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void> {
-		return this.deletionRepo.scheduleDeletion(userId, pendingDeletionAt, deletionReasonCode);
-	}
-
 	async deleteUserSecondaryIndices(userId: UserID): Promise<void> {
 		return this.accountRepo.deleteUserSecondaryIndices(userId);
 	}
 
 	async removeFromAllGuilds(userId: UserID): Promise<void> {
 		return this.guildRepo.removeFromAllGuilds(userId);
-	}
-
-	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<void> {
-		return this.accountRepo.updateLastActiveAt(params);
 	}
 
 	async updateSubscriptionStatus(
@@ -288,12 +259,6 @@ export class UserRepository {
 
 	async createAuthSession(sessionData: AuthSessionRow): Promise<AuthSession> {
 		return this.authSessionRepository.createAuthSession(sessionData);
-	}
-
-	async updateAuthSessionLastUsed(sessionIdHash: Buffer): Promise<void> {
-		const session = await this.authSessionRepository.getAuthSessionByToken(sessionIdHash);
-		if (!session) return;
-		await this.authSessionRepository.updateAuthSessionLastUsed(sessionIdHash);
 	}
 
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {
@@ -516,10 +481,6 @@ export class UserRepository {
 		options: ListHistoricalDmChannelOptions,
 	): Promise<Array<HistoricalDmChannelSummary>> {
 		return this.channelRepo.listHistoricalDmChannelsPaginated(userId, options);
-	}
-
-	async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
-		return this.channelRepo.recordHistoricalDmChannel(userId, channelId, isGroupDm);
 	}
 
 	async listPrivateChannelSummaries(userId: UserID): Promise<Array<PrivateChannelSummary>> {

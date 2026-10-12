@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Troppi file. Il limite è di {maxFiles, plural, one {# file} other {# file}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Rilevato URL `attachment://` non risolto. Avrebbe dovuto essere risolto prima dell’elaborazione del contenuto incorporato.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "L'allegato caricato {filename} non è stato trovato.",
-	"auth_and_oauth.application_not_owned": "Non possiedi questa applicazione.",
 	"auth_and_oauth.bot_already_in_guild": "Questo bot è già nella community.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Gli utenti bot non possono creare sessioni di autenticazione.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Gli utenti bot non possono usare gli endpoint di autenticazione.",

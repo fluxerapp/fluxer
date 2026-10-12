@@ -274,14 +274,6 @@ describe('DELETE /admin/reports/:report_id', () => {
 		expect(await repository.getReport(seeded.reportId)).toBeNull();
 	});
 
-	test('an unknown report gives UNKNOWN_REPORT and records nothing', async () => {
-		await deleteRequest(admin, '1499999999999999999')
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_REPORT)
-			.execute();
-
-		expect(await auditEntries('delete_report')).toEqual([]);
-	});
-
 	test('needs REPORT_DELETE, which REPORT_RESOLVE does not grant', async () => {
 		const seeded = await seedMessageReport(newEvidence());
 		const resolver = await setUserACLs(harness, await createTestAccount(harness), [

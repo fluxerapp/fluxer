@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage as describeFailure} from '@electron/common/ErrorMessage';
+
 import type {DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
 import type {ModuleLaunchAttempt} from '@electron/main/ModuleStore';
 
@@ -44,10 +46,6 @@ interface DesktopUpdateRunOptions {
 interface FilteredProbe {
 	readonly check: DesktopUpdateCheck;
 	readonly shellLatestVersion: string;
-}
-
-function describeFailure(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 export class DesktopUpdateRun {

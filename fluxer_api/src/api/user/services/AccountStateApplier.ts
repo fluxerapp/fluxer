@@ -22,17 +22,13 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import type {User} from '@app/api/models/User';
 import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
-import {
-	clearNewConversationLimit,
-	isNewConversationLimitExempt,
-	setNewConversationLimit,
-} from '@app/api/user/NewConversationLimit';
+import {clearNewConversationLimit, setNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	type PartialUserChangePropagationDeps,
 	propagatePartialUserChange,
 } from '@app/api/user/services/PartialUserChangePropagation';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
@@ -75,7 +71,7 @@ function gatewayDispatch(
 ): AccountUpdateDispatch {
 	return {
 		async userUpdated(user) {
-			await gateway.dispatchPresence({userId: user.id, event: 'USER_UPDATE', data: mapUserToPrivateResponse(user)});
+			await dispatchUserUpdate(gateway, user);
 		},
 		async profileChanged(user) {
 			await propagatePartialUserChange({...profile, gatewayService: gateway}, user);
@@ -347,7 +343,7 @@ export async function applyLimitNewConversations(
 		const lifted = await clearNewConversationLimit(user.id, store);
 		return outcomeOf(env, lifted ? 'applied' : 'noop', user);
 	}
-	if (isNewConversationLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+	if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 	const applied = await setNewConversationLimit(user.id, env.until_ms, store);
 	return outcomeOf(env, applied ? 'applied' : 'noop', user);
 }

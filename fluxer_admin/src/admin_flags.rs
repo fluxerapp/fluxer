@@ -160,6 +160,70 @@ pub const PREMIUM_FLAGS: &[I32Flag] = &[
     },
 ];
 
+pub const DELETION_REASONS: &[(&str, &str)] = &[
+    ("1", "User requested"),
+    ("2", "Other"),
+    ("3", "Spam"),
+    ("4", "Cheating or exploitation"),
+    ("5", "Coordinated raiding or manipulation"),
+    ("6", "Automation or self-bot usage"),
+    ("7", "Nonconsensual sexual content"),
+    ("8", "Scam or social engineering"),
+    ("9", "Child sexual content"),
+    ("10", "Privacy violation or doxxing"),
+    ("11", "Harassment or bullying"),
+    ("12", "Payment fraud"),
+    ("13", "Child safety violation"),
+    ("14", "Billing dispute or abuse"),
+    ("15", "Unsolicited explicit content"),
+    ("16", "Graphic violence"),
+    ("17", "Ban evasion"),
+    ("18", "Token or credential scam"),
+    ("19", "Inactivity"),
+    ("20", "Hate speech or extremist content"),
+    ("21", "Malicious links or malware distribution"),
+    ("22", "Impersonation or fake identity"),
+];
+
+pub const GUILD_FEATURES: &[&str] = &[
+    "ANIMATED_ICON",
+    "ANIMATED_BANNER",
+    "AUDIO_BITRATE_128_KBPS",
+    "AUDIO_BITRATE_256_KBPS",
+    "AUDIO_BITRATE_384_KBPS",
+    "BANNER",
+    "CLONE_EMOJI_DISABLED",
+    "CLONE_EMOJI_ENABLED",
+    "CLONE_STICKER_DISABLED",
+    "CLONE_STICKER_ENABLED",
+    "DETACHED_BANNER",
+    "INVITE_SPLASH",
+    "INVITES_DISABLED",
+    "RAID_DETECTED",
+    "TEXT_CHANNEL_FLEXIBLE_NAMES",
+    "HIDE_OWNER_CROWN",
+    "MORE_EMOJI",
+    "MORE_STICKERS",
+    "UNLIMITED_EMOJI",
+    "UNLIMITED_STICKERS",
+    "EXPRESSION_PURGE_ALLOWED",
+    "VANITY_URL",
+    "DISCOVERABLE",
+    "PARTNERED",
+    "VERIFIED",
+    "VIP_VOICE",
+    "VOICE_E2EE",
+    "UNAVAILABLE_FOR_EVERYONE",
+    "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
+    "UNAVAILABLE_HIDDEN",
+    "VISIONARY",
+    "LARGE_GUILD_OVERRIDE",
+    "VERY_LARGE_GUILD",
+    "ANNOUNCEMENT_CHANNELS_DISABLED",
+];
+
+pub const DEPRECATED_GUILD_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
+
 #[cfg(test)]
 mod tests {
     use super::USER_FLAGS;

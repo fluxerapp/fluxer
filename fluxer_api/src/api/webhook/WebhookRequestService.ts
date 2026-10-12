@@ -340,34 +340,15 @@ export class WebhookRequestService {
 	}
 
 	async deleteWebhookMessage(params: WebhookDeleteMessageParams): Promise<void> {
-		await this.webhookService.deleteWebhookMessage({
-			webhookId: params.webhookId,
-			token: params.token,
-			threadId: params.threadId,
-			messageId: params.messageId,
-			requestCache: params.requestCache,
-		});
+		await this.webhookService.deleteWebhookMessage(params);
 	}
 
 	async executeGitHubWebhook(params: WebhookExecuteGitHubParams): Promise<void> {
-		await this.webhookService.executeGitHubWebhook({
-			webhookId: params.webhookId,
-			token: params.token,
-			threadId: params.threadId,
-			event: params.event,
-			delivery: params.delivery,
-			data: params.data,
-			requestCache: params.requestCache,
-		});
+		await this.webhookService.executeGitHubWebhook(params);
 	}
 
 	async executeInstatusWebhook(params: WebhookExecuteInstatusParams): Promise<void> {
-		await this.webhookService.executeInstatusWebhook({
-			webhookId: params.webhookId,
-			token: params.token,
-			data: params.data,
-			requestCache: params.requestCache,
-		});
+		await this.webhookService.executeInstatusWebhook(params);
 	}
 
 	async executeSlackWebhook(params: WebhookExecuteSlackParams): Promise<void> {

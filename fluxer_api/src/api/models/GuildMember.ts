@@ -52,10 +52,6 @@ export class GuildMember {
 		this.version = row.version;
 	}
 
-	hasProfileFlag(flag: number): boolean {
-		return (this.profileFlags & flag) === flag;
-	}
-
 	toRow(): GuildMemberRow {
 		return {
 			guild_id: this.guildId,

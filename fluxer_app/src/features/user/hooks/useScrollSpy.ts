@@ -5,7 +5,6 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 export interface UseScrollSpyOptions {
 	sectionIds: ReadonlyArray<string>;
 	container: HTMLElement | null;
-	offset?: number;
 }
 
 export interface UseScrollSpyReturn {
@@ -29,6 +28,7 @@ interface PinnedSection {
 }
 
 const SCROLL_EPSILON = 2;
+const SCROLL_OFFSET = 68;
 
 function getSectionElement(container: HTMLElement, id: string): HTMLElement | null {
 	const element = document.getElementById(id);
@@ -75,7 +75,7 @@ function buildThresholds(
 	});
 }
 
-export function useScrollSpy({sectionIds, container, offset = 68}: UseScrollSpyOptions): UseScrollSpyReturn {
+export function useScrollSpy({sectionIds, container}: UseScrollSpyOptions): UseScrollSpyReturn {
 	const [activeSectionId, setActiveSectionId] = useState<string | null>(sectionIds[0] ?? null);
 	const thresholdsRef = useRef<Array<SectionThreshold>>([]);
 	const sectionTopsRef = useRef<Map<string, number>>(new Map());
@@ -146,7 +146,7 @@ export function useScrollSpy({sectionIds, container, offset = 68}: UseScrollSpyO
 			if (top === undefined) {
 				return;
 			}
-			const target = clampScrollTop(top - offset, getMaxScrollTop(container));
+			const target = clampScrollTop(top - SCROLL_OFFSET, getMaxScrollTop(container));
 			if (Math.abs(target - pinned.expectedScrollTop) > SCROLL_EPSILON) {
 				pinned.expectedScrollTop = target;
 				container.scrollTo({top: target, behavior: 'auto'});
@@ -166,7 +166,12 @@ export function useScrollSpy({sectionIds, container, offset = 68}: UseScrollSpyO
 			}
 			measured.sort((a, b) => a.top - b.top);
 			sectionTopsRef.current = new Map(measured.map(({id, top}) => [id, top]));
-			thresholdsRef.current = buildThresholds(measured, getMaxScrollTop(container), container.clientHeight, offset);
+			thresholdsRef.current = buildThresholds(
+				measured,
+				getMaxScrollTop(container),
+				container.clientHeight,
+				SCROLL_OFFSET,
+			);
 			pruneObservedElements();
 			reanchorPinnedSection();
 			applyActiveFromPosition();
@@ -204,7 +209,7 @@ export function useScrollSpy({sectionIds, container, offset = 68}: UseScrollSpyO
 				rafIdRef.current = null;
 			}
 		};
-	}, [sectionIds, container, offset]);
+	}, [sectionIds, container]);
 	const scrollToSection = useCallback(
 		(sectionId: string) => {
 			if (!container) {
@@ -217,13 +222,13 @@ export function useScrollSpy({sectionIds, container, offset = 68}: UseScrollSpyO
 			const containerRect = container.getBoundingClientRect();
 			const elementRect = element.getBoundingClientRect();
 			const top = container.scrollTop + (elementRect.top - containerRect.top);
-			const target = clampScrollTop(top - offset, getMaxScrollTop(container));
+			const target = clampScrollTop(top - SCROLL_OFFSET, getMaxScrollTop(container));
 			pinnedRef.current = {id: sectionId, expectedScrollTop: target};
 			container.scrollTo({top: target, behavior: 'auto'});
 			setActiveSectionId(sectionId);
 			return true;
 		},
-		[container, offset],
+		[container],
 	);
 	return {activeSectionId, scrollToSection};
 }

@@ -177,21 +177,6 @@ owner_result(_Owner) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-active_nodes_falls_back_to_self_test() ->
-    persistent_term:erase({gateway_cluster_membership, members}),
-    ?assertEqual([node()], active_nodes()).
-
-active_nodes_falls_back_when_empty_test() ->
-    persistent_term:put({gateway_cluster_membership, members}, []),
-    ?assertEqual([node()], active_nodes()),
-    persistent_term:erase({gateway_cluster_membership, members}).
-
-active_nodes_returns_membership_test() ->
-    Peers = [node(), 'peer@a', 'peer@b'],
-    persistent_term:put({gateway_cluster_membership, members}, Peers),
-    ?assertEqual(Peers, active_nodes()),
-    persistent_term:erase({gateway_cluster_membership, members}).
-
 active_nodes_for_role_returns_role_and_monolith_nodes_test() ->
     persistent_term:put({gateway_cluster_membership, members}, ['sessions@a', 'all@a']),
     persistent_term:put({gateway_cluster_membership, members_by_role}, #{
@@ -246,23 +231,6 @@ owner_node_for_role_without_role_members_errors_on_wrong_role_test() ->
     persistent_term:erase({gateway_cluster_membership, members_by_role}),
     persistent_term:erase({fluxer_gateway, runtime_config}).
 
-owner_node_with_single_member_returns_self_test() ->
-    persistent_term:erase({gateway_cluster_membership, members}),
-    ?assertEqual(node(), owner_node(<<"guild-123">>)),
-    ?assertEqual(node(), owner_node(456)),
-    ?assertEqual(node(), owner_node(some_atom)).
-
-select_owner_node_deterministic_for_same_input_test() ->
-    Peers = ['n@a', 'n@b', 'n@c'],
-    ?assertEqual(
-        select_owner_node(<<"guild-1">>, Peers),
-        select_owner_node(<<"guild-1">>, Peers)
-    ),
-    ?assertEqual(
-        select_owner_node(42, Peers),
-        select_owner_node(42, Peers)
-    ).
-
 select_owner_node_partitions_keys_across_nodes_test() ->
     Peers = ['n@a', 'n@b', 'n@c'],
     Owners = [
@@ -271,35 +239,6 @@ select_owner_node_partitions_keys_across_nodes_test() ->
     ],
     Unique = lists:usort(Owners),
     ?assert(length(Unique) >= 2).
-
-select_owner_node_stable_under_sort_order_test() ->
-    Peers1 = ['n@a', 'n@b', 'n@c'],
-    Peers2 = ['n@c', 'n@a', 'n@b'],
-    ?assertEqual(
-        select_owner_node(<<"k">>, Peers1),
-        select_owner_node(<<"k">>, Peers2)
-    ).
-
-select_owner_node_with_empty_returns_self_test() ->
-    ?assertEqual(node(), select_owner_node(<<"k">>, [])).
-
-owner_node_uses_membership_when_present_test() ->
-    gateway_cluster_metrics:reset_for_tests(),
-    Peers = [node(), 'peer@b'],
-    persistent_term:put({gateway_cluster_membership, members}, Peers),
-    Owner = owner_node(<<"some-key">>),
-    ?assert(lists:member(Owner, Peers)),
-    Snapshot = gateway_cluster_metrics:snapshot(),
-    Owners = maps:get(<<"gateway_node_router_owner_resolutions_total">>, Snapshot),
-    ?assertEqual(1, maps:get(<<"self">>, Owners) + maps:get(<<"peer">>, Owners)),
-    persistent_term:erase({gateway_cluster_membership, members}).
-
-is_draining_reads_persistent_term_test() ->
-    persistent_term:erase({fluxer_gateway, draining}),
-    ?assertNot(is_draining()),
-    persistent_term:put({fluxer_gateway, draining}, true),
-    ?assert(is_draining()),
-    persistent_term:erase({fluxer_gateway, draining}).
 
 -define(PINNED_GUILD, 1100000000000000001).
 

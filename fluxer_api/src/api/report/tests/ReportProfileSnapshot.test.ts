@@ -18,7 +18,7 @@ import {
 	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -162,7 +162,7 @@ describe('Report profile snapshots', () => {
 
 	test('a user report with guild context keeps the profile as it was when reported', async () => {
 		const {owner, target, guild, profile} = await setupProfile(harness);
-		const member = await new GuildMemberRepository().getMember(
+		const member = await new GuildRepository().getMember(
 			createGuildID(BigInt(guild.id)),
 			createUserID(BigInt(target.userId)),
 		);

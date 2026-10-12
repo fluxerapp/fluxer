@@ -116,15 +116,7 @@ describe('gift time around a Stripe subscription', () => {
 	}
 
 	async function checkoutWrite(userId: UserID, periodEnd: Date, periodStart: Date | null = null): Promise<void> {
-		await premiumService.setPremiumFromSubscriptionPeriod(
-			userId,
-			UserPremiumTypes.SUBSCRIPTION,
-			periodEnd,
-			'monthly',
-			true,
-			null,
-			periodStart,
-		);
+		await premiumService.setPremiumFromSubscriptionPeriod(userId, periodEnd, 'monthly', true, null, periodStart);
 	}
 
 	async function webhookWrite(userId: UserID, periodEnd: Date, periodStart: Date | null = null): Promise<void> {

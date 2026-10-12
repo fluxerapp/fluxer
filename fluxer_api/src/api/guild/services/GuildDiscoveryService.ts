@@ -166,7 +166,7 @@ export class GuildDiscoveryService {
 			await this.discoveryRepository.upsert(row);
 		}
 		if (shouldAutoApprove) {
-			await this.addDiscoverableFeature(guildId);
+			await this.setDiscoverableFeature(guildId, true);
 			if (this.guildSearchService) {
 				const updatedGuild = await this.guildRepository.findUnique(guildId);
 				if (updatedGuild) {
@@ -239,7 +239,7 @@ export class GuildDiscoveryService {
 		}
 		await this.discoveryRepository.deleteByGuildId(guildId, existing.status, existing.applied_at);
 		if (existing.status === DiscoveryApplicationStatus.APPROVED) {
-			await this.removeDiscoverableFeature(guildId);
+			await this.setDiscoverableFeature(guildId, false);
 			if (this.guildSearchService) {
 				await this.guildSearchService.deleteGuild(guildId);
 			}
@@ -278,7 +278,7 @@ export class GuildDiscoveryService {
 			review_reason: reason ?? null,
 		};
 		await this.discoveryRepository.updateStatus(guildId, existing.status, existing.applied_at, updatedRow);
-		await this.addDiscoverableFeature(guildId);
+		await this.setDiscoverableFeature(guildId, true);
 		if (this.guildSearchService) {
 			const guild = await this.guildRepository.findUnique(guildId);
 			if (guild) {
@@ -332,7 +332,7 @@ export class GuildDiscoveryService {
 			removal_reason: reason,
 		};
 		await this.discoveryRepository.updateStatus(guildId, existing.status, existing.applied_at, updatedRow);
-		await this.removeDiscoverableFeature(guildId);
+		await this.setDiscoverableFeature(guildId, false);
 		if (this.guildSearchService) {
 			await this.guildSearchService.deleteGuild(guildId);
 		}
@@ -456,24 +456,12 @@ export class GuildDiscoveryService {
 		return {guilds, total, category_counts: categoryCounts};
 	}
 
-	private async addDiscoverableFeature(guildId: GuildID): Promise<void> {
+	private async setDiscoverableFeature(guildId: GuildID, enabled: boolean): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) return;
 		const newFeatures = new Set(guild.features);
-		newFeatures.add(GuildFeatures.DISCOVERABLE);
-		const updatedGuild = await this.guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
-		await this.gatewayService.dispatchGuild({
-			guildId,
-			event: 'GUILD_UPDATE',
-			data: mapGuildToGuildResponse(updatedGuild),
-		});
-	}
-
-	private async removeDiscoverableFeature(guildId: GuildID): Promise<void> {
-		const guild = await this.guildRepository.findUnique(guildId);
-		if (!guild) return;
-		const newFeatures = new Set(guild.features);
-		newFeatures.delete(GuildFeatures.DISCOVERABLE);
+		if (enabled) newFeatures.add(GuildFeatures.DISCOVERABLE);
+		else newFeatures.delete(GuildFeatures.DISCOVERABLE);
 		const updatedGuild = await this.guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
 		await this.gatewayService.dispatchGuild({
 			guildId,

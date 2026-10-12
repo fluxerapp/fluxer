@@ -40,7 +40,7 @@ import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEm
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Presence from '@app/features/presence/state/Presence';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import * as FormUtils from '@app/lib/forms';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
@@ -484,7 +484,7 @@ export const useTextareaSubmit = ({
 			setValue('');
 			clearSegments();
 			DraftCommands.deleteDraft(draftOwner, channelId);
-			TypingUtils.clear(channelId);
+			RollingTypingSender.stopTyping(channelId);
 			MessageCommands.stopReply(channelId);
 			return;
 		}
@@ -571,7 +571,7 @@ export const useTextareaSubmit = ({
 			setValue('');
 			clearSegments();
 			DraftCommands.deleteDraft(draftOwner, channelId);
-			TypingUtils.clear(channelId);
+			RollingTypingSender.stopTyping(channelId);
 			return;
 		}
 		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean): boolean => {
@@ -627,7 +627,7 @@ export const useTextareaSubmit = ({
 						setValue('');
 						clearSegments();
 						DraftCommands.deleteDraft(draftOwner, channelId);
-						TypingUtils.clear(channelId);
+						RollingTypingSender.stopTyping(channelId);
 						if (parsedCommand.type !== 'msg') {
 							MessageCommands.stopReply(channelId);
 						}

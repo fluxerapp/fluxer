@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {
-	allocateOperation,
-	appendDiagnostic,
-	markOperation,
-	queueCommand,
-} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {allocateOperation, appendDiagnostic, queueCommand} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
 import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
 import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 
@@ -49,13 +44,5 @@ export function transitionUtilityPorts(
 				{type: 'diagnostics.log', operationId: allocated.operationId, entry: event.entry},
 			);
 		}
-		case 'diagnostics.logged':
-			return {
-				snapshot: {
-					...(event.operationId != null ? markOperation(snapshot, event.operationId, 'succeeded') : snapshot),
-					diagnostics: appendDiagnostic(snapshot.diagnostics, event.entry),
-				},
-				commands: [],
-			};
 	}
 }

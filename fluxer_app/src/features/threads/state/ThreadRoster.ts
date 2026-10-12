@@ -97,10 +97,6 @@ class ThreadRoster {
 		this.rosters.set(payload.thread_id, members);
 	}
 
-	clearThread(threadId: string): void {
-		this.rosters.delete(threadId);
-	}
-
 	reset(): void {
 		this.rosters.clear();
 	}

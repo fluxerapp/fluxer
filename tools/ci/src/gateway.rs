@@ -32,43 +32,11 @@ pub(crate) enum GatewayStep {
     FmtCheck,
     Lint,
     Compile,
-    ProdCompile,
     Dialyzer,
-    Eqwalizer,
     Typecheck,
     Eunit,
     AllChecks,
     Clean,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum NifBuildProfile {
-    Debug,
-    Release,
-}
-
-impl NifBuildProfile {
-    fn from_env_value(value: Option<&str>) -> Self {
-        match value {
-            Some("release") | None => Self::Release,
-            Some(_) => Self::Debug,
-        }
-    }
-
-    fn target_dir_name(self) -> &'static str {
-        match self {
-            Self::Debug => "debug",
-            Self::Release => "release",
-        }
-    }
-
-    fn cargo_args(self) -> Vec<OsString> {
-        let mut args = vec![OsString::from("build")];
-        if self == Self::Release {
-            args.push(OsString::from("--release"));
-        }
-        args
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,12 +71,7 @@ pub(crate) fn run_gateway_step(
         GatewayStep::FmtCheck => run_gateway_fmt_check(gateway_dir),
         GatewayStep::Lint => run_rebar(gateway_dir, ["lint"]),
         GatewayStep::Compile => run_rebar(gateway_dir, ["compile"]),
-        GatewayStep::ProdCompile => {
-            run_rebar(gateway_dir, ["as", "prod", "clean", "-a"])?;
-            run_rebar(gateway_dir, ["as", "prod", "compile"])
-        }
         GatewayStep::Dialyzer => run_rebar(gateway_dir, ["dialyzer"]),
-        GatewayStep::Eqwalizer => run_eqwalizer(gateway_dir, eqwalizer_profile),
         GatewayStep::Typecheck => run_eqwalizer(gateway_dir, eqwalizer_profile),
         GatewayStep::Eunit => run_rebar(gateway_dir, ["as", "test", "eunit"]),
         GatewayStep::AllChecks => {
@@ -144,11 +107,8 @@ pub(crate) fn run_gateway_step(
 }
 
 fn build_gateway_nifs(gateway_dir: &Path) -> Result<()> {
-    let profile =
-        NifBuildProfile::from_env_value(env::var("FLUXER_GATEWAY_NIF_PROFILE").ok().as_deref());
     let builds = gateway_nif_builds(
         gateway_dir,
-        profile,
         env::consts::DLL_PREFIX,
         env::consts::DLL_EXTENSION,
     );
@@ -362,21 +322,17 @@ fn asdf_shims_path() -> Option<PathBuf> {
 
 fn gateway_nif_builds(
     gateway_dir: &Path,
-    profile: NifBuildProfile,
     dll_prefix: &str,
     dll_extension: &str,
 ) -> Vec<GatewayNifBuild> {
     GATEWAY_NIF_CRATES
         .iter()
-        .map(|crate_name| {
-            gateway_nif_build(gateway_dir, profile, dll_prefix, dll_extension, crate_name)
-        })
+        .map(|crate_name| gateway_nif_build(gateway_dir, dll_prefix, dll_extension, crate_name))
         .collect()
 }
 
 fn gateway_nif_build(
     gateway_dir: &Path,
-    profile: NifBuildProfile,
     dll_prefix: &str,
     dll_extension: &str,
     crate_name: &str,
@@ -384,10 +340,10 @@ fn gateway_nif_build(
     let native_dir = gateway_dir.join("native").join(crate_name);
     GatewayNifBuild {
         crate_name: crate_name.to_string(),
-        cargo_args: profile.cargo_args(),
+        cargo_args: vec![OsString::from("build"), OsString::from("--release")],
         artifact_path: native_dir
             .join("target")
-            .join(profile.target_dir_name())
+            .join("release")
             .join(format!("{dll_prefix}{crate_name}.{dll_extension}")),
         output_path: gateway_dir.join("priv").join(format!("{crate_name}.so")),
         native_dir,
@@ -408,114 +364,4 @@ fn resolve_gateway_dir() -> Result<PathBuf> {
         "Could not resolve fluxer_gateway directory from {}",
         cwd.display()
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn nif_profile_defaults_to_release_and_uses_debug_for_other_values() {
-        assert_eq!(
-            NifBuildProfile::from_env_value(None),
-            NifBuildProfile::Release
-        );
-        assert_eq!(
-            NifBuildProfile::from_env_value(Some("release")),
-            NifBuildProfile::Release
-        );
-        assert_eq!(
-            NifBuildProfile::from_env_value(Some("debug")),
-            NifBuildProfile::Debug
-        );
-        assert_eq!(
-            NifBuildProfile::from_env_value(Some("dev")),
-            NifBuildProfile::Debug
-        );
-    }
-
-    #[test]
-    fn debug_build_plan_omits_release_arg_and_uses_debug_target_dir() {
-        let build = gateway_nif_build(
-            Path::new("/repo/fluxer_gateway"),
-            NifBuildProfile::Debug,
-            "lib",
-            "dylib",
-            "guild_member_list_oset_nif",
-        );
-
-        assert_eq!(build.cargo_args, vec![OsString::from("build")]);
-        assert_eq!(
-            build.artifact_path,
-            PathBuf::from(
-                "/repo/fluxer_gateway/native/guild_member_list_oset_nif/target/debug/libguild_member_list_oset_nif.dylib"
-            )
-        );
-        assert_eq!(
-            build.output_path,
-            PathBuf::from("/repo/fluxer_gateway/priv/guild_member_list_oset_nif.so")
-        );
-    }
-
-    #[test]
-    fn rebar_project_plugins_are_skipped_except_for_plugin_commands() {
-        assert!(should_skip_rebar_project_plugins(&[OsString::from(
-            "compile"
-        )]));
-        assert!(should_skip_rebar_project_plugins(&[
-            OsString::from("as"),
-            OsString::from("test"),
-            OsString::from("eunit"),
-        ]));
-        assert!(!should_skip_rebar_project_plugins(&[OsString::from("fmt")]));
-        assert!(!should_skip_rebar_project_plugins(&[OsString::from(
-            "lint"
-        )]));
-        assert!(!should_skip_rebar_project_plugins(&[OsString::from(
-            "plugins"
-        )]));
-    }
-
-    #[test]
-    fn rebar_command_runs_in_gateway_dir_and_sets_skip_env_for_compile() {
-        let command = rebar_command(Path::new("/repo/fluxer_gateway"), ["compile"]);
-
-        assert_eq!(command.program, OsString::from("rebar3"));
-        assert_eq!(command.args, vec![OsString::from("compile")]);
-        assert_eq!(command.cwd, Some(PathBuf::from("/repo/fluxer_gateway")));
-        assert!(command.env.contains(&(
-            OsString::from("REBAR_SKIP_PROJECT_PLUGINS"),
-            OsString::from("1")
-        )));
-    }
-
-    #[test]
-    fn rebar_command_keeps_project_plugins_for_fmt() {
-        let command = rebar_command(Path::new("/repo/fluxer_gateway"), ["fmt", "--check"]);
-
-        assert_eq!(
-            command.args,
-            vec![OsString::from("fmt"), OsString::from("--check")]
-        );
-        assert!(
-            !command
-                .env
-                .iter()
-                .any(|(key, _)| key == &OsString::from("REBAR_SKIP_PROJECT_PLUGINS"))
-        );
-    }
-
-    #[test]
-    fn zstd_probe_linker_warnings_are_fatal_only_on_aarch64_linux() {
-        assert_eq!(
-            zstd_probe_ldflags("linux", "aarch64", None),
-            Some(OsString::from(GNU_LD_FATAL_WARNINGS))
-        );
-        assert_eq!(
-            zstd_probe_ldflags("linux", "aarch64", Some(OsStr::new("-Wl,--as-needed"))),
-            Some(OsString::from("-Wl,--as-needed -Wl,--fatal-warnings"))
-        );
-        assert_eq!(zstd_probe_ldflags("linux", "x86_64", None), None);
-        assert_eq!(zstd_probe_ldflags("macos", "aarch64", None), None);
-    }
 }

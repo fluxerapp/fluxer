@@ -10,7 +10,6 @@ class VoiceCallLayout {
 	layoutMode: LayoutMode = 'grid';
 	pinnedParticipantIdentity: string | null = null;
 	pinnedParticipantSource: PinnedParticipantSource = null;
-	userOverride = false;
 	focusMembersRowVisible = true;
 
 	constructor() {
@@ -31,15 +30,10 @@ class VoiceCallLayout {
 		this.focusMembersRowVisible = !this.focusMembersRowVisible;
 	}
 
-	markUserOverride(): void {
-		this.userOverride = true;
-	}
-
 	reset(): void {
 		this.layoutMode = 'grid';
 		this.pinnedParticipantIdentity = null;
 		this.pinnedParticipantSource = null;
-		this.userOverride = false;
 		this.focusMembersRowVisible = true;
 	}
 }

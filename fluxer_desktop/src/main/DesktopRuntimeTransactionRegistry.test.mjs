@@ -59,7 +59,6 @@ function createPlan(instanceKey) {
 			giftEndpoint: null,
 		},
 		selfHosted: true,
-		desktopModulesEnabled: null,
 	};
 }
 

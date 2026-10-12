@@ -7,8 +7,8 @@ import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils'
 import styles from '@app/features/ui/avatars/AvatarWithPresence.module.css';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
 import type {User} from '@app/features/user/models/User';
-import {parseAvatarHash} from '@app/features/user/utils/AvatarMediaUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {parseAvatarHash} from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MicrophoneSlashIcon, SpeakerSlashIcon} from '@phosphor-icons/react';
@@ -35,7 +35,6 @@ interface Props {
 	deafened?: boolean;
 	className?: string;
 	ariaLabel?: string;
-	borderClassName?: string;
 	guildId?: string | null;
 	title?: never;
 }
@@ -48,7 +47,6 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 	deafened,
 	className,
 	ariaLabel,
-	borderClassName,
 	guildId,
 }) {
 	const {i18n} = useLingui();
@@ -115,7 +113,7 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 			avatarUrl={src}
 			hoverAvatarUrl={isAnimatedAvatarLoaded ? hoverSrc : undefined}
 			shouldPlayAnimated={wantsAnimatedAvatar && isAnimatedAvatarLoaded}
-			className={clsx(styles.container, speaking && styles.containerSpeaking, borderClassName, className)}
+			className={clsx(styles.container, speaking && styles.containerSpeaking, className)}
 			userTag={ariaLabel ?? user.displayName}
 			disableStatusTooltip
 			customStatusBadge={voiceBadge}

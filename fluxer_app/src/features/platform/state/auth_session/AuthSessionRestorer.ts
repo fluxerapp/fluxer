@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {
 	AccountInstanceMismatchError,

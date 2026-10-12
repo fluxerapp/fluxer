@@ -2,7 +2,6 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
@@ -11,6 +10,7 @@ import {
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
 import {Button} from '@app/features/ui/button/Button';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
@@ -20,6 +20,7 @@ import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import styles from '@app/features/webhook/components/WebhookListItem.module.css';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CaretDownIcon, CopySimpleIcon, TrashSimpleIcon} from '@phosphor-icons/react';
@@ -172,9 +173,7 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 			}
 			try {
 				setIsUpdatingAvatar(true);
-				const base64 = isSvgFile(file)
-					? await readImageFileAsUploadDataUrl(file)
-					: await AvatarUtils.fileToBase64(file);
+				const base64 = isSvgFile(file) ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
 				setLocalAvatar(base64);
 				onUpdate?.(webhook.id, {avatar: base64});
 			} catch {

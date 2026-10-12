@@ -54,3 +54,17 @@ export async function mapWithConcurrency<T, TResult>(
 	if (failure) throw failure.error;
 	return results;
 }
+
+export async function allSettledWithConcurrency<T, TResult>(
+	items: ReadonlyArray<T>,
+	concurrency: number,
+	mapper: (item: T, index: number) => Promise<TResult>,
+): Promise<Array<PromiseSettledResult<TResult>>> {
+	return mapWithConcurrency(items, concurrency, async (item, index): Promise<PromiseSettledResult<TResult>> => {
+		try {
+			return {status: 'fulfilled', value: await mapper(item, index)};
+		} catch (reason) {
+			return {status: 'rejected', reason};
+		}
+	});
+}

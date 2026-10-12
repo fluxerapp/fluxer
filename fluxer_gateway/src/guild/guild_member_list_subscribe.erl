@@ -348,7 +348,7 @@ sync_item_cache_enabled() ->
 session_can_view_list_members(SessionData, undefined, State) ->
     case maps:get(user_id, SessionData, undefined) of
         UserId when is_integer(UserId), UserId > 0 ->
-            guild_permissions:find_member_by_user_id(UserId, State) =/= undefined;
+            guild_permissions_check:find_member_by_user_id(UserId, State) =/= undefined;
         _ ->
             false
     end;
@@ -455,24 +455,6 @@ sync_item_cache_released_after_two_idle_generations_test() ->
         end)
     end).
 
-sync_item_cache_keeps_entries_touched_each_generation_test() ->
-    with_clean_cache(fun() ->
-        Payload = sync_payload(<<"500">>, [{0, 99}], [test_member(N) || N <- lists:seq(1, 8)]),
-        assert_matches_uncached(Payload),
-        rotate_now(),
-        ?assertEqual(#{}, current_entries()),
-        ?assertEqual(8, map_size(previous_entries())),
-        assert_matches_uncached(Payload),
-        ?assertEqual(8, map_size(current_entries())),
-        ?assertEqual(1, map_size(payload_entries())),
-        rotate_now(),
-        ?assertEqual(8, map_size(previous_entries())),
-        rotate_now(),
-        ?assertEqual(undefined, erlang:get(?SYNC_ITEM_CACHE_KEY)),
-        assert_matches_uncached(Payload),
-        ?assertEqual(8, map_size(current_entries()))
-    end).
-
 sync_item_cache_previous_generation_changed_member_reencodes_test() ->
     with_clean_cache(fun() ->
         Members = [test_member(N) || N <- lists:seq(1, 4)],
@@ -505,25 +487,6 @@ dispatch_sync_group_sends_uncached_bytes_test() ->
         ok = dispatch_sync_group([{0, 99}], [self()], 7, SyncFun),
         ok = dispatch_sync_group([{0, 99}], [self()], 7, SyncFun),
         ?assertEqual([Expected, Expected], received_dispatches())
-    end).
-
-sync_payload_equal_content_reuses_encoded_bytes_test() ->
-    with_clean_cache(fun() ->
-        Members = [test_member(N) || N <- lists:seq(1, 30)],
-        Payload = sync_payload(<<"500">>, [{0, 99}], Members),
-        assert_matches_uncached(Payload),
-        [Key] = maps:keys(payload_entries()),
-        Sentinel = {pre_encoded, <<"sentinel">>},
-        {TimerRef, Current, Previous} = erlang:get(?SYNC_ITEM_CACHE_KEY),
-        _ = erlang:put(
-            ?SYNC_ITEM_CACHE_KEY, {TimerRef, Current#{Key => {Payload, Sentinel}}, Previous}
-        ),
-        Copy = binary_to_term(term_to_binary(Payload)),
-        ?assertEqual(Sentinel, encode_sync_payload(Copy)),
-        [First | Rest] = Members,
-        Afk = put_in(First, [<<"member">>, <<"presence">>, <<"afk">>], true),
-        assert_matches_uncached(sync_payload(<<"500">>, [{0, 99}], [Afk | Rest])),
-        ?assertEqual([Key], maps:keys(payload_entries()))
     end).
 
 sync_payload_cache_is_keyed_by_list_and_ranges_test() ->

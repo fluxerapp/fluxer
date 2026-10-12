@@ -12,7 +12,6 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2OutputDeviceOptions,
 	VoiceEngineV2ParticipantVolumeOptions,
@@ -44,10 +43,7 @@ export type FakeVoiceEngineV2DriverCall =
 	| {type: 'setParticipantVolume'; options: VoiceEngineV2ParticipantVolumeOptions}
 	| {type: 'setRemoteTrackSubscription'; options: VoiceEngineV2RemoteTrackSubscriptionOptions}
 	| {type: 'publishData'; options: VoiceEngineV2DataOptions}
-	| {type: 'collectStats'}
-	| {type: 'getHardwareEncoderCapabilities'};
-
-export type FakeVoiceEngineV2DriverCallType = FakeVoiceEngineV2DriverCall['type'];
+	| {type: 'collectStats'};
 
 export interface FakeVoiceEngineV2FailureMap {
 	prewarm?: VoiceEngineV2Error;
@@ -71,13 +67,11 @@ export interface FakeVoiceEngineV2FailureMap {
 	setRemoteTrackSubscription?: VoiceEngineV2Error;
 	publishData?: VoiceEngineV2Error;
 	collectStats?: VoiceEngineV2Error;
-	getHardwareEncoderCapabilities?: VoiceEngineV2Error;
 }
 
 export interface FakeVoiceEngineV2DriverOptions {
 	failures?: FakeVoiceEngineV2FailureMap;
 	stats?: VoiceEngineV2Stats;
-	hardwareEncoderCapabilities?: VoiceEngineV2HardwareEncoderCapabilities;
 }
 
 export class FakeVoiceEngineV2Driver implements VoiceEngineV2Driver {
@@ -85,21 +79,10 @@ export class FakeVoiceEngineV2Driver implements VoiceEngineV2Driver {
 	private readonly listeners = new Set<VoiceEngineV2ExternalEventListener>();
 	private readonly failures: FakeVoiceEngineV2FailureMap;
 	private readonly stats: VoiceEngineV2Stats;
-	private readonly hardwareEncoderCapabilities: VoiceEngineV2HardwareEncoderCapabilities;
 
 	constructor(options: FakeVoiceEngineV2DriverOptions = {}) {
 		this.failures = options.failures ?? {};
 		this.stats = options.stats ?? {rttMs: null, outbound: [], inbound: []};
-		this.hardwareEncoderCapabilities = options.hardwareEncoderCapabilities ?? {
-			available: false,
-			backend: 'none',
-			compiled: false,
-			runtime: false,
-			codecs: [],
-			zeroCopy: false,
-			nativeInputs: [],
-			reason: 'not-queried',
-		};
 	}
 
 	async prewarm(): Promise<void> {
@@ -185,11 +168,6 @@ export class FakeVoiceEngineV2Driver implements VoiceEngineV2Driver {
 	async collectStats(): Promise<VoiceEngineV2Stats> {
 		this.record({type: 'collectStats'});
 		return this.stats;
-	}
-
-	async getHardwareEncoderCapabilities(): Promise<VoiceEngineV2HardwareEncoderCapabilities> {
-		this.record({type: 'getHardwareEncoderCapabilities'});
-		return this.hardwareEncoderCapabilities;
 	}
 
 	subscribe(listener: VoiceEngineV2ExternalEventListener): () => void {

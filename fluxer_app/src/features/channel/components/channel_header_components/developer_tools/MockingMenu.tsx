@@ -17,9 +17,9 @@ import {updateOption} from '@app/features/channel/components/channel_header_comp
 import * as DeveloperOptionsCommands from '@app/features/devtools/commands/DeveloperOptionsCommands';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import Users from '@app/features/user/state/Users';
 import {msg, plural} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -194,12 +194,6 @@ const ContentSafetyGatesMenu: React.FC = () => {
 						data-flx="channel.channel-header-components.developer-tools-context-menu.content-safety-gates-menu.developer-option-checkbox--2"
 					>
 						<Trans>Mock UK geo</Trans>
-					</DeveloperOptionCheckbox>
-					<DeveloperOptionCheckbox
-						optionKey="mockGeoBlocked"
-						data-flx="channel.channel-header-components.developer-tools-context-menu.content-safety-gates-menu.developer-option-checkbox--3"
-					>
-						<Trans>Mock geo block overlay</Trans>
 					</DeveloperOptionCheckbox>
 				</>
 			)}

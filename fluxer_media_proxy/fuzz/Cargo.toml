@@ -8,6 +8,7 @@ edition = "2024"
 cargo-fuzz = true
 
 [dependencies]
+fluxer_common = { path = "../../fluxer_common" }
 libfuzzer-sys = "0.4"
 fluxer-media-proxy = {path = ".."}
 

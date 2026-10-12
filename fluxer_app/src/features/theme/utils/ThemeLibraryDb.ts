@@ -8,6 +8,7 @@ import type {
 	ThemeLibraryLocalFileReference,
 	ThemeLibraryTheme,
 } from '@app/features/theme/state/ThemeLibrary';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const DB_NAME = 'fluxer-theme-library';
 const DB_VERSION = 1;
@@ -23,10 +24,6 @@ type ThemeLibraryTableName = typeof THEMES_STORE | typeof ASSETS_STORE | typeof 
 let openPromise: Promise<IDBDatabase> | null = null;
 
 const THEME_SOURCES = new Set<string>(['quick_css', 'css_file', 'desktop_directory', 'shared_theme', 'import']);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
 
 function isStringArray(value: unknown): value is Array<string> {
 	return Array.isArray(value) && value.every((item) => typeof item === 'string');

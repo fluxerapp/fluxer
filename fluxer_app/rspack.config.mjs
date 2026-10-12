@@ -35,8 +35,6 @@ const BOOT_LOW_PRIORITY_FONT_FILES = ['FluxerSans/FluxerSans-Medium.woff2'];
 const AUTH_ENTRY_DOCUMENT = 'auth-index.html';
 const ENTRY_STYLESHEET_LINK_PATTERN = /<link href="([^"]+\.css)" rel="stylesheet">/gu;
 const CSS_URL_PATTERN = /url\(\s*['"]?([^'")]+)/gu;
-const DESKTOP_MODULE_ASSET_QUERY = /[?&]m=([a-z][a-z0-9_]{0,63})(?:&|$)/u;
-const RESERVED_DESKTOP_MODULE_NAMES = new Set(['assets', 'fluxer_renderer']);
 const DESKTOP_MODULE_ASSET_SOURCES = [
 	{
 		test: /[\\/]fonts[\\/]files[\\/]FluxerSans(JP|KR|SC|TC)[\\/][^\\/]+\.woff2$/u,
@@ -58,19 +56,9 @@ const DESKTOP_MODULE_ASSET_SOURCES = [
 
 class UnusableDesktopModuleQueryError extends Error {
 	constructor(resource) {
-		super(
-			`${resource} carries an ?m= desktop module query that is not a usable module name. It must match [a-z][a-z0-9_]{0,63} and cannot be assets or fluxer_renderer.`,
-		);
+		super(`${resource} does not match a registered desktop module asset source.`);
 		this.name = 'UnusableDesktopModuleQueryError';
 	}
-}
-
-function desktopModuleAssetName(resource) {
-	const match = DESKTOP_MODULE_ASSET_QUERY.exec(resource);
-	if (match == null || RESERVED_DESKTOP_MODULE_NAMES.has(match[1])) {
-		throw new UnusableDesktopModuleQueryError(resource);
-	}
-	return match[1];
 }
 
 function desktopModuleAssetRules(isProduction) {
@@ -479,22 +467,6 @@ export default () => {
 					'bridge',
 					'index.ts',
 				),
-				'@fluxer/voice_engine_v2/runtime': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'runtime',
-					'index.ts',
-				),
-				'@fluxer/voice_engine_v2/testing': path.join(
-					MONOREPO_ROOT,
-					'packages',
-					'voice_engine_v2',
-					'src',
-					'testing',
-					'index.ts',
-				),
 				'@fluxer': path.join(MONOREPO_ROOT, 'packages'),
 				'@pkgs': PKGS_DIR,
 				'assert/strict': BROWSER_ASSERT_STRICT_MODULE,
@@ -657,18 +629,6 @@ export default () => {
 					},
 				},
 				...(isDesktopRenderer ? desktopModuleAssetRules(isProduction) : []),
-				{
-					resourceQuery: DESKTOP_MODULE_ASSET_QUERY,
-					type: 'asset/resource',
-					generator: {
-						filename: (pathData) => {
-							const moduleName = desktopModuleAssetName(pathData.filename ?? '');
-							return isProduction
-								? `assets/${moduleName}/[contenthash:16][ext]`
-								: `assets/${moduleName}/[name].[hash][ext]`;
-						},
-					},
-				},
 			],
 			generator: {
 				'css/module': {
@@ -793,7 +753,7 @@ export default () => {
 								maxSize: 100_000,
 							},
 							animation: {
-								test: /[\\/]node_modules[\\/](framer-motion|motion|motion-dom|motion-utils)[\\/]/,
+								test: /[\\/]node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/,
 								name: 'animation',
 								priority: 45,
 								reuseExistingChunk: true,

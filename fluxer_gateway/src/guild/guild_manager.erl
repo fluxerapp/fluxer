@@ -75,7 +75,7 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     process_registry:init(),
     guild_manager_cache:ensure_tables(),
-    {ShardCount, _Source} = guild_manager_shards:determine_shard_count(),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([guild_shards]),
     ShardMap = guild_manager_shards:start_shards(ShardCount),
     State = #{shards => ShardMap, shard_count => ShardCount},
     guild_manager_cache:sync_shard_table(State),
@@ -242,7 +242,7 @@ adopt_worker_shard_for_pid(Index, WorkerShard, Acc, Pid) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case guild_manager_shards:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} ->
             restart_manager_shard(Index, State);
         not_found ->
@@ -251,7 +251,7 @@ handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref),
     end;
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case guild_manager_shards:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} ->
             restart_manager_shard(Index, State);
         not_found ->

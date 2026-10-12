@@ -61,24 +61,8 @@ const FAIL_MESSAGE_LOADS_DESCRIPTOR = msg({
 	message: 'Fail message loads',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const RENDER_PLACEHOLDERS_DESCRIPTOR = msg({
-	message: 'Render placeholders',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const EMBED_SKELETONS_DESCRIPTOR = msg({
-	message: 'Embed skeletons',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const MEDIA_LOADING_STATE_DESCRIPTOR = msg({
-	message: 'Media loading state',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR = msg({
-	message: 'Slow attachment upload',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
@@ -87,10 +71,6 @@ const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
 });
 const SLOW_MESSAGE_SEND_DESCRIPTOR = msg({
 	message: 'Slow message send',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const SLOW_MESSAGE_EDIT_DESCRIPTOR = msg({
-	message: 'Slow message edit',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const SLOW_PROFILE_LOAD_DESCRIPTOR = msg({
@@ -105,14 +85,6 @@ const PROFILE_DATA_WARNING_DESCRIPTOR = msg({
 	message: 'Profile data warning',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const CLOUD_UPLOAD_DESCRIPTOR = msg({
-	message: 'Cloud upload',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const GIF_PICKER_LOADING_DESCRIPTOR = msg({
-	message: 'GIF picker loading',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const UNKNOWN_MESSAGE_TYPE_DESCRIPTOR = msg({
 	message: 'Unknown message type',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -123,10 +95,6 @@ const SELF_HOSTED_MODE_DESCRIPTOR = msg({
 });
 const VANITY_URL_DISCLAIMER_DESCRIPTOR = msg({
 	message: 'Vanity URL disclaimer',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const VOICE_CONNECTION_DEBUG_DESCRIPTOR = msg({
-	message: 'Voice connection debug',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 export const PREMIUM_TYPE_DESCRIPTOR = msg({
@@ -195,10 +163,6 @@ const FORCE_MATURE_MEDIA_DESCRIPTOR = msg({
 });
 const UK_GEO_DESCRIPTOR = msg({
 	message: 'UK geo',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const GEO_BLOCK_OVERLAY_DESCRIPTOR = msg({
-	message: 'Geo block overlay',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const NO_SEND_PERMISSION_DESCRIPTOR = msg({
@@ -315,40 +279,24 @@ const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescr
 			return FAIL_MESSAGE_SENDS_DESCRIPTOR;
 		case 'forceFailMessageLoads':
 			return FAIL_MESSAGE_LOADS_DESCRIPTOR;
-		case 'forceRenderPlaceholders':
-			return RENDER_PLACEHOLDERS_DESCRIPTOR;
-		case 'forceEmbedSkeletons':
-			return EMBED_SKELETONS_DESCRIPTOR;
-		case 'forceMediaLoading':
-			return MEDIA_LOADING_STATE_DESCRIPTOR;
 		case 'showMyselfTyping':
 			return SHOW_MYSELF_TYPING_DESCRIPTOR;
-		case 'slowAttachmentUpload':
-			return SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR;
 		case 'slowMessageLoad':
 			return SLOW_MESSAGE_LOAD_DESCRIPTOR;
 		case 'slowMessageSend':
 			return SLOW_MESSAGE_SEND_DESCRIPTOR;
-		case 'slowMessageEdit':
-			return SLOW_MESSAGE_EDIT_DESCRIPTOR;
 		case 'slowProfileLoad':
 			return SLOW_PROFILE_LOAD_DESCRIPTOR;
 		case 'forceProfileSkeletons':
 			return PROFILE_SKELETONS_DESCRIPTOR;
 		case 'forceProfileDataWarning':
 			return PROFILE_DATA_WARNING_DESCRIPTOR;
-		case 'useCloudUpload':
-			return CLOUD_UPLOAD_DESCRIPTOR;
-		case 'forceGifPickerLoading':
-			return GIF_PICKER_LOADING_DESCRIPTOR;
 		case 'forceUnknownMessageType':
 			return UNKNOWN_MESSAGE_TYPE_DESCRIPTOR;
 		case 'selfHostedModeOverride':
 			return SELF_HOSTED_MODE_DESCRIPTOR;
 		case 'forceShowVanityURLDisclaimer':
 			return VANITY_URL_DISCLAIMER_DESCRIPTOR;
-		case 'forceShowVoiceConnection':
-			return VOICE_CONNECTION_DEBUG_DESCRIPTOR;
 		case 'premiumTypeOverride':
 			return PREMIUM_TYPE_DESCRIPTOR;
 		case 'premiumLifetimeSequenceOverride':
@@ -383,8 +331,6 @@ const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescr
 			return FORCE_MATURE_MEDIA_DESCRIPTOR;
 		case 'mockInUK':
 			return UK_GEO_DESCRIPTOR;
-		case 'mockGeoBlocked':
-			return GEO_BLOCK_OVERLAY_DESCRIPTOR;
 		case 'forceNoSendMessages':
 			return {...NO_SEND_PERMISSION_DESCRIPTOR, values: {sendMessagesPermission: SEND_MESSAGES_PERMISSION}};
 		case 'forceNoAttachFiles':

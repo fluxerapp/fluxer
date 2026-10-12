@@ -51,7 +51,6 @@ const SCREEN_SHARE_MONITOR_TICK_MS = 2000;
 
 export interface DeviceScreenShareCaptureOptions {
 	videoDeviceId?: string;
-	previewVideoDeviceId?: string;
 	audioDeviceId?: string;
 	resolution?: ScreenShareCaptureOptions['resolution'];
 	sendUpdate?: boolean;

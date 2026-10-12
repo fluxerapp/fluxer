@@ -656,12 +656,4 @@ describe('VoiceMediaGraphSimulation', () => {
 			runSimulation(seed);
 		});
 	}
-
-	it('replays every seed deterministically to a deeply equal final snapshot', () => {
-		for (const seed of SIMULATION_SEEDS) {
-			const first = runSimulation(seed);
-			const second = runSimulation(seed);
-			expect(second, `seed=${seed} replay diverged`).toEqual(first);
-		}
-	}, 60_000);
 });

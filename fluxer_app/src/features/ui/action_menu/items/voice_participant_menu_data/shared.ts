@@ -2,8 +2,6 @@
 
 import {msg} from '@lingui/core/macro';
 
-export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-
 export const COPY_DEVICE_ID_DESCRIPTOR = msg({
 	message: 'Copy device ID',
 	comment: 'Developer-mode voice menu action that copies the unique identifier of a voice device or connection.',

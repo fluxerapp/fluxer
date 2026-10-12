@@ -8,7 +8,6 @@
 build_test_state() ->
     #{
         sessions => #{},
-        identify_attempts => [],
         pending_identifies => #{},
         identify_workers => #{},
         shard_index => 0

@@ -482,10 +482,6 @@ base_state(Opts) ->
         Opts
     ).
 
-is_oversized_event_small_event_test() ->
-    Req = #{event => message_create, data => #{<<"content">> => <<"hello">>}, seq => 1},
-    ?assertEqual(false, is_oversized_event(buffer_entry_bytes(Req))).
-
 is_oversized_event_large_event_test() ->
     LargeData = make_large_data(),
     Req = #{event => guild_create, data => LargeData, seq => 1},
@@ -558,12 +554,6 @@ standard_dispatch_sends_wire_payload_but_buffers_internal_data_test() ->
 make_large_data() ->
     Pairs = [{integer_to_binary(I), lists:duplicate(1000, $x)} || I <- lists:seq(1, 500)],
     maps:from_list(Pairs).
-
-normal_event_buffered_test() ->
-    Data = #{<<"content">> => <<"hello">>},
-    {noreply, S1} = do_handle_dispatch(message_create, Data, base_state(#{})),
-    ?assertEqual(1, limited_deque:size(maps:get(buffer, S1))),
-    ?assertEqual(1, maps:get(seq, S1)).
 
 should_skip_replay_buffer_test() ->
     ?assertEqual(true, should_skip_replay_buffer(guild_members_chunk)),

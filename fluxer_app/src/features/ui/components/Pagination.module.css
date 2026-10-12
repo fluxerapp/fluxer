@@ -1,0 +1,129 @@
+.paginationBar {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	padding: 0.75rem 0;
+	border-top: none;
+	background-color: transparent;
+}
+
+.paginationWrapper {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.pageButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 624.9375rem;
+	font-weight: 500;
+	font-size: 0.75rem;
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.pageButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+@media (min-width: 640px) {
+	.pageButton {
+		font-size: 0.875rem;
+	}
+}
+
+.pageButtonActive {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.pageButtonActive:hover {
+	background-color: var(--brand-primary);
+}
+
+.ellipsisButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 624.9375rem;
+	background-color: var(--background-tertiary);
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.ellipsisButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.pageInputForm {
+	display: flex;
+	height: 2rem;
+	align-items: center;
+}
+
+.pageInputLabel {
+	position: absolute;
+	width: 0.0625rem;
+	height: 0.0625rem;
+	padding: 0;
+	margin: -0.0625rem;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+.pageInput {
+	height: 2rem;
+	width: 3.5rem;
+	flex-shrink: 0;
+	appearance: textfield;
+	border-radius: 624.9375rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	background-color: var(--background-tertiary);
+	text-align: center;
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	transition: border-color 0.2s;
+}
+
+@media (min-width: 640px) {
+	.pageInput {
+		font-size: 0.875rem;
+	}
+}
+
+.pageInput::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.pageInput::-webkit-inner-spin-button,
+.pageInput::-webkit-outer-spin-button {
+	appearance: none;
+}
+
+.focusRingCircular {
+	border-radius: 624.9375rem;
+}
+.pageButton:disabled,
+.ellipsisButton:disabled {
+	cursor: default;
+	opacity: 0.5;
+}

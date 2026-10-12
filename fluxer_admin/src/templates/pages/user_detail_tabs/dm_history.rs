@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
 use crate::{
     api::types::DmChannel, config::AdminConfig,
     templates::components::page_container::card_with_header,
@@ -144,27 +146,14 @@ fn dm_pagination(
         return html! {};
     }
 
-    html! {
-        div class="flex items-center justify-center gap-2 rounded-lg border \
-                    border-neutral-200 bg-neutral-50 px-4 py-2" {
-            @if has_previous {
-                @if let Some(fid) = first_id {
-                    a href={(base) "/users/" (user_id) "?tab=dm_history&dm_limit=" (limit) "&dm_after=" (fid)}
-                        class="rounded px-3 py-1 text-sm font-medium text-neutral-600 \
-                               transition-colors hover:bg-white hover:text-neutral-900" {
-                        "Previous"
-                    }
-                }
-            }
-            @if has_next {
-                @if let Some(lid) = last_id {
-                    a href={(base) "/users/" (user_id) "?tab=dm_history&dm_limit=" (limit) "&dm_before=" (lid)}
-                        class="rounded px-3 py-1 text-sm font-medium text-neutral-600 \
-                               transition-colors hover:bg-white hover:text-neutral-900" {
-                        "Next"
-                    }
-                }
-            }
-        }
-    }
+    pager_with_missing(
+        first_id.filter(|_| has_previous).map(|id| {
+            format!("{base}/users/{user_id}?tab=dm_history&dm_limit={limit}&dm_after={id}")
+        }),
+        None,
+        last_id.filter(|_| has_next).map(|id| {
+            format!("{base}/users/{user_id}?tab=dm_history&dm_limit={limit}&dm_before={id}")
+        }),
+        true,
+    )
 }

@@ -2,13 +2,13 @@
 
 -module(gateway_rpc_guild_voice).
 
--typing([eqwalizer]).
-
--export([handle/2]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([handle/2]).
 
 -define(GUILD_CALL_TIMEOUT, 4000).
 -define(BATCH_TIMEOUT_MS, 5000).
@@ -16,26 +16,18 @@
 -spec handle(binary(), map()) -> term().
 handle(<<"guild.update_member_voice">>, P) ->
     handle_update_member_voice(P);
-handle(<<"guild.disconnect_voice_user">>, P) ->
-    handle_disconnect_voice_user(P);
 handle(<<"guild.disconnect_voice_user_if_in_channel">>, P) ->
     handle_disconnect_if_in_channel(P);
-handle(<<"guild.disconnect_all_voice_users_in_channel">>, P) ->
-    handle_disconnect_all_in_channel(P);
 handle(<<"guild.confirm_voice_connection_from_livekit">>, P) ->
     handle_confirm_connection(P);
 handle(<<"guild.get_voice_states_for_channel">>, P) ->
     handle_get_voice_states(P);
-handle(<<"guild.get_pending_joins_for_channel">>, P) ->
-    handle_get_pending_joins(P);
 handle(<<"guild.move_member">>, P) ->
     handle_move_member(P);
 handle(<<"guild.get_voice_state">>, P) ->
     handle_get_voice_state(P);
 handle(<<"guild.switch_voice_region">>, P) ->
-    handle_switch_voice_region(P);
-handle(<<"guild.batch_voice_state_update">>, P) ->
-    handle_batch_update(P).
+    handle_switch_voice_region(P).
 
 -spec handle_update_member_voice(map()) -> term().
 handle_update_member_voice(#{
@@ -54,22 +46,6 @@ handle_update_member_voice(#{
 -spec call_update_member_voice(pid(), map()) -> map().
 call_update_member_voice(VPid, Request) ->
     case gen_server:call(VPid, {update_member_voice, Request}, ?GUILD_CALL_TIMEOUT) of
-        #{success := true} -> #{<<"success">> => true};
-        #{error := E} -> raise_voice_error(E)
-    end.
-
--spec handle_disconnect_voice_user(map()) -> term().
-handle_disconnect_voice_user(#{<<"guild_id">> := GIB, <<"user_id">> := UIB} = P) ->
-    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GIB),
-    UserId = validation:snowflake_or_throw(<<"user_id">>, UIB),
-    Request = #{user_id => UserId, connection_id => maps:get(<<"connection_id">>, P, null)},
-    gateway_rpc_guild_infra:with_voice_server(GuildId, fun(VPid, _) ->
-        call_disconnect_voice_user(VPid, Request)
-    end).
-
--spec call_disconnect_voice_user(pid(), map()) -> map().
-call_disconnect_voice_user(VPid, Request) ->
-    case gen_server:call(VPid, {disconnect_voice_user, Request}, ?GUILD_CALL_TIMEOUT) of
         #{success := true} -> #{<<"success">> => true};
         #{error := E} -> raise_voice_error(E)
     end.
@@ -116,24 +92,6 @@ build_disconnect_if_in_channel_req(UserId, ExpCId, undefined) ->
     #{user_id => UserId, expected_channel_id => ExpCId};
 build_disconnect_if_in_channel_req(UserId, ExpCId, ConnId) ->
     #{user_id => UserId, expected_channel_id => ExpCId, connection_id => ConnId}.
-
--spec handle_disconnect_all_in_channel(map()) -> term().
-handle_disconnect_all_in_channel(#{<<"guild_id">> := GIB, <<"channel_id">> := CIB}) ->
-    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GIB),
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, CIB),
-    gateway_rpc_guild_infra:with_voice_server(GuildId, fun(VPid, _) ->
-        call_disconnect_all_in_channel(VPid, ChannelId)
-    end).
-
--spec call_disconnect_all_in_channel(pid(), integer()) -> map().
-call_disconnect_all_in_channel(VPid, ChannelId) ->
-    Request = {disconnect_all_voice_users_in_channel, #{channel_id => ChannelId}},
-    case gen_server:call(VPid, Request, ?GUILD_CALL_TIMEOUT) of
-        #{success := true, disconnected_count := Cnt} ->
-            #{<<"success">> => true, <<"disconnected_count">> => Cnt};
-        #{error := E} ->
-            raise_voice_error(E)
-    end.
 
 -spec handle_confirm_connection(map()) -> term().
 handle_confirm_connection(P) ->
@@ -183,26 +141,6 @@ get_voice_states_for_channel(VPid, CIdBin) ->
     case gen_server:call(VPid, {get_voice_states_for_channel, CIdBin}, 10000) of
         #{voice_states := VS} -> #{<<"voice_states">> => VS};
         _ -> gateway_rpc_error:raise(<<"voice_states_error">>)
-    end.
-
--spec handle_get_pending_joins(map()) -> term().
-handle_get_pending_joins(P) ->
-    case validate_gc_params(P) of
-        {ok, GId, CIdBin} -> get_pending_joins_for_guild(GId, CIdBin);
-        error -> #{<<"pending_joins">> => []}
-    end.
-
--spec get_pending_joins_for_guild(integer(), binary()) -> term().
-get_pending_joins_for_guild(GuildId, CIdBin) ->
-    gateway_rpc_guild_infra:with_voice_server(GuildId, fun(VPid, _) ->
-        get_pending_joins_for_channel(VPid, CIdBin)
-    end).
-
--spec get_pending_joins_for_channel(pid(), binary()) -> map().
-get_pending_joins_for_channel(VPid, CIdBin) ->
-    case gen_server:call(VPid, {get_pending_joins_for_channel, CIdBin}, 10000) of
-        #{pending_joins := PJ} -> #{<<"pending_joins">> => PJ};
-        _ -> gateway_rpc_error:raise(<<"pending_joins_error">>)
     end.
 
 -spec handle_move_member(map()) -> term().
@@ -272,19 +210,8 @@ switch_voice_region(VPid, GPid, GuildId, ChannelId) ->
 
 -spec spawn_switch_voice_region(integer(), integer(), pid()) -> ok.
 spawn_switch_voice_region(GuildId, ChannelId, GPid) ->
-    spawn(fun() -> guild_voice:switch_voice_region(GuildId, ChannelId, GPid) end),
+    spawn(fun() -> guild_voice_region:switch_voice_region(GuildId, ChannelId, GPid) end),
     ok.
-
--spec handle_batch_update(map()) -> term().
-handle_batch_update(#{<<"updates">> := Updates}) ->
-    gateway_rpc_guild_routing:validate_batch_size(length(Updates)),
-    Parsed = lists:map(fun gateway_rpc_guild_voice_util:parse_voice_update/1, Updates),
-    Results = gateway_rpc_guild_routing:process_batch(
-        Parsed,
-        fun gateway_rpc_guild_voice_util:process_voice_update/1,
-        ?BATCH_TIMEOUT_MS
-    ),
-    #{<<"results">> => Results}.
 
 -spec raise_voice_error(term()) -> no_return().
 raise_voice_error(Error) ->
@@ -317,13 +244,6 @@ guild_voice_channel_read_malformed_payloads_test() ->
     ?assertEqual(
         #{<<"voice_states">> => []},
         handle(<<"guild.get_voice_states_for_channel">>, #{})
-    ),
-    ?assertEqual(
-        #{<<"pending_joins">> => []},
-        handle(
-            <<"guild.get_pending_joins_for_channel">>,
-            #{<<"guild_id">> => null, <<"channel_id">> => <<"2">>}
-        )
     ).
 
 -endif.

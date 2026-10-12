@@ -2,7 +2,7 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::{MediaProxyClient, embed_media_flags};
+use crate::media_proxy::MediaProxyClient;
 use crate::network_policy;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedField, EmbedFooter, EmbedMedia, MessageEmbed};
@@ -405,7 +405,7 @@ fn build_bluesky_embed(input: BlueskyEmbedBuildInput<'_>) -> MessageEmbed {
         url: Some(input.post_url.clone()),
         icon_url: input
             .author
-            .and_then(|a| sanitize_optional_absolute_url(a.avatar.as_deref())),
+            .and_then(|a| a.avatar.as_deref().and_then(sanitize_absolute_url)),
         ..Default::default()
     });
 
@@ -654,9 +654,6 @@ async fn process_image(
         .await
         .ok()?;
     Some(EmbedMedia {
-        url: Some(image_url.to_owned()),
-        content_type: Some(meta.content_type.clone()),
-        content_hash: Some(meta.content_hash.clone()),
         width: aspect_ratio
             .and_then(|aspect_ratio| aspect_ratio.width)
             .or(meta.width),
@@ -666,10 +663,7 @@ async fn process_image(
         description: alt_text
             .filter(|alt| !alt.is_empty())
             .map(|alt| text_limits::truncate(alt, text_limits::MEDIA_DESCRIPTION_MAX)),
-        placeholder: meta.placeholder.clone(),
-        duration: meta.duration.map(|duration| duration as u32),
-        flags: embed_media_flags(&meta),
-        ..Default::default()
+        ..meta.to_embed_media(image_url)
     })
 }
 
@@ -713,15 +707,9 @@ async fn process_video_embed(
     };
 
     let video = EmbedMedia {
-        url: Some(direct_url),
-        content_type: Some(meta.content_type.clone()),
-        content_hash: Some(meta.content_hash.clone()),
         width: meta.width.or(thumbnail.width),
         height: meta.height.or(thumbnail.height),
-        placeholder: meta.placeholder.clone(),
-        duration: meta.duration.map(|duration| duration as u32),
-        flags: embed_media_flags(&meta),
-        ..Default::default()
+        ..meta.to_embed_media(&direct_url)
     };
 
     (Some(thumbnail), Some(video))
@@ -939,16 +927,6 @@ fn at_uri_to_post_url(at_uri: &str, fallback_handle: &str) -> String {
     }
 }
 
-fn normalize_url(url: &str) -> Option<String> {
-    Url::parse(url)
-        .ok()
-        .map(|url| url.to_string().trim_end_matches('/').to_owned())
-}
-
-fn sanitize_optional_absolute_url(url: Option<&str>) -> Option<String> {
-    Url::parse(url?.trim()).ok().map(|url| url.to_string())
-}
-
 #[derive(Debug, Deserialize)]
 struct DidResponse {
     did: Option<String>,
@@ -1041,15 +1019,6 @@ fn service_endpoint_cache() -> &'static moka::future::Cache<String, String> {
     })
 }
 
-fn normalize_timestamp(value: &str) -> String {
-    chrono::DateTime::parse_from_rfc3339(value)
-        .map(|dt| {
-            dt.with_timezone(&chrono::Utc)
-                .to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
-        })
-        .unwrap_or_else(|_| value.to_owned())
-}
-
 fn format_count(count: u64) -> String {
     if count < 1000 {
         return count.to_string();
@@ -1061,6 +1030,8 @@ fn format_count(count: u64) -> String {
     let thousands = count / 1000;
     format!("{thousands}K")
 }
+
+use super::default_helpers::{normalize_timestamp, normalize_url, sanitize_absolute_url};
 
 #[cfg(test)]
 mod tests {
@@ -1117,25 +1088,7 @@ mod tests {
     }
 
     #[test]
-    fn sanitize_optional_url_accepts_valid() {
-        assert_eq!(
-            sanitize_optional_absolute_url(Some("https://e.com/img.png")),
-            Some("https://e.com/img.png".to_owned())
-        );
-    }
-
-    #[test]
     fn sanitize_optional_url_rejects_relative() {
-        assert!(sanitize_optional_absolute_url(Some("/relative/path")).is_none());
-    }
-
-    #[test]
-    fn sanitize_optional_url_trims_whitespace() {
-        assert!(sanitize_optional_absolute_url(Some("  https://e.com  ")).is_some());
-    }
-
-    #[test]
-    fn sanitize_optional_url_none_input() {
-        assert!(sanitize_optional_absolute_url(None).is_none());
+        assert!(sanitize_absolute_url("/relative/path").is_none());
     }
 }

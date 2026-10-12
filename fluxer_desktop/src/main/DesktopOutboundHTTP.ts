@@ -57,8 +57,6 @@ const DESKTOP_OUTBOUND_HTTP_CAPACITY_MESSAGE = 'Too many downloads are already i
 
 const DesktopOutboundBlockReason = Object.freeze({
 	INSECURE_TRANSPORT: 'insecure-transport',
-	INVALID_TARGET: 'invalid-target',
-	LOOKUP_HOSTNAME_MISMATCH: 'lookup-hostname-mismatch',
 	NON_PUBLIC_ADDRESS: 'non-public-address',
 	NO_USABLE_ADDRESS: 'no-usable-address',
 	RESOLUTION_FAILED: 'resolution-failed',

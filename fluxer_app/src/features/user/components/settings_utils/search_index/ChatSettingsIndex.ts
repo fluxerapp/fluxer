@@ -5,21 +5,38 @@ import {
 	MARK_AS_READ_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
-import {INBOX_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+import {
+	ANIMATION_DESCRIPTOR,
+	ANIMATIONS_DESCRIPTOR,
+	COLON_AUTOCOMPLETE_DESCRIPTOR,
+	COMPOSER_BUTTONS_DESCRIPTOR,
+	EMOTICONS_DESCRIPTOR,
+	EXPRESSION_AUTOCOMPLETE_DESCRIPTOR,
+	INBOX_DESCRIPTOR,
+	MESSAGE_INPUT_BUTTONS_DESCRIPTOR,
+	MUTED_CHANNELS_DESCRIPTOR,
+	MUTED_DESCRIPTOR,
+	SCROLL_TO_BOTTOM_DESCRIPTOR,
+	SEND_BUTTON_DESCRIPTOR,
+	SENT_MESSAGES_DESCRIPTOR,
+	TEXT_REPLACEMENT_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR,
+	CONVERT_EMOTICONS_TO_EMOJI_DESCRIPTOR,
+	HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR,
+	KEEP_ATTACHMENTS_WHEN_CLEARING_AN_EDIT_DESCRIPTOR,
+	SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR,
+	SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR,
+	SEQUENTIAL_FILE_SEND_DESCRIPTOR,
+	SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR,
+	STRIP_TRACKING_PARAMETERS_FROM_URLS_DESCRIPTOR,
+	TRUST_ALL_DESCRIPTOR,
+	TRUST_ALL_EXTERNAL_LINKS_DESCRIPTOR,
+	UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR = msg({
-	message: 'Automatically send GIFs when selected',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const ANIMATION_DESCRIPTOR = msg({
-	message: 'Animation',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ANIMATIONS_DESCRIPTOR = msg({
-	message: 'Animations',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const AUTOMATICALLY_SEND_ANIMATION_DESCRIPTOR = msg({
 	message: 'Automatically send animation',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -44,10 +61,7 @@ const AUTOMATICALLY_SEND_GIFS_FROM_THE_PICKER_WITHOUT_CONFIRMATION_DESCRIPTOR = 
 	message: 'Automatically send GIFs from the picker without confirmation',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR = msg({
-	message: 'Save GIF favorites as saved media',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const FAVORITE_ANIMATION_DESCRIPTOR = msg({
 	message: 'Favorite animation',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -104,10 +118,7 @@ const CUSTOMIZE_WHICH_BUTTONS_APPEAR_ON_MEDIA_ATTACHMENTS_DESCRIPTOR = msg({
 	message: 'Customize which buttons and indicators appear on media attachments and embeds',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR = msg({
-	message: 'Upload attachments before sending',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const PREUPLOAD_ATTACHMENTS_DESCRIPTOR = msg({
 	message: 'Pre-upload attachments',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -124,10 +135,7 @@ const FILE_UPLOAD_DESCRIPTOR = msg({
 	message: 'File upload',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SEQUENTIAL_FILE_SEND_DESCRIPTOR = msg({
-	message: 'Send file messages in order',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const SEQUENTIAL_SEND_DESCRIPTOR = msg({
 	message: 'Sequential send',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -152,10 +160,7 @@ const START_UPLOADING_ATTACHMENTS_WHEN_THEY_ARE_ADDED_DESCRIPTOR = msg({
 	message: 'Start uploading attachments as soon as they are added to the message input',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const STRIP_TRACKING_PARAMETERS_FROM_URLS_DESCRIPTOR = msg({
-	message: 'Strip tracking parameters from URLs',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const TRACKING_DESCRIPTOR = msg({
 	message: 'Tracking',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -192,14 +197,7 @@ const AUTOMATICALLY_REMOVE_TRACKING_PARAMETERS_FROM_URLS_IN_MESSAGES_DESCRIPTOR 
 	message: 'Automatically remove tracking parameters from URLs in messages you send',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const TRUST_ALL_EXTERNAL_LINKS_DESCRIPTOR = msg({
-	message: 'Trust all external links',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const TRUST_ALL_DESCRIPTOR = msg({
-	message: 'Trust all',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const TRUST_ALL_LINKS_DESCRIPTOR = msg({
 	message: 'Trust all links',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -340,14 +338,7 @@ const CUSTOMIZE_THE_ACTION_BAR_THAT_APPEARS_WHEN_HOVERING_DESCRIPTOR = msg({
 	message: 'Customize the action bar that appears when hovering over messages',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const EXPRESSION_AUTOCOMPLETE_DESCRIPTOR = msg({
-	message: 'Expression autocomplete',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const COLON_AUTOCOMPLETE_DESCRIPTOR = msg({
-	message: 'Colon autocomplete',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const EMOJI_AUTOCOMPLETE_DESCRIPTOR = msg({
 	message: 'Emoji autocomplete',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -360,14 +351,7 @@ const PICK_WHAT_SHOWS_UP_WHEN_TYPING_A_COLON_DESCRIPTOR = msg({
 	message: 'Pick what appears when you type a colon in the message input',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const CONVERT_EMOTICONS_TO_EMOJI_DESCRIPTOR = msg({
-	message: 'Turn text smileys into emoji',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const EMOTICONS_DESCRIPTOR = msg({
-	message: 'Emoticons',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const EMOTICON_DESCRIPTOR = msg({
 	message: 'Emoticon',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -380,18 +364,12 @@ const SMILEY_FACE_DESCRIPTOR = msg({
 	message: 'Smiley face',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const TEXT_REPLACEMENT_DESCRIPTOR = msg({
-	message: 'Text replacement',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const REPLACE_COMMON_EMOTICONS_LIKE_SMILE_AND_HEART_DESCRIPTOR = msg({
 	message: 'Swap common text faces such as :) and <3 for emoji when sending messages',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const KEEP_ATTACHMENTS_WHEN_CLEARING_AN_EDIT_DESCRIPTOR = msg({
-	message: 'Keep attachments when clearing an edit',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const EMPTY_EDIT_DESCRIPTOR = msg({
 	message: 'Empty edit',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -416,14 +394,7 @@ const CLEARING_THE_TEXT_OF_A_MESSAGE_WITH_ATTACHMENTS_ASKS_TO_DELETE_IT_DESCRIPT
 	message: 'When this is off, clearing the text of a message with attachments asks you to delete the message',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const MESSAGE_INPUT_BUTTONS_DESCRIPTOR = msg({
-	message: 'Message input buttons',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const COMPOSER_BUTTONS_DESCRIPTOR = msg({
-	message: 'Composer buttons',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const GIF_BUTTON_DESCRIPTOR = msg({
 	message: 'GIF button',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -432,34 +403,17 @@ const EMOJI_BUTTON_DESCRIPTOR = msg({
 	message: 'Emoji button',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SEND_BUTTON_DESCRIPTOR = msg({
-	message: 'Send button',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const PICK_WHICH_BUTTONS_SHOW_IN_THE_MESSAGE_INPUT_DESCRIPTOR = msg({
 	message: 'Pick which buttons show in the message input',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR = msg({
-	message: 'Scroll to bottom when sending a message',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const SCROLL_TO_BOTTOM_DESCRIPTOR = msg({
-	message: 'Scroll to bottom',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SENT_MESSAGES_DESCRIPTOR = msg({
-	message: 'Sent messages',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CHOOSE_HOW_CHAT_MOVES_AFTER_YOU_SEND_A_MESSAGE_DESCRIPTOR = msg({
 	message: 'Choose how chat moves after you send a message',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR = msg({
-	message: 'Skip "Mark all as read" confirmation',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const MARK_ALL_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark all as read',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -484,18 +438,7 @@ const MARK_ALL_UNREAD_INBOX_CHANNELS_AS_READ_IMMEDIATELY_DESCRIPTOR = msg({
 	message: 'Mark all unread inbox channels as read immediately, without asking to confirm',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
-	message: 'Hide muted channels by default',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const MUTED_DESCRIPTOR = msg({
-	message: 'Muted',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const MUTED_CHANNELS_DESCRIPTOR = msg({
-	message: 'Muted channels',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const HIDE_MUTED_DESCRIPTOR = msg({
 	message: 'Hide muted',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Te veel bestanden. Maximaal {maxFiles, plural, one {# bestand} other {# bestanden}} toegestaan.",
 	"attachments_and_uploads.unresolved_attachment_url": "Onopgeloste `attachment://`-URL gedetecteerd. Dit had moeten worden opgelost vóór het verwerken van de ingesloten inhoud.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "De geüploade bijlage {filename} is niet gevonden.",
-	"auth_and_oauth.application_not_owned": "Deze app is niet van jou.",
 	"auth_and_oauth.bot_already_in_guild": "Deze bot is al lid van de community.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botgebruikers kunnen geen authenticatiesessies aanmaken.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botgebruikers kunnen geen authenticatie-eindpunten gebruiken.",

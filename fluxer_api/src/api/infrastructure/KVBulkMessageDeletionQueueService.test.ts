@@ -4,100 +4,13 @@ import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import {User} from '@app/api/models/User';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import processPendingBulkMessageDeletions from '@app/api/worker/tasks/ProcessPendingBulkMessageDeletions';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {afterEach, describe, expect, test} from 'vitest';
-
-class FakeKVProvider {
-	readonly strings = new Map<string, string>();
-	readonly sortedSets = new Map<string, Map<string, number>>();
-
-	async get(key: string): Promise<string | null> {
-		return this.strings.get(key) ?? null;
-	}
-
-	async set(key: string, value: string): Promise<string | null> {
-		this.strings.set(key, value);
-		return 'OK';
-	}
-
-	async del(...keys: Array<string>): Promise<number> {
-		let removed = 0;
-		for (const key of keys) {
-			if (this.strings.delete(key)) {
-				removed++;
-			}
-			if (this.sortedSets.delete(key)) {
-				removed++;
-			}
-		}
-		return removed;
-	}
-
-	async exists(key: string): Promise<number> {
-		return this.strings.has(key) || this.sortedSets.has(key) ? 1 : 0;
-	}
-
-	async zcard(key: string): Promise<number> {
-		return this.sortedSets.get(key)?.size ?? 0;
-	}
-
-	async zrangebyscore(
-		key: string,
-		_min: string | number,
-		max: string | number,
-		_limitToken?: string,
-		offset?: number,
-		count?: number,
-	): Promise<Array<string>> {
-		const members = [...(this.sortedSets.get(key) ?? new Map<string, number>()).entries()]
-			.filter(([, score]) => score <= Number(max))
-			.sort((a, b) => a[1] - b[1])
-			.map(([member]) => member);
-		return members.slice(offset ?? 0, (offset ?? 0) + (count ?? members.length));
-	}
-
-	async scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void> {
-		let set = this.sortedSets.get(queueKey);
-		if (!set) {
-			set = new Map<string, number>();
-			this.sortedSets.set(queueKey, set);
-		}
-		set.set(value, score);
-		this.strings.set(secondaryKey, value);
-	}
-
-	async removeBulkDeletion(queueKey: string, secondaryKey: string): Promise<boolean> {
-		const value = this.strings.get(secondaryKey);
-		if (!value) {
-			return false;
-		}
-		this.sortedSets.get(queueKey)?.delete(value);
-		this.strings.delete(secondaryKey);
-		return true;
-	}
-
-	async acquireLock(key: string, token: string, _ttlSeconds: number): Promise<boolean> {
-		if (this.strings.has(key)) {
-			return false;
-		}
-		this.strings.set(key, token);
-		return true;
-	}
-
-	async releaseLock(key: string, token: string): Promise<boolean> {
-		if (this.strings.get(key) !== token) {
-			return false;
-		}
-		this.strings.delete(key);
-		return true;
-	}
-}
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {afterEach, describe, expect, test, vi} from 'vitest';
 
 function createUser(userId: UserID, pendingBulkMessageDeletionAt: Date | null): User {
 	return new User({
@@ -108,19 +21,8 @@ function createUser(userId: UserID, pendingBulkMessageDeletionAt: Date | null): 
 	});
 }
 
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
-
 function createHarness(users: Array<User>) {
-	const kvClient = new FakeKVProvider();
+	const kvClient = new MockKVProvider();
 	const scanCalls: Array<number> = [];
 	const userRepository = {
 		async scanAllUsersPage(limit: number): Promise<{users: Array<User>; pageState: null}> {
@@ -138,17 +40,41 @@ function createHarness(users: Array<User>) {
 			return 0n;
 		},
 	} as unknown as WorkerDependencies['workerService'];
-	const bulkMessageDeletionQueueService = new KVBulkMessageDeletionQueueService(
-		kvClient as unknown as IKVProvider,
-		userRepository,
-	);
+	const bulkMessageDeletionQueueService = new KVBulkMessageDeletionQueueService(kvClient, userRepository);
 	setWorkerDependenciesForTest({bulkMessageDeletionQueueService, userRepository, workerService});
-	return {kvClient, scanCalls, jobs};
+	return {kvClient, scanCalls, jobs, bulkMessageDeletionQueueService};
 }
 
 describe('processPendingBulkMessageDeletions', () => {
 	afterEach(() => {
 		clearWorkerDependencies();
+		vi.restoreAllMocks();
+	});
+
+	test('replaces the old sorted-set member when a user is rescheduled', async () => {
+		const userId = createUserID(1234n);
+		const harness = createHarness([]);
+		const oldAt = new Date(1_700_000_000_000);
+		const newAt = new Date(oldAt.getTime() + 60_000);
+		await harness.bulkMessageDeletionQueueService.scheduleDeletion(userId, oldAt);
+		await harness.bulkMessageDeletionQueueService.scheduleDeletion(userId, newAt);
+
+		expect(await harness.bulkMessageDeletionQueueService.getQueueSize()).toBe(1);
+		expect(await harness.bulkMessageDeletionQueueService.getReadyDeletions(oldAt.getTime(), 100)).toEqual([]);
+		expect(await harness.bulkMessageDeletionQueueService.getReadyDeletions(newAt.getTime(), 100)).toEqual([
+			{userId, scheduledAt: newAt.getTime()},
+		]);
+	});
+
+	test('renews the rebuild lock with the acquired token before publishing the state version', async () => {
+		const harness = createHarness([createUser(createUserID(1234n), new Date())]);
+		const extendLock = vi.spyOn(harness.kvClient, 'extendLock');
+		const token = await harness.bulkMessageDeletionQueueService.acquireRebuildLock();
+		expect(token).not.toBeNull();
+		await harness.bulkMessageDeletionQueueService.rebuildState(token);
+
+		expect(extendLock).toHaveBeenCalledExactlyOnceWith('bulk_message_deletion_queue:rebuild_lock', token, 300);
+		expect((await harness.kvClient.exists('bulk_message_deletion_queue:state_version')) === 1).toBe(true);
 	});
 
 	test('rebuilds the queue from the users table when the state version is missing', async () => {
@@ -156,7 +82,7 @@ describe('processPendingBulkMessageDeletions', () => {
 		const scheduledAt = new Date(Date.now() - 60_000);
 		const harness = createHarness([createUser(userId, scheduledAt)]);
 
-		await processPendingBulkMessageDeletions({}, createHelpers());
+		await processPendingBulkMessageDeletions({}, createTestWorkerHelpers());
 
 		expect(harness.scanCalls).toEqual([1000]);
 		expect(harness.jobs).toEqual([
@@ -165,15 +91,15 @@ describe('processPendingBulkMessageDeletions', () => {
 				payload: {userId: userId.toString(), scheduledAt: scheduledAt.getTime()},
 			},
 		]);
-		expect(harness.kvClient.strings.has('bulk_message_deletion_queue:state_version')).toBe(true);
+		expect((await harness.kvClient.exists('bulk_message_deletion_queue:state_version')) === 1).toBe(true);
 	});
 
 	test('does not scan the users table when the state version is fresh', async () => {
 		const userId = createUserID(5678n);
 		const harness = createHarness([createUser(userId, new Date(Date.now() - 60_000))]);
-		harness.kvClient.strings.set('bulk_message_deletion_queue:state_version', Date.now().toString());
+		await harness.kvClient.set('bulk_message_deletion_queue:state_version', Date.now().toString());
 
-		await processPendingBulkMessageDeletions({}, createHelpers());
+		await processPendingBulkMessageDeletions({}, createTestWorkerHelpers());
 
 		expect(harness.scanCalls).toEqual([]);
 		expect(harness.jobs).toEqual([]);
@@ -182,12 +108,12 @@ describe('processPendingBulkMessageDeletions', () => {
 	test('skips the run when another worker holds the rebuild lock', async () => {
 		const userId = createUserID(9012n);
 		const harness = createHarness([createUser(userId, new Date(Date.now() - 60_000))]);
-		harness.kvClient.strings.set('bulk_message_deletion_queue:rebuild_lock', 'other-worker');
+		await harness.kvClient.set('bulk_message_deletion_queue:rebuild_lock', 'other-worker');
 
-		await processPendingBulkMessageDeletions({}, createHelpers());
+		await processPendingBulkMessageDeletions({}, createTestWorkerHelpers());
 
 		expect(harness.scanCalls).toEqual([]);
 		expect(harness.jobs).toEqual([]);
-		expect(harness.kvClient.strings.get('bulk_message_deletion_queue:rebuild_lock')).toBe('other-worker');
+		expect(await harness.kvClient.get('bulk_message_deletion_queue:rebuild_lock')).toBe('other-worker');
 	});
 });

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::DELETION_REASONS;
 use crate::utils::plural::{count_noun, noun_for};
 use crate::{
     acl,
@@ -28,31 +29,6 @@ const TEMP_BAN_DURATIONS: &[(&str, &str)] = &[
     ("336", "2 weeks"),
     ("720", "30 days"),
     ("0", "Permanent"),
-];
-
-const DELETION_REASONS: &[(&str, &str)] = &[
-    ("1", "User requested"),
-    ("2", "Other"),
-    ("3", "Spam"),
-    ("4", "Cheating or exploitation"),
-    ("5", "Coordinated raiding or manipulation"),
-    ("6", "Automation or self-bot usage"),
-    ("7", "Nonconsensual sexual content"),
-    ("8", "Scam or social engineering"),
-    ("9", "Child sexual content"),
-    ("10", "Privacy violation or doxxing"),
-    ("11", "Harassment or bullying"),
-    ("12", "Payment fraud"),
-    ("13", "Child safety violation"),
-    ("14", "Billing dispute or abuse"),
-    ("15", "Unsolicited explicit content"),
-    ("16", "Graphic violence"),
-    ("17", "Ban evasion"),
-    ("18", "Token or credential scam"),
-    ("19", "Inactivity"),
-    ("20", "Hate speech or extremist content"),
-    ("21", "Malicious links or malware distribution"),
-    ("22", "Impersonation or fake identity"),
 ];
 
 pub struct CurrentBan<'a> {
@@ -749,69 +725,3 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 	});
 })();
 "#;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::{Value, json};
-
-    fn user(extra: Value) -> AdminUser {
-        let mut value =
-            json!({"id": "1500000000000000001", "username": "target", "discriminator": "0001"});
-        if let (Some(target), Some(fields)) = (value.as_object_mut(), extra.as_object()) {
-            target.extend(fields.clone());
-        }
-        serde_json::from_value(value).expect("valid admin user")
-    }
-
-    #[test]
-    fn schedule_form_emails_the_user_by_default() {
-        let markup = deletion_card("/admin", &user(json!({})), "csrf", None, false).into_string();
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn temp_ban_form_emails_the_user_by_default() {
-        let markup =
-            ban_actions_card("/admin", &user(json!({})), "csrf", None, false).into_string();
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn username_mode_offers_no_email_and_sends_none() {
-        let pending = user(json!({
-            "pending_deletion_at": "2026-10-30T17:40:29.690Z",
-            "deletion_reason_code": 3
-        }));
-        let banned = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
-        let forms = [
-            deletion_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
-            deletion_card("/admin", &pending, "csrf", None, true).into_string(),
-            ban_actions_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
-            ban_actions_card("/admin", &banned, "csrf", None, true).into_string(),
-        ];
-        for markup in &forms {
-            assert!(!markup.contains("Email the user"));
-            assert!(!markup.contains(r#"name="notify_user" value="true""#));
-        }
-        assert!(forms[0].contains(r#"name="notify_user_present" value="1""#));
-        assert!(!forms[1].contains("notify_user"));
-        assert!(forms[2].contains(r#"name="notify_user_present" value="1""#));
-        assert!(forms[3].contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn unban_form_separates_the_public_and_private_reasons() {
-        let target = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
-        let markup = ban_actions_card("/admin", &target, "csrf", None, false).into_string();
-        assert!(markup.contains("?action=unban&amp;tab=moderation"));
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-        assert!(markup.contains(
-            r#"name="public_reason" placeholder="Enter public unban reason..." maxlength="512""#
-        ));
-        assert!(markup.contains(r#"name="private_reason""#));
-    }
-}

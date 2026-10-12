@@ -3,6 +3,7 @@
 import type {APIConfig, BlueskyOAuthConfig, TrustedCallerConfig} from '@app/api/config/APIConfig';
 import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRateLimitConfig';
 import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
+import {trimTrailingSlash} from '@app/api/utils/UrlUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
@@ -15,10 +16,6 @@ function extractHostname(url: string): string {
 	} catch {
 		throw new Error(`Invalid URL: ${url}`);
 	}
-}
-
-function trimTrailingSlash(url: string): string {
-	return url.replace(/\/+$/u, '');
 }
 
 function resolveEmailAppBaseUrl(master: MasterConfig): string {

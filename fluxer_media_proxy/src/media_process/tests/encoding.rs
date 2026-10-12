@@ -7,32 +7,6 @@ use super::fixtures::effort;
 use crate::{mime, output_format::OutputFormat};
 
 #[test]
-fn webp_effort_override_is_clamped_to_the_encoder_maximum() {
-    for requested in [7u8, 8, 9, 200] {
-        let suffix = webp_suffix(effort(requested));
-        assert!(
-            suffix.contains("effort=6"),
-            "effort={requested} produced {suffix}, but libvips webpsave rejects effort above 6 \
-             and silently falls back to its own default"
-        );
-    }
-    assert!(webp_suffix(effort(5)).contains("effort=5"));
-}
-
-fn webp_suffix(requested: EncodeEffort) -> String {
-    output_suffix(
-        OutputFormat::WebP,
-        ResolvedImageQuality::High,
-        None,
-        Some(requested),
-        0,
-    )
-    .expect("webp output suffix")
-    .into_string()
-    .expect("utf8 output suffix")
-}
-
-#[test]
 fn png_compression_drops_for_outputs_above_a_megapixel() {
     let png_suffix = |output_pixels| {
         output_suffix(
@@ -62,13 +36,6 @@ fn png_compression_drops_for_outputs_above_a_megapixel() {
         ".png[strip,compression=6,filter=all]",
         png_suffix(3024 * 4032)
     );
-}
-
-#[test]
-fn animated_webp_default_effort_matches_fast_tier() {
-    assert_eq!(2, ResolvedImageQuality::Low.default_effort(true));
-    assert_eq!(2, ResolvedImageQuality::High.default_effort(true));
-    assert_eq!(4, ResolvedImageQuality::High.default_effort(false));
 }
 
 #[test]

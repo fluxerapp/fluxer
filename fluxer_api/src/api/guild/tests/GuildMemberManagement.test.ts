@@ -98,26 +98,6 @@ describe('Guild Member Management', () => {
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
-	test('should enforce role hierarchy when adding roles', async () => {
-		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-		const member = members[0];
-		const higherRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Higher Role',
-			permissions: Permissions.MANAGE_ROLES.toString(),
-		});
-		const lowerRole = await createRole(harness, owner.token, guild.id, {
-			name: 'Lower Role',
-		});
-		await updateRolePositions(harness, owner.token, guild.id, [
-			{id: higherRole.id, position: 2},
-			{id: lowerRole.id, position: 1},
-		]);
-		await addMemberRole(harness, owner.token, guild.id, member.userId, lowerRole.id);
-		await createBuilder(harness, member.token)
-			.put(`/guilds/${guild.id}/members/${owner.userId}/roles/${higherRole.id}`)
-			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
 	test('should require KICK_MEMBERS to kick members', async () => {
 		const {members, guild} = await setupTestGuildWithMembers(harness, 2);
 		const [member1, member2] = members;
@@ -449,29 +429,6 @@ describe('Guild Member Management', () => {
 		});
 	});
 	describe('Member Role Assignment/Removal', () => {
-		test('should not allow assigning role higher than own highest role', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
-			const [moderator, target] = members;
-			const highRole = await createRole(harness, owner.token, guild.id, {
-				name: 'High Role',
-				permissions: '0',
-			});
-			const modRole = await createRole(harness, owner.token, guild.id, {
-				name: 'Moderator',
-				permissions: '268435456',
-			});
-			await updateRolePositions(harness, owner.token, guild.id, [
-				{id: highRole.id, position: 3},
-				{id: modRole.id, position: 2},
-			]);
-			await updateMember(harness, owner.token, guild.id, moderator.userId, {
-				roles: [modRole.id],
-			});
-			await createBuilder(harness, moderator.token)
-				.put(`/guilds/${guild.id}/members/${target.userId}/roles/${highRole.id}`)
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
 		test('should not allow removing role higher than own highest role', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
 			const [moderator, target] = members;

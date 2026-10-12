@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import type {GifService} from '@app/api/gif/GifService';
-import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {NatsGifProvider} from '@app/api/gif/NatsGifProvider';
 import type {AccountIdentity} from '@app/api/instance/AccountIdentityModeCache';
 import {withAccountIdentitySetupLock} from '@app/api/instance/AccountIdentitySetupLock';
 import {
@@ -35,7 +34,7 @@ import type {Hono} from 'hono';
 let discoveryValidators: DiscoveryValidators | null = null;
 
 function buildDiscoveryStaticInput(
-	gifService: GifService | undefined,
+	gifService: NatsGifProvider | undefined,
 	appPublic: InstanceAppPublic,
 	runtime: {
 		captcha: CaptchaConfig;
@@ -45,9 +44,9 @@ function buildDiscoveryStaticInput(
 ): DiscoveryStaticInput {
 	const apiClientEndpoint = Config.endpoints.apiClient;
 	const apiPublicEndpoint = Config.endpoints.apiPublic;
-	let gifProvider: IGifProvider | undefined;
+	let gifProvider: NatsGifProvider | undefined;
 	if (gifService !== undefined) {
-		gifProvider = gifService.getProvider();
+		gifProvider = gifService;
 	}
 	let gifProviderName = 'klipy';
 	let gifDisplayName = 'Klipy';
@@ -116,7 +115,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 		}),
 		async (ctx) => {
 			ctx.header('Access-Control-Allow-Origin', '*');
-			const gifService = ctx.get('gifService') as GifService | undefined;
+			const gifService = ctx.get('gifService') as NatsGifProvider | undefined;
 			const limits = ctx.get('limitConfigService').getConfigWireFormat();
 			const sso = await ctx.get('ssoService').getPublicStatus();
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');

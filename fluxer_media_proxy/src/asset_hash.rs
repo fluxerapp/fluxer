@@ -36,12 +36,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn strip_animation_prefix_removes_only_virtual_animated_prefix() {
-        assert_eq!("abc123", strip_animation_prefix("a_abc123"));
-        assert_eq!("abc123", strip_animation_prefix("abc123"));
-    }
-
-    #[test]
     fn parsed_hashes_split_the_animation_prefix_from_the_digest() {
         let plain = AssetHash::parse("abc123");
         assert_eq!("abc123", plain.digest());

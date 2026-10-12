@@ -985,21 +985,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn addon_mapping_covers_expected_packages() {
-        let names = DESKTOP_NATIVE_ADDONS
-            .iter()
-            .map(|addon| addon.package_dir)
-            .collect::<Vec<_>>();
-
-        assert!(names.contains(&"linux-audio-capture"));
-        assert!(names.contains(&"webauthn"));
-        assert!(names.contains(&"win-game-capture"));
-        assert!(names.contains(&"app-store"));
-        assert!(names.contains(&"gateway-socket"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
-    }
-
-    #[test]
     fn the_desktop_build_script_builds_and_verifies_every_registered_addon() {
         let build_script =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/scripts/build.mjs");

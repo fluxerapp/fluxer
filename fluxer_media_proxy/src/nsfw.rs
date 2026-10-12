@@ -265,7 +265,7 @@ impl NSFWClient {
         Self {
             transport: None,
             policy: NSFWPolicy::Disabled,
-            metrics: Arc::new(NSFWMetrics::new()),
+            metrics: Arc::new(NSFWMetrics::default()),
         }
     }
 
@@ -274,7 +274,7 @@ impl NSFWClient {
     }
 
     pub fn record_declined_scan(&self) {
-        self.metrics.record_disabled();
+        self.metrics.nsfw_calls_disabled.inc();
     }
 
     pub async fn check_buffers(
@@ -283,9 +283,9 @@ impl NSFWClient {
     ) -> Result<NSFWClassification, NSFWError> {
         let outcome = timed_stage(Stage::Nsfw, self.classify(request)).await;
         match outcome {
-            Ok(_) => self.metrics.record_success(),
-            Err(NSFWError::Disabled) => self.metrics.record_disabled(),
-            Err(_) => self.metrics.record_failure(),
+            Ok(_) => self.metrics.nsfw_calls_ok.inc(),
+            Err(NSFWError::Disabled) => self.metrics.nsfw_calls_disabled.inc(),
+            Err(_) => self.metrics.nsfw_calls_failed.inc(),
         }
         outcome
     }
@@ -449,17 +449,9 @@ mod tests {
 
     #[test]
     fn disabled_when_endpoint_empty() {
-        let client = NSFWClient::new("", 0.85, Arc::new(NSFWMetrics::new())).unwrap();
+        let client = NSFWClient::new("", 0.85, Arc::new(NSFWMetrics::default())).unwrap();
         assert_eq!(NSFWPolicy::Disabled, client.policy());
         assert_eq!(None, client.policy().scan_threshold(true));
-    }
-
-    #[test]
-    fn trim_trailing_slash_matches_service_urls() {
-        assert_eq!("http://x", trim_trailing_slash("http://x"));
-        assert_eq!("http://x", trim_trailing_slash("http://x/"));
-        assert_eq!("http://x", trim_trailing_slash("http://x///"));
-        assert_eq!("", trim_trailing_slash("/"));
     }
 
     #[test]
@@ -529,21 +521,5 @@ mod tests {
         let rendered = metrics.render();
         assert!(rendered.contains("fluxer_media_proxy_nsfw_calls_failed_total 1"));
         assert!(rendered.contains("fluxer_media_proxy_nsfw_calls_ok_total 0"));
-    }
-
-    #[tokio::test]
-    async fn a_disabled_client_records_a_disabled_call() {
-        let metrics = Metrics::new();
-        let client = NSFWClient::new("", 0.85, metrics.nsfw()).unwrap();
-        let request = NSFWScanRequest::new(threshold(), vec![vec![1]]).unwrap();
-        assert_eq!(
-            Err(NSFWError::Disabled),
-            client.check_buffers(request).await
-        );
-        assert!(
-            metrics
-                .render()
-                .contains("fluxer_media_proxy_nsfw_calls_disabled_total 1")
-        );
     }
 }

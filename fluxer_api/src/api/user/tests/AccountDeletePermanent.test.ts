@@ -2,6 +2,7 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {RelationshipRow} from '@app/api/database/types/UserTypes';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
@@ -9,7 +10,6 @@ import {RelationshipsByTarget} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {createFriendship} from '@app/api/user/tests/RelationshipTestUtils';
 import {
 	deleteAccount,
 	setPendingDeletionAt,

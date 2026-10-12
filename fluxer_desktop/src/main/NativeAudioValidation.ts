@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isPlainRecord as isPlainObject} from '@electron/common/PlainRecord';
+
 import type {NativeAudioStartOptions, VirtmicNode} from '@electron/common/Types';
 
 interface InternalAudioFrame {
@@ -21,12 +23,6 @@ const MAX_UINT32 = 0xffffffff;
 
 export function isValidTargetPid(pid: unknown): pid is number {
 	return typeof pid === 'number' && Number.isSafeInteger(pid) && pid > 0 && pid <= MAX_UINT32;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
 }
 
 function isBooleanOrUndefined(value: unknown): boolean {

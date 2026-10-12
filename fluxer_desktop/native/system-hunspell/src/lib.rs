@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod dictionaries;
+mod encoding;
+
 use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::path::Path;
 use std::ptr;
 use std::sync::{Mutex, MutexGuard};
 
-use fluxer_desktop_native::system_hunspell::dictionaries::{EnvSnapshot, discover_dictionaries};
-use fluxer_desktop_native::system_hunspell::encoding::is_utf8_encoding;
-use fluxer_desktop_native::system_hunspell::hashing::hash_file_to_hex;
-use napi::Task;
-use napi::bindgen_prelude::{AsyncTask, Env, Error, Result, Status};
+use crate::dictionaries::{EnvSnapshot, discover_dictionaries};
+use crate::encoding::is_utf8_encoding;
+use napi::bindgen_prelude::{Error, Result, Status};
 use napi_derive::napi;
 
 static HUNSPELL_LOCK: Mutex<()> = Mutex::new(());
@@ -97,29 +98,6 @@ pub fn discover_system_dictionaries() -> Vec<SystemDictionary> {
             dic_path: dict.dic_path.display().to_string(),
         })
         .collect()
-}
-
-pub struct HashFileTask {
-    path: String,
-}
-
-#[napi(js_name = "hashFile")]
-pub fn hash_file(path: String) -> Result<AsyncTask<HashFileTask>> {
-    validate_path_arg(&path)?;
-    Ok(AsyncTask::new(HashFileTask { path }))
-}
-
-impl Task for HashFileTask {
-    type Output = String;
-    type JsValue = String;
-
-    fn compute(&mut self) -> Result<Self::Output> {
-        hash_file_to_hex(&self.path).map_err(hash_error)
-    }
-
-    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        Ok(output)
-    }
 }
 
 #[derive(Debug)]
@@ -297,81 +275,9 @@ fn hunspell_load_error(reason: &str) -> Error {
     )
 }
 
-fn hash_error(error: std::io::Error) -> Error {
-    let message = match error.kind() {
-        std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied => {
-            "could not open file for hashing"
-        }
-        _ => "read failed while hashing file",
-    };
-    Error::new(Status::GenericFailure, message)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
-    use super::*;
-
-    #[test]
-    fn suggestion_limit_defaults_and_bounds_match_legacy_contract() {
-        assert_eq!(8, normalize_suggestion_limit(None));
-        assert_eq!(8, normalize_suggestion_limit(Some(0)));
-        assert_eq!(1, normalize_suggestion_limit(Some(1)));
-        assert_eq!(64, normalize_suggestion_limit(Some(64)));
-        assert_eq!(8, normalize_suggestion_limit(Some(65)));
-    }
-
-    #[test]
-    fn path_validation_rejects_empty_and_nul_paths() {
-        assert_eq!(
-            "path must be non-empty",
-            validate_path_arg("")
-                .expect_err("empty path should fail")
-                .reason
-        );
-        assert_eq!(
-            "path must not contain NUL bytes",
-            validate_path_arg("/tmp/a\0b")
-                .expect_err("NUL path should fail")
-                .reason
-        );
-    }
-
-    #[test]
-    fn text_validation_rejects_nul_words() {
-        assert_eq!(
-            "word must not contain NUL bytes",
-            validate_text_arg("a\0b", "word")
-                .expect_err("NUL word should fail")
-                .reason
-        );
-    }
-
-    #[test]
-    fn hash_error_maps_open_failures_to_existing_js_message() {
-        let err = hash_file_to_hex("/nonexistent/path/that/should/not/exist.bin")
-            .map_err(hash_error)
-            .expect_err("missing file should fail");
-        assert_eq!(Status::GenericFailure, err.status);
-        assert_eq!("could not open file for hashing", err.reason);
-    }
-
-    #[test]
-    fn hash_file_task_streams_file_to_expected_hex() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("payload");
-        let mut file = File::create(&path).unwrap();
-        file.write_all(b"abc").unwrap();
-
-        let mut task = HashFileTask {
-            path: path.display().to_string(),
-        };
-        assert_eq!(
-            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-            task.compute().unwrap()
-        );
-    }
+    use super::Dictionary;
 
     #[test]
     fn dictionary_fixture_spells_and_accepts_runtime_words() {
@@ -388,15 +294,6 @@ mod tests {
         assert!(!dict.spell("Fluxer").unwrap());
 
         drop(dir);
-    }
-
-    #[test]
-    fn dictionary_rejects_non_utf8_dictionaries() {
-        let (_dir, aff_path, dic_path) = write_fixture_dictionary("ISO-8859-1");
-        let err = Dictionary::load(&aff_path, &dic_path)
-            .expect_err("non-UTF-8 dictionary should be rejected");
-        assert_eq!(Status::GenericFailure, err.status);
-        assert_eq!("Hunspell load failed: DictionaryNotUtf8", err.reason);
     }
 
     fn write_fixture_dictionary(encoding: &str) -> (tempfile::TempDir, String, String) {

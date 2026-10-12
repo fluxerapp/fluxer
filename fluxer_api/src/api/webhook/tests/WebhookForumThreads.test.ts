@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
 import {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -39,16 +34,15 @@ describe('webhooks on forum and media channels', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(type: number = ChannelTypes.GUILD_FORUM): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		await ensureSessionStarted(harness, owner.token);
 		const guild = await createGuild(harness, owner.token, 'webhook forums');
@@ -169,74 +163,5 @@ describe('webhooks on forum and media channels', () => {
 		expect(controlLog.audit_log_entries.some((entry) => entry.target_id === hook.id)).toBe(true);
 		expect(controlLog.webhooks.map((webhook) => webhook.id)).not.toContain(hook.id);
 		expect(controlLog.webhooks.some((webhook) => webhook.channel_id === s.forum.id)).toBe(false);
-	});
-
-	it('hides forum webhooks once the guild leaves the experiment and ignores forum fields outside it', async () => {
-		const s = await setup();
-		await setChannelThreadsConfig({enabled: false});
-		await createBuilderWithoutAuth(harness)
-			.get(`/webhooks/${s.webhook.id}/${s.webhook.token}`)
-			.expect(404, APIErrorCodes.UNKNOWN_WEBHOOK)
-			.execute();
-		for (const capable of [true, false]) {
-			await threadsRequest(harness, s.owner.token, {capable})
-				.get(`/webhooks/${s.webhook.id}`)
-				.expect(404, APIErrorCodes.UNKNOWN_WEBHOOK)
-				.execute();
-			await threadsRequest(harness, s.owner.token, {capable})
-				.patch(`/webhooks/${s.webhook.id}`)
-				.body({name: 'renamed'})
-				.expect(404, APIErrorCodes.UNKNOWN_WEBHOOK)
-				.execute();
-			await threadsRequest(harness, s.owner.token, {capable})
-				.delete(`/webhooks/${s.webhook.id}`)
-				.expect(404, APIErrorCodes.UNKNOWN_WEBHOOK)
-				.execute();
-		}
-		await execute(s, {content: 'x', thread_name: 'post'}).expect(404, APIErrorCodes.UNKNOWN_WEBHOOK).execute();
-		await createBuilderWithoutAuth(harness)
-			.post(`/webhooks/${s.webhook.id}/${s.webhook.token}/slack`)
-			.body({text: 'hi'})
-			.expect(404, APIErrorCodes.UNKNOWN_WEBHOOK)
-			.execute();
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'plain');
-		const hook = await threadsRequest<WebhookResponse>(harness, owner.token)
-			.post(`/channels/${guild.system_channel_id}/webhooks`)
-			.body({name: 'plain'})
-			.execute();
-		const message = await createBuilderWithoutAuth<MessageResponse>(harness)
-			.post(`/webhooks/${hook.id}/${hook.token}?wait=true`)
-			.body({content: 'x', thread_name: 'ignored', applied_tags: ['1']})
-			.execute();
-		expect(message.channel_id).toBe(guild.system_channel_id);
-	});
-
-	it('reads no channels for webhook lookups in an untainted guild after the experiment was enabled', async () => {
-		await setChannelThreadsConfig({enabled: true, guild_basis_points: 0, user_basis_points: 10000});
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'control');
-		const hook = await threadsRequest<WebhookResponse>(harness, owner.token)
-			.post(`/channels/${guild.system_channel_id}/webhooks`)
-			.body({name: 'control'})
-			.execute();
-		const readChannelIds: Array<string> = [];
-		const readChannel = ChannelDataRepository.prototype.findUnique;
-		const findUnique = vi.spyOn(ChannelDataRepository.prototype, 'findUnique').mockImplementation(function (
-			this: ChannelDataRepository,
-			channelId,
-		) {
-			if (!new Error().stack?.includes('NoopGatewayService')) readChannelIds.push(channelId.toString());
-			return readChannel.call(this, channelId);
-		});
-		const listChannels = vi.spyOn(ChannelDataRepository.prototype, 'listChannels');
-		await createBuilderWithoutAuth(harness).get(`/webhooks/${hook.id}/${hook.token}`).execute();
-		await threadsRequest(harness, owner.token).get(`/guilds/${guild.id}/webhooks`).execute();
-		await threadsRequest(harness, owner.token).get(`/webhooks/${hook.id}`).execute();
-		const listCalls = listChannels.mock.calls.length;
-		findUnique.mockRestore();
-		listChannels.mockRestore();
-		expect(readChannelIds).not.toContain(guild.system_channel_id);
-		expect(listCalls).toBe(0);
 	});
 });

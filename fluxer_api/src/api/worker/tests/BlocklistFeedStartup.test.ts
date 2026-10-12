@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartup';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {describe, expect, it, vi} from 'vitest';
 

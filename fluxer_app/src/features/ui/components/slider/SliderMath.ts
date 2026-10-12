@@ -11,7 +11,7 @@ interface BuildMarkerStateOptions {
 }
 
 export function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
+	return Math.min(max, Math.max(min, value));
 }
 
 function findClosestMarkerIndex(value: number, markerArray: ReadonlyArray<number>): number {

@@ -38,7 +38,6 @@ class Authentication {
 			this,
 			{
 				isAuthenticated: computed,
-				authToken: computed,
 				currentUserId: computed,
 			},
 			{autoBind: true},
@@ -49,20 +48,8 @@ class Authentication {
 		return SessionManager.isAuthenticated;
 	}
 
-	get authToken(): string | null {
-		return SessionManager.token;
-	}
-
 	get currentUserId(): string | null {
 		return SessionManager.userId;
-	}
-
-	get userId(): string | null {
-		return SessionManager.userId;
-	}
-
-	setUserId(userId: string | null): void {
-		SessionManager.setUserId(userId);
 	}
 
 	handleGatewayReady({user}: {user: UserPrivate}): void {

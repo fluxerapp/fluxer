@@ -10,7 +10,6 @@
     build_ready_data_for_session/1,
     filter_guild_ids_for_identify/2,
     validate_identify_sharding/3,
-    check_identify_rate_limit/1,
     should_debounce_reactions/1,
     thread_channels_capable/1,
     extract_e2ee_capable/1,
@@ -318,22 +317,6 @@ filter_read_state(Row, false, _Viewer) when is_map(Row) ->
 filter_read_state(_Row, _Capable, _Viewer) ->
     true.
 
--spec check_identify_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-check_identify_rate_limit(Attempts) ->
-    case fluxer_gateway_env:get(identify_rate_limit_enabled) of
-        true -> do_check_rate_limit(Attempts);
-        _ -> {ok, Attempts}
-    end.
-
--spec do_check_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
-do_check_rate_limit(Attempts) ->
-    Now = erlang:system_time(millisecond),
-    AttemptsInWindow = [T || T <- Attempts, (Now - T) < 5000],
-    case AttemptsInWindow =/= [] of
-        true -> {error, rate_limited};
-        false -> {ok, [Now | AttemptsInWindow]}
-    end.
-
 -spec should_debounce_reactions(map()) -> boolean().
 should_debounce_reactions(IdentifyData) ->
     case map_utils:get_safe(IdentifyData, flags, 0) of
@@ -401,7 +384,7 @@ do_fetch_rpc_data(Request, PeerIP) ->
     RpcWithCapability = add_thread_channels_capable(
         RpcWithCoords, thread_channels_capable(IdentifyData)
     ),
-    RpcResult = api_rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
+    RpcResult = rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
     classify_rpc_result(RpcResult, PeerIP).
 
 -spec add_thread_channels_capable(map(), boolean()) -> map().

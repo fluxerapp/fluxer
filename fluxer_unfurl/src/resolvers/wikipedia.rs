@@ -2,7 +2,7 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::{MediaMetadata, MediaProxyClient};
 use crate::text_limits;
 use crate::types::{EmbedMedia, MessageEmbed};
 use serde::Deserialize;
@@ -156,27 +156,10 @@ fn build_embed_media_payload(
     height: Option<u32>,
 ) -> EmbedMedia {
     EmbedMedia {
-        url: Some(url.to_owned()),
         width: width.or(metadata.width),
         height: height.or(metadata.height),
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
-        content_hash: Some(metadata.content_hash.clone()),
-        content_type: Some(metadata.content_type.clone()),
-        duration: metadata.duration.map(|duration| duration as u32),
-        ..Default::default()
+        ..metadata.to_embed_media(url)
     }
-}
-
-fn parse_text(value: &str, max_len: usize) -> String {
-    text_limits::truncate(decode_html_entities(value).trim(), max_len)
-}
-
-fn decode_html_entities(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
-        .root_element()
-        .text()
-        .collect()
 }
 
 fn deduplicate_thumbnails(images: Vec<Option<EmbedMedia>>) -> Vec<EmbedMedia> {
@@ -237,3 +220,5 @@ fn normalize_wiki_url(url_str: &str) -> String {
         url_str.trim_end_matches('/').to_owned()
     }
 }
+
+use super::default_helpers::parse_text;

@@ -4,20 +4,25 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {EmojiPickerCategoryList} from '@app/features/channel/components/emoji_picker/EmojiPickerCategoryList';
-import {
-	buildEmojiRowOffsets,
-	type EmojiRowKind,
-	getEmojiRowWindow,
-} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
+import {EMOJI_ROW_HEIGHT, type EmojiRowKind} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiPickerSearchBar} from '@app/features/channel/components/emoji_picker/EmojiPickerSearchBar';
 import {useEmojiCategories} from '@app/features/channel/components/emoji_picker/hooks/useEmojiCategories';
-import {useVirtualRows} from '@app/features/channel/components/emoji_picker/hooks/useVirtualRows';
+import {getPickerRowItems, useVirtualRows} from '@app/features/channel/components/emoji_picker/hooks/useVirtualRows';
+import {renderEmojiPickerPreviewItem} from '@app/features/channel/components/emoji_picker/PickerPreviewItem';
 import {VirtualizedRow} from '@app/features/channel/components/emoji_picker/VirtualRow';
 import mobileStyles from '@app/features/channel/components/MobileEmojiPicker.module.css';
 import {PremiumUpsellBanner} from '@app/features/channel/components/PremiumUpsellBanner';
-import premiumStyles from '@app/features/channel/components/PremiumUpsellBanner.module.css';
 import {getMobileEmojiGridColumns} from '@app/features/channel/components/pickers/shared/MobilePickerGridLayout';
+import {
+	buildRowOffsets,
+	PICKER_CATEGORY_HEADER_GAP,
+	PICKER_CATEGORY_HEADER_HEIGHT,
+} from '@app/features/channel/components/pickers/shared/PickerRowLayout';
 import {useScrollerViewport} from '@app/features/channel/components/pickers/shared/useScrollerViewport';
+import {
+	usePickerListMetrics,
+	useVirtualPickerGrid,
+} from '@app/features/channel/components/pickers/shared/useVirtualPickerGrid';
 import Channels from '@app/features/channel/state/Channels';
 import Emoji, {normalizeEmojiSearchQuery} from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
@@ -29,8 +34,7 @@ import {
 	checkEmojiAvailability,
 	shouldShowEmojiPremiumUpsell,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
-import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
-import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
+
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
@@ -39,8 +43,8 @@ import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scrolle
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
+
+import {useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
 
 function getVisibleViewportWidth(): number {
 	if (typeof window === 'undefined') {
@@ -55,20 +59,18 @@ export const MobileEmojiPicker = observer(
 		handleSelect,
 		externalSearchTerm,
 		externalSetSearchTerm,
-		hideSearchBar = false,
 	}: {
 		channelId?: string;
 		handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 		externalSearchTerm?: string;
 		externalSetSearchTerm?: (term: string) => void;
-		hideSearchBar?: boolean;
 	}) => {
 		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const headerPortalContext = useExpressionPickerHeaderPortal();
 		const hasPortal = Boolean(headerPortalContext?.headerPortalElement);
 		const {i18n} = useLingui();
 		const [internalSearchTerm, setInternalSearchTerm] = useState('');
-		const [hoveredEmoji, setHoveredEmoji] = useState<FlatEmoji | null>(null);
+
 		const [visibleViewportWidth, setVisibleViewportWidth] = useState(() => getVisibleViewportWidth());
 		const scrollerRef = useRef<ScrollerHandle>(null);
 		const searchInputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +78,7 @@ export const MobileEmojiPicker = observer(
 		const {viewportSize, scrollTop, handleScroll, handleResize} = useScrollerViewport(scrollerRef);
 		const channel = channelId ? (Channels.getChannel(channelId) ?? null) : null;
 		const rowListRef = useRef<HTMLDivElement>(null);
-		const [listMetrics, setListMetrics] = useState({origin: 0, viewportHeight: 0});
+		const listMetrics = usePickerListMetrics(scrollerRef, rowListRef);
 		const [emojiDataVersion, setEmojiDataVersion] = useState(0);
 		const permissionVersion = useSyncExternalStore(Permission.subscribe.bind(Permission), () => Permission.version);
 		const getEmojiAvailability = useCallback(
@@ -122,48 +124,8 @@ export const MobileEmojiPicker = observer(
 		const renderedEmojis = searchUpsell.accessibleItems;
 		const allItems = useMemo(() => Emoji.getAllEmojis(channel).slice(), [channel, emojiDataVersion]);
 		const renderEmojiPreviewItem = useCallback(
-			(emoji: FlatEmoji) => {
-				const key = emoji.id ?? emoji.uniqueName ?? emoji.name ?? `${emoji.guildId ?? 'unicode'}-mobile`;
-				const {url: fallbackDisplayUrl} = getEmojiDisplayDataWithSkinTone(emoji, skinTone);
-				const displayUrl = emoji.id
-					? getEmojiRenderUrl({
-							id: emoji.id,
-							surrogateUrl: null,
-							isAnimatable: Boolean(emoji.animated),
-							animated: shouldAnimateEmoji,
-							jumbo: false,
-						})
-					: fallbackDisplayUrl;
-				let content: React.ReactNode;
-				if (displayUrl) {
-					content = (
-						<img
-							src={displayUrl}
-							alt={emoji.name}
-							data-flx="channel.mobile-emoji-picker.render-emoji-preview-item.img"
-						/>
-					);
-				} else {
-					content = (
-						<span
-							className={premiumStyles.previewEmojiText}
-							data-flx="channel.mobile-emoji-picker.render-emoji-preview-item.span"
-						>
-							{emoji.name ?? emoji.uniqueName}
-						</span>
-					);
-				}
-				return (
-					<div
-						className={premiumStyles.previewItem}
-						key={key}
-						data-flx="channel.mobile-emoji-picker.render-emoji-preview-item.div"
-					>
-						{content}
-					</div>
-				);
-			},
-			[shouldAnimateEmoji, skinTone],
+			(emoji: FlatEmoji) => renderEmojiPickerPreviewItem(emoji, skinTone, shouldAnimateEmoji),
+			[skinTone, shouldAnimateEmoji],
 		);
 		const allUpsell = usePremiumUpsellData({
 			items: allItems,
@@ -232,58 +194,43 @@ export const MobileEmojiPicker = observer(
 			shouldShowEmojiPremiumUpsell(channel) &&
 			!normalizedSearchTerm &&
 			lockedEmojiCount > 0;
-		const categoryRowIndexes = useMemo(() => {
-			const categories = new Map<string, number>();
-			for (let rowIndex = 0; rowIndex < pickerRows.length; rowIndex += 1) {
-				const row = pickerRows[rowIndex];
-				if (row.type === 'header') {
-					categories.set(row.category, rowIndex);
-				}
-			}
-			return categories;
-		}, [pickerRows]);
+
 		const remScale = getAppRemScale();
 		const rowOffsets = useMemo(() => {
 			const rowKinds = pickerRows.map((row): EmojiRowKind => row.type);
-			return buildEmojiRowOffsets(rowKinds, {remScale, sectionGap: 0});
+			return buildRowOffsets(rowKinds, {
+				headerHeightPx: (PICKER_CATEGORY_HEADER_HEIGHT + PICKER_CATEGORY_HEADER_GAP) * remScale,
+				rowHeightPx: EMOJI_ROW_HEIGHT * remScale,
+				sectionGap: 0,
+			});
 		}, [pickerRows, remScale, zoomLevel]);
-		const contentHeight = rowOffsets[rowOffsets.length - 1]!;
-		useLayoutEffect(() => {
-			const rowListNode = rowListRef.current;
-			const scrollerNode = scrollerRef.current?.getViewportElement();
-			if (!rowListNode || !scrollerNode) {
-				return;
-			}
-			const origin = Math.round(
-				rowListNode.getBoundingClientRect().top - scrollerNode.getBoundingClientRect().top + scrollerNode.scrollTop,
-			);
-			const viewportHeight = scrollerNode.clientHeight;
-			setListMetrics((current) =>
-				current.origin === origin && current.viewportHeight === viewportHeight ? current : {origin, viewportHeight},
-			);
+		const {
+			rowWindow,
+			contentHeight,
+			handleCategoryClick,
+			handleHover,
+			hovered: hoveredEmoji,
+		} = useVirtualPickerGrid({
+			rows: pickerRows,
+			getItems: getPickerRowItems,
+			rowOffsets,
+			scrollerRef,
+			scrollTop,
+			rowHeightPx: EMOJI_ROW_HEIGHT * remScale,
+			listMetrics,
+			leadRows: 0,
+			zoomLevel,
+			renderedCount: renderedEmojis.length,
 		});
-		const rowWindow = useMemo(
-			() => getEmojiRowWindow(rowOffsets, scrollTop - listMetrics.origin, listMetrics.viewportHeight),
-			[rowOffsets, scrollTop, listMetrics],
-		);
-		const handleCategoryClick = (category: string) => {
-			const rowIndex = categoryRowIndexes.get(category);
-			if (rowIndex == null) {
-				return;
-			}
-			scrollerRef.current?.scrollTo({to: listMetrics.origin + rowOffsets[rowIndex]!});
-		};
-		const handleHover = useCallback((emoji: FlatEmoji | null) => {
-			setHoveredEmoji(emoji);
-		}, []);
-		const searchBar = !hideSearchBar ? (
+
+		const searchBar = (
 			<EmojiPickerSearchBar
 				searchTerm={searchTerm}
 				setSearchTerm={setSearchTerm}
 				hoveredEmoji={hoveredEmoji}
 				data-flx="channel.mobile-emoji-picker.emoji-picker-search-bar"
 			/>
-		) : null;
+		);
 		return (
 			<div className={mobileStyles.container} data-flx="channel.mobile-emoji-picker.div">
 				{hasPortal && searchBar ? (

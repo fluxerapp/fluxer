@@ -46,13 +46,7 @@ export class UsernameNotAvailableError extends BadRequestError {
 	}
 }
 
-export interface IDiscriminatorService {
-	generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult>;
-	isDiscriminatorAvailableForUsername(username: string, discriminator: number): Promise<boolean>;
-	resolveUsernameChange(params: ResolveUsernameChangeParams): Promise<ResolveUsernameChangeResult>;
-}
-
-export class DiscriminatorService implements IDiscriminatorService {
+export class DiscriminatorService {
 	private static readonly LOCK_TTL_MS = ms('5 seconds');
 	private static readonly LOCK_RETRY_DELAY_MS = 50;
 	private static readonly LOCK_MAX_WAIT_MS = ms('10 seconds');

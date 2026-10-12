@@ -35,7 +35,6 @@ import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 interface ProcessedUrlEmbeds {
 	embeds: Array<Embed>;
-	cacheTtlSeconds: number | null;
 }
 
 interface InitialUrlEmbedResult {
@@ -104,11 +103,8 @@ export class EmbedService {
 		const result = await this.unfurlerService.unfurlWithCachePolicy(url, nsfwMode, options);
 		return {
 			embeds: result.embeds.map((embedData) => new Embed(this.mapResponseEmbed(embedData))),
-			cacheTtlSeconds: result.cacheTtlSeconds,
 		};
 	}
-
-	async cacheEmbeds(_url: string, _embeds: Array<Embed>, _cacheTtlSeconds?: number | null | undefined): Promise<void> {}
 
 	private async getInitialUrlEmbeds(
 		urls: Array<string>,

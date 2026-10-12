@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Πάρα πολλά αρχεία. Επιτρέπονται έως και {maxFiles, plural, one {# αρχείο} other {# αρχεία}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Βρέθηκε ανεπίλυτη διεύθυνση URL `attachment://`. Θα έπρεπε να είχε επιλυθεί πριν από την επεξεργασία των ενσωματώσεων.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Το ανεβασμένο συνημμένο {filename} δεν βρέθηκε.",
-	"auth_and_oauth.application_not_owned": "Δεν είσαι ο ιδιοκτήτης αυτής της εφαρμογής.",
 	"auth_and_oauth.bot_already_in_guild": "Αυτό το bot βρίσκεται ήδη στην κοινότητα.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Οι χρήστες bot δεν μπορούν να δημιουργήσουν συνεδρίες ελέγχου ταυτότητας.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Οι χρήστες bot δεν μπορούν να χρησιμοποιήσουν τα auth endpoints.",

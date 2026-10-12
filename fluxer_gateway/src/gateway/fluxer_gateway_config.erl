@@ -172,10 +172,7 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         nats_auth_token => get_string(Nats, <<"auth_token">>, ""),
         rpc_auth_token => get_string(Service, <<"rpc_auth_token">>, ""),
         gateway_nats_rpc_max_handlers =>
-            get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512),
-        identify_rate_limit_enabled => get_bool(
-            Service, <<"identify_rate_limit_enabled">>, false
-        )
+            get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512)
     }.
 
 -spec build_push_config(map(), map(), map()) -> config().
@@ -284,9 +281,6 @@ parse_guild_id(Token) ->
 -spec build_misc_config(map()) -> config().
 build_misc_config(Service) ->
     #{
-        handoff_enable_event_pause => get_bool(
-            Service, <<"handoff_enable_event_pause">>, false
-        ),
         voice_state_counts_sync_interval_ms =>
             get_int(Service, <<"voice_state_counts_sync_interval_ms">>, 30000),
         logger_level => get_log_level(Service, <<"logger_level">>, info)

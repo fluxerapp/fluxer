@@ -116,12 +116,6 @@
 	line-height: 1.5;
 }
 
-.cardActions {
-	display: flex;
-	gap: var(--spacing-2);
-	flex-wrap: wrap;
-}
-
 .cardBody {
 	display: flex;
 	flex-direction: column;

@@ -5,10 +5,10 @@ import {createAttachmentID, createChannelID, createMessageID} from '@app/api/Bra
 import {getConfig} from '@app/api/Config';
 import type {IAssetDeletionQueue, QueuedAssetDeletion} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {ms} from 'itty-time';
 import {afterEach, describe, expect, it} from 'vitest';
 

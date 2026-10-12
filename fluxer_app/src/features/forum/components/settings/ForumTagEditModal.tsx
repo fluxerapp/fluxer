@@ -9,6 +9,10 @@ import {ForumEmoji, forumEmojiFromPicker} from '@app/features/forum/components/F
 import type {ForumEmojiRef} from '@app/features/forum/utils/ForumChannelUtils';
 import {reportForumError} from '@app/features/forum/utils/ForumErrors';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR as D_CANCEL_DESCRIPTOR,
+	SAVE_DESCRIPTOR as D_SAVE_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -135,7 +139,7 @@ export const ForumTagEditModal = observer(({forumId, tagId}: {forumId: string; t
 					variant="secondary"
 					data-flx="forum.settings.forum-tag-edit-modal.button.pop"
 				>
-					{i18n._(D.CANCEL_DESCRIPTOR)}
+					{i18n._(D_CANCEL_DESCRIPTOR)}
 				</Button>
 				<Button
 					onClick={handleSave}
@@ -143,7 +147,7 @@ export const ForumTagEditModal = observer(({forumId, tagId}: {forumId: string; t
 					disabled={busy != null || input.name.length === 0}
 					data-flx="forum.settings.forum-tag-edit-modal.button.save"
 				>
-					{i18n._(D.SAVE_DESCRIPTOR)}
+					{i18n._(D_SAVE_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

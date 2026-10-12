@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
@@ -123,10 +124,6 @@ function sanitizeFilename(rawName: string | undefined, mediaType: ClipboardWrite
 
 function isClipboardWriteFileMediaType(value: unknown): value is ClipboardWriteFileMediaType {
 	return value === 'image' || value === 'gif' || value === 'video' || value === 'audio';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 export function parseClipboardWriteFileOptions(value: unknown): ClipboardWriteFileOptions {

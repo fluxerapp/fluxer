@@ -104,18 +104,9 @@ pub fn host_module_platform() -> Result<&'static str> {
 }
 
 pub fn rfc3339_utc(now: SystemTime) -> String {
-    let seconds = now
-        .duration_since(UNIX_EPOCH)
-        .map(|elapsed| elapsed.as_secs())
-        .unwrap_or(0);
-    let (year, month, day) = crate::desktop::civil_from_days((seconds / 86_400) as i64);
-    let second_of_day = seconds % 86_400;
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
-        second_of_day / 3600,
-        (second_of_day % 3600) / 60,
-        second_of_day % 60
-    )
+    chrono::DateTime::<chrono::Utc>::from(now)
+        .format("%Y-%m-%dT%H:%M:%SZ")
+        .to_string()
 }
 
 fn run_ci_step(step: &str, cwd: &Path, env: Vec<(String, Option<String>)>) -> Result<()> {
@@ -251,11 +242,7 @@ fn sha256_file(path: &Path) -> Result<String> {
         }
         hasher.update(&buffer[..read]);
     }
-    Ok(hasher
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex::encode(hasher.finalize()))
 }
 
 fn write_atomically(path: &Path, bytes: &[u8]) -> Result<()> {

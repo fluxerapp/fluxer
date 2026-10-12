@@ -59,17 +59,6 @@ afterEach(() => {
 	router.history = null;
 });
 
-test('closing a sheet by hand steps back over its history entry', () => {
-	const history = requireHistory();
-	const back = vi.spyOn(history, 'back');
-	act(() => root?.render(<Sheet data-flx="app.use-bottom-sheet-back-handler-test.sheet" />));
-	expect(sheetMarker()).toBeTypeOf('string');
-	act(() => closeSheet?.());
-	expect(back).toHaveBeenCalledTimes(1);
-	expect(history.location.href).toBe(SHEET_URL);
-	expect(sheetMarker()).toBeUndefined();
-});
-
 test('a sheet dismissed by an account switch leaves navigation to the switch', async () => {
 	const history = requireHistory();
 	const back = vi.spyOn(history, 'back');

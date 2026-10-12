@@ -57,7 +57,6 @@ export function handleMessageReactionAddMany(
 				messageId: data.message_id,
 				userId: reaction.user_id,
 				emoji,
-				skipReactionStore: true,
 			});
 		}
 	});

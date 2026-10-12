@@ -1,33 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/theme_studio/ui/StudioListItem.module.css';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
 
 interface StudioListItemProps {
 	leading?: ReactNode;
 	label: ReactNode;
-	description?: ReactNode;
 	trailing?: ReactNode;
-	active?: boolean;
-	onClick?: () => void;
-	className?: string;
 	codeBody?: ReactNode;
 }
 
-export const StudioListItem: React.FC<StudioListItemProps> = ({
-	leading,
-	label,
-	description,
-	trailing,
-	active,
-	onClick,
-	className,
-	codeBody,
-}) => {
-	const interactive = onClick !== undefined;
+export const StudioListItem: React.FC<StudioListItemProps> = ({leading, label, trailing, codeBody}) => {
 	const body = (
 		<>
 			{leading ? (
@@ -39,11 +23,7 @@ export const StudioListItem: React.FC<StudioListItemProps> = ({
 				<span className={styles.label} data-flx="theme-studio.ui.studio-list-item.label">
 					{label}
 				</span>
-				{description ? (
-					<span className={styles.description} data-flx="theme-studio.ui.studio-list-item.description">
-						{description}
-					</span>
-				) : null}
+
 				{codeBody ? (
 					<code className={styles.code} data-flx="theme-studio.ui.studio-list-item.code">
 						{codeBody}
@@ -57,25 +37,9 @@ export const StudioListItem: React.FC<StudioListItemProps> = ({
 			) : null}
 		</>
 	);
-	if (interactive) {
-		return (
-			<FocusRing offset={-2} data-flx="theme-studio.ui.studio-list-item.focus-ring">
-				<button
-					type="button"
-					className={clsx(styles.item, active && styles.active, className)}
-					onClick={onClick}
-					data-flx="theme-studio.ui.studio-list-item.item.click.button"
-				>
-					{body}
-				</button>
-			</FocusRing>
-		);
-	}
+
 	return (
-		<div
-			className={clsx(styles.item, styles.staticItem, active && styles.active, className)}
-			data-flx="theme-studio.ui.studio-list-item.item"
-		>
+		<div className={styles.item} data-flx="theme-studio.ui.studio-list-item.item">
 			{body}
 		</div>
 	);

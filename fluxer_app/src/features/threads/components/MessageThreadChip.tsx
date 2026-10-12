@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MESSAGE_COUNT_DESCRIPTOR as D_MESSAGE_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
@@ -50,7 +51,7 @@ export const MessageThreadChip = observer(({message}: {message: Message}) => {
 					</span>
 					<span className={styles.count} data-flx="threads.message-thread-chip.count">
 						<span data-flx="threads.message-thread-chip.count-label">
-							{i18n._(D.MESSAGE_COUNT_DESCRIPTOR, {count: thread.messageCount})}
+							{i18n._(D_MESSAGE_COUNT_DESCRIPTOR, {count: thread.messageCount})}
 						</span>
 						<CaretRightIcon size={12} weight="bold" data-flx="threads.message-thread-chip.caret" />
 					</span>

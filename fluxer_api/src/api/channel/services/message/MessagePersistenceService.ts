@@ -41,7 +41,6 @@ import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {hasVisibleContent} from '@app/api/utils/StringUtils';
 import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -51,6 +50,7 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';

@@ -1,3 +1,4 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APP_PROTOCOL, DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
@@ -61,7 +62,6 @@ import {
 	getStreamingPriorityDiagnostics,
 	releaseStreamingPriority,
 } from '@electron/main/StreamingPriority';
-import {setTaskbarProgress, type TaskbarProgressMode} from '@electron/main/TaskbarProgress';
 import {registerThemeLocalFileHandlers} from '@electron/main/ThemeLocalFiles';
 import {
 	relaunchAndExit,
@@ -77,7 +77,6 @@ import {
 } from '@electron/main/VoiceDebugEventSinkPopout';
 import {
 	clearSavedWindowBounds,
-	closeThemeStudioPopoutWindow,
 	desktopTransparencyPendingRestart,
 	desktopUseNativeTitleBarPendingRestart,
 	focusThemeStudioPopoutWindow,
@@ -90,7 +89,6 @@ import {
 	showWindow,
 	THEME_STUDIO_POPOUT_KEY,
 } from '@electron/main/Window';
-import {flashWindowForAttention, stopFlashingWindow} from '@electron/main/WindowFlash';
 import {setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
 import {
 	DESKTOP_MODULE_CHANNELS,
@@ -107,10 +105,6 @@ interface TrayRuntimeStateUpdate {
 	selfDeaf?: boolean;
 	presenceStatus?: TrayPresenceStatus | null;
 	buildInfo?: string | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
 }
 
 function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWindowBehaviorSettings> {
@@ -340,9 +334,7 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('theme-studio-popout-focus', (): boolean => {
 		return focusThemeStudioPopoutWindow();
 	});
-	ipcMain.handle('theme-studio-popout-close', (): boolean => {
-		return closeThemeStudioPopoutWindow();
-	});
+
 	ipcMain.handle('popout:set-always-on-top', (_event, key: unknown, flag: unknown): boolean => {
 		if (typeof key !== 'string' || typeof flag !== 'boolean') {
 			return false;
@@ -584,4 +576,37 @@ export function cleanupIpcHandlers(_options: {quitting?: boolean} = {}): void {
 		} catch {}
 		linuxAppearanceSubscription = null;
 	}
+}
+
+type TaskbarProgressMode = 'normal' | 'indeterminate' | 'error' | 'paused' | 'none';
+
+function setTaskbarProgress(fraction: number, mode: TaskbarProgressMode = 'normal'): void {
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	try {
+		if (mode === 'none' || fraction < 0) {
+			mainWindow.setProgressBar(-1);
+			return;
+		}
+		const clamped = Math.max(0, Math.min(1, fraction));
+		mainWindow.setProgressBar(clamped, {mode});
+	} catch {}
+}
+
+function flashWindowForAttention(persistent: boolean): void {
+	if (process.platform === 'darwin') return;
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	if (mainWindow.isFocused()) return;
+	try {
+		mainWindow.flashFrame(persistent);
+	} catch {}
+}
+
+function stopFlashingWindow(): void {
+	const mainWindow = getMainWindow();
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+	try {
+		mainWindow.flashFrame(false);
+	} catch {}
 }

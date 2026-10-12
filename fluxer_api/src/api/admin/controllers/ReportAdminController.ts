@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
-import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createReportID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -250,7 +250,6 @@ export function ReportAdminController(app: HonoApp) {
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
 			const {report_id} = ctx.req.valid('param');
 			const {legal_hold_until, legal_hold_reason} = ctx.req.valid('json');
 			const until = legal_hold_until === null ? null : new Date(legal_hold_until);
@@ -265,23 +264,17 @@ export function ReportAdminController(app: HonoApp) {
 			const reportRepository = getReportRepository();
 			const previous = await reportRepository.getReport(reportId);
 			const report = await reportRepository.setReportLegalHold(reportId, until, reason);
-			const metadata = new Map([
-				['report_id', reportId.toString()],
-				['report_type', report.reportType.toString()],
-			]);
-			if (until !== null && reason !== null) {
-				metadata.set('legal_hold_until', until.toISOString());
-				metadata.set('legal_hold_reason', reason);
-			}
-			if (previous?.legalHoldUntil) {
-				metadata.set('previous_legal_hold_until', previous.legalHoldUntil.toISOString());
-			}
-			await adminService.auditService.createAuditLog({
-				adminUserId: ctx.get('adminUserId'),
+			const metadata = {
+				report_id: reportId.toString(),
+				report_type: report.reportType.toString(),
+				legal_hold_until: until !== null && reason !== null ? until.toISOString() : undefined,
+				legal_hold_reason: until !== null && reason !== null ? reason : undefined,
+				previous_legal_hold_until: previous?.legalHoldUntil?.toISOString(),
+			};
+			await recordAdminWrite(ctx, {
 				targetType: 'report',
 				targetId: BigInt(reportId),
 				action: until === null ? 'clear_report_legal_hold' : 'set_report_legal_hold',
-				auditLogReason: ctx.get('auditLogReason'),
 				metadata,
 			});
 			return ctx.json({
@@ -318,19 +311,17 @@ export function ReportAdminController(app: HonoApp) {
 				reportId,
 				new Date(),
 			);
-			await ctx.get('adminService').auditService.createAuditLog({
-				adminUserId: ctx.get('adminUserId'),
+			await recordAdminWrite(ctx, {
 				targetType: 'report',
 				targetId: BigInt(reportId),
 				action: 'delete_report',
-				auditLogReason: ctx.get('auditLogReason'),
-				metadata: new Map([
-					['report_id', reportId.toString()],
-					['report_type', deleted.report.reportType.toString()],
-					['status', deleted.report.status.toString()],
-					['objects_deleted', deleted.objectsDeleted.toString()],
-					['shared_objects_kept', deleted.sharedObjectsKept.toString()],
-				]),
+				metadata: {
+					report_id: reportId.toString(),
+					report_type: deleted.report.reportType.toString(),
+					status: deleted.report.status.toString(),
+					objects_deleted: deleted.objectsDeleted.toString(),
+					shared_objects_kept: deleted.sharedObjectsKept.toString(),
+				},
 			});
 			return ctx.body(null, 204);
 		},

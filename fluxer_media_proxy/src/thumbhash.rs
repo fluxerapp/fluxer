@@ -205,21 +205,6 @@ mod tests {
     }
 
     #[test]
-    fn encode_produces_non_empty_deterministic_output() {
-        let mut pixels = [0u8; 16 * 16 * 4];
-        for px in pixels.as_chunks_mut::<4>().0 {
-            px[0] = 200;
-            px[1] = 100;
-            px[2] = 50;
-            px[3] = 255;
-        }
-        let out1 = encode_rgba(&pixels, 16, 16).unwrap();
-        let out2 = encode_rgba(&pixels, 16, 16).unwrap();
-        assert!(out1.len() > 5);
-        assert_eq!(out1, out2);
-    }
-
-    #[test]
     fn alpha_changes_header_layout() {
         let mut opaque = [0u8; 4 * 4 * 4];
         let mut translucent = [0u8; 4 * 4 * 4];
@@ -233,22 +218,5 @@ mod tests {
         let trans_out = encode_rgba(&translucent, 4, 4).unwrap();
         assert_eq!(0, opaque_out[2] & 0x80);
         assert_ne!(0, trans_out[2] & 0x80);
-    }
-
-    #[test]
-    fn synthetic_gradient_is_wire_stable() {
-        let mut pixels = [0u8; 8 * 8 * 4];
-        for y in 0..8 {
-            for x in 0..8 {
-                let i = (y * 8 + x) * 4;
-                pixels[i] = (x * 32) as u8;
-                pixels[i + 1] = (y * 32) as u8;
-                pixels[i + 2] = 50;
-                pixels[i + 3] = 255;
-            }
-        }
-        let out = encode_rgba(&pixels, 8, 8).unwrap();
-        assert_eq!(0, out[2] & 0x80);
-        assert!(out.len() >= 5);
     }
 }

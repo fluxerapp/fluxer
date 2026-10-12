@@ -3,12 +3,12 @@
 import {createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {expectDataExists} from '@app/api/user/tests/UserTestUtils';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
+import type {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface InactivityCheckResult {

@@ -13,7 +13,6 @@ import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRe
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
-import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -53,7 +52,7 @@ interface UserDeletionDependencies {
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	snowflakeService: ISnowflakeService;
-	discriminatorService: DiscriminatorService;
+
 	stripe: Stripe | null;
 	applicationRepository: ApplicationRepository;
 	workerService: IWorkerService<WorkerTaskName>;
@@ -506,7 +505,7 @@ export async function processUserDeletion(
 		stripe_subscription_id: null,
 		authenticator_types: new Set(),
 	});
-	await userRepository.removePendingDeletion(userId, pendingDeletionAt);
+
 	await userCacheService.setUserPartialResponseFromUser(anonymisedUser);
 	await userRepository.completeDeletion(anonymisedUser);
 	await emitActivity('account_deleted', userId.toString(), {user_id: userId.toString()}, null, userId.toString());

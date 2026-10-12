@@ -19,10 +19,9 @@ import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {classifyWebPushOrigin} from '@app/api/user/services/WebPushOriginReplacement';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {gateChannelOverrideFlags, mapUserGuildSettingsForViewer} from '@app/api/user/UserGuildSettingsThreadView';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
-import {mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate, mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {CHANNEL_THREADS_CLIENT_FEATURE} from '@app/api/utils/featureUtils';
 import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -404,7 +403,7 @@ export function UserAccountController(app: HonoApp) {
 				reason: 'user_requested',
 				actorUserId: user.id,
 			});
-			await ctx.get('userService').accountService.updatePropagator.dispatchUserUpdate(updatedUser);
+			await dispatchUserUpdate(ctx.get('gatewayService'), updatedUser);
 			return ctx.json(mapUserToPrivateResponse(updatedUser));
 		},
 	);
@@ -603,11 +602,7 @@ export function UserAccountController(app: HonoApp) {
 			if (!user) {
 				throw new UnknownUserError();
 			}
-			const userResponse = await getCachedUserPartialResponse({
-				userId,
-				userCacheService: ctx.get('userCacheService'),
-				requestCache: ctx.get('requestCache'),
-			});
+			const userResponse = await ctx.get('userCacheService').getUserPartialResponse(userId, ctx.get('requestCache'));
 			return ctx.json(userResponse);
 		},
 	);
@@ -1277,7 +1272,7 @@ export function UserAccountController(app: HonoApp) {
 				terms_agreed_at: now,
 				privacy_agreed_at: now,
 			});
-			await ctx.get('userService').accountService.updatePropagator.dispatchUserUpdate(updatedUser);
+			await dispatchUserUpdate(ctx.get('gatewayService'), updatedUser);
 			return ctx.json(mapUserToPrivateResponse(updatedUser));
 		},
 	);

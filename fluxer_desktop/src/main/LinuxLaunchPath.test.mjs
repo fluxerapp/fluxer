@@ -102,7 +102,11 @@ describe('AppImage relaunch script', () => {
 			const root = mkdtempSync(join(tmpdir(), 'fluxer-relaunch-test-'));
 			const marker = join(root, 'replacement-argv');
 			const replacement = join(root, 'My Fluxer.AppImage');
-			writeFileSync(replacement, `#!${shell}\nprintf '%s\\n' "$@" > '${marker}'\n`, {mode: 0o755});
+			writeFileSync(
+				replacement,
+				`#!${shell}\nprintf '%s\\n' "$@" > '${marker}.tmp'\nmv '${marker}.tmp' '${marker}'\n`,
+				{mode: 0o755},
+			);
 			const parent = spawn(shell, ['-c', 'sleep 30'], {stdio: 'ignore', detached: true});
 			parent.unref();
 

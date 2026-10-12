@@ -63,13 +63,3 @@ export function commitUnderTranslation({
 	host.remove();
 	return {error, htmlBeforeTranslation, htmlAfterTranslation, htmlAfterCommit, unsafeTextNodesBeforeTranslation};
 }
-
-export function isTranslationDomCrash(error: Error | null): boolean {
-	if (error == null) {
-		return false;
-	}
-	return (
-		error.message.includes("Failed to execute 'insertBefore' on 'Node'") ||
-		error.message.includes("Failed to execute 'removeChild' on 'Node'")
-	);
-}

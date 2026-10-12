@@ -9,6 +9,7 @@ import {
 	isPrimaryKeyAlreadyRepresentedByModifier,
 } from '@app/features/input/utils/KeybindUtils';
 import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
 import styles from '@app/features/ui/keybind_hint/KeybindHint.module.css';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -55,8 +56,6 @@ const PGDN_DESCRIPTOR = msg({
 	message: 'PgDn',
 	comment: 'Keyboard shortcut keycap label for Page Down. Keep the abbreviation compact.',
 });
-const isMac = () => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-
 interface KeyPart {
 	label: string;
 	isSymbol?: boolean;
@@ -66,7 +65,7 @@ const isShiftKeyName = (key: string): boolean => key === 'Shift' || key === 'Shi
 
 const formatKeyParts = (i18n: I18n, combo: KeyCombo): Array<KeyPart> => {
 	const parts: Array<KeyPart> = [];
-	const mac = isMac();
+	const mac = isMacPlatform();
 	if (combo.ctrl) {
 		parts.push(mac ? {label: '⌃', isSymbol: true} : {label: i18n._(CTRL_DESCRIPTOR)});
 	} else if (combo.ctrlOrMeta) {

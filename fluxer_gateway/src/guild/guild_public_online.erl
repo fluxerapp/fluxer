@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_public_online).
--typing([eqwalizer]).
-
--export([compute_count/1]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([compute_count/1]).
 
 -export_type([guild_state/0]).
 
@@ -35,7 +35,7 @@ compute_count_for_data(Data, State) ->
         not guild_thread_gate:is_thread_only_type(maps:get(<<"type">>, C, undefined))
     ],
     case classify_everyone_viewable(Channels, State) of
-        {open, _ChannelIds} -> guild_member_list:get_online_count(State);
+        {open, _ChannelIds} -> guild_member_list_read:get_online_count(State);
         {restricted, ChannelIdSet} -> count_online_with_access(ChannelIdSet, State);
         empty -> 0
     end.
@@ -93,7 +93,9 @@ classify_channel_visibility(Channel, EveryoneMember, ViewBit, State, {OpenIds, R
 ) -> {[integer()], [integer()]}.
 classify_valid_channel(ChannelId, Channel, EveryoneMember, ViewBit, State, Acc) ->
     case
-        guild_permissions:can_view_channel_by_permissions(0, ChannelId, EveryoneMember, State)
+        guild_permissions_check:can_view_channel_by_permissions(
+            0, ChannelId, EveryoneMember, State
+        )
     of
         true -> classify_visible_channel(ChannelId, Channel, ViewBit, Acc);
         false -> Acc
@@ -117,9 +119,9 @@ channel_has_view_restricting_overrides(Channel, ViewBit) ->
     lists:any(
         fun
             (OW) when is_map(OW) ->
-                Deny = permission_bits:parse(maps:get(<<"deny">>, OW, undefined)),
+                Deny = bitset:parse(maps:get(<<"deny">>, OW, undefined)),
                 Type = map_utils:get_integer(OW, <<"type">>, undefined),
-                is_integer(Deny) andalso permission_bits:has(Deny, ViewBit) andalso
+                is_integer(Deny) andalso bitset:has(Deny, ViewBit) andalso
                     (Type =:= 0 orelse Type =:= 1);
             (_) ->
                 false
@@ -162,7 +164,7 @@ count_user_with_access(UserId, TargetMap, State, Acc) ->
 
 -spec user_has_access(user_id(), map(), guild_state()) -> boolean().
 user_has_access(UserId, TargetMap, State) ->
-    UserChannels = guild_visibility:get_user_viewable_channels(UserId, State),
+    UserChannels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     lists:any(fun(Ch) -> maps:is_key(Ch, TargetMap) end, UserChannels).
 
 -spec is_online(map()) -> boolean().

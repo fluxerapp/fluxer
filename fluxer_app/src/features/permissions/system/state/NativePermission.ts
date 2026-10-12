@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
-import type {NativePermissionResult} from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI, getNativePlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
@@ -53,14 +51,6 @@ class NativePermission {
 
 	get isLinuxWaylandDesktop(): boolean {
 		return this._isDesktop && this._platform === 'linux' && this._waylandSession;
-	}
-
-	get isInputMonitoringGranted(): boolean {
-		return MacPermissions.statuses['input-monitoring'] === 'granted';
-	}
-
-	setInputMonitoringStatus(status: NativePermissionResult): void {
-		MacPermissions.applyPermissionResult('input-monitoring', status);
 	}
 }
 

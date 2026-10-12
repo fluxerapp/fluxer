@@ -36,24 +36,22 @@ import {
 	VOICE_UNDEAFEN_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
+import {
+	CUSTOM_DESCRIPTOR,
+	VIDEO_SETTINGS_DESCRIPTOR,
+	VOICE_SETTINGS_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {VOICE_VOLUME_MAX_PERCENT} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Voice processing profile option label (mobile voice settings). User configures processing manually.',
-});
 const INPUT_PROFILE_DESCRIPTOR = msg({
 	message: 'Input profile: {processingModeLabel}',
 	comment: 'Row label in the mobile voice settings input-profile picker. {processingModeLabel} is the profile name.',
 });
-const VOICE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Voice settings',
-	comment: 'Title of the mobile voice settings bottom sheet.',
-});
+
 const CAMERA_DEVICE_DESCRIPTOR = msg({
 	message: 'Camera device',
 	comment: 'Section header in the mobile video settings bottom sheet. Picks the camera device.',
@@ -62,10 +60,7 @@ const PREVIEW_CAMERA_DESCRIPTOR = msg({
 	message: 'Preview camera',
 	comment: 'Button label in the mobile video settings bottom sheet. Opens the camera preview.',
 });
-const VIDEO_SETTINGS_DESCRIPTOR = msg({
-	message: 'Video settings',
-	comment: 'Title of the mobile video settings bottom sheet.',
-});
+
 const GRID_VIEW_DESCRIPTOR = msg({
 	message: 'Grid view',
 	comment: 'Toggle label in the mobile video settings bottom sheet. Switches to grid layout.',

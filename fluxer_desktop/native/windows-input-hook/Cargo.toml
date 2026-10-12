@@ -12,7 +12,6 @@ resolver = "2"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-fluxer_desktop_native = {path = "../rust"}
 napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
 napi-derive = "3.6.7"
 

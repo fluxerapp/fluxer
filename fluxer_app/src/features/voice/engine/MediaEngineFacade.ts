@@ -5,7 +5,7 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import type {GatewayErrorData} from '@app/features/gateway/transport/GatewaySocket';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
@@ -121,7 +121,6 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHost';
 import voiceEngineV2AppDebugEventSinkHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugEventSinkHostAdapter';
 import {createVoiceEngineV2AppEventLogSpillLoggerSink} from '@app/features/voice/engine/v2/VoiceEngineV2AppEventLogSpillLoggerSink';
-import {createVoiceEngineV2AppIngestionPort} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
 import type {VoiceEngineV2AppLifecycleDisposable} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
 import voiceEngineV2AppMediaExecutionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaExecutionAdapter';
 import voiceEngineV2AppMediaStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaStateAdapter';
@@ -130,7 +129,10 @@ import {
 	type VoiceEngineV2AppParticipantAdapter,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppParticipantAdapter';
 import VoiceEngineV2AppPermissionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppPermissionAdapter';
-import {createVoiceEngineV2AppProductionHostPorts} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
+import {
+	createVoiceEngineV2AppIngestionPort,
+	createVoiceEngineV2AppProductionHostPorts,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
 import {
 	createVoiceEngineV2AppProjectionStore,
 	type VoiceEngineV2AppProjectionStore,
@@ -175,23 +177,23 @@ import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProce
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2/src/core/reducers/gateway';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraOptions,
-	VoiceEngineV2Command,
-	VoiceEngineV2Controller,
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2LatencyDataPoint,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Model,
 	VoiceEngineV2PerTrackStats,
-	VoiceEngineV2Snapshot,
 	VoiceEngineV2StatsSample,
 	VoiceEngineV2TransportInfo,
 	VoiceEngineV2VoiceStats,
-} from '@fluxer/voice_engine_v2';
-import {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import {type I18n, i18n as linguiI18n, type MessageDescriptor} from '@lingui/core';
 import type {
 	ConnectionQuality as LiveKitConnectionQuality,
@@ -408,7 +410,6 @@ class MediaEngineFacade extends Store {
 		});
 		this.voiceEngineV2SourceLifecycleBridge = this.createSourceLifecycleBridge();
 		voiceEngineV2AppScreenShareExecutionAdapter.setControllerGateway(this.createScreenShareControllerGateway());
-		voiceEngineV2AppScreenShareExecutionAdapter.setSourceLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		ScreenShareCodecNegotiation.setSelectionChangeListener((activeRoom, codec, reason) => {
 			void voiceEngineV2AppScreenShareExecutionAdapter
 				.republishActiveScreenShareForNegotiatedCodecInternal(activeRoom, codec)
@@ -1029,7 +1030,7 @@ class MediaEngineFacade extends Store {
 		});
 		voiceEngineV2AppScreenShareExecutionAdapter.stopNativeScreenShareForTerminalUnload();
 		const hasSpecificConnection = connectionId != null;
-		GatewayConnection.sendTerminalVoiceDisconnect(
+		GatewaySessions.foregroundConnection.sendTerminalVoiceDisconnect(
 			{
 				guild_id: hasSpecificConnection ? guildId : null,
 				channel_id: null,
@@ -1147,7 +1148,7 @@ class MediaEngineFacade extends Store {
 			isUnclaimed,
 			isGuildOwner: resolvedGuildId ? isOwner : true,
 			isDirectMessage: channel?.type === ChannelTypes.DM,
-			hasGatewaySocket: Boolean(GatewayConnection.socket),
+			hasGatewaySocket: Boolean(GatewaySessions.foregroundConnection.socket),
 			blockedByMatureGate,
 			channelLimitAllowed: true,
 		});

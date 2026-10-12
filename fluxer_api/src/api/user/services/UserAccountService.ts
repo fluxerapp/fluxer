@@ -6,7 +6,7 @@ import type {ConnectionRepository} from '@app/api/connection/ConnectionRepositor
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -16,6 +16,10 @@ import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {
+	type PartialUserChangePropagationDeps,
+	propagateUserUpdate,
+} from '@app/api/user/services/PartialUserChangePropagation';
 import {UserAccountLifecycleService} from '@app/api/user/services/UserAccountLifecycleService';
 import {UserAccountLookupService} from '@app/api/user/services/UserAccountLookupService';
 import {UserAccountNotesService} from '@app/api/user/services/UserAccountNotesService';
@@ -28,7 +32,6 @@ import {UserAccountSettingsService} from '@app/api/user/services/UserAccountSett
 import {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {createPremiumClearPatch} from '@app/api/user/UserHelpers';
-import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 import {runAllInOrder} from '@app/api/utils/ConcurrencyUtils';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
@@ -55,6 +58,7 @@ export class UserAccountService {
 	readonly notesService: UserAccountNotesService;
 	readonly lifecycleService: UserAccountLifecycleService;
 	readonly updatePropagator: UserAccountUpdatePropagator;
+	private readonly userUpdateDeps: PartialUserChangePropagationDeps;
 	private readonly userAccountRepository: UserRepository;
 	private readonly guildRepository: GuildRepository;
 	private readonly searchIndexService: GuildMemberSearchIndexService;
@@ -65,7 +69,7 @@ export class UserAccountService {
 		guildService: GuildService,
 		entityAssetService: EntityAssetService,
 		guildRepository: GuildRepository,
-		discriminatorService: IDiscriminatorService,
+		discriminatorService: DiscriminatorService,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		private readonly contactChangeLogService: UserContactChangeLogService,
 		connectionRepository: ConnectionRepository,
@@ -74,25 +78,17 @@ export class UserAccountService {
 		const {
 			users: userAccountRepository,
 			gateway: gatewayService,
-			media: mediaService,
 			email: emailService,
 			rateLimit: rateLimitService,
 		} = this.apiContext.services;
+		this.userUpdateDeps = {userCacheService, gatewayService, userRepository: userAccountRepository, guildRepository};
 		this.userAccountRepository = userAccountRepository;
 		this.guildRepository = guildRepository;
 		this.searchIndexService = new GuildMemberSearchIndexService();
-		this.updatePropagator = new UserAccountUpdatePropagator({
-			userCacheService,
-			gatewayService,
-			mediaService,
-			userRepository: userAccountRepository,
-			guildRepository,
-		});
+		this.updatePropagator = new UserAccountUpdatePropagator({gatewayService});
 		this.lookupService = new UserAccountLookupService({
 			userAccountRepository,
-			userRelationshipRepository: userAccountRepository,
-			userChannelRepository: userAccountRepository,
-			userSettingsRepository: userAccountRepository,
+
 			guildRepository,
 			guildService,
 			discriminatorService,
@@ -114,8 +110,7 @@ export class UserAccountService {
 		});
 		this.settingsService = new UserAccountSettingsService({
 			userAccountRepository,
-			userSettingsRepository: userAccountRepository,
-			userRelationshipRepository: userAccountRepository,
+
 			updatePropagator: this.updatePropagator,
 			gatewayService,
 			userCacheService,
@@ -124,7 +119,7 @@ export class UserAccountService {
 		});
 		this.notesService = new UserAccountNotesService({
 			userAccountRepository,
-			userRelationshipRepository: userAccountRepository,
+
 			updatePropagator: this.updatePropagator,
 		});
 		this.lifecycleService = new UserAccountLifecycleService({
@@ -132,7 +127,7 @@ export class UserAccountService {
 			userAccountRepository,
 			guildRepository,
 			emailService,
-			updatePropagator: this.updatePropagator,
+			userUpdateDeps: this.userUpdateDeps,
 			kvDeletionQueue,
 		});
 	}
@@ -182,12 +177,7 @@ export class UserAccountService {
 					Logger.error({error, userId: user.id}, 'Failed to commit asset changes after successful DB update');
 				}
 			},
-			() => this.updatePropagator.dispatchUserUpdate(updatedUser),
-			async () => {
-				if (hasPartialUserFieldsChanged(user, updatedUser)) {
-					await this.updatePropagator.propagatePartialUserChange(updatedUser);
-				}
-			},
+			() => propagateUserUpdate(this.userUpdateDeps, user, updatedUser, {continueAfterDispatchFailure: true}),
 			async () => {
 				const nameChanged =
 					user.username !== updatedUser.username ||
@@ -237,9 +227,6 @@ export class UserAccountService {
 			premium_flags: user.premiumFlags & ~PremiumFlags.ENABLED_OVERRIDE,
 		};
 		const updatedUser = await this.userAccountRepository.patchUpsert(user.id, updates, user.toRow());
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
-		if (hasPartialUserFieldsChanged(user, updatedUser)) {
-			await this.updatePropagator.propagatePartialUserChange(updatedUser);
-		}
+		await propagateUserUpdate(this.userUpdateDeps, user, updatedUser);
 	}
 }

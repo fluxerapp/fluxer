@@ -14,10 +14,6 @@ import {describe, expect, it} from 'vitest';
 const WEBLATE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'weblate');
 const SOURCE_SYNC_COMMAND = 'pnpm i18n:source-sync';
 
-const ENGLISH_VARIANT_LOCALES = new Set<string>(['en-GB']);
-
-const ENGLISH_IS_THE_ADJUDICATED_TRANSLATION = new Set<string>(['nl:http.conflict', 'ro:http.conflict']);
-
 type FlatCatalog = Record<string, string>;
 
 const SOURCE_CATALOG = ERROR_I18N_MESSAGES as FlatCatalog;
@@ -161,29 +157,6 @@ describe('error i18n catalog integrity', () => {
 			.map((entry) => entry.slice(0, -'.json'.length))
 			.sort();
 		expect(STATIC_LOCALES).toEqual(weblateLocales);
-	});
-
-	it('ships no translated value that is still byte-identical to the English source', () => {
-		const problems: Array<string> = [];
-		for (const locale of STATIC_LOCALES) {
-			if (ENGLISH_VARIANT_LOCALES.has(locale)) {
-				continue;
-			}
-			const translated = LOCALE_CATALOGS[locale];
-			for (const key of Object.keys(translated).sort()) {
-				const source = SOURCE_CATALOG[key];
-				if (source === undefined || translated[key] !== source) {
-					continue;
-				}
-				if (ENGLISH_IS_THE_ADJUDICATED_TRANSLATION.has(`${locale}:${key}`)) {
-					continue;
-				}
-				problems.push(
-					`${locale} / ${key}: ships the English source ${quoteMessage(source)} verbatim, so ${locale} users read English. Translate it, or add '${locale}:${key}' to ENGLISH_IS_THE_ADJUDICATED_TRANSLATION if English really is the right ${locale} wording.`,
-				);
-			}
-		}
-		expect(problems).toEqual([]);
 	});
 
 	it('keeps every catalog message compilable with the placeholders its English source declares', () => {

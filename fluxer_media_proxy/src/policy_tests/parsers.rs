@@ -1,38 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    asset_hash::AssetHash,
     constants::{DEFAULT_IMAGE_SIZE, parse_image_size},
     image_quality::ImageQuality,
     image_transform::EncodeEffort,
 };
-
-#[test]
-fn asset_hash_parsing_stays_lenient_about_the_digest_shape() {
-    for raw in [
-        "",
-        "deadbee",
-        "deadbeef0",
-        "DEADBEEF",
-        "gggggggg",
-        "0123abcd",
-        "a-deadbeef",
-    ] {
-        let parsed = AssetHash::parse(raw);
-        assert_eq!(parsed.digest(), raw, "the digest rewrote {raw}");
-        assert!(!parsed.is_animated(), "{raw} was read as animated");
-    }
-    for (raw, digest) in [
-        ("a_deadbeef", "deadbeef"),
-        ("a_DEADBEEF", "DEADBEEF"),
-        ("a_gggggggg", "gggggggg"),
-        ("a_", ""),
-    ] {
-        let parsed = AssetHash::parse(raw);
-        assert_eq!(parsed.digest(), digest, "the digest rewrote {raw}");
-        assert!(parsed.is_animated(), "{raw} lost its animation prefix");
-    }
-}
 
 #[test]
 fn malformed_query_values_fall_back_instead_of_failing_the_request() {

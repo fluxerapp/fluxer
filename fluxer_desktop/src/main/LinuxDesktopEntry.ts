@@ -88,11 +88,11 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 	return null;
 }
 
-function escapeDesktopValue(value: string): string {
+export function escapeDesktopValue(value: string): string {
 	return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r');
 }
 
-function quoteExecArg(value: string): string {
+export function quoteExecArg(value: string): string {
 	return `"${value.replace(/(["`$\\])/g, '\\$1')}"`;
 }
 

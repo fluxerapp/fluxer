@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::{bool_param, user_flags};
+
+use reqwest::Method;
+
 use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -367,9 +371,10 @@ impl AdminApiClient {
             reason: reason.map(std::borrow::ToOwned::to_owned),
         };
         let resp: UserMutationResponse = self
-            .put_typed_with_reason(
+            .send(
+                Method::PUT,
                 &format!("/admin/users/{}/ban", urlencoding::encode(user_id)),
-                &body,
+                Some(&body),
                 private_reason,
             )
             .await?;
@@ -439,7 +444,8 @@ impl AdminApiClient {
             "notify_user": notify_user,
         });
         let resp: UserMutationResponse = self
-            .delete_with_reason(
+            .send(
+                Method::DELETE,
                 &format!("/admin/users/{}/deletion", urlencoding::encode(user_id)),
                 Some(&body),
                 audit_log_reason,
@@ -458,9 +464,11 @@ impl AdminApiClient {
             "ban_audit_log_id": ban_audit_log_id,
             "note": note,
         });
-        self.post_void(
+        self.send_void(
+            Method::POST,
             &format!("/admin/users/{}/ban/notes", urlencoding::encode(user_id)),
             Some(&body),
+            None,
         )
         .await
     }
@@ -587,20 +595,6 @@ impl AdminApiClient {
 
 fn nonempty(value: Option<&str>) -> Option<&str> {
     value.filter(|value| !value.is_empty())
-}
-
-fn bool_param(value: bool) -> &'static str {
-    if value { "true" } else { "false" }
-}
-
-fn user_flags(values: &[String]) -> ApiResult<Vec<generated_types::UserFlags>> {
-    values
-        .iter()
-        .map(|value| {
-            generated_types::UserFlags::try_from(value.as_str())
-                .map_err(|error| ApiError::Parse(error.to_string()))
-        })
-        .collect()
 }
 
 fn premium_flags(values: &[i32]) -> Vec<generated_types::PremiumFlags> {

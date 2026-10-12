@@ -25,7 +25,6 @@ import {VoiceChannelUserCount} from '@app/features/app/components/layout/VoiceCh
 import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import {CategoryBottomSheet} from '@app/features/channel/components/bottomsheets/CategoryBottomSheet';
 import {ChannelBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelBottomSheet';
@@ -59,6 +58,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -146,7 +146,7 @@ interface ChannelItemCoreProps {
 export const ChannelItemCore: React.FC<ChannelItemCoreProps> = observer(
 	({channel, isSelected = false, forceHover = false, typingIndicator, className}) => {
 		const channelLabelRef = useRef<HTMLSpanElement>(null);
-		const isChannelNameOverflowing = useTextOverflow(channelLabelRef);
+		const isChannelNameOverflowing = useTextOverflow(channelLabelRef, {content: channel.name});
 		return (
 			<div
 				className={clsx(

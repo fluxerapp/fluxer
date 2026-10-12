@@ -226,7 +226,6 @@ export class ChannelService {
 			identifier,
 			maxAttempts: 1,
 			windowMs,
-			algorithm: 'leaky_bucket',
 		});
 		return Math.max(0, peek.resetTime.getTime() - Date.now());
 	}
@@ -254,7 +253,6 @@ export class ChannelService {
 			identifier: `${bucket}:${channelId}:${user.id}`,
 			maxAttempts: 1,
 			windowMs: rateLimitPerUser * 1000,
-			algorithm: 'leaky_bucket',
 		});
 		const retryAfterMs = Math.max(0, peek.resetTime.getTime() - Date.now());
 		return {

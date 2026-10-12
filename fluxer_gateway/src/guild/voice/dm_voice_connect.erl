@@ -1,14 +1,14 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_connect).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([handle_dm_voice_with_channel/5]).
 -export([handle_dm_connect_or_update/1]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,

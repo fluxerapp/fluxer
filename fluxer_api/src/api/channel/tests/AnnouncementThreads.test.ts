@@ -12,12 +12,8 @@ import {
 	followInto,
 	setupFanoutWorld,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -58,7 +54,7 @@ describe('announcement threads', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -66,12 +62,11 @@ describe('announcement threads', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'news threads');
@@ -353,33 +348,20 @@ describe('announcement threads', () => {
 			}
 		});
 
-		it('refuses converting a parent with retained private threads for control callers and after the experiment is off', async () => {
+		it('refuses converting a parent with retained private threads for incapable callers', async () => {
 			const s = await setup();
-			const secret = await startThread(s.owner.token, s.textId, {name: 'secret', type: ChannelTypes.PRIVATE_THREAD});
+			await startThread(s.owner.token, s.textId, {name: 'secret', type: ChannelTypes.PRIVATE_THREAD});
 			await threadsRequest(harness, s.owner.token, {capable: false})
 				.patch(`/channels/${s.textId}`)
 				.body({type: ChannelTypes.GUILD_ANNOUNCEMENT})
 				.expect(400, APIErrorCodes.CHANNEL_HAS_THREADS)
 				.execute();
-			await setChannelThreadsConfig({enabled: false});
-			await createBuilder(harness, s.owner.token)
-				.patch(`/channels/${s.textId}`)
-				.body({type: ChannelTypes.GUILD_ANNOUNCEMENT})
-				.expect(400, APIErrorCodes.CHANNEL_HAS_THREADS)
-				.execute();
-			expect((await repository.channelData.findUnique(createChannelID(BigInt(s.textId))))?.type).toBe(
-				ChannelTypes.GUILD_TEXT,
-			);
-			expect(await storedType(secret.id)).toEqual({
-				state: ChannelTypes.PRIVATE_THREAD,
-				channel: ChannelTypes.PRIVATE_THREAD,
-			});
 		});
 
-		it('keeps converting announcement channels with retained threads after the experiment is off', async () => {
+		it('converts announcement channels while preserving retained threads', async () => {
 			const s = await setup();
 			const thread = await startThread(s.owner.token, s.announcementId);
-			await setChannelThreadsConfig({enabled: false});
+
 			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			await createBuilder(harness, s.owner.token)
 				.patch(`/channels/${s.announcementId}`)
@@ -390,7 +372,9 @@ describe('announcement threads', () => {
 				state: ChannelTypes.PUBLIC_THREAD,
 				channel: ChannelTypes.PUBLIC_THREAD,
 			});
-			expect(dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_'))).toEqual([]);
+			expect(
+				dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_')).map(([params]) => params.data),
+			).toMatchObject([{id: thread.id, type: ChannelTypes.PUBLIC_THREAD}]);
 		});
 	});
 
@@ -402,7 +386,6 @@ describe('announcement threads', () => {
 		});
 
 		it('publishes a message that has a thread without leaking thread flags into follower copies', async () => {
-			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 			world = await setupFanoutWorld(harness);
 			await followInto(harness, world, world.b.t1.id);
 			const message = await sendMessage(harness, world.a.owner.token, world.a.ann.id, 'breaking');
@@ -426,7 +409,6 @@ describe('announcement threads', () => {
 		});
 
 		it('never publishes or delivers messages sent inside an announcement thread', async () => {
-			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 			world = await setupFanoutWorld(harness);
 			await followInto(harness, world, world.b.t1.id);
 			const thread = await startThread(world.a.owner.token, world.a.ann.id);
@@ -498,19 +480,17 @@ describe('announcement threads', () => {
 			expect(thread.rate_limit_per_user).toBe(5);
 		});
 
-		it('converts announcement channels in a guild that never had threads exactly as before', async () => {
+		it('converts announcement channels when the parent has no threads', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'plain');
 			const announcement = await createChannel(harness, owner.token, guild.id, 'news', ChannelTypes.GUILD_ANNOUNCEMENT);
 			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-			const listParentThreads = vi.spyOn(ThreadRepository.prototype, 'listParentThreads');
 			const converted = await createBuilder<ChannelResponse>(harness, owner.token)
 				.patch(`/channels/${announcement.id}`)
 				.body({type: ChannelTypes.GUILD_TEXT})
 				.expect(200)
 				.execute();
 			expect(converted.type).toBe(ChannelTypes.GUILD_TEXT);
-			expect(listParentThreads).not.toHaveBeenCalled();
 			expect(dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_'))).toEqual([]);
 			const back = await createBuilder<ChannelResponse>(harness, owner.token)
 				.patch(`/channels/${announcement.id}`)
@@ -518,7 +498,6 @@ describe('announcement threads', () => {
 				.expect(200)
 				.execute();
 			expect(back.type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
-			expect(listParentThreads).not.toHaveBeenCalled();
 		});
 	});
 });

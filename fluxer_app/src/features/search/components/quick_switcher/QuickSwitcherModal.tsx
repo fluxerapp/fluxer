@@ -14,7 +14,6 @@ import {
 	dismissQuickSwitcher,
 	getQuickSwitcherResultAccessibilityMetadata,
 	getResultKey,
-	getViewContext,
 	handleContextMenu,
 	PREFIX_HINTS,
 	type QuickSwitcherSection,
@@ -180,9 +179,7 @@ const ResultRow = observer(
 			quickStyles.optionIconHighlight,
 		);
 		const iconContent: React.ReactElement = iconRendered.content;
-		const key = getViewContext(executableResult)
-			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
-			: `${executableResult.type}-${executableResult.id}`;
+		const key = `${executableResult.type}-${executableResult.id}`;
 		return (
 			<FocusRing offset={-2} data-flx="search.quick-switcher.quick-switcher-modal.result-row.focus-ring">
 				<div

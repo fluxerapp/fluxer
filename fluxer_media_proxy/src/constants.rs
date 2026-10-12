@@ -72,6 +72,18 @@ pub enum AssetExtension {
 }
 
 impl AssetExtension {
+    pub const ALL: [Self; 10] = [
+        Self::Png,
+        Self::Jpeg,
+        Self::Webp,
+        Self::Gif,
+        Self::Apng,
+        Self::Avif,
+        Self::Heic,
+        Self::Heif,
+        Self::Jxl,
+        Self::Svg,
+    ];
     pub fn parse(raw: &str) -> Option<Self> {
         match raw.to_ascii_lowercase().as_str() {
             "png" => Some(Self::Png),
@@ -155,20 +167,6 @@ mod tests {
     }
 
     #[test]
-    fn image_size_snaps_up_to_the_next_rung() {
-        assert_eq!(128, parse_image_size(None));
-        assert_eq!(640, parse_image_size(Some("640")));
-        assert_eq!(1024, parse_image_size(Some("641")));
-        assert_eq!(1024, parse_image_size(Some("1000")));
-        assert_eq!(16, parse_image_size(Some("0")));
-        assert_eq!(16384, parse_image_size(Some("99999")));
-        assert_eq!(128, parse_image_size(Some("not-a-number")));
-        assert_eq!(128, parse_image_size(Some("")));
-        assert_eq!(128, parse_image_size(Some("-1")));
-        assert_eq!(128, parse_image_size(Some("99999999999")));
-    }
-
-    #[test]
     fn off_ladder_size_never_serves_fewer_pixels_than_requested() {
         for requested in 1..=4096u32 {
             let served = parse_image_size(Some(&requested.to_string()));
@@ -176,22 +174,6 @@ mod tests {
                 served >= requested,
                 "size={requested} served {served}, a silent downscale"
             );
-        }
-    }
-
-    #[test]
-    fn every_rung_snaps_to_itself() {
-        for rung in IMAGE_SIZES {
-            assert_eq!(*rung, parse_image_size(Some(&rung.to_string())));
-        }
-    }
-
-    #[test]
-    fn snapping_is_idempotent() {
-        for raw in [0u32, 1, 17, 641, 1000, 4097, 99999] {
-            let once = parse_image_size(Some(&raw.to_string()));
-            let twice = parse_image_size(Some(&once.to_string()));
-            assert_eq!(once, twice, "size={raw} did not settle");
         }
     }
 

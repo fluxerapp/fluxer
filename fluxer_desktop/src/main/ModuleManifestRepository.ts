@@ -3,12 +3,13 @@
 import {Buffer} from 'node:buffer';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {
 	type DesktopModuleManifestTarget,
 	type DesktopModuleUpdateManifest,
 	parseModuleUpdateManifest,
 } from '@electron/main/ModuleManifest';
-import {type ModuleStore, writeFileAtomically} from '@electron/main/ModuleStore';
+import type {ModuleStore} from '@electron/main/ModuleStore';
 
 const CHANNEL_MANIFEST_CACHE_FILE_NAME = 'manifest.json';
 const MODULE_MANIFEST_TIMEOUT_MS = 15000;

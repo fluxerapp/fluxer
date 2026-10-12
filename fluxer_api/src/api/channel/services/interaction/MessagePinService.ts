@@ -5,11 +5,11 @@ import {createMessageID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import {MessageInteractionBase} from '@app/api/channel/services/interaction/MessageInteractionBase';
 import {
 	dispatchMessageCreateBroadcast,
 	dispatchMessageUpdateBroadcast,
 } from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {ensureTextChannel, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
@@ -32,16 +32,14 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 const PIN_LIST_UNBOUNDED_TIMESTAMP = new Date('9999-12-31T23:59:59.999Z');
 
-export class MessagePinService extends MessageInteractionBase {
+export class MessagePinService {
 	constructor(
-		gatewayService: IGatewayService,
+		private gatewayService: IGatewayService,
 		private channelRepository: ChannelRepository,
 		private snowflakeService: ISnowflakeService,
 		private messagePersistenceService: MessagePersistenceService,
 		private readonly guildAuditLogService: GuildAuditLogService,
-	) {
-		super(gatewayService);
-	}
+	) {}
 
 	private async assertMessageHistoryAccess({
 		authChannel,
@@ -79,7 +77,7 @@ export class MessagePinService extends MessageInteractionBase {
 	}> {
 		const {channel} = authChannel;
 		if (THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) throw new InvalidChannelTypeError();
-		this.ensureTextChannel(channel);
+		ensureTextChannel(channel);
 		const hasReadHistory = !authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		if (!hasReadHistory) {
 			const cutoff = authChannel.guild?.message_history_cutoff;
@@ -157,11 +155,11 @@ export class MessagePinService extends MessageInteractionBase {
 		const {channel, guild, checkPermission} = authChannel;
 		if (guild) {
 			await checkPermission(Permissions.PIN_MESSAGES);
-			if (this.isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
+			if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
 				throw new FeatureTemporarilyDisabledError();
 			}
 		}
-		this.ensureTextChannel(channel);
+		ensureTextChannel(channel);
 		assertThreadInteractionAllowed(authChannel, 'pin');
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
@@ -210,11 +208,11 @@ export class MessagePinService extends MessageInteractionBase {
 		const {channel, guild, checkPermission} = authChannel;
 		if (guild) {
 			await checkPermission(Permissions.PIN_MESSAGES);
-			if (this.isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
+			if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
 				throw new FeatureTemporarilyDisabledError();
 			}
 		}
-		this.ensureTextChannel(channel);
+		ensureTextChannel(channel);
 		assertThreadInteractionAllowed(authChannel, 'pin');
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);

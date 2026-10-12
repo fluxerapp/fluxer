@@ -201,20 +201,11 @@ pub(in crate::server) fn is_svg_content_type(content_type: &str) -> bool {
         .is_some_and(|value| value.eq_ignore_ascii_case("image/svg+xml"))
 }
 
-pub(in crate::server) fn extension_from_mime(content_type: &str) -> Option<AssetExtension> {
-    match mime::normalize(Some(content_type))? {
-        "image/jpeg" => Some(AssetExtension::Jpeg),
-        "image/png" => Some(AssetExtension::Png),
-        "image/webp" => Some(AssetExtension::Webp),
-        "image/gif" => Some(AssetExtension::Gif),
-        "image/apng" => Some(AssetExtension::Apng),
-        "image/avif" => Some(AssetExtension::Avif),
-        "image/heic" => Some(AssetExtension::Heic),
-        "image/heif" => Some(AssetExtension::Heif),
-        "image/jxl" => Some(AssetExtension::Jxl),
-        "image/svg+xml" => Some(AssetExtension::Svg),
-        _ => None,
-    }
+pub(in crate::server) fn extension_from_mime(mime: &str) -> Option<AssetExtension> {
+    let mime = mime::normalize(Some(mime))?;
+    AssetExtension::ALL
+        .into_iter()
+        .find(|extension| extension.mime() == mime)
 }
 
 pub(in crate::server) fn image_extension_from_filename(filename: &str) -> Option<AssetExtension> {

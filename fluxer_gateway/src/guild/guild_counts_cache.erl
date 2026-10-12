@@ -9,14 +9,7 @@
 -compile({no_auto_import, [get/1]}).
 
 -export([
-    start_link/0,
-    update/3,
-    get/1,
-    bulk_get/1,
-    delete/1,
-    rebalance/0,
-    rebalance_async/0,
-    pending_handoff_count/0
+    start_link/0, update/3, get/1, bulk_get/1, delete/1, rebalance/0, pending_handoff_count/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -70,11 +63,6 @@ delete(GuildId) when is_integer(GuildId) ->
     _ = guild_counts_cache_query:safe_owner_call(GuildId, {delete, GuildId}, ok),
     ok.
 
--spec rebalance_async() -> ok.
-rebalance_async() ->
-    _ = guild_counts_cache_query:safe_local_cast(rebalance),
-    ok.
-
 -spec rebalance() -> ok.
 rebalance() ->
     _ = guild_counts_cache_query:safe_local_call(rebalance, ok),
@@ -91,7 +79,9 @@ pending_handoff_count() ->
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 0),
-    {ShardCount, _Source} = guild_counts_cache_shard_mgmt:determine_shard_count(),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([
+        guild_counts_cache_shards, guild_shards
+    ]),
     Shards = guild_counts_cache_shard_mgmt:start_shards(ShardCount, #{}),
     {ok,
         #{
@@ -146,21 +136,19 @@ handle_cast({remote_handoff_result, GuildId, Op, Action, Result}, State) ->
         State
     ),
     {noreply, State1};
-handle_cast(rebalance, State) ->
-    {noreply, guild_counts_cache_remote:rebalance_ownership(State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
     Shards = maps:get(shards, State),
-    case guild_counts_cache_shard_mgmt:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_shard(Index, State);
         not_found -> {noreply, State}
     end;
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case guild_counts_cache_shard_mgmt:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_shard(Index, State);
         not_found -> {noreply, State}
     end;

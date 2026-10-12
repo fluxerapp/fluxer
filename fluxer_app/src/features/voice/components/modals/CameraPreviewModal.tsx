@@ -41,6 +41,11 @@ import {
 	formatFallbackCameraLabel,
 	VOICE_TURN_ON_CAMERA_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	DEFAULT_3_DESCRIPTOR as DEFAULT_CAMERA_DESCRIPTOR,
+	MIRROR_CAMERA_DESCRIPTOR,
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -65,20 +70,7 @@ const CAMERA_PREVIEW_DESCRIPTOR = msg({
 	message: 'Camera preview',
 	comment: 'Title of the camera preview modal.',
 });
-const DEFAULT_CAMERA_DESCRIPTOR = msg({
-	message: 'Default',
-	context: 'device-option',
-	comment: 'Default camera device option.',
-});
-const MIRROR_CAMERA_DESCRIPTOR = msg({
-	message: 'Mirror camera',
-	comment: 'Switch label in the camera preview modal for flipping the local camera preview horizontally.',
-});
-const YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment:
-		'Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.',
-});
+
 const BLUR_STRENGTH_DESCRIPTOR = msg({
 	message: 'Blur strength',
 	comment: 'Slider label in the camera preview modal controlling how strong the background blur effect is.',

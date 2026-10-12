@@ -5,16 +5,11 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/VoiceParticipantTile.module.css';
-import {msg} from '@lingui/core/macro';
+import {ADD_STREAM_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {MonitorPlayIcon, PlusIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-
-const ADD_STREAM_DESCRIPTOR = msg({
-	message: 'Add stream',
-	comment: 'Action label on the local participant tile. Starts a new screen share.',
-});
 
 interface WatchStreamOverlayProps {
 	addStreamTooltipText: string;

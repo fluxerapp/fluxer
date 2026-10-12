@@ -4,12 +4,7 @@ import fs from 'node:fs';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {deleteOneOrMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {clearChannelThreadsTaintCacheForTesting, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
@@ -17,8 +12,8 @@ import {getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import {GuildThreadState} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
 import harvestGuildData from '@app/api/worker/tasks/HarvestGuildData';
@@ -30,20 +25,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-
-function helpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-		attempt: {isLastAttempt: true},
-	};
-}
 
 interface Setup {
 	owner: TestAccount;
@@ -65,13 +47,14 @@ describe('thread maintenance sweeps', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		deps = await initializeWorkerDependencies(getSnowflakeService());
 		setWorkerDependencies(deps);
 		jobs = [];
 		const addJob = async (task: string, payload: Record<string, unknown>) => {
 			jobs.push({task, payload});
-			if (task === 'deleteUserMessagesInGuildByTime') await deleteUserMessagesInGuildByTime(payload, helpers());
+			if (task === 'deleteUserMessagesInGuildByTime')
+				await deleteUserMessagesInGuildByTime(payload, createTestWorkerHelpers({attempt: {isLastAttempt: true}}));
 			return 0n;
 		};
 		vi.spyOn(NoopWorkerService.prototype, 'addJob').mockImplementation(addJob as () => Promise<bigint>);
@@ -83,12 +66,11 @@ describe('thread maintenance sweeps', () => {
 
 	afterAll(async () => {
 		clearWorkerDependencies();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'sweeps');
@@ -137,9 +119,9 @@ describe('thread maintenance sweeps', () => {
 		expect(await messageCount(s.threadId)).toBe(0);
 	});
 
-	it('keeps sweeping thread messages of a tainted guild after the experiment is off', async () => {
+	it('sweeps thread messages of a tainted guild', async () => {
 		const s = await setup();
-		await setChannelThreadsConfig({enabled: false});
+
 		await ban(s);
 		expect(await remaining(s.threadId)).toBe(0);
 	});
@@ -169,7 +151,7 @@ describe('thread maintenance sweeps', () => {
 
 	it('removes thread messages in a guild scoped delete of my messages', async () => {
 		const s = await setup();
-		await setChannelThreadsConfig({enabled: false});
+
 		await deps.channelService.userMessageDeletion.deleteUserMessagesInScope(createUserID(BigInt(s.member.userId)), {
 			guildId: createGuildID(BigInt(s.guildId)),
 		});
@@ -197,7 +179,7 @@ describe('thread maintenance sweeps', () => {
 		expect(payload).toBeDefined();
 		vi.spyOn(deps.storageService, 'uploadObjectFromFile').mockResolvedValue(undefined as never);
 		const writeFile = vi.spyOn(fs.promises, 'writeFile');
-		await harvestGuildData(payload!, helpers());
+		await harvestGuildData(payload!, createTestWorkerHelpers({attempt: {isLastAttempt: true}}));
 		const threadFile = writeFile.mock.calls.find(([file]) =>
 			String(file).endsWith(`channels/${s.threadId}/messages.json`),
 		);

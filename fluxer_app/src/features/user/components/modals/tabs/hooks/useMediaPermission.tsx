@@ -5,7 +5,7 @@ import MediaPermission from '@app/features/permissions/system/state/MediaPermiss
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type {VoiceDeviceState} from '@app/features/voice/utils/VoiceDeviceManager';
-import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useState} from 'react';
 
 const logger = new Logger('useMediaPermission');
 
@@ -16,10 +16,6 @@ interface PermissionState {
 	status: 'idle' | 'loading' | 'granted' | 'denied';
 	devices: Array<MediaDeviceInfo>;
 	deviceState: VoiceDeviceState;
-}
-
-interface UseMediaPermissionOptions {
-	autoRequest?: boolean;
 }
 
 const devicesFromVoiceState = (deviceState: VoiceDeviceState, type: PermissionType): Array<MediaDeviceInfo> => {
@@ -56,8 +52,7 @@ const resolveStatusFromVoiceState = ({
 	if (permissionStatus === 'granted') return 'granted';
 	return 'idle';
 };
-export const useMediaPermission = (type: PermissionType, options: UseMediaPermissionOptions = {}) => {
-	const {autoRequest = false} = options;
+export const useMediaPermission = (type: PermissionType) => {
 	const micExplicitlyDenied = MediaPermission.microphoneExplicitlyDenied;
 	const cameraExplicitlyDenied = MediaPermission.cameraExplicitlyDenied;
 	const isExplicitlyDenied = type === 'audio' ? micExplicitlyDenied : cameraExplicitlyDenied;
@@ -131,26 +126,17 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 			return false;
 		}
 	}, [type, isExplicitlyDenied, applyVoiceDeviceState, unlockDevices]);
-	const unlockDevicesRef = useRef(unlockDevices);
-	useLayoutEffect(() => {
-		unlockDevicesRef.current = unlockDevices;
-	}, [unlockDevices]);
 	useEffect(() => VoiceDevicePermissionState.subscribe(applyVoiceDeviceState), [applyVoiceDeviceState]);
 	useLayoutEffect(() => {
 		if (isExplicitlyDenied) {
 			setState((prev) => ({...prev, status: 'denied'}));
 			return;
 		}
-		if (!autoRequest) {
-			void VoiceDevicePermissionState.ensureDevices({requestPermissions: false})
-				.then(applyVoiceDeviceState)
-				.catch((error) => logger.warn('Passive media device enumeration failed', {type, error}));
-			return;
-		}
-		void unlockDevicesRef
-			.current()
-			.catch((error) => logger.error('Automatic media permission request failed', {type, error}));
-	}, [applyVoiceDeviceState, isExplicitlyDenied, type, autoRequest]);
+
+		void VoiceDevicePermissionState.ensureDevices({requestPermissions: false})
+			.then(applyVoiceDeviceState)
+			.catch((error) => logger.warn('Passive media device enumeration failed', {type, error}));
+	}, [applyVoiceDeviceState, isExplicitlyDenied, type]);
 	return {
 		...state,
 		isExplicitlyDenied,

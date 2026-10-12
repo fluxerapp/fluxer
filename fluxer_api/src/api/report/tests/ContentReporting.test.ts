@@ -25,7 +25,7 @@ import {
 	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
@@ -138,7 +138,7 @@ function contextIds(report: Awaited<ReturnType<typeof readReport>>): Array<strin
 }
 
 async function setJoinedAt(guildId: string, userId: string, joinedAt: Date): Promise<void> {
-	const repository = new GuildMemberRepository();
+	const repository = new GuildRepository();
 	const member = await repository.getMember(createGuildID(BigInt(guildId)), createUserID(BigInt(userId)));
 	if (!member) {
 		throw new Error(`Member ${userId} of guild ${guildId} was not stored`);

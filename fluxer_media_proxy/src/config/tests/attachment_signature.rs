@@ -65,16 +65,6 @@ fn rejects_an_unknown_signature_mode() {
 }
 
 #[test]
-fn the_cors_mode_error_still_names_its_own_variable() {
-    let err = Config::load_from_iter(env_with(&[("FLUXER_MEDIA_PROXY_CORS_MODE", "strict")]))
-        .unwrap_err();
-    assert_eq!(
-        "FLUXER_MEDIA_PROXY_CORS_MODE must be one of: off, report, enforce",
-        err.to_string()
-    );
-}
-
-#[test]
 fn report_and_enforce_require_a_secret() {
     for mode in ["report", "enforce"] {
         let unset = Config::load_from_iter(env_with(&[(MODE_KEY, mode)])).unwrap_err();

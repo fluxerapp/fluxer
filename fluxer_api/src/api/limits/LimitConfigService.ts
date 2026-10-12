@@ -4,7 +4,6 @@ import {Config} from '@app/api/Config';
 import {
 	buildStoredLimitConfig,
 	createDefaultLimitConfig,
-	getLegacyLimitConfigKvKey,
 	LIMIT_CONFIG_REFRESH_CHANNEL,
 	type LimitBuildOptions,
 	mergeWithCurrentDefaults,
@@ -200,7 +199,6 @@ export class LimitConfigService {
 
 	private async reloadConfig(generation: number): Promise<void> {
 		this.assertRefreshActive(generation);
-		await this.cacheService.delete(getLegacyLimitConfigKvKey(Config.instance.selfHosted));
 		await this.refreshConfig(generation);
 		this.assertRefreshActive(generation);
 		await this.cacheService.publish(LIMIT_CONFIG_REFRESH_CHANNEL, 'refresh');

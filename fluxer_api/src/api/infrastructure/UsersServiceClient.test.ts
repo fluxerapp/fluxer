@@ -2,63 +2,16 @@
 
 import {createUserID} from '@app/api/BrandedTypes';
 import {NatsUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {FakeNatsConnectionManager} from '@app/api/test/mocks/FakeNatsConnectionManager';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {NatsConnection} from '@nats-io/transport-node';
-import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {describe, expect, it} from 'vitest';
 
-interface FakeRequest {
-	subject: string;
-	body: Record<string, unknown>;
-	timeout: number | undefined;
-}
-
-class FakeNatsConnectionManager implements INatsConnectionManager {
-	private closed = true;
-	private readonly responses: Array<unknown>;
-	readonly requests: Array<FakeRequest> = [];
-	connectCalls = 0;
-	drained = false;
-
-	constructor(responses: Array<unknown>) {
-		this.responses = [...responses];
-	}
-
-	async connect(): Promise<void> {
-		this.connectCalls += 1;
-		this.closed = false;
-	}
-
-	getConnection(): NatsConnection {
-		if (this.closed) {
-			throw new Error('not connected');
-		}
-		return {
-			request: async (subject: string, data: Uint8Array, options?: {timeout?: number}) => {
-				this.requests.push({
-					subject,
-					body: JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>,
-					timeout: options?.timeout,
-				});
-				const response = this.responses.shift();
-				if (response instanceof Error) {
-					throw response;
-				}
-				return {
-					data: new TextEncoder().encode(JSON.stringify(response)),
-				};
-			},
-		} as unknown as NatsConnection;
-	}
-
-	async drain(): Promise<void> {
-		this.drained = true;
-		this.closed = true;
-	}
-
-	isClosed(): boolean {
-		return this.closed;
-	}
+function createConnectionManager(responses: Array<unknown>): FakeNatsConnectionManager {
+	const pending = [...responses];
+	return new FakeNatsConnectionManager(() => {
+		const response = pending.shift();
+		return response instanceof Error ? response : JSON.stringify(response);
+	});
 }
 
 describe('NatsUsersServiceClient', () => {
@@ -73,7 +26,7 @@ describe('NatsUsersServiceClient', () => {
 			avatar_color: 0x336699,
 			flags: 1,
 		};
-		const manager = new FakeNatsConnectionManager([{FoundApiPartials: [partial]}]);
+		const manager = createConnectionManager([{FoundApiPartials: [partial]}]);
 		const client = new NatsUsersServiceClient(manager, 321, 'svc.users.test');
 
 		const result = await client.getUserPartialResponses([userId]);
@@ -94,7 +47,7 @@ describe('NatsUsersServiceClient', () => {
 
 	it('sends invalidation requests with a string user id', async () => {
 		const userId = createUserID(9007199254740993n);
-		const manager = new FakeNatsConnectionManager(['Invalidated']);
+		const manager = createConnectionManager(['Invalidated']);
 		const client = new NatsUsersServiceClient(manager, 250, 'svc.users.test');
 
 		await client.invalidateUserCache(userId);
@@ -128,7 +81,7 @@ describe('NatsUsersServiceClient', () => {
 			id: secondUserId.toString(),
 			username: 'Second',
 		};
-		const manager = new FakeNatsConnectionManager([
+		const manager = createConnectionManager([
 			{FoundApiPartials: [secondPartial, partial]},
 			{FoundApiPartials: [partial]},
 		]);

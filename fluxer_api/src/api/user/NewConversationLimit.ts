@@ -40,10 +40,6 @@ function limitKey(userId: UserID | bigint | string): string {
 	return `user:new_conversation_limit:${userId.toString()}`;
 }
 
-export function isNewConversationLimitExempt(user: Pick<User, 'isBot' | 'isSystem' | 'flags'>): boolean {
-	return isAccountLimitExempt(user);
-}
-
 export async function getNewConversationLimit(
 	userId: UserID,
 	deps: NewConversationLimitDeps = {},
@@ -108,7 +104,7 @@ export async function assertMayStartConversation(
 	{user, targetId, users, messages, channel}: NewConversationCheck,
 	deps: NewConversationLimitDeps = {},
 ): Promise<void> {
-	if (isNewConversationLimitExempt(user)) return;
+	if (isAccountLimitExempt(user)) return;
 	const limit = await getNewConversationLimit(user.id, deps);
 	if (!limit) return;
 	const [friendship, target] = await Promise.all([

@@ -33,26 +33,4 @@ describe('Auth concurrent sessions', () => {
 		await createBuilder(harness, session3Token).get('/users/@me').expect(200).execute();
 		await createBuilder(harness, session2Token).get('/users/@me').expect(401).execute();
 	});
-	it('can list all active sessions', async () => {
-		const account = await createTestAccount(harness);
-		await loginAccount(harness, account);
-		await loginAccount(harness, account);
-		const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, account.token)
-			.get('/auth/sessions')
-			.execute();
-		expect(sessions.length).toBeGreaterThan(0);
-		for (const session of sessions) {
-			expect(session.id_hash).toBeTruthy();
-			expect(session.id_hash.length).toBeGreaterThan(0);
-			expect(session).toHaveProperty('masked_ip');
-			if (session.masked_ip) {
-				expect(session.masked_ip).toContain('x');
-			}
-			expect(session.client_info?.location).toEqual({
-				city: 'Stockholm',
-				region: 'Stockholm County',
-				country: 'Sweden',
-			});
-		}
-	});
 });

@@ -57,42 +57,12 @@ pub async fn require_auth(
     response
 }
 
-fn admin_cookie_path(config: &crate::config::AdminConfig) -> &str {
-    if config.base_path.is_empty() {
-        "/"
-    } else {
-        config.base_path.as_str()
-    }
-}
-
 fn clear_session_and_redirect(url: &str, config: &crate::config::AdminConfig) -> Response {
     let mut response = Redirect::to(url).into_response();
-    let admin_path = admin_cookie_path(config);
-    for path in [admin_path, "/"] {
-        if path != admin_path && admin_path == "/" {
-            continue;
-        }
-        let clear = format!(
-            "{}=; Path={}; HttpOnly; SameSite=Lax; Max-Age=0",
-            crate::session::SESSION_COOKIE_NAME,
-            path
-        );
-        if let Ok(v) = axum::http::HeaderValue::from_str(&clear) {
-            response
-                .headers_mut()
-                .append(axum::http::header::SET_COOKIE, v);
-        }
-        let legacy_clear = format!(
-            "{}=; Path={}; HttpOnly; SameSite=Lax; Max-Age=0",
-            crate::session::LEGACY_SESSION_COOKIE_NAME,
-            path
-        );
-        if let Ok(v) = axum::http::HeaderValue::from_str(&legacy_clear) {
-            response
-                .headers_mut()
-                .append(axum::http::header::SET_COOKIE, v);
-        }
-    }
+    session::append_cookies(
+        &mut response,
+        &session::clear_cookie_values(session::SESSION_COOKIE_NAME, config),
+    );
     response
 }
 

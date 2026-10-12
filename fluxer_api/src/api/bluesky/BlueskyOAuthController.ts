@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BlueskyOAuthStateInvalidError, BlueskyOAuthStoreError} from '@app/api/bluesky/BlueskyOAuthStores';
-import {DisabledBlueskyOAuthService} from '@app/api/bluesky/DisabledBlueskyOAuthService';
-import type {BlueskyAuthorizeResult, IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
+import type {BlueskyAuthorizeResult} from '@app/api/bluesky/IBlueskyOAuthService';
 import {Config} from '@app/api/Config';
 import {BlueskyOAuthAuthorizationFailedError} from '@app/api/connection/errors/BlueskyOAuthAuthorizationFailedError';
 import {BlueskyOAuthNotEnabledError} from '@app/api/connection/errors/BlueskyOAuthNotEnabledError';
@@ -27,10 +26,6 @@ function normalizeBlueskyHandle(input: string): string {
 	return input.trim().replace(BLUESKY_PROFILE_URL_RE, '').replace(/^@/, '');
 }
 
-function isBlueskyOAuthEnabled(service: IBlueskyOAuthService): boolean {
-	return !(service instanceof DisabledBlueskyOAuthService);
-}
-
 function getCallbackFailureReason(error: unknown, phase: BlueskyCallbackPhase): BlueskyCallbackFailureReason {
 	if (error instanceof BlueskyOAuthNotEnabledError) return 'not_enabled';
 	if (
@@ -48,7 +43,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 		RateLimitMiddleware(ConnectionRateLimitConfigs.BLUESKY_CLIENT_DOCUMENT),
 		async (ctx) => {
 			const service = ctx.get('blueskyOAuthService');
-			if (!isBlueskyOAuthEnabled(service)) {
+			if (service === null) {
 				return ctx.json({error: 'Bluesky OAuth is not enabled'}, 404);
 			}
 			return ctx.json(service.clientMetadata);
@@ -59,7 +54,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 		RateLimitMiddleware(ConnectionRateLimitConfigs.BLUESKY_CLIENT_DOCUMENT),
 		async (ctx) => {
 			const service = ctx.get('blueskyOAuthService');
-			if (!isBlueskyOAuthEnabled(service)) {
+			if (service === null) {
 				return ctx.json({error: 'Bluesky OAuth is not enabled'}, 404);
 			}
 			return ctx.json(service.jwks);
@@ -82,7 +77,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const service = ctx.get('blueskyOAuthService');
-			if (!isBlueskyOAuthEnabled(service)) {
+			if (service === null) {
 				throw new BlueskyOAuthNotEnabledError();
 			}
 			const resolvedServices = await ctx.get('instanceConfigRepository').getResolvedServicesConfig();
@@ -112,7 +107,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 		async (ctx) => {
 			const callbackUrl = `${Config.endpoints.webApp}/connection-callback`;
 			const service = ctx.get('blueskyOAuthService');
-			if (!isBlueskyOAuthEnabled(service)) {
+			if (service === null) {
 				return ctx.redirect(`${callbackUrl}?status=error&reason=not_enabled`);
 			}
 			let phase: BlueskyCallbackPhase = 'callback';

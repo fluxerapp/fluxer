@@ -32,7 +32,7 @@ disconnect_ineligible_sessions_staff_only_test() ->
         ?assert(maps:is_key(<<"staff">>, Sessions)),
         ?assertEqual(
             unavailable_for_everyone_but_staff,
-            guild_availability:get_cached_unavailability_mode(GuildId)
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         receive
             {non_staff, {'$gen_cast', {guild_leave, GuildId, forced_unavailable}}} -> ok
@@ -67,7 +67,8 @@ disconnect_ineligible_sessions_everyone_test() ->
         UpdatedState = guild_availability:handle_unavailability_transition(BaseState, NewState),
         ?assertEqual(#{}, maps:get(sessions, UpdatedState, #{})),
         ?assertEqual(
-            unavailable_for_everyone, guild_availability:get_cached_unavailability_mode(GuildId)
+            unavailable_for_everyone,
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         receive
             {user_one, {'$gen_cast', {guild_leave, GuildId, forced_unavailable}}} -> ok
@@ -104,7 +105,8 @@ disconnect_ineligible_sessions_everyone_hidden_test() ->
         UpdatedState = guild_availability:handle_unavailability_transition(BaseState, NewState),
         ?assertEqual(#{}, maps:get(sessions, UpdatedState, #{})),
         ?assertEqual(
-            unavailable_for_everyone, guild_availability:get_cached_unavailability_mode(GuildId)
+            unavailable_for_everyone,
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         ?assertEqual(
             true, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
@@ -164,13 +166,15 @@ is_unavailable_hidden_enabled_from_cache_test() ->
     try
         _ = guild_availability:update_unavailability_cache_for_state(HiddenUnavailableState),
         ?assertEqual(
-            true, guild_availability:is_unavailable_hidden_enabled(HiddenUnavailableState)
+            true, guild_availability_check:is_unavailable_hidden_enabled(HiddenUnavailableState)
         ),
         ?assertEqual(
             true, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
         ),
         _ = guild_availability:update_unavailability_cache_for_state(HiddenOnlyState),
-        ?assertEqual(false, guild_availability:is_unavailable_hidden_enabled(HiddenOnlyState)),
+        ?assertEqual(
+            false, guild_availability_check:is_unavailable_hidden_enabled(HiddenOnlyState)
+        ),
         ?assertEqual(
             false, guild_availability:is_unavailable_hidden_enabled_from_cache(GuildId)
         )

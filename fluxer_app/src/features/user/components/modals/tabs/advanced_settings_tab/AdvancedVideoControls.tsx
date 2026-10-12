@@ -12,7 +12,17 @@ import PiP from '@app/features/ui/state/PiP';
 import styles from '@app/features/user/components/modals/tabs/AdvancedSettingsTab.module.css';
 import {selectScreenShareEncoderPathDescription} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
+import {MOTION_DESCRIPTOR as CONTENT_HINT_MOTION_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
+import {
+	ALLOW_AV1_SCREEN_SHARE_DESCRIPTOR as AV1_SCREEN_SHARE_OPT_IN_DESCRIPTOR,
+	CONFIGURE_DESCRIPTOR,
+	AUTOMATIC_DESCRIPTOR as CONTENT_HINT_AUTO_DESCRIPTOR,
+	AUTOMATIC_DESCRIPTOR as ENCODER_PATH_AUTO_DESCRIPTOR,
+	ENCODER_PATH_DESCRIPTOR,
+	ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR as HEVC_SCREEN_SHARE_OPT_IN_DESCRIPTOR,
+	AUTOMATIC_DESCRIPTOR as SVC_MODE_AUTO_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {
@@ -49,14 +59,7 @@ const HIDE_STREAM_PREVIEW_THUMBNAIL_DESCRIPTOR = msg({
 	message: 'Hide my stream preview thumbnail',
 	comment: 'Short label for an advanced stream privacy preference.',
 });
-const ENCODER_PATH_DESCRIPTOR = msg({
-	message: 'Encoder path',
-	comment: 'Label for an advanced screen-share select. Refers to hardware or software video encoding.',
-});
-const ENCODER_PATH_AUTO_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Option label for an encoder path select.',
-});
+
 const ENCODER_PATH_HARDWARE_DESCRIPTOR = msg({
 	message: 'Prefer hardware',
 	comment: 'Option label for an encoder path select. Refers to hardware video encoders.',
@@ -73,10 +76,7 @@ const SVC_MODE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Layering for AV1 and VP9 when available.',
 	comment: 'Description for an SVC mode select. Keep SVC and AV1 literal.',
 });
-const SVC_MODE_AUTO_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Option label for an SVC mode select.',
-});
+
 const SVC_MODE_SINGLE_LAYER_DESCRIPTOR = msg({
 	message: 'Single layer',
 	comment: 'Option label for an SVC mode select.',
@@ -94,14 +94,7 @@ const CONTENT_HINT_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Description for a WebRTC content hint select. Custom, Gaming and Screen share are the stream quality preset labels.',
 });
-const CONTENT_HINT_AUTO_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Option label for a WebRTC content hint select.',
-});
-const CONTENT_HINT_MOTION_DESCRIPTOR = msg({
-	message: 'Motion',
-	comment: 'Option label for a WebRTC content hint select.',
-});
+
 const CONTENT_HINT_DETAIL_DESCRIPTOR = msg({
 	message: 'Detail',
 	comment: 'Option label for a WebRTC content hint select.',
@@ -109,10 +102,6 @@ const CONTENT_HINT_DETAIL_DESCRIPTOR = msg({
 const CONTENT_HINT_TEXT_DESCRIPTOR = msg({
 	message: 'Text',
 	comment: 'Option label for a WebRTC content hint select.',
-});
-const CONFIGURE_DESCRIPTOR = msg({
-	message: 'Configure',
-	comment: 'Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.',
 });
 
 const PREFERRED_SCREEN_SHARE_CODEC_DESCRIPTOR = msg({
@@ -133,15 +122,7 @@ const H265_REQUIRES_OPT_IN_OPTION_DESCRIPTOR = msg({
 	comment:
 		'Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.',
 });
-const AV1_SCREEN_SHARE_OPT_IN_DESCRIPTOR = msg({
-	message: 'Allow AV1 for screen sharing',
-	comment: 'Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.',
-});
-const HEVC_SCREEN_SHARE_OPT_IN_DESCRIPTOR = msg({
-	message: 'Allow H.265 (HEVC) for screen sharing',
-	comment:
-		'Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.',
-});
+
 const SCREEN_SHARE_CODEC_OPTION_ORDER = ['av1', 'h265', 'h264', 'vp9', 'vp8'] as const;
 
 function useLoadedGpuEncoderReport(): HardwareEncodeReport | null {
@@ -181,7 +162,7 @@ export const ScreenShareCodecControl = observer(() => {
 		})),
 	];
 	return (
-		<Combobox<CodecPreference, false>
+		<Combobox<CodecPreference>
 			value={VoiceSettings.getPreferredScreenShareCodec()}
 			options={options}
 			onChange={(value) => VoiceSettingsCommands.update({preferredScreenShareCodec: value})}

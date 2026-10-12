@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "ファイルが多すぎます。最大{maxFiles, plural, other {#個}}のファイルまでです。",
 	"attachments_and_uploads.unresolved_attachment_url": "未解決の`attachment://` URLが検出されました。これは埋め込み処理の前に解決されているはずです。",
 	"attachments_and_uploads.uploaded_attachment_not_found": "アップロードされた添付ファイル「{filename}」が見つかりませんでした。",
-	"auth_and_oauth.application_not_owned": "このアプリケーションの所有者ではありません。",
 	"auth_and_oauth.bot_already_in_guild": "このボットはすでにコミュニティに参加しています。",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "ボットユーザーは認証セッションを作成できません。",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "ボットユーザーは認証エンドポイントを使用できません。",

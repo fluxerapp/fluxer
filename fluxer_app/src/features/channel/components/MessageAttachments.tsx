@@ -402,7 +402,7 @@ const ForwardedMessageContent = observer(({message, snapshot, onDelete}: Forward
 						})()}
 					</div>
 				)}
-				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.getRenderEmbeds() && (
+				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.renderEmbeds && (
 					<div
 						className={styles.attachmentsContainer}
 						data-flx="channel.message-attachments.forwarded-message-content.attachments-container--2"
@@ -698,7 +698,7 @@ export const MessageAttachments = observer(() => {
 					</>
 				);
 			})()}
-			{UserSettings.getRenderEmbeds() &&
+			{UserSettings.renderEmbeds &&
 				!message.suppressEmbeds &&
 				message.embeds.map((embed, index) => {
 					const embedKey = `${embed.id}-${index}`;
@@ -714,7 +714,7 @@ export const MessageAttachments = observer(() => {
 						/>
 					);
 				})}
-			{UserSettings.getRenderReactions() && reactions.length > 0 && (
+			{UserSettings.renderReactions && reactions.length > 0 && (
 				<MessageReactions
 					message={message}
 					isPreview={reactionsIsPreview}

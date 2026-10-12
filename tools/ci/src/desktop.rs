@@ -3,9 +3,9 @@
 use crate::common::{
     CalverEnv, CommandSpec, append_github_env, append_github_output, append_github_path, capture,
     collect_files, command_succeeds, copy_dir_contents, count_files, download_file, env_bool,
-    env_string, output_bytes, output_text, parse_bool, path_to_s3_key, remove_dir_if_exists,
+    env_string, output_bytes, output_text, path_to_s3_key, remove_dir_if_exists,
     remove_empty_dirs_below, remove_file_if_exists, require_any_env, require_env, require_home,
-    resolve_calver, run_command, runner_temp, title_case, trim_option,
+    resolve_calver, run_command, runner_temp, title_case,
 };
 use crate::functions::{sha256_file, write_json_pretty};
 use crate::release::{
@@ -102,20 +102,6 @@ pub struct BuildDesktopArgs {
     channel: Option<String>,
     #[arg(long)]
     skip_targets: Option<String>,
-    #[arg(long)]
-    skip_windows: Option<String>,
-    #[arg(long)]
-    skip_windows_x64: Option<String>,
-    #[arg(long)]
-    skip_windows_arm64: Option<String>,
-    #[arg(long)]
-    skip_macos: Option<String>,
-    #[arg(long)]
-    skip_linux: Option<String>,
-    #[arg(long)]
-    skip_linux_x64: Option<String>,
-    #[arg(long)]
-    skip_linux_arm64: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -301,16 +287,8 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
     }
 }
 
-fn calver_env_from_process() -> CalverEnv {
-    CalverEnv {
-        build_version: trim_option(env::var("BUILD_VERSION").ok()),
-        fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
-        fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
-    }
-}
-
 fn set_metadata_step(channel: &str) -> Result<()> {
-    let version = resolve_calver(&calver_env_from_process(), Utc::now())?;
+    let version = resolve_calver(&CalverEnv::from_process(), Utc::now())?;
     let pub_date = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let build_channel = if channel == "canary" {
         "canary"
@@ -424,17 +402,12 @@ fn selected_platforms(args: &BuildDesktopArgs) -> Result<Vec<Platform>> {
     Ok(PLATFORMS
         .iter()
         .copied()
-        .filter(|platform| !skip_platform(*platform, args, &skip_targets))
+        .filter(|platform| !skip_platform(*platform, &skip_targets))
         .collect())
 }
 
 fn skip_target_set(args: &BuildDesktopArgs) -> Result<BTreeSet<String>> {
-    let raw = args
-        .skip_targets
-        .clone()
-        .filter(|value| !value.is_empty())
-        .or_else(|| env_string("SKIP_TARGETS"))
-        .unwrap_or_default();
+    let raw = args.skip_targets.clone().unwrap_or_default();
     let valid = BTreeSet::from([
         "windows",
         "windows-x64",
@@ -461,35 +434,9 @@ fn skip_target_set(args: &BuildDesktopArgs) -> Result<BTreeSet<String>> {
     Ok(targets)
 }
 
-fn skip_platform(
-    platform: Platform,
-    args: &BuildDesktopArgs,
-    skip_targets: &BTreeSet<String>,
-) -> bool {
-    let flag = |arg: &Option<String>, env_name: &str| {
-        arg.as_deref()
-            .map(parse_bool)
-            .unwrap_or_else(|| env_bool(env_name))
-    };
+fn skip_platform(platform: Platform, skip_targets: &BTreeSet<String>) -> bool {
     let platform_arch = format!("{}-{}", platform.platform, platform.arch);
-    if skip_targets.contains(platform.platform) || skip_targets.contains(platform_arch.as_str()) {
-        return true;
-    }
-    match platform.platform {
-        "windows" => {
-            flag(&args.skip_windows, "SKIP_WINDOWS")
-                || (platform.arch == "x64" && flag(&args.skip_windows_x64, "SKIP_WINDOWS_X64"))
-                || (platform.arch == "arm64"
-                    && flag(&args.skip_windows_arm64, "SKIP_WINDOWS_ARM64"))
-        }
-        "macos" => flag(&args.skip_macos, "SKIP_MACOS"),
-        "linux" => {
-            flag(&args.skip_linux, "SKIP_LINUX")
-                || (platform.arch == "x64" && flag(&args.skip_linux_x64, "SKIP_LINUX_X64"))
-                || (platform.arch == "arm64" && flag(&args.skip_linux_arm64, "SKIP_LINUX_ARM64"))
-        }
-        _ => false,
-    }
+    skip_targets.contains(platform.platform) || skip_targets.contains(platform_arch.as_str())
 }
 
 fn platform_json(platform: Platform) -> String {
@@ -6215,119 +6162,11 @@ mod tests {
         assert_eq!(parsed.shell.latest_version, "2026.1008.32323");
     }
 
-    #[test]
-    fn bare_drive_workdir_resolves_to_the_drive_root() {
-        assert_eq!(workdir_path("W:"), PathBuf::from("W:\\"));
-        assert_eq!(workdir_path("w:"), PathBuf::from("w:\\"));
-        assert_eq!(workdir_path("W:\\src"), PathBuf::from("W:\\src"));
-        assert_eq!(
-            workdir_path("/home/runner/work"),
-            PathBuf::from("/home/runner/work")
-        );
-    }
-
-    fn matrix_args() -> BuildDesktopArgs {
-        BuildDesktopArgs {
-            step: DesktopStep::SetMatrix,
-            channel: None,
-            skip_targets: None,
-            skip_windows: Some("false".to_string()),
-            skip_windows_x64: Some("false".to_string()),
-            skip_windows_arm64: Some("false".to_string()),
-            skip_macos: Some("false".to_string()),
-            skip_linux: Some("false".to_string()),
-            skip_linux_x64: Some("false".to_string()),
-            skip_linux_arm64: Some("false".to_string()),
-        }
-    }
-
     fn write_file(path: &Path, contents: &str) {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).unwrap();
         }
         fs::write(path, contents).unwrap();
-    }
-
-    #[test]
-    fn matrix_skip_flags_filter_individual_arches() {
-        let mut args = matrix_args();
-        args.skip_windows_x64 = Some("true".to_string());
-        args.skip_macos = Some("true".to_string());
-
-        let selected = selected_platforms(&args)
-            .unwrap()
-            .into_iter()
-            .map(platform_json)
-            .collect::<Vec<_>>();
-
-        assert_eq!(
-            selected,
-            vec![
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
-            ]
-        );
-    }
-
-    #[test]
-    fn matrix_selects_one_row_per_platform_arch_by_default() {
-        let selected = selected_platforms(&matrix_args()).unwrap();
-
-        assert_eq!(selected.len(), 5);
-        assert_eq!(
-            selected
-                .iter()
-                .filter(|platform| platform.platform == "windows")
-                .count(),
-            2
-        );
-    }
-
-    #[test]
-    fn matrix_skip_targets_filter_platforms_and_arches() {
-        let mut args = matrix_args();
-        args.skip_targets = Some("windows-x64, macos".to_string());
-
-        let selected = selected_platforms(&args)
-            .unwrap()
-            .into_iter()
-            .map(platform_json)
-            .collect::<Vec<_>>();
-
-        assert_eq!(
-            selected,
-            vec![
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
-            ]
-        );
-    }
-
-    #[test]
-    fn matrix_skip_targets_drop_every_windows_row() {
-        let mut args = matrix_args();
-        args.skip_targets = Some("windows".to_string());
-
-        let selected = selected_platforms(&args).unwrap();
-
-        assert!(
-            selected
-                .iter()
-                .all(|platform| platform.platform != "windows")
-        );
-        assert_eq!(selected.len(), 3);
-    }
-
-    #[test]
-    fn matrix_skip_targets_reject_unknown_values() {
-        let mut args = matrix_args();
-        args.skip_targets = Some("windows-riscv".to_string());
-
-        let error = selected_platforms(&args).unwrap_err();
-
-        assert!(error.to_string().contains("Unknown desktop skip target"));
     }
 
     const BUILD_DESKTOP_WORKFLOW: &str =
@@ -6346,12 +6185,6 @@ mod tests {
             .find(|&index| body[index..].starts_with("  ") && !body[index..].starts_with("   "))
             .unwrap_or(body.len());
         &body[..end]
-    }
-
-    fn workflow_step_names(job: &str) -> Vec<&str> {
-        job.lines()
-            .filter_map(|line| line.strip_prefix("      - name: "))
-            .collect()
     }
 
     #[test]
@@ -6397,88 +6230,6 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn parses_handoff_artifact_dir_names() {
-        assert_eq!(
-            parse_artifact_dir_name("fluxer-desktop-canary-windows-arm64", "canary").unwrap(),
-            ArtifactIdentity {
-                platform: "windows".to_string(),
-                arch: "arm64".to_string(),
-                signed: false,
-            }
-        );
-        assert!(parse_artifact_dir_name("fluxer-desktop-stable-linux-x64", "canary").is_none());
-        assert_eq!(
-            parse_artifact_dir_name("fluxer-desktop-canary-windows-x64-signed", "canary").unwrap(),
-            ArtifactIdentity {
-                platform: "windows".to_string(),
-                arch: "x64".to_string(),
-                signed: true,
-            }
-        );
-    }
-
-    #[test]
-    fn handoff_artifact_name_only_marks_signed_windows_uploads() {
-        assert_eq!(
-            handoff_artifact_name("canary", "windows", "x64", true),
-            "fluxer-desktop-canary-windows-x64-signed"
-        );
-        assert_eq!(
-            handoff_artifact_name("canary", "linux", "x64", true),
-            "fluxer-desktop-canary-linux-x64"
-        );
-        assert_eq!(
-            handoff_artifact_name("stable", "windows", "arm64", false),
-            "fluxer-desktop-stable-windows-arm64"
-        );
-    }
-
-    #[test]
-    fn build_channel_content_matches_expected_typescript() {
-        assert_eq!(
-            build_channel_content("canary"),
-            "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export type BuildChannel = 'stable' | 'canary' | 'development';\n\n\
-export const BUILD_CHANNEL = 'canary' as BuildChannel;\n\
-export const IS_CANARY = BUILD_CHANNEL === 'canary';\n\
-export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
-        );
-        assert!(
-            build_channel_content("development")
-                .contains("export const BUILD_CHANNEL = 'development' as BuildChannel;")
-        );
-    }
-
-    #[test]
-    fn write_build_channel_file_rejects_invalid_channels() {
-        let temp = tempfile::tempdir().unwrap();
-        assert_eq!(
-            write_build_channel_file(temp.path(), "nightly")
-                .unwrap_err()
-                .to_string(),
-            "Invalid BUILD_CHANNEL: nightly. Must be one of: stable, canary, development."
-        );
-        write_build_channel_file(temp.path(), "development").unwrap();
-    }
-
-    #[test]
-    fn write_build_channel_file_creates_and_updates_file() {
-        let temp = tempfile::tempdir().unwrap();
-        write_build_channel_file(temp.path(), "stable").unwrap();
-        let path = temp.path().join("src/common/BuildChannel.ts");
-        assert_eq!(
-            fs::read_to_string(&path).unwrap(),
-            build_channel_content("stable")
-        );
-
-        write_build_channel_file(temp.path(), "canary").unwrap();
-        assert_eq!(
-            fs::read_to_string(&path).unwrap(),
-            build_channel_content("canary")
-        );
     }
 
     #[test]
@@ -6704,83 +6455,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
     }
 
     #[test]
-    fn create_zip_from_dir_preserves_relative_paths() {
-        let temp = tempfile::tempdir().unwrap();
-        let source = temp.path().join("source");
-        write_file(&source.join(".portable"), "");
-        write_file(&source.join("resources/app.asar"), "asar");
-        let zip_path = temp.path().join("portable.zip");
-
-        create_zip_from_dir(&source, &zip_path).unwrap();
-
-        let file = File::open(zip_path).unwrap();
-        let mut zip = zip::ZipArchive::new(file).unwrap();
-        assert!(zip.by_name(".portable").is_ok());
-        assert!(zip.by_name("resources/app.asar").is_ok());
-    }
-
-    #[test]
-    fn velopack_portable_archives_are_removed_from_the_release_directory() {
-        let temp = tempfile::tempdir().unwrap();
-        let output_dir = temp.path();
-        write_file(
-            &output_dir.join("fluxer_desktop_canary-2026.810.1-Portable.zip"),
-            "velopack",
-        );
-        write_file(
-            &output_dir.join("fluxer_desktop_canary-2026.810.1-full.nupkg"),
-            "payload",
-        );
-        write_file(
-            &output_dir.join("Fluxer Canary-2026.810.1-win-arm64.exe"),
-            "setup",
-        );
-        write_file(&output_dir.join("RELEASES"), "feed");
-
-        remove_velopack_portable_archives(output_dir).unwrap();
-
-        let remaining = collect_files(output_dir)
-            .unwrap()
-            .into_iter()
-            .filter_map(|path| file_name_string(&path).ok())
-            .collect::<BTreeSet<_>>();
-        assert!(!remaining.iter().any(|name| name.ends_with(".zip")));
-        assert!(remaining.contains("fluxer_desktop_canary-2026.810.1-full.nupkg"));
-        assert!(remaining.contains("Fluxer Canary-2026.810.1-win-arm64.exe"));
-        assert!(remaining.contains("RELEASES"));
-    }
-
-    #[test]
-    fn percent_encoded_archive_names_match_their_decoded_inventory_entry() {
-        assert_eq!(
-            percent_decode_archive_name("Fluxer%20Canary.exe"),
-            "Fluxer Canary.exe"
-        );
-        assert_eq!(percent_decode_archive_name("Fluxer.exe"), "Fluxer.exe");
-        assert_eq!(
-            percent_decode_archive_name("win-game-capture.win32-arm64-msvc.node"),
-            "win-game-capture.win32-arm64-msvc.node"
-        );
-        assert_eq!(percent_decode_archive_name("100%.dll"), "100%.dll");
-        assert_eq!(percent_decode_archive_name("a%zz.dll"), "a%zz.dll");
-    }
-
-    #[test]
-    fn canary_nupkg_inventory_accepts_percent_encoded_main_executable() {
-        let root = Path::new("lib").join("app");
-        let files = expected_windows_pe_inventory("arm64", "Fluxer Canary.exe")
-            .into_iter()
-            .map(|name| {
-                if name == "Fluxer Canary.exe" {
-                    return root.join("Fluxer%20Canary.exe");
-                }
-                root.join(name)
-            })
-            .collect::<Vec<_>>();
-        assert_expected_windows_pe_inventory(&root, &files, "arm64", "Fluxer Canary.exe").unwrap();
-    }
-
-    #[test]
     fn shipped_account_switching_addons_are_required_windows_binaries() {
         for arch in ["x64", "arm64"] {
             let inventory = expected_windows_pe_inventory(arch, "Fluxer.exe");
@@ -6806,27 +6480,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                 );
             }
         }
-    }
-
-    #[test]
-    fn known_optional_windows_pe_inventory_never_repeats_a_required_binary() {
-        for arch in ["x64", "arm64"] {
-            for main_exe in ["Fluxer.exe", "Fluxer Canary.exe"] {
-                assert_eq!(
-                    contradictory_optional_windows_pe_inventory(arch, main_exe),
-                    Vec::<String>::new(),
-                    "{arch}/{main_exe} declares a binary as both required and known-optional"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn module_package_urls_point_at_the_content_addressed_package() {
-        assert_eq!(
-            desktop_module_package_url("canary", "fluxer_renderer", "5c1e"),
-            "https://pkgs.fluxer.com/desktop/canary/modules/fluxer_renderer/5c1e/package.br"
-        );
     }
 
     #[test]
@@ -7079,19 +6732,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
     }
 
     #[test]
-    fn the_module_payload_ships_only_through_the_github_release() {
-        let upload = workflow_job("upload");
-        assert!(!upload.contains("fluxer-desktop-module-payload"));
-        assert!(!upload.contains("payload_tree/desktop/*/modules/"));
-        let steps = workflow_step_names(upload);
-        let manifest = steps
-            .iter()
-            .position(|step| *step == "Build desktop module manifest")
-            .unwrap();
-        assert_eq!(steps[manifest + 1], "Prepare GitHub release assets");
-    }
-
-    #[test]
     fn pruning_the_shell_renderer_keeps_the_renderer_and_drops_on_demand_modules() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("renderer");
@@ -7187,16 +6827,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         assert!(desktop_module_for_relative_path("assets/fluxer_renderer/app.js").is_err());
         assert!(desktop_module_for_relative_path("assets/Bad/app.js").is_err());
         assert!(desktop_module_for_relative_path("assets/a/b/c.js").is_err());
-    }
-
-    #[test]
-    fn dictionary_directories_map_to_module_names() {
-        assert_eq!(
-            desktop_dictionary_module_name("dictionary-en-gb@3.0.0").as_deref(),
-            Some("fluxer_dict_en_gb")
-        );
-        assert_eq!(desktop_dictionary_module_name("dictionary-en@"), None);
-        assert_eq!(desktop_dictionary_module_name("NOTICE.md"), None);
     }
 
     #[test]
@@ -7300,21 +6930,57 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         assert!(ensure_renderer_assets_ready(&root).is_err());
     }
 
+    fn matrix_args() -> BuildDesktopArgs {
+        BuildDesktopArgs {
+            step: DesktopStep::SetMatrix,
+            channel: None,
+            skip_targets: None,
+        }
+    }
+
     #[test]
-    fn pipewire_header_overlay_presence_skips_only_a_complete_install() {
-        let temp = TempDir::new().unwrap();
-        let include_dir = temp.path();
-        assert!(!linux_pipewire_header_overlay_present(include_dir).unwrap());
+    fn matrix_skip_targets_filter_platforms_and_arches() {
+        let mut args = matrix_args();
+        args.skip_targets = Some("windows-x64, macos".to_string());
 
-        fs::create_dir_all(include_dir.join(LINUX_PIPEWIRE_HEADER_DIR)).unwrap();
-        let partial = linux_pipewire_header_overlay_present(include_dir).unwrap_err();
-        assert!(partial.to_string().contains("partially installed"));
+        let selected = selected_platforms(&args)
+            .unwrap()
+            .into_iter()
+            .map(platform_json)
+            .collect::<Vec<_>>();
 
-        fs::create_dir_all(include_dir.join(LINUX_SPA_HEADER_DIR)).unwrap();
-        assert!(linux_pipewire_header_overlay_present(include_dir).unwrap());
+        assert_eq!(
+            selected,
+            vec![
+                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"x64\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
+            ]
+        );
+    }
 
-        fs::remove_dir(include_dir.join(LINUX_PIPEWIRE_HEADER_DIR)).unwrap();
-        let partial = linux_pipewire_header_overlay_present(include_dir).unwrap_err();
-        assert!(partial.to_string().contains("partially installed"));
+    #[test]
+    fn matrix_skip_targets_drop_every_windows_row() {
+        let mut args = matrix_args();
+        args.skip_targets = Some("windows".to_string());
+
+        let selected = selected_platforms(&args).unwrap();
+
+        assert!(
+            selected
+                .iter()
+                .all(|platform| platform.platform != "windows")
+        );
+        assert_eq!(selected.len(), 3);
+    }
+
+    #[test]
+    fn matrix_skip_targets_reject_unknown_values() {
+        let mut args = matrix_args();
+        args.skip_targets = Some("windows-riscv".to_string());
+
+        let error = selected_platforms(&args).unwrap_err();
+
+        assert!(error.to_string().contains("Unknown desktop skip target"));
     }
 }

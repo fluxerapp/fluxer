@@ -12,7 +12,7 @@ import {
 } from '@app/features/platform/utils/DesktopUploadProgressBridge';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {AllowedMentions} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {BehaviorSubject, interval, type Observable, type Subscription} from 'rxjs';
+import {BehaviorSubject, interval, type Observable} from 'rxjs';
 
 const logger = new Logger('CloudUpload');
 const LOCAL_MEDIA_PROBE_TIMEOUT_MS = 10_000;
@@ -67,40 +67,10 @@ class CloudUploadManager {
 	private readonly attachmentIndex: Map<number, CloudAttachment> = new Map();
 	private readonly textareaListeners: Map<string, Set<Listener>> = new Map();
 	private readonly messageUploadListeners: Map<string, Set<MessageUploadListener>> = new Map();
-	private cleanupSubscription: Subscription | null = null;
-
 	constructor() {
-		this.cleanupSubscription = interval(CloudUploadManager.CLEANUP_INTERVAL_MS).subscribe(() => {
+		interval(CloudUploadManager.CLEANUP_INTERVAL_MS).subscribe(() => {
 			this.cleanupStaleUploads();
 		});
-	}
-
-	destroy(): void {
-		if (this.cleanupSubscription) {
-			this.cleanupSubscription.unsubscribe();
-			this.cleanupSubscription = null;
-		}
-		for (const subject of this.textareaAttachmentSubjects.values()) {
-			for (const att of subject.value) {
-				if (att.previewURL) URL.revokeObjectURL(att.previewURL);
-				if (att.thumbnailURL) URL.revokeObjectURL(att.thumbnailURL);
-			}
-		}
-		for (const subject of this.messageUploadSubjects.values()) {
-			const upload = subject.value;
-			if (!upload) continue;
-			for (const att of upload.attachments) {
-				if (att.previewURL) URL.revokeObjectURL(att.previewURL);
-				if (att.thumbnailURL) URL.revokeObjectURL(att.thumbnailURL);
-			}
-		}
-		this.textareaAttachmentSubjects.clear();
-		this.messageUploadSubjects.clear();
-		this.attachmentIndex.clear();
-		this.messageUploadTimestamps.clear();
-		this.activeUploadControllers.clear();
-		this.textareaListeners.clear();
-		this.messageUploadListeners.clear();
 	}
 
 	private ensureTextareaSubject(channelId: string): BehaviorSubject<Array<CloudAttachment>> {

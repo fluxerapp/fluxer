@@ -20,12 +20,7 @@ import {Logger} from '@app/api/Logger';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
 import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
-import {
-	buildHashedAssetKey,
-	buildSimpleAssetKey,
-	getAnimatedAssetExtension,
-	getEmojiExtension,
-} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {buildHashedAssetKey, getAnimatedAssetExtension} from '@app/api/worker/utils/AssetArchiveHelpers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_THREAD_MEMBERS, THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
@@ -291,14 +286,14 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 		for (const emoji of emojis) {
 			const id = emoji.id.toString();
 			assetJobs.push({
-				key: buildSimpleAssetKey('emojis', id),
-				dest: path.join(contentDir, 'assets', 'guild', 'emojis', `${id}.${getEmojiExtension(emoji.isAnimated)}`),
+				key: `emojis/${id}`,
+				dest: path.join(contentDir, 'assets', 'guild', 'emojis', `${id}.${emoji.isAnimated ? 'gif' : 'webp'}`),
 			});
 		}
 		for (const sticker of stickers) {
 			const id = sticker.id.toString();
 			assetJobs.push({
-				key: buildSimpleAssetKey('stickers', id),
+				key: `stickers/${id}`,
 				dest: path.join(contentDir, 'assets', 'guild', 'stickers', `${id}.${sticker.animated ? 'gif' : 'png'}`),
 			});
 		}

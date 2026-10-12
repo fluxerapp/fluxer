@@ -2,7 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
@@ -118,7 +118,7 @@ class ForumReadState {
 		if (this.pump != null) clearTimeout(this.pump);
 		this.pump = null;
 		while (this.queue.size > 0) {
-			const socket = GatewayConnection.socket;
+			const socket = GatewaySessions.foregroundConnection.socket;
 			if (!socket?.isConnected()) {
 				this.queue.clear();
 				return;

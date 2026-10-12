@@ -2,12 +2,11 @@
 
 use crate::common::{
     CALVER_SCHEME, CalverEnv, append_github_output, micro_segment, month_day_segment,
-    parse_version_instant, resolve_calver, trim_option,
+    parse_version_instant, resolve_calver,
 };
 use anyhow::Result;
 use chrono::{Datelike, Timelike, Utc};
 use clap::Args;
-use std::env;
 
 #[derive(Debug, Args, Clone)]
 pub struct ResolveCalverArgs {
@@ -38,14 +37,7 @@ pub fn run(args: ResolveCalverArgs) -> Result<()> {
 }
 
 fn resolve_calver_from_env() -> Result<String> {
-    resolve_calver(
-        &CalverEnv {
-            build_version: trim_option(env::var("BUILD_VERSION").ok()),
-            fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
-            fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
-        },
-        Utc::now(),
-    )
+    resolve_calver(&CalverEnv::from_process(), Utc::now())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

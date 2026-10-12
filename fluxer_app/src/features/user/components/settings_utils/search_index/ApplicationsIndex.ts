@@ -5,8 +5,23 @@ import type {SearchableSettingDescriptor} from '@app/features/user/components/se
 import {
 	APPLICATIONS_DESCRIPTOR,
 	AUTHORIZATION_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	APPLICATION_INFORMATION_DESCRIPTOR,
+	APPLICATION_NAME_DESCRIPTOR,
+	BOT_AVATAR_DESCRIPTOR,
+	BOT_PROFILE_DESCRIPTOR,
+	BOT_TOKEN_DESCRIPTOR,
+	BOT_USERNAME_DESCRIPTOR,
+	CLIENT_SECRET_DESCRIPTOR,
+	CREATE_APPLICATION_DESCRIPTOR,
 	DEVELOPER_DESCRIPTOR,
-} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+	FRIENDLY_BOT_DESCRIPTOR,
+	INTERFACE_DESCRIPTOR,
+	PUBLIC_BOT_DESCRIPTOR,
+	REGENERATE_DESCRIPTOR,
+	SECRETS_TOKENS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
 const APPLICATIONS_BOTS_DESCRIPTOR = msg({
@@ -17,14 +32,7 @@ const BOTS_DESCRIPTOR = msg({
 	message: 'Bots',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const INTERFACE_DESCRIPTOR = msg({
-	message: 'Interface',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CREATE_APPLICATION_DESCRIPTOR = msg({
-	message: 'Create application',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DOCUMENTATION_DESCRIPTOR = msg({
 	message: 'Documentation',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -33,18 +41,7 @@ const CREATE_AND_MANAGE_APPLICATIONS_AND_BOTS_FOR_YOUR_DESCRIPTOR = msg({
 	message: 'Create and manage applications and bots for your account',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const APPLICATION_INFORMATION_DESCRIPTOR = msg({
-	message: 'Application information',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const APPLICATION_NAME_DESCRIPTOR = msg({
-	message: 'Application name',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const PUBLIC_BOT_DESCRIPTOR = msg({
-	message: 'Public bot',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const REDIRECT_ADDRESS_DESCRIPTOR = msg({
 	message: 'Redirect address',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -61,18 +58,7 @@ const EDIT_APPLICATION_BASICS_AND_REDIRECT_URIS_DESCRIPTOR = msg({
 	message: 'Edit application basics and redirect URIs',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const BOT_PROFILE_DESCRIPTOR = msg({
-	message: 'Bot profile',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const BOT_AVATAR_DESCRIPTOR = msg({
-	message: 'Bot avatar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const BOT_USERNAME_DESCRIPTOR = msg({
-	message: 'Bot username',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const BOT_BIOGRAPHY_DESCRIPTOR = msg({
 	message: 'Bot biography',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -81,10 +67,7 @@ const BOT_BANNER_DESCRIPTOR = msg({
 	message: 'Bot banner',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const FRIENDLY_BOT_DESCRIPTOR = msg({
-	message: 'Friendly bot',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const EDIT_THE_BOT_AVATAR_TAG_BIO_BANNER_AND_DESCRIPTOR = msg({
 	message: 'Edit the bot avatar, tag, bio, banner, and friend request behavior',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
@@ -113,22 +96,7 @@ const BUILD_AN_AUTHORIZATION_URL_WITH_SCOPES_REDIRECTS_AND_DESCRIPTOR = msg({
 	message: 'Build an authorization URL with scopes, redirects, and bot permissions',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const SECRETS_TOKENS_DESCRIPTOR = msg({
-	message: 'Secrets & tokens',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const CLIENT_SECRET_DESCRIPTOR = msg({
-	message: 'Client secret',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const BOT_TOKEN_DESCRIPTOR = msg({
-	message: 'Bot token',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const REGENERATE_DESCRIPTOR = msg({
-	message: 'Regenerate',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const TOKEN_DESCRIPTOR = msg({
 	message: 'Token',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

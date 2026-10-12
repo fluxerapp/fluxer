@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::types::{ApiUserPartial, User, UserPartial, UserRequest, UserResponse, now_ms};
+use crate::types::{ApiUserPartial, UserPartial, UserRequest, UserResponse};
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, Utc};
-use fluxer_common::user_flags::AccountStanding;
+use fluxer_common::time::unix_millis;
+use fluxer_common::user_flags::{AccountStanding, USER_FLAG_STAFF};
+use fluxer_common::user_partial::{
+    FLUXER_SYSTEM_DISCRIMINATOR, FLUXER_SYSTEM_USER_ID, FLUXER_SYSTEM_USERNAME,
+};
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::{postgres, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
@@ -39,10 +43,6 @@ const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
 const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
 const USER_CACHE_MAX_GENERATION_STRIPES: usize = 1 << 20;
-const FLUXER_SYSTEM_USER_ID: i64 = 0;
-const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
-const FLUXER_SYSTEM_DISCRIMINATOR: i32 = 0;
-const USER_FLAG_STAFF: i64 = 1;
 
 pub struct UsersShard {
     storage: UsersStorage,
@@ -80,7 +80,7 @@ struct ScyllaUsersStorage {
     stmt_partial_batch: PreparedStatement,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 struct PartialUserDbRow {
     user_id: i64,
     username: String,
@@ -264,7 +264,7 @@ impl UsersShard {
 
     async fn get_partial_user(&self, user_id: i64) -> anyhow::Result<Option<UserPartial>> {
         if user_id == FLUXER_SYSTEM_USER_ID {
-            return Ok(Some(fluxer_system_user().to_partial()));
+            return Ok(Some(system_user_partial()));
         }
         self.caches
             .get_or_fetch_partial(user_id, self.storage.fetch_partial_user(user_id))
@@ -278,7 +278,7 @@ impl UsersShard {
         let mut misses = Vec::new();
         for user_id in user_ids {
             if user_id == FLUXER_SYSTEM_USER_ID {
-                partials.push(fluxer_system_user().to_partial());
+                partials.push(system_user_partial());
                 continue;
             }
             match self.caches.get_partial(user_id).await {
@@ -452,64 +452,21 @@ fn decode_postgres_user_partial(row: serde_json::Value) -> anyhow::Result<UserPa
     Ok(row.into())
 }
 
-fn fluxer_system_user() -> User {
-    User {
+fn system_user_partial() -> UserPartial {
+    UserPartial {
         user_id: FLUXER_SYSTEM_USER_ID,
         username: FLUXER_SYSTEM_USERNAME.to_owned(),
         discriminator: FLUXER_SYSTEM_DISCRIMINATOR,
+        global_name: None,
+        avatar_hash: None,
         bot: Some(true),
         system: Some(true),
-        email: None,
-        email_verified: None,
-        email_bounced: None,
-        authenticator_types: Vec::new(),
-        avatar_hash: None,
-        avatar_color: None,
+        flags: Some(USER_FLAG_STAFF),
         banner_hash: None,
         banner_color: None,
-        bio: None,
         accent_color: None,
-        date_of_birth: None,
-        locale: None,
-        flags: Some(USER_FLAG_STAFF),
-        premium_flags: None,
-        global_name: None,
-        pronouns: None,
-        traits: Vec::new(),
-        premium_type: None,
-        premium_since: None,
-        premium_until: None,
-        premium_gift_extension_ends_at: None,
-        premium_lifetime_sequence: None,
-        premium_billing_cycle: None,
-        premium_will_cancel: None,
-        premium_onboarding_dismissed_at: None,
-        has_ever_purchased: None,
-        stripe_subscription_id: None,
-        stripe_customer_id: None,
-        gift_inventory_server_seq: None,
-        gift_inventory_client_seq: None,
-        terms_agreed_at: None,
-        privacy_agreed_at: None,
-        last_active_at: None,
-        last_active_ip: None,
-        temp_banned_until: None,
-        pending_deletion_at: None,
-        pending_bulk_message_deletion_at: None,
-        pending_bulk_message_deletion_channel_count: None,
-        pending_bulk_message_deletion_message_count: None,
-        password_last_changed_at: None,
-        acls: Vec::new(),
-        deletion_reason_code: None,
-        deletion_public_reason: None,
-        deletion_audit_log_reason: None,
-        first_refund_at: None,
-        version: 1,
-        premium_grace_ends_at: None,
+        avatar_color: None,
         mention_flags: None,
-        last_voice_activity_sharing_change_at: None,
-        timezone: None,
-        timezone_privacy_flags: None,
         content_hidden_since: None,
     }
 }
@@ -597,7 +554,7 @@ impl From<PartialUserDbRow> for UserPartial {
             mention_flags: row.mention_flags,
             content_hidden_since: row.content_hidden_since,
         }
-        .visible_to_others(&standing, now_ms())
+        .visible_to_others(&standing, unix_millis())
     }
 }
 
@@ -606,19 +563,26 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn test_user(user_id: i64) -> User {
-        let mut user = fluxer_system_user();
-        user.user_id = user_id;
-        user.username = "Ada".to_owned();
-        user.discriminator = 7;
-        user.global_name = Some("Ada Lovelace".to_owned());
-        user.avatar_hash = Some("avatar_hash".to_owned());
-        user.bot = Some(false);
-        user.system = Some(false);
-        user.email = Some("ada@example.com".to_owned());
-        user.bio = Some("analytical engine enjoyer".to_owned());
-        user.stripe_customer_id = Some("cus_123".to_owned());
-        user
+    fn test_user(user_id: i64) -> PartialUserDbRow {
+        PartialUserDbRow {
+            user_id,
+            username: "Ada".to_owned(),
+            discriminator: 7,
+            global_name: Some("Ada Lovelace".to_owned()),
+            avatar_hash: Some("avatar_hash".to_owned()),
+            bot: Some(false),
+            system: Some(false),
+            flags: Some(USER_FLAG_STAFF),
+            banner_hash: None,
+            banner_color: None,
+            accent_color: None,
+            avatar_color: None,
+            mention_flags: None,
+            temp_banned_until: None,
+            pending_deletion_at: None,
+            deletion_reason_code: None,
+            content_hidden_since: None,
+        }
     }
 
     fn caches() -> UserCaches {
@@ -626,34 +590,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn partial_reads_populate_only_the_partial_cache() {
-        let caches = caches();
-        let partial = test_user(42).to_partial();
-
-        let fetched = caches
-            .get_or_fetch_partial(42, async { Ok(Some(partial)) })
-            .await
-            .unwrap()
-            .unwrap();
-
-        assert_eq!(fetched.username, "Ada");
-        assert_eq!(
-            caches.get_partial(42).await.unwrap().unwrap().username,
-            "Ada"
-        );
-    }
-
-    #[tokio::test]
     async fn partial_cache_hits_do_not_reach_storage_again() {
         let caches = caches();
-        let partial = test_user(42).to_partial();
+        let partial = UserPartial::from(test_user(42));
         caches
             .get_or_fetch_partial(42, async { Ok(Some(partial)) })
             .await
             .unwrap();
 
         let fetched = caches
-            .get_or_fetch_partial(42, async { Ok(Some(test_user(7).to_partial())) })
+            .get_or_fetch_partial(42, async { Ok(Some(UserPartial::from(test_user(7)))) })
             .await
             .unwrap()
             .unwrap();
@@ -665,34 +611,13 @@ mod tests {
     async fn invalidation_clears_a_partial_only_entry() {
         let caches = caches();
         caches
-            .get_or_fetch_partial(42, async { Ok(Some(test_user(42).to_partial())) })
+            .get_or_fetch_partial(42, async { Ok(Some(UserPartial::from(test_user(42)))) })
             .await
             .unwrap();
 
         caches.invalidate(42).await;
 
         assert!(caches.get_partial(42).await.is_none());
-    }
-
-    #[tokio::test]
-    async fn invalidation_counts_generation_bumps() {
-        let caches = caches();
-        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 0);
-
-        caches.invalidate(42).await;
-        caches.invalidate(43).await;
-
-        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 2);
-    }
-
-    #[test]
-    fn generation_stripes_follow_the_configured_capacity() {
-        assert_eq!(generation_stripes(16), USER_CACHE_MIN_GENERATION_STRIPES);
-        assert_eq!(generation_stripes(100_000), 131_072);
-        assert_eq!(
-            generation_stripes(u64::MAX),
-            USER_CACHE_MAX_GENERATION_STRIPES
-        );
     }
 
     #[cfg(feature = "scylla")]
@@ -706,7 +631,7 @@ mod tests {
             .collect::<BTreeSet<_>>();
         let mut user = test_user(42);
         user.content_hidden_since = Some(1);
-        let partial = serde_json::to_value(user.to_partial()).unwrap();
+        let partial = serde_json::to_value(UserPartial::from(user.clone())).unwrap();
         let mut fields = partial
             .as_object()
             .unwrap()
@@ -724,7 +649,7 @@ mod tests {
 
     #[test]
     fn fluxer_system_user_partial_is_virtual_id_zero() {
-        let partial = fluxer_system_user().to_partial();
+        let partial = system_user_partial();
 
         assert_eq!(partial.user_id, 0);
         assert_eq!(partial.username, "Fluxer");
@@ -741,7 +666,7 @@ mod tests {
     const DISABLED: i64 = 1 << 38;
     const PROFILE_HIDDEN: i64 = 1 << 7;
 
-    fn styled(user_id: i64, flags: i64) -> User {
+    fn styled(user_id: i64, flags: i64) -> PartialUserDbRow {
         let mut user = test_user(user_id);
         user.flags = Some(flags);
         user.banner_hash = Some("banner_hash".to_owned());
@@ -770,9 +695,7 @@ mod tests {
 
     #[test]
     fn a_masked_partial_matches_the_shared_development_vector() {
-        let api = styled(1_174_109_840_998_400_001, SPAMMER)
-            .to_partial()
-            .to_api_partial();
+        let api = UserPartial::from(styled(1_174_109_840_998_400_001, SPAMMER)).to_api_partial();
         assert_eq!(
             (api.username.as_str(), api.discriminator.as_str()),
             ("MambaEgret", "6542")
@@ -783,18 +706,8 @@ mod tests {
     }
 
     #[test]
-    fn a_masked_partial_is_stable_across_reads() {
-        let first = styled(53, PROFILE_HIDDEN).to_partial();
-        let second = styled(53, PROFILE_HIDDEN).to_partial();
-        assert_eq!(
-            (first.username, first.discriminator),
-            (second.username, second.discriminator)
-        );
-    }
-
-    #[test]
     fn hidden_and_enforced_accounts_get_a_neutral_partial_and_keep_their_stored_profile() {
-        let now = now_ms();
+        let now = unix_millis();
         let mut banned = styled(43, DISABLED);
         banned.temp_banned_until = Some(now + 60_000);
         let mut deleting = styled(44, 0);
@@ -806,7 +719,7 @@ mod tests {
             banned,
             deleting,
         ] {
-            assert_hidden(&user.to_partial());
+            assert_hidden(&UserPartial::from(user.clone()));
             assert_eq!(user.username, "Ada");
             assert_eq!(user.avatar_hash.as_deref(), Some("avatar_hash"));
         }
@@ -814,14 +727,14 @@ mod tests {
 
     #[test]
     fn lifted_bans_self_disables_and_normal_accounts_keep_their_partial() {
-        let now = now_ms();
+        let now = unix_millis();
         let mut expired = styled(45, DISABLED);
         expired.temp_banned_until = Some(now - 60_000);
         let mut self_deleting = styled(46, 0);
         self_deleting.pending_deletion_at = Some(now + 60_000);
         self_deleting.deletion_reason_code = Some(1);
         for user in [styled(47, 0), styled(48, DISABLED), expired, self_deleting] {
-            let partial = user.to_partial();
+            let partial = UserPartial::from(user.clone());
             assert_eq!(partial.username, "Ada", "{}", user.user_id);
             assert_eq!(partial.global_name.as_deref(), Some("Ada Lovelace"));
             assert_eq!(partial.banner_hash.as_deref(), Some("banner_hash"));
@@ -847,7 +760,7 @@ mod tests {
                 "temp_banned_until": until(ms),
             })
         };
-        let now = now_ms();
+        let now = unix_millis();
         assert_hidden(&decode_postgres_user_partial(row(now + 60_000)).unwrap());
         let lifted = decode_postgres_user_partial(row(now - 60_000)).unwrap();
         assert_eq!(lifted.username, "ada");
@@ -859,22 +772,22 @@ mod tests {
         let since = 1_790_000_000_000;
         let mut hidden = styled(49, 0);
         hidden.content_hidden_since = Some(since);
-        let partial = hidden.to_partial();
+        let partial = UserPartial::from(hidden.clone());
         assert_eq!(partial.content_hidden_since, Some(since));
         assert_eq!(partial.username, "Ada");
         let mut masked = styled(50, PROFILE_HIDDEN);
         masked.content_hidden_since = Some(since);
-        let partial = masked.to_partial();
+        let partial = UserPartial::from(masked.clone());
         assert_hidden(&partial);
         assert_eq!(partial.content_hidden_since, Some(since));
         assert_eq!(
-            styled(51, PROFILE_HIDDEN).to_partial().content_hidden_since,
+            UserPartial::from(styled(51, PROFILE_HIDDEN)).content_hidden_since,
             None
         );
-        let wire = serde_json::to_value(styled(52, 0).to_partial()).unwrap();
+        let wire = serde_json::to_value(UserPartial::from(styled(52, 0))).unwrap();
         assert!(wire.get("content_hidden_since").is_none());
         assert!(
-            serde_json::to_value(hidden.to_partial().to_api_partial())
+            serde_json::to_value(UserPartial::from(hidden.clone()).to_api_partial())
                 .unwrap()
                 .get("content_hidden_since")
                 .is_none()

@@ -47,10 +47,6 @@ impl RouterService for GifsRouter {
             self.l1.insert(key, resp.clone());
         }
     }
-
-    fn l1_invalidate(&self, key: &str) {
-        self.l1.invalidate(key);
-    }
 }
 
 fn request_l1_key(req: &GifRequest) -> Option<String> {

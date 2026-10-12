@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_ring).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([fetch_dm_channel_via_rpc/2]).
@@ -8,10 +12,6 @@
 -export([check_recipient/3]).
 -export([is_dm_channel_type/1]).
 -export([broadcast_voice_state_update/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -129,13 +129,9 @@ channel_recipient_ids(Channel) ->
     Raw =
         case maps:get(<<"recipient_ids">>, Channel, undefined) of
             Ids when is_list(Ids) -> Ids;
-            _ -> ensure_list(maps:get(<<"recipients">>, Channel, []))
+            _ -> map_utils:ensure_list(maps:get(<<"recipients">>, Channel, []))
         end,
     [Id || Entry <- Raw, Id <- [recipient_entry_id(Entry)], is_integer(Id)].
-
--spec ensure_list(term()) -> [term()].
-ensure_list(Value) when is_list(Value) -> Value;
-ensure_list(_) -> [].
 
 -spec dispatch_voice_state_update([integer()], atom(), voice_state()) -> ok.
 dispatch_voice_state_update(AllRecipients, Event, VoiceState) ->

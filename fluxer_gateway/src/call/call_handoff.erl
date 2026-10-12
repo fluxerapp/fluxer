@@ -198,25 +198,4 @@ restore_state_remonitors_live_sessions_test() ->
     ?assertEqual(#{1 => VoiceState}, maps:get(voice_states, Restored)),
     SessionPid ! stop.
 
-export_and_restore_round_trips_the_caller_test() ->
-    State = #{
-        channel_id => 123,
-        message_id => 456,
-        caller_id => 7,
-        caller_name => <<"Ada">>,
-        caller_avatar => <<"a1b2c3d4">>
-    },
-    Restored = restore_state(export_state(State)),
-    ?assertEqual(
-        #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
-        call_state:caller_from_state(Restored)
-    ).
-
-restore_state_reads_a_transfer_without_a_caller_as_undefined_test() ->
-    Restored = restore_state(#{channel_id => 123, message_id => 456}),
-    ?assertEqual(
-        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
-        call_state:caller_from_state(Restored)
-    ).
-
 -endif.

@@ -40,7 +40,6 @@ import {
 	EmbedSkeletonTitle,
 } from '@app/features/messaging/components/embeds/embed_card/EmbedCard';
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
-import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
@@ -156,7 +155,6 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	const {i18n} = useLingui();
 	const instanceTarget = useMemo(currentInstanceTarget, []);
 	const inviteState = Invites.getInvite(code, instanceTarget);
-	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	const invite = inviteState?.data ?? null;
 	const isGuildInviteType = invite != null && isGuildInvite(invite);
 	const guildFromInvite = isGuildInviteType ? invite!.guild : null;
@@ -167,7 +165,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	const messageViewContext = useMaybeMessageViewContext();
 	const currentChannelId = messageViewContext?.channel.id;
 	const inviteWrapperRef = useRef<HTMLDivElement | null>(null);
-	const isLoading = shouldForceSkeleton || !inviteState || inviteState.loading;
+	const isLoading = !inviteState || inviteState.loading;
 	const prevLoadingRef = useRef(true);
 	const prevCodeRef = useRef(code);
 	useEffect(() => {
@@ -194,7 +192,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 		}
 	}, [memberGuildId]);
 	let content: React.ReactNode;
-	if (shouldForceSkeleton || !inviteState || inviteState.loading) {
+	if (!inviteState || inviteState.loading) {
 		content = <InviteLoadingState data-flx="channel.invite-embed.invite-loading-state" />;
 	} else if (inviteState.error || !invite) {
 		content = <InviteNotFoundError data-flx="channel.invite-embed.invite-not-found-error" />;

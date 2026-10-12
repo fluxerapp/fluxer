@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as fs from 'node:fs';
@@ -157,10 +158,6 @@ function normalizeEmailCatalog(source: EmailCatalog, existing: unknown): EmailCa
 		};
 	}
 	return next;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function validateCatalog(kind: CatalogKind, catalog: unknown, label: string): Catalog {

@@ -10,7 +10,6 @@ const {DesktopNativeGatewayTransport} = await import('./NativeGatewayTransport.t
 const {GatewayOriginRegistry} = await import('./GatewayOriginRegistry.ts');
 const {DesktopOutboundHTTP} = await import('./DesktopOutboundHTTP.ts');
 const {RendererDocumentOwnerFactory} = await import('./RendererDocumentOwner.ts');
-const {parseNativeGatewayTransportEvent} = await import('./NativeGatewayTransportEventParser.ts');
 const {getNativeGatewayDisableReason} = await import('./LaunchOptions.ts');
 const {createNativeGatewayPreloadAPI} = await import('../preload/NativeGatewayPreload.ts');
 const {
@@ -869,42 +868,6 @@ describe('GatewayOriginRegistry', () => {
 		await rejects(registry.admit({documentKey: document, url: GATEWAY_URL}), /no reachable/u);
 		registry.releaseDocument(document);
 		await rejects(registry.admit({documentKey: document, url: GATEWAY_URL}), /no reachable/u);
-	});
-});
-
-describe('NativeGatewayTransportEventParser', () => {
-	test('accepts the addon exact seven field shape and normalises binary to ArrayBuffer', () => {
-		const parsed = parseNativeGatewayTransportEvent(
-			'id',
-			nativeEvent({kind: 'binary', binary: Buffer.from([1, 2, 3])}),
-		);
-		assert.equal(parsed.kind, 'binary');
-		assert.deepEqual([...new Uint8Array(parsed.binary)], [1, 2, 3]);
-		assert.equal(parsed.data, null);
-	});
-
-	test('rejects an inapplicable field that is not null', () => {
-		assert.throws(
-			() => parseNativeGatewayTransportEvent('id', nativeEvent({kind: 'open', message: ''})),
-			/message must be null/u,
-		);
-		assert.throws(
-			() => parseNativeGatewayTransportEvent('id', nativeEvent({kind: 'open', data: undefined})),
-			/must be a plain object with exactly the declared keys|data must be null/u,
-		);
-	});
-
-	test('rejects a close event with an out of range code', () => {
-		assert.throws(
-			() =>
-				parseNativeGatewayTransportEvent('id', nativeEvent({kind: 'close', code: 70_000, reason: '', wasClean: true})),
-			/unsigned 16-bit integer/u,
-		);
-	});
-
-	test('rejects a prototype-polluted record', () => {
-		const hostile = Object.create({kind: 'open'});
-		assert.throws(() => parseNativeGatewayTransportEvent('id', hostile), /plain object/u);
 	});
 });
 

@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showPremiumActionErrorModal} from '@app/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import GeoIP from '@app/features/app/state/GeoIP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {
+	CUSTOMER_PORTAL_FAILED_MESSAGE_DESCRIPTOR,
+	CUSTOMER_PORTAL_FAILED_TITLE_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
 import type {
 	CurrentSubscriptionPriceResponse,
@@ -91,10 +98,6 @@ async function fetchPremiumState(countryCode?: string): Promise<PremiumStateResp
 		...(country ? {query: {country_code: country}} : {}),
 	});
 	return response.body;
-}
-
-function isAbortError(error: unknown): boolean {
-	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
 }
 
 export async function refreshPremiumState(countryCode?: string): Promise<PremiumStateResponse> {
@@ -256,5 +259,22 @@ export async function rejoinVisionaryGuild(): Promise<void> {
 	} catch (error) {
 		logger.error('Failed to rejoin Visionary guild', error);
 		throw error;
+	}
+}
+
+export async function openCustomerPortalWithErrorModal(dataFlx: string): Promise<void> {
+	try {
+		const url = await createCustomerPortalSession();
+		await openExternalUrl(url);
+	} catch (error) {
+		logger.error('Failed to open customer portal', error);
+		showPremiumActionErrorModal(
+			error,
+			{
+				fallbackTitle: CUSTOMER_PORTAL_FAILED_TITLE_DESCRIPTOR,
+				fallbackMessage: CUSTOMER_PORTAL_FAILED_MESSAGE_DESCRIPTOR,
+			},
+			dataFlx,
+		);
 	}
 }

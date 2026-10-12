@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getSortModeOptions} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
+import {useSearchResultCollapsedGroups} from '@app/features/channel/hooks/useSearchResultCollapsedGroups';
 import {msg} from '@lingui/core/macro';
 import '@app/features/channel/components/ChannelSearchHighlight.css';
 import sharedStyles from '@app/features/app/components/bottomsheets/shared.module.css';
@@ -8,11 +10,7 @@ import {Message as MessageComponent} from '@app/features/channel/components/Chan
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
 import type {MessageGroupRenderWrapperProps} from '@app/features/channel/components/MessageGroup';
-import {
-	buildSearchResultGroups,
-	buildSearchResultGroupsByMessageId,
-	countSearchResultChannels,
-} from '@app/features/channel/components/SearchResultGrouping';
+import {countSearchResultChannels} from '@app/features/channel/components/SearchResultGrouping';
 import {SearchResultMessageList} from '@app/features/channel/components/SearchResultMessageList';
 import {type ChannelSearchFilters, useChannelSearch} from '@app/features/channel/hooks/useChannelSearch';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -35,9 +33,9 @@ import {
 } from '@app/features/messaging/utils/ChannelSearchHighlight';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
-import {getCollapsedMessageGroupKey} from '@app/features/messaging/utils/MessageGroupingUtils';
+
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
-import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {ChannelFilterSheet} from '@app/features/search/components/search/ChannelFilterSheet';
@@ -72,18 +70,6 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const UNNAMED_CHANNEL_DESCRIPTOR = msg({message: 'Unnamed channel'});
 
-const NEWEST_DESCRIPTOR = msg({
-	message: 'Newest',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts results newest first.',
-});
-const OLDEST_DESCRIPTOR = msg({
-	message: 'Oldest',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts results oldest first.',
-});
-const RELEVANT_DESCRIPTOR = msg({
-	message: 'Relevant',
-	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts by relevance.',
-});
 const MESSAGE_1_USER_DESCRIPTOR = msg({
 	message: '1 user',
 	comment: 'Summary chip text in the mobile channel search sheet when exactly one user is selected as a filter.',
@@ -197,7 +183,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 		const [hasFilters, setHasFilters] = useState<Array<HasFilterType>>([]);
 		const [fromUserIds, setFromUserIds] = useState<Array<string>>([]);
 		const [inChannelIds, setInChannelIds] = useState<Array<string>>([]);
-		const [revealedGroupKeys, setRevealedGroupKeys] = useState<Set<string>>(new Set());
+
 		const [hasSheetOpen, setHasSheetOpen] = useState(false);
 		const [userSheetOpen, setUserSheetOpen] = useState(false);
 		const [channelSheetOpen, setChannelSheetOpen] = useState(false);
@@ -221,54 +207,17 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 		const successResults = machineState.status === 'success' ? machineState.results : EMPTY_SEARCH_MESSAGES;
 		const successChannels = machineState.status === 'success' ? machineState.channels : EMPTY_SEARCH_CHANNELS;
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(successResults);
-		const searchChannelsById = React.useMemo(
-			() => new Map(successChannels.map((searchChannel) => [searchChannel.id, searchChannel])),
-			[successChannels],
-		);
-		const resultGroups = React.useMemo(() => buildSearchResultGroups(successResults), [successResults]);
-		const resultGroupsByMessageId = React.useMemo(
-			() => buildSearchResultGroupsByMessageId(resultGroups),
-			[resultGroups],
-		);
-		const spammerOverrideVersion = LocalUserSpamOverride.version;
-		const collapsedMessageVisibility = React.useMemo(
-			() => ({
-				isMessageRevealed: (message: Message) => {
-					const resultGroup = resultGroupsByMessageId.get(message.id);
-					if (!resultGroup) {
-						return false;
-					}
-					const messageChannel = searchChannelsById.get(message.channelId) ?? Channels.getChannel(message.channelId);
-					if (!messageChannel) {
-						return false;
-					}
-					const groupKey = getCollapsedMessageGroupKey({
-						channel: messageChannel,
-						messages: resultGroup.messages,
-						messageId: message.id,
-						treatSpam: true,
-					});
-					return groupKey != null && revealedGroupKeys.has(groupKey);
-				},
-			}),
-			[resultGroupsByMessageId, revealedGroupKeys, searchChannelsById, spammerOverrideVersion],
-		);
-		const handleCollapsedGroupRevealChange = useCallback((groupKey: string, revealed: boolean) => {
-			setRevealedGroupKeys((current) => {
-				const next = new Set(current);
-				if (revealed) {
-					next.add(groupKey);
-				} else {
-					next.delete(groupKey);
-				}
-				return next;
-			});
-		}, []);
-		const sortModeLabel = (() => {
-			if (sortMode === 'newest') return i18n._(NEWEST_DESCRIPTOR);
-			if (sortMode === 'oldest') return i18n._(OLDEST_DESCRIPTOR);
-			return i18n._(RELEVANT_DESCRIPTOR);
-		})();
+		const {
+			spammerOverrideVersion,
+			searchChannelsById,
+			resultGroups,
+			collapsedMessageVisibility,
+			revealedGroupKeys,
+			setRevealedGroupKeys,
+			handleCollapsedGroupRevealChange,
+		} = useSearchResultCollapsedGroups(successResults, successChannels);
+
+		const sortModeLabel = getSortModeOptions(i18n).find((option) => option.mode === sortMode)!.label;
 		const buildFilters = useCallback((): ChannelSearchFilters => {
 			return {
 				content: contentQuery.trim() || undefined,

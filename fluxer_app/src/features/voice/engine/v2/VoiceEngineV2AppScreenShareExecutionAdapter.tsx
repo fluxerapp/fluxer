@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import i18n from '@app/app/I18n';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
-import {Platform} from '@app/features/platform/types/Platform';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -43,7 +42,6 @@ import {
 	type VoiceScreenShareStateOptions,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareStateSync';
 import {VoiceEngineV2AppScreenShareTrackPlumbing} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareTrackPlumbing';
-import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {ensureNativeMicrophonePermissionForDeviceShare} from '@app/features/voice/engine/voice_screen_share_manager/NativePermissionGate';
 import {
 	captureScreenSharePublicationCleanup,
@@ -97,7 +95,7 @@ import {
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
-import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {msg} from '@lingui/core/macro';
 import {
 	createLocalAudioTrack,
@@ -185,8 +183,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private screenShareTrackingGeneration = 0;
 	private readonly reconciledCodecPairs = new Set<string>();
 	private readonly verifiedCodecCorrectionsByTrack = new WeakMap<MediaStreamTrack, number>();
-	sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
-
 	readonly liveKitFlows: VoiceEngineV2AppScreenShareLiveKitFlows;
 	readonly controllerRouting: VoiceEngineV2AppScreenShareControllerRouting;
 
@@ -214,10 +210,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	get isScreenShareCapturePaused(): boolean {
 		return this.screenShareCapturePaused;
-	}
-
-	setSourceLifecycleBridge(bridge: VoiceEngineV2AppSourceLifecycleBridge | null): void {
-		this.sourceLifecycleBridge = bridge;
 	}
 
 	stopNativeScreenShareForTerminalUnload(): void {
@@ -375,11 +367,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				target: ActiveScreenShareSource.getTarget(),
 			},
 		};
-	}
-
-	syncLocalScreenShareAudioStateInternal(participant: LocalParticipant, enabled: boolean): void {
-		const hasAudioTrack = Boolean(participant.getTrackPublication(Track.Source.ScreenShareAudio));
-		LocalVoiceState.updateSelfStreamAudio(enabled && hasAudioTrack);
 	}
 
 	syncPersistedScreenShareAudioPreferenceInternal(participant: LocalParticipant): void {
@@ -794,7 +781,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			participant.getTrackPublication(Track.Source.ScreenShareAudio),
 		);
 		this.syncLocalStreamWatchStateInternal(false);
-		this.syncLocalScreenShareAudioStateInternal(participant, false);
 		if (!this.isScreenSharePending) {
 			this.applyScreenShareStateInternal(false, {reason: 'user', sendUpdate: true});
 		}
@@ -880,7 +866,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		if (options.replaceExisting !== true) {
 			const reconfigured = await reconfigureLinuxNativeAudioRouting(linuxRule, options);
 			if (reconfigured !== 'unsupported') {
-				this.syncLocalScreenShareAudioStateInternal(participant, true);
 				this.syncPersistedScreenShareAudioPreferenceInternal(participant);
 				return true;
 			}
@@ -904,7 +889,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			}
 			return false;
 		}
-		this.syncLocalScreenShareAudioStateInternal(participant, true);
 		this.syncPersistedScreenShareAudioPreferenceInternal(participant);
 		return true;
 	}
@@ -934,7 +918,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			stopMediaTrack(capturedTrack);
 			return false;
 		}
-		this.syncLocalScreenShareAudioStateInternal(participant, true);
 		this.syncPersistedScreenShareAudioPreferenceInternal(participant);
 		return true;
 	}
@@ -971,7 +954,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			}
 			return false;
 		}
-		this.syncLocalScreenShareAudioStateInternal(participant, true);
 		this.syncPersistedScreenShareAudioPreferenceInternal(participant);
 		return true;
 	}
@@ -1162,10 +1144,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
 		assert.ok(options === undefined || typeof options === 'object');
-		if (Platform.OS !== 'web') {
-			logger.warn('Screen share updates are not supported on native');
-			return false;
-		}
 		const participant = room?.localParticipant;
 		if (!participant?.isScreenShareEnabled) return false;
 		const screenSharePublication = participant.getTrackPublication(Track.Source.ScreenShare);
@@ -1190,7 +1168,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		await this.enforceScreenShareSenderParametersInternal(participant, publishOptions);
 		this.ensureScreenShareKeepAliveSinkInternal(participant);
 		updateLocalParticipantFromRoom(room);
-		this.syncLocalScreenShareAudioStateInternal(participant, participant.isScreenShareEnabled);
 		return geometryUpdate !== 'needs-capture-restart' && geometryUpdate !== 'failed';
 	}
 
@@ -1204,7 +1181,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		operation.catch((error) => {
 			logger.warn('Failed to apply immediate screen share audio mute', {error, muted});
 		});
-		this.syncLocalScreenShareAudioStateInternal(participant, !muted);
 	}
 
 	resetStreamTracking(): void {

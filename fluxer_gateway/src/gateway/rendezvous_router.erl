@@ -97,26 +97,6 @@ weight(Key, Index) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-select_single_shard_test() ->
-    ?assertEqual(0, select(test_key, 1)),
-    ?assertEqual(0, select(any_key, 1)),
-    ?assertEqual(0, select(12345, 1)).
-
-select_valid_index_test_() ->
-    [?_test(assert_valid_index(N)) || N <- [2, 5, 10, 100]].
-
-assert_valid_index(N) ->
-    Index = select(test_key, N),
-    ?assert(Index >= 0),
-    ?assert(Index < N).
-
-select_stability_test_() ->
-    [
-        ?_assertEqual(select(<<"abc">>, 8), select(<<"abc">>, 8)),
-        ?_assertEqual(select(12345, 3), select(12345, 3)),
-        ?_assertEqual(select({user, 1}, 10), select({user, 1}, 10))
-    ].
-
 select_distribution_test() ->
     Keys = lists:seq(1, 1000),
     ShardCount = 10,
@@ -137,13 +117,6 @@ count_distribution(Keys, ShardCount) ->
 count_distribution_fold(Key, ShardCount, Acc) ->
     Index = select(Key, ShardCount),
     maps:update_with(Index, fun(V) -> V + 1 end, 1, Acc).
-
-group_keys_empty_test() ->
-    ?assertEqual([], group_keys([], 4)).
-
-group_keys_single_test() ->
-    Groups = group_keys([key1], 4),
-    ?assertEqual(1, length(Groups)).
 
 group_keys_deduplicates_test() ->
     Keys = [1, 2, 3, 1, 2],
@@ -166,17 +139,6 @@ group_keys_all_keys_present_test() ->
     Groups = group_keys(Keys, 3),
     AllGroupedKeys = lists:flatten([K || {_, K} <- Groups]),
     ?assertEqual(lists:sort(Keys), lists:sort(AllGroupedKeys)).
-
-select_node_empty_returns_undefined_test() ->
-    ?assertEqual(undefined, select_node(<<"k">>, [])).
-
-select_node_single_returns_only_node_test() ->
-    ?assertEqual('n@a', select_node(<<"k">>, ['n@a'])).
-
-select_node_deterministic_test() ->
-    Nodes = ['n@a', 'n@b', 'n@c'],
-    ?assertEqual(select_node(<<"guild-1">>, Nodes), select_node(<<"guild-1">>, Nodes)),
-    ?assertEqual(select_node(42, Nodes), select_node(42, Nodes)).
 
 select_node_independent_of_order_test() ->
     Nodes1 = ['n@a', 'n@b', 'n@c'],

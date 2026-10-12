@@ -1721,43 +1721,6 @@ mod tests {
     }
 
     #[test]
-    fn binding_drops_empty_strings() {
-        let parsed = ShortcutBinding::new("a".into(), Some(String::new()), Some(String::new()));
-        assert_eq!(parsed.description, None);
-        assert_eq!(parsed.trigger_description, None);
-        let kept = ShortcutBinding::new("a".into(), Some("A".into()), Some("F13".into()));
-        assert_eq!(kept.description.as_deref(), Some("A"));
-        assert_eq!(kept.trigger_description.as_deref(), Some("F13"));
-    }
-
-    #[test]
-    fn definitions_must_be_non_empty_unique_and_described() {
-        assert_eq!(validate_definitions(&[]), Err(DefinitionError::Empty));
-        assert_eq!(
-            validate_definitions(&[definition("", "Mute")]),
-            Err(DefinitionError::EmptyId)
-        );
-        assert_eq!(
-            validate_definitions(&[definition("voice_toggle_mute", " ")]),
-            Err(DefinitionError::EmptyDescription)
-        );
-        assert_eq!(
-            validate_definitions(&[
-                definition("voice_toggle_mute", "Mute"),
-                definition("voice_toggle_mute", "Mute again"),
-            ]),
-            Err(DefinitionError::DuplicateId)
-        );
-        assert_eq!(
-            validate_definitions(&[
-                definition("voice_toggle_mute", "Mute"),
-                definition("voice_push_to_talk", "Push to talk"),
-            ]),
-            Ok(())
-        );
-    }
-
-    #[test]
     fn tokens_only_allow_portal_safe_characters() {
         assert!(is_valid_token("fluxer_global_shortcuts"));
         assert!(is_valid_token("fluxer_canary_global_shortcuts"));
@@ -1848,14 +1811,6 @@ mod tests {
                 .merge(vec![binding("voice_push_to_talk", None)])
                 .is_empty()
         );
-    }
-
-    #[test]
-    fn listed_table_accepts_the_listed_ids() {
-        let table = ShortcutTable::from_listed(&[binding("voice_push_to_talk", Some("F13"))]);
-        assert!(table.contains("voice_push_to_talk"));
-        assert!(!table.contains("voice_toggle_mute"));
-        assert!(ShortcutTable::default().bindings().is_empty());
     }
 
     #[test]

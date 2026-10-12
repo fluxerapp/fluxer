@@ -520,7 +520,7 @@ compute_session_connect(_GuildId, _Request, _State) ->
 
 -spec compute_available_connect(integer(), integer(), map(), map()) -> map().
 compute_available_connect(GuildId, UserId, Request, State) ->
-    case guild_data_members:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             #{not_member => true};
         _Member ->
@@ -531,10 +531,12 @@ compute_available_connect(GuildId, UserId, Request, State) ->
             #{
                 guild_state => GS,
                 thread_viewer => maps:get(thread_viewer, ThreadFields),
-                initial_last_message_ids => guild_sessions:build_initial_last_message_ids(GS),
+                initial_last_message_ids => guild_sessions_connect:build_initial_last_message_ids(
+                    GS
+                ),
                 initial_channel_versions => build_channel_versions(GS),
                 viewable_channels => build_viewable_map(
-                    guild_visibility:get_user_viewable_channels(UserId, State)
+                    guild_visibility_channels:get_user_viewable_channels(UserId, State)
                 ),
                 user_roles => session_passive:get_user_roles_for_guild(UserId, State),
                 should_mark_guild_synced =>
@@ -696,7 +698,9 @@ update_presence_subscription(UserId, Existing, State, Joined) ->
         undefined ->
             subscribe_joined_user(UserId, State, Joined);
         ExistingUserId ->
-            State1 = guild_sessions:unsubscribe_from_user_presence(ExistingUserId, State),
+            State1 = guild_sessions_presence:unsubscribe_from_user_presence(
+                ExistingUserId, State
+            ),
             subscribe_joined_user(UserId, State1, Joined)
     end.
 

@@ -133,7 +133,7 @@ member_list_presence_fields(Presence) ->
 
 -spec find_member_in_state_data(user_id(), guild_state()) -> map() | undefined.
 find_member_in_state_data(UserId, State) ->
-    guild_data_index:get_member(UserId, maps:get(data, State, #{})).
+    guild_data_index_members:get_member(UserId, maps:get(data, State, #{})).
 
 -spec broadcast_all_member_list_updates(guild_state()) -> {ok, guild_state()}.
 broadcast_all_member_list_updates(State) ->

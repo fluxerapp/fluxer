@@ -210,14 +210,3 @@
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
 }
-
-.logoutSection {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.logoutDescription {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-}

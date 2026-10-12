@@ -8,7 +8,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import Notification from '@app/features/ui/state/Notification';
 import CallState from '@app/features/voice/state/CallState';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
@@ -35,7 +35,7 @@ export function handleMessageCreate(data: Message, _context: GatewayHandlerConte
 	if (data.thread !== undefined) {
 		ChannelThreads.ingestMessageThreads([data]);
 	}
-	TypingIndicator.stopTypingOnMessageCreate(data);
+	RollingTypingStore.remove(data.channel_id, data.author.id);
 	Messages.handleIncomingMessage({channelId: data.channel_id, message: data});
 	MessageReferences.handleMessageCreate(data, false);
 	Notification.handleMessageCreate({message: data});

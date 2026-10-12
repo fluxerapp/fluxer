@@ -2,8 +2,14 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import type {Channel} from '@app/features/channel/models/Channel';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CHANNEL_RECORD_DESCRIPTOR, RecordDebugModal} from '@app/features/devtools/components/debug/RecordDebugModal';
+import {
+	COPY_LINK_DESCRIPTOR as D_COPY_THREAD_LINK_DESCRIPTOR,
+	NOTIFICATION_LEVEL_ALL_MESSAGES_DESCRIPTOR as D_NOTIFICATION_ALL_DESCRIPTOR,
+	NOTIFICATION_LEVEL_NOTHING_DESCRIPTOR as D_NOTIFICATION_NOTHING_DESCRIPTOR,
+	NOTIFICATION_SETTINGS_DESCRIPTOR as D_THREAD_NOTIFICATIONS_DESCRIPTOR,
+	MARK_AS_READ_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
@@ -109,9 +115,9 @@ export function buildThreadNotificationItems(i18n: I18n, thread: Channel): Array
 	const current = getThreadNotificationSetting(thread.id);
 	const options: Array<[ThreadNotificationSetting, string]> = [
 		[ThreadNotificationSetting.DEFAULT, i18n._(D.NOTIFICATION_DEFAULT_DESCRIPTOR)],
-		[ThreadNotificationSetting.ALL_MESSAGES, i18n._(D.NOTIFICATION_ALL_DESCRIPTOR)],
+		[ThreadNotificationSetting.ALL_MESSAGES, i18n._(D_NOTIFICATION_ALL_DESCRIPTOR)],
 		[ThreadNotificationSetting.ONLY_MENTIONS, i18n._(D.NOTIFICATION_MENTIONS_DESCRIPTOR)],
-		[ThreadNotificationSetting.NO_MESSAGES, i18n._(D.NOTIFICATION_NOTHING_DESCRIPTOR)],
+		[ThreadNotificationSetting.NO_MESSAGES, i18n._(D_NOTIFICATION_NOTHING_DESCRIPTOR)],
 	];
 	return options.map(([setting, label]) => ({
 		label,
@@ -177,7 +183,7 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 		});
 		behaviorItems.push({
 			icon: <NotificationSettingsIcon size={20} data-flx="threads.use-thread-menu-data.notification-settings-icon" />,
-			label: i18n._(D.THREAD_NOTIFICATIONS_DESCRIPTOR),
+			label: i18n._(D_THREAD_NOTIFICATIONS_DESCRIPTOR),
 			items: buildThreadNotificationItems(i18n, thread),
 		});
 	}
@@ -259,7 +265,7 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 	const copyItems: Array<MenuSheetItem> = [
 		{
 			icon: <CopyLinkIcon size={20} data-flx="threads.use-thread-menu-data.copy-link-icon" />,
-			label: i18n._(D.COPY_THREAD_LINK_DESCRIPTOR),
+			label: i18n._(D_COPY_THREAD_LINK_DESCRIPTOR),
 			onClick: () => {
 				void TextCopyCommands.copy(i18n, buildChannelLink({guildId: thread.guildId, channelId: thread.id}), true);
 				ToastCommands.createToast({type: 'success', children: i18n._(D.THREAD_LINK_COPIED_DESCRIPTOR)});
@@ -276,9 +282,10 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
 						modal(() => (
-							<ChannelDebugModal
+							<RecordDebugModal
+								label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 								title={i18n._(D.THREAD_DEBUG_DESCRIPTOR)}
-								channel={thread}
+								record={thread}
 								data-flx="threads.use-thread-menu-data.channel-debug-modal"
 							/>
 						)),

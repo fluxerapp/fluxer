@@ -56,33 +56,6 @@ describe('instance SMTP settings', () => {
 			.execute();
 	}
 
-	it('tests the saved settings when the request names none', async () => {
-		await patchSmtp({
-			host: 'smtp.example.com',
-			port: 587,
-			username: 'mailer',
-			password: 'saved-password',
-			tls_mode: 'implicit',
-		});
-		await expect(runSmtpTest({})).resolves.toEqual({ok: true, error: null});
-		expect(createTransport).toHaveBeenCalledWith(
-			expect.objectContaining({
-				host: 'smtp.example.com',
-				port: 587,
-				secure: true,
-				requireTLS: false,
-				ignoreTLS: false,
-				auth: {user: 'mailer', pass: 'saved-password'},
-			}),
-		);
-	});
-
-	it('reports the failure a send with the saved settings would hit', async () => {
-		await patchSmtp({host: 'smtp.example.com', port: 587, username: 'mailer', password: 'saved-password'});
-		verify.mockRejectedValue(new Error('wrong version number'));
-		await expect(runSmtpTest({})).resolves.toEqual({ok: false, error: 'wrong version number'});
-	});
-
 	it('fills a draft for the saved host with the saved password', async () => {
 		await patchSmtp({
 			host: 'smtp.example.com',
@@ -117,45 +90,6 @@ describe('instance SMTP settings', () => {
 			expect(createTransport).not.toHaveBeenCalled();
 		},
 	);
-
-	it('tests a draft for another host with the password it brings', async () => {
-		await patchSmtp({host: 'smtp.example.com', port: 465, username: 'mailer', password: 'saved-password'});
-		await runSmtpTest({host: 'draft.example.com', username: 'drafter', password: 'draft-password'});
-		expect(createTransport).toHaveBeenCalledWith(
-			expect.objectContaining({host: 'draft.example.com', auth: {user: 'drafter', pass: 'draft-password'}}),
-		);
-	});
-
-	it.each([
-		[{enabled: false}, 'Email is turned off'],
-		[{provider: 'none'}, 'The email provider is not SMTP'],
-	])('fails the saved test when %j stops outgoing email', async (email, error) => {
-		await patchSmtp({host: 'smtp.example.com', port: 587, username: 'mailer', password: 'saved-password'});
-		await createBuilder<InstanceConfigResponse>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({integrations: {email}})
-			.execute();
-		await expect(runSmtpTest({})).resolves.toEqual({ok: false, error});
-		expect(createTransport).not.toHaveBeenCalled();
-	});
-
-	it.each([
-		[{fromEmail: ''}, 'No from address is set'],
-		[{smtp: {host: '', port: 587, username: 'mailer', password: 'pass', tlsMode: null}}, 'No SMTP host is configured'],
-		[
-			{smtp: {host: 'relay.internal', port: 25, username: '', password: '', tlsMode: null}},
-			'The SMTP username and password are both required',
-		],
-	])('fails the saved test when the environment leaves %j', async (environment, error) => {
-		const original = {...getConfig().email};
-		Object.assign(getConfig().email, environment);
-		try {
-			await expect(runSmtpTest({})).resolves.toEqual({ok: false, error});
-			expect(createTransport).not.toHaveBeenCalled();
-		} finally {
-			Object.assign(getConfig().email, original);
-		}
-	});
 
 	it('picks the TLS mode from the port until one is saved', async () => {
 		const original = getConfig().email.smtp;

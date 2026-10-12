@@ -66,7 +66,7 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
-    .with_graceful_shutdown(shutdown_signal())
+    .with_graceful_shutdown(fluxer_common::shutdown::wait_for_shutdown())
     .await?;
     drain_and_shutdown(&state, &drain).await
 }
@@ -170,27 +170,6 @@ async fn drain_and_shutdown(state: &Arc<AppState>, drain: &HttpRequestDrain) -> 
     aggregate_results("media proxy shutdown", [requests, coalescer, native_tasks])
 }
 
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        let _ = tokio::signal::ctrl_c().await;
-    };
-    #[cfg(unix)]
-    let terminate = async {
-        let Ok(mut sigterm) =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        else {
-            return;
-        };
-        sigterm.recv().await;
-    };
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -278,13 +257,6 @@ mod tests {
     }
 
     const SIGNATURE_SECRET: [u8; 32] = [11u8; 32];
-    const SIGNATURE_REPORT: &[(&str, &str)] = &[
-        ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", "report"),
-        (
-            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
-            "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws=",
-        ),
-    ];
     const SIGNATURE_ENFORCE: &[(&str, &str)] = &[
         ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", "enforce"),
         (
@@ -294,31 +266,6 @@ mod tests {
     ];
     const ATTACHMENT_PATH: &str = "/attachments/1/2/file.bin";
     const ATTACHMENT_KEY: &str = "attachments/1/2/file.bin";
-
-    async fn body_text(response: Response) -> String {
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-            .await
-            .expect("response body");
-        String::from_utf8(body.to_vec()).expect("body is utf-8")
-    }
-
-    #[tokio::test]
-    async fn health_names_the_attachment_signature_mode() {
-        for (extra, expected) in [
-            (&[][..], "off"),
-            (SIGNATURE_REPORT, "report"),
-            (SIGNATURE_ENFORCE, "enforce"),
-        ] {
-            let router = test_router_for(test_config("mp", extra));
-            let response = probe(router, "/_health", Method::GET).await;
-            assert_eq!(StatusCode::OK, response.status(), "{expected}");
-            assert_eq!(
-                format!("OK attachment_signature={expected}"),
-                body_text(response).await,
-                "{expected}"
-            );
-        }
-    }
 
     #[tokio::test]
     async fn an_enforced_refusal_is_countable_apart_from_a_genuine_missing_object() {

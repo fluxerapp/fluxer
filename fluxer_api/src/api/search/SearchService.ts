@@ -14,21 +14,8 @@ import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GlobalSearchMessagesRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {MessageResponse, MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-
-function omitReferencedMessages(result: MessageSearchResponse): MessageSearchResponse {
-	if (!('messages' in result)) {
-		return result;
-	}
-	return {
-		...result,
-		messages: result.messages.map((message) => {
-			const {referenced_message: _referencedMessage, ...rest} = message as MessageResponse;
-			return rest;
-		}),
-	};
-}
 
 export class SearchService {
 	private readonly globalSearch: GlobalSearchService;
@@ -135,6 +122,6 @@ export class SearchService {
 				}
 				break;
 		}
-		return omitReferencedMessages(result);
+		return result;
 	}
 }

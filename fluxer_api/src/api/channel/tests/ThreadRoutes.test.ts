@@ -12,14 +12,8 @@ import {
 	createChannelInvite,
 	createGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	THREADS_FEATURE,
-	THREADS_FEATURE_HEADER,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {THREADS_FEATURE, THREADS_FEATURE_HEADER, threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -70,7 +64,7 @@ describe('thread routes', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -78,12 +72,11 @@ describe('thread routes', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -163,21 +156,9 @@ describe('thread routes', () => {
 			}
 		}
 
-		it('answers every thread route like an unregistered path while the experiment is off', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: false});
-			await expectEveryRouteUnregistered(s, s.owner.token, {[THREADS_FEATURE_HEADER]: THREADS_FEATURE});
-		});
-
 		it('answers every thread route like an unregistered path without the client capability', async () => {
 			const s = await setup();
 			await expectEveryRouteUnregistered(s, s.owner.token, {});
-		});
-
-		it('answers every thread route like an unregistered path for a guild outside the experiment', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: true, user_basis_points: 10000, disabled_guild_ids: [s.guildId]});
-			await expectEveryRouteUnregistered(s, s.owner.token, {[THREADS_FEATURE_HEADER]: THREADS_FEATURE});
 		});
 
 		it('answers bot-only routes like an unregistered path for users', async () => {
@@ -192,20 +173,6 @@ describe('thread routes', () => {
 				expect(response.status).toBe(404);
 				expect(((await response.json()) as {code: string}).code).toBe('NOT_FOUND');
 			}
-		});
-
-		it('writes no thread data and dispatches nothing when the gate is off', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({enabled: false});
-			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-			const message = await sendMessage(harness, s.owner.token, s.channelId, 'hello');
-			await threadsRequest(harness, s.owner.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'nope'})
-				.expect(404)
-				.execute();
-			expect(await repository.threads.getState(createChannelID(BigInt(message.id)))).toBeNull();
-			expect(dispatch.mock.calls.filter(([params]) => params.event.startsWith('THREAD_'))).toEqual([]);
 		});
 	});
 
@@ -406,27 +373,6 @@ describe('thread routes', () => {
 			await setRateLimit(30);
 			expect(clear.mock.calls).toEqual([[`slowmode:${s.channelId}:`], [`slowmode-thread:${s.channelId}:`]]);
 			await startThread(s.member.token, s.channelId, {name: 'second', type: ChannelTypes.PUBLIC_THREAD});
-		});
-
-		it('clears only the message slowmode on a rate limit change in a guild without threads', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'control');
-			const channel = await createChannel(harness, owner.token, guild.id, 'general');
-			const clear = vi.spyOn(RateLimitService.prototype, 'clearLimitsByIdentifierPrefix');
-			const arms: Array<[Parameters<typeof setChannelThreadsConfig>[0], number]> = [
-				[{enabled: false}, 60],
-				[{enabled: true, included_user_ids: [owner.userId]}, 30],
-			];
-			for (const [config, seconds] of arms) {
-				await setChannelThreadsConfig(config);
-				clear.mockClear();
-				await threadsRequest(harness, owner.token)
-					.patch(`/channels/${channel.id}`)
-					.body({rate_limit_per_user: seconds})
-					.expect(200)
-					.execute();
-				expect(clear.mock.calls).toEqual([[`slowmode:${channel.id}:`]]);
-			}
 		});
 	});
 
@@ -685,16 +631,6 @@ describe('thread routes', () => {
 			await threadsRequest(harness, s.owner.token)
 				.put(`/channels/${thread.id}/thread-members/${outsider.userId}`)
 				.expect(404, APIErrorCodes.UNKNOWN_MEMBER)
-				.execute();
-		});
-
-		it('refuses adding a member who is outside the experiment like one who cannot view the parent', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({...ALL_THREADS_ACTIVE, excluded_user_ids: [s.member.userId]});
-			const thread = await startThread(s.owner.token, s.channelId);
-			await threadsRequest(harness, s.owner.token)
-				.put(`/channels/${thread.id}/thread-members/${s.member.userId}`)
-				.expect(403, APIErrorCodes.MISSING_ACCESS)
 				.execute();
 		});
 
@@ -971,13 +907,13 @@ describe('thread routes', () => {
 	});
 
 	describe('admin', () => {
-		it('lists every thread of a guild and deletes threads even after the experiment is off', async () => {
+		it('lists every thread of a guild and deletes thread data', async () => {
 			const s = await setup();
 			const admin = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.WILDCARD]);
 			const open = await startThread(s.owner.token, s.channelId);
 			const archived = await startThread(s.owner.token, s.channelId, {name: 'old', type: ChannelTypes.PUBLIC_THREAD});
 			await archive(archived.id);
-			await setChannelThreadsConfig({enabled: false});
+
 			const listed = await createBuilder<{threads: Array<ThreadChannelResponse>}>(harness, admin.token)
 				.get(`/admin/guilds/${s.guildId}/threads`)
 				.execute();

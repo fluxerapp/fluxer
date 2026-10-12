@@ -18,7 +18,7 @@ use crate::{
     },
     utils::bigint::format_discriminator,
     utils::timestamps::format_admin_timestamp,
-    utils::user_tag::user_tag,
+    utils::user_tag::display_with_tag,
 };
 use maud::{Markup, html};
 
@@ -75,11 +75,12 @@ fn owner_display(
     let Some(discriminator) = discriminator else {
         return owner_id.to_owned();
     };
-    let tag = user_tag(username, &format_discriminator(discriminator), false);
-    match global_name.filter(|value| !value.trim().is_empty()) {
-        Some(global_name) => format!("{global_name} ({tag})"),
-        None => tag,
-    }
+    display_with_tag(
+        global_name,
+        username,
+        &format_discriminator(discriminator),
+        false,
+    )
 }
 
 fn nsfw_badge(level: Option<i32>) -> Markup {

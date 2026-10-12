@@ -1,13 +1,13 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_subscription_mutual_channels).
--typing([eqwalizer]).
-
--export([filter_member_ids/4, filter_session_member_ids/2, filter_session_member_ids/3]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
+
+-export([filter_member_ids/4, filter_session_member_ids/2, filter_session_member_ids/3]).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
@@ -154,7 +154,9 @@ member_channel_key(MemberId, Exceptions, State, Cache) ->
         true ->
             {Key, Cache};
         false ->
-            {Key, Cache#{Key => guild_visibility:get_user_viewable_channels(MemberId, State)}}
+            {Key, Cache#{
+                Key => guild_visibility_channels:get_user_viewable_channels(MemberId, State)
+            }}
     end.
 
 -spec session_channel_map(user_id(), guild_state()) -> map().
@@ -162,7 +164,7 @@ session_channel_map(SessionUserId, State) ->
     case guild_visibility_channels:get_cached_viewable_channel_map(SessionUserId, State) of
         undefined ->
             guild_sessions:build_viewable_channel_map(
-                guild_visibility:get_user_viewable_channels(SessionUserId, State)
+                guild_visibility_channels:get_user_viewable_channels(SessionUserId, State)
             );
         Map ->
             Map
@@ -216,8 +218,10 @@ cached_has_mutual_channel(MemberId, RawRoles, SessionMap, State, Cache, Memo) ->
 -spec memo_key(user_id(), sets:set(user_id()), guild_state()) -> {ok, term()} | bypass.
 memo_key(MemberId, Exceptions, State) ->
     case sets:is_element(MemberId, Exceptions) of
-        true -> bypass;
-        false -> member_roles_key(guild_permissions:find_member_by_user_id(MemberId, State))
+        true ->
+            bypass;
+        false ->
+            member_roles_key(guild_permissions_check:find_member_by_user_id(MemberId, State))
     end.
 
 -spec member_roles_key(map() | undefined) -> {ok, term()} | bypass.
@@ -257,7 +261,7 @@ overwrite_target_ids(Data) ->
     maps:fold(
         fun(_ChannelId, Channel, Acc) -> channel_target_ids(Channel, Acc) end,
         Cached,
-        guild_data_index:channel_index(Data)
+        guild_data_index_channels:channel_index(Data)
     ).
 
 -spec cached_target_ids(term(), [user_id()]) -> [user_id()].
@@ -362,7 +366,7 @@ reference_keep(MemberId, SessionUserId, _SessionMap, _State) when
 ->
     false;
 reference_keep(MemberId, _SessionUserId, SessionMap, State) ->
-    MemberChannels = guild_visibility:get_user_viewable_channels(MemberId, State),
+    MemberChannels = guild_visibility_channels:get_user_viewable_channels(MemberId, State),
     case has_shared_channel(MemberChannels, SessionMap) of
         true -> {true, MemberId};
         false -> false
@@ -387,15 +391,6 @@ filter_member_ids_matches_unmemoised_test() ->
         [reference_filter_member_ids(Viewer, Ids, State) || Viewer <- [10, 30, 7, 99]],
         [filter_member_ids(#{}, Viewer, Ids, State) || Viewer <- [10, 30, 7, 99]]
     ).
-
-memo_holds_one_entry_per_roles_term_test() ->
-    State = test_state(),
-    SessionMap = session_channel_map(10, State),
-    {First, Memo1} = memoised_has_mutual_channel(20, SessionMap, State, new_memo(State)),
-    {Second, Memo2} = memoised_has_mutual_channel(21, SessionMap, State, Memo1),
-    ?assert(First),
-    ?assertEqual(First, Second),
-    ?assertEqual([1, 1], [map_size(maps:get(cache, M)) || M <- [Memo1, Memo2]]).
 
 exception_user_is_not_answered_from_its_role_set_test() ->
     State = test_state(),

@@ -16,22 +16,13 @@
     bulk_get/1,
     bulk_get_map/1,
     get_memory_stats/0,
-    pending_handoff_count/0,
-    get_pending_handoff_count/0,
     rebalance/0,
-    rebalance_async/0,
     handle_nodedown/1,
     handle_nodeup/1,
-    trigger_anti_entropy/0,
-    generation/0,
-    pending_operations_count/0
+    generation/0
 ]).
 
--export([
-    put_local/3,
-    delete_local/2,
-    local_snapshot/1
-]).
+-export([put_local/3, delete_local/2, local_snapshot/1]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -87,21 +78,6 @@ get_memory_stats() ->
         _ -> {error, not_available}
     end.
 
--spec get_pending_handoff_count() -> non_neg_integer().
-get_pending_handoff_count() ->
-    case presence_cache_api:safe_call_if_enabled(get_pending_handoff_count, 0) of
-        Count when is_integer(Count), Count >= 0 -> Count;
-        _ -> 0
-    end.
-
--spec pending_handoff_count() -> non_neg_integer().
-pending_handoff_count() ->
-    get_pending_handoff_count().
-
--spec rebalance_async() -> ok.
-rebalance_async() ->
-    presence_cache_api:safe_cast_if_enabled(rebalance).
-
 -spec rebalance() -> ok.
 rebalance() ->
     presence_cache_api:rebalance().
@@ -114,17 +90,9 @@ handle_nodedown(Node) when is_atom(Node) ->
 handle_nodeup(Node) when is_atom(Node) ->
     presence_cache_api:safe_cast_if_enabled({nodeup_cancel_grace, Node}).
 
--spec trigger_anti_entropy() -> ok.
-trigger_anti_entropy() ->
-    presence_cache_api:safe_cast_if_enabled(anti_entropy_sync).
-
 -spec generation() -> non_neg_integer().
 generation() ->
     presence_cache_api:generation().
-
--spec pending_operations_count() -> non_neg_integer().
-pending_operations_count() ->
-    get_pending_handoff_count().
 
 -spec put_local(integer(), map(), state()) -> {ok, state()}.
 put_local(UserId, Presence, State) ->
@@ -145,7 +113,7 @@ local_snapshot(State) ->
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 10),
-    {ShardCount, _Source} = presence_cache_shards:determine_count(presence_cache_shards),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([presence_cache_shards]),
     Shards = presence_cache_shards:start_all(ShardCount),
     {ok, #{
         shards => Shards,
@@ -156,21 +124,21 @@ init([]) ->
         delete_tombstones => #{},
         delete_tombstone_order => queue:new(),
         generation => 0,
-        anti_entropy_timer => presence_cache_rebalance:schedule_anti_entropy()
+        anti_entropy_timer => presence_cache_anti_entropy:schedule_anti_entropy()
     }}.
 
 -spec terminate(term(), state()) -> ok.
 terminate(_Reason, State) ->
-    presence_cache_rebalance:cancel_pending_retry_timer(State),
+    presence_cache_pending:cancel_pending_retry_timer(State),
     presence_cache_rebalance:cancel_all_grace_timers(State),
-    presence_cache_rebalance:cancel_anti_entropy_timer(State),
+    presence_cache_anti_entropy:cancel_anti_entropy_timer(State),
     presence_cache_shards:stop_all(State),
     ok.
 
 -spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) ->
     erlang:garbage_collect(),
-    {ok, presence_cache_rebalance:ensure_pending_state(State)}.
+    {ok, presence_cache_pending:ensure_pending_state(State)}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
 handle_call({put, UserId, Presence}, _From, State) when is_integer(UserId), is_map(Presence) ->
@@ -204,8 +172,6 @@ handle_call_extended({bulk_get_local_map, UserIds}, _From, State) when is_list(U
     {reply, Reply, NewState};
 handle_call_extended(rebalance, _From, State) ->
     {reply, ok, presence_cache_rebalance:rebalance_ownership(State)};
-handle_call_extended(get_pending_handoff_count, _From, State) ->
-    {reply, presence_cache_rebalance:count_pending_operations(State), State};
 handle_call_extended(get_memory_stats, _From, State) ->
     {reply, presence_cache_shards:memory_stats(State), State};
 handle_call_extended(get_generation, _From, State) ->
@@ -214,21 +180,19 @@ handle_call_extended(_Request, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast(rebalance, State) ->
-    {noreply, presence_cache_rebalance:rebalance_ownership(State)};
 handle_cast({nodedown_grace, Node}, State) when is_atom(Node) ->
     {noreply, presence_cache_rebalance:start_nodedown_grace(Node, State)};
 handle_cast({nodeup_cancel_grace, Node}, State) when is_atom(Node) ->
     {noreply, presence_cache_rebalance:cancel_nodedown_grace(Node, State)};
-handle_cast(anti_entropy_sync, State) ->
-    {noreply, presence_cache_rebalance:perform_anti_entropy(State)};
 handle_cast({anti_entropy_digest_request, FromNode, RemoteDigest}, State) when
     is_atom(FromNode), is_binary(RemoteDigest)
 ->
-    presence_cache_rebalance:handle_anti_entropy_digest_request(FromNode, RemoteDigest, State);
+    presence_cache_anti_entropy:handle_anti_entropy_digest_request(
+        FromNode, RemoteDigest, State
+    );
 handle_cast({anti_entropy_response, Entries}, State) when is_map(Entries) ->
     {noreply,
-        presence_cache_rebalance:merge_anti_entropy_entries(
+        presence_cache_anti_entropy:merge_anti_entropy_entries(
             presence_cache_bulk:sanitize_presence_map(Entries), State
         )};
 handle_cast({put, UserId, Presence}, State) when is_integer(UserId), is_map(Presence) ->
@@ -246,25 +210,27 @@ handle_cast(_Msg, State) ->
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
-    State1 = presence_cache_rebalance:ensure_pending_state(State),
+    State1 = presence_cache_pending:ensure_pending_state(State),
     {noreply, presence_cache_shards:handle_down_by_ref(Ref, State1)};
 handle_info(?PENDING_HANDOFF_RETRY_MSG, State) ->
-    State1 = (presence_cache_rebalance:ensure_pending_state(State))#{
+    State1 = (presence_cache_pending:ensure_pending_state(State))#{
         pending_retry_timer => undefined
     },
     {noreply, presence_cache_rebalance:rebalance_ownership(State1)};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
-    State1 = presence_cache_rebalance:ensure_pending_state(State),
+    State1 = presence_cache_pending:ensure_pending_state(State),
     {noreply, presence_cache_shards:handle_down_by_pid(Pid, State1)};
 handle_info({nodedown_grace_expired, Node}, State) when is_atom(Node) ->
     {noreply, presence_cache_rebalance:process_nodedown_grace_expiry(Node, State)};
 handle_info(?ANTI_ENTROPY_MSG, State) ->
-    State1 = presence_cache_rebalance:perform_anti_entropy(State),
-    {noreply, State1#{anti_entropy_timer => presence_cache_rebalance:schedule_anti_entropy()}};
+    State1 = presence_cache_anti_entropy:perform_anti_entropy(State),
+    {noreply, State1#{
+        anti_entropy_timer => presence_cache_anti_entropy:schedule_anti_entropy()
+    }};
 handle_info({'ETS-TRANSFER', _Table, _FromPid, _HeirData}, State) ->
     {noreply, State};
 handle_info(_Info, State) ->
-    {noreply, presence_cache_rebalance:ensure_pending_state(State)}.
+    {noreply, presence_cache_pending:ensure_pending_state(State)}.
 
 -spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
 normalize_start_link({ok, Pid}) ->

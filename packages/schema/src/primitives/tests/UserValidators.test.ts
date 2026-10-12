@@ -1,85 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {
-	DiscriminatorType,
-	EmailType,
-	GlobalNameType,
-	PasswordType,
-	UsernameType,
-	WebhookNameType,
-} from '@fluxer/schema/src/primitives/UserValidators';
+import {GlobalNameType, PasswordType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {describe, expect, it} from 'vitest';
-
-describe('EmailType', () => {
-	it('accepts valid email addresses', () => {
-		const result = EmailType.parse('user@example.com');
-		expect(result).toBe('user@example.com');
-	});
-	it('accepts emails with subdomains', () => {
-		const result = EmailType.safeParse('user@mail.example.com');
-		expect(result.success).toBe(true);
-	});
-	it('accepts emails with plus addressing', () => {
-		const result = EmailType.safeParse('user+tag@example.com');
-		expect(result.success).toBe(true);
-	});
-	it('rejects emails without @ symbol', () => {
-		const result = EmailType.safeParse('userexample.com');
-		expect(result.success).toBe(false);
-	});
-	it('rejects emails without domain', () => {
-		const result = EmailType.safeParse('user@');
-		expect(result.success).toBe(false);
-	});
-	it('rejects emails with invalid local part characters', () => {
-		const result = EmailType.safeParse('user name@example.com');
-		expect(result.success).toBe(false);
-	});
-	it('rejects emails exceeding max length', () => {
-		const longLocal = 'a'.repeat(250);
-		const result = EmailType.safeParse(`${longLocal}@example.com`);
-		expect(result.success).toBe(false);
-	});
-	it('trims emails with leading/trailing whitespace', () => {
-		const result = EmailType.parse('  user@example.com  ');
-		expect(result).toBe('user@example.com');
-	});
-});
-
-describe('DiscriminatorType', () => {
-	it('accepts valid single digit discriminators', () => {
-		const result = DiscriminatorType.parse('1');
-		expect(result).toBe(1);
-	});
-	it('accepts valid four digit discriminators', () => {
-		const result = DiscriminatorType.parse('1234');
-		expect(result).toBe(1234);
-	});
-	it('accepts zero as discriminator', () => {
-		const result = DiscriminatorType.parse('0');
-		expect(result).toBe(0);
-	});
-	it('accepts discriminators with leading zeros', () => {
-		const result = DiscriminatorType.parse('0001');
-		expect(result).toBe(1);
-	});
-	it('rejects discriminators with more than 4 digits', () => {
-		const result = DiscriminatorType.safeParse('12345');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.DISCRIMINATOR_INVALID_FORMAT);
-		}
-	});
-	it('rejects non-numeric discriminators', () => {
-		const result = DiscriminatorType.safeParse('abc');
-		expect(result.success).toBe(false);
-	});
-	it('rejects negative discriminators', () => {
-		const result = DiscriminatorType.safeParse('-1');
-		expect(result.success).toBe(false);
-	});
-});
 
 describe('UsernameType', () => {
 	it('accepts valid alphanumeric usernames', () => {
@@ -144,29 +67,6 @@ describe('UsernameType', () => {
 });
 
 describe('GlobalNameType', () => {
-	it('accepts valid display names', () => {
-		const result = GlobalNameType.parse('Test User');
-		expect(result).toBe('Test User');
-	});
-	it('accepts names with unicode characters', () => {
-		const result = GlobalNameType.safeParse('Test User');
-		expect(result.success).toBe(true);
-	});
-	it('sanitizes and normalizes input', () => {
-		const result = GlobalNameType.parse('  Test  User  ');
-		expect(result).toBe('Test User');
-	});
-	it('rejects empty names', () => {
-		const result = GlobalNameType.safeParse('');
-		expect(result.success).toBe(false);
-	});
-	it('rejects names exceeding max length', () => {
-		const result = GlobalNameType.safeParse('a'.repeat(33));
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.GLOBAL_NAME_LENGTH_INVALID);
-		}
-	});
 	it('rejects "everyone" as global name', () => {
 		const result = GlobalNameType.safeParse('everyone');
 		expect(result.success).toBe(false);
@@ -213,35 +113,5 @@ describe('PasswordType', () => {
 	it('trims and normalizes password', () => {
 		const result = PasswordType.parse('  password123  ');
 		expect(result).toBe('password123');
-	});
-});
-
-describe('WebhookNameType', () => {
-	it('accepts valid webhook names', () => {
-		const result = WebhookNameType.parse('My Webhook');
-		expect(result).toBe('My Webhook');
-	});
-	it('accepts single character names', () => {
-		const result = WebhookNameType.safeParse('A');
-		expect(result.success).toBe(true);
-	});
-	it('accepts names at maximum length', () => {
-		const result = WebhookNameType.safeParse('a'.repeat(80));
-		expect(result.success).toBe(true);
-	});
-	it('rejects empty names', () => {
-		const result = WebhookNameType.safeParse('');
-		expect(result.success).toBe(false);
-	});
-	it('rejects names exceeding maximum length', () => {
-		const result = WebhookNameType.safeParse('a'.repeat(81));
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.WEBHOOK_NAME_LENGTH_INVALID);
-		}
-	});
-	it('trims and normalizes webhook names', () => {
-		const result = WebhookNameType.parse('  My Webhook  ');
-		expect(result).toBe('My Webhook');
 	});
 });

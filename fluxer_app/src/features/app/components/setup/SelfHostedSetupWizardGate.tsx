@@ -48,7 +48,6 @@ import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding'
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {AuthRegisterDraftContext, type AuthRegisterFormDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
@@ -56,6 +55,7 @@ import {isAccountTransitionAbortError} from '@app/features/platform/state/Accoun
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl as fileToBase64} from '@app/features/platform/utils/BlobDataUrl';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import Theme from '@app/features/theme/state/Theme';
 import {Button} from '@app/features/ui/button/Button';
@@ -72,7 +72,6 @@ import {
 import * as RecoveryKitCommands from '@app/features/user/commands/RecoveryKitCommands';
 import {confirmNewRecoveryKit} from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
 import RecoveryKitStatus from '@app/features/user/state/RecoveryKitStatus';
-import {fileToBase64} from '@app/features/user/utils/AvatarUtils';
 import * as FormUtils from '@app/lib/forms';
 import {
 	type AccountIdentityMode,
@@ -81,6 +80,7 @@ import {
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
@@ -575,7 +575,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		} catch (error) {
 			logger.warn('Failed to fully clear stale setup session', error);
 			Authentication.handleSessionStart({token: null});
-			Authentication.setUserId(null);
+			SessionManager.setUserId(null);
 		}
 		Authentication.handleLogout({skipRedirect: true});
 	}, [clearStepNavigationLock]);
@@ -693,7 +693,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}
 	const wizardModel = selectSetupWizardModel(syncedSnapshot);
 	const {step, steps, direction} = wizardModel;
-	const currentUserId = Authentication.userId;
+	const currentUserId = Authentication.currentUserId;
 	const hasRecoveryKit = currentUserId ? (RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit ?? false) : false;
 
 	useEffect(() => {

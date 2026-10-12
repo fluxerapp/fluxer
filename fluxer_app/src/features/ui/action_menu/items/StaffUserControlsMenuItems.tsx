@@ -69,8 +69,8 @@ function toggleUserIdList(userIds: ReadonlyArray<string>, userId: string, enable
 
 export const StaffUserControlsMenuItems: React.FC<StaffUserControlsMenuItemsProps> = observer(({user}) => {
 	const {i18n} = useLingui();
-	const staffDmAccessUserIds = UserSettings.getStaffDmAccessUserIds();
-	const mentionBypassUserIds = UserSettings.getSuppressUnprivilegedSelfMentionsBypassUserIds();
+	const staffDmAccessUserIds = UserSettings.staffDmAccessUserIds;
+	const mentionBypassUserIds = UserSettings.suppressUnprivilegedSelfMentionsBypassUserIds;
 	const handleStaffDmAccessChange = useCallback(
 		(checked: boolean) => {
 			void UserSettingsCommands.update({

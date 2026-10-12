@@ -17,11 +17,5 @@ export default defineConfig({
 		isolate: false,
 		reporters: ['default', 'json'],
 		outputFile: './test-results.json',
-		coverage: {
-			provider: 'v8',
-			reporter: ['text', 'text-summary', 'json', 'html'],
-			reportsDirectory: './coverage',
-			exclude: ['**/node_modules/tests/test*.test.tsx', '**/*.test.ts'],
-		},
 	},
 });

@@ -19,10 +19,6 @@ class VoiceMeshPeers {
 		return this.failedConnectionIds.length > 0;
 	}
 
-	getStatus(connectionId: string): VoiceMeshPeerStatus | null {
-		return this.statuses[connectionId] ?? null;
-	}
-
 	setStatus(connectionId: string, status: VoiceMeshPeerStatus): void {
 		if (this.statuses[connectionId] === status) return;
 		this.statuses = {...this.statuses, [connectionId]: status};
@@ -32,10 +28,6 @@ class VoiceMeshPeers {
 		if (!Object.hasOwn(this.statuses, connectionId)) return;
 		const {[connectionId]: _removed, ...rest} = this.statuses;
 		this.statuses = rest;
-	}
-
-	reset(): void {
-		this.statuses = {};
 	}
 }
 

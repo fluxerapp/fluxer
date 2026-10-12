@@ -96,7 +96,6 @@ describe('Signing in again reactivates the account on every sign-in path', () =>
 			userId: user.id,
 			nextPendingDeletionAt: pendingDeletionAt,
 			deletionReasonCode: DeletionReasons.INACTIVITY,
-			userRepository: users,
 			deletionQueue: getKVAccountDeletionQueue(),
 		});
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);

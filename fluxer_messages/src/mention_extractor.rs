@@ -350,4 +350,12 @@ mod tests {
         assert_eq!(mentions.users.len(), 1);
         assert_eq!(mentions.roles.len(), 1);
     }
+    #[test]
+    fn markdown_extractor_keeps_link_text_mentions_but_not_url_mentions() {
+        let mentions =
+            extract_mentions_from_markdown(Some("[<@101>](https://example.com/<@202>) <#303>"));
+        assert!(mentions.users.contains(&101));
+        assert!(!mentions.users.contains(&202));
+        assert!(mentions.channels.contains(&303));
+    }
 }

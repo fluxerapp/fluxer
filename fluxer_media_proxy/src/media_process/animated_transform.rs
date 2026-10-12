@@ -51,19 +51,19 @@ pub(super) fn try_decode_heif_primary_still(
         NativeStatus::Ok if image.is_some() => {}
         NativeStatus::Ok | NativeStatus::Unsupported | NativeStatus::CodecFailure => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Ok(None);
         }
         status => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Err(native_status_error(status, MediaError::MediaDecodeFailed)
                 .expect("non-success native status must map to an error"));
         }
     }
-    metrics.record_heif_primary_still_decode();
+    metrics.avif_libheif_decode_count.inc();
     if facts.hdr_gain_map_detected != 0 {
-        metrics.record_heif_hdr_gain_map_detected();
+        metrics.heif_hdr_gain_map_count.inc();
     }
     let image = image.ok_or(MediaError::MediaDecodeFailed)?;
     Ok(Some(DecodedHEIFPrimaryStill {

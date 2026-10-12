@@ -18,7 +18,26 @@ import {
 	type SettingsSectionId,
 	type UserSettingsTabType,
 } from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
+import {
+	ACCESSIBILITY_DESCRIPTOR,
+	ACCOUNT_DESCRIPTOR as ACCOUNT_SECURITY_DESCRIPTOR,
+	APPLICATIONS_DESCRIPTOR,
+	AUTHORIZED_APPS_DESCRIPTOR,
+	BLOCKED_USERS_DESCRIPTOR,
+	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR as DESKTOP_SETTINGS_DESCRIPTOR,
+	DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR,
+	EMBED_DEBUGGER_DESCRIPTOR,
+	LANGUAGE_DESCRIPTOR as LANGUAGE_AND_TIME_DESCRIPTOR,
+	DEVICES_DESCRIPTOR as LINKED_DEVICES_DESCRIPTOR,
+	PRIVACY_DESCRIPTOR as PRIVACY_SAFETY_DESCRIPTOR,
+	SHORTCUTS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import Users from '@app/features/user/state/Users';
+import {
+	GIFTS_DESCRIPTOR as GIFTS_AND_CODES_DESCRIPTOR,
+	LOOK_AND_FEEL_DESCRIPTOR,
+	MESSAGES_AND_MEDIA_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
@@ -48,22 +67,6 @@ import {
 } from '@phosphor-icons/react';
 import type React from 'react';
 
-const BLOCKED_USERS_DESCRIPTOR = msg({
-	message: 'Blocked users',
-	comment: 'User settings tab listing accounts the current user has blocked.',
-});
-const LINKED_DEVICES_DESCRIPTOR = msg({
-	message: 'Devices',
-	comment: 'User settings tab for managing devices linked to the current account.',
-});
-const ACCESSIBILITY_DESCRIPTOR = msg({
-	message: 'Accessibility',
-	comment: 'User settings tab for accessibility preferences (visual, motion, screen reader, etc.).',
-});
-const APPLICATIONS_DESCRIPTOR = msg({
-	message: 'Applications',
-	comment: 'Developer settings tab for managing the current user developer applications and bots.',
-});
 const WINDOWS_SETTINGS_DESCRIPTOR = msg({
 	message: 'Windows app',
 	comment: 'User settings tab label shown on Windows desktop builds. Refers to the Microsoft Windows OS.',
@@ -76,72 +79,29 @@ const MACOS_SETTINGS_DESCRIPTOR = msg({
 	message: 'macOS app',
 	comment: 'User settings tab label shown on macOS desktop builds.',
 });
-const DESKTOP_SETTINGS_FALLBACK_DESCRIPTOR = msg({
-	message: 'Desktop app',
-	comment:
-		'User settings tab label shown on desktop builds when the OS could not be identified (fallback for the per-OS labels).',
-});
 const PROFILE_DESCRIPTOR = msg({
 	message: 'Profile',
 	comment: 'User settings tab for editing the current user profile.',
 });
-const ACCOUNT_SECURITY_DESCRIPTOR = msg({
-	message: 'Account',
-	comment: 'User settings tab for account login, password, MFA, and security.',
-});
-const GIFTS_AND_CODES_DESCRIPTOR = msg({
-	message: 'Gifts',
-	comment: 'User settings tab for gift inventory and redemption codes.',
-});
-const PRIVACY_SAFETY_DESCRIPTOR = msg({
-	message: 'Privacy',
-	comment: 'User settings tab for privacy and safety controls.',
-});
-const AUTHORIZED_APPS_DESCRIPTOR = msg({
-	message: 'Authorized apps',
-	comment: 'User settings tab for OAuth or connected apps authorized by the user.',
-});
+
 const CONNECTIONS_DESCRIPTOR = msg({
 	message: 'Connections',
 	context: 'user-settings-tab',
 	comment: 'User settings tab for linked external accounts.',
 });
-const LOOK_AND_FEEL_DESCRIPTOR = msg({
-	message: 'Appearance',
-	comment: 'User settings tab for app appearance and layout options.',
-});
-const MESSAGES_AND_MEDIA_DESCRIPTOR = msg({
-	message: 'Chat',
-	comment: 'User settings tab for chat message, media, and input behavior.',
-});
+
 const AUDIO_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice & video',
 	comment: 'User settings tab for microphone, speaker, camera, and call stats.',
-});
-const SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Shortcuts',
-	comment: 'User settings tab for keyboard shortcuts and custom bindings.',
 });
 const NOTIFICATIONS_DESCRIPTOR = msg({
 	message: 'Notifications',
 	context: 'user-settings-tab',
 	comment: 'User settings tab for notification and alert sound controls.',
 });
-const LANGUAGE_AND_TIME_DESCRIPTOR = msg({
-	message: 'Language',
-	comment: 'User settings tab for language, locale, and time display preferences.',
-});
-const DESKTOP_SETTINGS_DESCRIPTOR = msg({
-	message: 'Desktop app',
-	comment: 'User settings tab for desktop app integration and platform settings.',
-});
 const ADVANCED_SETTINGS_DESCRIPTOR = msg({
 	message: 'Advanced',
 	comment: 'User settings tab for power-user and experimental application preferences.',
-});
-const EMBED_DEBUGGER_DESCRIPTOR = msg({
-	message: 'Embed debugger',
-	comment: 'Developer settings tab for testing URL unfurls and rendered embeds.',
 });
 const DESIGN_SYSTEM_DESCRIPTOR = msg({
 	message: 'Design system',

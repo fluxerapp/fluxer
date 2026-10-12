@@ -12,5 +12,4 @@ export interface HardwareEncoderCapability {
 	detail?: string;
 }
 
-export declare function isSupported(): boolean;
 export declare function getHardwareEncoderCapabilities(): HardwareEncoderCapability;

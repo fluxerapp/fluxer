@@ -8,11 +8,11 @@ import {
 	setHighlightRanges,
 } from '@app/features/messaging/utils/CSSHighlightSearch';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {AccessibilityInlineContent} from '@app/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline';
+import {AccessibilityInlineContent} from '@app/features/user/components/modals/tabs/AccessibilityTab';
+import {AppearanceInlineContent} from '@app/features/user/components/modals/tabs/AppearanceTab';
 import {AccountSecurityInlineTab} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityTabInline';
-import {AppearanceInlineContent} from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline';
 import ApplicationsTab from '@app/features/user/components/modals/tabs/applications_tab';
-import {ChatSettingsInlineContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline';
+import {ChatSettingsInlineContent} from '@app/features/user/components/modals/tabs/ChatSettingsTab';
 import DesktopSettingsTab from '@app/features/user/components/modals/tabs/DesktopSettingsTab';
 import GiftInventoryTab from '@app/features/user/components/modals/tabs/GiftInventoryTab';
 import KeybindsTab from '@app/features/user/components/modals/tabs/KeybindsTab';
@@ -22,7 +22,7 @@ import MyProfileTab from '@app/features/user/components/modals/tabs/MyProfileTab
 import {NotificationsInlineContent} from '@app/features/user/components/modals/tabs/NotificationsTab';
 import {PlutoniumInlineTab} from '@app/features/user/components/modals/tabs/PlutoniumTab';
 import {PrivacyDashboardContent} from '@app/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline';
-import {VoiceVideoInlineContent} from '@app/features/user/components/modals/tabs/voice_video_tab/VoiceVideoTabInline';
+import {VoiceVideoInlineContent} from '@app/features/user/components/modals/tabs/VoiceVideoTab';
 import {getSettingsTabComponent} from '@app/features/user/components/settings_utils/DesktopSettingsTabs';
 import type {SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import {

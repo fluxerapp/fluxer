@@ -9,8 +9,6 @@ pub const EMPTY_UNFURL_CACHE_TTL_SECS: u64 = 60;
 
 const SCAN_TOKENS: [&str; 2] = ["scanned", "unscanned"];
 
-const PROVIDER_CAPABILITIES: [&str; 4] = ["none", "youtube", "klipy", "youtube+klipy"];
-
 pub fn nsfw_scan_token(nsfw_mode: NsfwMode) -> &'static str {
     match nsfw_mode {
         NsfwMode::Block | NsfwMode::Flag => SCAN_TOKENS[0],
@@ -30,16 +28,6 @@ pub fn provider_capability(has_youtube_key: bool, has_klipy_key: bool) -> &'stat
 pub fn unfurl_cache_key(url: &str, nsfw_mode: NsfwMode, capability: &str) -> String {
     let scan = nsfw_scan_token(nsfw_mode);
     format!("{scan}:{capability}:{url}")
-}
-
-pub fn every_unfurl_cache_key(url: &str) -> Vec<String> {
-    let mut keys = Vec::with_capacity(SCAN_TOKENS.len() * PROVIDER_CAPABILITIES.len());
-    for scan in SCAN_TOKENS {
-        for capability in PROVIDER_CAPABILITIES {
-            keys.push(format!("{scan}:{capability}:{url}"));
-        }
-    }
-    keys
 }
 
 pub fn default_empty_entry_lifetime() -> Duration {
@@ -131,22 +119,6 @@ mod tests {
                 .collect(),
             cache_ttl_seconds: None,
         }))
-    }
-
-    #[test]
-    fn every_key_covers_the_full_scan_and_capability_matrix() {
-        let keys = every_unfurl_cache_key(URL);
-        assert_eq!(keys.len(), 8);
-        let unique: std::collections::HashSet<&String> = keys.iter().collect();
-        assert_eq!(unique.len(), keys.len(), "invalidation keys must be unique");
-        for nsfw_mode in [NsfwMode::Block, NsfwMode::Flag, NsfwMode::Allow] {
-            for capability in PROVIDER_CAPABILITIES {
-                assert!(
-                    keys.contains(&unfurl_cache_key(URL, nsfw_mode, capability)),
-                    "invalidation must cover {nsfw_mode:?}/{capability}"
-                );
-            }
-        }
     }
 
     #[test]

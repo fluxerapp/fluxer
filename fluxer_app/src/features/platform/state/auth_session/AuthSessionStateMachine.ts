@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 

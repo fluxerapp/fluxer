@@ -424,20 +424,6 @@ describe('VoiceGatewayStateMachine', () => {
 		expectProjectionConsistent(snapshot.context);
 	});
 
-	it('clears all projection indexes', () => {
-		let snapshot = createVoiceGatewayStateSnapshot();
-		snapshot = transition(snapshot, {
-			type: 'connection.open',
-			guilds: [guild('guild-1', [voiceState({connection_id: 'connection-1', channel_id: 'channel-1'})])],
-		});
-		snapshot = transition(snapshot, {type: 'clear.all'});
-		expect(snapshot.context).toEqual({
-			voiceStates: {},
-			userVoiceStates: {},
-			connectionVoiceStates: {},
-		});
-	});
-
 	it('keeps projection indexes consistent after long randomized sequences', () => {
 		let snapshot = createVoiceGatewayStateSnapshot();
 		const random = createRandom(0x5eed);

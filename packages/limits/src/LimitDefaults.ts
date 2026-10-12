@@ -108,6 +108,3 @@ export const DEFAULT_STOCK_LIMITS: Record<LimitKey, number> = {
 	max_guilds: 200,
 	max_message_length: MAX_MESSAGE_LENGTH_PREMIUM,
 };
-
-export const DEFAULT_FREE_LIMITS = DEFAULT_RESTRICTED_LIMITS;
-export const DEFAULT_PREMIUM_LIMITS = DEFAULT_STOCK_LIMITS;

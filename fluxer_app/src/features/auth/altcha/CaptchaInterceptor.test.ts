@@ -78,7 +78,13 @@ class StubXMLHttpRequest extends EventTarget {
 installHarnessBootstrap();
 
 await import('@app/features/auth/altcha/CaptchaInterceptor');
-const {instanceRequest} = await import('@app/features/platform/transport/InstanceHTTP');
+const {instanceRequest, instanceRequestWithinAccountTransition} = await import(
+	'@app/features/platform/transport/InstanceHTTP'
+);
+const {AccountScopedWork, AccountScopedWorkTransitionReason} = await import(
+	'@app/features/platform/state/AccountScopedWork'
+);
+const {isAccountTransitionAbortError} = await import('@app/features/platform/state/AccountTransitionAbort');
 const {http} = await import('@app/features/platform/transport/RestTransport');
 
 const FOREIGN_TARGET = {
@@ -103,10 +109,13 @@ beforeEach(() => {
 	replies.length = 0;
 	sent.length = 0;
 	solveAltchaChallenge.mockClear();
+	http.configure({baseUrl: `${window.location.origin}/api`, apiVersion: 1});
+	http.installAuth(() => 'active-account-token');
 });
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	http.installAuth(() => null);
 });
 
 describe('CaptchaInterceptor on instance-targeted requests', () => {
@@ -119,7 +128,6 @@ describe('CaptchaInterceptor on instance-targeted requests', () => {
 			path: '/auth/register',
 			target: FOREIGN_TARGET,
 			body: {username: 'someone'},
-			auth: 'none',
 		});
 
 		expect(reply.body).toEqual({token: 'session'});
@@ -128,6 +136,8 @@ describe('CaptchaInterceptor on instance-targeted requests', () => {
 			'https://foreign.test/api/v1/auth/register',
 			'https://foreign.test/api/v1/auth/register',
 		]);
+		expect(http.hasAuthorization()).toBe(true);
+		expect(sent[0].headers.authorization).toBeUndefined();
 		expect(sent[0].headers['x-captcha-token']).toBeUndefined();
 		expect(sent[1].headers['x-captcha-token']).toBe('solved:foreign-challenge');
 		expect(sent[1].headers['x-captcha-type']).toBeUndefined();
@@ -146,5 +156,40 @@ describe('CaptchaInterceptor on instance-targeted requests', () => {
 			'https://foreign.test/api/v1/auth/login',
 		]);
 		expect(sent[2].headers['x-captcha-token']).toBe('solved:second');
+	});
+});
+
+describe('InstanceHTTP during account transitions', () => {
+	test('logout sends its targeted request while ordinary work stays suspended', async () => {
+		await AccountScopedWork.runSuspended(AccountScopedWorkTransitionReason.LOGOUT, async (suspension) => {
+			const rejected = await instanceRequest({method: 'GET', path: '/users/@me', target: FOREIGN_TARGET}).catch(
+				(error: unknown) => error,
+			);
+			expect(isAccountTransitionAbortError(rejected)).toBe(true);
+			expect(sent).toHaveLength(0);
+			const reply = await instanceRequestWithinAccountTransition(
+				{method: 'POST', path: '/auth/logout', target: FOREIGN_TARGET, body: {}},
+				suspension,
+			);
+			expect(reply.status).toBe(200);
+			expect(sent.map((request) => request.url)).toEqual(['https://foreign.test/api/v1/auth/logout']);
+			expect(sent[0].headers.authorization).toBeUndefined();
+			expect(AccountScopedWork.isSuspended).toBe(true);
+		});
+		expect(AccountScopedWork.isSuspended).toBe(false);
+	});
+
+	test('a released transition lease cannot send a request', async () => {
+		const suspension = await AccountScopedWork.runSuspended(
+			AccountScopedWorkTransitionReason.LOGOUT,
+			async (lease) => lease,
+		);
+		expect(() =>
+			instanceRequestWithinAccountTransition(
+				{method: 'POST', path: '/auth/logout', target: FOREIGN_TARGET},
+				suspension,
+			),
+		).toThrow('Account scoped work suspension is no longer active');
+		expect(sent).toHaveLength(0);
 	});
 });

@@ -3,7 +3,7 @@
 use crate::{
     config::DeploymentMode,
     constants::{AssetExtension, AssetKind},
-    external_path, public_net_policy,
+    public_net_policy,
     server::{
         asset_path::{
             decode_storage_key, parse_entrance_sound_path, parse_guild_member_asset_path,
@@ -11,7 +11,6 @@ use crate::{
         },
         state::AppState,
     },
-    signing,
 };
 
 pub(in crate::server) enum SelfOrigin {
@@ -37,10 +36,15 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
     }
     if let Some(rest) = path.strip_prefix("/external/") {
         let (signature, proxy_path) = rest.split_once('/')?;
-        if !signing::verify_signature(proxy_path, signature, app.cfg.secret_key.as_bytes()) {
+        if !fluxer_common::external_media_path::verify_signature(
+            proxy_path,
+            signature,
+            app.cfg.secret_key.as_bytes(),
+        ) {
             return None;
         }
-        let target = external_path::reconstruct_original_url(proxy_path).ok()?;
+        let target =
+            fluxer_common::external_media_path::reconstruct_original_url(proxy_path).ok()?;
         if own_path(endpoint, &target).is_some() {
             return None;
         }

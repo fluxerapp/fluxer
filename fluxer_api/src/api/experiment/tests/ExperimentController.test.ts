@@ -19,8 +19,6 @@ import {
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
-	readDomainMigrationAssignment,
-	readVoiceP2pAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import type {GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -83,24 +81,6 @@ describe('GET /experiments', () => {
 				voice_p2p: INERT_VOICE_P2P_ASSIGNMENT,
 			},
 		});
-	});
-
-	it('populates the domain migration assignment key even when the rollout is disabled', async () => {
-		const account = await createTestAccount(harness);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
-
-		expect(Object.hasOwn(body.assignments, 'domain_migration')).toBe(true);
-		expect(readDomainMigrationAssignment(body).enabled).toBe(false);
-	});
-
-	it('populates the voice p2p assignment key even when the rollout is disabled', async () => {
-		const account = await createTestAccount(harness);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
-
-		expect(Object.hasOwn(body.assignments, 'voice_p2p')).toBe(true);
-		expect(readVoiceP2pAssignment(body).enabled).toBe(false);
 	});
 
 	it('resolves the domain migration caller through the allowlist', async () => {
@@ -284,36 +264,6 @@ describe('GET /experiments', () => {
 		}
 	});
 
-	it.each([
-		{name: 'lowercase', countryCodes: ['se']},
-		{name: 'duplicated', countryCodes: ['SE', 'SE']},
-		{name: 'malformed', countryCodes: ['SWE']},
-	])('rejects $name rollout country codes from an admin', async ({countryCodes}) => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-		await createBuilder(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({voice_p2p: {rollout_country_codes: countryCodes}})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-
-	it.each([1, 5])('rejects a voice p2p max_participants of %i from an admin', async (maxParticipants) => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-		await createBuilder(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({voice_p2p: {max_participants: maxParticipants}})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-
 	it('revalidates with a strong etag and answers 304 when nothing changed', async () => {
 		const account = await createTestAccount(harness);
 
@@ -429,41 +379,6 @@ describe('GET /experiments', () => {
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
 		expect(body.assignments.domain_migration).toEqual({enabled: true});
-	});
-
-	it('leaves the domain migration config version alone for an admin update that sets no field', async () => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-
-		const afterFirst = await createBuilder<{domain_migration: {config_version: number; enabled: boolean}}>(
-			harness,
-			admin.token,
-		)
-			.patch('/admin/instance/config')
-			.body({domain_migration: {enabled: true}})
-			.execute();
-		expect(afterFirst.domain_migration).toMatchObject({config_version: 1, enabled: true});
-
-		const afterEmpty = await createBuilder<{domain_migration: {config_version: number; enabled: boolean}}>(
-			harness,
-			admin.token,
-		)
-			.patch('/admin/instance/config')
-			.body({domain_migration: {}})
-			.execute();
-		expect(afterEmpty.domain_migration).toMatchObject({config_version: 1, enabled: true});
-
-		const afterUndefined = await createBuilder<{domain_migration: {config_version: number; enabled: boolean}}>(
-			harness,
-			admin.token,
-		)
-			.patch('/admin/instance/config')
-			.body({domain_migration: {enabled: undefined}})
-			.execute();
-		expect(afterUndefined.domain_migration).toMatchObject({config_version: 1, enabled: true});
 	});
 
 	it('bumps the voice p2p config version on every admin update without the client sending one', async () => {

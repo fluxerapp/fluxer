@@ -150,27 +150,6 @@ function findCategorySpanInOrderedList<Id extends string | bigint, Channel exten
 	return {start, end};
 }
 
-export function computePrecedingSiblingIdFromPosition<
-	Id extends string | bigint,
-	Channel extends ChannelOrderingChannel<Id>,
->({
-	channels,
-	targetId,
-	desiredParentId,
-	position,
-}: {
-	channels: ReadonlyArray<Channel>;
-	targetId: Id;
-	desiredParentId: Id | null;
-	position: number;
-}): Id | null {
-	const siblings = sortChannelsForOrdering(channels).filter((ch) => (ch.parentId ?? null) === desiredParentId);
-	const blockIds = computeChannelMoveBlockIds({channels, targetId});
-	const siblingsWithoutBlock = siblings.filter((ch) => !blockIds.has(ch.id));
-	const clamped = Math.min(Math.max(position, 0), siblingsWithoutBlock.length);
-	return clamped === 0 ? null : siblingsWithoutBlock[clamped - 1]!.id;
-}
-
 export function computePositionFromPrecedingSiblingId<
 	Id extends string | bigint,
 	Channel extends ChannelOrderingChannel<Id>,

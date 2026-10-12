@@ -60,6 +60,50 @@ function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadat
 }
 
 export class GuildAuditLogService {
+	async record(params: {
+		guildId: GuildID;
+		userId: UserID;
+		action: AuditLogActionType;
+		targetId?: bigint | string | null;
+		auditLogReason?: string | null;
+		metadata?: Map<string, string> | Record<string, string>;
+		changes?: GuildAuditLogChange | null;
+		createdAt?: Date;
+	}): Promise<void> {
+		const targetId =
+			params.targetId === undefined || params.targetId === null
+				? null
+				: typeof params.targetId === 'string'
+					? params.targetId
+					: params.targetId.toString();
+		try {
+			const builder = this.createBuilder(params.guildId, params.userId)
+				.withAction(params.action, targetId)
+				.withReason(params.auditLogReason ?? null);
+			if (params.metadata) {
+				builder.withMetadata(params.metadata);
+			}
+			if (params.changes) {
+				builder.withChanges(params.changes);
+			}
+			if (params.createdAt) {
+				builder.withCreatedAt(params.createdAt);
+			}
+			await builder.commit();
+		} catch (error) {
+			Logger.error(
+				{
+					error,
+					guildId: params.guildId.toString(),
+					userId: params.userId.toString(),
+					action: params.action,
+					targetId,
+				},
+				'Failed to record guild audit log',
+			);
+		}
+	}
+
 	constructor(
 		private readonly guildRepository: GuildRepository,
 		private readonly snowflakeService: ISnowflakeService,

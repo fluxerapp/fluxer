@@ -3,6 +3,7 @@
 import {createRequire} from 'node:module';
 import {hasRequestedMacScreenRecording, markMacScreenRecordingRequested} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 import {ipcMain, systemPreferences} from 'electron';
 
 const logger = createChildLogger('MacTcc');
@@ -29,33 +30,10 @@ interface MacTccIpcOptions {
 	onStatus?: (surface: TccSurface, status: TccStatus) => void;
 }
 
-let cached: MacTccModule | null | undefined;
 let cachedProbe: ScreenRecordingProbeModule | null | undefined;
 let screenRecordingLiveGranted = false;
 let screenRecordingProbeInFlight: Promise<void> | null = null;
 let inputMonitoringRequested = false;
-
-function loadAddon(): MacTccModule | null {
-	if (cached !== undefined) return cached;
-	if (process.platform !== 'darwin') {
-		cached = null;
-		return cached;
-	}
-	try {
-		const mod = requireModule('@fluxer/mac-tcc') as MacTccModule;
-		if (mod.loadError) {
-			logger.info('@fluxer/mac-tcc reported load error', {error: mod.loadError});
-			cached = null;
-			return cached;
-		}
-		cached = mod;
-		return cached;
-	} catch (error) {
-		logger.info('@fluxer/mac-tcc not available; TCC pre-flight disabled', {error});
-		cached = null;
-		return cached;
-	}
-}
 
 function loadProbe(): ScreenRecordingProbeModule | null {
 	if (cachedProbe !== undefined) return cachedProbe;
@@ -181,3 +159,11 @@ export function registerMacTccIpcHandlers(options: MacTccIpcOptions = {}): void 
 		return status;
 	});
 }
+
+const loadAddon = loadOptionalNativeAddon<MacTccModule>({
+	platform: 'darwin',
+	load: () => requireModule('@fluxer/mac-tcc'),
+	logger: logger,
+	level: 'info',
+	unavailableMessage: '@fluxer/mac-tcc not available; TCC pre-flight disabled',
+});

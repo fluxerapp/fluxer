@@ -598,17 +598,6 @@ describe('GlobalShortcutsNative translation', () => {
 		return {type, ctrlKey: false, altKey: false, shiftKey: false, metaKey: false, ...overrides};
 	}
 
-	test('an injected Windows key without a scan code matches by virtual key', () => {
-		const matcher = new GlobalShortcutMatcher();
-		matcher.setBindings([bindingFromCombo('custom:a', 'voice_push_to_talk', combo({key: 'F13', code: 'F13'}))]);
-		const identity = {keycode: 0x7c, keyName: 'F13', scanCode: 0, extended: false};
-		const down = native.translateNativeHookEvent('windows', nativeKey('keydown', identity));
-		const up = native.translateNativeHookEvent('windows', nativeKey('keyup', identity));
-		assert.equal(down.code, 'F13');
-		assert.equal(matcher.handleKey(down, true).length, 1);
-		assert.equal(matcher.handleKey(up, true).length, 1);
-	});
-
 	test('an old renderer media select registration matches the media select key', () => {
 		const binding = legacy.legacyRegistrationToBinding({id: 'key:media', keyName: 'LaunchMediaPlayer'});
 		assert.deepEqual(binding.trigger, {kind: 'key', layoutKey: 'LaunchMediaPlayer', code: 'MediaSelect'});
@@ -677,89 +666,6 @@ describe('GlobalShortcutsNative translation', () => {
 		assert.deepEqual(matcher.handleKey(other, true), [
 			{sourceId: 'custom:a', action: 'voice_push_to_talk', phase: 'release'},
 		]);
-	});
-
-	test('Windows unicode packets report the typed character, and a space packet is the Space key', () => {
-		const matcher = new GlobalShortcutMatcher();
-		matcher.setBindings([
-			bindingFromCombo('custom:f13', 'voice_push_to_talk', combo({key: 'F13', code: 'F13'})),
-			bindingFromCombo('custom:space', 'voice_toggle_mute', combo({key: ' ', code: 'Space'})),
-			bindingFromCombo(
-				'custom:shift',
-				'voice_push_to_mute',
-				combo({key: 'Shift', code: 'ShiftRight', modifierOnly: true}),
-			),
-		]);
-		for (const character of ['d', '9', '6', '8']) {
-			const identity = {keycode: 0xe7, keyName: 'Key231', scanCode: character.charCodeAt(0), extended: false};
-			const down = native.translateNativeHookEvent('windows', nativeKey('keydown', identity));
-			assert.equal(down.code, null);
-			assert.equal(down.key, character.toUpperCase());
-			assert.deepEqual(matcher.handleKey(down, true), []);
-			assert.deepEqual(
-				matcher.handleKey(native.translateNativeHookEvent('windows', nativeKey('keyup', identity)), true),
-				[],
-			);
-		}
-		const letter = new GlobalShortcutMatcher();
-		letter.setBindings([bindingFromCombo('custom:d', 'voice_toggle_mute', combo({key: 'd', code: 'KeyD'}))]);
-		const packetD = {keycode: 0xe7, keyName: 'Key231', scanCode: 0x64, extended: false};
-		const packetE = {keycode: 0xe7, keyName: 'Key231', scanCode: 0x65, extended: false};
-		assert.equal(
-			letter.handleKey(native.translateNativeHookEvent('windows', nativeKey('keydown', packetD)), true).length,
-			1,
-		);
-		assert.deepEqual(
-			letter.handleKey(native.translateNativeHookEvent('windows', nativeKey('keyup', packetE)), true),
-			[],
-		);
-		assert.equal(
-			letter.handleKey(native.translateNativeHookEvent('windows', nativeKey('keyup', packetD)), true).length,
-			1,
-		);
-		const packetSpace = {keycode: 0xe7, keyName: 'Space', scanCode: 0x20, extended: false};
-		const spaceDown = native.translateNativeHookEvent('windows', nativeKey('keydown', packetSpace));
-		assert.equal(spaceDown.code, 'Space');
-		assert.deepEqual(
-			matcher.handleKey(spaceDown, true).map((transition) => `${transition.phase}:${transition.sourceId}`),
-			['press:custom:space'],
-		);
-		assert.deepEqual(
-			matcher
-				.handleKey(native.translateNativeHookEvent('windows', nativeKey('keyup', packetSpace)), true)
-				.map((transition) => `${transition.phase}:${transition.sourceId}`),
-			['release:custom:space'],
-		);
-	});
-
-	test('injected Windows keys without a scan code resolve every virtual key the old names covered', () => {
-		const expected = [
-			[0x0c, 'Numpad5'],
-			[0x15, 'KanaMode'],
-			[0x1c, 'Convert'],
-			[0x1d, 'NonConvert'],
-			[0x5f, 'Sleep'],
-			[0x6c, 'NumpadComma'],
-			[0x92, 'NumpadEqual'],
-			[0xa6, 'BrowserBack'],
-			[0xa7, 'BrowserForward'],
-			[0xa8, 'BrowserRefresh'],
-			[0xa9, 'BrowserStop'],
-			[0xaa, 'BrowserSearch'],
-			[0xab, 'BrowserFavorites'],
-			[0xac, 'BrowserHome'],
-			[0xb4, 'LaunchMail'],
-			[0xb5, 'MediaSelect'],
-			[0xb6, 'LaunchApp1'],
-			[0xb7, 'LaunchApp2'],
-			[0x87, 'F24'],
-			[0xde, 'Quote'],
-			[0xe2, 'IntlBackslash'],
-		];
-		for (const [vk, code] of expected) {
-			const identity = {keycode: vk, keyName: 'x', scanCode: 0, extended: false};
-			assert.equal(native.translateNativeHookEvent('windows', nativeKey('keydown', identity)).code, code, code);
-		}
 	});
 });
 
@@ -1050,7 +956,7 @@ describe('LegacyGlobalKeyHookAdapter', () => {
 		assert.equal(harness.engine.getStatus().backend, 'evdev');
 	});
 
-	test('legacy evdev status never offers a prompt and grant is unsupported', () => {
+	test('legacy evdev status never offers a prompt', () => {
 		assert.deepEqual(legacy.buildLegacyLinuxEvdevStatus({platform: 'linux', sandboxed: true, username: 'u'}), {
 			supported: true,
 			hasAccess: true,
@@ -1064,10 +970,6 @@ describe('LegacyGlobalKeyHookAdapter', () => {
 		assert.equal(
 			legacy.buildLegacyLinuxEvdevStatus({platform: 'darwin', sandboxed: false, username: null}).hasAccess,
 			true,
-		);
-		assert.deepEqual(
-			{...legacy.LEGACY_LINUX_EVDEV_GRANT_RESULT},
-			{success: false, needsRelogin: false, error: 'unsupported'},
 		);
 	});
 });

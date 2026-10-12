@@ -7,7 +7,12 @@ use std::collections::VecDeque;
 use crate::audio_contract::{
     self, DIRECT_CAPTURE_CHANNELS, DIRECT_CAPTURE_MAX_SAMPLES, DIRECT_CAPTURE_SAMPLE_RATE,
 };
-use crate::backend::CapturedFrame;
+pub struct CapturedFrame {
+    pub samples: Vec<f32>,
+    pub sample_rate: u32,
+    pub channels: u32,
+    pub timestamp_us: i64,
+}
 
 pub struct DirectReadMeta {
     pub sample_rate: u32,

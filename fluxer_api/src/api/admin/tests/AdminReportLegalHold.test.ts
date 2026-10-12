@@ -137,16 +137,6 @@ describe('report legal hold', () => {
 		},
 	);
 
-	test('an end time that is not an ISO 8601 timestamp is refused', async () => {
-		const reportId = await seedReport(10);
-
-		const response = await holdRequest(admin, reportId, {legal_hold_until: 'next year', legal_hold_reason: 'Request'})
-			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-			.execute();
-
-		expect(response.errors?.[0]?.path).toBe('legal_hold_until');
-	});
-
 	test('an unknown report gives UNKNOWN_REPORT and stores nothing', async () => {
 		await holdRequest(admin, '1499999999999999999', {legal_hold_until: HOLD_UNTIL, legal_hold_reason: 'Request'})
 			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_REPORT')

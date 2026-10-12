@@ -104,7 +104,7 @@ init([]) ->
     ensure_shard_user_table(),
     presence_manager_shards:ensure_table(),
     presence_manager_cache:ensure_table(),
-    {ShardCount, _Source} = presence_manager_shards:determine_count(),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([presence_shards]),
     ShardMap = start_all_shards(ShardCount),
     State = #{shards => ShardMap, shard_count => ShardCount},
     presence_manager_shards:sync_table(State),
@@ -155,14 +155,14 @@ handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref),
     Shards = maps:get(shards, State),
     {noreply,
         maybe_restart_manager_shard(
-            presence_manager_shards:find_by_ref(Ref, Shards), State
+            shard_utils:find_shard_by_ref(Ref, Shards), State
         )};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
     presence_manager_cache:clean_by_pid(Pid),
     Shards = maps:get(shards, State),
     {noreply,
         maybe_restart_manager_shard(
-            presence_manager_shards:find_by_pid(Pid, Shards), State
+            shard_utils:find_shard_by_pid(Pid, Shards), State
         )};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -324,29 +324,3 @@ safe_cast_presence_rejoin(Pid) ->
     catch
         _:_ -> ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-safe_cast_presence_rejoin_delivers_cast_test() ->
-    Parent = self(),
-    Pid = spawn(fun() -> rejoin_cast_receiver(Parent) end),
-    ?assertEqual(ok, safe_cast_presence_rejoin(Pid)),
-    receive
-        got_rejoin -> ok;
-        rejoin_timeout -> ?assert(false, rejoin_cast_not_delivered)
-    after 1500 -> ?assert(false, no_response)
-    end.
-
-rejoin_cast_receiver(Parent) ->
-    receive
-        {'$gen_cast', presence_rejoin} -> Parent ! got_rejoin
-    after 1000 -> Parent ! rejoin_timeout
-    end.
-
-safe_cast_presence_rejoin_tolerates_dead_pid_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual(ok, safe_cast_presence_rejoin(Pid)).
-
--endif.

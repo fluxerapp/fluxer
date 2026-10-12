@@ -1,7 +1,9 @@
+import {isRecord as isPlainObject} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {getLegacyAppOrigin} from '@electron/common/DesktopConfig';
+import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {type DesktopAppStorage, getDesktopAppStorage} from '@electron/main/DesktopAppStorage';
 import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
@@ -69,14 +71,6 @@ interface LegacyHarvestMarker {
 	readonly status: DesktopLegacyHarvestStatus;
 	readonly capturedAt: number;
 	readonly origin: string;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function describeError(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 function parseHarvestMarker(value: string | null): LegacyHarvestMarker | null {

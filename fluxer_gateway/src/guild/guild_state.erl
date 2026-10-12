@@ -185,7 +185,7 @@ resync_channels_after_permission_change(ChanIds, OldState, NewState) ->
         ],
         NewState
     ),
-    Dispatched = guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
+    Dispatched = guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_channels(
         ChanIds, OldState, Rebuilt
     ),
     ok = guild_voice_permission_sync:sync_all_voice_permissions_for_channels(
@@ -205,7 +205,9 @@ post_update_member_remove(EventData, NewState) ->
 post_update_fallback(Event, OldState, NewState) ->
     case guild_state_utils:needs_visibility_check(Event) of
         true ->
-            guild_visibility:compute_and_dispatch_visibility_changes(OldState, NewState);
+            guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
+                OldState, NewState
+            );
         false ->
             NewState
     end.
@@ -215,11 +217,11 @@ post_update_fallback(Event, OldState, NewState) ->
 dispatch_member_update_visibility(UserId, StateWithUpdatedUser, UpdatedState) when
     is_integer(UserId), UserId > 0
 ->
-    guild_visibility:compute_and_dispatch_visibility_changes_for_users(
+    guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_users(
         [UserId], StateWithUpdatedUser, UpdatedState
     );
 dispatch_member_update_visibility(_UserId, StateWithUpdatedUser, UpdatedState) ->
-    guild_visibility:compute_and_dispatch_visibility_changes(
+    guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
         StateWithUpdatedUser, UpdatedState
     ).
 
@@ -308,10 +310,12 @@ guild_update_syncs_unavailability_cache_test() ->
         ),
         ?assertEqual(
             unavailable_for_everyone,
-            guild_availability:get_cached_unavailability_mode(GuildId)
+            guild_availability_cache:get_cached_unavailability_mode(GuildId)
         ),
         _State2 = update_state(guild_update, #{<<"features">> => []}, State1),
-        ?assertEqual(available, guild_availability:get_cached_unavailability_mode(GuildId))
+        ?assertEqual(
+            available, guild_availability_cache:get_cached_unavailability_mode(GuildId)
+        )
     after
         _ = guild_availability:update_unavailability_cache_for_state(CleanupState)
     end.

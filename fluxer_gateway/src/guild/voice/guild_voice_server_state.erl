@@ -8,7 +8,6 @@
     apply_guild_state/2,
     merge_guild_state/2,
     local_voice_states_for_channel/2,
-    local_pending_joins_for_channel/2,
     parse_voice_channel_id/1,
     fetch_guild_data/1,
     guild_state_call/2,
@@ -77,34 +76,6 @@ local_voice_states_for_channel(ChannelIdBin, State) ->
     ),
     #{voice_states => Filtered}.
 
--spec local_pending_joins_for_channel(binary(), server_state()) -> map().
-local_pending_joins_for_channel(ChannelIdBin, State) ->
-    case parse_voice_channel_id(ChannelIdBin) of
-        {ok, ChannelIdInt, _NormalizedBin} ->
-            do_local_pending_joins(ChannelIdInt, State);
-        error ->
-            #{pending_joins => []}
-    end.
-
--spec do_local_pending_joins(integer(), server_state()) -> map().
-do_local_pending_joins(ChannelIdInt, State) ->
-    PendingConns = ensure_map(maps:get(pending_voice_connections, State, #{})),
-    Filtered = maps:fold(
-        fun(ConnId, Metadata, Acc) ->
-            prepend_pending_join_for_channel(ConnId, Metadata, ChannelIdInt, Acc)
-        end,
-        [],
-        PendingConns
-    ),
-    #{pending_joins => Filtered}.
-
--spec prepend_pending_join_for_channel(term(), term(), integer(), [map()]) -> [map()].
-prepend_pending_join_for_channel(ConnId, Metadata, ChannelIdInt, Acc) ->
-    case pending_join_channel_id(Metadata) of
-        ChannelIdInt -> prepend_defined(pending_join_rpc_entry(ConnId, Metadata), Acc);
-        _ -> Acc
-    end.
-
 -spec parse_voice_channel_id(term()) -> {ok, integer(), binary()} | error.
 parse_voice_channel_id(ChannelId) ->
     case validation:validate_snowflake(<<"channel_id">>, ChannelId) of
@@ -166,40 +137,6 @@ voice_state_rpc_entry_or_undefined(VS) ->
         false -> undefined
     end.
 
--spec pending_join_rpc_entry(term(), term()) -> map() | undefined.
-pending_join_rpc_entry(ConnId, Metadata) when is_map(Metadata) ->
-    NormalizedConnId = normalize_rpc_id(ConnId),
-    UserId = normalize_rpc_id(
-        maps:get(user_id, Metadata, maps:get(<<"user_id">>, Metadata, null))
-    ),
-    case {NormalizedConnId, UserId} of
-        {null, _} ->
-            undefined;
-        {_, null} ->
-            undefined;
-        _ ->
-            #{
-                connection_id => NormalizedConnId,
-                user_id => UserId,
-                token_nonce => normalize_rpc_binary(
-                    maps:get(token_nonce, Metadata, maps:get(<<"token_nonce">>, Metadata, null))
-                ),
-                expires_at => normalize_rpc_millisecond(
-                    maps:get(expires_at, Metadata, maps:get(<<"expires_at">>, Metadata, 0))
-                )
-            }
-    end;
-pending_join_rpc_entry(_, _) ->
-    undefined.
-
--spec pending_join_channel_id(term()) -> integer() | undefined.
-pending_join_channel_id(Metadata) when is_map(Metadata) ->
-    normalize_rpc_integer(
-        maps:get(channel_id, Metadata, maps:get(<<"channel_id">>, Metadata, undefined))
-    );
-pending_join_channel_id(_) ->
-    undefined.
-
 -spec guild_state_call(pid(), timeout()) -> term().
 guild_state_call(GuildPid, Timeout) ->
     case gen_server:call(GuildPid, {get_voice_guild_state}, Timeout) of
@@ -242,10 +179,6 @@ fetch_guild_data(GuildPid) ->
             #{}
     end.
 
--spec ensure_map(term()) -> map().
-ensure_map(Map) when is_map(Map) -> Map;
-ensure_map(_) -> #{}.
-
 -spec prepend_defined(undefined | map(), [map()]) -> [map()].
 prepend_defined(undefined, Acc) -> Acc;
 prepend_defined(Entry, Acc) -> [Entry | Acc].
@@ -285,20 +218,6 @@ normalize_rpc_binary(Value) when is_list(Value), Value =/= [] ->
     end;
 normalize_rpc_binary(_) ->
     null.
-
--spec normalize_rpc_millisecond(term()) -> integer().
-normalize_rpc_millisecond(Value) when is_integer(Value), Value >= 0 -> Value;
-normalize_rpc_millisecond(Value) when is_binary(Value), byte_size(Value) > 0 ->
-    try binary_to_integer(Value) of
-        Integer when Integer >= 0 -> Integer;
-        _ -> 0
-    catch
-        throw:_ -> 0;
-        error:_ -> 0;
-        exit:_ -> 0
-    end;
-normalize_rpc_millisecond(_) ->
-    0.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

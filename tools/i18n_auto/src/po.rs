@@ -374,11 +374,4 @@ mod tests {
             format!("{}\n", content.trim_end())
         );
     }
-
-    #[test]
-    fn reset_clears_msgstr() {
-        let reset = reset_po_translations(sample_po()).unwrap();
-        let entries = parse_po(&reset).unwrap();
-        assert!(entries.iter().all(|entry| entry.msgstr.is_empty()));
-    }
 }

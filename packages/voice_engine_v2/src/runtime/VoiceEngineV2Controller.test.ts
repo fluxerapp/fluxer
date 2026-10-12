@@ -3,16 +3,14 @@
 import type {
 	VoiceEngineV2CommandResult,
 	VoiceEngineV2Implementation,
-} from '@fluxer/voice_engine_v2/src/implementations';
-import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {
-	FakeVoiceEngineV2Driver,
-	VoiceEngineV2TestImplementation,
-	waitForRuntime,
-} from '@fluxer/voice_engine_v2/src/testing';
+import {waitForRuntime} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 import {describe, expect, it} from 'vitest';
 
 interface DeferredCommand {
@@ -96,33 +94,6 @@ describe('VoiceEngineV2Controller', () => {
 			atMs: 1010,
 			event: {type: 'implementation.prewarmRequested'},
 			commands: [{type: 'implementation.prewarm', operationId: 1}],
-		});
-	});
-
-	it('queries hardware encoder capabilities through the v2 command pipeline', async () => {
-		const driver = new FakeVoiceEngineV2Driver({
-			hardwareEncoderCapabilities: {
-				available: true,
-				backend: 'nvenc',
-				compiled: true,
-				runtime: true,
-				codecs: ['h264'],
-				zeroCopy: true,
-				nativeInputs: ['d3d11-texture'],
-			},
-		});
-		const controller = new VoiceEngineV2Controller(
-			createControllerTestRuntime(new VoiceEngineV2TestImplementation(driver)),
-		);
-
-		controller.queryHardwareEncoderCapabilities();
-		await waitForRuntime();
-
-		expect(driver.calls).toEqual([{type: 'getHardwareEncoderCapabilities'}]);
-		expect(controller.snapshot.hardwareEncoder.capabilities).toMatchObject({
-			available: true,
-			backend: 'nvenc',
-			zeroCopy: true,
 		});
 	});
 

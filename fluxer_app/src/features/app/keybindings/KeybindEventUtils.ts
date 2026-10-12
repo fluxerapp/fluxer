@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
+import {shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 export type KeyboardShortcutEvent = Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'altKey' | 'shiftKey' | 'metaKey'> &
 	Partial<Pick<KeyboardEvent, 'code'>>;
@@ -32,7 +32,7 @@ const keyboardEventIsModifierKey = (
 };
 export const keyboardEventTriggerMatchesCombo = (combo: KeyCombo, event: KeyboardShortcutEvent): boolean => {
 	const expectedLayoutKey = combo.key || combo.code;
-	if (shouldPreferLayoutKeyForShortcut(combo) && expectedLayoutKey) {
+	if (shouldPreferLayoutKey(combo) && expectedLayoutKey) {
 		if (normalizeKeyboardShortcutKey(event.key) === normalizeKeyboardShortcutKey(expectedLayoutKey)) return true;
 		return Boolean(combo.code && event.code === combo.code && combo.ctrlOrMeta && combo.alt);
 	}

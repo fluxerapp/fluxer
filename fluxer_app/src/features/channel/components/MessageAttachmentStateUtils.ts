@@ -9,7 +9,6 @@ import type {MessageAttachment} from '@fluxer/schema/src/domains/message/Message
 
 interface AttachmentRenderingState {
 	enrichedAttachments: Array<MessageAttachment>;
-	activeAttachments: Array<MessageAttachment>;
 	mediaAttachments: Array<MessageAttachment>;
 	shouldUseMosaic: boolean;
 }
@@ -36,10 +35,9 @@ export const getAttachmentRenderingState = (
 	const enrichedAttachments = expiryApplied.map((entry) => entry.attachment);
 	const activeAttachments = expiryApplied.filter((entry) => !entry.isExpired).map((entry) => entry.attachment);
 	const {mediaAttachments} = splitMediaAndFileAttachments(activeAttachments);
-	const shouldUseMosaic = mediaAttachments.length > 0 && UserSettings.getInlineAttachmentMedia();
+	const shouldUseMosaic = mediaAttachments.length > 0 && UserSettings.inlineAttachmentMedia;
 	return {
 		enrichedAttachments,
-		activeAttachments,
 		mediaAttachments,
 		shouldUseMosaic,
 	};

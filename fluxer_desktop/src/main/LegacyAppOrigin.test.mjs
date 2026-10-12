@@ -26,6 +26,8 @@ function transform(relativePath) {
 const constantsSource = transform('../common/Constants.ts');
 const localAppRouteContractSource = transform('../../../packages/desktop_ipc/src/LocalAppRouteContract.ts');
 const desktopConfigSource = transform('../common/DesktopConfig.ts');
+const plainRecordSource = transform('../common/PlainRecord.ts');
+const recordGuardsSource = transform('../../../packages/record_utils/src/RecordGuards.ts');
 const globalShortcutActionsSource = transform('../common/GlobalShortcutActions.ts');
 
 const silentLog = {debug() {}, info() {}, warn() {}, error() {}};
@@ -62,7 +64,15 @@ function loadDesktop({channel = 'stable', settings} = {}) {
 	const globalShortcutActions = runModule(globalShortcutActionsSource, (specifier) => {
 		throw new Error(`Unexpected import: ${specifier}`);
 	});
+	const plainRecord = runModule(plainRecordSource, (specifier) => {
+		throw new Error(`Unexpected import: ${specifier}`);
+	});
+	const recordGuards = runModule(recordGuardsSource, (specifier) => {
+		throw new Error(`Unexpected import: ${specifier}`);
+	});
 	const desktopConfig = runModule(desktopConfigSource, (specifier) => {
+		if (specifier === '@electron/common/PlainRecord') return plainRecord;
+		if (specifier === '@fluxer/record_utils/src/RecordGuards') return recordGuards;
 		if (specifier === 'node:fs') return fs;
 		if (specifier === '@electron/common/GlobalShortcutActions') return globalShortcutActions;
 		if (specifier === 'node:path') return path;

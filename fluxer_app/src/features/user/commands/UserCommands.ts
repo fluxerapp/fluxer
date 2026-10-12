@@ -5,7 +5,7 @@ import AuthSession from '@app/features/auth/state/AuthSession';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import SudoPrompt from '@app/features/auth/state/SudoPrompt';
 import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTypes';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -93,116 +93,23 @@ export type PreloadedDirectMessages = Record<string, WireMessage>;
 
 const EMPTY_BODY: Record<string, never> = {};
 
-function updatedUserFields(user: UserUpdatePayload): Array<string> {
-	return Object.keys(user).filter((key) => key !== 'new_password');
-}
-
-async function requestUserUpdate(user: UserUpdatePayload): Promise<UserUpdateResponse> {
-	const response = await http.patch<UserUpdateResponse>(Endpoints.USER_ME, {body: user});
-	return response.body;
-}
-
-function emailTicketRequest(ticket: string): {ticket: string} {
-	return {ticket};
-}
-
-function emailCodeRequest(ticket: string, code: string): {ticket: string; code: string} {
-	return {ticket, code};
-}
-
-function requestNewEmailBody(
-	ticket: string,
-	newEmail: string,
-	originalProof: string,
-	newPassword?: string,
-): {ticket: string; new_email: string; original_proof: string; new_password?: string} {
-	return {
-		ticket,
-		new_email: newEmail,
-		original_proof: originalProof,
-		...(newPassword != null ? {new_password: newPassword} : {}),
-	};
-}
-
-function verifyNewEmailBody(
-	ticket: string,
-	code: string,
-	originalProof: string,
-): {ticket: string; code: string; original_proof: string} {
-	return {ticket, code, original_proof: originalProof};
-}
-
-function bouncedEmailRequest(newEmail: string): {new_email: string} {
-	return {new_email: newEmail};
-}
-
-function completePasswordChangeBody(
-	ticket: string,
-	verificationProof: string,
-	newPassword: string,
-): {ticket: string; verification_proof: string; new_password: string} {
-	return {
-		ticket,
-		verification_proof: verificationProof,
-		new_password: newPassword,
-	};
-}
-
-function webAuthnRegistrationBody(
-	response: RegistrationResponseJSON,
-	challenge: string,
-	name: string,
-): {response: RegistrationResponseJSON; challenge: string; name: string} {
-	return {response, challenge, name};
-}
-
-async function requestAccountPost(endpoint: string): Promise<void> {
-	await http.post(endpoint, {body: EMPTY_BODY});
-}
-
-async function bulkDeleteMyMessagesSudoPayload(): Promise<SudoVerificationPayload> {
-	return Sudo.hasValidToken()
-		? {}
-		: await SudoPrompt.requestVerification({
-				method: 'POST',
-				path: Endpoints.USER_BULK_DELETE_MY_MESSAGES,
-			});
-}
-
-async function requestHarvest(): Promise<string> {
-	const response = await http.post<HarvestRequestResponse>(Endpoints.USER_HARVEST);
-	return response.body.harvest_id;
-}
-
-async function requestPreloadedDMMessages(channelIds: Array<string>): Promise<PreloadedDirectMessages> {
-	const response = await http.post<PreloadedDirectMessages>(Endpoints.USER_PRELOAD_MESSAGES, {
-		body: {channels: channelIds},
-	});
-	return response.body ?? {};
-}
-
 export async function update(user: UserUpdatePayload): Promise<UserUpdateResponse> {
-	try {
-		logger.debug('Updating current user profile');
-		const userData = await requestUserUpdate(user);
-		logger.debug('Successfully updated user profile');
-		const updatedFields = updatedUserFields(user);
-		if (updatedFields.length > 0) {
-			logger.debug(`Updated fields: ${updatedFields.join(', ')}`);
-		}
-		if (userData.token) {
-			SessionManager.setToken(userData.token);
-			GatewayConnection.setToken(userData.token);
-			if (userData.auth_session_id_hash) {
-				AuthSession.handleAuthSessionChange(userData.auth_session_id_hash);
-			}
-			logger.debug('Authentication token was refreshed');
-		}
-		return userData;
-	} catch (error) {
-		logger.error('Failed to update user profile:', error);
-		throw error;
+	logger.debug('Updating current user profile');
+	const userData = (await http.patch<UserUpdateResponse>(Endpoints.USER_ME, {body: user})).body;
+	logger.debug('Successfully updated user profile');
+	const updatedFields = Object.keys(user).filter((key) => key !== 'new_password');
+	if (updatedFields.length > 0) {
+		logger.debug(`Updated fields: ${updatedFields.join(', ')}`);
 	}
+	if (userData.token) {
+		SessionManager.setToken(userData.token);
+		GatewaySessions.foregroundConnection.setToken(userData.token);
+		if (userData.auth_session_id_hash) {
+			AuthSession.handleAuthSessionChange(userData.auth_session_id_hash);
+		}
+		logger.debug('Authentication token was refreshed');
+	}
+	return userData;
 }
 
 export async function checkFluxerTagAvailability({
@@ -212,57 +119,37 @@ export async function checkFluxerTagAvailability({
 	username: string;
 	discriminator: string;
 }): Promise<boolean> {
-	try {
-		logger.debug(`Checking availability for FluxerTag ${username}#${discriminator}`);
-		const response = await http.get<FluxerTagAvailabilityResponse>(Endpoints.USER_CHECK_TAG, {
-			query: {username, discriminator},
-		});
-		return response.body.taken;
-	} catch (error) {
-		logger.error('Failed to check FluxerTag availability:', error);
-		throw error;
-	}
+	logger.debug(`Checking availability for FluxerTag ${username}#${discriminator}`);
+	const response = await http.get<FluxerTagAvailabilityResponse>(Endpoints.USER_CHECK_TAG, {
+		query: {username, discriminator},
+	});
+	return response.body.taken;
 }
 
 export async function startEmailChange(): Promise<EmailChangeStartResponse> {
-	try {
-		logger.debug('Starting email change flow');
-		const response = await http.post<EmailChangeStartResponse>(Endpoints.USER_EMAIL_CHANGE_START, {
-			body: {},
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to start email change', error);
-		throw error;
-	}
+	logger.debug('Starting email change flow');
+	const response = await http.post<EmailChangeStartResponse>(Endpoints.USER_EMAIL_CHANGE_START, {
+		body: {},
+	});
+	return response.body;
 }
 
 export async function resendEmailChangeOriginal(ticket: string): Promise<void> {
-	try {
-		logger.debug('Resending email change original code');
-		await http.post(Endpoints.USER_EMAIL_CHANGE_RESEND_ORIGINAL, {
-			body: emailTicketRequest(ticket),
-		});
-	} catch (error) {
-		logger.error('Failed to resend original email code', error);
-		throw error;
-	}
+	logger.debug('Resending email change original code');
+	await http.post(Endpoints.USER_EMAIL_CHANGE_RESEND_ORIGINAL, {
+		body: {ticket: ticket},
+	});
 }
 
 export async function verifyEmailChangeOriginal(
 	ticket: string,
 	code: string,
 ): Promise<EmailChangeVerifyOriginalResponse> {
-	try {
-		logger.debug('Verifying original email code');
-		const response = await http.post<EmailChangeVerifyOriginalResponse>(Endpoints.USER_EMAIL_CHANGE_VERIFY_ORIGINAL, {
-			body: emailCodeRequest(ticket, code),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to verify original email code', error);
-		throw error;
-	}
+	logger.debug('Verifying original email code');
+	const response = await http.post<EmailChangeVerifyOriginalResponse>(Endpoints.USER_EMAIL_CHANGE_VERIFY_ORIGINAL, {
+		body: {ticket: ticket, code: code},
+	});
+	return response.body;
 }
 
 export async function requestEmailChangeNew(
@@ -271,28 +158,23 @@ export async function requestEmailChangeNew(
 	originalProof: string,
 	newPassword?: string,
 ): Promise<EmailChangeRequestNewResponse> {
-	try {
-		logger.debug('Requesting new email code');
-		const response = await http.post<EmailChangeRequestNewResponse>(Endpoints.USER_EMAIL_CHANGE_REQUEST_NEW, {
-			body: requestNewEmailBody(ticket, newEmail, originalProof, newPassword),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to request new email code', error);
-		throw error;
-	}
+	logger.debug('Requesting new email code');
+	const response = await http.post<EmailChangeRequestNewResponse>(Endpoints.USER_EMAIL_CHANGE_REQUEST_NEW, {
+		body: {
+			ticket: ticket,
+			new_email: newEmail,
+			original_proof: originalProof,
+			...(newPassword != null ? {new_password: newPassword} : {}),
+		},
+	});
+	return response.body;
 }
 
 export async function resendEmailChangeNew(ticket: string): Promise<void> {
-	try {
-		logger.debug('Resending new email code');
-		await http.post(Endpoints.USER_EMAIL_CHANGE_RESEND_NEW, {
-			body: emailTicketRequest(ticket),
-		});
-	} catch (error) {
-		logger.error('Failed to resend new email code', error);
-		throw error;
-	}
+	logger.debug('Resending new email code');
+	await http.post(Endpoints.USER_EMAIL_CHANGE_RESEND_NEW, {
+		body: {ticket: ticket},
+	});
 }
 
 export async function verifyEmailChangeNew(
@@ -300,92 +182,57 @@ export async function verifyEmailChangeNew(
 	code: string,
 	originalProof: string,
 ): Promise<EmailChangeVerifyNewResponse> {
-	try {
-		logger.debug('Verifying new email code');
-		const response = await http.post<EmailChangeVerifyNewResponse>(Endpoints.USER_EMAIL_CHANGE_VERIFY_NEW, {
-			body: verifyNewEmailBody(ticket, code, originalProof),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to verify new email code', error);
-		throw error;
-	}
+	logger.debug('Verifying new email code');
+	const response = await http.post<EmailChangeVerifyNewResponse>(Endpoints.USER_EMAIL_CHANGE_VERIFY_NEW, {
+		body: {ticket: ticket, code: code, original_proof: originalProof},
+	});
+	return response.body;
 }
 
 export async function requestBouncedEmailChangeNew(newEmail: string): Promise<EmailChangeRequestNewResponse> {
-	try {
-		logger.debug('Requesting bounced email replacement code');
-		const response = await http.post<EmailChangeRequestNewResponse>(Endpoints.USER_EMAIL_CHANGE_BOUNCED_REQUEST_NEW, {
-			body: bouncedEmailRequest(newEmail),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to request bounced email replacement code', error);
-		throw error;
-	}
+	logger.debug('Requesting bounced email replacement code');
+	const response = await http.post<EmailChangeRequestNewResponse>(Endpoints.USER_EMAIL_CHANGE_BOUNCED_REQUEST_NEW, {
+		body: {new_email: newEmail},
+	});
+	return response.body;
 }
 
 export async function resendBouncedEmailChangeNew(ticket: string): Promise<void> {
-	try {
-		logger.debug('Resending bounced email replacement code');
-		await http.post(Endpoints.USER_EMAIL_CHANGE_BOUNCED_RESEND_NEW, {
-			body: emailTicketRequest(ticket),
-		});
-	} catch (error) {
-		logger.error('Failed to resend bounced email replacement code', error);
-		throw error;
-	}
+	logger.debug('Resending bounced email replacement code');
+	await http.post(Endpoints.USER_EMAIL_CHANGE_BOUNCED_RESEND_NEW, {
+		body: {ticket: ticket},
+	});
 }
 
 export async function verifyBouncedEmailChangeNew(ticket: string, code: string): Promise<UserPrivate> {
-	try {
-		logger.debug('Verifying bounced email replacement code');
-		const response = await http.post<UserPrivate>(Endpoints.USER_EMAIL_CHANGE_BOUNCED_VERIFY_NEW, {
-			body: emailCodeRequest(ticket, code),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to verify bounced email replacement code', error);
-		throw error;
-	}
+	logger.debug('Verifying bounced email replacement code');
+	const response = await http.post<UserPrivate>(Endpoints.USER_EMAIL_CHANGE_BOUNCED_VERIFY_NEW, {
+		body: {ticket: ticket, code: code},
+	});
+	return response.body;
 }
 
 export async function startPasswordChange(): Promise<PasswordChangeStartResponse> {
-	try {
-		logger.debug('Starting password change flow');
-		const response = await http.post<PasswordChangeStartResponse>(Endpoints.USER_PASSWORD_CHANGE_START, {
-			body: {},
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to start password change', error);
-		throw error;
-	}
+	logger.debug('Starting password change flow');
+	const response = await http.post<PasswordChangeStartResponse>(Endpoints.USER_PASSWORD_CHANGE_START, {
+		body: {},
+	});
+	return response.body;
 }
 
 export async function resendPasswordChangeCode(ticket: string): Promise<void> {
-	try {
-		logger.debug('Resending password change code');
-		await http.post(Endpoints.USER_PASSWORD_CHANGE_RESEND, {
-			body: emailTicketRequest(ticket),
-		});
-	} catch (error) {
-		logger.error('Failed to resend password change code', error);
-		throw error;
-	}
+	logger.debug('Resending password change code');
+	await http.post(Endpoints.USER_PASSWORD_CHANGE_RESEND, {
+		body: {ticket: ticket},
+	});
 }
 
 export async function verifyPasswordChangeCode(ticket: string, code: string): Promise<PasswordChangeVerifyResponse> {
-	try {
-		logger.debug('Verifying password change code');
-		const response = await http.post<PasswordChangeVerifyResponse>(Endpoints.USER_PASSWORD_CHANGE_VERIFY, {
-			body: emailCodeRequest(ticket, code),
-		});
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to verify password change code', error);
-		throw error;
-	}
+	logger.debug('Verifying password change code');
+	const response = await http.post<PasswordChangeVerifyResponse>(Endpoints.USER_PASSWORD_CHANGE_VERIFY, {
+		body: {ticket: ticket, code: code},
+	});
+	return response.body;
 }
 
 export async function completePasswordChange(
@@ -393,51 +240,40 @@ export async function completePasswordChange(
 	verificationProof: string,
 	newPassword: string,
 ): Promise<void> {
-	try {
-		logger.debug('Completing password change');
-		const response = await http.post<PasswordChangeCompleteResponse>(Endpoints.USER_PASSWORD_CHANGE_COMPLETE, {
-			body: completePasswordChangeBody(ticket, verificationProof, newPassword),
-		});
-		await SessionManager.setToken(response.body.token);
-		GatewayConnection.setToken(response.body.token);
-		AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
-		logger.info('Password changed successfully');
-	} catch (error) {
-		logger.error('Failed to complete password change', error);
-		throw error;
-	}
+	logger.debug('Completing password change');
+	const response = await http.post<PasswordChangeCompleteResponse>(Endpoints.USER_PASSWORD_CHANGE_COMPLETE, {
+		body: {
+			ticket: ticket,
+			verification_proof: verificationProof,
+			new_password: newPassword,
+		},
+	});
+	await SessionManager.setToken(response.body.token);
+	GatewaySessions.foregroundConnection.setToken(response.body.token);
+	AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
+	logger.info('Password changed successfully');
 }
 
 export async function updatePasswordWithSudo(newPassword: string): Promise<void> {
-	try {
-		logger.debug('Updating password with sudo verification');
-		const response = await http.post<UserPasswordUpdateResponse>(Endpoints.USER_PASSWORD, {
-			body: {new_password: newPassword},
-		});
-		SessionManager.setToken(response.body.token);
-		GatewayConnection.setToken(response.body.token);
-		AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
-		logger.info('Password changed successfully');
-	} catch (error) {
-		logger.error('Failed to update password', error);
-		throw error;
-	}
+	logger.debug('Updating password with sudo verification');
+	const response = await http.post<UserPasswordUpdateResponse>(Endpoints.USER_PASSWORD, {
+		body: {new_password: newPassword},
+	});
+	SessionManager.setToken(response.body.token);
+	GatewaySessions.foregroundConnection.setToken(response.body.token);
+	AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
+	logger.info('Password changed successfully');
 }
 
 export async function getWebAuthnRegistrationOptions(): Promise<PublicKeyCredentialCreationOptionsJSON> {
-	try {
-		logger.debug('Getting WebAuthn registration options');
-		const response = await http.post<PublicKeyCredentialCreationOptionsJSON>(
-			Endpoints.USER_MFA_WEBAUTHN_REGISTRATION_OPTIONS,
-			{body: {}},
-		);
-		const data = response.body;
-		logger.debug('WebAuthn registration options retrieved');
-		return data;
-	} catch (error) {
-		logger.error('Failed to get WebAuthn registration options', error);
-		throw error;
-	}
+	logger.debug('Getting WebAuthn registration options');
+	const response = await http.post<PublicKeyCredentialCreationOptionsJSON>(
+		Endpoints.USER_MFA_WEBAUTHN_REGISTRATION_OPTIONS,
+		{body: {}},
+	);
+	const data = response.body;
+	logger.debug('WebAuthn registration options retrieved');
+	return data;
 }
 
 export async function registerWebAuthnCredential(
@@ -445,127 +281,82 @@ export async function registerWebAuthnCredential(
 	challenge: string,
 	name: string,
 ): Promise<void> {
-	try {
-		logger.debug('Registering WebAuthn credential');
-		await http.post(Endpoints.USER_MFA_WEBAUTHN_CREDENTIALS, {
-			body: webAuthnRegistrationBody(response, challenge, name),
-		});
-		logger.info('WebAuthn credential registered');
-		Sudo.clearToken();
-	} catch (error) {
-		logger.error('Failed to register WebAuthn credential', error);
-		throw error;
-	}
+	logger.debug('Registering WebAuthn credential');
+	await http.post(Endpoints.USER_MFA_WEBAUTHN_CREDENTIALS, {
+		body: {response: response, challenge: challenge, name: name},
+	});
+	logger.info('WebAuthn credential registered');
+	Sudo.clearToken();
 }
 
 export async function setWebAuthnTwoFactor(enabled: boolean): Promise<Array<BackupCode> | null> {
-	try {
-		logger.debug('Updating the passkey two-factor preference');
-		const response = await http.put<WebAuthnTwoFactorResponse>(Endpoints.USER_MFA_WEBAUTHN_TWO_FACTOR, {
-			body: {enabled},
-		});
-		const {user, backup_codes: backupCodes} = response.body;
-		Users.handleUserUpdate(user);
-		logger.info('Passkey two-factor preference updated');
-		Sudo.clearToken();
-		return backupCodes ?? null;
-	} catch (error) {
-		logger.error('Failed to update the passkey two-factor preference', error);
-		throw error;
-	}
+	logger.debug('Updating the passkey two-factor preference');
+	const response = await http.put<WebAuthnTwoFactorResponse>(Endpoints.USER_MFA_WEBAUTHN_TWO_FACTOR, {
+		body: {enabled},
+	});
+	const {user, backup_codes: backupCodes} = response.body;
+	Users.handleUserUpdate(user);
+	logger.info('Passkey two-factor preference updated');
+	Sudo.clearToken();
+	return backupCodes ?? null;
 }
 
 export async function renameWebAuthnCredential(credentialId: string, name: string): Promise<void> {
-	try {
-		logger.debug('Renaming WebAuthn credential');
-		await http.patch(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: {name}});
-		logger.info('WebAuthn credential renamed');
-	} catch (error) {
-		logger.error('Failed to rename WebAuthn credential', error);
-		throw error;
-	}
+	logger.debug('Renaming WebAuthn credential');
+	await http.patch(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: {name}});
+	logger.info('WebAuthn credential renamed');
 }
 
 export async function deleteWebAuthnCredential(credentialId: string): Promise<void> {
-	try {
-		logger.debug('Deleting WebAuthn credential');
-		await http.delete(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: EMPTY_BODY});
-		logger.info('WebAuthn credential deleted');
-	} catch (error) {
-		logger.error('Failed to delete WebAuthn credential', error);
-		throw error;
-	}
+	logger.debug('Deleting WebAuthn credential');
+	await http.delete(Endpoints.USER_MFA_WEBAUTHN_CREDENTIAL(credentialId), {body: EMPTY_BODY});
+	logger.info('WebAuthn credential deleted');
 }
 
 export async function disableAccount(): Promise<void> {
-	try {
-		logger.debug('Disabling account');
-		await requestAccountPost(Endpoints.USER_DISABLE);
-		logger.info('Account disabled');
-	} catch (error) {
-		logger.error('Failed to disable account', error);
-		throw error;
-	}
+	logger.debug('Disabling account');
+	await http.post(Endpoints.USER_DISABLE, {body: EMPTY_BODY});
+	logger.info('Account disabled');
 }
 
 export async function deleteAccount(): Promise<void> {
-	try {
-		logger.debug('Deleting account');
-		await requestAccountPost(Endpoints.USER_DELETE);
-		logger.info('Account scheduled for deletion');
-	} catch (error) {
-		logger.error('Failed to delete account', error);
-		throw error;
-	}
+	logger.debug('Deleting account');
+	await http.post(Endpoints.USER_DELETE, {body: EMPTY_BODY});
+	logger.info('Account scheduled for deletion');
 }
 
 export async function forgetAuthorizedIps(sudoPayload: SudoVerificationPayload): Promise<void> {
-	try {
-		logger.debug('Forgetting authorized IPs');
-		await http.delete(Endpoints.USER_AUTHORIZED_IPS, {body: sudoPayload});
-		logger.info('Authorised IPs cleared');
-	} catch (error) {
-		logger.error('Failed to forget authorized IPs', error);
-		throw error;
-	}
+	logger.debug('Forgetting authorized IPs');
+	await http.delete(Endpoints.USER_AUTHORIZED_IPS, {body: sudoPayload});
+	logger.info('Authorised IPs cleared');
 }
 
 export async function bulkDeleteMyMessages(filter: BulkDeleteMyMessagesFilter): Promise<void> {
-	try {
-		logger.debug('Requesting bulk deletion of my messages', filter);
-		await http.post(Endpoints.USER_BULK_DELETE_MY_MESSAGES, {
-			body: {...filter, ...(await bulkDeleteMyMessagesSudoPayload())},
-		});
-		logger.info('Bulk message deletion queued');
-	} catch (error) {
-		logger.error('Failed to queue bulk message deletion', error);
-		throw error;
-	}
+	logger.debug('Requesting bulk deletion of my messages', filter);
+	await http.post(Endpoints.USER_BULK_DELETE_MY_MESSAGES, {
+		body: {
+			...filter,
+			...(Sudo.hasValidToken()
+				? {}
+				: await SudoPrompt.requestVerification({method: 'POST', path: Endpoints.USER_BULK_DELETE_MY_MESSAGES})),
+		},
+	});
+	logger.info('Bulk message deletion queued');
 }
 
 export async function resetPremiumState(): Promise<void> {
-	try {
-		logger.debug('Resetting premium state for current user');
-		await http.post(Endpoints.USER_PREMIUM_RESET);
-		logger.info('Reset premium state for current user');
-	} catch (error) {
-		logger.error('Failed to reset premium state', error);
-		throw error;
-	}
+	logger.debug('Resetting premium state for current user');
+	await http.post(Endpoints.USER_PREMIUM_RESET);
+	logger.info('Reset premium state for current user');
 }
 
 export async function requestDataHarvest(): Promise<{
 	harvestId: string;
 }> {
-	try {
-		logger.debug('Requesting data harvest');
-		const harvestId = await requestHarvest();
-		logger.info('Data harvest request submitted', {harvestId});
-		return {harvestId};
-	} catch (error) {
-		logger.error('Failed to request data harvest', error);
-		throw error;
-	}
+	logger.debug('Requesting data harvest');
+	const harvestId = (await http.post<HarvestRequestResponse>(Endpoints.USER_HARVEST)).body.harvest_id;
+	logger.info('Data harvest request submitted', {harvestId});
+	return {harvestId};
 }
 
 export async function requestFilteredDataHarvest(filter: HarvestDataFilter): Promise<{harvestId: string}> {
@@ -578,35 +369,22 @@ export async function requestFilteredDataHarvest(filter: HarvestDataFilter): Pro
 }
 
 export async function getLatestHarvest(): Promise<HarvestStatusResponse | null> {
-	try {
-		logger.debug('Fetching latest harvest');
-		const response = await http.get<HarvestStatusResponse | null>(Endpoints.USER_HARVEST_LATEST);
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to fetch latest harvest', error);
-		throw error;
-	}
+	logger.debug('Fetching latest harvest');
+	const response = await http.get<HarvestStatusResponse | null>(Endpoints.USER_HARVEST_LATEST);
+	return response.body;
 }
 
 export async function getHarvestDownloadUrl(harvestId: string): Promise<HarvestDownloadUrlResponse> {
-	try {
-		logger.debug('Fetching harvest download URL', {harvestId});
-		const response = await http.get<HarvestDownloadUrlResponse>(Endpoints.USER_HARVEST_DOWNLOAD(harvestId));
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to fetch harvest download URL', error);
-		throw error;
-	}
+	logger.debug('Fetching harvest download URL', {harvestId});
+	const response = await http.get<HarvestDownloadUrlResponse>(Endpoints.USER_HARVEST_DOWNLOAD(harvestId));
+	return response.body;
 }
 
 export async function preloadDMMessages(channelIds: Array<string>): Promise<PreloadedDirectMessages> {
-	try {
-		logger.debug('Preloading DM messages', {channelCount: channelIds.length});
-		const preloadedData = await requestPreloadedDMMessages(channelIds);
-		Messages.handleMessagePreload({messages: preloadedData});
-		return preloadedData;
-	} catch (error) {
-		logger.error('Failed to preload DM messages', error);
-		throw error;
-	}
+	logger.debug('Preloading DM messages', {channelCount: channelIds.length});
+	const preloadedData =
+		(await http.post<PreloadedDirectMessages>(Endpoints.USER_PRELOAD_MESSAGES, {body: {channels: channelIds}})).body ??
+		{};
+	Messages.handleMessagePreload({messages: preloadedData});
+	return preloadedData;
 }

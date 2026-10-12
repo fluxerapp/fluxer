@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import type {
-	VoiceRegionAvailability,
-	VoiceRegionMetadata,
-	VoiceRegionRecord,
-	VoiceServerRecord,
-} from '@app/api/voice/VoiceModel';
+import type {VoiceRegionAvailability, VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {preferServersUnderSoftLimit} from '@app/api/voice/VoiceRegionSelection';
 import type {VoiceServerLoadSource} from '@app/api/voice/VoiceServerLoad';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
@@ -30,10 +25,6 @@ export class VoiceAvailabilityService {
 
 	getServerConnectionCounts(): ReadonlyMap<string, number> {
 		return this.loadSource?.getConnectionCounts() ?? EMPTY_CONNECTION_COUNTS;
-	}
-
-	getRegionMetadata(): Array<VoiceRegionMetadata> {
-		return this.topology.getRegionMetadataList();
 	}
 
 	isRegionAccessible(region: VoiceRegionRecord, context: VoiceAccessContext): boolean {

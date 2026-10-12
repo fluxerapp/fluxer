@@ -10,6 +10,7 @@ import appearanceStyles from '@app/features/user/components/modals/tabs/Appearan
 import {SubsectionTitle} from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabSubsectionTitle';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.module.css';
 import Users from '@app/features/user/state/Users';
+import {LINKS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {MessagePreviewContext, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -26,10 +27,7 @@ const HEADINGS_DESCRIPTOR = msg({
 	message: 'Headings',
 	comment: 'Title in the markdown tab. Keep it concise.',
 });
-const LINKS_DESCRIPTOR = msg({
-	message: 'Links',
-	comment: 'Short label in the markdown tab. Keep it concise.',
-});
+
 const LISTS_DESCRIPTOR = msg({
 	message: 'Lists',
 	comment: 'Short label in the markdown tab. Keep it concise.',

@@ -334,7 +334,10 @@ merge_parent_settings(Settings, State) ->
         }
      || S <- Settings, is_map(S)
     ]),
-    Channels = [merge_parent_setting(C, ById) || C <- guild_data_index:channel_list(Data)],
+    Channels = [
+        merge_parent_setting(C, ById)
+     || C <- guild_data_index_channels:channel_list(Data)
+    ],
     State#{data => guild_data_index:put_channels(Channels, Data)}.
 
 -spec merge_parent_setting(map(), map()) -> map().
@@ -749,7 +752,7 @@ loaded_forum_without_a_config_row_gets_default_surface_fields_test() ->
         },
         #{id => 5, data => Data, sessions => #{}}
     ),
-    [Loaded] = guild_data_index:channel_list(maps:get(data, State)),
+    [Loaded] = guild_data_index_channels:channel_list(maps:get(data, State)),
     ?assertEqual([], maps:get(<<"available_tags">>, Loaded)),
     ?assertEqual(<<"match_some">>, maps:get(<<"default_tag_setting">>, Loaded)),
     ?assertEqual(0, maps:get(<<"default_forum_layout">>, Loaded)),

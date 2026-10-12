@@ -27,8 +27,6 @@ export function createDesktopModuleRequest(moduleName: string): DesktopModuleReq
 	const backoff = new ExponentialBackoff({
 		minDelay: DESKTOP_MODULE_BACKOFF_MIN_MS,
 		maxDelay: DESKTOP_MODULE_BACKOFF_MAX_MS,
-		factor: 2,
-		jitter: true,
 		jitterFactor: 0.2,
 	});
 	let state: DesktopModuleState = 'idle';

@@ -3,11 +3,9 @@
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
-import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
 import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import {MessageCrosspostService} from '@app/api/channel/services/message/MessageCrosspostService';
 import {MessageDeleteService} from '@app/api/channel/services/message/MessageDeleteService';
-import {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import {MessageEditService} from '@app/api/channel/services/message/MessageEditService';
 import {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
@@ -44,14 +42,12 @@ export class MessageService {
 	public readonly search: MessageSearchService;
 	public readonly persistence: MessagePersistenceService;
 	public readonly channelAuth: MessageChannelAuthService;
-	public readonly dispatch: MessageDispatchService;
 	public readonly processing: MessageProcessingService;
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
-	public readonly anonymization: MessageAnonymizationService;
 	public readonly writeLock: MessageWriteLock;
 	public readonly crosspostPropagation: CrosspostPropagation;
 	public readonly crosspost: MessageCrosspostService;
@@ -95,7 +91,6 @@ export class MessageService {
 			guildRepository,
 			gatewayService,
 		);
-		this.dispatch = new MessageDispatchService(gatewayService);
 		this.processing = new MessageProcessingService(
 			channelRepository,
 			userRepository,
@@ -109,7 +104,7 @@ export class MessageService {
 			guildRepository,
 			snowflakeService,
 			this.persistence,
-			this.dispatch,
+			gatewayService,
 		);
 		const operationsHelpers = new MessageOperationsHelpers({
 			channelRepository,
@@ -119,7 +114,7 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
-		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService, userRepository);
+		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService);
 		this.send = new MessageSendService({
 			threadActivity: this.threadActivity,
 			channelRepository,
@@ -135,7 +130,6 @@ export class MessageService {
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			attachmentUploadTraceRepository,
 			operationsHelpers,
@@ -150,7 +144,7 @@ export class MessageService {
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
+			gatewayService,
 			searchService: this.search,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
@@ -163,16 +157,15 @@ export class MessageService {
 			purgeQueue,
 			validationService: this.validation,
 			channelAuthService: this.channelAuth,
-			dispatchService: this.dispatch,
-			searchService: this.search,
 			gatewayService,
+			searchService: this.search,
 			guildAuditLogService,
 			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.crosspost = new MessageCrosspostService({
 			channelRepository,
 			channelAuthService: this.channelAuth,
-			dispatchService: this.dispatch,
+			gatewayService,
 			rateLimitService,
 			messageWriteLock: this.writeLock,
 			crosspostPropagation: this.crosspostPropagation,
@@ -185,6 +178,5 @@ export class MessageService {
 			this.search,
 			userRepository,
 		);
-		this.anonymization = new MessageAnonymizationService(channelRepository);
 	}
 }

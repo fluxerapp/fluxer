@@ -171,9 +171,6 @@ catalogs:
     '@types/validator':
       specifier: 13.15.10
       version: 13.15.10
-    '@vitest/coverage-v8':
-      specifier: 5.0.1
-      version: 5.0.1
     '@vvo/tzdb':
       specifier: 6.198.0
       version: 6.198.0
@@ -297,9 +294,6 @@ catalogs:
     mobx-react-lite:
       specifier: 5.0.3
       version: 5.0.3
-    motion:
-      specifier: 13.4.0
-      version: 13.4.0
     msw:
       specifier: 2.15.0
       version: 2.15.0
@@ -476,9 +470,6 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.14
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 5.0.1(vitest@5.0.1)
       eslint:
         specifier: 'catalog:'
         version: 10.10.0(jiti@2.7.0)(supports-color@7.2.0)
@@ -563,6 +554,9 @@ importers:
       '@fluxer/logger':
         specifier: workspace:*
         version: link:../packages/logger
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../packages/record_utils
       '@fluxer/schema':
         specifier: workspace:*
         version: link:../packages/schema
@@ -608,9 +602,6 @@ importers:
       '@pkgs/kv_client':
         specifier: workspace:*
         version: link:pkgs/kv_client
-      '@pkgs/locale':
-        specifier: workspace:*
-        version: link:pkgs/locale
       '@pkgs/media_proxy_utils':
         specifier: workspace:*
         version: link:pkgs/media_proxy_utils
@@ -668,9 +659,6 @@ importers:
       html-entities:
         specifier: 'catalog:'
         version: 2.6.0
-      idna-uts46-hx:
-        specifier: 'catalog:'
-        version: 6.2.1
       ioredis:
         specifier: 'catalog:'
         version: 6.0.0(supports-color@7.2.0)
@@ -683,9 +671,6 @@ importers:
       livekit-server-sdk:
         specifier: 'catalog:'
         version: 2.19.0
-      lodash:
-        specifier: 'catalog:'
-        version: 4.18.1
       maxmind:
         specifier: 'catalog:'
         version: 5.0.7
@@ -735,9 +720,6 @@ importers:
       '@types/archiver':
         specifier: 'catalog:'
         version: 8.0.0
-      '@types/lodash':
-        specifier: 'catalog:'
-        version: 4.17.25
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -876,6 +858,12 @@ importers:
       '@fluxer/constants':
         specifier: workspace:*
         version: link:../../../packages/constants
+      '@fluxer/ip_utils':
+        specifier: workspace:*
+        version: link:../../../packages/ip_utils
+      '@fluxer/schema':
+        specifier: workspace:*
+        version: link:../../../packages/schema
       undici:
         specifier: 'catalog:'
         version: 8.10.2
@@ -901,22 +889,6 @@ importers:
       ioredis:
         specifier: 'catalog:'
         version: 6.0.0(supports-color@7.2.0)
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.1
-      typescript:
-        specifier: catalog:ts7
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
-
-  fluxer_api/pkgs/locale:
-    dependencies:
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../../../packages/constants
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1386,6 +1358,9 @@ importers:
       '@fluxer/limits':
         specifier: workspace:*
         version: link:../packages/limits
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../packages/record_utils
       '@fluxer/schema':
         specifier: workspace:*
         version: link:../packages/schema
@@ -1509,9 +1484,6 @@ importers:
       mobx-react-lite:
         specifier: 'catalog:'
         version: 5.0.3(mobx@7.0.3)(react@19.3.0)
-      motion:
-        specifier: 'catalog:'
-        version: 13.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       onnxruntime-web:
         specifier: 'catalog:'
         version: 1.30.0
@@ -1718,6 +1690,9 @@ importers:
       '@fluxer/ip_utils':
         specifier: workspace:*
         version: link:../packages/ip_utils
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../packages/record_utils
       '@fluxer/voice_engine_v2':
         specifier: workspace:*
         version: link:../packages/voice_engine_v2
@@ -1837,6 +1812,9 @@ importers:
       '@fluxer/config':
         specifier: workspace:*
         version: link:../packages/config
+      '@fluxer/constants':
+        specifier: workspace:*
+        version: link:../packages/constants
       astro:
         specifier: 'catalog:'
         version: 7.3.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(@types/node@26.6.1)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
@@ -1889,9 +1867,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.1
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 5.0.1(vitest@5.0.1)
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
@@ -1928,6 +1903,10 @@ importers:
         version: 7.0.2
 
   packages/desktop_ipc:
+    dependencies:
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../record_utils
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1947,6 +1926,9 @@ importers:
       '@fluxer/logger':
         specifier: workspace:*
         version: link:../logger
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../record_utils
       '@fluxer/schema':
         specifier: workspace:*
         version: link:../schema
@@ -2010,6 +1992,12 @@ importers:
 
   packages/i18n:
     dependencies:
+      '@fluxer/constants':
+        specifier: workspace:*
+        version: link:../constants
+      '@fluxer/record_utils':
+        specifier: workspace:*
+        version: link:../record_utils
       '@messageformat/core':
         specifier: 'catalog:'
         version: 3.4.0
@@ -2054,9 +2042,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.1
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 5.0.1(vitest@5.0.1)
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
@@ -2123,6 +2108,15 @@ importers:
       tsx:
         specifier: 'catalog:'
         version: 4.23.13
+      typescript:
+        specifier: catalog:ts7
+        version: 7.0.2
+
+  packages/record_utils:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.1
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
@@ -9041,17 +9035,6 @@ packages:
   motion-utils@13.3.0:
     resolution: {integrity: sha512-sgSschQp7EseHInIlR7hBbMuvet3RA0bs28KPZAXJcGKGdxHGvh1ogpYDilY3bOMtl73EqPNmp75sAKHYPU5sg==}
 
-  motion@13.4.0:
-    resolution: {integrity: sha512-aiNSA29N+vgV5p5cJSB5cFzx8KTuuxB99z8zGtxsaqlwKtBK6sq8YgPRpkVQLkbJMOcLDU0q/ShdT95qpBy/0g==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
-
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -12632,7 +12615,8 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  '@bcoe/v8-coverage@1.0.2': {}
+  '@bcoe/v8-coverage@1.0.2':
+    optional: true
 
   '@biomejs/biome@2.5.14':
     optionalDependencies:
@@ -13753,7 +13737,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -15388,11 +15372,11 @@ snapshots:
 
   '@types/readdir-glob@1.1.5':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
 
   '@types/sdp-transform@2.15.0': {}
 
@@ -15418,7 +15402,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -15597,12 +15581,15 @@ snapshots:
       std-env: 4.2.0
       tinyrainbow: 3.1.1
       vitest: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+    optional: true
 
-  '@vitest/istanbul-lib-coverage@1.0.1': {}
+  '@vitest/istanbul-lib-coverage@1.0.1':
+    optional: true
 
   '@vitest/istanbul-lib-report@1.0.1':
     dependencies:
       '@vitest/istanbul-lib-coverage': 1.0.1
+    optional: true
 
   '@vitest/mocker@5.0.1(msw@2.15.0(@types/node@26.6.1)(typescript@6.0.3))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
@@ -15853,6 +15840,7 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
       js-tokens: 10.0.0
+    optional: true
 
   astring@1.9.0: {}
 
@@ -16091,7 +16079,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
 
   buffer@5.6.0:
     dependencies:
@@ -17091,7 +17079,7 @@ snapshots:
 
   happy-dom@20.14.5:
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4
@@ -17516,7 +17504,8 @@ snapshots:
 
   js-sha256@0.10.1: {}
 
-  js-tokens@10.0.0: {}
+  js-tokens@10.0.0:
+    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -18333,14 +18322,6 @@ snapshots:
 
   motion-utils@13.3.0: {}
 
-  motion@13.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
-    dependencies:
-      framer-motion: 13.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      tslib: 2.8.1
-    optionalDependencies:
-      react: 19.3.0
-      react-dom: 19.3.0(react@19.3.0)
-
   mri@1.2.0: {}
 
   mrmime@2.0.1: {}
@@ -19139,7 +19120,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 26.6.1
+      '@types/node': 24.13.5
       long: 5.3.2
 
   pseudolocale@3.1.0:
@@ -19930,7 +19911,8 @@ snapshots:
 
   tinypool@2.2.0: {}
 
-  tinyrainbow@3.1.1: {}
+  tinyrainbow@3.1.1:
+    optional: true
 
   tlds@1.261.0: {}
 

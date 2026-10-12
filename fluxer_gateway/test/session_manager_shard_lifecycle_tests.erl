@@ -8,7 +8,6 @@
 build_test_state(Overrides) ->
     Base = #{
         sessions => #{},
-        identify_attempts => [],
         pending_identifies => #{},
         identify_workers => #{},
         shard_index => 0
@@ -32,17 +31,6 @@ test_proc_loop() ->
         _ -> ok
     after 30000 -> ok
     end.
-
--spec test_from() -> gen_server:from().
-test_from() ->
-    {self(), make_ref()}.
-
-handle_start_call_rejects_during_drain_test() ->
-    State = build_test_state(#{}),
-    ?assertEqual(
-        {reply, {error, draining}, State},
-        session_manager_shard_lifecycle:handle_start_call(true, #{}, self(), test_from(), State)
-    ).
 
 identify_fetch_timeout_replies_and_cleans_worker_test() ->
     SessionId = <<"identify-timeout-session">>,

@@ -58,7 +58,7 @@ class TrustedDomainState {
 	}
 
 	get trustedDomains(): ReadonlyArray<string> {
-		return UserSettings.getTrustedDomains();
+		return UserSettings.trustedDomains;
 	}
 
 	get trustAllDomains(): boolean {

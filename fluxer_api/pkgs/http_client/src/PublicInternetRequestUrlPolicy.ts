@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import dns from 'node:dns';
 import type {LookupFunction} from 'node:net';
 import {BlockList, isIP} from 'node:net';
+import {ipToBytes} from '@fluxer/ip_utils/src/IpAddress';
+import {isFqdnHostname} from '@fluxer/schema/src/primitives/UrlValidators';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import type {
 	FetchDispatcher,
@@ -16,8 +18,6 @@ import {Agent, Dispatcher1Wrapper} from 'undici';
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
 const DNS_CACHE_MAX_ENTRIES = 10000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
-const HOSTNAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-
 interface BlockedSubnet {
 	address: string;
 	prefixLength: number;
@@ -84,72 +84,9 @@ function normalizeHostname(hostname: string): string {
 	return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
 }
 
-function isFqdnHostname(hostname: string): boolean {
-	if (!hostname || hostname.length > 253 || !hostname.includes('.')) {
-		return false;
-	}
-	const labels = hostname.split('.');
-	for (const label of labels) {
-		if (!label || label.length > 63 || !HOSTNAME_LABEL_REGEX.test(label)) {
-			return false;
-		}
-	}
-	const topLevelDomain = labels[labels.length - 1];
-	return !/^\d+$/.test(topLevelDomain);
-}
-
-function expandIpv6ToBytes(ipv6Address: string): Uint8Array | null {
-	const normalized = stripIpv6Brackets(ipv6Address.trim().toLowerCase());
-	if (isIP(normalized) !== 6) {
-		return null;
-	}
-	let head = normalized;
-	let embeddedIpv4Octets: Array<number> | null = null;
-	const lastColonIndex = head.lastIndexOf(':');
-	const trailing = head.slice(lastColonIndex + 1);
-	if (trailing.includes('.')) {
-		if (isIP(trailing) !== 4) {
-			return null;
-		}
-		embeddedIpv4Octets = trailing.split('.').map((part) => Number.parseInt(part, 10));
-		head = `${head.slice(0, lastColonIndex + 1)}0:0`;
-	}
-	let groups: Array<string>;
-	if (head.indexOf('::') === -1) {
-		groups = head.split(':');
-		if (groups.length !== 8) {
-			return null;
-		}
-	} else {
-		const [beforePart, afterPart] = head.split('::');
-		const before = beforePart.length > 0 ? beforePart.split(':') : [];
-		const after = afterPart.length > 0 ? afterPart.split(':') : [];
-		const missing = 8 - before.length - after.length;
-		if (missing < 1) {
-			return null;
-		}
-		groups = [...before, ...new Array(missing).fill('0'), ...after];
-	}
-	const bytes = new Uint8Array(16);
-	for (let index = 0; index < 8; index += 1) {
-		const value = parseHexGroup(groups[index]);
-		if (value === null) {
-			return null;
-		}
-		bytes[index * 2] = (value >> 8) & 0xff;
-		bytes[index * 2 + 1] = value & 0xff;
-	}
-	if (embeddedIpv4Octets) {
-		bytes[12] = embeddedIpv4Octets[0];
-		bytes[13] = embeddedIpv4Octets[1];
-		bytes[14] = embeddedIpv4Octets[2];
-		bytes[15] = embeddedIpv4Octets[3];
-	}
-	return bytes;
-}
-
 function parseEmbeddedIpv4Address(ipv6Address: string): string | null {
-	const bytes = expandIpv6ToBytes(ipv6Address);
+	const parsed = ipToBytes(ipv6Address);
+	const bytes = parsed?.family === 'ipv6' ? parsed.bytes : null;
 	if (!bytes) {
 		return null;
 	}
@@ -169,13 +106,6 @@ function parseEmbeddedIpv4Address(ipv6Address: string): string | null {
 		return dottedQuadAt(2);
 	}
 	return null;
-}
-
-function parseHexGroup(value: string | undefined): number | null {
-	if (!value || !/^[0-9a-f]{1,4}$/.test(value)) {
-		return null;
-	}
-	return Number.parseInt(value, 16);
 }
 
 function isBlockedIpAddress(address: string): boolean {

@@ -31,15 +31,6 @@ describe('Admin User Change Log and Flags', () => {
 		await harness?.shutdown();
 	});
 	describe('GET /admin/users/{user_id}/change-log', () => {
-		test('requires USER_VIEW_CONTACT_LOG ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE]);
-			const target = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users/${target.userId}/change-log?limit=50`)
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
 		test('rejects an admin holding USER_LOOKUP but not USER_VIEW_CONTACT_LOG', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);

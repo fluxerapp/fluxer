@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {VoiceSignalSendResult} from '@app/features/gateway/transport/GatewaySocket';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 export const VOICE_MESH_TOKEN = 'p2p';
 export const VOICE_MESH_ENDPOINT = 'wss://p2p.invalid';
@@ -46,10 +47,6 @@ const listeners = new Set<VoiceMeshSignalListener>();
 
 export function voiceMeshTrackSid(connectionId: string, src: VoiceMeshSource): string {
 	return `TR_${connectionId}_${src}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isCounter(value: unknown): value is number {
@@ -129,7 +126,7 @@ export function parseVoiceMeshSignalData(value: unknown): VoiceMeshSignalData | 
 }
 
 export function sendVoiceMeshSignal(target: VoiceMeshSignalTarget, data: VoiceMeshSignalData): VoiceSignalSendResult {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return VoiceSignalSendResult.Unsent;
 	return socket.sendVoiceSignal({guild_id: target.guildId, channel_id: target.channelId, to: target.to, data});
 }

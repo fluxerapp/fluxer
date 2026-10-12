@@ -38,7 +38,6 @@ interface State {
 	isGeneratingInvite: boolean;
 	currentMemberIds: Array<string>;
 	remainingSlotsCount: number;
-	availableFriendsCount: number;
 }
 
 interface Handlers {
@@ -59,7 +58,6 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 	const channel = Channels.getChannel(channelId);
 	const currentMemberIds = useMemo(() => Array.from(channel?.recipientIds ?? []), [channel?.recipientIds]);
 	const remainingSlotsCount = getGroupDmRemainingSlots(channel);
-	const availableFriendsCount = 0;
 	const handleToggle = useCallback(
 		(userId: string) => {
 			setSelectedUserIds((prev) => {
@@ -140,7 +138,6 @@ export function useAddFriendsToGroupModalLogic(channelId: string): State & Handl
 		isGeneratingInvite,
 		currentMemberIds,
 		remainingSlotsCount,
-		availableFriendsCount,
 		handleToggle,
 		handleAddFriends,
 		handleGenerateInvite,

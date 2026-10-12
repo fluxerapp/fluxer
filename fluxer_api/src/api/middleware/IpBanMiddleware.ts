@@ -10,11 +10,10 @@ import {Logger} from '@app/api/Logger';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
-import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import {RefreshedCache} from '@app/api/utils/RefreshedCache';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {getSameIpDecisionKey, type IpAddressFamily} from '@fluxer/ip_utils/src/IpAddress';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {createMiddleware} from 'hono/factory';
 
 type FamilyMap<T> = Record<IpAddressFamily, Map<string, T>>;
@@ -59,53 +58,32 @@ const PERMANENT_BAN_METADATA: IpBanMetadata = {
 	expiresAt: null,
 };
 
-class IpBanCache {
+class IpBanCache extends RefreshedCache {
 	private singleIpBans: FamilyMap<SingleCacheEntry>;
 	private rangeIpBans: FamilyMap<RangeCacheEntry>;
 	private sameIpDecisionBans: Map<string, IpBanCount>;
 	private adminRepository = new AdminRepository();
-	private consecutiveFailures = 0;
-	private readonly maxConsecutiveFailures = 5;
-	private kvClient: IKVProvider | null = null;
-	private readonly refreshSubscription = new RefreshSubscription({
-		name: 'IP ban cache',
-		channels: [IP_BAN_REFRESH_CHANNEL],
-		refresh: () => this.refresh(),
-		periodicIntervalMs: () => {
-			const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
-			return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
-		},
-		onRefreshError: (err, trigger) => {
-			const message = err instanceof Error ? err.message : String(err);
-			if (trigger === 'periodic') {
-				Logger.warn({error: message}, 'Periodic IP ban cache refresh failed');
-				return;
-			}
-			this.consecutiveFailures++;
-			if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-				Logger.error({error: message}, 'Failed to refresh IP ban cache after notification');
-			} else {
-				Logger.warn({error: message}, 'Failed to refresh IP ban cache after notification');
-			}
-		},
-	});
-
 	constructor() {
+		super({
+			name: 'IP ban cache',
+			channels: [IP_BAN_REFRESH_CHANNEL],
+			periodicIntervalMs: () => {
+				const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
+				return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
+			},
+			onPeriodicRefreshError: (error) =>
+				Logger.warn(
+					{error: error instanceof Error ? error.message : String(error)},
+					'Periodic IP ban cache refresh failed',
+				),
+		});
 		const state = this.createEmptyState();
 		this.singleIpBans = state.singleIpBans;
 		this.rangeIpBans = state.rangeIpBans;
 		this.sameIpDecisionBans = state.sameIpDecisionBans;
 	}
 
-	setRefreshSubscriber(kvClient: IKVProvider | null): void {
-		this.kvClient = kvClient;
-	}
-
-	initialize(): Promise<void> {
-		return this.refreshSubscription.start(this.kvClient);
-	}
-
-	async refresh(): Promise<void> {
+	protected async load(): Promise<void> {
 		const entries = await this.adminRepository.loadAllBannedIpEntries();
 		const state = this.createEmptyState();
 		for (const entry of entries) {
@@ -114,7 +92,6 @@ class IpBanCache {
 		this.singleIpBans = state.singleIpBans;
 		this.rangeIpBans = state.rangeIpBans;
 		this.sameIpDecisionBans = state.sameIpDecisionBans;
-		this.consecutiveFailures = 0;
 	}
 
 	isBanned(ip: string): boolean {
@@ -320,10 +297,6 @@ class IpBanCache {
 				map.delete(parsed.canonical);
 			}
 		}
-	}
-
-	shutdown(): Promise<void> {
-		return this.refreshSubscription.stop();
 	}
 }
 

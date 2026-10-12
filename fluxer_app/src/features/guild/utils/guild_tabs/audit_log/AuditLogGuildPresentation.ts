@@ -87,6 +87,7 @@ import {
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages';
 import {
 	actorPlaceholder,
+	channelPlaceholder,
 	featureDelta,
 	readBitfield,
 	readBoolean,
@@ -96,6 +97,7 @@ import {
 	readString,
 	readStringArray,
 	readTimestamp,
+	textPlaceholder,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {
 	ContentWarningLevel,
@@ -264,14 +266,6 @@ function summarizedChange(
 		row: {id, tone, sentence: {descriptor: rowDescriptor, values}},
 		summary: {descriptor: summaryDescriptor, values: {actor, ...values}},
 	};
-}
-
-function channelPlaceholder(id: string): AuditLogPlaceholder {
-	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
-}
-
-function textPlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'text', value};
 }
 
 function readNullableText(value: unknown): string | null | undefined {

@@ -6,13 +6,12 @@ import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateC
 import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {PRIORITIZE_SPEAKERS_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
@@ -26,6 +25,7 @@ import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/Ca
 import {HideOwnCameraConfirmModal} from '@app/features/voice/components/modals/HideOwnCameraConfirmModal';
 import styles from '@app/features/voice/components/VoiceSettingsMenus.module.css';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {
 	getLocalPublicationMediaStreamTrack,
 	getPrimaryLocalMicrophonePublication,
@@ -51,6 +51,15 @@ import {
 	VOICE_P2P_SWITCH_TO_STANDARD_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
+import {
+	CUSTOM_DESCRIPTOR_2 as CUSTOM_DESCRIPTOR,
+	DEFAULT_3_DESCRIPTOR,
+	MICROPHONE_DESCRIPTOR as MICROPHONE_2_DESCRIPTOR,
+	MIRROR_CAMERA_DESCRIPTOR,
+	SPEAKER_2_DESCRIPTOR,
+	VIDEO_SETTINGS_DESCRIPTOR,
+	VOICE_SETTINGS_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {VOICE_VOLUME_MAX_PERCENT} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {AUTOMATIC_VOICE_REGION_ID} from '@fluxer/constants/src/ChannelConstants';
 import type {RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -71,29 +80,11 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Voice input processing profile where the user configures processing manually.',
-	context: 'voice-processing-profile',
-});
 const INPUT_PROFILE_DESCRIPTOR = msg({
 	message: 'Input profile',
 	comment: 'Voice settings menu label for microphone processing profile.',
 });
-const MICROPHONE_2_DESCRIPTOR = msg({
-	message: 'Microphone',
-	comment: 'Fallback microphone label in the voice settings menu when the OS does not report a device name.',
-});
-const SPEAKER_2_DESCRIPTOR = msg({
-	message: 'Speaker',
-	comment: 'Fallback speaker label in the voice settings menu when the OS does not report a device name.',
-});
-const DEFAULT_3_DESCRIPTOR = msg({
-	message: 'Default',
-	context: 'device-option',
-	comment:
-		'Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).',
-});
+
 const AUTOMATIC_DESCRIPTOR = msg({
 	message: 'Automatic',
 	comment:
@@ -107,18 +98,7 @@ const INPUT_LEVEL_DESCRIPTOR = msg({
 	message: 'Input level',
 	comment: 'Read-only microphone input level shown in the voice device menu.',
 });
-const VOICE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Voice settings',
-	comment: 'Menu action that opens voice settings.',
-});
-const VIDEO_SETTINGS_DESCRIPTOR = msg({
-	message: 'Video settings',
-	comment: 'Menu action that opens video settings.',
-});
-const MIRROR_CAMERA_DESCRIPTOR = msg({
-	message: 'Mirror camera',
-	comment: 'Camera settings menu checkbox for flipping the local camera preview horizontally.',
-});
+
 const logger = new Logger('VoiceSettingsMenus');
 
 const INPUT_LEVEL_MIN_DB = -60;
@@ -240,8 +220,7 @@ const VoiceInputLevelItem: React.FC = () => {
 			setLevel(0);
 			return;
 		}
-		const AudioContextClass =
-			window.AudioContext ?? (window as unknown as {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+		const AudioContextClass = resolveAudioContextConstructor();
 		if (!AudioContextClass) {
 			return;
 		}
@@ -789,7 +768,6 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 						onCheckedChange={(checked) => {
 							if (checked) VoiceCallLayoutCommands.setLayoutMode('grid');
 							else VoiceCallLayoutCommands.setLayoutMode('focus');
-							VoiceCallLayoutCommands.markUserOverride();
 						}}
 						data-flx="voice.voice-settings-menus.voice-more-options-menu.checkbox-item"
 					>

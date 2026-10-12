@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
-import type {AccountRekeyTarget, KeyedStoredAccount, StoredAccountList} from '@app/features/auth/state/AccountStorage';
-import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorage';
+import type {
+	AccountRekeyTarget,
+	KeyedStoredAccount,
+	StoredAccountList,
+} from '@app/features/auth/state/AccountStorageContract';
+import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey, getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {

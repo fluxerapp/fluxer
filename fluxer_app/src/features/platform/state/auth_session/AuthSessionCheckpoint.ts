@@ -5,7 +5,11 @@ import {
 	type RuntimeConfigSnapshot,
 	runtimeConfigSnapshotsAreSameInstance,
 } from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, KeyedStoredAccount, StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {
+	AccountPresenceIntent,
+	KeyedStoredAccount,
+	StoredAccount,
+} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import type {AuthSessionAccountStorage} from '@app/features/platform/state/auth_session/AuthSessionDependencies';
 import type {AuthSessionRuntimeCommitter} from '@app/features/platform/state/auth_session/AuthSessionRuntimeCommitter';

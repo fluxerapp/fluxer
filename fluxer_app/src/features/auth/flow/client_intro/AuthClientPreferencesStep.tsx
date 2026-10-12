@@ -34,7 +34,6 @@ const CLIENT_LANGUAGE_MENU_MAX_HEIGHT = 220;
 
 interface AuthClientPreferencesStepProps {
 	readonly body?: React.ReactNode;
-	readonly continueLabel?: React.ReactNode;
 	readonly onContinue: () => void;
 	readonly title?: React.ReactNode;
 }
@@ -43,7 +42,6 @@ export const AuthClientPreferencesStep = observer(function AuthClientPreferences
 	onContinue,
 	title,
 	body,
-	continueLabel,
 }: AuthClientPreferencesStepProps) {
 	const {i18n} = useLingui();
 	const currentLocale = LocaleUtils.getCurrentOrDetectedLocale();
@@ -132,7 +130,7 @@ export const AuthClientPreferencesStep = observer(function AuthClientPreferences
 					data-step-focus="true"
 					data-flx="auth.flow.client-intro.auth-client-preferences-step.button.continue"
 				>
-					{continueLabel ?? i18n._(CONTINUE_DESCRIPTOR)}
+					{i18n._(CONTINUE_DESCRIPTOR)}
 				</Button>
 			</flx-auth-client-preferences-step-footer>
 		</section>

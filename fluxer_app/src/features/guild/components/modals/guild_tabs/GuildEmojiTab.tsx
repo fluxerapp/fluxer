@@ -10,7 +10,7 @@ import {
 	seedGuildEmojiCache,
 	subscribeToGuildEmojiUpdates,
 } from '@app/features/expressions/state/GuildExpressionTabCache';
-import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import * as ImageCropUtils from '@app/features/expressions/utils/ImageCropUtils';
 import {isSvgFile} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {CloneAllowedToggle} from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle';
@@ -31,6 +31,7 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {EMOJI_MAX_SIZE, MAX_GUILD_EMOJIS} from '@fluxer/constants/src/LimitConstants';
 import type {GuildEmojiWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';

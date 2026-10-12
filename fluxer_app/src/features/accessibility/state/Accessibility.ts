@@ -23,6 +23,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {applyAppZoomToDocument} from '@app/features/ui/utils/AppZoomUtils';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {decodeSyncedPreferencesLenient} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {
 	AccessibilitySettingsSchema,
@@ -93,10 +94,6 @@ const DEFAULT_LOCAL_MOTION_SETTINGS: LocalMotionSettings = {
 	keepGifAutoPlayUnderReducedMotion: false,
 	keepStickerAnimationUnderReducedMotion: false,
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 const FONT_SIZE_MIN = 8;
 const FONT_SIZE_MAX = 48;

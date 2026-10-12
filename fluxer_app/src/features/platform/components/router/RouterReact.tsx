@@ -15,9 +15,9 @@ import * as React from 'react';
 import {useCallback, useContext, useEffect, useMemo, useSyncExternalStore} from 'react';
 
 const RouterContext = React.createContext<Router | null>(null);
-export const RouterProvider: React.FC<RouterProviderProps> = ({router, children, linkContainerRef}) => {
+export const RouterProvider: React.FC<RouterProviderProps> = ({router, children}) => {
 	useEffect(() => {
-		const container = linkContainerRef?.current ?? document.body;
+		const container = document.body;
 		const onClick = (event: MouseEvent) => {
 			if (event.defaultPrevented) return;
 			if (event.button !== 0) return;
@@ -44,7 +44,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({router, children,
 		};
 		container.addEventListener('click', onClick);
 		return () => container.removeEventListener('click', onClick);
-	}, [router, linkContainerRef]);
+	}, [router]);
 	useEffect(
 		() => () => {
 			router.destroy();

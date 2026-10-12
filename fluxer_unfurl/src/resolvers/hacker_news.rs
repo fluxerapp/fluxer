@@ -157,17 +157,8 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
     (y, m, d)
 }
 
-fn parse_text(value: &str, max_len: usize) -> String {
-    text_limits::truncate(decode_html_entities(value).trim(), max_len)
-}
-
 fn html_to_markdown(html: &str) -> String {
-    crate::html_markdown::to_markdown(html, decode_html_entities)
+    crate::html_markdown::to_markdown(html, decode_html_text)
 }
 
-fn decode_html_entities(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
-        .root_element()
-        .text()
-        .collect()
-}
+use super::default_helpers::{decode_html_text, parse_text};

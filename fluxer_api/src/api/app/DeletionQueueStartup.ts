@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '@app/api/ILogger';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 export async function ensureDeletionQueueState(
 	deletionQueue: KVAccountDeletionQueueService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	try {
 		if (!(await deletionQueue.needsRebuild())) {

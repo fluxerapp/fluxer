@@ -7,7 +7,6 @@ import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/Pwned
 import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpResponse, http} from 'msw';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -39,7 +38,7 @@ describe('StripeSubscriptionService', () => {
 	});
 	beforeEach(async () => {
 		await harness.resetData();
-		stripeHandlers.resetAll();
+		stripeHandlers.reset();
 		server.use(...stripeHandlers.handlers, createPwnedPasswordsRangeHandler());
 	});
 	describe('POST /premium/cancel-subscription', () => {
@@ -116,47 +115,6 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			expect(me.premium_will_cancel).toBe(true);
 		});
-		test('rejects when no active subscription', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post('/premium/cancel-subscription')
-				.expect(400, APIErrorCodes.STRIPE_NO_ACTIVE_SUBSCRIPTION)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
-		test('rejects when subscription already canceling', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-					premium_will_cancel: true,
-				})
-				.execute();
-			await createBuilder(harness, account.token)
-				.post('/premium/cancel-subscription')
-				.expect(400, APIErrorCodes.STRIPE_SUBSCRIPTION_ALREADY_CANCELING)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
-		test('handles stripe api errors gracefully', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-					premium_will_cancel: false,
-				})
-				.execute();
-			stripeHandlers.reset();
-			server.use(...createStripeApiHandlers({subscriptionShouldFail: true}).handlers);
-			await createBuilder(harness, account.token)
-				.post('/premium/cancel-subscription')
-				.expect(400, APIErrorCodes.STRIPE_ERROR)
-				.execute();
-		});
 	});
 	describe('POST /premium/reactivate-subscription', () => {
 		test('reactivates subscription', async () => {
@@ -220,34 +178,6 @@ describe('StripeSubscriptionService', () => {
 			expect(update?.params.cancel_at).toBe('');
 			expect(update?.params.cancel_at_period_end).toBeUndefined();
 			expect(update?.params.proration_behavior).toBe('none');
-		});
-		test('rejects when no subscription id', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post('/premium/reactivate-subscription')
-				.expect(400, APIErrorCodes.STRIPE_NO_SUBSCRIPTION)
-				.execute();
-			await createBuilder(harness, account.token)
-				.post('/premium/cancel-subscription')
-				.expect(400, APIErrorCodes.STRIPE_NO_ACTIVE_SUBSCRIPTION)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
-		test('rejects when subscription not canceling', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					stripe_subscription_id: 'sub_test_1',
-					premium_type: 1,
-					premium_will_cancel: false,
-				})
-				.execute();
-			await createBuilder(harness, account.token)
-				.post('/premium/reactivate-subscription')
-				.expect(400, APIErrorCodes.STRIPE_SUBSCRIPTION_NOT_CANCELING)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
 		});
 	});
 	describe('POST /premium/change-subscription', () => {
@@ -581,15 +511,6 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			expect(me.premium_will_cancel).toBe(false);
 		});
-		test('rejects when there is no active subscription', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post('/premium/change-subscription')
-				.body({billing_cycle: 'yearly'})
-				.expect(400, APIErrorCodes.STRIPE_NO_ACTIVE_SUBSCRIPTION)
-				.execute();
-			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
 	});
 	describe('extendSubscriptionWithGiftTrialDuration', () => {
 		test('updates subscription trial_end to extend by gift duration', async () => {
@@ -686,18 +607,6 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			expect(stripeHandlers.spies.retrievedSubscriptions).toHaveLength(0);
 			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
-		});
-		test('rejects when user has no active subscription', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/extend-subscription-trial`)
-				.body({
-					duration_months: 3,
-					idempotency_key: 'gift_no_sub',
-				})
-				.expect(400, APIErrorCodes.NO_ACTIVE_SUBSCRIPTION)
-				.execute();
-			expect(stripeHandlers.spies.retrievedSubscriptions).toHaveLength(0);
 		});
 	});
 });

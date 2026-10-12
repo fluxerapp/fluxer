@@ -25,15 +25,6 @@ export type DropPlacement = (typeof DropPlacement)[keyof typeof DropPlacement];
 
 type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
 
-export const DNDReorderState = Object.freeze({
-	IDLE: 'idle',
-	RESOLVING: 'resolving',
-	TARGETING: 'targeting',
-	BLOCKED: 'blocked',
-} as const);
-
-export type DNDReorderState = (typeof DNDReorderState)[keyof typeof DNDReorderState];
-
 export interface DragItem {
 	type: string;
 	id: string;

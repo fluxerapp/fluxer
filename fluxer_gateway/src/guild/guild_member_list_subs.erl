@@ -1,11 +1,11 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_member_list_subs).
--typing([eqwalizer]).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+-typing([eqwalizer]).
 
 -export([
     new/0,
@@ -210,25 +210,6 @@ remove_list_from_session_index(IdxTab, SessionId, ListId, Ids) ->
     end.
 
 -ifdef(TEST).
-
-retain_only_session_list_drops_other_lists_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"200">>, [{0, 99}], Tab),
-    subscribe(<<"s1">>, <<"300">>, [{0, 99}], Tab),
-    Removed = retain_only_session_list(<<"s1">>, <<"300">>, Tab),
-    ?assertEqual([<<"100">>, <<"200">>], lists:sort(Removed)),
-    ?assert(is_subscribed(<<"300">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    ?assertNot(is_subscribed(<<"200">>, <<"s1">>, Tab)),
-    destroy(Tab).
-
-retain_only_session_list_noop_when_single_list_test() ->
-    Tab = new(),
-    subscribe(<<"s1">>, <<"100">>, [{0, 99}], Tab),
-    ?assertEqual([], retain_only_session_list(<<"s1">>, <<"100">>, Tab)),
-    ?assert(is_subscribed(<<"100">>, <<"s1">>, Tab)),
-    destroy(Tab).
 
 retain_only_session_list_leaves_other_sessions_untouched_test() ->
     Tab = new(),

@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import type {VoiceEngineV2AppDiagnosticsLogger} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
-import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
+import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 const LIFECYCLE_OPERATION_CAP = 4096;
 const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;

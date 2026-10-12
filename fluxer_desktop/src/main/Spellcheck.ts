@@ -7,6 +7,7 @@ import {createRequire} from 'node:module';
 import * as path from 'node:path';
 import {STATIC_CDN_URL} from '@electron/common/Constants';
 import type {SpellcheckBundledDictionary} from '@electron/common/Types';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {getSpellcheckLaunchMode, type SpellcheckLaunchMode} from '@electron/main/LaunchOptions';
 import {getNativeLocale} from '@electron/main/MainI18n';
 import {
@@ -35,7 +36,6 @@ type SystemHunspellNative = {
 		  })
 		| null;
 	discoverSystemDictionaries: (() => Array<{tag: string; affPath: string; dicPath: string}>) | null;
-	hashFile: ((path: string) => Promise<string>) | null;
 	loadError: Error | null;
 };
 
@@ -256,15 +256,8 @@ const writeCachedDictionaryFile = async (
 ): Promise<void> => {
 	const dir = dictionaryCacheDir(dict);
 	const filePath = path.join(dir, fileName);
-	const tmpPath = path.join(dir, `.${fileName}.${process.pid}.${Date.now()}.tmp`);
 	await fs.mkdir(dir, {recursive: true});
-	await fs.writeFile(tmpPath, data, {mode: 0o600});
-	try {
-		await fs.rename(tmpPath, filePath);
-	} catch (error) {
-		await fs.rm(tmpPath, {force: true}).catch(() => {});
-		throw error;
-	}
+	await writeFileAtomically(filePath, data, 0o600);
 };
 const downloadDictionaryFile = async (
 	dict: SpellcheckDictionaryCatalogEntry,

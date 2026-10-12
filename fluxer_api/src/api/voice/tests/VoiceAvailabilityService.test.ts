@@ -58,17 +58,6 @@ function createMockTopology(
 	return {
 		getAllRegions: () => regions,
 		getServersForRegion: (regionId: string) => serversByRegion.get(regionId) ?? [],
-		getRegionMetadataList: () =>
-			regions.map((r) => ({
-				id: r.id,
-				name: r.name,
-				emoji: r.emoji,
-				latitude: r.latitude,
-				longitude: r.longitude,
-				isDefault: r.isDefault,
-				vipOnly: r.restrictions.vipOnly,
-				requiredGuildFeatures: Array.from(r.restrictions.requiredGuildFeatures),
-			})),
 	} as VoiceTopology;
 }
 

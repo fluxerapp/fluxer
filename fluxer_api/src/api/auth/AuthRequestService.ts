@@ -12,7 +12,7 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import {getTokenIdHash} from '@app/api/auth/AuthUtility';
 import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
 import type {SsoService} from '@app/api/auth/services/SsoService';
-import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
@@ -36,10 +36,8 @@ import type {
 	AuthLoginResponse,
 	AuthorizeIpRequest,
 	AuthRegisterResponse,
-	AuthSessionsResponse,
 	AuthTokenWithUserIdResponse,
 	EmailRevertRequest,
-	ForgotPasswordRequest,
 	HandoffCompleteRequest,
 	HandoffCompleteResponse,
 	HandoffInfoResponse,
@@ -48,7 +46,6 @@ import type {
 	IpAuthorizationPollResponse,
 	LoginRequest,
 	LogoutAuthSessionsRequest,
-	MfaTicketRequest,
 	RecoverAccountRequest,
 	RecoverAccountResponse,
 	RegisterRequest,
@@ -72,13 +69,7 @@ interface AuthRegisterRequest {
 interface AuthLoginRequest {
 	data: LoginRequest;
 	request: Request;
-	requestCache: RequestCache;
 	captchaVerified?: boolean;
-}
-
-interface AuthForgotPasswordRequest {
-	data: ForgotPasswordRequest;
-	request: Request;
 }
 
 interface AuthResetPasswordRequest {
@@ -100,10 +91,6 @@ interface AuthLoginMfaRequest {
 	code: string;
 	ticket: string;
 	request: Request;
-}
-
-interface AuthLogoutRequest {
-	authToken?: string;
 }
 
 interface AuthHandoffCompleteRequest {
@@ -157,11 +144,6 @@ interface AuthHandoffStatusRequest {
 	grant?: string;
 }
 
-interface AuthHandoffCancelRequest {
-	code: string;
-	pollSecret: string;
-}
-
 export class AuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
@@ -170,10 +152,6 @@ export class AuthRequestService {
 		private registrationDependencies: AuthRegistration.RegistrationDependencies,
 		private loginDependencies: AuthLogin.LoginDependencies,
 	) {}
-
-	getSsoStatus() {
-		return this.ssoService.getPublicStatus();
-	}
 
 	startSso(data: SsoStartRequest) {
 		return this.ssoService.startLogin({
@@ -200,12 +178,7 @@ export class AuthRequestService {
 		return await this.toAuthTokenResponse(result);
 	}
 
-	async login({
-		data,
-		request,
-		requestCache: _requestCache,
-		captchaVerified,
-	}: AuthLoginRequest): Promise<AuthLoginResponse> {
+	async login({data, request, captchaVerified}: AuthLoginRequest): Promise<AuthLoginResponse> {
 		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request, captchaVerified});
 		return await this.toAuthLoginResponse(result);
 	}
@@ -215,25 +188,11 @@ export class AuthRequestService {
 		return await this.toAuthTokenResponse(result);
 	}
 
-	async logout({authToken}: AuthLogoutRequest): Promise<void> {
-		if (authToken) {
-			await AuthSession.revokeToken(this.apiContext, authToken);
-		}
-	}
-
 	async verifyEmail(data: VerifyEmailRequest): Promise<void> {
 		const success = await AuthEmail.verifyEmail(this.apiContext, data);
 		if (!success) {
 			throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
 		}
-	}
-
-	async resendVerificationEmail(user: User): Promise<void> {
-		await AuthEmail.resendVerificationEmail(this.apiContext, user);
-	}
-
-	async forgotPassword({data, request}: AuthForgotPasswordRequest): Promise<void> {
-		await AuthPassword.forgotPassword(this.apiContext, {data, request});
 	}
 
 	async validateResetPasswordToken(token: string): Promise<{
@@ -266,10 +225,6 @@ export class AuthRequestService {
 		return await this.toAuthTokenResponse(result);
 	}
 
-	getAuthSessions(userId: UserID, currentSessionIdHash?: Uint8Array): Promise<AuthSessionsResponse> {
-		return AuthSession.getAuthSessions(this.apiContext, userId, currentSessionIdHash);
-	}
-
 	async logoutAuthSessions({user, data}: AuthLogoutAuthSessionsRequest): Promise<void> {
 		await AuthSession.logoutAuthSessions(this.apiContext, {
 			user,
@@ -282,10 +237,6 @@ export class AuthRequestService {
 		const result = await AuthLogin.completeIpAuthorization(this.apiContext, data.token);
 		const payload = JSON.stringify({token: result.token, user_id: result.user_id});
 		await cache.set(`ip-auth-result:${result.ticket}`, payload, 60);
-	}
-
-	async resendIpAuthorization({ticket}: MfaTicketRequest): Promise<void> {
-		await AuthLogin.resendIpAuthorization(this.apiContext, ticket);
 	}
 
 	async pollIpAuthorization({ticket}: AuthPollIpRequest): Promise<IpAuthorizationPollResponse> {
@@ -310,18 +261,10 @@ export class AuthRequestService {
 		return {completed: false};
 	}
 
-	async getWebAuthnAuthenticationOptions(origin: string | undefined) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext, origin);
-	}
-
 	async authenticateWebAuthnDiscoverable({data, request}: AuthWebAuthnAuthenticateRequest) {
 		const user = await AuthMfa.verifyWebAuthnAuthenticationDiscoverable(this.apiContext, data.response, data.challenge);
 		const [token] = await AuthLogin.createLoginSession(this.apiContext, user, request);
 		return {token, user_id: user.id.toString(), user: mapUserToPartialResponse(user)};
-	}
-
-	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest, origin: string | undefined) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket, origin);
 	}
 
 	async loginMfaWebAuthn({data, request}: AuthWebAuthnMfaRequest): Promise<AuthTokenWithUserIdResponse> {
@@ -383,10 +326,6 @@ export class AuthRequestService {
 			},
 			return_method: info.returnMethod,
 		};
-	}
-
-	async denyHandoff({code, clientIp}: AuthHandoffInfoRequest): Promise<void> {
-		await this.desktopHandoffService.denyHandoff(code, clientIp);
 	}
 
 	async completeHandoff({
@@ -458,10 +397,6 @@ export class AuthRequestService {
 			user_id: result.userId,
 			user: result.userId ? await this.getUserPartial(result.userId) : undefined,
 		};
-	}
-
-	async cancelHandoff({code, pollSecret}: AuthHandoffCancelRequest): Promise<void> {
-		await this.desktopHandoffService.cancelHandoff(code, pollSecret);
 	}
 
 	private async getUserPartial(userId: string): Promise<UserPartialResponse> {

@@ -199,10 +199,6 @@
 	max-width: 27rem;
 }
 
-.cardWide {
-	max-width: 38rem;
-}
-
 .formSide {
 	display: flex;
 	width: 100%;
@@ -218,10 +214,6 @@
 
 .formSideCompact {
 	padding: 2rem;
-}
-
-.formSideWide {
-	padding: 2.5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -244,8 +236,7 @@
 	}
 
 	.formSideStandard,
-	.formSideCompact,
-	.formSideWide {
+	.formSideCompact {
 		padding: 1.5rem;
 	}
 }

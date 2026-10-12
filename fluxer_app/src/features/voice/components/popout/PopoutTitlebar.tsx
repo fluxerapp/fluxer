@@ -3,6 +3,7 @@
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNativePlatformSync} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/voice/components/popout/PopoutTitlebar.module.css';
+import {POP_BACK_IN_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -19,10 +20,7 @@ const REMOVE_FROM_TOP_DESCRIPTOR = msg({
 	message: 'Remove from top',
 	comment: 'Button label in a popped-out voice window titlebar that unpins the window from staying above others.',
 });
-const POP_BACK_IN_DESCRIPTOR = msg({
-	message: 'Pop back in',
-	comment: 'Button label in a popped-out voice window titlebar that restores the content into the main app window.',
-});
+
 const CLOSE_WINDOW_DESCRIPTOR = msg({
 	message: 'Close window',
 	comment: 'Button label in a popped-out voice window titlebar that closes the popped-out window.',

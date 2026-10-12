@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import {Logger} from '@app/api/Logger';
-import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {addGiftCodeDuration, type GiftCode} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -15,9 +13,10 @@ import {
 	getGiftTrialPaidUntil,
 	getGiftTrialSeconds,
 } from '@app/api/stripe/StripeGiftTrialMetadata';
+import {mirrorSubscription} from '@app/api/stripe/StripeMirror';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import Stripe from 'stripe';
@@ -101,7 +100,7 @@ export class StripeGiftReversalHandler {
 					'Reduced gift extension after gift reversal for user with Stripe identity',
 				);
 			}
-			await this.enqueuePremiumStateReconciliation(redeemer.id, {
+			await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(redeemer.id, {
 				reason: context.reason,
 				subscriptionId: redeemer.stripeSubscriptionId ?? undefined,
 			});
@@ -324,7 +323,7 @@ export class StripeGiftReversalHandler {
 			}
 			throw error;
 		}
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	private async planGiftTrialCut(redeemer: User, giftCode: GiftCode, now: Date): Promise<GiftTrialCut | null> {
@@ -389,17 +388,11 @@ export class StripeGiftReversalHandler {
 					},
 					{idempotencyKey},
 				);
-		try {
-			await getBillingRepository().subscriptions.upsertFromStripe(subscription, {
-				knownUserId: redeemer.id,
-				snapshotCapturedAt: new Date(),
-			});
-		} catch (mirrorErr) {
-			Logger.error(
-				{mirrorErr, subId: subscription.id},
-				'Mirror upsert failed after Stripe write; reconciler will heal',
-			);
-		}
+		await mirrorSubscription(
+			subscription,
+			redeemer.id,
+			'Mirror upsert failed after Stripe write; reconciler will heal',
+		);
 	}
 
 	private async commitReversal(
@@ -418,7 +411,10 @@ export class StripeGiftReversalHandler {
 				);
 				return false;
 			}
-			await this.dispatchUser(await this.userRepository.patchUpsert(redeemer.id, patch, redeemer.toRow()));
+			await dispatchUserUpdate(
+				this.gatewayService,
+				await this.userRepository.patchUpsert(redeemer.id, patch, redeemer.toRow()),
+			);
 			return true;
 		}
 		if (trialCut) {
@@ -438,7 +434,7 @@ export class StripeGiftReversalHandler {
 			}
 			throw error;
 		}
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		return true;
 	}
 
@@ -509,35 +505,5 @@ export class StripeGiftReversalHandler {
 			hasLifetimeGift,
 			giftExtensionEndsAt,
 		};
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
-	}
-
-	private async enqueuePremiumStateReconciliation(
-		userId: UserID,
-		context: {
-			reason: string;
-			subscriptionId?: string;
-		},
-	): Promise<void> {
-		try {
-			await this.premiumStateReconciliationQueueService.enqueueUser(userId);
-		} catch (error) {
-			Logger.warn(
-				{
-					error,
-					userId: userId.toString(),
-					reason: context.reason,
-					subscriptionId: context.subscriptionId,
-				},
-				'Failed to enqueue premium reconciliation from Stripe webhook',
-			);
-		}
 	}
 }

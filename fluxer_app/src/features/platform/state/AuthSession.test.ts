@@ -11,12 +11,14 @@ import type {
 	AccountPresenceIntent,
 	QualifiedStoredAccount,
 	StoredAccount,
-	StoredAccountInventory,
-	StoredAccountInventoryReplacement,
 	StoredAccountList,
 	StoredAccountSource,
 	UserData,
-} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
+import type {
+	StoredAccountInventory,
+	StoredAccountInventoryReplacement,
+} from '@app/features/auth/state/StoredAccountInventoryContract';
 import {StoredAccountInventoryReplacementConflictError} from '@app/features/auth/state/StoredAccountInventoryContract';
 import {
 	classifyStoredAccount,
@@ -41,11 +43,13 @@ vi.mock('@app/features/app/state/DesktopRuntimeTransaction', async (importOrigin
 	const actual = await importOriginal<typeof import('@app/features/app/state/DesktopRuntimeTransaction')>();
 	return {...actual, requiresDesktopRuntimeTransaction: () => desktopRuntime.required};
 });
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
 	default: {
-		logout: () => undefined,
-		startSession: () => undefined,
-		sendInvisiblePresenceForCurrentSession: () => undefined,
+		foregroundConnection: {
+			logout: () => undefined,
+			startSession: () => undefined,
+			sendInvisiblePresenceForCurrentSession: () => undefined,
+		},
 	},
 }));
 

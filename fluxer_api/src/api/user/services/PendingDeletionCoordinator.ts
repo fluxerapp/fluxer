@@ -4,11 +4,6 @@ import type {UserID} from '@app/api/BrandedTypes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 
-interface PendingDeletionRepositoryLike {
-	addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void>;
-	removePendingDeletion(userId: UserID, pendingDeletionAt: Date): Promise<void>;
-}
-
 interface PendingDeletionQueueLike {
 	scheduleDeletion(userId: UserID, pendingAt: Date, reasonCode: number): Promise<void>;
 	removeFromQueue(userId: UserID): Promise<void>;
@@ -19,14 +14,13 @@ interface ReschedulePendingDeletionParams {
 	currentPendingDeletionAt?: Date | null;
 	nextPendingDeletionAt: Date;
 	deletionReasonCode: number;
-	userRepository: PendingDeletionRepositoryLike;
+
 	deletionQueue: PendingDeletionQueueLike;
 }
 
 interface ClearPendingDeletionParams {
 	userId: UserID;
-	pendingDeletionAt?: Date | null;
-	userRepository: PendingDeletionRepositoryLike;
+
 	deletionQueue: Pick<PendingDeletionQueueLike, 'removeFromQueue'>;
 }
 
@@ -45,28 +39,13 @@ export async function reschedulePendingDeletion({
 	currentPendingDeletionAt,
 	nextPendingDeletionAt,
 	deletionReasonCode,
-	userRepository,
 	deletionQueue,
 }: ReschedulePendingDeletionParams): Promise<void> {
-	if (currentPendingDeletionAt) {
-		await deletionQueue.removeFromQueue(userId);
-		if (currentPendingDeletionAt.getTime() !== nextPendingDeletionAt.getTime()) {
-			await userRepository.removePendingDeletion(userId, currentPendingDeletionAt);
-		}
-	}
-	await userRepository.addPendingDeletion(userId, nextPendingDeletionAt, deletionReasonCode);
+	if (currentPendingDeletionAt) await deletionQueue.removeFromQueue(userId);
 	await deletionQueue.scheduleDeletion(userId, nextPendingDeletionAt, deletionReasonCode);
 }
 
-export async function clearPendingDeletion({
-	userId,
-	pendingDeletionAt,
-	userRepository,
-	deletionQueue,
-}: ClearPendingDeletionParams): Promise<void> {
-	if (pendingDeletionAt) {
-		await userRepository.removePendingDeletion(userId, pendingDeletionAt);
-	}
+export async function clearPendingDeletion({userId, deletionQueue}: ClearPendingDeletionParams): Promise<void> {
 	await deletionQueue.removeFromQueue(userId);
 }
 

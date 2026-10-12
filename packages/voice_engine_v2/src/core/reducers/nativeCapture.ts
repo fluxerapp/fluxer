@@ -176,8 +176,5 @@ export function transitionNativeCapture(
 			return stopNativeCapture(snapshot, event.captureId, event.operationId);
 		case 'nativeCapture.failed':
 			return completeNativeCaptureOperation(snapshot, event.captureId, event.operationId, event.error);
-		case 'nativeCapture.frame':
-			if (event.frame.zeroCopy !== true) return failWithZeroCopyRequired(snapshot, 'frame');
-			return {snapshot, commands: []};
 	}
 }

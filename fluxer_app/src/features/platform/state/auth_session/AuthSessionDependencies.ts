@@ -7,16 +7,19 @@ import RuntimeConfig, {
 	type PreparedRuntimeConfig,
 	type RuntimeConfigSnapshot,
 } from '@app/features/app/state/RuntimeConfig';
-import accountStorage, {
-	type AccountPresenceIntent,
-	type QualifiedStoredAccount,
-	type StoredAccount,
-	type StoredAccountInventory,
-	type StoredAccountInventoryReplacement,
-	type StoredAccountList,
-	type UserData,
-} from '@app/features/auth/state/AccountStorage';
+import accountStorage from '@app/features/auth/state/AccountStorage';
+import type {
+	AccountPresenceIntent,
+	QualifiedStoredAccount,
+	StoredAccount,
+	StoredAccountList,
+	UserData,
+} from '@app/features/auth/state/AccountStorageContract';
 import Sudo from '@app/features/auth/state/AuthSudo';
+import type {
+	StoredAccountInventory,
+	StoredAccountInventoryReplacement,
+} from '@app/features/auth/state/StoredAccountInventoryContract';
 import {
 	AccountScopedWork,
 	type AccountScopedWorkTransitionReason,
@@ -137,11 +140,11 @@ export function createDefaultAuthSessionDependencies(): AuthSessionDependencies 
 		},
 		clearSudoToken: () => Sudo.clearToken(),
 		sendInvisiblePresence: (reason) =>
-			import('@app/features/gateway/transport/GatewayConnection').then((module) => {
-				module.default.sendInvisiblePresenceForCurrentSession(reason);
+			import('@app/features/gateway/transport/GatewaySessionPool').then((module) => {
+				module.default.foregroundConnection.sendInvisiblePresenceForCurrentSession(reason);
 			}),
 		cleanupGatewaySession: (reason) =>
-			import('@app/features/gateway/transport/GatewayConnection').then((module) => {
+			import('@app/features/gateway/transport/GatewaySessionPool').then((module) => {
 				return module.default.retireForAccountTransition(reason);
 			}),
 		resetSyncedUserSettings: async () => {

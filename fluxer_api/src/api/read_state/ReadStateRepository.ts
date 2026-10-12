@@ -44,16 +44,6 @@ const FETCH_READ_STATES_BY_CHANNEL_IDS_CQL = ReadStates.selectCql({
 });
 const BULK_READ_STATE_BATCH_QUERY_LIMIT = 50;
 
-function baseReadStateRow(row: ReadStateRow): ReadStateRow {
-	return {
-		user_id: row.user_id,
-		channel_id: row.channel_id,
-		message_id: row.message_id,
-		mention_count: row.mention_count,
-		last_pin_timestamp: row.last_pin_timestamp,
-	};
-}
-
 function markerNeeded(marker: ReadStateMarker | null | undefined, row: ReadStateRow | null): marker is ReadStateMarker {
 	return marker != null && (row?.guild_id == null || row.flags !== marker.flags);
 }
@@ -142,49 +132,6 @@ export class ReadStateRepository {
 			...(stamp ? markerColumns(marker) : markerOf(currentReadState)),
 		});
 		return {readState, previous};
-	}
-
-	async incrementReadStateMentions(
-		userId: UserID,
-		channelId: ChannelID,
-		messageId: MessageID,
-		incrementBy = 1,
-		marker?: ReadStateMarker | null,
-	): Promise<ReadState | null> {
-		return this.incrementReadStateMentionsRow(userId, channelId, messageId, incrementBy, marker);
-	}
-
-	private async incrementReadStateMentionsRow(
-		userId: UserID,
-		channelId: ChannelID,
-		messageId: MessageID,
-		incrementBy = 1,
-		marker?: ReadStateMarker | null,
-	): Promise<ReadState | null> {
-		const currentReadState = await fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
-			user_id: userId,
-			channel_id: channelId,
-		});
-		if (!currentReadState) {
-			const baselineMessageId = mentionBaseline(channelId, marker);
-			if (baselineMessageId >= messageId) {
-				return null;
-			}
-			return (
-				await this.upsertReadStateRow(userId, channelId, baselineMessageId, incrementBy, undefined, false, marker)
-			).readState;
-		}
-		if (currentReadState.message_id != null && currentReadState.message_id >= messageId) {
-			return null;
-		}
-		const newMentionCount = (currentReadState.mention_count || 0) + incrementBy;
-		const updatedReadState: ReadStateRow = {
-			...baseReadStateRow(currentReadState),
-			mention_count: newMentionCount,
-			...(markerNeeded(marker, currentReadState) ? markerColumns(marker) : {}),
-		};
-		await upsertOne(ReadStates.upsertAll(updatedReadState));
-		return new ReadState({...markerOf(currentReadState), ...updatedReadState});
 	}
 
 	async bulkIncrementMentionCounts(updates: Array<ReadStateMentionUpdate>): Promise<

@@ -6,11 +6,20 @@ import {type Dirent, constants as fsConstants, type Stats} from 'node:fs';
 import type {FileHandle} from 'node:fs/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+	fsyncDirectory,
+	ModuleStoreError,
+	ModuleStoreIOError,
+	renameWithRetry,
+	WINDOWS_TRANSIENT_FS_RETRY_DELAYS_MS,
+	writeFileAtomically,
+} from '@electron/main/AtomicFile';
 import {ModuleInstallCoordinator} from '@electron/main/ModuleInstallCoordinator';
 import {
 	DESKTOP_MODULE_FILE_LIST_NAME,
 	DESKTOP_MODULE_MANIFEST_MAX_BYTES,
 	type DesktopModuleManifest,
+	isPathInsideRoot,
 	ModulePackageHashMismatchError,
 	parseDesktopModuleManifest,
 	verifyAndExtract,
@@ -48,23 +57,6 @@ const MODULE_FILE_STAMPS_MAX_BYTES = 16 * 1024 * 1024;
 const MISSING_INSTALLATION_ERROR_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR', 'ELOOP']);
 const MODULE_PACKAGE_DIGEST_MISMATCH_PREFIX = 'package sha256 mismatch:';
 const MODULE_LAUNCH_ATTEMPT = Symbol('fluxer.desktop.moduleLaunchAttempt');
-const WINDOWS_TRANSIENT_FS_ERROR_CODES: ReadonlySet<string> = new Set(['EPERM', 'EACCES', 'EBUSY']);
-const WINDOWS_TRANSIENT_FS_RETRY_DELAYS_MS: ReadonlyArray<number> = [25, 50, 100, 200, 400, 800];
-
-class ModuleStoreError extends Error {
-	public constructor(message: string, options?: ErrorOptions) {
-		super(message, options);
-		this.name = 'ModuleStoreError';
-	}
-}
-
-class ModuleStoreIOError extends ModuleStoreError {
-	public constructor(message: string, options?: ErrorOptions) {
-		super(message, options);
-		this.name = 'ModuleStoreIOError';
-	}
-}
-
 class ModuleStoreStateCorruptError extends ModuleStoreError {
 	public constructor(statePath: string, detail: string, options?: ErrorOptions) {
 		super(`module state at ${statePath} is corrupt: ${detail}`, options);
@@ -244,42 +236,11 @@ function assertSha256(sha256: string): void {
 	}
 }
 
-function isPathInsideRoot(root: string, candidate: string): boolean {
-	const relative = path.relative(root, candidate);
-	return relative.length > 0 && !relative.startsWith('..') && !path.isAbsolute(relative);
-}
-
 async function createDirectory(directory: string): Promise<void> {
 	try {
 		await fs.mkdir(directory, {recursive: true});
 	} catch (error) {
 		throw new ModuleStoreIOError(`failed to create ${directory}`, {cause: error});
-	}
-}
-
-function isWindowsTransientFsError(error: unknown): boolean {
-	return (
-		process.platform === 'win32' &&
-		typeof error === 'object' &&
-		error !== null &&
-		'code' in error &&
-		typeof error.code === 'string' &&
-		WINDOWS_TRANSIENT_FS_ERROR_CODES.has(error.code)
-	);
-}
-
-async function renameWithRetry(source: string, target: string): Promise<void> {
-	for (let attempt = 0; ; attempt += 1) {
-		try {
-			await fs.rename(source, target);
-			return;
-		} catch (error) {
-			const delay = WINDOWS_TRANSIENT_FS_RETRY_DELAYS_MS[attempt];
-			if (delay === undefined || !isWindowsTransientFsError(error)) {
-				throw error;
-			}
-			await new Promise((resolve) => setTimeout(resolve, delay));
-		}
 	}
 }
 
@@ -339,52 +300,6 @@ async function fsyncFile(filePath: string): Promise<void> {
 	} finally {
 		await handle.close();
 	}
-}
-
-async function fsyncDirectory(directory: string): Promise<void> {
-	if (process.platform === 'win32') {
-		return;
-	}
-	let handle: FileHandle;
-	try {
-		handle = await fs.open(directory, 'r');
-	} catch (error) {
-		throw new ModuleStoreIOError(`failed to open ${directory} for fsync`, {cause: error});
-	}
-	try {
-		await handle.sync();
-	} catch (error) {
-		throw new ModuleStoreIOError(`failed to fsync ${directory}`, {cause: error});
-	} finally {
-		await handle.close();
-	}
-}
-
-export async function writeFileAtomically(target: string, contents: Buffer | string, mode: number): Promise<void> {
-	const directory = path.dirname(target);
-	const temporary = path.join(directory, `${path.basename(target)}.${randomBytes(8).toString('hex')}.tmp`);
-	let handle: FileHandle;
-	try {
-		handle = await fs.open(temporary, 'wx', mode);
-	} catch (error) {
-		throw new ModuleStoreIOError(`failed to create ${temporary}`, {cause: error});
-	}
-	try {
-		await handle.writeFile(contents, 'utf8');
-		await handle.sync();
-	} catch (error) {
-		await handle.close();
-		await fs.rm(temporary, {force: true});
-		throw new ModuleStoreIOError(`failed to write ${temporary}`, {cause: error});
-	}
-	await handle.close();
-	try {
-		await renameWithRetry(temporary, target);
-	} catch (error) {
-		await fs.rm(temporary, {force: true});
-		throw new ModuleStoreIOError(`failed to publish ${target}`, {cause: error});
-	}
-	await fsyncDirectory(directory);
 }
 
 async function openPartialPackage(partial: string): Promise<FileHandle> {

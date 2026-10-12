@@ -15,7 +15,6 @@ mod relay_consent;
 mod resolver;
 mod retry;
 mod rpc;
-mod secret;
 pub mod server;
 mod subscription;
 mod tokens;

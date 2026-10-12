@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "For mange filer. Maksimalt {maxFiles, plural, one {# fil} other {# filer}} er tillatt.",
 	"attachments_and_uploads.unresolved_attachment_url": "En uløst `attachment://`-URL ble oppdaget. Denne skulle ha vært løst før behandling av innebygd innhold.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Det opplastede vedlegget {filename} ble ikke funnet.",
-	"auth_and_oauth.application_not_owned": "Du eier ikke denne appen.",
 	"auth_and_oauth.bot_already_in_guild": "Denne boten er allerede i fellesskapet.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botbrukere kan ikke opprette autentiseringsøkter.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botbrukere kan ikke bruke autentiseringsendepunkter.",

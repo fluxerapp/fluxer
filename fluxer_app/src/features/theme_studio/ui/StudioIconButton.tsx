@@ -7,12 +7,11 @@ import {type ButtonHTMLAttributes, forwardRef} from 'react';
 
 interface StudioIconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	compact?: boolean;
-	active?: boolean;
 	tone?: 'default' | 'danger';
 }
 
 export const StudioIconButton = forwardRef<HTMLButtonElement, StudioIconButtonProps>(function StudioIconButton(
-	{compact = false, active = false, tone = 'default', className, type = 'button', children, ...rest},
+	{compact = false, tone = 'default', className, type = 'button', children, ...rest},
 	ref,
 ) {
 	return (
@@ -20,13 +19,7 @@ export const StudioIconButton = forwardRef<HTMLButtonElement, StudioIconButtonPr
 			<button
 				ref={ref}
 				type={type}
-				className={clsx(
-					styles.button,
-					compact && styles.compact,
-					active && styles.active,
-					tone === 'danger' && styles.danger,
-					className,
-				)}
+				className={clsx(styles.button, compact && styles.compact, tone === 'danger' && styles.danger, className)}
 				data-flx="theme-studio.ui.studio-icon-button.button"
 				{...rest}
 			>

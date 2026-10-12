@@ -16,32 +16,25 @@ import {
 	partitionMergedShortcutRows,
 	sortBySectionDisplayOrder,
 } from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+import {
+	MESSAGES_3_DESCRIPTOR as MESSAGES_DESCRIPTOR,
+	NAVIGATION_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	MESSAGES_AND_MEDIA_DESCRIPTOR as CHAT_DESCRIPTOR,
+	DEFAULT_SHORTCUTS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
 
-const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
-const MESSAGES_DESCRIPTOR = msg({
-	message: 'Messages',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
-const NAVIGATION_DESCRIPTOR = msg({
-	message: 'Navigation',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
 const DRAG_AND_DROP_DESCRIPTOR = msg({
 	message: 'Drag and drop',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
-const CHAT_DESCRIPTOR = msg({
-	message: 'Chat',
-	comment: 'Short label in the keybinds tab. Keep it concise.',
-});
+
 const VOICE_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice and video',
 	comment: 'Short label in the keybinds tab. Keep it concise.',

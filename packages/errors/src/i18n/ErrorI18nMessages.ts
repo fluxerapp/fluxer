@@ -83,7 +83,6 @@ export const ERROR_I18N_MESSAGES = {
 	'attachments_and_uploads.unresolved_attachment_url':
 		'Unresolved `attachment://` URL detected. This should have been resolved before embed processing.',
 	'attachments_and_uploads.uploaded_attachment_not_found': "Uploaded attachment {filename} wasn't found.",
-	'auth_and_oauth.application_not_owned': "You don't own this application.",
 	'auth_and_oauth.bot_already_in_guild': 'This bot is already in the community.',
 	'auth_and_oauth.bot_users_cannot_create_auth_sessions': "Bot users can't create auth sessions.",
 	'auth_and_oauth.bot_users_cannot_use_auth_endpoints': "Bot users can't use auth endpoints.",

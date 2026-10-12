@@ -20,7 +20,8 @@ import {
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 const NOW = Date.now();
@@ -89,7 +90,10 @@ const STATES: Array<[string, Partial<UserRow>, boolean]> = [
 
 describe('profile visibility', () => {
 	beforeAll(() => {
-		new LimitConfigService(new InstanceConfigRepository(), new InMemoryProvider()).setAsGlobalInstance();
+		new LimitConfigService(
+			new InstanceConfigRepository(),
+			new KVCacheProvider({client: new MockKVProvider()}),
+		).setAsGlobalInstance();
 	});
 
 	afterAll(() => {

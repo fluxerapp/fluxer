@@ -3,7 +3,6 @@
 
 import {EventEmitter} from 'node:events';
 import type {ScreenShareEncoderVerificationAction} from '@app/features/voice/utils/CodecCapabilityDetector';
-import type {ScreenShareAudioSummaryInput} from '@app/features/voice/utils/ScreenShareAudioSummary';
 import {BackupCodecPolicy, ParticipantEvent, type Room, Track, type VideoCodec} from 'livekit-client';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -21,7 +20,6 @@ let unknownParticipants = 0;
 let preferenceOrder: Array<VideoCodec> = ['h264'];
 let selectedCodec: VideoCodec | null = 'vp9';
 let stallAction: ScreenShareEncoderVerificationAction = {kind: 'recover-stalled', codec: 'h264'};
-const menuEntitled = true;
 const gpuReport: {gpuLabel: string} | null = null;
 const gpuReportLoad: Promise<unknown> = Promise.resolve(null);
 const h264HardwareProfiles: {profiles: Set<string>} | null = null;
@@ -29,8 +27,6 @@ let displayShareEnvironment: 'web' | 'desktop-custom' | 'desktop-wayland' = 'web
 const voiceConnectionContext: {guildId: string | null; channelId: string | null; connectionId: string | null} | null =
 	null;
 const voiceStates: Record<string, Record<string, Record<string, unknown>>> = {};
-const settingsUpdate = vi.fn();
-const openPremiumModal = vi.fn();
 
 vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
 	getGpuEncoderReportSync: () => gpuReport,
@@ -156,96 +152,10 @@ vi.mock('@app/features/ui/commands/SoundCommands', () => ({playSound: () => unde
 
 vi.mock('@app/features/ui/commands/ToastCommands', () => ({createToast: () => undefined}));
 
-vi.mock('@app/features/voice/commands/VoiceSettingsCommands', () => ({
-	update: (...args: Array<unknown>) => settingsUpdate(...args),
-}));
-
-vi.mock('@app/features/premium/commands/PremiumModalCommands', () => ({open: () => openPremiumModal()}));
-
-vi.mock('@app/features/ui/action_menu/ContextMenu', async () => {
-	const React = await import('react');
-	const box = ({children}: {children?: React.ReactNode}) => React.createElement('div', null, children);
-	return {
-		CheckboxItem: box,
-		MenuGroup: box,
-		MenuGroupLabel: box,
-		MenuItem: box,
-		MenuSeparator: () => null,
-		SubMenu: ({label, render}: {label: string; render: () => React.ReactNode}) =>
-			React.createElement('div', {'data-submenu': label}, render()),
-		SelectableMenuItem: ({
-			children,
-			selected,
-			textValue,
-			onAction,
-		}: {
-			children?: React.ReactNode;
-			selected: boolean;
-			textValue: string;
-			onAction: () => void;
-		}) =>
-			React.createElement(
-				'button',
-				{type: 'button', 'data-selected': String(selected), 'data-label': textValue, onClick: onAction},
-				children,
-			),
-		useContextMenuClose: () => () => undefined,
-	};
-});
-
-vi.mock('@app/features/voice/components/modals/CameraPreviewModal', () => ({
-	CameraPreviewModalStandalone: () => null,
-}));
-
-vi.mock('@app/features/user/components/modals/tabs/hooks/useMediaPermission', () => ({
-	useMediaPermission: () => ({
-		devices: [{deviceId: 'camera-1', kind: 'videoinput', label: 'Camera one'}],
-		deviceState: {
-			inputDevices: [],
-			outputDevices: [],
-			videoDevices: [{deviceId: 'camera-1', kind: 'videoinput', label: 'Camera one'}],
-			permissionStatus: {audio: 'granted', video: 'granted'},
-		},
-		status: 'granted',
-		requestPermission: async () => true,
-	}),
-}));
-
-vi.mock('@app/features/user/components/modals/tabs/components/CompactComboboxRow', async () => {
-	const React = await import('react');
-	return {
-		CompactComboboxRow: ({
-			dataFlx,
-			onChange,
-			options,
-			value,
-		}: {
-			dataFlx: string;
-			onChange: (value: unknown) => void;
-			options: ReadonlyArray<{label: string; value: unknown}>;
-			value: unknown;
-		}) =>
-			React.createElement(
-				'div',
-				{
-					'data-combobox': dataFlx,
-					'data-value': String(value),
-					'data-options': options.map((option) => option.label).join(','),
-				},
-				options.map((option) =>
-					React.createElement('button', {
-						key: String(option.value),
-						type: 'button',
-						'data-option': String(option.value),
-						onClick: () => onChange(option.value),
-					}),
-				),
-			),
-	};
-});
+vi.mock('@app/features/premium/commands/PremiumModalCommands', () => ({open: () => undefined}));
 
 vi.mock('@app/features/voice/utils/VideoQualityEntitlement', () => ({
-	hasHigherVideoQuality: () => menuEntitled,
+	hasHigherVideoQuality: () => true,
 	getScreenShareBitrateCeilingBps: () => 9_000_000,
 }));
 
@@ -827,30 +737,6 @@ describe('the configured screen share start flow', () => {
 		expect(ActiveScreenShareSource.getSourceDimensions()).toBeNull();
 	});
 
-	it('commits the target of the share the start flow asked for', async () => {
-		storedResolution = 'source';
-		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
-		const device = resolveConfiguredScreenShareTarget('device', null);
-		expect(device).not.toEqual(resolveConfiguredScreenShareTarget('display', null));
-		expect(ActiveScreenShareSource.getTarget()).toEqual(device);
-		expect(started).toEqual([
-			{
-				resolution: buildConfiguredScreenShareOptions({
-					target: device,
-					sourceDimensions: null,
-					includeAudio: false,
-					videoCodec: 'h264',
-				}).captureOptions.resolution,
-				publishOptions: buildConfiguredScreenShareOptions({
-					target: device,
-					sourceDimensions: null,
-					includeAudio: false,
-					videoCodec: 'h264',
-				}).publishOptions,
-			},
-		]);
-	});
-
 	it('retargets the committed target on a source switch', async () => {
 		await startConfiguredDeviceScreenShare('camera-1');
 		const startedTarget = ActiveScreenShareSource.getTarget();
@@ -1010,14 +896,6 @@ describe('a live settings push', () => {
 });
 
 const {reconfigureActiveDeviceShareAudio} = await import('@app/features/voice/utils/ScreenShareStartFlow');
-const {
-	DEVICE_AUDIO_ONLY_DESCRIPTOR,
-	DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR,
-	MICROPHONE_WITH_DEVICE_DESCRIPTOR,
-	NO_DEVICE_AUDIO_DESCRIPTOR,
-	resolveDeviceShareAudioPairing,
-	resolveScreenShareAudioSummary,
-} = await import('@app/features/voice/utils/ScreenShareAudioSummary');
 
 describe('the device share audio input', () => {
 	const engine = MediaEngine as unknown as {
@@ -1112,64 +990,5 @@ describe('the device share audio input', () => {
 		expect(await reconfigureActiveDeviceShareAudio()).toBe(true);
 		expect(engine.setScreenShareAudioMuted).toHaveBeenCalledWith(true);
 		expect(engine.ensureDeviceScreenShareMicPublication).not.toHaveBeenCalled();
-	});
-
-	const summarise = (input: Partial<ScreenShareAudioSummaryInput>) =>
-		resolveScreenShareAudioSummary({
-			sourceMode: 'system',
-			includeSources: [],
-			shareContext: 'device',
-			microphoneLabel: 'Headset',
-			...input,
-		});
-
-	it('never names the microphone for a capture device that has no audio of its own', () => {
-		expect(summarise({deviceAudioPairing: resolveDeviceShareAudioPairing([CARD, HEADSET], 'card-video')})).toEqual({
-			kind: 'message',
-			descriptor: NO_DEVICE_AUDIO_DESCRIPTOR,
-		});
-	});
-
-	it('names the capture device own audio input when it has one', () => {
-		expect(
-			summarise({deviceAudioPairing: resolveDeviceShareAudioPairing([CARD, CARD_AUDIO, HEADSET], 'card-video')}),
-		).toEqual({
-			kind: 'message',
-			descriptor: DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR,
-			values: {deviceLabel: 'Capture card audio'},
-		});
-	});
-
-	it('names the input the user picked in the audio device menu', () => {
-		expect(
-			summarise({
-				chosenAudioDeviceId: 'microphone-1',
-				deviceAudioPairing: resolveDeviceShareAudioPairing([CARD, HEADSET], 'card-video'),
-			}),
-		).toEqual({
-			kind: 'message',
-			descriptor: MICROPHONE_WITH_DEVICE_DESCRIPTOR,
-			values: {deviceLabel: 'Headset'},
-		});
-	});
-
-	it('names the microphone when the audio source picker asked for it', () => {
-		expect(
-			summarise({
-				usesDeviceMicrophone: true,
-				deviceAudioPairing: resolveDeviceShareAudioPairing([CARD, HEADSET], 'card-video'),
-			}),
-		).toEqual({
-			kind: 'message',
-			descriptor: MICROPHONE_WITH_DEVICE_DESCRIPTOR,
-			values: {deviceLabel: 'Headset'},
-		});
-	});
-
-	it('promises nothing about a device the user has not picked yet', () => {
-		expect(summarise({deviceAudioPairing: resolveDeviceShareAudioPairing([CARD, CARD_AUDIO], '')})).toEqual({
-			kind: 'message',
-			descriptor: DEVICE_AUDIO_ONLY_DESCRIPTOR,
-		});
 	});
 });

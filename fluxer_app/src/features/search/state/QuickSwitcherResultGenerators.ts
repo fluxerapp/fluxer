@@ -120,7 +120,7 @@ function isChannelVisible(channel: Channel): boolean {
 
 function channelResult(channel: Channel, i18n: I18n): QuickSwitcherExecutableResult | null {
 	const candidate = buildChannelCandidate(channel, i18n);
-	return candidate == null ? null : candidateToResult(candidate, i18n);
+	return candidate == null ? null : candidateToResult(candidate);
 }
 
 function collectChannelResults(
@@ -266,8 +266,8 @@ function rankedType(ranked: RankedCandidate): ForwardSearchResult['type'] {
 	return ranked.candidate.type === QuickSwitcherResultTypes.USER ? 'user' : 'text_channel';
 }
 
-function rankedToResult(ranked: RankedCandidate, i18n: I18n): QuickSwitcherExecutableResult {
-	const result = candidateToResult(ranked.candidate, i18n);
+function rankedToResult(ranked: RankedCandidate, _i18n: I18n): QuickSwitcherExecutableResult {
+	const result = candidateToResult(ranked.candidate);
 	if (result.type !== QuickSwitcherResultTypes.USER) return result;
 	const {user} = result;
 	const tag = NicknameUtils.formatUserTagForStreamerMode(user);
@@ -472,7 +472,7 @@ export function generateQueryModeResults(
 				listed = [...sets.guilds, ...sets.virtualGuilds];
 				break;
 		}
-		return [header, ...listed.map((candidate) => candidateToResult(candidate, i18n))];
+		return [header, ...listed.map((candidate) => candidateToResult(candidate))];
 	}
 	let ranked: Array<RankedCandidate>;
 	switch (prefixMode) {

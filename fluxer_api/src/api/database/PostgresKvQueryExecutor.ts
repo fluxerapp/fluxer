@@ -326,21 +326,6 @@ export function matchesWhere(
 			case 'gte':
 				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
 				break;
-			case 'tupleGt': {
-				const left = clause.cols.map((column) => row[column]);
-				const right = clause.params.map((param) => getParam(params, param));
-				let greater = false;
-				for (let i = 0; i < left.length; i += 1) {
-					const cmp = compareValues(left[i], right[i]);
-					if (cmp > 0) {
-						greater = true;
-						break;
-					}
-					if (cmp < 0) break;
-				}
-				if (!greater) return false;
-				break;
-			}
 		}
 	}
 	return true;
@@ -417,7 +402,7 @@ function pinnedClause(where: ReadonlyArray<WhereExpr<Row>>, column: string): Pin
 }
 
 function clauseColumns(clause: WhereExpr<Row>): ReadonlyArray<string> {
-	return clause.kind === 'tupleGt' ? (clause.cols as ReadonlyArray<string>) : [clause.col as string];
+	return [clause.col as string];
 }
 
 function describeClause(clause: WhereExpr<Row>): string {

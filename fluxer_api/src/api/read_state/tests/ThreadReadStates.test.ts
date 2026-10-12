@@ -2,12 +2,8 @@
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {clearReadStateChannelMetaCacheForTesting} from '@app/api/read_state/ReadStateChannelMeta';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -42,7 +38,7 @@ describe('thread read states', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		clearReadStateChannelMetaCacheForTesting();
 	});
 
@@ -51,7 +47,7 @@ describe('thread read states', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -71,7 +67,6 @@ describe('thread read states', () => {
 	}
 
 	async function activeSetup() {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -101,9 +96,6 @@ describe('thread read states', () => {
 		});
 		const incapable = await session(s.member);
 		expect(incapable.read_states.some((readState) => readState.id === s.thread.id)).toBe(false);
-		await setChannelThreadsConfig({enabled: false});
-		const killed = await session(s.member, true);
-		expect(killed.read_states.some((readState) => readState.id === s.thread.id)).toBe(false);
 	});
 
 	it('stamps the actor self-ack of thread system messages', async () => {

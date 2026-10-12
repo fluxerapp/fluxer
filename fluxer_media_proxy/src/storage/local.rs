@@ -131,6 +131,7 @@ impl Store {
         })
     }
 
+    #[cfg(test)]
     pub(super) async fn write_local(
         &self,
         bucket: &str,

@@ -3,7 +3,7 @@
 import {createEmojiID, type GuildID} from '@app/api/BrandedTypes';
 import type {ThreadParentConfigPatch, ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import type {ForumTagUdt} from '@app/api/database/types/ThreadTypes';
-import {guildActive, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadParentConfig} from '@app/api/models/ThreadParentConfig';
@@ -238,7 +238,7 @@ export async function loadThreadParentConfig(
 	threads: ThreadRepository,
 	channel: Channel,
 ): Promise<ThreadParentConfig | null> {
-	if (!isThreadParentInGuild(channel) || !guildActive(channel.guildId)) return null;
+	if (!isThreadParentInGuild(channel)) return null;
 	return threads.getParentConfig(channel.guildId, channel.id);
 }
 
@@ -248,7 +248,7 @@ export async function withThreadParentFields(
 	response: ChannelResponse,
 	viewer?: ThreadViewer,
 ): Promise<ChannelResponse> {
-	if (!isThreadParentInGuild(channel) || !guildActive(channel.guildId)) return response;
+	if (!isThreadParentInGuild(channel)) return response;
 	if (viewer && !viewerActive(viewer, channel.guildId)) return response;
 	const config = await threads.getParentConfig(channel.guildId, channel.id);
 	return {...response, ...mapThreadParentFields(channel.type, config)};
@@ -261,7 +261,7 @@ export async function withThreadParentFieldsMany(
 	responses: Array<ChannelResponse>,
 	viewer?: ThreadViewer,
 ): Promise<Array<ChannelResponse>> {
-	if (!guildActive(guildId) || (viewer && !viewerActive(viewer, guildId))) return responses;
+	if (viewer && !viewerActive(viewer, guildId)) return responses;
 	if (!channels.some((channel) => THREAD_PARENT_CHANNEL_TYPES.has(channel.type))) return responses;
 	const configs = new Map(
 		(await threads.listParentConfigs(guildId)).map((config) => [config.channelId.toString(), config]),

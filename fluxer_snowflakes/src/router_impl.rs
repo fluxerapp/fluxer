@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::types::{SERVICE_NAME, SnowflakeRequest, SnowflakeResponse};
-use fluxer_svc::config::ServiceConfig;
 use fluxer_svc::hash_ring::HashRing;
-use fluxer_svc::metrics::ServiceMetrics;
-use fluxer_svc::transport::{NatsMessage, NatsTransport, TransportMessage, TransportSubscriber};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::time::{Duration, Instant};
-use tokio::task::JoinSet;
-use tracing::{debug, info, warn};
-
-const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
-const MAX_ROUTER_REQUEST_BYTES: usize = 64 * 1024;
+use fluxer_svc::router::RouterService;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 pub struct RoundRobinShardPicker {
     next: AtomicU32,
@@ -21,12 +12,8 @@ pub struct RoundRobinShardPicker {
 
 impl RoundRobinShardPicker {
     pub fn new(shard_count: u32) -> Self {
-        Self::with_start(shard_count, 0)
-    }
-
-    fn with_start(shard_count: u32, start: u32) -> Self {
         Self {
-            next: AtomicU32::new(start),
+            next: AtomicU32::new(0),
             shard_count: shard_count.max(1),
         }
     }
@@ -57,186 +44,30 @@ impl SnowflakeShardPicker {
     }
 }
 
-pub async fn run_round_robin_router(
-    config: &ServiceConfig,
-    transport: NatsTransport,
-) -> anyhow::Result<()> {
-    anyhow::ensure!(
-        config.max_concurrent_requests > 0,
-        "snowflake router request concurrency must be positive"
-    );
-    let picker = Arc::new(SnowflakeShardPicker::new(config.shard_count));
-    let mut tasks = JoinSet::new();
-    let health_addr = config.listen_addr;
-    let router_serving = Arc::new(AtomicBool::new(true));
-    let http_serving = router_serving.clone();
-    let http_metrics = Arc::new(ServiceMetrics::default());
-    http_metrics.init();
-    tasks.spawn({
-        let metrics = http_metrics.clone();
-        async move {
-            fluxer_svc::server::run_http(
-                health_addr,
-                http_serving,
-                metrics,
-                SERVICE_NAME.to_owned(),
-            )
-            .await
-        }
-    });
-    tasks.spawn(serve_requests(
-        transport,
-        picker,
-        http_metrics,
-        config.max_concurrent_requests,
-    ));
-    tokio::select! {
-        result = tasks.join_next() => {
-            match result {
-                Some(Ok(Ok(()))) => Ok(()),
-                Some(Ok(Err(error))) => Err(error),
-                Some(Err(error)) => Err(error.into()),
-                None => Ok(()),
-            }
-        }
-        _ = fluxer_svc::shutdown::wait_for_shutdown() => {
-            info!("snowflake router shutting down");
-            router_serving.store(false, Ordering::SeqCst);
-            Ok(())
+pub struct SnowflakesRouter {
+    picker: SnowflakeShardPicker,
+}
+
+impl SnowflakesRouter {
+    pub fn new(shard_count: u32) -> Self {
+        Self {
+            picker: SnowflakeShardPicker::new(shard_count),
         }
     }
 }
 
-async fn serve_requests(
-    transport: NatsTransport,
-    picker: Arc<SnowflakeShardPicker>,
-    metrics: Arc<ServiceMetrics>,
-    max_concurrent_requests: usize,
-) -> anyhow::Result<()> {
-    let request_subject = format!("svc.{SERVICE_NAME}");
-    let queue_group = format!("{SERVICE_NAME}-router");
-    let mut requests = JoinSet::new();
-    loop {
-        let mut sub = transport
-            .subscribe_queue(&request_subject, &queue_group)
-            .await?;
-        info!(
-            subject = request_subject,
-            max_concurrent_requests, "snowflake router listening for requests"
-        );
-        loop {
-            let msg = tokio::select! {
-                result = requests.join_next(), if !requests.is_empty() => {
-                    if let Err(error) = result.expect("nonempty snowflake request set") {
-                        warn!(error = %error, "snowflake request task failed");
-                    }
-                    continue;
-                }
-                msg = sub.next() => {
-                    let Some(msg) = msg else {
-                        warn!("snowflake router request subscription stream ended, will re-subscribe");
-                        break;
-                    };
-                    msg
-                }
-            };
-            while let Some(result) = requests.try_join_next() {
-                if let Err(error) = result {
-                    warn!(error = %error, "snowflake request task failed");
-                }
-            }
-            metrics.record_request();
-            if requests.len() >= max_concurrent_requests {
-                debug!(
-                    max_concurrent_requests,
-                    "shedding overloaded snowflake router request"
-                );
-                metrics.record_request_error();
-                reply_json_error(&msg, &transport, "overloaded").await;
-                continue;
-            }
-            requests.spawn(handle_request(
-                msg,
-                transport.clone(),
-                picker.clone(),
-                metrics.clone(),
-            ));
-        }
+impl RouterService for SnowflakesRouter {
+    type Request = SnowflakeRequest;
+    type Response = SnowflakeResponse;
+    const CACHES_RESPONSES: bool = false;
+    fn service_name(&self) -> &str {
+        SERVICE_NAME
     }
-}
-
-async fn handle_request(
-    msg: NatsMessage,
-    transport: NatsTransport,
-    picker: Arc<SnowflakeShardPicker>,
-    metrics: Arc<ServiceMetrics>,
-) {
-    let started = Instant::now();
-    match forward_request(msg.payload(), &transport, &picker, &metrics).await {
-        Ok(response) => {
-            if msg.has_reply() {
-                let payload = serde_json::to_vec(&response)
-                    .expect("snowflake responses contain only JSON-serializable strings");
-                reply(&msg, &transport, &payload).await;
-            }
-        }
-        Err(error) => {
-            metrics.record_request_error();
-            reply_json_error(&msg, &transport, error).await;
-        }
+    fn route_key(request: &Self::Request) -> String {
+        request.routing_key().unwrap_or_default().to_owned()
     }
-    metrics.record_request_duration(started.elapsed().as_millis() as u64);
-}
-
-async fn forward_request(
-    payload: &[u8],
-    transport: &NatsTransport,
-    picker: &SnowflakeShardPicker,
-    metrics: &ServiceMetrics,
-) -> Result<SnowflakeResponse, &'static str> {
-    if payload.len() > MAX_ROUTER_REQUEST_BYTES {
-        warn!(
-            payload_bytes = payload.len(),
-            max_payload_bytes = MAX_ROUTER_REQUEST_BYTES,
-            "rejecting oversized snowflake request"
-        );
-        return Err("request_too_large");
-    }
-    let request: SnowflakeRequest = serde_json::from_slice(payload).map_err(|error| {
-        warn!(error = %error, "failed to decode snowflake request");
-        "decode_error"
-    })?;
-    let shard_id = picker.pick_shard(&request);
-    let shard_subject = format!("svc.{SERVICE_NAME}.shard.{shard_id}");
-    let payload = rmp_serde::to_vec(&request).map_err(|error| {
-        warn!(error = %error, "failed to encode snowflake shard request");
-        "encode_error"
-    })?;
-    metrics.record_shard_forward();
-    let response_bytes = transport
-        .request(&shard_subject, &payload, SHARD_REQUEST_TIMEOUT)
-        .await
-        .map_err(|error| {
-            debug!(error = %error, shard_id, "snowflake shard request failed");
-            "shard_unavailable"
-        })?;
-    rmp_serde::from_slice(&response_bytes).map_err(|error| {
-        debug!(error = %error, shard_id, "failed to decode snowflake shard response");
-        "shard_decode_error"
-    })
-}
-
-async fn reply_json_error(msg: &NatsMessage, transport: &NatsTransport, error: &str) {
-    if msg.has_reply() {
-        let payload = serde_json::to_vec(&serde_json::json!({ "error": error }))
-            .expect("snowflake error responses contain only a JSON-serializable string");
-        reply(msg, transport, &payload).await;
-    }
-}
-
-async fn reply(msg: &NatsMessage, transport: &NatsTransport, payload: &[u8]) {
-    if let Err(error) = msg.reply(transport, payload).await {
-        warn!(error = %error, "failed to reply to snowflake request");
+    fn shard_for(&self, request: &Self::Request, _ring: &HashRing) -> u32 {
+        self.picker.pick_shard(request)
     }
 }
 
@@ -253,7 +84,8 @@ mod tests {
 
     #[test]
     fn picker_handles_atomic_wraparound() {
-        let picker = RoundRobinShardPicker::with_start(4, u32::MAX - 1);
+        let picker = RoundRobinShardPicker::new(4);
+        picker.next.store(u32::MAX - 1, Ordering::Relaxed);
         let shards = (0..4).map(|_| picker.next_shard()).collect::<Vec<_>>();
         assert_eq!(shards, vec![2, 3, 0, 1]);
     }

@@ -5,44 +5,23 @@
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-get_users_to_mention_by_roles_basic_test() ->
-    State = test_state(),
-    Request = #{channel_id => 500, role_ids => [200], author_id => 1},
-    {reply, #{user_ids := UserIds}, _} = guild_members:get_users_to_mention_by_roles(
-        Request, State
-    ),
-    ?assertEqual([2], UserIds).
-
 get_members_with_role_test() ->
     State = test_state(),
-    {reply, #{user_ids := UserIds}, _} = guild_members:get_members_with_role(
+    {reply, #{user_ids := UserIds}, _} = guild_members_query:get_members_with_role(
         #{role_id => 200}, State
     ),
     ?assertEqual([2], UserIds).
 
 get_members_with_role_rejects_malformed_role_id_test() ->
     State = test_state(),
-    {reply, #{user_ids := UserIds}, _} = guild_members:get_members_with_role(
+    {reply, #{user_ids := UserIds}, _} = guild_members_query:get_members_with_role(
         #{role_id => <<"0200">>}, State
     ),
     ?assertEqual([], UserIds).
 
-resolve_all_mentions_test() ->
-    State = test_state(),
-    Request = #{
-        channel_id => 500,
-        author_id => 1,
-        mention_everyone => false,
-        mention_here => false,
-        role_ids => [200],
-        user_ids => [3]
-    },
-    {reply, #{user_ids := UserIds}, _} = guild_members:resolve_all_mentions(Request, State),
-    ?assertEqual([2, 3], UserIds).
-
 resolve_channel_mentions_skips_invalid_channel_ids_test() ->
     State = channel_mentions_state([]),
-    {reply, #{channels := Channels}, _} = guild_members:resolve_channel_mentions(
+    {reply, #{channels := Channels}, _} = guild_members_mutation:resolve_channel_mentions(
         #{channel_ids => [<<"001">>, <<"500">>]},
         State
     ),
@@ -59,7 +38,7 @@ resolve_channel_mentions_ignores_user_zero_overwrite_test() ->
         }
     ],
     State = channel_mentions_state(Overwrites),
-    {reply, #{channels := Channels}, _} = guild_members:resolve_channel_mentions(
+    {reply, #{channels := Channels}, _} = guild_members_mutation:resolve_channel_mentions(
         #{channel_ids => [<<"500">>]},
         State
     ),
@@ -67,7 +46,7 @@ resolve_channel_mentions_ignores_user_zero_overwrite_test() ->
 
 get_assignable_roles_owner_test() ->
     State = test_state(),
-    {reply, #{role_ids := RoleIds}, _} = guild_members:get_assignable_roles(
+    {reply, #{role_ids := RoleIds}, _} = guild_members_roles:get_assignable_roles(
         #{user_id => 1}, State
     ),
     ?assertEqual(lists:sort([100, 200, 201]), lists:sort(RoleIds)).
@@ -78,7 +57,7 @@ get_viewable_channels_skips_malformed_channel_id_test() ->
     Channels = maps:get(<<"channels">>, Data0),
     BadChannel = #{<<"id">> => <<"0502">>, <<"type">> => 0, <<"permission_overwrites">> => []},
     State = State0#{data => Data0#{<<"channels">> => [BadChannel | Channels]}},
-    {reply, #{channel_ids := ChannelIds}, _} = guild_members:get_viewable_channels(
+    {reply, #{channel_ids := ChannelIds}, _} = guild_members_query:get_viewable_channels(
         #{user_id => 1}, State
     ),
     ?assert(lists:member(500, ChannelIds)),
@@ -86,10 +65,10 @@ get_viewable_channels_skips_malformed_channel_id_test() ->
 
 check_target_member_test() ->
     State = test_state(),
-    {reply, #{can_manage := true}, _} = guild_members:check_target_member(
+    {reply, #{can_manage := true}, _} = guild_members_roles:check_target_member(
         #{user_id => 1, target_user_id => 2}, State
     ),
-    {reply, #{can_manage := false}, _} = guild_members:check_target_member(
+    {reply, #{can_manage := false}, _} = guild_members_roles:check_target_member(
         #{user_id => 2, target_user_id => 1}, State
     ).
 

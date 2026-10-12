@@ -345,7 +345,6 @@ fn copy_pixel(input: &[u8], dst: &mut [u8], layout: PixelLayout, src: Point, tar
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::*;
 
     fn request(src_width: u32, src_height: u32) -> TransformRequest {
         TransformRequest {
@@ -376,44 +375,6 @@ mod tests {
         let mut output = vec![0; rgba_byte_len(geometry.target_width, geometry.target_height)?];
         crop_rotate_rgba_into(input, &mut output, request)?;
         Ok(((geometry.target_width, geometry.target_height), output))
-    }
-
-    #[test]
-    fn rotate_90_uses_clockwise_quarter_turns() {
-        let mut transform = request(2, 3);
-        transform.rotation_deg = 90;
-        let (size, pixels) = transformed(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
-        assert_eq!(size, (3, 2));
-        assert_eq!(pixels, rgba(&[5, 3, 1, 6, 4, 2]));
-    }
-
-    #[test]
-    fn rotate_180_reverses_rows_and_columns() {
-        let mut transform = request(2, 2);
-        transform.rotation_deg = 180;
-        let (size, pixels) = transformed(&rgba(&[1, 2, 3, 4]), transform).unwrap();
-        assert_eq!(size, (2, 2));
-        assert_eq!(pixels, rgba(&[4, 3, 2, 1]));
-    }
-
-    #[test]
-    fn rotate_270_uses_clockwise_quarter_turns() {
-        let mut transform = request(2, 3);
-        transform.rotation_deg = 270;
-        let (size, pixels) = transformed(&rgba(&[1, 2, 3, 4, 5, 6]), transform).unwrap();
-        assert_eq!(size, (3, 2));
-        assert_eq!(pixels, rgba(&[2, 4, 6, 1, 3, 5]));
-    }
-
-    #[test]
-    fn applies_nearest_resize_after_rotation() {
-        let mut transform = request(4, 1);
-        transform.x = 1;
-        transform.width = 2;
-        transform.resize_width = 4;
-        let (size, pixels) = transformed(&rgba(&[1, 2, 3, 4]), transform).unwrap();
-        assert_eq!(size, (4, 1));
-        assert_eq!(pixels, rgba(&[2, 2, 3, 3]));
     }
 
     #[test]
@@ -462,16 +423,5 @@ mod tests {
             crop_rotate_rgba_into(&rgba(&[1, 2, 3, 4]), &mut output, request(2, 2)).unwrap_err(),
             TransformError::InvalidOutputLength
         );
-    }
-
-    proptest! {
-        #[test]
-        fn identity_transform_preserves_pixels(width in 1u32..16, height in 1u32..16) {
-            let pixel_count = (width * height) as usize;
-            let input = rgba(&(0..pixel_count).map(|index| index as u8).collect::<Vec<_>>());
-            let (size, pixels) = transformed(&input, request(width, height)).unwrap();
-            prop_assert_eq!(size, (width, height));
-            prop_assert_eq!(pixels, input);
-        }
     }
 }

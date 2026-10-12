@@ -4,10 +4,9 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {CheckboxItem, MenuGroupLabel} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, MenuGroupLabel, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import {getElectronAPI, supportsDesktopScreenShareAudioCapture} from '@app/features/ui/utils/NativeUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {AudioSourcePickerLinuxSubmenu} from '@app/features/voice/components/AudioSourcePickerLinux';
@@ -64,6 +63,14 @@ import {
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {hasHigherVideoQuality as resolveHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	CUSTOM_DESCRIPTOR,
+	GAMING_DESCRIPTOR,
+	SCREENSHARE_DESCRIPTOR,
+	SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR as SOURCE_DESCRIPTOR,
+	SYSTEM_DEFAULT_DESCRIPTOR,
+	UNNAMED_INPUT_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -73,10 +80,6 @@ import type {Track} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-const GAMING_DESCRIPTOR = msg({
-	message: 'Gaming',
-	comment: 'Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.',
-});
 const SMOOTH_60_FPS_AT_UP_TO_1440P_DESCRIPTOR = msg({
 	message: 'Smooth 60 FPS at up to 1440p',
 	comment:
@@ -86,10 +89,7 @@ const SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR = msg({
 	message: 'Smooth 30 FPS at up to 720p',
 	comment: 'Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.',
 });
-const SCREENSHARE_DESCRIPTOR = msg({
-	message: 'Screen share',
-	comment: 'Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.',
-});
+
 const SHARP_TEXT_AT_UP_TO_4K_DESCRIPTOR = msg({
 	message: 'Sharp text at up to 4K, up to 15 FPS',
 	comment:
@@ -100,18 +100,12 @@ const SHARP_TEXT_AT_720P_DESCRIPTOR = msg({
 	comment:
 		'Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.',
 });
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Streaming preset label in the stream settings menu. Lets user pick resolution and frame rate manually.',
-});
+
 const DIAL_IN_YOUR_OWN_NUMBERS_DESCRIPTOR = msg({
 	message: 'Dial in your own numbers',
 	comment: 'Description for the Custom streaming preset. Lightly playful prose; keep tone casual.',
 });
-const SOURCE_DESCRIPTOR = msg({
-	message: 'Source',
-	comment: 'Resolution option in the stream settings menu meaning the original source resolution (no downscale).',
-});
+
 const FPS_DESCRIPTOR = msg({
 	message: '{frameRate} FPS',
 	comment: 'Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.',
@@ -138,14 +132,7 @@ const AUDIO_DEVICE_DESCRIPTOR = msg({
 	message: 'Audio device',
 	comment: 'Section header in the stream settings menu. Selects the audio capture device for the share.',
 });
-const SYSTEM_DEFAULT_DESCRIPTOR = msg({
-	message: 'System default',
-	comment: 'Audio device option label meaning the OS default audio input device.',
-});
-const UNNAMED_INPUT_DESCRIPTOR = msg({
-	message: 'Unnamed input',
-	comment: 'Fallback label for an audio input device whose name is not reported by the OS.',
-});
+
 const AUDIO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Audio settings',
 	comment: 'Section header in the stream settings menu grouping audio-related toggles.',

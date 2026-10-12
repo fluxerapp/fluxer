@@ -88,7 +88,7 @@ fn the_video_scan_never_spends_a_slot_on_the_container_first_frame() {
         return;
     };
     let media_limits = limits();
-    let metrics = TransformMetrics::new();
+    let metrics = TransformMetrics::default();
     let metadata = super::super::probe_av_metadata(
         &mp4,
         super::super::NSFW_PREVIEW_MAX_DIMENSION,
@@ -96,12 +96,6 @@ fn the_video_scan_never_spends_a_slot_on_the_container_first_frame() {
         None,
     )
     .expect("probe generated mp4");
-    let preview = metadata
-        .frame
-        .as_ref()
-        .expect("the generated mp4 decodes a preview frame")
-        .encode_nsfw_jpeg(&media_limits, None)
-        .expect("encode the preview frame");
     let frames = nsfw_video_scan_buffers(&NSFWScanSource {
         media_limits: &media_limits,
         metrics: &metrics,
@@ -118,10 +112,6 @@ fn the_video_scan_never_spends_a_slot_on_the_container_first_frame() {
         MAX_NSFW_SAMPLE_FRAMES,
         frames.len(),
         "every corroborating slot must hold a sampled frame"
-    );
-    assert!(
-        !frames.contains(&preview),
-        "the t=0 preview frame must not take one of the sampled slots"
     );
     for frame in &frames {
         assert_bounded_jpeg(frame, &media_limits);

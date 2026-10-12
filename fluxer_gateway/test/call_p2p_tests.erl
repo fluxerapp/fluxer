@@ -37,24 +37,6 @@ race_p2p_join_after_sfu_start_is_rejected_test() ->
         ?assertEqual([], drain_voice_server_updates())
     end).
 
-race_async_join_producing_mixed_states_is_rejected_test() ->
-    with_stubs(fun() ->
-        State = join_all([{1, true}], call_state()),
-        ?assertEqual(
-            {noreply, State},
-            call_voice:handle_join_async(
-                2, voice_state(2, false), session_id(2), erlang:get(call_p2p_sink), State
-            )
-        ),
-        receive
-            {call_join_result, 1, Result} ->
-                ?assertEqual({error, voice_p2p_consent_required}, Result)
-        after 1000 ->
-            error(call_join_result_not_sent)
-        end,
-        ?assertEqual([], drain_voice_server_updates())
-    end).
-
 fifth_joiner_over_the_cap_is_rejected_test() ->
     with_stubs(fun() ->
         Mesh = join_all([{UserId, true} || UserId <- [1, 2, 3, 4]], call_state()),

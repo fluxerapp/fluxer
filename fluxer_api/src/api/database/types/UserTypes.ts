@@ -14,7 +14,6 @@ import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import type {GuildFolderIcon, MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 import type {types} from 'cassandra-driver';
 
-type Nullish<T> = T | null;
 export type PushSubscriptionPlatform =
 	| 'web_push'
 	| 'android_fcm'
@@ -26,64 +25,64 @@ export interface UserRow {
 	user_id: UserID;
 	username: string;
 	discriminator: number;
-	global_name: Nullish<string>;
-	bot: Nullish<boolean>;
-	system: Nullish<boolean>;
-	email: Nullish<string>;
-	email_verified: Nullish<boolean>;
-	email_bounced: Nullish<boolean>;
-	password_hash: Nullish<string>;
-	password_last_changed_at: Nullish<Date>;
-	totp_secret: Nullish<string>;
-	authenticator_types: Nullish<Set<number>>;
-	avatar_hash: Nullish<string>;
-	avatar_color: Nullish<number>;
-	banner_hash: Nullish<string>;
-	banner_color: Nullish<number>;
-	bio: Nullish<string>;
-	pronouns: Nullish<string>;
-	accent_color: Nullish<number>;
-	timezone: Nullish<string>;
-	timezone_privacy_flags: Nullish<number>;
-	date_of_birth: Nullish<types.LocalDate>;
-	locale: Nullish<string>;
-	flags: Nullish<bigint>;
-	premium_flags?: Nullish<number>;
-	premium_type: Nullish<number>;
-	premium_since: Nullish<Date>;
-	premium_until: Nullish<Date>;
-	premium_gift_extension_ends_at: Nullish<Date>;
-	premium_will_cancel: Nullish<boolean>;
-	premium_billing_cycle: Nullish<string>;
-	premium_lifetime_sequence: Nullish<number>;
-	premium_grace_ends_at: Nullish<Date>;
-	stripe_subscription_id: Nullish<string>;
-	stripe_customer_id: Nullish<string>;
-	has_ever_purchased: Nullish<boolean>;
-	terms_agreed_at: Nullish<Date>;
-	privacy_agreed_at: Nullish<Date>;
-	last_active_at: Nullish<Date>;
-	last_active_ip: Nullish<string>;
-	temp_banned_until: Nullish<Date>;
-	pending_bulk_message_deletion_at: Nullish<Date>;
-	pending_bulk_message_deletion_channel_count: Nullish<number>;
-	pending_bulk_message_deletion_message_count: Nullish<number>;
-	pending_deletion_at: Nullish<Date>;
-	deletion_started_at?: Nullish<Date>;
-	deletion_reason_code: Nullish<number>;
-	deletion_public_reason: Nullish<string>;
-	deletion_audit_log_reason: Nullish<string>;
-	deletion_scheduled_by?: Nullish<UserID>;
-	deletion_scheduled_at?: Nullish<Date>;
-	content_hidden_since?: Nullish<Date>;
-	acls: Nullish<Set<string>>;
-	traits: Nullish<Set<string>>;
-	first_refund_at: Nullish<Date>;
-	gift_inventory_server_seq: Nullish<number>;
-	gift_inventory_client_seq: Nullish<number>;
-	premium_onboarding_dismissed_at: Nullish<Date>;
-	mention_flags?: Nullish<MentionReplyPreference>;
-	last_voice_activity_sharing_change_at: Nullish<Date>;
+	global_name: string | null;
+	bot: boolean | null;
+	system: boolean | null;
+	email: string | null;
+	email_verified: boolean | null;
+	email_bounced: boolean | null;
+	password_hash: string | null;
+	password_last_changed_at: Date | null;
+	totp_secret: string | null;
+	authenticator_types: Set<number> | null;
+	avatar_hash: string | null;
+	avatar_color: number | null;
+	banner_hash: string | null;
+	banner_color: number | null;
+	bio: string | null;
+	pronouns: string | null;
+	accent_color: number | null;
+	timezone: string | null;
+	timezone_privacy_flags: number | null;
+	date_of_birth: types.LocalDate | null;
+	locale: string | null;
+	flags: bigint | null;
+	premium_flags?: number | null;
+	premium_type: number | null;
+	premium_since: Date | null;
+	premium_until: Date | null;
+	premium_gift_extension_ends_at: Date | null;
+	premium_will_cancel: boolean | null;
+	premium_billing_cycle: string | null;
+	premium_lifetime_sequence: number | null;
+	premium_grace_ends_at: Date | null;
+	stripe_subscription_id: string | null;
+	stripe_customer_id: string | null;
+	has_ever_purchased: boolean | null;
+	terms_agreed_at: Date | null;
+	privacy_agreed_at: Date | null;
+	last_active_at: Date | null;
+	last_active_ip: string | null;
+	temp_banned_until: Date | null;
+	pending_bulk_message_deletion_at: Date | null;
+	pending_bulk_message_deletion_channel_count: number | null;
+	pending_bulk_message_deletion_message_count: number | null;
+	pending_deletion_at: Date | null;
+	deletion_started_at?: Date | null;
+	deletion_reason_code: number | null;
+	deletion_public_reason: string | null;
+	deletion_audit_log_reason: string | null;
+	deletion_scheduled_by?: UserID | null;
+	deletion_scheduled_at?: Date | null;
+	content_hidden_since?: Date | null;
+	acls: Set<string> | null;
+	traits: Set<string> | null;
+	first_refund_at: Date | null;
+	gift_inventory_server_seq: number | null;
+	gift_inventory_client_seq: number | null;
+	premium_onboarding_dismissed_at: Date | null;
+	mention_flags?: MentionReplyPreference | null;
+	last_voice_activity_sharing_change_at: Date | null;
 	version: number;
 }
 
@@ -217,20 +216,20 @@ export const EMPTY_USER_ROW: UserRow = {
 };
 
 export interface CustomStatus {
-	text: Nullish<string>;
-	emoji_id: Nullish<EmojiID>;
-	emoji_name: Nullish<string>;
+	text: string | null;
+	emoji_id: EmojiID | null;
+	emoji_name: string | null;
 	emoji_animated: boolean;
-	expires_at: Nullish<Date>;
+	expires_at: Date | null;
 }
 
 export interface GuildFolder {
 	folder_id: number;
-	name: Nullish<string>;
-	color: Nullish<number>;
-	flags: Nullish<number>;
-	icon: Nullish<GuildFolderIcon>;
-	guild_ids: Nullish<Array<GuildID>>;
+	name: string | null;
+	color: number | null;
+	flags: number | null;
+	icon: GuildFolderIcon | null;
+	guild_ids: Array<GuildID> | null;
 }
 
 export interface UserSettingsRow {
@@ -238,9 +237,9 @@ export interface UserSettingsRow {
 	locale: LocaleCode;
 	theme: string;
 	status: string;
-	status_resets_at: Nullish<Date>;
-	status_resets_to: Nullish<string>;
-	custom_status: Nullish<CustomStatus>;
+	status_resets_at: Date | null;
+	status_resets_to: string | null;
+	custom_status: CustomStatus | null;
 	developer_mode: boolean;
 	message_display_compact: boolean;
 	animate_emoji: boolean;
@@ -257,25 +256,25 @@ export interface UserSettingsRow {
 	group_dm_add_permission_flags: number;
 	default_guilds_restricted: boolean;
 	bot_default_guilds_restricted: boolean;
-	restricted_guilds: Nullish<Set<GuildID>>;
-	bot_restricted_guilds: Nullish<Set<GuildID>>;
-	guild_positions: Nullish<Array<GuildID>>;
-	guild_folders: Nullish<Array<GuildFolder>>;
-	afk_timeout: Nullish<number>;
-	time_format: Nullish<number>;
-	trusted_domains: Nullish<Set<string>>;
-	default_hide_muted_channels: Nullish<boolean>;
-	sensitive_content_friend_dm_filter: Nullish<number>;
-	sensitive_content_non_friend_dm_filter: Nullish<number>;
-	sensitive_content_guild_filter: Nullish<number>;
-	suppress_unprivileged_self_mentions: Nullish<boolean>;
-	suppress_unprivileged_self_mentions_bypass_user_ids: Nullish<Set<UserID>>;
-	staff_dm_access_user_ids: Nullish<Set<UserID>>;
-	synced_preferences: Nullish<string>;
-	profile_privacy: Nullish<number>;
-	default_share_voice_activity: Nullish<boolean>;
-	privacy_setup_version: Nullish<number>;
-	privacy_setup_completed_at: Nullish<Date>;
+	restricted_guilds: Set<GuildID> | null;
+	bot_restricted_guilds: Set<GuildID> | null;
+	guild_positions: Array<GuildID> | null;
+	guild_folders: Array<GuildFolder> | null;
+	afk_timeout: number | null;
+	time_format: number | null;
+	trusted_domains: Set<string> | null;
+	default_hide_muted_channels: boolean | null;
+	sensitive_content_friend_dm_filter: number | null;
+	sensitive_content_non_friend_dm_filter: number | null;
+	sensitive_content_guild_filter: number | null;
+	suppress_unprivileged_self_mentions: boolean | null;
+	suppress_unprivileged_self_mentions_bypass_user_ids: Set<UserID> | null;
+	staff_dm_access_user_ids: Set<UserID> | null;
+	synced_preferences: string | null;
+	profile_privacy: number | null;
+	default_share_voice_activity: boolean | null;
+	privacy_setup_version: number | null;
+	privacy_setup_completed_at: Date | null;
 	version: number;
 }
 
@@ -283,9 +282,9 @@ export interface RelationshipRow {
 	source_user_id: UserID;
 	target_user_id: UserID;
 	type: number;
-	nickname: Nullish<string>;
-	since: Nullish<Date>;
-	share_voice_activity: Nullish<boolean>;
+	nickname: string | null;
+	since: Date | null;
+	share_voice_activity: boolean | null;
 	version: number;
 }
 
@@ -297,31 +296,31 @@ export interface NoteRow {
 }
 
 export interface MuteConfig {
-	end_time: Nullish<Date>;
-	selected_time_window: Nullish<number>;
+	end_time: Date | null;
+	selected_time_window: number | null;
 }
 
 export interface ChannelOverride {
 	collapsed: boolean;
-	message_notifications: Nullish<number>;
+	message_notifications: number | null;
 	muted: boolean;
-	mute_config: Nullish<MuteConfig>;
-	unread_badges: Nullish<number>;
-	flags?: Nullish<number>;
+	mute_config: MuteConfig | null;
+	unread_badges: number | null;
+	flags?: number | null;
 }
 
 export interface UserGuildSettingsRow {
 	user_id: UserID;
 	guild_id: GuildID;
-	message_notifications: Nullish<number>;
+	message_notifications: number | null;
 	muted: boolean;
-	mute_config: Nullish<MuteConfig>;
+	mute_config: MuteConfig | null;
 	mobile_push: boolean;
 	suppress_everyone: boolean;
 	suppress_roles: boolean;
 	hide_muted_channels: boolean;
-	channel_overrides: Nullish<Map<ChannelID, ChannelOverride>>;
-	unread_badges: Nullish<number>;
+	channel_overrides: Map<ChannelID, ChannelOverride> | null;
+	unread_badges: number | null;
 	version: number;
 }
 
@@ -343,21 +342,21 @@ export interface FavoriteMemeRow {
 	user_id: UserID;
 	meme_id: MemeID;
 	name: string;
-	alt_text: Nullish<string>;
-	tags: Nullish<Array<string>>;
+	alt_text: string | null;
+	tags: Array<string> | null;
 	attachment_id: AttachmentID;
 	filename: string;
 	content_type: string;
-	content_hash: Nullish<string>;
+	content_hash: string | null;
 	size: bigint;
-	width: Nullish<number>;
-	height: Nullish<number>;
-	duration: Nullish<number>;
+	width: number | null;
+	height: number | null;
+	duration: number | null;
 	is_gifv: boolean;
-	klipy_slug: Nullish<string>;
-	tenor_id_str: Nullish<string>;
-	media_formats: Nullish<string>;
-	placeholder: Nullish<string>;
+	klipy_slug: string | null;
+	tenor_id_str: string | null;
+	media_formats: string | null;
+	placeholder: string | null;
 	version: number;
 }
 
@@ -406,16 +405,16 @@ export interface UserHarvestRow {
 	harvest_id: bigint;
 	requested_at: Date;
 	attempt_id?: string | null;
-	started_at: Nullish<Date>;
-	completed_at: Nullish<Date>;
-	failed_at: Nullish<Date>;
+	started_at: Date | null;
+	completed_at: Date | null;
+	failed_at: Date | null;
 	terminal_failed_at?: Date | null;
-	storage_key: Nullish<string>;
-	file_size: Nullish<bigint>;
+	storage_key: string | null;
+	file_size: bigint | null;
 	progress_percent: number;
-	progress_step: Nullish<string>;
-	error_message: Nullish<string>;
-	download_url_expires_at: Nullish<Date>;
+	progress_step: string | null;
+	error_message: string | null;
+	download_url_expires_at: Date | null;
 }
 
 export const USER_HARVEST_COLUMNS = [
@@ -438,15 +437,15 @@ export const USER_HARVEST_COLUMNS = [
 export interface PushSubscriptionRow {
 	user_id: UserID;
 	subscription_id: string;
-	auth_session_id_hash: Nullish<string>;
+	auth_session_id_hash: string | null;
 	endpoint: string;
-	p256dh_key: Nullish<string>;
-	auth_key: Nullish<string>;
-	user_agent: Nullish<string>;
-	platform?: Nullish<PushSubscriptionPlatform>;
-	app_id?: Nullish<string>;
-	provider_environment?: Nullish<string>;
-	thread_channels?: Nullish<boolean>;
+	p256dh_key: string | null;
+	auth_key: string | null;
+	user_agent: string | null;
+	platform?: PushSubscriptionPlatform | null;
+	app_id?: string | null;
+	provider_environment?: string | null;
+	thread_channels?: boolean | null;
 }
 
 export const PUSH_SUBSCRIPTION_COLUMNS = [
@@ -467,10 +466,10 @@ export interface UserContactChangeLogRow {
 	user_id: UserID;
 	event_id: types.TimeUuid;
 	field: string;
-	old_value: Nullish<string>;
-	new_value: Nullish<string>;
+	old_value: string | null;
+	new_value: string | null;
 	reason: string;
-	actor_user_id: Nullish<UserID>;
+	actor_user_id: UserID | null;
 	event_at: Date;
 }
 
@@ -623,20 +622,6 @@ export const USER_BY_LAST_ACTIVE_IP_TRUST_KEY_COLUMNS = [
 	'user_id',
 	'last_active_at',
 ] as const satisfies ReadonlyArray<keyof UserByLastActiveIpTrustKeyRow>;
-
-export interface UsersPendingDeletionRow {
-	deletion_date: string;
-	pending_deletion_at: Date;
-	user_id: UserID;
-	deletion_reason_code: number;
-}
-
-export const USERS_PENDING_DELETION_COLUMNS = [
-	'deletion_date',
-	'pending_deletion_at',
-	'user_id',
-	'deletion_reason_code',
-] as const satisfies ReadonlyArray<keyof UsersPendingDeletionRow>;
 
 export interface UserDmHistoryRow {
 	user_id: UserID;

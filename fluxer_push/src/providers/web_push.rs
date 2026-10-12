@@ -296,24 +296,6 @@ fn retry_delay(attempt: u32) -> Duration {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_unified_push_topic_with_no_listener_is_permanent() {
-        assert_eq!(
-            classify(INSUFFICIENT_STORAGE),
-            SendOutcome::permanent("http_507")
-        );
-    }
-
-    #[test]
-    fn an_unavailable_push_service_stays_retryable() {
-        assert_eq!(classify(503), SendOutcome::transient("http_503"));
-    }
-}
-
-#[cfg(test)]
 mod retry_tests {
     use super::*;
 
@@ -365,5 +347,23 @@ mod retry_tests {
     fn a_permanent_status_is_never_retried() {
         assert!(!should_retry(400, 0));
         assert!(!should_retry(410, 0));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_unified_push_topic_with_no_listener_is_permanent() {
+        assert_eq!(
+            classify(INSUFFICIENT_STORAGE),
+            SendOutcome::permanent("http_507")
+        );
+    }
+
+    #[test]
+    fn an_unavailable_push_service_stays_retryable() {
+        assert_eq!(classify(503), SendOutcome::transient("http_503"));
     }
 }

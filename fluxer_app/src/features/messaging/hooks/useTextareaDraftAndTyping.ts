@@ -5,7 +5,7 @@ import {segmentsEqual} from '@app/features/messaging/state/MessagingDrafts';
 import type {MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {onBeforeAppStorageScopeChange} from '@app/features/platform/state/PersistentStorage';
 import {flushPendingPersistWrites} from '@app/features/platform/utils/MobXPersistence';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import {useEffect, useRef} from 'react';
 
 interface UseTextareaDraftAndTypingOptions {
@@ -60,7 +60,7 @@ export const useTextareaDraftAndTyping = ({
 		if (enabled) {
 			return;
 		}
-		TypingUtils.clear(channelId);
+		RollingTypingSender.stopTyping(channelId);
 		pendingDraftRef.current = null;
 		if (currentDraftRef.current) {
 			DraftCommands.deleteDraft(draftOwner, channelId);
@@ -165,7 +165,7 @@ export const useTextareaDraftAndTyping = ({
 		if (isRestoringDraftRef.current) {
 			return;
 		}
-		TypingUtils.handleComposerChange({
+		RollingTypingSender.handleComposerChange({
 			channelId,
 			value,
 			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,

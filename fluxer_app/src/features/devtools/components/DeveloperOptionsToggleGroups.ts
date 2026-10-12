@@ -29,11 +29,6 @@ const RENDER_ALL_YOUR_MESSAGES_AS_AN_UNKNOWN_MESSAGE_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Tooltip / description for the force-unknown-message-type override.',
 });
-const ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR = msg({
-	message: 'Always display the voice connection status bar in mocked mode.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for forcing the voice connection status bar visible in mocked mode.',
-});
 const DISABLE_TRANSLATION_DOM_GUARD_DESCRIPTOR = msg({
 	message: 'Disable translation DOM guard',
 	comment: 'Developer option label for turning off the page-translator DOM crash guard.',
@@ -68,10 +63,6 @@ const UI_COMPONENTS_DESCRIPTOR = msg({
 	message: 'UI components',
 	comment: 'Developer options group for forcing UI component states.',
 });
-const FORCE_GIF_PICKER_LOADING_DESCRIPTOR = msg({
-	message: 'Force GIF picker loading',
-	comment: 'Developer option label for simulating a loading GIF picker.',
-});
 const FORCE_SHOW_VANITY_URL_DISCLAIMER_DESCRIPTOR = msg({
 	message: 'Force show vanity URL disclaimer',
 	comment: 'Developer option label for always showing a community settings warning.',
@@ -87,14 +78,6 @@ const SLOW_MESSAGE_LOAD_DESCRIPTOR = msg({
 const SLOW_MESSAGE_SEND_DESCRIPTOR = msg({
 	message: 'Slow message send',
 	comment: 'Developer option label for simulating slow message sending.',
-});
-const SLOW_MESSAGE_EDIT_DESCRIPTOR = msg({
-	message: 'Slow message edit',
-	comment: 'Developer option label for simulating slow message edits.',
-});
-const SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR = msg({
-	message: 'Slow attachment upload',
-	comment: 'Developer option label for simulating slow file uploads.',
 });
 const SLOW_PROFILE_LOAD_DESCRIPTOR = msg({
 	message: 'Slow profile load',
@@ -123,10 +106,6 @@ const FEATURES_DESCRIPTOR = msg({
 const FORCE_UNKNOWN_MESSAGE_TYPE_DESCRIPTOR = msg({
 	message: 'Force unknown message type',
 	comment: 'Developer option label for rendering messages as unknown message types.',
-});
-const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
-	message: 'Force show voice connection',
-	comment: 'Developer option label for always showing the voice connection status bar.',
 });
 const NO_OP_IN_APP_REPORTS_DESCRIPTOR = msg({
 	message: 'No-op in-app reports',
@@ -172,10 +151,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 		title: UI_COMPONENTS_DESCRIPTOR,
 		items: [
 			{
-				key: 'forceGifPickerLoading',
-				label: FORCE_GIF_PICKER_LOADING_DESCRIPTOR,
-			},
-			{
 				key: 'forceShowVanityURLDisclaimer',
 				label: FORCE_SHOW_VANITY_URL_DISCLAIMER_DESCRIPTOR,
 				description: ALWAYS_SHOW_THE_VANITY_URL_DISCLAIMER_WARNING_IN_DESCRIPTOR,
@@ -192,14 +167,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 			{
 				key: 'slowMessageSend',
 				label: SLOW_MESSAGE_SEND_DESCRIPTOR,
-			},
-			{
-				key: 'slowMessageEdit',
-				label: SLOW_MESSAGE_EDIT_DESCRIPTOR,
-			},
-			{
-				key: 'slowAttachmentUpload',
-				label: SLOW_ATTACHMENT_UPLOAD_DESCRIPTOR,
 			},
 			{
 				key: 'slowProfileLoad',
@@ -232,11 +199,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				key: 'forceUnknownMessageType',
 				label: FORCE_UNKNOWN_MESSAGE_TYPE_DESCRIPTOR,
 				description: RENDER_ALL_YOUR_MESSAGES_AS_AN_UNKNOWN_MESSAGE_DESCRIPTOR,
-			},
-			{
-				key: 'forceShowVoiceConnection',
-				label: FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR,
-				description: ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR,
 			},
 			{
 				key: 'noOpInAppReports',

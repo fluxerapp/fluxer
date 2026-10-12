@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthLogin from '@app/api/auth/AuthLogin';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {recordPendingPasskeyMigration} from '@app/api/auth/services/PasskeyMigrationService';
 import {
 	effectiveRpId,
@@ -20,14 +18,13 @@ import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {randomBase64Url, secretMatchesHash, sha256Hex} from '@app/api/utils/SecretHash';
 import {PASSKEY_BRIDGE_PATH, PASSKEY_BRIDGE_RETURN_FRAGMENT_KEY} from '@fluxer/constants/src/PasskeyConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidPasskeyBridgeNonceError} from '@fluxer/errors/src/domains/auth/InvalidPasskeyBridgeNonceError';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {NoPasskeysRegisteredError} from '@fluxer/errors/src/domains/auth/NoPasskeysRegisteredError';
 import {PasskeyAuthenticationFailedError} from '@fluxer/errors/src/domains/auth/PasskeyAuthenticationFailedError';
 import {UnknownPasskeyBridgeError} from '@fluxer/errors/src/domains/auth/UnknownPasskeyBridgeError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import type {
 	PasskeyBridgeCompleteRequest,
@@ -70,21 +67,6 @@ interface CompletedPasskeyBridge {
 const PASSKEY_BRIDGE_KEY_PREFIX = 'passkey_bridge:';
 const PASSKEY_BRIDGE_LOCK_PREFIX = 'passkey_bridge_lock:';
 const PASSKEY_BRIDGE_SECRET_BYTES = 32;
-
-function sha256Hex(value: string): string {
-	return createHash('sha256').update(value).digest('hex');
-}
-
-function hashMatches(value: string, storedHash: string | null): boolean {
-	if (storedHash === null) return false;
-	const presented = Buffer.from(sha256Hex(value), 'hex');
-	const stored = Buffer.from(storedHash, 'hex');
-	return presented.length === stored.length && timingSafeEqual(presented, stored);
-}
-
-function createSecret(): string {
-	return randomBytes(PASSKEY_BRIDGE_SECRET_BYTES).toString('base64url');
-}
 
 function passkeyBridgeKey(ceremonyId: string): string {
 	return `${PASSKEY_BRIDGE_KEY_PREFIX}${sha256Hex(ceremonyId)}`;
@@ -133,16 +115,6 @@ async function mutateRecord<T>(
 	}
 }
 
-async function requireMfaTicketUser(ctx: ApiContext, ticket: string, expectedUserId?: string): Promise<User> {
-	const userId = await ctx.services.cache.get<string>(`mfa-ticket:${ticket}`);
-	if (!userId || (expectedUserId !== undefined && userId !== expectedUserId)) {
-		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
-	}
-	const user = await ctx.services.users.findUniqueAssert(createUserID(BigInt(userId)));
-	AuthUtility.assertNonBotUser(ctx, user);
-	return user;
-}
-
 async function requireLegacyCredentials(ctx: ApiContext, userId: UserID): Promise<Array<WebAuthnCredential>> {
 	const legacyRpId = ctx.services.config.auth.passkeys.rpId;
 	const credentials = visibleWebAuthnCredentials(await ctx.services.users.listWebAuthnCredentials(userId)).filter(
@@ -166,7 +138,7 @@ async function startPasskeyBridge(
 	origin: string,
 	fields: Pick<PasskeyBridgeRecord, 'purpose' | 'runner' | 'nonce_hash' | 'user_id' | 'ticket'>,
 ): Promise<PasskeyBridgeStartResponse> {
-	const ceremonyId = createSecret();
+	const ceremonyId = randomBase64Url(PASSKEY_BRIDGE_SECRET_BYTES);
 	const createdAt = Date.now();
 	const ceremonyOrigin = fields.runner === 'page' ? passkeyLegacyOriginFor(origin) : origin;
 	await writeRecord(ctx, ceremonyId, {
@@ -195,7 +167,7 @@ export async function startPasskeyBridgeLogin(
 	const targetOrigin = assertBridgeStartOrigin(ctx, origin);
 	let userId: string | null = null;
 	if (data.purpose === 'login_mfa') {
-		const user = await requireMfaTicketUser(ctx, data.ticket!);
+		const user = await AuthLogin.requireMfaTicketUser(ctx, data.ticket!);
 		if (!(await resolveWebAuthnSecondFactor(ctx, user))) {
 			throw new MfaNotEnabledError();
 		}
@@ -264,7 +236,7 @@ async function finishRecord(
 	ceremonyId: string,
 	record: PasskeyBridgeRecord,
 ): Promise<PasskeyBridgeFinishResponse> {
-	const completionCode = createSecret();
+	const completionCode = randomBase64Url(PASSKEY_BRIDGE_SECRET_BYTES);
 	await writeRecord(ctx, ceremonyId, {...record, completion_code_hash: sha256Hex(completionCode)});
 	if (record.runner === 'native') {
 		return {return_url: null, completion_code: completionCode};
@@ -299,7 +271,7 @@ export async function completePasskeyBridge(
 			throw new PasskeyAuthenticationFailedError();
 		}
 		if (record.purpose === 'login_mfa') {
-			await requireMfaTicketUser(ctx, record.ticket!, record.user_id!);
+			await AuthLogin.requireMfaTicketUser(ctx, record.ticket!, record.user_id!);
 			await AuthLogin.consumeMfaAttempt(ctx, {userId: record.user_id!, ticket: record.ticket!, field: 'ticket'});
 		} else if (record.purpose === 'sudo') {
 			await AuthMfa.consumeSudoMfaAttempt(ctx, userId);
@@ -361,13 +333,19 @@ async function redeemPasskeyBridge(
 	}
 	assertCeremonyOrigin(ctx, record, origin, record.target_origin);
 	assertRedeemable(record, purposes, expectedUserId);
-	if (!hashMatches(data.nonce, record.nonce_hash) || !hashMatches(data.completion_code, record.completion_code_hash)) {
+	if (
+		!secretMatchesHash(data.nonce, record.nonce_hash) ||
+		!secretMatchesHash(data.completion_code, record.completion_code_hash)
+	) {
 		await cache.delete(key);
 		throw new InvalidPasskeyBridgeNonceError();
 	}
 	const taken = await cache.getAndDelete<PasskeyBridgeRecord>(key);
 	assertRedeemable(taken, purposes, expectedUserId);
-	if (!hashMatches(data.nonce, taken.nonce_hash) || !hashMatches(data.completion_code, taken.completion_code_hash)) {
+	if (
+		!secretMatchesHash(data.nonce, taken.nonce_hash) ||
+		!secretMatchesHash(data.completion_code, taken.completion_code_hash)
+	) {
 		throw new InvalidPasskeyBridgeNonceError();
 	}
 	if (taken.status === 'cancelled') {
@@ -405,7 +383,7 @@ export async function redeemPasskeyBridgeLogin(
 	let authSession: AuthSession;
 	let user: User;
 	if (completed.record.purpose === 'login_mfa') {
-		user = await requireMfaTicketUser(ctx, completed.record.ticket!, completed.record.user_id!);
+		user = await AuthLogin.requireMfaTicketUser(ctx, completed.record.ticket!, completed.record.user_id!);
 		if (!(await resolveWebAuthnSecondFactor(ctx, user))) {
 			throw new MfaNotEnabledError();
 		}

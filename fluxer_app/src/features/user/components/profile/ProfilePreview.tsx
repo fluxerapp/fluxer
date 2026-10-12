@@ -29,6 +29,7 @@ import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {ProfilePreviewOverrides} from '@app/features/user/utils/ProfileDisplayUtils';
 import {type BadgeSettings, createMockProfile} from '@app/features/user/utils/ProfileUtils';
+import {YOU_CAN_T_MESSAGE_YOURSELF_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import type {UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -40,10 +41,6 @@ import {useCallback, useMemo} from 'react';
 const PROFILE_PREVIEW_PRESS_ENTER_TO_OPEN_FULL_PREVIEW_DESCRIPTOR = msg({
 	message: 'Profile preview (press Enter to open full preview)',
 	comment: 'Label in the user settings profile preview.',
-});
-const YOU_CAN_T_MESSAGE_YOURSELF_DESCRIPTOR = msg({
-	message: "You can't message yourself",
-	comment: 'Error message in the user settings profile preview.',
 });
 
 interface ProfilePreviewProps {

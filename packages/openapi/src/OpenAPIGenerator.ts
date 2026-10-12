@@ -141,7 +141,7 @@ export class OpenAPIGenerator {
 				continue;
 			}
 			if (!route.responseSchemaName && !route.hasNoContent) {
-				skippedRoutes.push(describeRoute(route, 'no responseSchema and no NoContent()'));
+				skippedRoutes.push(describeRoute(route, 'no responseSchema'));
 				continue;
 			}
 			if (!hasOpenAPIPathTemplate(route.path)) {

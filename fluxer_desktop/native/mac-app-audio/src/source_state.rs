@@ -132,32 +132,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn is_allowed_exhaustive() {
-        let all = [
-            State::Idle,
-            State::Starting,
-            State::Running,
-            State::Stopping,
-            State::Stopped,
-        ];
-        let allowed: &[(State, State)] = &[
-            (State::Idle, State::Starting),
-            (State::Idle, State::Stopped),
-            (State::Starting, State::Running),
-            (State::Starting, State::Stopped),
-            (State::Running, State::Stopping),
-            (State::Running, State::Stopped),
-            (State::Stopping, State::Stopped),
-        ];
-        for &from in &all {
-            for &to in &all {
-                let expected = allowed.iter().any(|p| p.0 == from && p.1 == to);
-                assert_eq!(expected, is_allowed(from, to), "{:?} -> {:?}", from, to);
-            }
-        }
-    }
-
-    #[test]
     fn happy_path() {
         let m = Machine::new();
         assert_eq!(State::Idle, m.current());

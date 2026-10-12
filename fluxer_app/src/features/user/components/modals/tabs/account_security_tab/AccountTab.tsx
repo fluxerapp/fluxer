@@ -20,19 +20,15 @@ import {
 } from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {
+	HIDE_EMAIL_TOGGLE_DESCRIPTOR,
+	REVEAL_DESCRIPTOR as REVEAL_EMAIL_TOGGLE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const HIDE_EMAIL_TOGGLE_DESCRIPTOR = msg({
-	message: 'Hide',
-	comment: 'Account settings: button that hides the user email address (currently revealed). Verb, sentence case.',
-});
-const REVEAL_EMAIL_TOGGLE_DESCRIPTOR = msg({
-	message: 'Reveal',
-	comment: 'Account settings: button that reveals the masked user email address. Verb, sentence case.',
-});
 const SIGN_IN_METHODS_DESCRIPTOR = msg({
 	message: 'Sign-in methods',
 	comment: 'Accessible name for the group of email, password and recovery kit rows in account settings.',

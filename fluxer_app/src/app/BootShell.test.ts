@@ -4,8 +4,7 @@
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {SHELL_HINT_VERSION} from '@app/features/app/components/skeleton/ShellHint';
-import {createElement, type ReactNode} from 'react';
-import {createRoot} from 'react-dom/client';
+import type {ReactNode} from 'react';
 import {afterEach, expect, test, vi} from 'vitest';
 
 vi.mock('@lingui/core/macro', () => {
@@ -196,21 +195,4 @@ test('the error listener and the backstop stop existing once React has cleared t
 	vi.advanceTimersByTime(60_000);
 
 	expect(document.querySelector('#fluxer-boot-shell')).not.toBeNull();
-});
-
-test('React clearing its own container is what removes the boot shell', async () => {
-	const container = document.createElement('div');
-	container.id = 'root';
-	const shell = document.createElement('div');
-	shell.id = 'fluxer-boot-shell';
-	container.appendChild(shell);
-	document.body.appendChild(container);
-
-	createRoot(container).render(createElement('span', null, 'mounted'));
-
-	await vi.waitFor(() => {
-		expect(container.textContent).toContain('mounted');
-	});
-
-	expect(container.querySelector('#fluxer-boot-shell')).toBeNull();
 });

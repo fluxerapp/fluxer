@@ -22,11 +22,6 @@ export interface ReadStateAckRequestEntry {
 	manual?: boolean;
 }
 
-export interface ReadStateAckResponse {
-	read_states: Array<GatewayReadState>;
-	read_state_proto?: string;
-}
-
 export interface ChannelPayload {
 	id: string;
 	type: number;

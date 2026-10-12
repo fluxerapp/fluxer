@@ -43,7 +43,7 @@ impl TransformCache {
         let eviction_metrics = Arc::clone(&settings.cache_metrics);
         Self {
             cached: Arc::new(ByteCache::new(settings.cache, move || {
-                eviction_metrics.record_eviction();
+                eviction_metrics.transform_cache_evictions.inc();
             })),
             in_flight: Arc::new(ByteCoalescer::with_budget(
                 settings.budget,
@@ -57,7 +57,7 @@ impl TransformCache {
 
     pub fn get(&self, key: &str) -> Option<CachedTransform> {
         let cached = self.cached.get(key)?;
-        self.metrics.record_hit();
+        self.metrics.transform_cache_hits.inc();
         Some(cached)
     }
 
@@ -84,7 +84,7 @@ impl TransformCache {
             assert_eq!(cached.format, format);
             return Ok(cached.data);
         }
-        self.metrics.record_miss();
+        self.metrics.transform_cache_misses.inc();
         let cached = Arc::clone(&self.cached);
         let metrics = Arc::clone(&self.metrics);
         self.in_flight
@@ -98,7 +98,7 @@ impl TransformCache {
                             format,
                         },
                     ) {
-                        metrics.record_insert_rejected();
+                        metrics.transform_cache_insert_rejected.inc();
                     }
                 }
             })

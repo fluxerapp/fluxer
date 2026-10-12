@@ -5,44 +5,6 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-user_matches_voice_state_integer_test() ->
-    VoiceState = #{<<"user_id">> => <<"10">>},
-    ?assert(guild_voice_state:user_matches_voice_state(VoiceState, 10)),
-    ?assertNot(guild_voice_state:user_matches_voice_state(VoiceState, 11)).
-
-user_matches_voice_state_binary_test() ->
-    VoiceState = #{<<"user_id">> => <<"123">>},
-    ?assert(guild_voice_state:user_matches_voice_state(VoiceState, <<"123">>)),
-    ?assertNot(guild_voice_state:user_matches_voice_state(VoiceState, <<"456">>)).
-
-user_matches_voice_state_undefined_test() ->
-    VoiceState = #{},
-    ?assertNot(guild_voice_state:user_matches_voice_state(VoiceState, 10)).
-
-extract_session_info_from_voice_state_test() ->
-    VoiceState = #{
-        <<"session_id">> => <<"sess">>,
-        <<"self_mute">> => true,
-        <<"self_deaf">> => false,
-        <<"self_video">> => true,
-        <<"self_stream">> => false,
-        <<"is_mobile">> => true,
-        <<"suppress">> => true,
-        <<"e2ee_capable">> => true,
-        <<"latitude">> => <<"1.0">>,
-        <<"longitude">> => <<"2.0">>,
-        <<"member">> => #{<<"id">> => <<"m">>}
-    },
-    Info = guild_voice_state:extract_session_info_from_voice_state(<<"conn">>, VoiceState),
-    ?assertEqual(<<"conn">>, maps:get(connection_id, Info)),
-    ?assertEqual(<<"sess">>, maps:get(session_id, Info)),
-    ?assertEqual(true, maps:get(self_mute, Info)),
-    ?assertEqual(true, maps:get(suppress, Info)),
-    ?assertEqual(true, maps:get(e2ee_capable, Info)),
-    ?assertEqual(<<"1.0">>, maps:get(latitude, Info)),
-    ?assertEqual(<<"2.0">>, maps:get(longitude, Info)),
-    ?assertEqual(#{<<"id">> => <<"m">>}, maps:get(member, Info)).
-
 update_voice_state_data_no_change_reply_is_external_test() ->
     ExistingVS = #{
         <<"guild_id">> => <<"1">>,

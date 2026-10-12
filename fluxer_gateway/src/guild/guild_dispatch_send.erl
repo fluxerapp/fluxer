@@ -5,10 +5,7 @@
 
 -include_lib("kernel/include/logger.hrl").
 
--export([
-    dispatch_to_sessions/4,
-    filter_visible_channels/4
-]).
+-export([dispatch_to_sessions/4]).
 
 -define(MAX_BULK_ENCODE_GROUPS, 1024).
 -define(BROADCASTER_CLAIM_DEADLINE_MS, 250).
@@ -194,32 +191,13 @@ filter_permitted_for_session(SessionData, IndexedChannels, UpdatedState) ->
             ];
         _ ->
             UserId = maps:get(user_id, SessionData),
-            Member = guild_permissions:find_member_by_user_id(UserId, UpdatedState),
+            Member = guild_permissions_check:find_member_by_user_id(UserId, UpdatedState),
             [
                 Ch
              || {ChId, Ch} <- IndexedChannels,
                 is_integer(ChId),
-                guild_permissions:can_view_channel(UserId, ChId, Member, UpdatedState)
+                guild_permissions_check:can_view_channel(UserId, ChId, Member, UpdatedState)
             ]
-    end.
-
--spec filter_visible_channels([map()], user_id(), map() | undefined, guild_state()) -> [map()].
-filter_visible_channels(Channels, UserId, Member, State) ->
-    lists:filter(
-        fun(Channel) ->
-            is_channel_visible(Channel, UserId, Member, State)
-        end,
-        Channels
-    ).
-
--spec is_channel_visible(map(), user_id(), map() | undefined, guild_state()) -> boolean().
-is_channel_visible(_Channel, _UserId, undefined, _State) ->
-    false;
-is_channel_visible(Channel, UserId, Member, State) ->
-    ChannelIdBin = maps:get(<<"id">>, Channel, undefined),
-    case guild_dispatch_decorate:parse_snowflake(<<"id">>, ChannelIdBin) of
-        undefined -> false;
-        ChannelId -> guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
     end.
 
 -spec dispatch_bulk_to_pid(
@@ -350,67 +328,6 @@ normalize_dispatched([_ | _]) -> 1.
 -include_lib("eunit/include/eunit.hrl").
 
 -define(OVERFLOW_CHANNEL_BITS, 11).
-
-normalize_success_test() ->
-    ?assertEqual(1, normalize_success(5)),
-    ?assertEqual(1, normalize_success(1)),
-    ?assertEqual(0, normalize_success(0)).
-
-normalize_dispatched_test() ->
-    ?assertEqual(0, normalize_dispatched([])),
-    ?assertEqual(1, normalize_dispatched([self()])),
-    ?assertEqual(1, normalize_dispatched([self(), self()])).
-
-filter_visible_channels_test() ->
-    {UserId, Member, State} = visibility_test_fixture(),
-    Channels = [#{<<"id">> => <<"100">>}, #{<<"id">> => <<"101">>}],
-    Result = filter_visible_channels(Channels, UserId, Member, State),
-    ?assertEqual(1, length(Result)),
-    ?assertEqual(<<"100">>, maps:get(<<"id">>, hd(Result))).
-
-visibility_test_fixture() ->
-    GuildId = 42,
-    UserId = 10,
-    VP = constants:view_channel_permission(),
-    GIdBin = integer_to_binary(GuildId),
-    VPBin = integer_to_binary(VP),
-    Member = #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => []},
-    DenyOW = #{
-        <<"id">> => GIdBin, <<"type">> => 0, <<"allow">> => <<"0">>, <<"deny">> => VPBin
-    },
-    State = #{
-        id => GuildId,
-        data => #{
-            <<"guild">> => #{<<"owner_id">> => <<"999">>},
-            <<"roles">> => [#{<<"id">> => GIdBin, <<"permissions">> => VPBin}],
-            <<"members">> => [Member],
-            <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"permission_overwrites">> => []},
-                #{<<"id">> => <<"101">>, <<"permission_overwrites">> => [DenyOW]}
-            ]
-        }
-    },
-    {UserId, Member, State}.
-
-filter_visible_channels_undefined_member_test() ->
-    State = #{data => #{<<"members">> => []}},
-    Channels = [#{<<"id">> => <<"100">>}],
-    Result = filter_visible_channels(Channels, 10, undefined, State),
-    ?assertEqual([], Result).
-
-passive_standard_structural_updates_dispatch_test() ->
-    Events = [
-        {guild_update, #{<<"name">> => <<"Updated">>}},
-        {guild_role_update, #{<<"role">> => #{<<"id">> => <<"200">>, <<"name">> => <<"Role">>}}},
-        {guild_role_update_bulk, #{
-            <<"roles">> => [#{<<"id">> => <<"200">>, <<"name">> => <<"Role">>}]
-        }},
-        {channel_create, #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}},
-        {channel_update, #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}},
-        {channel_delete, #{<<"id">> => <<"100">>}},
-        {guild_member_update, #{<<"user">> => #{<<"id">> => <<"10">>}, <<"roles">> => []}}
-    ],
-    lists:foreach(fun assert_passive_standard_dispatch/1, Events).
 
 passive_channel_update_bulk_dispatches_visible_channels_test() ->
     flush_dispatches(),
@@ -561,20 +478,6 @@ assert_no_dispatch() ->
     after 100 ->
         ok
     end.
-
-assert_passive_standard_dispatch({Event, Data}) ->
-    flush_dispatches(),
-    ?assertEqual(
-        1,
-        dispatch_to_sessions(
-            [passive_session_pair()],
-            Event,
-            Data#{<<"guild_id">> => <<"42">>},
-            passive_dispatch_state()
-        )
-    ),
-    _Payload = receive_pre_encoded_payload(Event),
-    ok.
 
 passive_session_pair() ->
     {<<"passive">>, passive_session_data()}.

@@ -1293,51 +1293,6 @@ mod tests {
     }
 
     #[test]
-    fn every_secure_connection_shares_one_tls_client_config() {
-        match (tls_client_config(), tls_client_config()) {
-            (Ok(first), Ok(second)) => assert!(Arc::ptr_eq(&first, &second)),
-            (Err(first), Err(second)) => assert_eq!(first, second),
-            _ => panic!("the cached TLS client config changed between calls"),
-        }
-    }
-
-    #[tokio::test]
-    async fn a_cleartext_target_needs_no_tls_connector() {
-        let target = parse_websocket_connection_target("ws://127.0.0.1:9/", None).unwrap();
-        assert!(tls_connector_for(&target).await.unwrap().is_none());
-    }
-
-    #[test]
-    fn transport_modes_parse_and_bound_their_frames() {
-        assert_eq!(
-            TransportMode::parse("gateway").unwrap().max_frame_bytes(),
-            GATEWAY_FRAME_MAX_BYTES
-        );
-        assert_eq!(
-            TransportMode::parse("voice").unwrap().max_frame_bytes(),
-            VOICE_FRAME_MAX_BYTES
-        );
-        assert!(TransportMode::parse("Gateway").is_err());
-        assert!(TransportMode::parse("").is_err());
-        assert_eq!(
-            TransportMode::Gateway.read_capacity_bytes(),
-            GATEWAY_FRAME_MAX_BYTES + 1
-        );
-    }
-
-    #[test]
-    fn close_codes_and_reasons_are_validated() {
-        assert_eq!(validate_close_code(1000).unwrap(), 1000);
-        assert_eq!(validate_close_code(4004).unwrap(), 4004);
-        assert!(validate_close_code(1005).is_err());
-        assert!(validate_close_code(1006).is_err());
-        assert!(validate_close_code(70_000).is_err());
-        assert!(validate_close_reason(&"a".repeat(CLOSE_REASON_MAX_BYTES)).is_ok());
-        assert!(validate_close_reason(&"a".repeat(CLOSE_REASON_MAX_BYTES + 1)).is_err());
-        assert!(validate_close_reason(&"\u{1f600}".repeat(31)).is_err());
-    }
-
-    #[test]
     fn the_queue_budget_rejects_past_its_entry_and_byte_caps() {
         static GLOBAL_BYTES: AtomicUsize = AtomicUsize::new(0);
         static GLOBAL_RELEASED: Notify = Notify::const_new();

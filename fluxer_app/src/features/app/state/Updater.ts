@@ -27,6 +27,7 @@ import {
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import type {UpdaterEvent as NativeUpdaterEvent, UpdaterDownloadOption} from '@app/types/electron.d';
+import {OFFICIAL_WEB_APP_HOSTS} from '@fluxer/instance_bootstrap/src/OfficialWebAppHosts';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 type UpdaterContext = NonNullable<NativeUpdaterEvent['context']>;
@@ -70,12 +71,7 @@ const WEB_CHECK_TIMEOUT_MS = 15 * 1000;
 const NATIVE_CHECK_TIMEOUT_MS = 30 * 1000;
 const VERSION_ENDPOINT = '/version.json';
 const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
-const ALLOWED_WEB_UPDATE_HOSTS = new Set([
-	'web.fluxer.app',
-	'web.canary.fluxer.app',
-	'fluxer.com',
-	'canary.fluxer.com',
-]);
+const ALLOWED_WEB_UPDATE_HOSTS = new Set<string>(OFFICIAL_WEB_APP_HOSTS);
 
 function loadUpdaterModals(): Promise<typeof UpdaterModalCommands> {
 	return import('@app/features/updater/commands/UpdaterModalCommands');

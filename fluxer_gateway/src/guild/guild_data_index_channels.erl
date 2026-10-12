@@ -26,7 +26,7 @@ channel_list(Data) when is_map(Data) ->
         false ->
             lists:filtermap(
                 fun normalize_channel_item/1,
-                guild_data_index:ensure_list(maps:get(<<"channels">>, Data, []))
+                map_utils:ensure_list(maps:get(<<"channels">>, Data, []))
             )
     end;
 channel_list(_) ->
@@ -45,7 +45,7 @@ channel_index(_) ->
 put_channels(Channels, Data) when is_map(Data) ->
     ChannelList = lists:filtermap(
         fun normalize_channel_item/1,
-        guild_data_index:ensure_list(Channels)
+        map_utils:ensure_list(Channels)
     ),
     put_forum_categories(ChannelList, Data#{
         <<"channels">> => ChannelList,
@@ -100,7 +100,7 @@ is_forum_type(16) -> true;
 is_forum_type(_) -> false.
 
 -spec build_overwrite_perms_cache([channel()]) ->
-    #{integer() => [{integer(), integer(), integer()}]}.
+    #{integer() => [{integer(), integer(), integer(), integer()}]}.
 build_overwrite_perms_cache(Channels) ->
     lists:foldl(
         fun
@@ -152,8 +152,8 @@ valid_overwrite(Overwrite) when is_map(Overwrite) ->
         {
             snowflake_id:parse_maybe(maps:get(<<"id">>, Overwrite, undefined)),
             map_utils:get_integer(Overwrite, <<"type">>, undefined),
-            permission_bits:parse_maybe(maps:get(<<"allow">>, Overwrite, undefined)),
-            permission_bits:parse_maybe(maps:get(<<"deny">>, Overwrite, undefined))
+            bitset:parse_maybe(maps:get(<<"allow">>, Overwrite, undefined)),
+            bitset:parse_maybe(maps:get(<<"deny">>, Overwrite, undefined))
         }
     of
         {Id, Type, Allow, Deny} when
@@ -191,8 +191,8 @@ channel_overwrites(Channel) ->
 -spec overwrite_tuple(term()) -> false | {true, {integer(), term(), integer(), integer()}}.
 overwrite_tuple(OW) when is_map(OW) ->
     OWId = snowflake_id:parse_maybe(maps:get(<<"id">>, OW, undefined)),
-    Allow = permission_bits:parse_optional(maps:get(<<"allow">>, OW, undefined)),
-    Deny = permission_bits:parse_optional(maps:get(<<"deny">>, OW, undefined)),
+    Allow = bitset:parse_optional(maps:get(<<"allow">>, OW, undefined)),
+    Deny = bitset:parse_optional(maps:get(<<"deny">>, OW, undefined)),
     Type = map_utils:get_integer(OW, <<"type">>, undefined),
     case {OWId, Allow, Deny, Type} of
         {Id, AllowBits, DenyBits, OverwriteType} when

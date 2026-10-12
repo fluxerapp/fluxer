@@ -12,23 +12,8 @@ on:
         description: "Path to the Dockerfile to build"
         type: string
         required: true
-      context:
-        description: "Docker build context"
-        type: string
-        required: false
-        default: "."
       build-version:
         description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
-        type: string
-        required: false
-        default: ""
-      moving-tags:
-        description: "Comma-separated moving tags to repoint at this build"
-        type: string
-        required: false
-        default: "v1,latest"
-      extra-build-args:
-        description: "Additional Docker build args, one KEY=VALUE entry per line"
         type: string
         required: false
         default: ""
@@ -115,7 +100,7 @@ jobs:
           password: ${{ github.token }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
         with:
-          context: ${{ inputs.context }}
+          context: .
           file: ${{ inputs.dockerfile }}
           push: true
           provenance: mode=min
@@ -125,7 +110,6 @@ jobs:
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             SOURCE_SHA=${{ github.sha }}
             SOURCE_DATE=${{ steps.source.outputs.date }}
-            ${{ inputs.extra-build-args }}
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }}
           cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
         env:
@@ -190,7 +174,7 @@ jobs:
 
       - name: Advance moving image tags
         env:
-          MOVING_TAGS: ${{ inputs.moving-tags }}
+          MOVING_TAGS: v1,latest
           VERSION: ${{ needs.meta.outputs.build_version }}
         run: >-
           tools/ci/run.sh image-set

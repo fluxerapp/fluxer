@@ -7,8 +7,11 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
 import AccountAccess from '@app/features/auth/state/AccountAccess';
 import Authentication from '@app/features/auth/state/Authentication';
+import ChannelFrecency from '@app/features/channel/state/ChannelFrecency';
 import Channels from '@app/features/channel/state/Channels';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
+import ForumReadState from '@app/features/forum/state/ForumReadState';
 import {scheduleAccountReadyWork} from '@app/features/gateway/events/AccountReadyWork';
 import type {GatewayGeoipPayload} from '@app/features/gateway/events/EventRouter';
 import {
@@ -49,6 +52,7 @@ import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlR
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import ReportFlows from '@app/features/moderation/state/ReportFlows';
 import Navigation from '@app/features/navigation/state/Navigation';
+import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {writePrebootNetworkHint} from '@app/features/platform/state/PrebootNetworkHandoff';
@@ -58,7 +62,12 @@ import {getGatewayClientProperties} from '@app/features/platform/utils/ClientInf
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import ThreadPanel from '@app/features/threads/state/ThreadPanel';
+import ThreadRoster from '@app/features/threads/state/ThreadRoster';
+import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {reportGatewayErrorToVoice, teardownVoiceForFatalGatewayCrash} from '@app/features/voice/VoiceGatewayLifecycle';
@@ -77,21 +86,6 @@ const FOREGROUND_SOCKET_EVENTS = [
 	'ready',
 	'resumed',
 ] as const;
-
-export {
-	GATEWAY_FOREGROUND_READY_TIMEOUT_MS,
-	GatewayReadyTimeoutError,
-} from '@app/features/gateway/transport/GatewayReadinessWaiters';
-
-import ChannelFrecency from '@app/features/channel/state/ChannelFrecency';
-import ForumPosts from '@app/features/forum/state/ForumPosts';
-import ForumReadState from '@app/features/forum/state/ForumReadState';
-import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
-import ChannelThreads from '@app/features/threads/state/ChannelThreads';
-import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
-import ThreadPanel from '@app/features/threads/state/ThreadPanel';
-import ThreadRoster from '@app/features/threads/state/ThreadRoster';
-import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
 
 export class GatewaySessionSupersededError extends Error {
 	constructor() {
@@ -1025,7 +1019,7 @@ export class PooledGatewayConnection {
 		SessionManager.handleConnectionReady();
 		ThreadSubscriptions.handleConnectionReady();
 		LocalPresence.updatePresence();
-		TypingIndicator.reset();
+		RollingTypingStore.reset();
 		QuickSwitcher.recomputeIfOpen();
 		this.flushPendingGuildSync();
 		void import('@app/features/member/state/GuildMembers').then((module) => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
+import {hookKeyNameForLayoutKey, shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 const globalHookCodeKeyMap: Record<string, string> = {
 	Space: 'Space',
@@ -100,35 +100,10 @@ const globalHookCodeKeyMap: Record<string, string> = {
 	MetaLeft: 'MetaLeft',
 	MetaRight: 'MetaRight',
 };
-const globalHookCharacterKeyMap: Record<string, string> = {
-	' ': 'Space',
-	'-': 'Minus',
-	_: 'Minus',
-	'=': 'Equal',
-	'+': 'Equal',
-	',': 'Comma',
-	'<': 'Comma',
-	'.': 'Period',
-	'>': 'Period',
-	';': 'Semicolon',
-	':': 'Semicolon',
-	"'": 'Quote',
-	'"': 'Quote',
-	'/': 'Slash',
-	'?': 'Slash',
-	'\\': 'Backslash',
-	'|': 'Backslash',
-	'[': 'BracketLeft',
-	'{': 'BracketLeft',
-	']': 'BracketRight',
-	'}': 'BracketRight',
-	'`': 'Backquote',
-	'~': 'Backquote',
-};
 export const keyNameForGlobalHook = (combo: KeyCombo): string | null => {
 	if (combo.mouseButton != null || combo.gamepadButton != null || combo.modifierOnly) return null;
 	const code = combo.code;
-	if (shouldPreferLayoutKeyForShortcut(combo)) {
+	if (shouldPreferLayoutKey(combo)) {
 		const keyName = keyNameForGlobalHookKey(combo.key);
 		if (keyName) return keyName;
 	}
@@ -152,10 +127,7 @@ const keyNameForGlobalHookCode = (code: string | undefined): string | null => {
 const keyNameForGlobalHookKey = (raw: string | undefined): string | null => {
 	if (!raw) return null;
 	if (raw.length === 1) {
-		const characterMapped = globalHookCharacterKeyMap[raw];
-		if (characterMapped) return characterMapped;
-		const upper = raw.toUpperCase();
-		return /^[A-Z0-9]$/.test(upper) ? upper : null;
+		return hookKeyNameForLayoutKey(raw);
 	}
 	const mapped = globalHookCodeKeyMap[raw];
 	if (mapped) return mapped;

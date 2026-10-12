@@ -3,19 +3,14 @@
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
-import {
-	SYSTEM_THREAD_VIEWER,
-	syncChannelThreadsConfig,
-	type ThreadViewer,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {SYSTEM_THREAD_VIEWER, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
-import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
-import {beforeEach, describe, expect, it} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 const GUILD_ID = createGuildID(100n);
 const CHANNEL_ID = createChannelID(300n);
@@ -39,20 +34,9 @@ function createService(type: number): ChannelAuthService {
 	return new ChannelAuthService(channelRepository, {} as UserRepository, {} as GuildRepository, gatewayService);
 }
 
-function enroll(): void {
-	const raw = JSON.stringify(
-		ChannelThreadsConfigSchema.parse({enabled: true, enabled_guild_ids: ['100'], included_user_ids: ['10']}),
-	);
-	syncChannelThreadsConfig(raw, (value) => ChannelThreadsConfigSchema.parse(JSON.parse(value ?? '{}')));
-}
-
 const capableViewer: ThreadViewer = {kind: 'user', userId: USER_ID, bot: false, capable: true};
 
 describe('getChannelAuthenticated thread gate', () => {
-	beforeEach(() => {
-		syncChannelThreadsConfig(null, () => ChannelThreadsConfigSchema.parse({}));
-	});
-
 	it('never consults the gate for control channel types', async () => {
 		await expect(
 			createService(ChannelTypes.GUILD_TEXT).getChannelAuthenticated({
@@ -68,14 +52,17 @@ describe('getChannelAuthenticated thread gate', () => {
 		ChannelTypes.PRIVATE_THREAD,
 		ChannelTypes.GUILD_FORUM,
 		ChannelTypes.GUILD_MEDIA,
-	])('hides channel type %i as unknown outside the experiment', async (type) => {
+	])('hides channel type %i as unknown from incapable viewers', async (type) => {
 		await expect(
-			createService(type).getChannelAuthenticated({userId: USER_ID, channelId: CHANNEL_ID, viewer: capableViewer}),
+			createService(type).getChannelAuthenticated({
+				userId: USER_ID,
+				channelId: CHANNEL_ID,
+				viewer: {...capableViewer, capable: false},
+			}),
 		).rejects.toBeInstanceOf(UnknownChannelError);
 	});
 
-	it('hides a thread from an enrolled user whose client lacks the capability', async () => {
-		enroll();
+	it('hides a thread when the client lacks the capability', async () => {
 		await expect(
 			createService(ChannelTypes.PUBLIC_THREAD).getChannelAuthenticated({
 				userId: USER_ID,
@@ -86,7 +73,6 @@ describe('getChannelAuthenticated thread gate', () => {
 	});
 
 	it('lets an active viewer and the system through to the permission checks', async () => {
-		enroll();
 		const service = createService(ChannelTypes.PUBLIC_THREAD);
 		await expect(
 			service.getChannelAuthenticated({userId: USER_ID, channelId: CHANNEL_ID, viewer: capableViewer}),

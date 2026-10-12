@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
@@ -204,7 +204,7 @@ const updateConnectionProperty = async (
 ): Promise<void> => {
 	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	socket.updateVoiceStateExplicit({
 		guild_id: voiceState.guild_id,
@@ -221,7 +221,7 @@ const updateConnectionsProperty = async (
 	property: VoiceStateProperty,
 	value: boolean,
 ): Promise<void> => {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
@@ -277,7 +277,7 @@ export async function bulkTurnOffCameras(connectionIds: Array<string>): Promise<
 }
 
 export async function bulkDisconnect(connectionIds: Array<string>): Promise<void> {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
@@ -295,7 +295,7 @@ export async function bulkDisconnect(connectionIds: Array<string>): Promise<void
 }
 
 export async function bulkMoveConnections(connectionIds: Array<string>, targetChannelId: string): Promise<void> {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	const localConnectionId = MediaEngine.connectionId;
 	for (const connectionId of connectionIds) {

@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+fluxer_common = { path = "../fluxer_common", version = "0.1.0" }
 anyhow = "1.0.104"
 async-nats = "0.50"
 async-trait = "0.1"

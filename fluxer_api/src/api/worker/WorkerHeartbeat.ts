@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {writeFileSync} from 'node:fs';
-import type {ILogger} from '@app/api/ILogger';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 const WORKER_HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat';
 export const WORKER_HEARTBEAT_WRITE_INTERVAL_MS = 5000;
@@ -15,7 +15,7 @@ export interface WorkerHeartbeatSignal {
 }
 
 interface WorkerHeartbeatOptions {
-	logger: Pick<ILogger, 'info' | 'error'>;
+	logger: Pick<LoggerInterface, 'info' | 'error'>;
 	path?: string;
 	intervalMs?: number;
 	now?: () => number;
@@ -28,7 +28,7 @@ interface WorkerHeartbeatComponent {
 }
 
 export class WorkerHeartbeat {
-	private readonly logger: Pick<ILogger, 'info' | 'error'>;
+	private readonly logger: Pick<LoggerInterface, 'info' | 'error'>;
 	private readonly path: string;
 	private readonly intervalMs: number;
 	private readonly now: () => number;
@@ -43,10 +43,6 @@ export class WorkerHeartbeat {
 		this.intervalMs = options.intervalMs ?? WORKER_HEARTBEAT_WRITE_INTERVAL_MS;
 		this.now = options.now ?? Date.now;
 		this.write = options.write ?? ((path, contents) => writeFileSync(path, contents));
-	}
-
-	getPath(): string {
-		return this.path;
 	}
 
 	register(name: string, staleAfterMs: number): WorkerHeartbeatSignal {

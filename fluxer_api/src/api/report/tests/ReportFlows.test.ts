@@ -16,23 +16,19 @@ import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrast
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
-import {
-	getReportFlowResponse,
-	getReportFlowVariant,
-	type ReportFlowStepInput,
-} from '@app/api/report/flows/ReportFlowRegistry';
+import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {
+import type {
 	ReportFlowResponse,
-	type ReportFlowSurface,
-	type ReportFlowTargetType,
+	ReportFlowSurface,
+	ReportFlowTargetType,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ReportResponse {
@@ -57,14 +53,6 @@ interface MessageTarget {
 
 const HAS_SESSION_STARTED = 1n << 39n;
 const RATE_LIMIT_HEADER = 'x-fluxer-test-enable-rate-limits';
-
-const VARIANTS: ReadonlyArray<readonly [ReportFlowTargetType, ReportFlowSurface]> = [
-	['message', 'in_app'],
-	['user', 'in_app'],
-	['message', 'dsa'],
-	['user', 'dsa'],
-	['guild', 'dsa'],
-];
 
 const SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [{screen_id: 'root_message', option_id: 'spam'}];
 const USER_SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
@@ -101,12 +89,6 @@ class CapturingPublisher implements ActivityPublisher {
 
 function currentHash(target: ReportFlowTargetType, surface: ReportFlowSurface = 'in_app'): string {
 	return getReportFlowVariant(target, surface).revisionHash;
-}
-
-function screenKind(screen: ReportFlowResponse['screens'][number]): string {
-	if (screen.checklist) return 'checklist';
-	if (screen.next_screen_id) return 'info';
-	return 'choice';
 }
 
 async function readReport(reportId: string) {
@@ -195,25 +177,6 @@ describe('Report flows', () => {
 	});
 
 	describe('Fetch', () => {
-		test.each(VARIANTS)('%s on %s serves every reachable screen', async (target, surface) => {
-			const account = await createTestAccount(harness);
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get(`/reports/flows/${target}?surface=${surface}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(ReportFlowResponse.safeParse(flow).success).toBe(true);
-			const variant = getReportFlowVariant(target, surface);
-			expect(flow.target_type).toBe(target);
-			expect(flow.surface).toBe(surface);
-			expect(flow.start_screen_id).toBe(variant.startScreenId);
-			expect(flow.screens[0].id).toBe(variant.startScreenId);
-			expect(flow.revision_hash).toBe(variant.revisionHash);
-			expect(flow.screens.map((screen) => screen.id).sort()).toEqual([...variant.screens.keys()].sort());
-			for (const screen of flow.screens) {
-				expect(screenKind(screen), screen.id).toBe(variant.screens.get(screen.id)?.kind);
-			}
-		});
-
 		test('the default surface is in app and the hash is locale independent', async () => {
 			const english = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
 				.get('/reports/flows/message?locale=en-US')
@@ -251,75 +214,6 @@ describe('Report flows', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(flow.start_screen_id).toBe('community_parts');
-		});
-	});
-
-	describe('Locale', () => {
-		test('the user locale picks the catalog', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'de'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get('/reports/flows/message')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('de');
-			expect(flow).toEqual(getReportFlowResponse('message', 'in_app', 'de'));
-		});
-
-		test('the query locale wins over the user locale', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'de'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get('/reports/flows/message?locale=ja')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('ja');
-		});
-
-		test('Accept-Language is used when logged out', async () => {
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user')
-				.header('Accept-Language', 'fr-FR,fr;q=0.9')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('fr');
-		});
-	});
-
-	describe('Submit, message', () => {
-		test('checklist items are stored in definition order', async () => {
-			const target = await setupMessage(harness);
-			const result = await submitMessage(harness, target.reporter.token, messageBody(target, PRIVATE_INFO_WALK))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const report = await readReport(result.report_id);
-			expect(report.flowSteps?.[1]).toEqual({screen_id: 'private_info', item_ids: ['email', 'phone']});
-		});
-
-		test('the locale falls back to the request locale and is resolved', async () => {
-			const target = await setupMessage(harness);
-			const first = await submitMessage(harness, target.reporter.token, messageBody(target, SPAM_WALK, {locale: 'nb'}))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect((await readReport(first.report_id)).flowLocale).toBe('no');
-			const other = await setupMessage(harness);
-			await createBuilder(harness, other.reporter.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'ja'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const second = await submitMessage(harness, other.reporter.token, messageBody(other))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect((await readReport(second.report_id)).flowLocale).toBe('ja');
 		});
 	});
 

@@ -70,10 +70,6 @@ function buildGeometry(viewportWidth: number, viewportHeight: number, titlebarHe
 	};
 }
 
-export function clamp(value: number, min: number, max: number): number {
-	return Math.min(max, Math.max(min, value));
-}
-
 export function getPiPHeight(width: number): number {
 	return getPaneHeight(width, PIP_ASPECT_RATIO);
 }

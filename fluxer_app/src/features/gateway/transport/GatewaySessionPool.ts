@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Initialization from '@app/features/app/state/Initialization';
-import {
-	BackgroundGatewaySessionManager,
-	MAX_BACKGROUND_GATEWAY_CONNECTIONS,
-	readMaxBackgroundGatewayConnections,
-} from '@app/features/gateway/transport/BackgroundGatewaySessionManager';
+import {BackgroundGatewaySessionManager} from '@app/features/gateway/transport/BackgroundGatewaySessionManager';
 import {installDeferredReaction} from '@app/features/gateway/transport/DeferredReaction';
 import {
 	ForegroundGatewayConnectionRecoverableError,
@@ -20,12 +16,11 @@ import {
 	selectForegroundActivationGuildId,
 } from '@app/features/gateway/transport/PooledGatewayConnection';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import {AccountScopedWorkTransitionReason} from '@app/features/platform/state/AccountScopedWork';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import {reaction} from 'mobx';
-
-export {MAX_BACKGROUND_GATEWAY_CONNECTIONS, readMaxBackgroundGatewayConnections};
 
 const logger = new Logger('GatewaySessionPool');
 const FOREGROUND_RECOVERY_RETRY_DELAYS_MS = [1_000, 3_000, 10_000] as const;
@@ -46,6 +41,14 @@ class GatewaySessionPool {
 	private foregroundRecoveryTimer: number | null = null;
 	private foregroundRecovery: ForegroundRecoveryState = {kind: 'idle'};
 	private failedRecoveryDisposer: (() => void) | null = null;
+
+	async retireForAccountTransition(reason: AccountScopedWorkTransitionReason): Promise<void> {
+		if (reason === AccountScopedWorkTransitionReason.ACCOUNT_SWITCH) {
+			await this.demoteForegroundForAccountSwitch();
+			return;
+		}
+		this.foregroundConnection.logout();
+	}
 
 	start(): void {
 		if (this.started) {
@@ -269,14 +272,6 @@ class GatewaySessionPool {
 
 	demoteForegroundForAccountSwitch(): Promise<ForegroundDemotionOutcome> {
 		return this.handoff.demoteForegroundForAccountSwitch();
-	}
-
-	isBackgroundTransportAvailable(): boolean {
-		return this.backgroundSessions.isTransportAvailable();
-	}
-
-	bootstrapBackground(): void {
-		this.backgroundSessions.start();
 	}
 
 	get isBackgroundBootstrapped(): boolean {

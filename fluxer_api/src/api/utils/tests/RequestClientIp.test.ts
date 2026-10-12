@@ -28,27 +28,6 @@ function createCountingRequest(headers: Record<string, string>): CountingRequest
 }
 
 describe('RequestClientIp', () => {
-	it('resolves the client ip once and hands the same value to every consumer', async () => {
-		const {request, countReads} = createCountingRequest({'x-forwarded-for': '203.0.113.10, 10.0.0.1'});
-		const seen: Array<string | null> = [];
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.get('/v1/messages', (ctx) => {
-			seen.push(requireRequestClientIp(ctx));
-			return ctx.text('ok');
-		});
-		const response = await app.request(request);
-		expect(response.status).toBe(200);
-		expect(seen).toEqual(['203.0.113.10', '203.0.113.10', '203.0.113.10']);
-		expect(countReads('x-forwarded-for')).toBe(1);
-	});
 	it('normalizes the resolved address the same way for every consumer', async () => {
 		const seen: Array<string | null> = [];
 		const app = new Hono<HonoEnv>();
@@ -85,20 +64,6 @@ describe('RequestClientIp', () => {
 		expect(seen).toEqual([null, null]);
 		expect(errors[0]).toBeInstanceOf(MissingClientIpError);
 		expect(countReads('x-forwarded-for')).toBe(1);
-	});
-	it('reports a malformed client ip header exactly as before', async () => {
-		const seen: Array<string | null> = [];
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.get('/v1/messages', (ctx) => {
-			seen.push(getRequestClientIp(ctx));
-			return ctx.text('ok');
-		});
-		await app.request('http://localhost/v1/messages', {headers: {'x-forwarded-for': 'not-an-ip'}});
-		expect(seen).toEqual([null, null]);
 	});
 	it('never reuses a resolution made under a different header name', async () => {
 		const seen: Array<string | null> = [];

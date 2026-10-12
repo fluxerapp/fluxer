@@ -68,7 +68,6 @@ const LoginPage = observer(function LoginPage({onBackActionChange}: LoginPagePro
 			forceCredentials={false}
 			startWithAddAccount={false}
 			runtimeTarget={runtimeTarget}
-			showInstanceSelector={null}
 			ssoRedirectPath={null}
 			suppressInlineBackButtons={true}
 			initialIdentifier={params.get('login') ?? params.get('email')}

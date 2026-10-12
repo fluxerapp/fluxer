@@ -120,7 +120,7 @@ state() ->
         )
     },
     Viewable = guild_sessions:build_viewable_channel_map(
-        guild_visibility:get_user_viewable_channels(10, Base)
+        guild_visibility_channels:get_user_viewable_channels(10, Base)
     ),
     Base#{
         sessions => #{

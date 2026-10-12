@@ -2,7 +2,6 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedMedia, EmbedProvider, MessageEmbed};
 use serde::Deserialize;
@@ -150,32 +149,18 @@ impl Resolver for YouTubeResolver {
                             None
                         }
                     };
+                let media = thumbnail_meta
+                    .as_ref()
+                    .map(|meta| meta.to_embed_media(&thumbnail.url))
+                    .unwrap_or_else(|| EmbedMedia {
+                        url: Some(thumbnail.url.clone()),
+                        content_type: Some("image/jpeg".to_owned()),
+                        ..Default::default()
+                    });
                 embed.thumbnail = Some(EmbedMedia {
-                    url: Some(thumbnail.url.clone()),
-                    content_type: thumbnail_meta
-                        .as_ref()
-                        .map(|meta| meta.content_type.clone())
-                        .or_else(|| Some("image/jpeg".to_owned())),
-                    content_hash: thumbnail_meta
-                        .as_ref()
-                        .map(|meta| meta.content_hash.clone()),
-                    width: thumbnail
-                        .width
-                        .or_else(|| thumbnail_meta.as_ref().and_then(|meta| meta.width)),
-                    height: thumbnail
-                        .height
-                        .or_else(|| thumbnail_meta.as_ref().and_then(|meta| meta.height)),
-                    placeholder: thumbnail_meta
-                        .as_ref()
-                        .and_then(|meta| meta.placeholder.clone()),
-                    duration: thumbnail_meta
-                        .as_ref()
-                        .and_then(|meta| meta.duration.map(|duration| duration as u32)),
-                    flags: thumbnail_meta
-                        .as_ref()
-                        .map(embed_media_flags)
-                        .unwrap_or_default(),
-                    ..Default::default()
+                    width: thumbnail.width.or(media.width),
+                    height: thumbnail.height.or(media.height),
+                    ..media
                 });
             }
 

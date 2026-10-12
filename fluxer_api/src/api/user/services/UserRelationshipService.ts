@@ -15,7 +15,7 @@ import type {Relationship} from '@app/api/models/Relationship';
 import type {User} from '@app/api/models/User';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
@@ -758,8 +758,7 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const userPartialResolver = (userId: UserID) =>
-			getCachedUserPartialResponse({userId, userCacheService, requestCache});
+		const userPartialResolver = (userId: UserID) => userCacheService.getUserPartialResponse(userId, requestCache);
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'RELATIONSHIP_ADD',
@@ -778,8 +777,7 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const userPartialResolver = (userId: UserID) =>
-			getCachedUserPartialResponse({userId, userCacheService, requestCache});
+		const userPartialResolver = (userId: UserID) => userCacheService.getUserPartialResponse(userId, requestCache);
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'RELATIONSHIP_UPDATE',

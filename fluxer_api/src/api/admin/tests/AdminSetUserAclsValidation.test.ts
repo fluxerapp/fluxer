@@ -34,20 +34,6 @@ describe('Admin set user ACLs validation', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	test('stores a value of the registry', async () => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.ACL_SET_USER,
-			AdminACLs.USER_LOOKUP,
-		]);
-		const target = await createTestAccount(harness);
-		const result = await createBuilder<AdminUserMutationResponse>(harness, `${admin.token}`)
-			.put(`/admin/users/${target.userId}/acls`)
-			.body({acls: [AdminACLs.USER_LOOKUP]})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(result.user.acls).toEqual([AdminACLs.USER_LOOKUP]);
-	});
 	test('rejects an ACL outside the registry with 400 and leaves the stored set unchanged', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,

@@ -11,7 +11,7 @@ import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
 import MfaScreen from '@app/features/auth/flow/MfaScreen';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
-import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
+import {resolveAuthBannerError, useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {type LoginSuccessPayload, type MfaChallenge, recoverAccount} from '@app/features/auth/state/AuthFlow';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {BACK_TO_SIGN_IN_DESCRIPTOR, USERNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -61,24 +61,6 @@ function readRecoveryFragment(): RecoveryFragment {
 function clearRecoveryFragment(): void {
 	if (!window.location.hash) return;
 	window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
-}
-
-function resolveBannerError(
-	error: string | null,
-	fieldErrors: ReadonlyMap<string, string> | null | undefined,
-): string | null {
-	if (error != null) {
-		return error;
-	}
-	if (fieldErrors == null) {
-		return null;
-	}
-	for (const [fieldName, message] of fieldErrors) {
-		if (!API_RENDERED_FIELDS.has(fieldName)) {
-			return message;
-		}
-	}
-	return null;
 }
 
 function usernameFromLogin(login: string): {username: string; discriminator?: string} {
@@ -186,7 +168,7 @@ const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
 			/>
 		);
 	}
-	const bannerError = resolveBannerError(error, fieldErrors);
+	const bannerError = resolveAuthBannerError(error, fieldErrors, API_RENDERED_FIELDS);
 	return (
 		<>
 			<h1 className={styles.title} data-flx="auth.recover-account-page.title">

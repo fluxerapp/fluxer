@@ -17,7 +17,6 @@ import {
 import {createInvalidResponseError, KVClientError, KVClientErrorCode} from '@pkgs/kv_client/src/KVClientError';
 import {resolveKVClusterConnection} from '@pkgs/kv_client/src/KVClusterConnection';
 import {
-	createStringEntriesFromPairs,
 	createZSetMembersFromScorePairs,
 	normalizeScoreBound,
 	parseRangeByScoreArguments,
@@ -341,20 +340,6 @@ export class KVClient implements IKVProvider {
 		});
 	}
 
-	async mset(...args: Array<string>): Promise<void> {
-		const entries = createStringEntriesFromPairs(args);
-		if (entries.length === 0) {
-			return;
-		}
-		await this.execute('mset', async () => {
-			const batches = this.splitBySlot(entries, (entry) => entry.key);
-			await runSlotBatches(batches, async (batch) => {
-				const result = await this.client.mset(...batch.flatMap((entry) => [entry.key, entry.value]));
-				parseSetReply(result, 'mset');
-			});
-		});
-	}
-
 	async del(...keys: Array<string>): Promise<number> {
 		if (keys.length === 0) {
 			return 0;
@@ -379,17 +364,6 @@ export class KVClient implements IKVProvider {
 
 	async ttl(key: string): Promise<number> {
 		return await this.execute('ttl', async () => this.client.ttl(key));
-	}
-
-	async incr(key: string): Promise<number> {
-		return await this.execute('incr', async () => this.client.incr(key));
-	}
-
-	async getex(key: string, ttlSeconds: number): Promise<string | null> {
-		return await this.execute('getex', async () => {
-			const result = await this.client.call('GETEX', key, 'EX', ttlSeconds);
-			return parseNullableStringReply(result, 'getex');
-		});
 	}
 
 	async getdel(key: string): Promise<string | null> {
@@ -423,16 +397,6 @@ export class KVClient implements IKVProvider {
 
 	async scard(key: string): Promise<number> {
 		return await this.execute('scard', async () => this.client.scard(key));
-	}
-
-	async spop(key: string, count: number = 1): Promise<Array<string>> {
-		if (count <= 0) {
-			return [];
-		}
-		return await this.execute('spop', async () => {
-			const result = await this.client.spop(key, count);
-			return parsePoppedValues(result, 'spop', count);
-		});
 	}
 
 	async zadd(key: string, ...scoreMembers: Array<number | string>): Promise<number> {

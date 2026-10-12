@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	AuditLogDetailRow,
-	AuditLogTone,
-} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
+import type {AuditLogDetailRow} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	readChange,
 	readNumber,
 	readSnowflake,
 	readString,
+	row,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {ChannelFlags, ForumLayoutTypes, ForumSortOrderTypes} from '@fluxer/constants/src/ThreadConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
-import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 export const CHANNEL_CREATE_FORUM_SUMMARY = msg({
@@ -163,15 +160,6 @@ interface TagSnapshot {
 	id: string;
 	name: string;
 	key: string;
-}
-
-function row(
-	id: string,
-	tone: AuditLogTone,
-	descriptor: MessageDescriptor,
-	values: AuditLogDetailRow['sentence']['values'] = {},
-): AuditLogDetailRow {
-	return {id, tone, sentence: {descriptor, values}};
 }
 
 function readTags(value: unknown): Array<TagSnapshot> {

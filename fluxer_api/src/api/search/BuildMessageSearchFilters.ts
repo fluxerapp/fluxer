@@ -26,14 +26,10 @@ export function buildMessageSearchFilters(
 		filters.exactPhrases = searchParams.exact_phrases;
 	}
 	if (searchParams.exclude_channel_id) {
-		filters.excludeChannelIds = Array.isArray(searchParams.exclude_channel_id)
-			? searchParams.exclude_channel_id.map((id: bigint) => id.toString())
-			: [(searchParams.exclude_channel_id as bigint).toString()];
+		filters.excludeChannelIds = searchParams.exclude_channel_id.map((id) => id.toString());
 	}
 	if (searchParams.author_id != null) {
-		filters.authorId = Array.isArray(searchParams.author_id)
-			? searchParams.author_id.map((id: bigint) => id.toString())
-			: [(searchParams.author_id as bigint).toString()];
+		filters.authorId = searchParams.author_id.map((id) => id.toString());
 	}
 	if (searchParams.author_type) {
 		filters.authorType = searchParams.author_type;
@@ -42,9 +38,7 @@ export function buildMessageSearchFilters(
 		filters.excludeAuthorType = searchParams.exclude_author_type;
 	}
 	if (searchParams.exclude_author_id != null) {
-		filters.excludeAuthorIds = Array.isArray(searchParams.exclude_author_id)
-			? searchParams.exclude_author_id.map((id: bigint) => id.toString())
-			: [(searchParams.exclude_author_id as bigint).toString()];
+		filters.excludeAuthorIds = searchParams.exclude_author_id.map((id) => id.toString());
 	}
 	if (searchParams.mentions) {
 		filters.mentions = searchParams.mentions.map((id: bigint) => id.toString());
@@ -65,10 +59,10 @@ export function buildMessageSearchFilters(
 		filters.excludeHas = searchParams.exclude_has;
 	}
 	if (searchParams.embed_type) {
-		filters.embedType = searchParams.embed_type as Array<'image' | 'video' | 'sound' | 'article'>;
+		filters.embedType = searchParams.embed_type;
 	}
 	if (searchParams.exclude_embed_type) {
-		filters.excludeEmbedTypes = searchParams.exclude_embed_type as Array<'image' | 'video' | 'sound' | 'article'>;
+		filters.excludeEmbedTypes = searchParams.exclude_embed_type;
 	}
 	if (searchParams.embed_provider) {
 		filters.embedProvider = searchParams.embed_provider;
@@ -95,10 +89,10 @@ export function buildMessageSearchFilters(
 		filters.excludeAttachmentExtensions = searchParams.exclude_attachment_extension;
 	}
 	if (searchParams.sort_by) {
-		filters.sortBy = searchParams.sort_by as 'timestamp' | 'relevance';
+		filters.sortBy = searchParams.sort_by;
 	}
 	if (searchParams.sort_order) {
-		filters.sortOrder = searchParams.sort_order as 'asc' | 'desc';
+		filters.sortOrder = searchParams.sort_order;
 	}
 	if (searchParams.include_nsfw !== undefined) {
 		filters.includeNsfw = searchParams.include_nsfw;

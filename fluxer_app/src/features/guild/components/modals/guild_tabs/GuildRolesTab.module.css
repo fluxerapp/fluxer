@@ -121,33 +121,6 @@
 	min-width: 0;
 }
 
-.layoutButtons {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	flex-shrink: 0;
-}
-
-.layoutButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.25rem;
-	height: 2.25rem;
-	border-radius: 0.375rem;
-	background: var(--background-secondary);
-	color: var(--text-primary-muted);
-	cursor: pointer;
-	transition:
-		background-color 150ms ease,
-		color 150ms ease;
-}
-
-.layoutButton:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .permCategories {
 	display: flex;
 	flex-direction: column;

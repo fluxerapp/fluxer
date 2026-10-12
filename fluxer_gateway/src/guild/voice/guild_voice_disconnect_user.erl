@@ -27,7 +27,7 @@
     binary() | undefined, term(), integer(), voice_state_map() | term(), guild_state()
 ) -> voice_reply().
 handle_voice_disconnect(undefined, SessionId, UserId, VoiceStates0, State) ->
-    case normalize_session_id(SessionId) of
+    case guild_voice_connection_normalize:normalize_session_id(SessionId) of
         undefined ->
             {reply, gateway_errors:error(voice_missing_connection_id), State};
         RequestSessionId ->
@@ -104,7 +104,9 @@ do_voice_disconnect(
 -spec disconnect_voice_user(map(), guild_state()) -> voice_reply().
 disconnect_voice_user(#{user_id := UserId} = Request, State) ->
     ConnectionId = maps:get(connection_id, Request, null),
-    RequestSessionId = normalize_session_id(maps:get(session_id, Request, undefined)),
+    RequestSessionId = guild_voice_connection_normalize:normalize_session_id(
+        maps:get(session_id, Request, undefined)
+    ),
     VoiceStates = voice_state_utils:voice_states(State),
     case ConnectionId of
         null ->
@@ -266,11 +268,10 @@ matching_user_voice_states(UserId, RequestSessionId, VoiceStates) ->
 voice_state_session_matches(_VoiceState, undefined) ->
     true;
 voice_state_session_matches(VoiceState, RequestSessionId) ->
-    normalize_session_id(maps:get(<<"session_id">>, VoiceState, undefined)) =:=
+    guild_voice_connection_normalize:normalize_session_id(
+        maps:get(<<"session_id">>, VoiceState, undefined)
+    ) =:=
         RequestSessionId.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) -> voice_state_utils:normalize_session_id(Value).
 
 -spec maybe_cleanup_after_disconnect(integer(), integer(), guild_state()) -> guild_state().
 maybe_cleanup_after_disconnect(UserId, ChannelId, State) ->
@@ -360,9 +361,159 @@ maybe_force_disconnect_voice_state(ConnectionId, VoiceState, State) ->
 resolve_guild_id(VoiceState, State) ->
     case voice_state_utils:voice_state_guild_id(VoiceState) of
         undefined ->
-            guild_voice_connection_normalize:normalize_positive_snowflake(
+            snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             );
         GuildId ->
             GuildId
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+voice_state_fixture(UserId, GuildId, ChannelId) ->
+    #{
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"guild_id">> => integer_to_binary(GuildId),
+        <<"channel_id">> => integer_to_binary(ChannelId)
+    }.
+
+collect_force_disconnect_messages(0, Acc) ->
+    lists:reverse(Acc);
+collect_force_disconnect_messages(Count, Acc) when Count > 0 ->
+    receive
+        {force_disconnect, _, _, _, _} = Msg ->
+            collect_force_disconnect_messages(Count - 1, [Msg | Acc])
+    after 200 -> lists:reverse(Acc)
+    end.
+collect_force_disconnect_messages(Count) -> collect_force_disconnect_messages(Count, []).
+
+test_force_disconnect_fun() ->
+    Self = self(),
+    fun(GId, CId, UId, ConnId) ->
+        Self ! {force_disconnect, GId, CId, UId, ConnId},
+        {ok, #{success => true}}
+    end.
+
+assert_disconnect_clears_voice_states(UserId, State) ->
+    {reply, #{success := true}, #{voice_states := #{}}} =
+        disconnect_voice_user(#{user_id => UserId, connection_id => null}, State).
+
+disconnect_voice_user_removes_all_connections_test() ->
+    VoiceStates = #{
+        <<"a">> => voice_state_fixture(5, 10, 20),
+        <<"b">> => voice_state_fixture(5, 10, 21)
+    },
+    State = #{
+        voice_states => VoiceStates,
+        test_force_disconnect_fun => fun(_, _, _, _) -> {ok, #{success => true}} end
+    },
+    assert_disconnect_clears_voice_states(5, State).
+
+disconnect_voice_user_with_session_id_test() ->
+    TestFun = test_force_disconnect_fun(),
+    VoiceStates = #{
+        <<"a">> => (voice_state_fixture(5, 10, 20))#{<<"session_id">> => <<"sess-a">>},
+        <<"b">> => (voice_state_fixture(5, 10, 21))#{<<"session_id">> => <<"sess-b">>},
+        <<"c">> => (voice_state_fixture(6, 10, 22))#{<<"session_id">> => <<"sess-a">>}
+    },
+    State = #{id => 10, voice_states => VoiceStates, test_force_disconnect_fun => TestFun},
+    {reply, #{success := true}, NewState} =
+        disconnect_voice_user(
+            #{user_id => 5, connection_id => null, session_id => <<"sess-a">>}, State
+        ),
+    ?assertEqual(
+        [{force_disconnect, 10, 20, 5, <<"a">>}], collect_force_disconnect_messages(1)
+    ),
+    Remaining = maps:get(voice_states, NewState),
+    ?assertNot(maps:is_key(<<"a">>, Remaining)),
+    ?assert(maps:is_key(<<"b">>, Remaining)),
+    ?assert(maps:is_key(<<"c">>, Remaining)).
+
+handle_voice_disconnect_invalid_state_test() ->
+    VoiceState = #{<<"user_id">> => <<"5">>},
+    State = #{voice_states => #{<<"conn">> => VoiceState}},
+    {reply, {error, validation_error, _}, _} =
+        handle_voice_disconnect(<<"conn">>, undefined, 5, #{<<"conn">> => VoiceState}, State).
+
+disconnect_voice_user_if_in_channel_ignored_test() ->
+    State = #{voice_states => #{}},
+    {reply, #{ignored := true}, _} =
+        disconnect_voice_user_if_in_channel(#{user_id => 5, expected_channel_id => 99}, State).
+
+cache_and_clear_recently_disconnected_test() ->
+    VS = voice_state_fixture(5, 10, 20),
+    S1 = guild_voice_disconnect_broadcast:cache_recently_disconnected(#{<<"conn">> => VS}, #{}),
+    ?assert(
+        maps:is_key(
+            <<"conn">>, guild_voice_disconnect_broadcast:recently_disconnected_voice_states(S1)
+        )
+    ),
+    S2 = guild_voice_disconnect_broadcast:clear_recently_disconnected(<<"conn">>, S1),
+    ?assertEqual(#{}, guild_voice_disconnect_broadcast:recently_disconnected_voice_states(S2)).
+
+clear_recently_disconnected_for_channel_test() ->
+    VS1 = voice_state_fixture(5, 10, 20),
+    VS2 = voice_state_fixture(6, 10, 30),
+    S0 = guild_voice_disconnect_broadcast:cache_recently_disconnected(
+        #{<<"a">> => VS1, <<"b">> => VS2}, #{}
+    ),
+    S1 = guild_voice_disconnect_broadcast:clear_recently_disconnected_for_channel(20, S0),
+    Cache = guild_voice_disconnect_broadcast:recently_disconnected_voice_states(S1),
+    ?assertNot(maps:is_key(<<"a">>, Cache)),
+    ?assert(maps:is_key(<<"b">>, Cache)).
+
+disconnect_voice_user_if_in_channel_caches_test() ->
+    VS = voice_state_fixture(5, 10, 20),
+    State = #{voice_states => #{<<"conn">> => VS}},
+    {reply, #{success := true}, NewState} =
+        disconnect_voice_user_if_in_channel(
+            #{user_id => 5, expected_channel_id => 20, connection_id => <<"conn">>}, State
+        ),
+    ?assert(
+        maps:is_key(
+            <<"conn">>,
+            guild_voice_disconnect_broadcast:recently_disconnected_voice_states(NewState)
+        )
+    ).
+
+disconnect_voice_user_force_disconnect_all_test() ->
+    TestFun = test_force_disconnect_fun(),
+    VoiceStates = #{
+        <<"a">> => voice_state_fixture(5, 10, 20),
+        <<"b">> => voice_state_fixture(5, 10, 21)
+    },
+    State = #{id => 10, voice_states => VoiceStates, test_force_disconnect_fun => TestFun},
+    assert_disconnect_clears_voice_states(5, State),
+    Msgs = collect_force_disconnect_messages(2),
+    ?assertEqual(2, length(Msgs)).
+
+disconnect_all_voice_users_in_channel_test() ->
+    TestFun = test_force_disconnect_fun(),
+    VoiceStates = #{
+        <<"a">> => voice_state_fixture(5, 10, 20),
+        <<"b">> => voice_state_fixture(6, 10, 20),
+        <<"c">> => voice_state_fixture(7, 10, 30)
+    },
+    State = #{id => 10, voice_states => VoiceStates, test_force_disconnect_fun => TestFun},
+    {reply, #{success := true, disconnected_count := 2}, NewState} =
+        guild_voice_disconnect_channel:disconnect_all_voice_users_in_channel(
+            #{channel_id => 20}, State
+        ),
+    _ = collect_force_disconnect_messages(2),
+    Remaining = maps:get(voice_states, NewState),
+    ?assert(maps:is_key(<<"c">>, Remaining)),
+    ?assertNot(maps:is_key(<<"a">>, Remaining)).
+
+disconnect_voice_user_cleans_pending_test() ->
+    Pending = #{
+        <<"conn1">> => #{user_id => 5, channel_id => 100},
+        <<"conn2">> => #{user_id => 6, channel_id => 100}
+    },
+    State = #{id => 10, voice_states => #{}, pending_voice_connections => Pending},
+    {reply, #{success := true}, NewState} = disconnect_voice_user(#{user_id => 5}, State),
+    NewPending = maps:get(pending_voice_connections, NewState),
+    ?assertNot(maps:is_key(<<"conn1">>, NewPending)),
+    ?assert(maps:is_key(<<"conn2">>, NewPending)).
+
+-endif.

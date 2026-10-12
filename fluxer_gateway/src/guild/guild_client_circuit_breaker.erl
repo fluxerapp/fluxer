@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_client_circuit_breaker).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([
@@ -19,10 +23,6 @@
 -define(FAILURE_THRESHOLD, 5).
 -define(RECOVERY_TIMEOUT_MS, 30000).
 -define(MAX_CONCURRENT, 50).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec ensure_table() -> ok.
 ensure_table() ->
@@ -238,14 +238,14 @@ test_waiter() ->
     after 30000 -> ok
     end.
 
-setup_test() ->
+circuit_test_setup() ->
     ensure_table(),
     Pid = spawn_test_pid(),
     ets:delete_all_objects(?CIRCUIT_BREAKER_TABLE),
     Pid.
 
 get_circuit_state_open_test() ->
-    Pid = setup_test(),
+    Pid = circuit_test_setup(),
     Now = erlang:system_time(millisecond),
     ets:insert(
         ?CIRCUIT_BREAKER_TABLE,
@@ -260,7 +260,7 @@ get_circuit_state_open_test() ->
     Pid ! done.
 
 get_circuit_state_half_open_test() ->
-    Pid = setup_test(),
+    Pid = circuit_test_setup(),
     OldTime = erlang:system_time(millisecond) - ?RECOVERY_TIMEOUT_MS - 1000,
     ets:insert(
         ?CIRCUIT_BREAKER_TABLE,
@@ -275,7 +275,7 @@ get_circuit_state_half_open_test() ->
     Pid ! done.
 
 record_failure_opens_circuit_test() ->
-    Pid = setup_test(),
+    Pid = circuit_test_setup(),
     ets:insert(
         ?CIRCUIT_BREAKER_TABLE,
         {Pid, #{

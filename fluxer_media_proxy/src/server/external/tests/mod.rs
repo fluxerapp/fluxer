@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-mod cache_policy;
-
 use super::{
     ExternalBody, ExternalFetchError, ExternalSuccessStatus, FetchedExternal,
     PreparedExternalRequest,
@@ -25,10 +23,8 @@ use crate::{
     byte_budget::{BudgetedBytes, ByteBudget},
     config::Config,
     constants,
-    external_path::build_external_media_proxy_path,
     metrics::external::ExternalMetrics,
     server::{download_stream::DownloadStreamPolicy, state::AppState},
-    signing,
 };
 use axum::{
     body::to_bytes,
@@ -524,7 +520,7 @@ fn external_partial_validation_rejects_a_partial_the_client_did_not_request() {
 #[tokio::test]
 async fn external_buffering_rejects_a_body_shorter_than_its_content_length() {
     let budget = ByteBudget::new(constants::MAX_MEDIA_PROXY_BYTES * 4);
-    let metrics = ExternalMetrics::new();
+    let metrics = ExternalMetrics::default();
     let truncated = buffer_external_response(ExternalBufferRequest {
         response: reqwest::Response::from(
             http::Response::builder()
@@ -701,7 +697,7 @@ async fn external_streaming_response_emits_the_sniff_prefix_then_the_rest() {
 #[tokio::test]
 async fn external_buffering_prepends_the_sniff_prefix() {
     let budget = ByteBudget::new(constants::MAX_MEDIA_PROXY_BYTES * 4);
-    let metrics = ExternalMetrics::new();
+    let metrics = ExternalMetrics::default();
     let buffered = buffer_external_response(ExternalBufferRequest {
         response: reqwest::Response::from(
             http::Response::builder()
@@ -727,13 +723,11 @@ async fn a_cached_external_transform_is_served_without_refetching_the_origin() {
     use super::{external_hint, serve_external};
     use crate::{
         config::Config,
-        external_path::build_external_media_proxy_path,
         server::{
             params::url_filename,
             state::AppState,
             transform::{ServeBytesRequest, parameters::TransformRoute, serve_bytes_or_transform},
         },
-        signing,
         test_fixtures::fixture_jpeg,
     };
     use axum::http::HeaderMap;
@@ -750,7 +744,10 @@ async fn a_cached_external_transform_is_served_without_refetching_the_origin() {
     let proxy_path = build_external_media_proxy_path(url).expect("the external path builds");
     let rest = format!(
         "{}/{proxy_path}",
-        signing::create_signature(&proxy_path, app.cfg.secret_key.as_bytes())
+        fluxer_common::external_media_path::create_signature(
+            &proxy_path,
+            app.cfg.secret_key.as_bytes()
+        )
     );
     let filename = url_filename(url);
     let data = Bytes::from(fixture_jpeg());
@@ -890,7 +887,10 @@ async fn an_upstream_that_ignores_the_client_range_still_streams_a_complete_body
     let app = Arc::new(AppState::for_tests(cfg));
     let url = "https://media.example.test/clip.mp4";
     let proxy_path = build_external_media_proxy_path(url).expect("the external path builds");
-    let signature = signing::create_signature(&proxy_path, app.cfg.secret_key.as_bytes());
+    let signature = fluxer_common::external_media_path::create_signature(
+        &proxy_path,
+        app.cfg.secret_key.as_bytes(),
+    );
     let rest = format!("{signature}/{proxy_path}");
     let params = HashMap::new();
     let mut headers = HeaderMap::new();
@@ -937,7 +937,7 @@ async fn external_buffering_accepts_transport_chunks_of_any_size_within_the_limi
     const SMALL_CHUNK_BYTES: usize = 1448;
     const SMALL_CHUNKS: usize = 512;
     let budget = ByteBudget::new(constants::MAX_MEDIA_PROXY_BYTES * 4);
-    let metrics = ExternalMetrics::new();
+    let metrics = ExternalMetrics::default();
     let buffer = |response: reqwest::Response, length: usize| {
         buffer_external_response(ExternalBufferRequest {
             response,
@@ -970,3 +970,5 @@ async fn external_buffering_accepts_transport_chunks_of_any_size_within_the_limi
     .expect("packet-sized transport chunks");
     assert_eq!(SMALL_CHUNK_BYTES * SMALL_CHUNKS, small.as_bytes().len());
 }
+
+use fluxer_common::external_media_path::build_external_media_proxy_path;

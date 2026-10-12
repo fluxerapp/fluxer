@@ -153,22 +153,9 @@ define_media_types!(
 mod tests {
     use super::*;
 
-    const ASSET_EXTENSIONS: [AssetExtension; 10] = [
-        AssetExtension::Png,
-        AssetExtension::Jpeg,
-        AssetExtension::Webp,
-        AssetExtension::Gif,
-        AssetExtension::Apng,
-        AssetExtension::Avif,
-        AssetExtension::Heic,
-        AssetExtension::Heif,
-        AssetExtension::Jxl,
-        AssetExtension::Svg,
-    ];
-
     #[test]
     fn registry_agrees_with_the_frozen_asset_extension_table() {
-        for extension in ASSET_EXTENSIONS {
+        for extension in AssetExtension::ALL {
             let media_type = MediaType::from(extension);
             let spec = MEDIA_TYPE_SPECS
                 .iter()
@@ -212,26 +199,6 @@ mod tests {
         assert_eq!(Some(MediaType::MP4Audio), MediaType::from_extension("m4b"));
         assert_eq!(None, MediaType::from_mime("application/octet-stream"));
         assert_eq!(None, MediaType::from_extension("exe"));
-    }
-
-    #[test]
-    fn the_media_block_never_crosses_into_asset_extensions() {
-        for mime in [
-            "video/mp4",
-            "audio/mp4",
-            "image/tiff",
-            "image/bmp",
-            "video/x-matroska",
-            "audio/aiff",
-        ] {
-            let media_type = MediaType::from_mime(mime).expect("registered media mime");
-            assert_eq!(mime, media_type.mime());
-            assert!(
-                !ASSET_EXTENSIONS
-                    .iter()
-                    .any(|extension| MediaType::from(*extension) == media_type)
-            );
-        }
     }
 
     #[test]

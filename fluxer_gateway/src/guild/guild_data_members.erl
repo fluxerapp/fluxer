@@ -9,7 +9,6 @@
     has_member/2,
     list_guild_members/2,
     search_guild_members/2,
-    find_member_by_user_id/2,
     paginate_members/3
 ]).
 
@@ -21,7 +20,7 @@
 
 -spec get_guild_member(map(), guild_state()) -> {reply, map(), guild_state()}.
 get_guild_member(#{user_id := UserId}, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             {reply, #{success => false, member_data => null}, State};
         Member ->
@@ -39,14 +38,14 @@ get_guild_members_batch(#{user_ids := UserIds}, State) when is_list(UserIds) ->
 
 -spec add_member_to_batch(user_id(), guild_state(), map()) -> map().
 add_member_to_batch(UserId, State, Acc) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> Acc;
         Member -> Acc#{UserId => Member}
     end.
 
 -spec has_member(map(), guild_state()) -> {reply, map(), guild_state()}.
 has_member(#{user_id := UserId}, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             {reply, #{has_member => false}, State};
         _ ->
@@ -56,7 +55,7 @@ has_member(#{user_id := UserId}, State) ->
 -spec list_guild_members(map(), guild_state()) -> {reply, map(), guild_state()}.
 list_guild_members(#{limit := Limit, offset := Offset}, State) ->
     Data = guild_data_index:ensure_data_map(State),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     SortedIds = guild_data_index_members:sorted_member_ids(Data, MemberMap),
     PageIds = paginate_members(SortedIds, Limit, Offset),
     PaginatedMembers = lookup_members(PageIds, MemberMap),
@@ -71,7 +70,7 @@ search_guild_members(#{query := Query, limit := Limit}, State) when
     is_binary(Query), is_integer(Limit), Limit >= 0
 ->
     Data = guild_data_index:ensure_data_map(State),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     Members = collect_query_matches(MemberMap, string:lowercase(Query), Limit),
     {reply, #{members => Members, total => map_size(MemberMap)}, State};
 search_guild_members(_Request, State) ->
@@ -113,10 +112,6 @@ collect_query_match(Member, NormalizedQuery, Remaining, Acc, NextIterator) ->
         false ->
             collect_query_matches_iter(NextIterator, NormalizedQuery, Remaining, Acc)
     end.
-
--spec find_member_by_user_id(user_id(), guild_state()) -> guild_member() | undefined.
-find_member_by_user_id(UserId, State) ->
-    guild_permissions:find_member_by_user_id(UserId, State).
 
 -spec paginate_members([term()], non_neg_integer(), non_neg_integer()) -> [term()].
 paginate_members(Items, Limit, Offset) ->

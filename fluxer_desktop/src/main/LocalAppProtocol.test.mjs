@@ -46,7 +46,6 @@ function runtimePlan(origin) {
 		instanceKey: `${origin}/api`,
 		document: {},
 		selfHosted: true,
-		desktopModulesEnabled: null,
 		endpoints: {
 			apiEndpoint: `${origin}/api`,
 			apiPublicEndpoint: null,

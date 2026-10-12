@@ -13,9 +13,8 @@ import {EmailVerificationNagbar} from '@app/features/app/components/layout/app_l
 import {GiftInventoryNagbar} from '@app/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar';
 import {GuildMembershipCtaNagbar} from '@app/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar';
 import {LegacyPriceOptInNagbar} from '@app/features/app/components/layout/app_layout/nagbars/LegacyPriceOptInNagbar';
-import {PremiumExpiredNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar';
-import {PremiumGracePeriodNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar';
 import {PremiumOnboardingNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar';
+import {PremiumStatusNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PremiumStatusNagbar';
 import {PriceAnnouncementNagbar} from '@app/features/app/components/layout/app_layout/nagbars/PriceAnnouncementNagbar';
 import {ScheduledMaintenanceNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar';
 import {StreamerModeNagbar} from '@app/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar';
@@ -124,7 +123,8 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 					case NagbarType.PREMIUM_GRACE_PERIOD:
 						if (!showPremiumFeatures) return null;
 						return (
-							<PremiumGracePeriodNagbar
+							<PremiumStatusNagbar
+								variant="grace-period"
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.premium-grace-period-nagbar"
@@ -133,7 +133,8 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 					case NagbarType.PREMIUM_EXPIRED:
 						if (!showPremiumFeatures) return null;
 						return (
-							<PremiumExpiredNagbar
+							<PremiumStatusNagbar
+								variant="expired"
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.premium-expired-nagbar"

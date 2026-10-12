@@ -9,7 +9,7 @@ get_members_cursor_returns_atom_keys_test() ->
     Member1 = #{<<"user">> => #{<<"id">> => <<"2">>}},
     Member2 = #{<<"user">> => #{<<"id">> => <<"1">>}},
     State = #{data => #{<<"members">> => [Member1, Member2]}},
-    {reply, Reply, _NewState} = guild_member_list:get_members_cursor(
+    {reply, Reply, _NewState} = guild_member_list_read:get_members_cursor(
         #{<<"limit">> => 1}, State
     ),
     ?assert(maps:is_key(members, Reply)),
@@ -24,7 +24,7 @@ get_members_cursor_with_after_test() ->
         #{<<"user">> => #{<<"id">> => <<"3">>}}
     ],
     State = #{data => #{<<"members">> => Members}},
-    {reply, Reply, _} = guild_member_list:get_members_cursor(
+    {reply, Reply, _} = guild_member_list_read:get_members_cursor(
         #{<<"limit">> => 10, <<"after">> => 1}, State
     ),
     ReturnedMembers = maps:get(members, Reply),
@@ -34,14 +34,14 @@ get_members_cursor_with_after_test() ->
 
 get_members_cursor_empty_guild_test() ->
     State = #{data => #{<<"members">> => []}},
-    {reply, Reply, _} = guild_member_list:get_members_cursor(#{<<"limit">> => 10}, State),
+    {reply, Reply, _} = guild_member_list_read:get_members_cursor(#{<<"limit">> => 10}, State),
     ?assertEqual([], maps:get(members, Reply)),
     ?assertEqual(0, maps:get(total, Reply)).
 
 get_members_cursor_zero_limit_test() ->
     Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
     State = #{data => #{<<"members">> => Members}},
-    {reply, Reply, _} = guild_member_list:get_members_cursor(#{<<"limit">> => 0}, State),
+    {reply, Reply, _} = guild_member_list_read:get_members_cursor(#{<<"limit">> => 0}, State),
     ?assertEqual([], maps:get(members, Reply)).
 
 get_members_cursor_after_last_member_test() ->
@@ -50,7 +50,7 @@ get_members_cursor_after_last_member_test() ->
         #{<<"user">> => #{<<"id">> => <<"2">>}}
     ],
     State = #{data => #{<<"members">> => Members}},
-    {reply, Reply, _} = guild_member_list:get_members_cursor(
+    {reply, Reply, _} = guild_member_list_read:get_members_cursor(
         #{<<"limit">> => 10, <<"after">> => 999}, State
     ),
     ?assertEqual([], maps:get(members, Reply)).
@@ -58,7 +58,7 @@ get_members_cursor_after_last_member_test() ->
 subscribe_builds_channel_store_lazily_test() ->
     State = base_state(make_subs_tab()),
     {NewState, ShouldSync, Ranges} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State),
+        guild_member_list_subscribe:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State),
     try
         Engines = maps:get(channel_member_list_engines, NewState, #{}),
         ?assertEqual(true, ShouldSync),
@@ -73,9 +73,9 @@ subscribe_prunes_other_session_channel_lists_test() ->
     SubsTab = make_subs_tab(),
     State0 = base_state(SubsTab),
     {State1, true, [{0, 99}]} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State0),
+        guild_member_list_subscribe:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State0),
     {State2, true, [{10, 20}]} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"600">>, [{10, 20}], State1),
+        guild_member_list_subscribe:subscribe_ranges(<<"s1">>, <<"600">>, [{10, 20}], State1),
     try
         Engines = maps:get(channel_member_list_engines, State2, #{}),
         ?assertNot(guild_member_list_subs:is_subscribed(<<"500">>, <<"s1">>, SubsTab)),
@@ -91,7 +91,7 @@ unsubscribe_last_session_drops_channel_store_test() ->
     State = (base_state(make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}])))#{
         channel_member_list_engines => #{<<"500">> => Ref}
     },
-    NewState = guild_member_list:unsubscribe_session(<<"s1">>, State),
+    NewState = guild_member_list_subscribe:unsubscribe_session(<<"s1">>, State),
     Engines = maps:get(channel_member_list_engines, NewState, #{}),
     ?assertNot(maps:is_key(<<"500">>, Engines)),
     ?assertEqual(undefined, ets:info(Ref, name)).
@@ -101,7 +101,7 @@ empty_ranges_subscribe_drops_channel_engine_test() ->
     State = (base_state(make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}])))#{
         channel_member_list_engines => #{<<"500">> => Ref}
     },
-    {NewState, _ShouldSync, _Ranges} = guild_member_list:subscribe_ranges(
+    {NewState, _ShouldSync, _Ranges} = guild_member_list_subscribe:subscribe_ranges(
         <<"s1">>, <<"500">>, [], State
     ),
     Engines = maps:get(channel_member_list_engines, NewState, #{}),
@@ -123,12 +123,12 @@ run_broadcast_channel_list_dispatches_sync_immediately() ->
             Member
         ]),
         NewState = OldState#{member_presence => #{1 => #{<<"status">> => <<"online">>}}},
-        {ok, QueuedState} = guild_member_list:broadcast_member_list_updates(
+        {ok, QueuedState} = guild_member_list_write:broadcast_member_list_updates(
             1, OldState, NewState
         ),
         ?assertNot(maps:is_key(pending_member_list_sync_batch, QueuedState)),
         assert_single_channel_sync_dispatch(NewState, QueuedState),
-        FlushedState = guild_member_list:flush_pending_member_list_syncs(QueuedState),
+        FlushedState = guild_member_list_write:flush_pending_member_list_syncs(QueuedState),
         ?assertNot(maps:is_key(pending_member_list_sync_batch, FlushedState)),
         assert_no_sync_dispatch()
     after
@@ -152,18 +152,18 @@ run_broadcast_channel_list_fans_out_repeated_syncs() ->
             Ref, make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}]), Members
         ),
         NewState1 = OldState#{coalesce_marker => first},
-        {ok, QueuedState1} = guild_member_list:broadcast_member_list_updates(
+        {ok, QueuedState1} = guild_member_list_write:broadcast_member_list_updates(
             1, OldState, NewState1
         ),
         ?assertNot(maps:is_key(pending_member_list_sync_batch, QueuedState1)),
         assert_channel_sync_dispatch_marker(first, QueuedState1),
         NewState2 = QueuedState1#{coalesce_marker => final},
-        {ok, QueuedState2} = guild_member_list:broadcast_member_list_updates(
+        {ok, QueuedState2} = guild_member_list_write:broadcast_member_list_updates(
             2, QueuedState1, NewState2
         ),
         ?assertNot(maps:is_key(pending_member_list_sync_batch, QueuedState2)),
         assert_channel_sync_dispatch_marker(final, QueuedState2),
-        FlushedState = guild_member_list:flush_pending_member_list_syncs(QueuedState2),
+        FlushedState = guild_member_list_write:flush_pending_member_list_syncs(QueuedState2),
         ?assertEqual(QueuedState2, FlushedState),
         assert_no_sync_dispatch()
     after
@@ -200,15 +200,17 @@ run_sync_batch_fans_out_before_subscription_churn() ->
     SubsTab = make_subs_tab(),
     State0 = base_state(SubsTab),
     {State1, true, [{0, 10}]} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 10}], State0),
+        guild_member_list_subscribe:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 10}], State0),
     SyncedState = guild_member_list_sync_batch:queue_list_sync(<<"500">>, State1),
     assert_single_channel_sync_dispatch_with_ranges([{0, 10}], SyncedState),
-    UnsubscribedState = guild_member_list:unsubscribe_session(<<"s1">>, SyncedState),
+    UnsubscribedState = guild_member_list_subscribe:unsubscribe_session(<<"s1">>, SyncedState),
     ?assertNot(
         maps:is_key(<<"500">>, maps:get(channel_member_list_engines, UnsubscribedState, #{}))
     ),
     {ResubscribedState, true, [{20, 30}]} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"500">>, [{20, 30}], UnsubscribedState),
+        guild_member_list_subscribe:subscribe_ranges(
+            <<"s1">>, <<"500">>, [{20, 30}], UnsubscribedState
+        ),
     try
         FlushedState = guild_member_list_sync_batch:flush_pending_syncs(ResubscribedState),
         ?assertEqual(ResubscribedState, FlushedState),
@@ -224,10 +226,10 @@ run_sync_batch_skips_unsubscribed_lists_at_queue_time() ->
     SubsTab = make_subs_tab(),
     State0 = base_state(SubsTab),
     {State1, true, _Ranges} =
-        guild_member_list:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State0),
+        guild_member_list_subscribe:subscribe_ranges(<<"s1">>, <<"500">>, [{0, 99}], State0),
     _SyncedState = guild_member_list_sync_batch:queue_list_sync(<<"500">>, State1),
     _ = collect_sync_dispatches(1),
-    UnsubscribedState = guild_member_list:unsubscribe_session(<<"s1">>, State1),
+    UnsubscribedState = guild_member_list_subscribe:unsubscribe_session(<<"s1">>, State1),
     ResyncedState = guild_member_list_sync_batch:queue_list_sync(<<"500">>, UnsubscribedState),
     ?assertNot(maps:is_key(pending_member_list_sync_batch, ResyncedState)),
     ?assertNot(
@@ -281,7 +283,7 @@ run_broadcast_afk_only_change_skips_sync() ->
     Ref = guild_member_list_engine:new(),
     try
         State = presence_delta_state(Ref),
-        {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+        {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
             1,
             State,
             State,
@@ -301,7 +303,7 @@ run_broadcast_status_change_dispatches_sync() ->
     Ref = guild_member_list_engine:new(),
     try
         State = presence_delta_state(Ref),
-        {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+        {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
             1,
             State,
             State,
@@ -321,7 +323,7 @@ run_broadcast_custom_status_change_dispatches_sync() ->
     Ref = guild_member_list_engine:new(),
     try
         State = presence_delta_state(Ref),
-        {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+        {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
             1,
             State,
             State,
@@ -341,7 +343,7 @@ run_broadcast_offline_transition_dispatches_sync() ->
     Ref = guild_member_list_engine:new(),
     try
         State = presence_delta_state(Ref),
-        {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+        {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
             1,
             State,
             State,

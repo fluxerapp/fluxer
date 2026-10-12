@@ -2,17 +2,14 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {requestSvcJson} from '@app/api/infrastructure/SvcErrorReply';
 import {Logger} from '@app/api/Logger';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
-
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
 const USERS_SERVICE_SUBJECT = readOptionalEnv('FLUXER_USERS_SERVICE_SUBJECT') ?? 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;
@@ -157,20 +154,12 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 
 	private async request<T>(payload: UsersServiceRequest, responseGuard: (value: unknown) => value is T): Promise<T> {
 		try {
-			if (this.connectionManager.isClosed()) {
-				await this.connectionManager.connect();
-			}
-			const connection = this.connectionManager.getConnection();
-			const response = await connection.request(this.subject, textEncoder.encode(JSON.stringify(payload)), {
-				timeout: this.requestTimeoutMs,
+			return await requestSvcJson(this.connectionManager, this.subject, payload, {
+				timeoutMs: this.requestTimeoutMs,
+				guard: responseGuard,
+				service: 'users-service',
+				invalidPayloadError: () => new Error('[users-service] invalid response payload'),
 			});
-			const decoded = textDecoder.decode(response.data);
-			const parsed = parseJsonWithGuard(decoded, responseGuard);
-			if (parsed === null) {
-				throwForSvcErrorReply('users-service', parseJsonRecord(decoded));
-				throw new Error('[users-service] invalid response payload');
-			}
-			return parsed;
 		} catch (error) {
 			Logger.warn({error, op: payload.op}, '[users-service] request failed');
 			throw error;

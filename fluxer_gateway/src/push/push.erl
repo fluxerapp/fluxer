@@ -9,13 +9,7 @@
 -export([
     handle_message_create/1,
     handle_buffered_message_creates/1,
-    sync_user_guild_settings/3,
     sync_user_guild_settings_local/3,
-    sync_user_blocked_ids/2,
-    sync_user_blocked_ids_local/2,
-    invalidate_user_subscriptions_local/1,
-    invalidate_user_badge_count_local/1,
-    invalidate_user_badge_counts_local/1,
     clear_channel_notifications/3,
     clear_notifications_enabled/0
 ]).
@@ -79,18 +73,6 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast({handle_message_create, Params}, State) when is_map(Params) ->
     handle_message_create_cast(Params, State);
-handle_cast({sync_user_guild_settings, UserId, GuildId, UserGuildSettings}, State) when
-    is_integer(UserId), is_integer(GuildId), is_map(UserGuildSettings)
-->
-    push_ets_cache:put_user_guild_settings(UserId, GuildId, UserGuildSettings),
-    {noreply, State};
-handle_cast({sync_user_blocked_ids, UserId, BlockedIds}, State) when is_integer(UserId) ->
-    handle_sync_user_blocked_ids(UserId, BlockedIds, State);
-handle_cast({cache_user_guild_settings, UserId, GuildId, Settings}, State) when
-    is_integer(UserId), is_integer(GuildId), is_map(Settings)
-->
-    push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings),
-    {noreply, State};
 handle_cast({clear_channel_notifications, UserId, ChannelId, MessageId}, State) when
     is_integer(UserId), is_integer(ChannelId), is_integer(MessageId)
 ->
@@ -137,53 +119,11 @@ handle_buffered_message_creates(ParamsList) ->
             ok
     end.
 
--spec sync_user_guild_settings(integer(), integer(), map()) -> ok.
-sync_user_guild_settings(UserId, GuildId, Settings) ->
-    maybe_cast(UserId, {sync_user_guild_settings, UserId, GuildId, Settings}).
-
 -spec sync_user_guild_settings_local(integer(), integer(), map()) -> ok.
 sync_user_guild_settings_local(UserId, GuildId, Settings) ->
     local_cache_mutation(fun() ->
         push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings)
     end).
-
--spec sync_user_blocked_ids(integer(), [integer()]) -> ok.
-sync_user_blocked_ids(UserId, BlockedIds) ->
-    maybe_cast(UserId, {sync_user_blocked_ids, UserId, BlockedIds}).
-
--spec sync_user_blocked_ids_local(integer(), term()) -> ok.
-sync_user_blocked_ids_local(UserId, BlockedIds) ->
-    case push_normalize:integer_list(BlockedIds) of
-        {ok, TypedBlockedIds} ->
-            put_blocked_ids_local(UserId, TypedBlockedIds);
-        error ->
-            ok
-    end.
-
--spec invalidate_user_subscriptions_local(integer()) -> ok.
-invalidate_user_subscriptions_local(_UserId) ->
-    ok.
-
--spec invalidate_user_badge_count_local(integer()) -> ok.
-invalidate_user_badge_count_local(_UserId) ->
-    ok.
-
--spec invalidate_user_badge_counts_local([integer()]) -> ok.
-invalidate_user_badge_counts_local(_UserIds) ->
-    ok.
-
--spec put_blocked_ids_local(integer(), [integer()]) -> ok.
-put_blocked_ids_local(UserId, TypedBlockedIds) ->
-    local_cache_mutation(fun() ->
-        push_ets_cache:put_blocked_ids(UserId, TypedBlockedIds)
-    end).
-
--spec maybe_cast(term(), term()) -> ok.
-maybe_cast(Key, Msg) ->
-    case is_push_noop() of
-        true -> ok;
-        false -> cast_to_push_owner(Key, Msg)
-    end.
 
 -spec is_push_active() -> boolean().
 is_push_active() ->
@@ -764,16 +704,6 @@ blocked_ids_counters() ->
         blocked_ids_budget_exhausted => read_counter(?CNT_BUDGET_EXHAUSTED)
     }.
 
--spec handle_sync_user_blocked_ids(integer(), term(), state()) -> {noreply, state()}.
-handle_sync_user_blocked_ids(UserId, BlockedIds, State) ->
-    case push_normalize:integer_list(BlockedIds) of
-        {ok, TypedBlockedIds} ->
-            push_ets_cache:put_blocked_ids(UserId, TypedBlockedIds),
-            {noreply, State};
-        error ->
-            {noreply, State}
-    end.
-
 -spec handle_message_create_cast(map(), state()) -> {noreply, state()}.
 handle_message_create_cast(Params, State) ->
     SpawnResult = maybe_spawn_push_worker(fun() -> do_handle_message_create(Params) end),
@@ -927,13 +857,6 @@ sync_user_guild_settings_local_updates_local_cache_test() ->
         ?assertEqual(Settings, push_ets_cache:get_user_guild_settings(10, 20))
     end),
     push_ets_cache:delete_user_guild_settings(10, 20).
-
-sync_user_blocked_ids_local_updates_local_cache_test() ->
-    push_ets_cache:init(),
-    with_registered_push(fun() ->
-        ok = sync_user_blocked_ids_local(10, [20, 30]),
-        ?assertEqual([20, 30], push_ets_cache:get_blocked_ids(10))
-    end).
 
 a_message_publishes_every_eligible_recipient_in_one_call_test() ->
     push_ets_cache:init(),

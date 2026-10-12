@@ -4,11 +4,14 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
-import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
-import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import {
+	type PartialUserChangePropagationDeps,
+	propagateUserUpdate,
+} from '@app/api/user/services/PartialUserChangePropagation';
 import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -24,7 +27,7 @@ import type {
 interface AdminUserBanServiceDeps {
 	apiContext: ApiContext;
 	auditService: AdminAuditService;
-	updatePropagator: AdminUserUpdatePropagator;
+	userUpdateDeps: PartialUserChangePropagationDeps;
 }
 
 export class AdminUserBanService {
@@ -37,7 +40,7 @@ export class AdminUserBanService {
 		acls: ReadonlySet<string>,
 	) {
 		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
+		const {auditService, userUpdateDeps} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -51,8 +54,8 @@ export class AdminUserBanService {
 		}
 		const bannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: tempBannedUntil}, user.toRow());
 		const updatedUser = (await userRepository.updateFlags(userId, (flags) => flags | UserFlags.DISABLED)) ?? bannedUser;
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
+		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
 		const email = user.email;
 		const notificationSent =
 			data.notify_user && email && data.duration_hours > 0
@@ -133,7 +136,7 @@ export class AdminUserBanService {
 		acls: ReadonlySet<string>,
 	) {
 		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
+		const {auditService, userUpdateDeps} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -143,7 +146,7 @@ export class AdminUserBanService {
 		const unbannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: null}, user.toRow());
 		const updatedUser =
 			(await userRepository.updateFlags(userId, (flags) => flags & ~UserFlags.DISABLED)) ?? unbannedUser;
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
 		const email = user.email;
 		const notificationSent =
 			data.notify_user && email && wasTempBanned

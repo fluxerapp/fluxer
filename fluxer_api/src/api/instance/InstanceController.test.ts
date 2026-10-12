@@ -6,9 +6,9 @@ import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigReposito
 import {InstanceController} from '@app/api/instance/InstanceController';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it} from 'vitest';
 

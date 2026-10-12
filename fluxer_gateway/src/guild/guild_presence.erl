@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_presence).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([handle_bus_presence/3, send_cached_presence_to_session/3]).
@@ -22,10 +26,6 @@
 ]).
 -define(PRESENCE_SNAPSHOT_TRIM_MEMBER_THRESHOLD_DEFAULT, 5000).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -spec handle_bus_presence(user_id(), map(), guild_state()) -> {noreply, guild_state()}.
 handle_bus_presence(UserId, Payload, State) ->
     case maps:get(<<"user_update">>, Payload, false) of
@@ -37,7 +37,7 @@ handle_bus_presence(UserId, Payload, State) ->
 handle_user_update(UserId, Payload, State) ->
     UserData = maps:get(<<"user">>, Payload, #{}),
     UpdatedState = handle_user_data_update(UserId, UserData, State),
-    {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+    {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
         UserId, State, UpdatedState
     ),
     {noreply, NewState}.
@@ -74,7 +74,7 @@ handle_presence_update(UserId, Payload, State) ->
 -spec handle_presence_update(user_id(), map(), list_sync(), guild_state()) ->
     {noreply, guild_state()}.
 handle_presence_update(UserId, Payload, ListSync, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> {noreply, State};
         Member -> process_presence(UserId, Payload, Member, ListSync, State)
     end.
@@ -125,7 +125,7 @@ build_presence_map(Payload, Member) ->
 
 -spec maybe_handle_offline(atom(), user_id(), guild_state()) -> guild_state().
 maybe_handle_offline(offline, UserId, State) ->
-    guild_sessions:handle_user_offline(UserId, State);
+    guild_sessions_presence:handle_user_offline(UserId, State);
 maybe_handle_offline(_, _UserId, State) ->
     State.
 
@@ -153,7 +153,7 @@ spawn_presence_broadcast(UserId, OldPresence, PresenceMap, OldState, NewState, L
     list_sync(), user_id(), guild_state(), guild_state(), map(), map()
 ) -> {ok, guild_state()}.
 member_list_presence_update(immediate, UserId, OldState, NewState, OldPresence, PresenceMap) ->
-    guild_member_list:broadcast_member_list_updates(
+    guild_member_list_write:broadcast_member_list_updates(
         UserId, OldState, NewState, OldPresence, PresenceMap
     );
 member_list_presence_update(deferred, UserId, OldState, NewState, OldPresence, PresenceMap) ->
@@ -191,7 +191,7 @@ safe_presence_update_recipients(UserId, View) ->
 
 -spec presence_update_recipients(user_id(), guild_state()) -> {integer(), [pid()]} | none.
 presence_update_recipients(UserId, View) ->
-    case {find_member_by_user_id(UserId, View), guild_id(View)} of
+    case {guild_permissions_check:find_member_by_user_id(UserId, View), guild_id(View)} of
         {undefined, _} ->
             none;
         {_Member, GuildId} when is_integer(GuildId), GuildId > 0 ->
@@ -330,7 +330,7 @@ send_cached_presence_to_known_session(UserId, SessionId, Payload, GuildId, Sessi
 -spec dispatch_cached_presence(user_id(), pid(), map(), integer(), guild_state()) ->
     guild_state().
 dispatch_cached_presence(UserId, SessionPid, Payload, GuildId, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             State;
         Member ->
@@ -374,7 +374,7 @@ guild_id(State) ->
 
 -spec handle_user_data_update(user_id(), map(), guild_state()) -> guild_state().
 handle_user_data_update(UserId, UserData, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> State;
         Member -> apply_user_data_update(UserId, UserData, Member, State)
     end.
@@ -389,7 +389,7 @@ apply_user_data_update(UserId, UserData, Member, State) ->
         true ->
             UpdatedMember = Member#{<<"user">> => NormalizedUserData},
             Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
-            UpdatedData = guild_data_index:put_member(UpdatedMember, Data),
+            UpdatedData = guild_data_index_members:put_member(UpdatedMember, Data),
             UpdatedState = State#{data => UpdatedData},
             guild_presence_sync:sync_member_data(UserId, UpdatedState),
             maybe_dispatch_member_update(UserId, UpdatedState),
@@ -398,7 +398,7 @@ apply_user_data_update(UserId, UserData, Member, State) ->
 
 -spec maybe_dispatch_member_update(user_id(), guild_state()) -> ok.
 maybe_dispatch_member_update(UserId, State) ->
-    case find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> ok;
         Member -> dispatch_member_update(Member, State)
     end.
@@ -414,10 +414,6 @@ dispatch_member_update(Member, State) ->
         _ ->
             ok
     end.
-
--spec find_member_by_user_id(user_id(), guild_state()) -> member() | undefined.
-find_member_by_user_id(UserId, State) ->
-    guild_permissions:find_member_by_user_id(UserId, State).
 
 -spec store_member_presence(user_id(), map(), guild_state()) -> guild_state().
 store_member_presence(UserId, PresenceMap, State) ->
@@ -442,7 +438,7 @@ handle_bus_presence_unchanged_payload_is_noop_test() ->
         <<"afk">> => false,
         <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"Alpha">>}
     },
-    Member = #{} = guild_permissions:find_member_by_user_id(1, State),
+    Member = #{} = guild_permissions_check:find_member_by_user_id(1, State),
     PresenceMap = build_presence_map(Payload, Member),
     ets:insert(maps:get(member_presence, State), {1, PresenceMap}),
     {noreply, NewState} = handle_bus_presence(1, Payload, State),

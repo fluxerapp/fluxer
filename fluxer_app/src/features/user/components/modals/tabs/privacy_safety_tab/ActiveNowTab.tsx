@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {
@@ -17,7 +18,7 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.module.css';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
-import {showUserErrorModalAfterAutoDismiss} from '@app/features/user/utils/UserErrorModalUtils';
+
 import {VOICE_ACTIVITY_SHARING_COOLDOWN_MS} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -105,7 +106,7 @@ function useCooldownRemainingMs(endsAt: Date | null): number {
 export const ActiveNowTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const [submitting, setSubmitting] = useState(false);
-	const sharing = UserSettings.getDefaultShareVoiceActivity();
+	const sharing = UserSettings.defaultShareVoiceActivity;
 	const lastChange = Users.getCurrentUser()?.lastVoiceActivitySharingChangeAt ?? null;
 	const cooldownEndsAt =
 		lastChange != null ? new Date(lastChange.getTime() + VOICE_ACTIVITY_SHARING_COOLDOWN_MS) : null;
@@ -130,10 +131,12 @@ export const ActiveNowTabContent: React.FC = observer(() => {
 							await UserSettingsCommands.updateVoiceActivitySharingDefault(nextValue);
 							ToastCommands.createToast({type: 'success', children: i18n._(TOAST_SUCCESS_DESCRIPTOR)});
 						} catch {
-							showUserErrorModalAfterAutoDismiss(
-								i18n._(TOAST_ERROR_DESCRIPTOR),
-								i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
-							);
+							showGenericErrorModal({
+								title: i18n._(TOAST_ERROR_DESCRIPTOR),
+								message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+								dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+								defer: true,
+							});
 						} finally {
 							setSubmitting(false);
 						}

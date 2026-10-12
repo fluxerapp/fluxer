@@ -1,29 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	calculateSwipeVelocity,
+	pushVelocitySample,
+	SWIPE_VELOCITY_THRESHOLD,
+	type VelocitySample,
+} from '@app/features/app/hooks/SwipeVelocity';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 const PRESS_MOVEMENT_THRESHOLD = 10;
 const PRESS_HIGHLIGHT_DELAY_MS = 100;
-const SWIPE_VELOCITY_THRESHOLD = 0.4;
-const MIN_VELOCITY_SAMPLES = 2;
-const MAX_VELOCITY_SAMPLE_AGE = 100;
 export const isTouchDevice = window.matchMedia?.('(hover: none) and (pointer: coarse)').matches ?? false;
-
-interface VelocitySample {
-	x: number;
-	y: number;
-	timestamp: number;
-}
 
 interface UsePressableOptions {
 	disabled?: boolean;
-	highlightDelay?: number;
-	movementThreshold?: number;
 }
 
 interface UsePressableResult {
 	isPressed: boolean;
-	clearPress: () => void;
 	pressableProps: {
 		onPointerDown: (e: React.PointerEvent) => void;
 		onPointerMove: (e: React.PointerEvent) => void;
@@ -35,11 +29,7 @@ interface UsePressableResult {
 
 export function usePressable(options: UsePressableOptions | boolean = {}): UsePressableResult {
 	const opts = typeof options === 'boolean' ? {disabled: options} : options;
-	const {
-		disabled = false,
-		highlightDelay = PRESS_HIGHLIGHT_DELAY_MS,
-		movementThreshold = PRESS_MOVEMENT_THRESHOLD,
-	} = opts;
+	const {disabled = false} = opts;
 	const [isPressed, setIsPressed] = useState(false);
 	const pressStartPos = useRef<{
 		x: number;
@@ -60,24 +50,6 @@ export function usePressable(options: UsePressableOptions | boolean = {}): UsePr
 		velocitySamples.current = [];
 		isPressIntent.current = false;
 	}, []);
-	const calculateVelocity = useCallback((): number => {
-		const samples = velocitySamples.current;
-		if (samples.length < MIN_VELOCITY_SAMPLES) return 0;
-		const now = performance.now();
-		let firstRecentIndex = 0;
-		while (firstRecentIndex < samples.length && now - samples[firstRecentIndex].timestamp >= MAX_VELOCITY_SAMPLE_AGE) {
-			firstRecentIndex++;
-		}
-		if (samples.length - firstRecentIndex < MIN_VELOCITY_SAMPLES) return 0;
-		const first = samples[firstRecentIndex];
-		const last = samples[samples.length - 1];
-		const dt = last.timestamp - first.timestamp;
-		if (dt === 0) return 0;
-		const dx = last.x - first.x;
-		const dy = last.y - first.y;
-		const distance = Math.sqrt(dx * dx + dy * dy);
-		return distance / dt;
-	}, []);
 	const handlePointerDown = useCallback(
 		(e: React.PointerEvent) => {
 			if (disabled || !isTouchDevice) return;
@@ -94,9 +66,9 @@ export function usePressable(options: UsePressableOptions | boolean = {}): UsePr
 					setIsPressed(true);
 				}
 				highlightTimerId.current = null;
-			}, highlightDelay);
+			});
 		},
-		[disabled, highlightDelay],
+		[disabled, PRESS_HIGHLIGHT_DELAY_MS],
 	);
 	const handlePointerMove = useCallback(
 		(e: React.PointerEvent) => {
@@ -104,23 +76,20 @@ export function usePressable(options: UsePressableOptions | boolean = {}): UsePr
 			if (activePointerId.current !== e.pointerId) return;
 			const startPos = pressStartPos.current;
 			if (!startPos) return;
-			velocitySamples.current.push({x: e.clientX, y: e.clientY, timestamp: performance.now()});
-			if (velocitySamples.current.length > 10) {
-				velocitySamples.current.splice(0, velocitySamples.current.length - 10);
-			}
+			pushVelocitySample(velocitySamples.current, e.clientX, e.clientY);
 			const deltaX = Math.abs(e.clientX - startPos.x);
 			const deltaY = Math.abs(e.clientY - startPos.y);
-			if (deltaX > movementThreshold || deltaY > movementThreshold) {
+			if (deltaX > PRESS_MOVEMENT_THRESHOLD || deltaY > PRESS_MOVEMENT_THRESHOLD) {
 				clearPress();
 				return;
 			}
-			const velocity = calculateVelocity();
+			const velocity = calculateSwipeVelocity(velocitySamples.current, performance.now());
 			if (velocity > SWIPE_VELOCITY_THRESHOLD) {
 				clearPress();
 				return;
 			}
 		},
-		[clearPress, calculateVelocity, movementThreshold],
+		[clearPress],
 	);
 	const handlePointerUp = useCallback(
 		(e: React.PointerEvent) => {
@@ -166,7 +135,6 @@ export function usePressable(options: UsePressableOptions | boolean = {}): UsePr
 	}, [clearPress]);
 	return {
 		isPressed,
-		clearPress,
 		pressableProps: {
 			onPointerDown: handlePointerDown,
 			onPointerMove: handlePointerMove,

@@ -31,10 +31,6 @@ export const SUBSCRIBE_MONTHLY_DESCRIPTOR = msg({
 	message: 'Get monthly',
 	comment: 'Secondary Plutonium page button that starts a monthly subscription checkout.',
 });
-export const SAVE_PERCENT_DESCRIPTOR = msg({
-	message: 'Save {percent}%',
-	comment: 'Badge on the yearly Plutonium button. percent is a whole number such as 17.',
-});
 export const GIFT_PLUTONIUM_DESCRIPTOR = msg({
 	message: 'Gift {premiumProductName}',
 	comment: 'Plutonium page button that opens the gift purchase dialog. premiumProductName is the paid tier name.',
@@ -132,10 +128,6 @@ export const FEATURE_COLUMN_DESCRIPTOR = msg({
 export const FREE_COLUMN_DESCRIPTOR = msg({
 	message: 'Free',
 	comment: 'Column header for the free tier in the Plutonium page comparison table.',
-});
-export const AVAILABLE_DESCRIPTOR = msg({
-	message: 'Available',
-	comment: 'Screen reader text for a check mark in the Plutonium page comparison table.',
 });
 export const NOT_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Not available',
@@ -261,8 +253,4 @@ export const PURCHASE_BLOCKED_VERIFY_DESCRIPTOR = msg({
 export const PAGE_LABEL_DESCRIPTOR = msg({
 	message: '{premiumProductName} page',
 	comment: 'Accessible label of the Plutonium page region. premiumProductName is the paid tier name.',
-});
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Accessible label of the back button on the Plutonium page in the mobile layout.',
 });

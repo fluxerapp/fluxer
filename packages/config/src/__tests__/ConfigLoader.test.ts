@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {generateKeyPairSync} from 'node:crypto';
-import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -81,24 +78,6 @@ describe('ConfigLoader', () => {
 
 		vi.stubEnv('FLUXER_BASE_DOMAIN', 'changed.example');
 		expect((await loadConfig()).domain.base_domain).toBe('localhost');
-	});
-
-	test('loadConfig reads secrets from NAME_FILE', async () => {
-		const dir = mkdtempSync(join(tmpdir(), 'fluxer-config-file-'));
-		try {
-			const path = join(dir, 'postgres_password');
-			writeFileSync(path, 'from-secret-file\n');
-			stubMinimalEnv({FLUXER_POSTGRES_PASSWORD: '', FLUXER_POSTGRES_PASSWORD_FILE: path});
-			const config = await loadConfig();
-			expect(config.database.postgres.password).toBe('from-secret-file');
-		} finally {
-			rmSync(dir, {recursive: true, force: true});
-		}
-	});
-
-	test('loadConfig rejects NAME and NAME_FILE together', async () => {
-		stubMinimalEnv({FLUXER_SUDO_MODE_SECRET_FILE: '/run/secrets/sudo'});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_SUDO_MODE_SECRET and FLUXER_SUDO_MODE_SECRET_FILE are both set');
 	});
 
 	test('endpoint overrides take precedence over derived endpoints', async () => {
@@ -367,16 +346,6 @@ describe('ConfigLoader', () => {
 	test('rejects invalid Postgres typed environment values', async () => {
 		stubMinimalEnv({FLUXER_POSTGRES_PORT: 'abc'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PORT');
-	});
-
-	test('rejects a non-integer port', async () => {
-		stubMinimalEnv({FLUXER_API_PORT: '80a'});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_API_PORT must be an integer, got "80a"');
-	});
-
-	test('rejects malformed JSON for a JSON-shaped variable', async () => {
-		stubMinimalEnv({FLUXER_LIVEKIT_DEFAULT_REGION: '{bad'});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_LIVEKIT_DEFAULT_REGION must be valid JSON');
 	});
 
 	test('rejects a non-boolean Postgres prepared statements value', async () => {

@@ -115,28 +115,28 @@ is_category(ChannelId, State) ->
     boolean().
 base_has_view(Base, UserId, ChannelId, State) ->
     Perms = guild_permissions:channel_permissions(Base, UserId, ChannelId, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec can_view_channel_by_permissions(user_id(), channel_id(), maybe_member(), guild_state()) ->
     boolean().
 can_view_channel_by_permissions(UserId, ChannelId, Member, State) ->
     Perms = guild_permissions:compute_member_permissions(UserId, ChannelId, Member, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec can_view_channel_members(user_id(), channel_id(), maybe_member(), guild_state()) ->
     boolean().
 can_view_channel_members(UserId, ChannelId, Member, State) ->
     Perms = guild_permissions:compute_member_permissions(UserId, ChannelId, Member, State),
-    permission_bits:has(Perms, constants:view_channel_members_permission()).
+    bitset:has(Perms, constants:view_channel_members_permission()).
 
 -spec can_manage_channel(user_id(), maybe_channel_id(), guild_state()) -> boolean().
 can_manage_channel(UserId, ChannelId, State) ->
     Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-    permission_bits:has(Perms, constants:manage_channels_permission()).
+    bitset:has(Perms, constants:manage_channels_permission()).
 
 -spec can_access_message_by_permissions(permission(), binary(), guild_state()) -> boolean().
 can_access_message_by_permissions(Permissions, MessageId, State) ->
-    HasReadHistory = permission_bits:has(
+    HasReadHistory = bitset:has(
         Permissions, constants:read_message_history_permission()
     ),
     case HasReadHistory of
@@ -152,7 +152,7 @@ check_message_history_cutoff(MessageId, State) ->
         null ->
             false;
         CutoffMs ->
-            MessageMs = snowflake_util:extract_timestamp(MessageId),
+            MessageMs = snowflake_id:extract_timestamp(MessageId),
             MessageMs >= CutoffMs
     end.
 
@@ -185,7 +185,7 @@ get_max_role_position(UserId, State) ->
         {_, undefined} ->
             -1;
         {Member, Data} ->
-            Roles = guild_data_index:role_index(Data),
+            Roles = guild_data_index_roles:role_index(Data),
             compute_max_position(Member, Roles)
     end.
 
@@ -287,7 +287,7 @@ find_role_by_id(RoleId, Roles) ->
         undefined ->
             undefined;
         TargetId ->
-            find_role_in_list(TargetId, guild_permissions_common:ensure_list(Roles))
+            find_role_in_list(TargetId, map_utils:ensure_list(Roles))
     end.
 
 -spec find_role_in_list(role_id(), [term()]) -> role() | undefined.
@@ -311,7 +311,9 @@ find_channel_by_id(ChannelId, State) ->
         {snowflake_id:parse_maybe(ChannelId), guild_permissions_common:resolve_data_map(State)}
     of
         {ResolvedChannelId, Data} when is_integer(ResolvedChannelId), is_map(Data) ->
-            maps:get(ResolvedChannelId, guild_data_index:channel_index(Data), undefined);
+            maps:get(
+                ResolvedChannelId, guild_data_index_channels:channel_index(Data), undefined
+            );
         _ ->
             undefined
     end.
@@ -355,7 +357,7 @@ is_viewable_child(Channel, UserId, CategoryId, Base, State) ->
 view_inputs(ChannelId, State) ->
     Data = map_utils:ensure_map(guild_permissions_common:resolve_data_map(State)),
     Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     Cache = map_utils:ensure_map(maps:get(overwrite_perms_cache, Data, #{})),
     {
         maps:get(<<"owner_id">>, Guild, undefined),

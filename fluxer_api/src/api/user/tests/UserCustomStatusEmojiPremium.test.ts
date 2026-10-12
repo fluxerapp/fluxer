@@ -71,22 +71,7 @@ describe('User custom status emoji premium', () => {
 		expect(settings.custom_status?.emoji_name).toBeNull();
 		expect(settings.custom_status?.emoji_animated).toBe(false);
 	});
-	it('accepts single-codepoint unicode emoji names for custom status', async () => {
-		const account = await createTestAccount(harness);
-		const settings = await createBuilder<UserSettingsResponse>(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({
-				custom_status: {
-					text: 'Coffee break',
-					emoji_name: '☕',
-				},
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(settings.custom_status?.emoji_name).toBe('☕');
-		expect(settings.custom_status?.emoji_id).toBeUndefined();
-		expect(settings.custom_status?.emoji_animated).toBe(false);
-	});
+
 	it('allows custom emoji status for premium users without guild access', async () => {
 		const owner = await createTestAccount(harness);
 		const premiumAccount = await createTestAccount(harness);

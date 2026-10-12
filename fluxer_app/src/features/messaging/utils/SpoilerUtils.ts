@@ -33,15 +33,6 @@ function extractYouTubeVideoId(parsed: URL): string | null {
 	return null;
 }
 
-export function normalizeUrl(url: string): string | null {
-	try {
-		const parsed = new URL(url);
-		return parsed.href.replace(/\/$/, '');
-	} catch {
-		return null;
-	}
-}
-
 export function canonicalizeMediaUrl(url: string | null | undefined): string | null {
 	if (!url) return null;
 	try {

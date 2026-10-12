@@ -7,24 +7,6 @@ export const HTTPMethod = Object.freeze({
 
 export type HTTPMethod = (typeof HTTPMethod)[keyof typeof HTTPMethod];
 
-export const HTTPStatusCode = Object.freeze({
-	OK: 200,
-	MOVED_PERMANENTLY: 301,
-	BAD_REQUEST: 400,
-	NOT_FOUND: 404,
-	METHOD_NOT_ALLOWED: 405,
-	PAYLOAD_TOO_LARGE: 413,
-	INTERNAL_SERVER_ERROR: 500,
-	SERVICE_UNAVAILABLE: 503,
-} as const);
-
-export type HTTPStatusCode = (typeof HTTPStatusCode)[keyof typeof HTTPStatusCode];
-
-export const MIMEType = Object.freeze({
-	JSON: 'application/json',
-	PLAIN: 'text/plain',
-} as const);
-
 export const HTTPHeader = Object.freeze({
 	ALLOW: 'Allow',
 	CACHE_CONTROL: 'Cache-Control',

@@ -96,7 +96,7 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     _ = fluxer_gateway_env:load(),
     session_manager_shards:ensure_shard_table(),
-    {ShardCount, _Source} = shard_utils:determine_shard_count(session_shards),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([session_shards]),
     Shards = session_manager_shards:start_shards(ShardCount),
     State = #{shards => Shards, shard_count => ShardCount},
     session_manager_shards:sync_shard_table(State),
@@ -205,7 +205,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_ref(Ref, Shards) of
+    case shard_utils:find_shard_by_ref(Ref, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> handle_down_by_pid(Pid, State)
     end;
@@ -298,7 +298,7 @@ restart_shard_noreply(Index, State) ->
 -spec handle_down_by_pid(pid(), state()) -> {noreply, state()}.
 handle_down_by_pid(Pid, State) ->
     Shards = maps:get(shards, State),
-    case session_manager_transfer:find_shard_by_pid(Pid, Shards) of
+    case shard_utils:find_shard_by_pid(Pid, Shards) of
         {ok, Index} -> restart_shard_noreply(Index, State);
         not_found -> {noreply, State}
     end.

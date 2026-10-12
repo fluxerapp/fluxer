@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
+import {createMuteConfig, getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {
 	MUTE_CHANNEL_DESCRIPTOR,
@@ -12,18 +12,18 @@ import {
 	NOTIFICATION_LEVEL_NOTHING_DESCRIPTOR,
 	NOTIFICATION_LEVEL_ONLY_MENTIONS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ContextMenuCloseProvider} from '@app/features/ui/action_menu/ContextMenu';
+import {ContextMenuCloseProvider, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MuteIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import itemStyles from '@app/features/ui/action_menu/items/MenuItems.module.css';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import menuItemStyles from '@app/features/ui/action_menu/MenuItem.module.css';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {getMutedText, getNotificationSettingsLabel} from '@app/lib/overlay/OverlayContextMenu';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -65,28 +65,18 @@ export const ChannelNotificationSettingsDropdown: React.FC<Props> = observer(({c
 				: MessageNotifications.ALL_MESSAGES
 			: channelUnreadBadges;
 	const showUnreadBadgeCustomization = AdvancedSettings.unreadBadgeCustomizationEnabled;
-	const guildNotificationLevel = guildId
-		? UserGuildSettings.getGuildMessageNotifications(guildId)
-		: MessageNotifications.ALL_MESSAGES;
 	const categoryId = channel.parentId;
-	const categoryOverride = guildId ? UserGuildSettings.getChannelOverride(guildId, categoryId ?? '') : null;
-	const categoryNotifications = categoryId ? categoryOverride?.message_notifications : undefined;
-	const resolveEffectiveLevel = (level: number | undefined, fallback: number): number => {
-		if (level === undefined || level === MessageNotifications.INHERIT) {
-			return fallback;
-		}
-		return level;
-	};
-	const effectiveDefaultLevel = resolveEffectiveLevel(categoryNotifications, guildNotificationLevel);
+	const effectiveDefaultLevel = guildId
+		? UserGuildSettings.resolveEffectiveMessageNotifications({
+				id: channel.parentId ?? '',
+				guildId: channel.guildId,
+				type: ChannelTypes.GUILD_CATEGORY,
+			})
+		: MessageNotifications.ALL_MESSAGES;
 	const hasCategory = categoryId != null;
 	const handleMute = useCallback(
 		(duration: number | null) => {
-			const muteConfigValue = duration
-				? {
-						selected_time_window: duration,
-						end_time: new Date(Date.now() + duration).toISOString(),
-					}
-				: null;
+			const muteConfigValue = createMuteConfig(duration);
 			UserGuildSettingsCommands.updateChannelOverride(
 				guildId ?? null,
 				channel.id,
@@ -123,29 +113,9 @@ export const ChannelNotificationSettingsDropdown: React.FC<Props> = observer(({c
 	);
 	const handleNotificationLevelChange = useCallback(
 		(level: number) => {
-			if (level === MessageNotifications.INHERIT) {
-				UserGuildSettingsCommands.updateChannelOverride(
-					guildId ?? null,
-					channel.id,
-					{
-						message_notifications: MessageNotifications.INHERIT,
-					},
-					{persistImmediately: true},
-				);
-			} else if (guildId) {
-				UserGuildSettingsCommands.updateMessageNotifications(guildId, level, channel.id, {
-					persistImmediately: true,
-				});
-			} else {
-				UserGuildSettingsCommands.updateChannelOverride(
-					null,
-					channel.id,
-					{
-						message_notifications: level,
-					},
-					{persistImmediately: true},
-				);
-			}
+			UserGuildSettingsCommands.updateMessageNotifications(guildId ?? null, level, channel.id, {
+				persistImmediately: true,
+			});
 		},
 		[guildId, channel.id],
 	);

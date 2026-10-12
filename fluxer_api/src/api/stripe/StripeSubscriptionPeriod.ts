@@ -139,3 +139,25 @@ export function getFirstInvoicePaymentIntentId(invoice: Stripe.Invoice | null): 
 	}
 	return paymentIntent.id ?? null;
 }
+
+export function getSubscriptionBillingCycle(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {
+	const item = getPrimarySubscriptionItem(subscription);
+	const interval = item?.price?.recurring?.interval;
+	if (interval === 'month') {
+		return 'monthly';
+	}
+	if (interval === 'year') {
+		return 'yearly';
+	}
+	return null;
+}
+
+export async function loadSubscriptionSchedule(
+	stripe: Stripe | null,
+	scheduleRef: Stripe.Subscription['schedule'],
+): Promise<Stripe.SubscriptionSchedule | null> {
+	if (!scheduleRef) return null;
+	if (typeof scheduleRef === 'object') return scheduleRef;
+	if (!stripe) return null;
+	return stripe.subscriptionSchedules.retrieve(scheduleRef);
+}

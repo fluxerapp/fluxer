@@ -8,7 +8,7 @@
 -export([new_state/0]).
 
 -ifdef(TEST).
--export([parse_forwarded_for/1, parse_version/1]).
+-export([parse_forwarded_for/1]).
 -endif.
 
 -type state() :: #{
@@ -26,7 +26,7 @@
     request_workers := map(),
     voice_queue_timer := reference() | undefined,
     pending_identify := {map(), pid()} | undefined,
-    pending_identify_retry_timer := {reference(), reference()} | reference() | undefined,
+    pending_identify_retry_timer := {reference(), reference()} | undefined,
     connection_acquired => boolean()
 }.
 
@@ -107,8 +107,6 @@ websocket_handle(_, State) ->
 -spec websocket_info(term(), state()) -> ws_result().
 websocket_info({heartbeat_check, Token}, State) when is_reference(Token) ->
     gateway_handler_heartbeat:handle_heartbeat_check(Token, State);
-websocket_info({heartbeat_check}, State) ->
-    gateway_handler_heartbeat:handle_legacy_heartbeat_check(State);
 websocket_info({dispatch, Event, Data, Seq}, State) when
     is_integer(Seq), is_atom(Event), is_map(Data);
     is_integer(Seq), is_binary(Event), is_map(Data);
@@ -131,8 +129,6 @@ websocket_info(rollout_config_changed, State) ->
     gateway_handler_identify:handle_rollout_config_changed(State);
 websocket_info({retry_pending_identify, Token}, State) when is_reference(Token) ->
     gateway_handler_identify:handle_pending_identify_retry(Token, State);
-websocket_info(retry_pending_identify, State) ->
-    gateway_handler_identify:handle_pending_identify_retry(State);
 websocket_info(session_reconnect, State) ->
     gateway_handler_dispatch:handle_session_reconnect(State);
 websocket_info({'DOWN', _, process, Pid, _}, #{session_pid := Pid} = State) ->

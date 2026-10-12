@@ -69,7 +69,7 @@ vi.mock('@app/features/permissions/state/Permission', () => ({
 vi.mock('@app/features/navigation/state/Navigation', () => ({default: navigation}));
 vi.mock('@app/features/navigation/state/SelectedGuild', () => ({default: selectedGuild}));
 vi.mock('@app/features/navigation/utils/RouterUtils', () => ({replaceWith: vi.fn(), transitionTo: vi.fn()}));
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({default: gateway}));
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({default: {foregroundConnection: gateway}}));
 vi.mock('@app/features/user/utils/DateFormatting', () => ({getFormattedFullDate: () => ''}));
 vi.mock('@app/features/moderation/state/LocalUserSpamOverride', () => ({
 	default: {isUserMarkedAsSpammer: () => false},
@@ -87,7 +87,6 @@ const {isSyncExcludedChannelId} = await import('@app/features/threads/utils/Sync
 const {cleanupChannelLocalState} = await import('@app/features/channel/events/ChannelDelete');
 const RouterUtils = await import('@app/features/navigation/utils/RouterUtils');
 const {http} = await import('@app/features/platform/transport/RestTransport');
-const {isNewMessageGroup} = await import('@app/features/messaging/utils/MessageGroupingUtils');
 
 const GUILD = '1500000000000000000';
 const PARENT = '1500000000000000001';
@@ -596,101 +595,5 @@ describe('control arm', () => {
 				[otherGuild]: {threads: true, thread_member_lists: []},
 			},
 		});
-	});
-});
-
-describe('thread roster', () => {
-	const ONLINE = '1600000000000000001';
-	const IDLE = '1600000000000000002';
-	const OFFLINE = '1600000000000000003';
-
-	function listUpdate(members: Array<{user_id: string; presence: Record<string, unknown>}>) {
-		return {
-			guild_id: GUILD,
-			thread_id: THREAD_A,
-			members: members.map((entry) => ({...entry, join_timestamp: null, flags: 0, member: null})),
-		};
-	}
-
-	it('keeps each member status and custom status from the list update', () => {
-		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
-		ThreadRoster.handleListUpdate(
-			listUpdate([
-				{user_id: ONLINE, presence: {status: 'online', afk: false, mobile: true, custom_status: null}},
-				{
-					user_id: IDLE,
-					presence: {
-						status: 'idle',
-						afk: true,
-						mobile: false,
-						custom_status: {emoji_id: '1471401583408697449', emoji_name: 'nahua_smug', text: 'im spooky goop'},
-					},
-				},
-				{user_id: OFFLINE, presence: {status: 'offline', afk: false, mobile: false}},
-			]),
-		);
-		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
-			{userId: ONLINE, joinTimestamp: null, status: 'online', mobile: true, customStatus: null},
-			{
-				userId: IDLE,
-				joinTimestamp: null,
-				status: 'idle',
-				mobile: false,
-				customStatus: expect.objectContaining({text: 'im spooky goop', emojiName: 'nahua_smug'}),
-			},
-			{userId: OFFLINE, joinTimestamp: null, status: 'offline', mobile: false, customStatus: null},
-		]);
-		release();
-	});
-
-	it('replaces the roster on every list update and ignores updates after release', () => {
-		const release = ThreadRoster.subscribe(GUILD, THREAD_A);
-		ThreadRoster.handleListUpdate(
-			listUpdate([
-				{user_id: ONLINE, presence: {status: 'online'}},
-				{user_id: IDLE, presence: {status: 'idle'}},
-			]),
-		);
-		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'dnd'}}]));
-		expect(ThreadRoster.getMembers(THREAD_A)).toEqual([
-			{userId: ONLINE, joinTimestamp: null, status: 'dnd', mobile: false, customStatus: null},
-		]);
-		release();
-		ThreadRoster.handleListUpdate(listUpdate([{user_id: ONLINE, presence: {status: 'online'}}]));
-		expect(ThreadRoster.getMembers(THREAD_A)).toBeUndefined();
-	});
-});
-
-describe('control arm message grouping', () => {
-	const SYSTEM_TYPES = [1, 2, 3, 4, 5, 6, 7, MessageTypes.THREAD_CREATED, MessageTypes.CLIENT_SYSTEM];
-
-	function fakeMessage(type: number, offsetMs: number) {
-		return {
-			type,
-			author: {id: 'author', username: 'author'},
-			webhookId: undefined,
-			timestamp: new Date(Date.UTC(2026, 8, 28, 12, 0, 0) + offsetMs),
-			mentions: [],
-			mentionRoles: [],
-			mentionEveryone: false,
-			hasFlag: () => false,
-			isUserMessage: () =>
-				type === MessageTypes.DEFAULT || type === MessageTypes.REPLY || type === MessageTypes.CLIENT_SYSTEM,
-		} as unknown as Parameters<typeof isNewMessageGroup>[2];
-	}
-
-	it("keeps today's grouping for system, reply and client messages while inactive", () => {
-		expect(ThreadGuilds.anyActive).toBe(false);
-		for (const type of SYSTEM_TYPES) {
-			expect(isNewMessageGroup(undefined, fakeMessage(MessageTypes.DEFAULT, 0), fakeMessage(type, 1000))).toBe(true);
-			expect(isNewMessageGroup(undefined, fakeMessage(type, 0), fakeMessage(MessageTypes.DEFAULT, 1000))).toBe(true);
-			expect(isNewMessageGroup(undefined, fakeMessage(type, 0), fakeMessage(type, 1000))).toBe(false);
-		}
-		expect(
-			isNewMessageGroup(undefined, fakeMessage(MessageTypes.DEFAULT, 0), fakeMessage(MessageTypes.REPLY, 1000)),
-		).toBe(true);
-		expect(
-			isNewMessageGroup(undefined, fakeMessage(MessageTypes.DEFAULT, 0), fakeMessage(MessageTypes.DEFAULT, 1000)),
-		).toBe(false);
 	});
 });

@@ -31,7 +31,6 @@ import {getCurrencyPreferences, getGiftCurrencyPreferences, isLocalizedCurrency}
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {PremiumStateResponse, PriceIdsResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {HttpResponse, http} from 'msw';
@@ -190,7 +189,6 @@ describe('operator billing catalog', () => {
 				const lower = currency.toLowerCase();
 				expect(registry.getProduct(`price_envmonthly${lower}`)).toEqual({
 					type: ProductType.MONTHLY_SUBSCRIPTION,
-					premiumType: UserPremiumTypes.SUBSCRIPTION,
 					durationMonths: 1,
 					isGift: false,
 					currency,
@@ -198,7 +196,6 @@ describe('operator billing catalog', () => {
 				});
 				expect(registry.getProduct(`price_envyearly${lower}`)).toEqual({
 					type: ProductType.YEARLY_SUBSCRIPTION,
-					premiumType: UserPremiumTypes.SUBSCRIPTION,
 					durationMonths: 12,
 					isGift: false,
 					currency,
@@ -206,14 +203,12 @@ describe('operator billing catalog', () => {
 				});
 				expect(registry.getProduct(`price_envgiftmonth${lower}`)).toEqual({
 					type: ProductType.GIFT_1_MONTH,
-					premiumType: UserPremiumTypes.SUBSCRIPTION,
 					durationMonths: 1,
 					isGift: true,
 					currency,
 				});
 				expect(registry.getProduct(`price_envgiftyear${lower}`)).toEqual({
 					type: ProductType.GIFT_1_YEAR,
-					premiumType: UserPremiumTypes.SUBSCRIPTION,
 					durationMonths: 12,
 					isGift: true,
 					currency,
@@ -231,16 +226,6 @@ describe('operator billing catalog', () => {
 			const registry = getProductRegistry();
 			expect(registry.getProduct('price_legacygbp')).toBeNull();
 			expect(registry.getProduct('price_legacybrl')?.currency).toBe('BRL');
-		});
-
-		test('serves the localized SEK price ids for a Swedish request', async () => {
-			const prices = await createBuilder<PriceIdsResponse>(harness, '')
-				.get('/premium/price-ids?country_code=SE')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(prices.currency).toBe('SEK');
-			expect(prices.monthly).toBe('price_envmonthlysek');
-			expect(prices.gift_currency).toBe('SEK');
 		});
 
 		test('keeps the hosted tier name, required terms consent and tax collection on hosted', async () => {
@@ -295,7 +280,6 @@ describe('operator billing catalog', () => {
 			expect(getEffectiveBillingConfig().catalogMode).toBe('operator');
 			expect(registry.getProduct('price_opgbpmonthly')).toEqual({
 				type: ProductType.MONTHLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: false,
 				currency: 'GBP',

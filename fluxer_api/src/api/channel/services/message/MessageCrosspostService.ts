@@ -3,19 +3,19 @@
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
-import {collectEmbedContentHashes} from '@app/api/channel/services/message/CrosspostEmbedObjects';
+import {scanMessageForModeration} from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import {
 	type CrosspostPropagation,
 	createCrosspostRateLimitError,
 	isCrosspostedMessage,
 } from '@app/api/channel/services/message/CrosspostPropagation';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {isCrosspostCopy, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import {assertMessageWithinHistoryCutoff} from '@app/api/channel/services/message/MessageHistoryCutoff';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
-import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
@@ -31,14 +31,14 @@ import {MessageNotCrosspostableError} from '@fluxer/errors/src/domains/channel/M
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
-import {ServiceUnavailableError} from '@fluxer/errors/src/HttpErrors';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface MessageCrosspostServiceDeps {
+	gatewayService: IGatewayService;
 	channelRepository: ChannelRepository;
 	channelAuthService: MessageChannelAuthService;
-	dispatchService: MessageDispatchService;
 	rateLimitService: IRateLimitService;
 	messageWriteLock: MessageWriteLock;
 	crosspostPropagation: CrosspostPropagation;
@@ -61,7 +61,6 @@ export class MessageCrosspostService {
 		viewer,
 		channelId,
 		messageId,
-		requestCache,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -121,7 +120,7 @@ export class MessageCrosspostService {
 			},
 			'message published',
 		);
-		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: published, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: published});
 		try {
 			await this.deps.crosspostPropagation.enqueueCrosspostFanout({channelId, messageId});
 		} catch (error) {
@@ -131,7 +130,7 @@ export class MessageCrosspostService {
 			);
 			const reverted = await this.revertPublish({channelId, messageId});
 			if (reverted) {
-				await this.deps.dispatchService.dispatchMessageUpdate({channel, message: reverted, requestCache});
+				await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: reverted});
 			}
 			if (error instanceof WorkerQueueOverflowError) {
 				throw new ServiceUnavailableError();
@@ -158,27 +157,7 @@ export class MessageCrosspostService {
 			channelId: message.channelId,
 			messageId: message.id,
 		};
-		const textContext = {...context, surface: 'message_content' as const};
-		contentModerationService.scanText(message.content, textContext);
-		for (const embed of message.embeds) {
-			if (embed.type !== 'rich') continue;
-			contentModerationService.scanText(embed.title, textContext);
-			contentModerationService.scanText(embed.description, textContext);
-			for (const field of embed.fields) {
-				contentModerationService.scanText(field.name, textContext);
-				contentModerationService.scanText(field.value, textContext);
-			}
-			contentModerationService.scanText(embed.footer?.text, textContext);
-			contentModerationService.scanText(embed.author?.name, textContext);
-		}
-		for (const attachment of message.attachments) {
-			if (attachment.contentHash) {
-				contentModerationService.scanSha256(attachment.contentHash, {...context, surface: 'message_attachment'});
-			}
-		}
-		for (const contentHash of collectEmbedContentHashes(message)) {
-			contentModerationService.scanSha256(contentHash, {...context, surface: 'message_attachment'});
-		}
+		scanMessageForModeration(message, context);
 	}
 
 	private channelBudgetConfig(channelId: ChannelID) {

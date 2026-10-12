@@ -2,45 +2,31 @@
 
 import styles from '@app/features/channel/components/GuildMembersPage.module.css';
 import {
+	MAX_VISIBLE_PAGES,
 	PAGE_SIZE_OPTIONS,
-	type PaginationEllipsisSide,
-	type PaginationItem,
 } from '@app/features/channel/components/guild_members_page/GuildMembersPageShared';
-import {MembersPagination} from '@app/features/channel/components/guild_members_page/MembersPagination';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
+import {Pagination} from '@app/features/ui/components/Pagination';
 import {Trans} from '@lingui/react/macro';
-import type React from 'react';
 
 export interface MembersTableFooterProps {
 	pageSize: number;
 	onPageSizeChange: (value: number) => void;
 	showPagination: boolean;
-	paginationRange: ReadonlyArray<PaginationItem>;
 	currentPage: number;
 	totalPages: number;
 	isSearching: boolean;
-	activeEllipsis: PaginationEllipsisSide | null;
-	pageJumpValue: string;
-	ellipsisInputRef: React.RefObject<HTMLInputElement | null>;
 	onPageSelect: (page: number) => void;
-	setActiveEllipsis: React.Dispatch<React.SetStateAction<PaginationEllipsisSide | null>>;
-	setPageJumpValue: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function MembersTableFooter({
 	pageSize,
 	onPageSizeChange,
 	showPagination,
-	paginationRange,
 	currentPage,
 	totalPages,
 	isSearching,
-	activeEllipsis,
-	pageJumpValue,
-	ellipsisInputRef,
 	onPageSelect,
-	setActiveEllipsis,
-	setPageJumpValue,
 }: MembersTableFooterProps) {
 	return (
 		<div className={styles.footer} data-flx="channel.guild-members-page.members-table-view.footer">
@@ -61,17 +47,13 @@ export function MembersTableFooter({
 				</div>
 			</div>
 			{showPagination && (
-				<MembersPagination
-					paginationRange={paginationRange}
+				<Pagination
 					currentPage={currentPage}
+					visiblePageSlots={MAX_VISIBLE_PAGES}
+					className={styles.paginationBar}
 					totalPages={totalPages}
-					isSearching={isSearching}
-					activeEllipsis={activeEllipsis}
-					pageJumpValue={pageJumpValue}
-					ellipsisInputRef={ellipsisInputRef}
-					onPageSelect={onPageSelect}
-					setActiveEllipsis={setActiveEllipsis}
-					setPageJumpValue={setPageJumpValue}
+					disabled={isSearching}
+					onJumpToPage={onPageSelect}
 					data-flx="channel.guild-members-page.members-table-view.members-pagination"
 				/>
 			)}

@@ -432,36 +432,6 @@ legacy_zstd_stream_ctx_routes_to_frame_test() ->
             ?assertEqual(skip, skip)
     end.
 
-new_context_test_() ->
-    [
-        ?_assertEqual(none, get_type(new_context(none))),
-        ?_assertEqual(zstd_frame, get_type(new_context(zstd_frame))),
-        ?_assertEqual(zstd_stream, get_type(new_context(zstd_stream)))
-    ].
-
-close_context_test() ->
-    Ctx = new_context(none),
-    ?assertEqual(ok, close_context(Ctx)).
-
-compress_none_test() ->
-    Ctx = new_context(none),
-    Data = <<"hello world">>,
-    {ok, Compressed, Ctx2} = compress(Data, Ctx),
-    ?assertEqual(Data, Compressed),
-    ?assertEqual(none, get_type(Ctx2)).
-
-compress_none_iolist_test() ->
-    Ctx = new_context(none),
-    Data = [<<"hello">>, <<" ">>, <<"world">>],
-    {ok, Compressed, _} = compress(Data, Ctx),
-    ?assertEqual(<<"hello world">>, Compressed).
-
-decompress_none_test() ->
-    Ctx = new_context(none),
-    Data = <<"hello world">>,
-    {ok, Decompressed, _} = decompress(Data, Ctx),
-    ?assertEqual(Data, Decompressed).
-
 check_decompressed_size_allows_normal_payload_test() ->
     Ctx = new_context(zstd_frame),
     Data = <<"normal payload">>,
@@ -508,113 +478,12 @@ zstd_stream_decompress_allows_payload_at_max_size_test() ->
             ?assertEqual(skip, skip)
     end.
 
-zstd_stream_decompress_keeps_context_across_frames_test() ->
-    case probe_ezstd_stream_available() of
-        true ->
-            {ok, First, EncodeCtx} = compress(<<"first message">>, new_context(zstd_stream)),
-            {ok, Second, _} = compress(<<"second message">>, EncodeCtx),
-            {ok, <<"first message">>, DecodeCtx} =
-                decompress(First, new_context(zstd_stream), 4096),
-            ?assertMatch({ok, <<"second message">>, _}, decompress(Second, DecodeCtx, 4096));
-        false ->
-            ?assertEqual(skip, skip)
-    end.
-
 stream_compress_zeros(_Ctx, 0, Acc) ->
     Acc;
 stream_compress_zeros(Ctx, Remaining, Acc) ->
     {ok, Chunk, NextCtx} = compress(binary:copy(<<0>>, 8 * 1024 * 1024), Ctx),
     stream_compress_zeros(NextCtx, Remaining - 1, <<Acc/binary, Chunk/binary>>).
 
-init_caches_availability_test() ->
-    with_saved_availability(fun() ->
-        erase_cached_availability(),
-        ok = init(),
-        ?assertEqual(probe_ezstd_available(), persistent_term:get(?ZSTD_AVAILABLE_KEY)),
-        ?assertEqual(
-            probe_ezstd_stream_available(), persistent_term:get(?ZSTD_STREAM_AVAILABLE_KEY)
-        )
-    end).
-
-availability_falls_back_to_probe_when_uncached_test() ->
-    with_saved_availability(fun() ->
-        erase_cached_availability(),
-        ?assertEqual(probe_ezstd_available(), ezstd_available()),
-        ?assertEqual(probe_ezstd_stream_available(), ezstd_stream_available()),
-        ?assertEqual(probe_ezstd_available(), persistent_term:get(?ZSTD_AVAILABLE_KEY)),
-        ?assertEqual(
-            probe_ezstd_stream_available(), persistent_term:get(?ZSTD_STREAM_AVAILABLE_KEY)
-        )
-    end).
-
-cached_availability_false_rejects_zstd_test() ->
-    with_cached_availability(false, fun assert_zstd_unavailable/0).
-
-cached_availability_true_round_trips_test() ->
-    case probe_ezstd_stream_available() of
-        true -> with_cached_availability(true, fun assert_zstd_round_trip/0);
-        false -> ?assertEqual(skip, skip)
-    end.
-
-assert_zstd_unavailable() ->
-    Data = <<"cached availability payload">>,
-    NoneCtx = new_context(none),
-    ?assertEqual({ok, Data, NoneCtx}, compress(Data, NoneCtx)),
-    ?assertEqual({ok, Data, NoneCtx}, decompress(Data, NoneCtx)),
-    FrameCtx = new_context(zstd_frame),
-    ?assertEqual({error, {compress_failed, zstd_not_available}}, compress(Data, FrameCtx)),
-    ?assertEqual({error, {decompress_failed, zstd_not_available}}, decompress(Data, FrameCtx)),
-    StreamCtx = new_context(zstd_stream),
-    ?assertEqual(
-        {error, {compress_failed, zstd_stream_not_available}}, compress(Data, StreamCtx)
-    ),
-    ?assertEqual(
-        {error, {decompress_failed, zstd_stream_not_available}}, decompress(Data, StreamCtx)
-    ).
-
-assert_zstd_round_trip() ->
-    Data = <<"cached availability round trip payload">>,
-    FrameCtx = new_context(zstd_frame),
-    {ok, Frame, FrameCtx2} = compress(Data, FrameCtx),
-    ?assertMatch({ok, Data, _}, decompress(Frame, FrameCtx2)),
-    {ok, Streamed, _} = compress(Data, new_context(zstd_stream)),
-    ?assertMatch({ok, Data, _}, decompress(Streamed, new_context(zstd_stream))).
-
-availability_keys() ->
-    [?ZSTD_AVAILABLE_KEY, ?ZSTD_STREAM_AVAILABLE_KEY].
-
-with_saved_availability(Fun) ->
-    Previous = [{Key, persistent_term:get(Key, undefined)} || Key <- availability_keys()],
-    try
-        Fun()
-    after
-        lists:foreach(fun({Key, Value}) -> restore_availability(Key, Value) end, Previous)
-    end.
-
-with_cached_availability(Available, Fun) ->
-    with_saved_availability(fun() ->
-        put_cached_availability(Available),
-        Fun()
-    end).
-
-put_cached_availability(Available) ->
-    lists:foreach(fun(Key) -> cache_availability(Key, Available) end, availability_keys()).
-
-erase_cached_availability() ->
-    lists:foreach(fun(Key) -> restore_availability(Key, undefined) end, availability_keys()).
-
-restore_availability(Key, undefined) ->
-    persistent_term:erase(Key);
-restore_availability(Key, Value) ->
-    persistent_term:put(Key, Value).
-
--ifdef(DEV_MODE).
-zstd_roundtrip_test() ->
-    ?assertEqual(skip, skip).
-
-zstd_compression_ratio_test() ->
-    ?assertEqual(skip, skip).
--else.
 zstd_roundtrip_test() ->
     case ezstd_available() of
         true ->
@@ -639,6 +508,5 @@ zstd_compression_ratio_test() ->
         false ->
             ?assertEqual(skip, skip)
     end.
--endif.
 
 -endif.

@@ -22,9 +22,11 @@ read_model_preserves_query_results_test() ->
                     fun guild_data:get_auth_context/2},
                 {get_guild_auth_context, #{user_id => 999, channel_id => null},
                     fun guild_data:get_auth_context/2},
-                {get_guild_member, #{user_id => 200}, fun guild_data:get_guild_member/2},
-                {get_guild_member, #{user_id => 999}, fun guild_data:get_guild_member/2},
-                {has_member, #{user_id => 200}, fun guild_data:has_member/2}
+                {get_guild_member, #{user_id => 200},
+                    fun guild_data_members:get_guild_member/2},
+                {get_guild_member, #{user_id => 999},
+                    fun guild_data_members:get_guild_member/2},
+                {has_member, #{user_id => 200}, fun guild_data_members:has_member/2}
             ]
         )
     after
@@ -167,7 +169,7 @@ read_model_survives_blocked_owner_and_rejects_dead_tables_test() ->
 read_model_state() ->
     State = test_state(),
     Data = guild_data_index:normalize_map(maps:get(data, State)),
-    Members = guild_data_index:member_map(Data),
+    Members = guild_data_index_members:member_map(Data),
     Tab = ets:new(read_model_members, [set, public]),
     ets:insert(Tab, maps:to_list(Members)),
     State#{member_count => map_size(Members), data => Data#{members_ets => Tab}}.
@@ -516,7 +518,7 @@ search_guild_members_limits_prefix_matches_without_paginating_all_test() ->
             ]
         }
     },
-    {reply, Reply, _State} = guild_data:search_guild_members(
+    {reply, Reply, _State} = guild_data_members:search_guild_members(
         #{query => <<"ali">>, limit => 1}, State
     ),
     Members = maps:get(members, Reply),
@@ -534,7 +536,7 @@ search_guild_members_limits_prefix_matches_without_paginating_all_test() ->
 search_guild_members_matches_username_of_nicknamed_member_test() ->
     Nicknamed = (member(1, <<"jiralite">>))#{<<"nick">> => <<"Specsaver engineer">>},
     State = #{data => #{<<"members">> => [Nicknamed, member(2, <<"Bob">>)]}},
-    {reply, Reply, _State} = guild_data:search_guild_members(
+    {reply, Reply, _State} = guild_data_members:search_guild_members(
         #{query => <<"jiralite">>, limit => 25}, State
     ),
     ?assertEqual(

@@ -4,7 +4,6 @@ import AccountAccess, {AccountAccessDecision, AccountAccessPhase} from '@app/fea
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {readAuthenticatedRuntimeContext} from '@app/features/auth/state/AuthenticatedRuntime';
 import {pruneOrphanedDesktopStateStores} from '@app/features/gateway/snapshot/SnapshotSync';
-import BackgroundAccountPresence from '@app/features/gateway/transport/BackgroundAccountPresence';
 import {
 	backgroundSessionNeedsRestart,
 	gatewayEndpointForAccount,
@@ -92,7 +91,7 @@ export class BackgroundGatewaySessionManager {
 		this.disposers.push(
 			installDeferredReaction(() =>
 				reaction(
-					() => [BackgroundAccountPresence.appearOffline, Idle.isAfk()],
+					() => Idle.isAfk(),
 					() => {
 						for (const session of BackgroundGatewaySessions.values()) {
 							session.refreshPresence();

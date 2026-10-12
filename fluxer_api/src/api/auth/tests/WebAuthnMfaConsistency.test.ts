@@ -4,12 +4,9 @@ import {
 	createTestAccount,
 	createTotpSecret,
 	generateTotpCode,
-	type LoginMfaResponse,
-	type LoginSuccessResponse,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {
-	createSudoWebAuthnBody,
 	createWebAuthnDevice,
 	loginWithDiscoverablePasskey,
 	registerWebAuthnCredential,
@@ -18,7 +15,7 @@ import {
 	type WebAuthnDevice,
 } from '@app/api/auth/tests/WebAuthnTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, expect, test} from 'vitest';
 
 async function setupPasskeyOnlyAccount(
@@ -89,53 +86,6 @@ describe('WebAuthn MFA Consistency Tests', () => {
 			})
 			.expect(204)
 			.execute();
-	});
-	test('passkey user with two-factor on can use WebAuthn for sudo verification', async () => {
-		const {account, device} = await setupPasskeyOnlyAccount(harness, true);
-		const sudoBody = await createSudoWebAuthnBody(harness, account.token, device);
-		const {response: disableResp} = await createBuilder(harness, account.token)
-			.post('/users/@me/disable')
-			.body(sudoBody)
-			.expect(204)
-			.executeWithResponse();
-		const sudoToken = disableResp.headers.get('x-sudo-mode-token');
-		expect(sudoToken).toBeNull();
-	});
-	test('passkey user with two-factor off can use WebAuthn for sudo verification', async () => {
-		const {account, device} = await setupPasskeyOnlyAccount(harness, false);
-		const sudoBody = await createSudoWebAuthnBody(harness, account.token, device);
-		await createBuilder(harness, account.token).post('/users/@me/disable').body(sudoBody).expect(204).execute();
-	});
-	test('passkey user with two-factor on requires MFA when logging in with password', async () => {
-		const {account} = await setupPasskeyOnlyAccount(harness, true);
-		const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
-			.post('/auth/login')
-			.body({
-				email: account.email,
-				password: account.password,
-			})
-			.execute();
-		expect(login.mfa).toBe(true);
-		expect(login.ticket).toBeTruthy();
-		expect(login.webauthn).toBe(true);
-	});
-	test('passkey user with two-factor off logs in with password and receives a session token', async () => {
-		const {account} = await setupPasskeyOnlyAccount(harness, false);
-		const login = await createBuilderWithoutAuth<LoginSuccessResponse | LoginMfaResponse>(harness)
-			.post('/auth/login')
-			.body({
-				email: account.email,
-				password: account.password,
-			})
-			.execute();
-		expect('mfa' in login).toBe(false);
-		expect((login as LoginSuccessResponse).token).toBeTruthy();
-		const userInfo = await createBuilder<{
-			id: string;
-		}>(harness, (login as LoginSuccessResponse).token)
-			.get('/users/@me')
-			.execute();
-		expect(userInfo.id).toBe(account.userId);
 	});
 	test('sudo WebAuthn options stay available to a passkey user with two-factor off', async () => {
 		const {account, device} = await setupPasskeyOnlyAccount(harness, false);

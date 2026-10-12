@@ -365,25 +365,9 @@ class ProcessLoopback extends EventEmitter {
 		}
 	}
 
-	setScreenAudioSink(handle) {
-		if (!this.capture || typeof this.capture.setScreenAudioSink !== 'function') return false;
-		try {
-			return this.capture.setScreenAudioSink(handle) !== false;
-		} catch {
-			return false;
-		}
-	}
-
-	clearScreenAudioSink() {
-		if (this.capture && typeof this.capture.clearScreenAudioSink === 'function') {
-			this.capture.clearScreenAudioSink();
-		}
-	}
-
 	async stop() {
 		if (this.closed) return;
 		this.closed = true;
-		this.clearScreenAudioSink();
 		if (this.timer) clearInterval(this.timer);
 		this.timer = null;
 		if (this.refreshTimer) clearInterval(this.refreshTimer);

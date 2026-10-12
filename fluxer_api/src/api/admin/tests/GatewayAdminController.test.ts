@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createAdminWithAcls} from '@app/api/admin/tests/AdminTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterEach, beforeEach, describe, test} from 'vitest';
-
-async function createAdminWithAcls(harness: ApiTestHarness, acls: Array<string>): Promise<TestAccount> {
-	const account = await createTestAccount(harness);
-	return await setUserACLs(harness, account, [AdminACLs.AUTHENTICATE, ...acls]);
-}
 
 describe('GatewayAdminController', () => {
 	let harness: ApiTestHarness;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {jitteredExponentialDelay} from '@electron/common/ExponentialBackoff';
 import {ModuleUpdaterStatus} from '@electron/main/ModuleUpdater';
 
 export const UPDATE_SERVER_RETRY_BASE_MS = 15_000;
@@ -18,8 +19,12 @@ interface UpdateServerRetryDependencies {
 }
 
 export function nextUpdateServerRetryDelay(attempt: number, random: () => number = Math.random): number {
-	const exponential = Math.min(UPDATE_SERVER_RETRY_BASE_MS * 2 ** Math.max(0, attempt), UPDATE_SERVER_RETRY_CAP_MS);
-	return Math.round(exponential * (0.5 + random() * 0.5));
+	return jitteredExponentialDelay(
+		UPDATE_SERVER_RETRY_BASE_MS,
+		UPDATE_SERVER_RETRY_CAP_MS,
+		Math.max(0, attempt),
+		random,
+	);
 }
 
 export class UpdateServerRetry {

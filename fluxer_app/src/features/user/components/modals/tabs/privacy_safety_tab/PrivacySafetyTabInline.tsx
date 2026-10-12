@@ -11,6 +11,11 @@ import {ProfilePrivacyTabContent as ProfilePrivacyTab} from '@app/features/user/
 import {SensitiveContentTabContent as SensitiveContentTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab';
 import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {useUserSettingsMutationController} from '@app/features/user/hooks/useUserSettingsMutationController';
+import {
+	ACTIVITY_SHARING_DESCRIPTOR,
+	PROFILE_PRIVACY_LABEL_DESCRIPTOR as PROFILE_PRIVACY_DESCRIPTOR,
+	SENSITIVE_CONTENT_2_DESCRIPTOR as SENSITIVE_CONTENT_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -20,22 +25,12 @@ const FRIENDS_AND_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	message: 'Friends & direct messages',
 	comment: 'Privacy dashboard section label for who can send friend requests and direct messages.',
 });
-const PROFILE_PRIVACY_DESCRIPTOR = msg({
-	message: 'Profile privacy',
-	comment: 'Privacy section label for who can see the user profile details.',
-});
+
 const COMMUNICATION_DESCRIPTOR = msg({
 	message: 'Communication',
 	comment: 'Short label in the privacy dashboard. Keep it concise.',
 });
-const ACTIVITY_SHARING_DESCRIPTOR = msg({
-	message: 'Activity sharing',
-	comment: 'Privacy section label for voice activity sharing.',
-});
-const SENSITIVE_CONTENT_DESCRIPTOR = msg({
-	message: 'Sensitive content',
-	comment: 'Short label in the privacy dashboard. Keep it concise.',
-});
+
 const DATA_EXPORT_DESCRIPTOR = msg({
 	message: 'Data export',
 	comment: 'Short label in the privacy dashboard. Keep it concise.',

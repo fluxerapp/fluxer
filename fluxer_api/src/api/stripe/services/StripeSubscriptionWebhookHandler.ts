@@ -14,7 +14,6 @@ import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {
 	canProvisionPremiumFromSubscriptionStatus,
 	getPremiumWillCancelFromSubscription,
-	shouldTreatInvoiceCollectionIssueAsAccessChange,
 	shouldTreatInvoicePaymentFailureAsAccessChange,
 	shouldTreatInvoiceUpdatedAsCollectionIssue,
 } from '@app/api/stripe/StripeSubscriptionAccessPolicy';
@@ -22,6 +21,7 @@ import {
 	getInvoiceLatestLinePeriodEnd,
 	getInvoiceLatestLinePeriodStart,
 	getPrimarySubscriptionItem,
+	getSubscriptionBillingCycle,
 	getSubscriptionCurrentPeriodStart,
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
@@ -34,7 +34,7 @@ import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShi
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getPremiumPaymentRecoveryGraceMs} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type Stripe from 'stripe';
@@ -149,7 +149,6 @@ export class StripeSubscriptionWebhookHandler {
 		try {
 			await this.premiumService.setPremiumFromSubscriptionPeriod(
 				renewalContext.userId,
-				renewalContext.productInfo.premiumType,
 				renewalPeriodEnd,
 				renewalContext.productInfo.billingCycle || null,
 				true,
@@ -182,7 +181,7 @@ export class StripeSubscriptionWebhookHandler {
 				renewalContext.productInfo,
 			);
 		}
-		await this.enqueuePremiumStateReconciliation(renewalContext.userId, {
+		await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(renewalContext.userId, {
 			reason: 'invoice_payment_succeeded',
 			subscriptionId,
 		});
@@ -218,10 +217,10 @@ export class StripeSubscriptionWebhookHandler {
 		const premiumUntil = getSubscriptionPremiumPeriodEnd(subscription);
 		const willCancel = getPremiumWillCancelFromSubscription(subscription);
 		const customerId = extractId(subscription.customer);
-		const billingCycle = productInfo.billingCycle || this.reconciler.getBillingCycleFromSubscription(subscription);
+		const billingCycle = productInfo.billingCycle || getSubscriptionBillingCycle(subscription);
 		const patch: Partial<UserRow> = {};
-		if (user.premiumType !== productInfo.premiumType) {
-			patch.premium_type = productInfo.premiumType;
+		if (user.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
+			patch.premium_type = UserPremiumTypes.SUBSCRIPTION;
 		}
 		if (!user.premiumSince || user.premiumSince.getTime() > premiumSince.getTime()) {
 			patch.premium_since = premiumSince;
@@ -257,7 +256,7 @@ export class StripeSubscriptionWebhookHandler {
 			return;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
@@ -279,7 +278,7 @@ export class StripeSubscriptionWebhookHandler {
 	}
 
 	async handleInvoicePaymentActionRequired(invoice: Stripe.Invoice): Promise<void> {
-		if (!shouldTreatInvoiceCollectionIssueAsAccessChange(invoice)) {
+		if (!shouldTreatInvoicePaymentFailureAsAccessChange(invoice)) {
 			Logger.debug(
 				{
 					invoiceId: invoice.id,
@@ -297,7 +296,7 @@ export class StripeSubscriptionWebhookHandler {
 	}
 
 	async handleInvoiceFinalizationFailed(invoice: Stripe.Invoice): Promise<void> {
-		if (!shouldTreatInvoiceCollectionIssueAsAccessChange(invoice)) {
+		if (!shouldTreatInvoicePaymentFailureAsAccessChange(invoice)) {
 			Logger.debug(
 				{
 					invoiceId: invoice.id,
@@ -388,7 +387,7 @@ export class StripeSubscriptionWebhookHandler {
 			customerId: this.reconciler.getCustomerIdFromInvoice(invoice),
 			failedInvoiceServicePeriod: this.getInvoiceServicePeriod(invoice),
 		});
-		await this.enqueuePremiumStateReconciliation(updatedUser.id, {
+		await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(updatedUser.id, {
 			reason: context.reason,
 			subscriptionId: subscriptionId ?? undefined,
 		});
@@ -514,7 +513,7 @@ export class StripeSubscriptionWebhookHandler {
 				},
 				'Subscription update contains pending_update; keeping current subscription state and enqueuing reconciliation',
 			);
-			await this.enqueuePremiumStateReconciliation(targetUser.id, {
+			await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(targetUser.id, {
 				reason: 'subscription_updated_pending_update',
 				subscriptionId: canonicalSubscription.id,
 			});
@@ -526,7 +525,7 @@ export class StripeSubscriptionWebhookHandler {
 				customerId: extractId(canonicalSubscription.customer),
 				failedInvoiceServicePeriod: this.getUnpaidRenewalPeriod(targetUser, canonicalSubscription),
 			});
-			await this.enqueuePremiumStateReconciliation(updatedUser.id, {
+			await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(updatedUser.id, {
 				reason: 'subscription_updated_non_provisionable',
 				subscriptionId: canonicalSubscription.id,
 			});
@@ -584,9 +583,9 @@ export class StripeSubscriptionWebhookHandler {
 			Logger.error({subscriptionId: subscription.id, userId: targetUser.id}, 'Updated user not found');
 			throw new StripeError('Updated user not found for subscription update');
 		}
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		await this.restoreStoreEntitlement(updatedUser.id);
-		await this.enqueuePremiumStateReconciliation(updatedUser.id, {
+		await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(updatedUser.id, {
 			reason: 'subscription_updated',
 			subscriptionId: canonicalSubscription.id,
 		});
@@ -683,8 +682,7 @@ export class StripeSubscriptionWebhookHandler {
 						targetUser.premiumUntil && targetUser.premiumUntil.getTime() < subscriptionEndedAt.getTime()
 							? targetUser.premiumUntil
 							: subscriptionEndedAt;
-					const billingCycle =
-						targetUser.premiumBillingCycle ?? this.reconciler.getBillingCycleFromSubscription(subscription);
+					const billingCycle = targetUser.premiumBillingCycle ?? getSubscriptionBillingCycle(subscription);
 					updates.premium_until = lapseStart;
 					updates.premium_grace_ends_at = new Date(
 						lapseStart.getTime() + getPremiumPaymentRecoveryGraceMs(billingCycle),
@@ -698,9 +696,9 @@ export class StripeSubscriptionWebhookHandler {
 			}
 		}
 		const updatedUser = await this.userRepository.patchUpsert(targetUser.id, updates, targetUser.toRow());
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		await this.restoreStoreEntitlement(updatedUser.id);
-		await this.enqueuePremiumStateReconciliation(updatedUser.id, {
+		await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(updatedUser.id, {
 			reason: 'subscription_deleted',
 			subscriptionId: subscription.id,
 		});
@@ -811,7 +809,7 @@ export class StripeSubscriptionWebhookHandler {
 			return user;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		return (await this.restoreStoreEntitlement(updatedUser.id)) ?? updatedUser;
 	}
 
@@ -889,35 +887,5 @@ export class StripeSubscriptionWebhookHandler {
 			return null;
 		}
 		return this.userRepository.findUnique(userId);
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
-	}
-
-	private async enqueuePremiumStateReconciliation(
-		userId: UserID,
-		context: {
-			reason: string;
-			subscriptionId?: string;
-		},
-	): Promise<void> {
-		try {
-			await this.premiumStateReconciliationQueueService.enqueueUser(userId);
-		} catch (error) {
-			Logger.warn(
-				{
-					error,
-					userId: userId.toString(),
-					reason: context.reason,
-					subscriptionId: context.subscriptionId,
-				},
-				'Failed to enqueue premium reconciliation from Stripe webhook',
-			);
-		}
 	}
 }

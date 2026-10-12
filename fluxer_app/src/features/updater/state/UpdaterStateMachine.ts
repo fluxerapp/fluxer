@@ -174,7 +174,6 @@ const updaterStateMachine = setup({
 	},
 	guards: {
 		isChecking: ({context}) => context.isChecking,
-		isNotChecking: ({context}) => !context.isChecking,
 		isNotCheckingAndHasUpdate: ({context}) => !context.isChecking && hasAnyUpdate(context),
 		isNotCheckingAndHasNoUpdate: ({context}) => !context.isChecking && !hasAnyUpdate(context),
 		hasUpdate: ({context}) => hasAnyUpdate(context),

@@ -3,7 +3,6 @@
 import crypto from 'node:crypto';
 import {promisify} from 'node:util';
 import type {ApiContext} from '@app/api/ApiContext';
-import type {UserID} from '@app/api/BrandedTypes';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
@@ -38,10 +37,6 @@ function base62Encode(buffer: Uint8Array): string {
 		num = num / base;
 	}
 	return encoded;
-}
-
-export async function generateSecureToken(_ctx: ApiContext, length = 64): Promise<string> {
-	return RandomUtils.randomString(length);
 }
 
 export async function generateAuthToken(_ctx: ApiContext): Promise<string> {
@@ -82,17 +77,6 @@ export function assertNonBotUser(_ctx: ApiContext, user: User): void {
 	}
 }
 
-export async function authorizeIpByToken(
-	ctx: ApiContext,
-	token: string,
-): Promise<{
-	userId: UserID;
-	email: string;
-} | null> {
-	const {users} = ctx.services;
-	return users.authorizeIpByToken(token);
-}
-
 function checkAccountBanStatus(_ctx: ApiContext, user: User): AccountBanStatus {
 	const hasTempBan = !!(user.flags & UserFlags.DISABLED && user.tempBannedUntil);
 	const isTempBanned = isTemporarilyBanned(user);
@@ -128,7 +112,6 @@ export async function reactivateOnSignIn(
 		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on sign-in');
 	}
 	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
-		const pendingDeletionAt = currentUser.pendingDeletionAt;
 		currentUser = await users.updateDeletionSchedule(currentUser, {
 			flags: currentUser.flags & ~UserFlags.SELF_DELETED,
 			pending_deletion_at: null,
@@ -136,9 +119,6 @@ export async function reactivateOnSignIn(
 			deletion_public_reason: null,
 			deletion_audit_log_reason: null,
 		});
-		if (pendingDeletionAt) {
-			await users.removePendingDeletion(currentUser.id, pendingDeletionAt);
-		}
 		await deletionQueue.removeFromQueue(currentUser.id);
 		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on sign-in');
 	}

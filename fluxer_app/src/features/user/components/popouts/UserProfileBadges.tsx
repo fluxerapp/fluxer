@@ -4,7 +4,6 @@ import {Routes} from '@app/app/Routes';
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -93,7 +92,6 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 		const selfHosted = RuntimeConfig.isSelfHosted();
 		const showPremium = shouldShowPremiumFeatures();
 		const premiumInfoUrl = RuntimeConfig.premiumInfoUrl;
-		const plutoniumPageEnabled = PlutoniumPageRollout.enabled;
 		const badges = useMemo(() => {
 			const result: Array<Badge> = [];
 			if (user.flags & PublicUserFlags.STAFF) {
@@ -125,8 +123,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			}
 			if (showPremium && profile?.premiumType && profile.premiumType !== UserPremiumTypes.NONE) {
 				let tooltipText = getPremiumProductFullName();
-				let badgeUrl: string | undefined =
-					premiumInfoUrl ?? (selfHosted || plutoniumPageEnabled ? undefined : Routes.plutonium());
+				let badgeUrl: string | undefined = premiumInfoUrl ?? undefined;
 				const badgeOnClick = badgeUrl ? undefined : () => PremiumModalCommands.open();
 				if (!selfHosted && profile.premiumType === UserPremiumTypes.LIFETIME) {
 					if (profile.premiumSince) {
@@ -174,7 +171,6 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			selfHosted,
 			showPremium,
 			premiumInfoUrl,
-			plutoniumPageEnabled,
 			user.flags,
 			profile?.premiumType,
 			profile?.premiumSince,

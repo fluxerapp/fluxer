@@ -64,9 +64,6 @@ const RouteMetadata = z.strictObject({
 		.regex(/^[a-z][a-z0-9_]*$/)
 		.optional(),
 });
-const RouteOptionsMetadata = RouteMetadata.pick({description: true, responseContentType: true}).extend({
-	description: z.string().min(1),
-});
 function isHttpMethod(method: string): method is HttpMethod {
 	return HTTP_METHODS.has(method);
 }
@@ -184,20 +181,12 @@ interface MiddlewareInfo {
 	explicitExperiment?: string;
 }
 function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataContext): MiddlewareInfo {
-	const [first, summary, responseSchema, options] = args;
+	const [first] = args;
 	if (!first) throw new Error('OpenAPI requires route metadata');
-	if (options !== undefined && !Node.isObjectLiteralExpression(options)) {
-		throw new Error(`OpenAPI options must be an object literal: ${options.getText()}`);
+	if (!Node.isObjectLiteralExpression(first)) {
+		throw new Error(`OpenAPI metadata must be an object literal: ${first.getText()}`);
 	}
-	const value = Node.isObjectLiteralExpression(first)
-		? parseObjectLiteralMetadata(first, context)
-		: {
-				...(options ? RouteOptionsMetadata.parse(parseObjectLiteralMetadata(options, context)) : {}),
-				operationId: resolveMetadataValue(first, context),
-				summary: summary ? resolveMetadataValue(summary, context) : undefined,
-				responseSchema: responseSchema ? extractSchemaName(responseSchema, context) : undefined,
-				tags: [],
-			};
+	const value = parseObjectLiteralMetadata(first, context);
 	const parsed = RouteMetadata.safeParse(value);
 	if (!parsed.success) {
 		throw new Error(`Invalid OpenAPI metadata at line ${first.getStartLineNumber()}`, {cause: parsed.error});
@@ -233,10 +222,6 @@ function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContex
 	switch (name) {
 		case 'RateLimitMiddleware':
 			return {middlewareName: name, rateLimitConfig: args[0]?.getText()};
-		case 'ResponseType':
-			return {middlewareName: name, responseSchemaName: args[0]?.getText()};
-		case 'NoContent':
-			return {middlewareName: name, hasNoContent: true};
 		case 'OpenAPI':
 			return extractOpenAPIMetadata(args, context);
 		case 'requireOAuth2Scope':

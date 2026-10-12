@@ -68,7 +68,6 @@ function openThemeStudioPopoutWindow(): void {
 		if (popup) {
 			popup.focus();
 			ThemeStudioState.markPoppedOut(popup);
-			broadcastThemeStudioMessage({type: 'studio:opened-popout'});
 			broadcastThemeStudioMessage({type: 'themePreference', snapshot: Theme.getPreferenceSnapshot()});
 		}
 	} catch (error) {

@@ -2,7 +2,6 @@
 
 import {
 	extractClientIp,
-	extractClientIpDetails,
 	MissingClientIpError,
 	requireClientIp,
 	resolveClientIpHeaderName,
@@ -106,25 +105,6 @@ describe('resolveClientIpHeaderName', () => {
 	it('returns the configured header name normalised to lowercase', () => {
 		expect(resolveClientIpHeaderName('x-client-ip')).toBe('x-client-ip');
 		expect(resolveClientIpHeaderName('X-Real-Ip')).toBe('x-real-ip');
-	});
-});
-
-describe('extractClientIpDetails', () => {
-	it('returns extracted ip and source', () => {
-		const request = new Request('http://example.com', {
-			headers: {'X-Forwarded-For': '203.0.113.50'},
-		});
-		expect(extractClientIpDetails(request, {trustClientIpHeader: true})).toEqual({
-			ip: '203.0.113.50',
-			source: 'client-ip-header',
-			ipVersion: 'ipv4',
-		});
-	});
-	it('returns null when trust is disabled', () => {
-		const request = new Request('http://example.com', {
-			headers: {'X-Forwarded-For': '203.0.113.50'},
-		});
-		expect(extractClientIpDetails(request, {trustClientIpHeader: false})).toBeNull();
 	});
 });
 

@@ -9,7 +9,7 @@ import type {GifPickerGridItemData} from '@app/features/channel/components/picke
 import {computeMasonryColumns} from '@app/features/channel/components/pickers/shared/ComputeColumns';
 import {MasonryVirtualGrid} from '@app/features/channel/components/pickers/shared/MasonryVirtualGrid';
 import {MASONRY_PADDING_PX} from '@app/features/channel/components/pickers/shared/PickerConstants';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import * as GifCommands from '@app/features/expressions/commands/GifCommands';
 import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
@@ -34,7 +34,6 @@ export const GifPickerGrid = observer(
 		onClose,
 		selectGif,
 		autoSendKlipyGifs,
-		gifAutoPlay,
 		viewportWidth,
 		viewportHeight,
 		scrollTop,
@@ -44,7 +43,6 @@ export const GifPickerGrid = observer(
 		onClose?: () => void;
 		selectGif?: (gif: Gif) => void;
 		autoSendKlipyGifs: boolean;
-		gifAutoPlay: boolean;
 		viewportWidth: number;
 		viewportHeight: number;
 		scrollTop: number;
@@ -97,7 +95,7 @@ export const GifPickerGrid = observer(
 		const bottomPaddingPx = MASONRY_PADDING_PX * 2;
 		const handleShowFavorites = useCallback(() => {
 			if (FavoriteGif.saveGifFavoritesAsSavedMedia && FavoriteGif.favoriteGifs.length === 0) {
-				ExpressionPickerCommands.setTab('memes');
+				ExpressionPicker.setTab('memes');
 			} else {
 				store.goToFavorites();
 			}
@@ -189,7 +187,6 @@ export const GifPickerGrid = observer(
 						onClose={onClose}
 						selectGif={selectGif}
 						autoSendKlipyGifs={autoSendKlipyGifs}
-						gifAutoPlay={gifAutoPlay}
 						searchTerm={store.searchTerm}
 						onShowFavorites={handleShowFavorites}
 						onShowTrending={store.goToTrending}

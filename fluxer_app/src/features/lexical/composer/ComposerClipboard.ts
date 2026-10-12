@@ -21,6 +21,7 @@ import {COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH} from '@app/features/lexical/com
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {mergeRegister} from '@lexical/utils';
 import {
 	$addUpdateTag,
@@ -83,10 +84,6 @@ interface SerializedComposerClipboardPayload {
 	token: string;
 	display: string;
 	segments: Array<MentionSegment>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
 }
 
 function hasExactKeys<const T extends ReadonlyArray<string>>(value: Record<string, unknown>, keys: T): boolean {

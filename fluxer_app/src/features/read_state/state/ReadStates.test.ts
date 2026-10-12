@@ -952,7 +952,7 @@ describe('ReadStates thread seeding', () => {
 
 vi.mock('@app/features/auth/state/Authentication', () => ({default: {currentUserId: 'me'}}));
 vi.mock('@app/features/user/commands/UserGuildSettingsCommands', () => ({updateChannelOverride: vi.fn()}));
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({default: {}}));
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({default: {foregroundConnection: {}}}));
 vi.mock('@app/features/threads/state/ThreadGuilds', () => ({default: {isActive: () => true}}));
 
 describe('ReadStates forum read state', () => {

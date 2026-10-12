@@ -5,7 +5,11 @@ import {useCheckoutActions} from '@app/features/app/components/dialogs/component
 import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import GeoIP from '@app/features/app/state/GeoIP';
-import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	ONE_MONTH_DURATION_DESCRIPTOR as ONE_MONTH_DESCRIPTOR,
+	SAVE_PERCENT_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import styles from '@app/features/premium/components/modals/GiftPlutoniumModal.module.css';
 import PremiumState from '@app/features/premium/state/PremiumState';
@@ -27,18 +31,12 @@ const GIFT_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Pay once and get a gift link to share. Gifts never renew.',
 	comment: 'Description at the top of the gift purchase dialog.',
 });
-const ONE_MONTH_DESCRIPTOR = msg({
-	message: '1 month',
-	comment: 'Gift purchase dialog option for a one-month gift.',
-});
+
 const ONE_YEAR_DESCRIPTOR = msg({
 	message: '1 year',
 	comment: 'Gift purchase dialog option for a one-year gift.',
 });
-const SAVE_PERCENT_DESCRIPTOR = msg({
-	message: 'Save {percent}%',
-	comment: 'Badge on the one-year option in the gift purchase dialog. percent is a whole number such as 17.',
-});
+
 const GIFT_PLAN_LABEL_DESCRIPTOR = msg({
 	message: 'Gift length',
 	comment: 'Accessible label of the gift length options in the gift purchase dialog.',

@@ -36,6 +36,19 @@ import {
 	VOICE_DEAFEN_DESCRIPTOR,
 	VOICE_UNDEAFEN_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	CAMERA_OFF_DESCRIPTOR,
+	CONNECTING_DESCRIPTOR,
+	CONNECTION_ID_DESCRIPTOR,
+	ENDPOINT_DESCRIPTOR,
+	JITTER_DESCRIPTOR,
+	LEAVE_CALL_DESCRIPTOR,
+	MUTE_DESCRIPTOR,
+	OPEN_CALL_VIEW_DESCRIPTOR,
+	PACKET_LOSS_DESCRIPTOR,
+	PING_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -46,11 +59,7 @@ const CALL_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Call available',
 	comment: 'Status label in the mobile direct-call lobby bottom sheet. Indicates an ongoing call you can join.',
 });
-const CONNECTING_DESCRIPTOR = msg({
-	message: 'Connecting…',
-	comment:
-		'Status label in the mobile direct-call lobby bottom sheet while joining the call. Trailing ellipsis indicates in-progress.',
-});
+
 const IN_CALL_DESCRIPTOR = msg({
 	message: 'In call',
 	comment: 'Status label in the mobile direct-call lobby bottom sheet when the user is connected.',
@@ -63,33 +72,12 @@ const JOIN_CALL_DESCRIPTOR = msg({
 	message: 'Join call',
 	comment: 'Primary CTA button in the mobile direct-call lobby bottom sheet. Joins the active call.',
 });
-const OPEN_CALL_VIEW_DESCRIPTOR = msg({
-	message: 'Open call view',
-	comment:
-		'Primary CTA button in the mobile direct-call lobby bottom sheet when already in the call. Opens the full call UI.',
-});
+
 const JOIN_ON_THIS_DEVICE_DESCRIPTOR = msg({
 	message: 'Join on this device',
 	comment: 'CTA button shown when the user is already in the call on another device. Moves the call to this device.',
 });
-const LEAVE_CALL_DESCRIPTOR = msg({
-	message: 'Leave call',
-	comment: 'Destructive button in the mobile direct-call lobby bottom sheet. Disconnects from the call.',
-});
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	context: 'voice-control-action',
-	comment: 'Mic toggle button label in the mobile direct-call lobby bottom sheet (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	context: 'voice-control-action',
-	comment: 'Mic toggle button label in the mobile direct-call lobby bottom sheet (currently unmuted).',
-});
-const CAMERA_OFF_DESCRIPTOR = msg({
-	message: 'Camera off',
-	comment: 'Camera toggle button label in the mobile direct-call lobby bottom sheet (currently on).',
-});
+
 const CONNECTED_TO_CALL_DESCRIPTOR = msg({
 	message: 'Connected to call',
 	comment: 'Section header in the mobile direct-call lobby bottom sheet when connected. Groups in-call controls.',
@@ -98,26 +86,7 @@ const YOU_RE_IN_THE_CALL_DESCRIPTOR = msg({
 	message: "You're in the call",
 	comment: 'Subtitle below the connected-call header confirming the user is connected.',
 });
-const PING_DESCRIPTOR = msg({
-	message: 'Ping',
-	comment: 'Voice stats field label (mobile lobby). Shows current latency in ms.',
-});
-const ENDPOINT_DESCRIPTOR = msg({
-	message: 'Endpoint',
-	comment: 'Voice stats field label (mobile lobby). Shows the voice server endpoint hostname.',
-});
-const CONNECTION_ID_DESCRIPTOR = msg({
-	message: 'Connection ID',
-	comment: 'Voice stats field label (mobile lobby). Shows the voice connection identifier. Developer / debug surface.',
-});
-const PACKET_LOSS_DESCRIPTOR = msg({
-	message: 'Packet loss',
-	comment: 'Voice stats field label (mobile lobby). Shows packet loss percentage.',
-});
-const JITTER_DESCRIPTOR = msg({
-	message: 'Jitter',
-	comment: 'Voice stats field label (mobile lobby). Shows network jitter in ms.',
-});
+
 const logger = new Logger('DirectCallLobbyBottomSheet');
 
 interface DirectCallLobbyBottomSheetProps {

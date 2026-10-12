@@ -74,13 +74,13 @@ interface CommunicationPermissionSpec {
 
 const INCOMING_CALL_SPEC: CommunicationPermissionSpec = {
 	flags: IncomingCallFlags,
-	read: () => UserSettings.getIncomingCallFlags(),
+	read: () => UserSettings.incomingCallFlags,
 	write: (flags) => UserSettingsCommands.update({incomingCallFlags: flags}),
 };
 
 const GROUP_DM_ADD_SPEC: CommunicationPermissionSpec = {
 	flags: GroupDmAddPermissionFlags,
-	read: () => UserSettings.getGroupDmAddPermissionFlags(),
+	read: () => UserSettings.groupDmAddPermissionFlags,
 	write: (flags) => UserSettingsCommands.update({groupDmAddPermissionFlags: flags}),
 };
 
@@ -141,8 +141,8 @@ function buildCommunicationOptions(
 
 export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = observer(({mutationController}) => {
 	const {i18n} = useLingui();
-	const incomingCallFlags = UserSettings.getIncomingCallFlags();
-	const groupDmAddPermissionFlags = UserSettings.getGroupDmAddPermissionFlags();
+	const incomingCallFlags = UserSettings.incomingCallFlags;
+	const groupDmAddPermissionFlags = UserSettings.groupDmAddPermissionFlags;
 	const hasCallFlag = (flag: number) => (incomingCallFlags & flag) === flag;
 	const hasGroupDmAddFlag = (flag: number) => (groupDmAddPermissionFlags & flag) === flag;
 	const settleBaseChange = (spec: CommunicationPermissionSpec, value: CommunicationPermissionValue) => {
@@ -153,7 +153,7 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 	};
 	const handleIncomingCallModifierToggle = ({enabled, flag}: CommunicationFlagUpdate) => {
 		mutationController.settle(() => {
-			let newFlags = UserSettings.getIncomingCallFlags();
+			let newFlags = UserSettings.incomingCallFlags;
 			if (enabled) {
 				newFlags |= flag;
 			} else {

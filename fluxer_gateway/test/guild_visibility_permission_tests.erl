@@ -43,7 +43,7 @@ channel_overwrite_denies_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([], Channels).
 
 role_overwrite_allows_view_test() ->
@@ -90,7 +90,7 @@ role_overwrite_allows_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([ChannelId], Channels).
 
 user_overwrite_denies_view_test() ->
@@ -137,7 +137,7 @@ user_overwrite_denies_view_test() ->
             ]
         }
     },
-    Channels = guild_visibility:get_user_viewable_channels(UserId, State),
+    Channels = guild_visibility_channels:get_user_viewable_channels(UserId, State),
     ?assertEqual([], Channels).
 
 parent_category_included_when_child_channel_is_visible_test() ->
@@ -150,7 +150,7 @@ parent_category_included_when_child_channel_is_visible_test() ->
     State = parent_category_visible_state(
         GuildId, UserId, RoleId, CategoryId, ChannelId, ViewPerm
     ),
-    Channels = lists:sort(guild_visibility:get_user_viewable_channels(UserId, State)),
+    Channels = lists:sort(guild_visibility_channels:get_user_viewable_channels(UserId, State)),
     ?assertEqual([CategoryId, ChannelId], Channels).
 
 parent_category_visible_state(GuildId, UserId, RoleId, CategoryId, ChannelId, ViewPerm) ->

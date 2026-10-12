@@ -23,7 +23,7 @@ import {
 } from '@app/features/member/utils/MemberListLayout';
 import {buildMemberListRangeWindow} from '@app/features/member/utils/MemberListRangeUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {OwnerCrownIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -117,7 +117,7 @@ const MobileMemberListItem = observer(
 		onLongPress?: (member: GuildMember) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const isTyping = TypingIndicator.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
+		const isTyping = RollingTypingStore.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
 		const status = resolveMemberListPresence({guildId: guild.id, channelId, userId: member.user.id});
 		const isMobile = member.isCurrentUser()
 			? undefined

@@ -14,7 +14,6 @@
 -type user_id() :: integer().
 -type session_ref() :: {pid(), reference()}.
 -type status() :: online | offline | idle | dnd | invisible.
--type identify_timestamp() :: integer().
 
 -type identify_request() :: #{
     session_id := session_id(),
@@ -43,7 +42,6 @@
 
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    identify_attempts := [identify_timestamp()],
     pending_identifies := #{session_id() => pending_identify()},
     identify_workers := #{reference() => {session_id(), pid()}},
     shard_index := non_neg_integer(),
@@ -91,7 +89,6 @@ init(Args) ->
         #{
             sessions => #{},
             session_refs => #{},
-            identify_attempts => [],
             pending_identifies => #{},
             identify_workers => #{},
             shard_index => ShardIndex

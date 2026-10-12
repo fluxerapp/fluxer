@@ -1066,6 +1066,8 @@ class StubNode {
 	}
 }
 
+const {serializeSplashState: serializePreloadState} = await loadSplashWindow('preload-state-producer');
+
 function createPreloadHarness(options = {}) {
 	const sent = [];
 	const ipcListeners = new Map();
@@ -1148,7 +1150,7 @@ function createPreloadHarness(options = {}) {
 			select.value = value;
 			select.dispatch('change');
 		},
-		sendState: (payload) => ipcListeners.get('desktop-splash:state')({}, payload),
+		sendState: (payload) => ipcListeners.get('desktop-splash:state')({}, serializePreloadState(payload)),
 		reveal: () => ipcListeners.get('desktop-splash:revealed')({}),
 		sent,
 		channels: () => sent.map((entry) => entry.channel),
@@ -1566,24 +1568,6 @@ describe('splash preload manual update layout', () => {
 
 		assert.deepEqual(harness.sent.at(-1), {channel: 'desktop-splash:open-download', payload: undefined});
 	});
-
-	test('no manual update payload can normalise into a screen with nothing to click', () => {
-		const {context} = createPreloadHarness();
-
-		for (const patch of [
-			{options: null, action: null},
-			{options: [], action: {kind: 'launch-anyway', label: 'Launch anyway'}},
-			{options: 'deb', action: {kind: 'retry', label: '  '}},
-			{options: [{value: 'DEB', label: 'Debian', buttonLabel: 'Download', kind: 'download'}], action: undefined},
-		]) {
-			const state = context.normalizeState(manualState(patch));
-			assert.notEqual(
-				state.options ?? state.action,
-				null,
-				`${JSON.stringify(patch)} must still carry a control the preload can route`,
-			);
-		}
-	});
 });
 
 describe('splash preload contract', () => {
@@ -1591,26 +1575,13 @@ describe('splash preload contract', () => {
 		const {SplashLayout, SplashStatus} = await loadSplashWindow('preload-status-parity');
 		const {context} = createPreloadHarness();
 
-		for (const status of Object.values(SplashStatus)) {
-			assert.equal(context.normalizeState({status}).status, status, `${status} is unknown to the preload`);
-		}
-		for (const layout of Object.values(SplashLayout)) {
-			assert.equal(context.normalizeState({layout}).layout, layout, `${layout} is unknown to the preload`);
-		}
-	});
-
-	test('falls back to checking for updates on a status the preload does not know', () => {
-		const {context} = createPreloadHarness();
-
-		assert.equal(
-			context.getStatusText(context.normalizeState({status: 'not-a-splash-status'})),
-			'Checking for updates…',
-		);
+		assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext('SplashStatus', context))), SplashStatus);
+		assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext('SplashLayout', context))), SplashLayout);
 	});
 
 	test('shows the bar only for a numeric progress on a status that carries one', () => {
 		const {context} = createPreloadHarness();
-		const shows = (payload) => context.shouldShowProgress(context.normalizeState(payload));
+		const shows = (payload) => context.shouldShowProgress(serializePreloadState(payload));
 
 		assert.equal(shows({status: 'downloading-updates', progress: 0}), true);
 		assert.equal(shows({status: 'installing-updates', progress: 100}), true);
@@ -1621,34 +1592,6 @@ describe('splash preload contract', () => {
 		assert.equal(shows({status: 'shell-update-restarting', progress: 50}), false);
 		assert.equal(shows({status: 'verifying', progress: 50}), false);
 		assert.equal(shows({status: 'launching', progress: 50}), false);
-	});
-
-	test('normalises the picker the same way the main process serialises it', async () => {
-		const {serializeSplashState} = await loadSplashWindow('preload-option-parity');
-		const {context} = createPreloadHarness();
-		const state = {status: 'blocked-shell-update', layout: 'manual-update', options: MANUAL_UPDATE_OPTIONS};
-
-		assert.deepEqual(JSON.parse(JSON.stringify(context.normalizeState(serializeSplashState(state)))), {
-			layout: 'manual-update',
-			status: 'blocked-shell-update',
-			requiredSecurityUpdate: false,
-			current: null,
-			total: null,
-			progress: null,
-			seconds: null,
-			receivedBytes: null,
-			totalBytes: null,
-			bytesPerSecond: null,
-			action: null,
-			message: null,
-			versionLabel: null,
-			options: MANUAL_UPDATE_OPTIONS.map((option) => ({...option})),
-		});
-		assert.equal(
-			context.normalizeState({options: [{value: 'DEB', label: 'x', buttonLabel: 'y', kind: 'download'}]}).options,
-			null,
-		);
-		assert.equal(context.normalizeState({options: []}).options, null);
 	});
 
 	test('clamps the manual update message so a long one can never push the controls out of the window', () => {

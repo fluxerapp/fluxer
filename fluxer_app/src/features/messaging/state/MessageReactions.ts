@@ -58,9 +58,7 @@ function isMissingReactionStateNoop(event: ReactionMachineEvent): boolean {
 		case 'reaction.remove':
 		case 'reaction.removeAll':
 		case 'reaction.removeEmoji':
-		case 'reaction.trackReactor':
 		case 'reaction.trackReactors':
-		case 'reaction.untrackReactor':
 			return true;
 	}
 }

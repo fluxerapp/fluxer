@@ -6,7 +6,7 @@ import {AuthController} from '@app/api/auth/AuthController';
 import {OriginHandoffController} from '@app/api/auth/OriginHandoffController';
 import {PasskeyBridgeController} from '@app/api/auth/PasskeyBridgeController';
 import {BlueskyOAuthController} from '@app/api/bluesky/BlueskyOAuthController';
-import {ChannelController} from '@app/api/channel/ChannelController';
+import {registerChannelControllers} from '@app/api/channel/controllers/index';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {ConnectionController} from '@app/api/connection/ConnectionController';
 import {DonationController} from '@app/api/donation/DonationController';
@@ -17,7 +17,7 @@ import {FavoriteMemeController} from '@app/api/favorite_meme/FavoriteMemeControl
 import {GatewayController} from '@app/api/gateway/GatewayController';
 import {GeolocationController} from '@app/api/geolocation/GeolocationController';
 import {GifController} from '@app/api/gif/GifController';
-import {GuildController} from '@app/api/guild/GuildController';
+import {GuildController} from '@app/api/guild/controllers/index';
 import {InstanceController} from '@app/api/instance/InstanceController';
 import {InviteController} from '@app/api/invite/InviteController';
 import {OAuth2ApplicationsController} from '@app/api/oauth/OAuth2ApplicationsController';
@@ -47,7 +47,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	OriginHandoffController(routes);
 	PasskeyBridgeController(routes);
 	AttachmentController(routes);
-	ChannelController(routes);
+	registerChannelControllers(routes);
 	ConnectionController(routes);
 	BlueskyOAuthController(routes);
 	InstanceController(routes);

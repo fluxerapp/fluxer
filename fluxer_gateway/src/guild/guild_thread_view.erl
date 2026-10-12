@@ -72,7 +72,7 @@ thread_id(Thread) ->
 -spec can_view(integer(), map(), map() | undefined, guild_state()) -> boolean().
 can_view(UserId, Thread, Member, State) ->
     Perms = guild_thread_permissions:resolve(UserId, Thread, Member, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec viewable_thread_ids(
     integer(), [integer()] | all | joined, map() | undefined, guild_state()
@@ -171,7 +171,7 @@ drop_forum_only_categories(UserId, Member, State, Channels) ->
             of
                 {4, Id} when is_integer(Id) ->
                     sets:is_element(Id, Parents) orelse
-                        guild_permissions:can_view_channel_by_permissions(
+                        guild_permissions_check:can_view_channel_by_permissions(
                             UserId, Id, Member, State
                         ) orelse
                         guild_virtual_channel_access:has_virtual_access(UserId, Id, State);

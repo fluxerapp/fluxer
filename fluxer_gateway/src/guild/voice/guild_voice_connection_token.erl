@@ -130,10 +130,10 @@ handle_sfu_token_success(GuildId, ChannelId, UserId, Data) ->
         token => maps:get(<<"token">>, Data),
         endpoint => maps:get(<<"endpoint">>, Data),
         connection_id => maps:get(<<"connectionId">>, Data),
-        region_id => guild_voice_connection_util:normalize_optional_binary(
+        region_id => guild_voice_connection_normalize:normalize_optional_binary(
             maps:get(<<"regionId">>, Data, undefined)
         ),
-        server_id => guild_voice_connection_util:normalize_optional_binary(
+        server_id => guild_voice_connection_normalize:normalize_optional_binary(
             maps:get(<<"serverId">>, Data, undefined)
         )
     }}.

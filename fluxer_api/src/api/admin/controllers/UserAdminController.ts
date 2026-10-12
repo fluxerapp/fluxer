@@ -8,14 +8,13 @@ import {
 	RequireEmailAccountIdentity,
 	RequireUsernameAccountIdentity,
 } from '@app/api/middleware/AccountIdentityMiddleware';
-import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {requireAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
@@ -56,12 +55,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-
-function requireSelectorACL(granted: ReadonlySet<string>, acl: string): void {
-	if (!granted.has(acl) && !granted.has(AdminACLs.WILDCARD)) {
-		throw new MissingACLError(acl);
-	}
-}
 
 export function UserAdminController(app: HonoApp) {
 	app.get(
@@ -134,7 +127,7 @@ export function UserAdminController(app: HonoApp) {
 				query.user_id === undefined ? undefined : Array.isArray(query.user_id) ? query.user_id : [query.user_id];
 			if (userIds || query.resolve !== undefined) {
 				if (!userIds && query.resolve?.includes('@')) {
-					requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_EMAIL);
+					requireGrantedAdminACLs(adminUserAcls, [AdminACLs.USER_VIEW_EMAIL]);
 				}
 				const parsed = LookupUserRequest.safeParse(userIds ? {user_ids: userIds} : {query: query.resolve});
 				if (!parsed.success) {
@@ -157,9 +150,9 @@ export function UserAdminController(app: HonoApp) {
 			}
 			const selector = query.email?.trim() ? 'email' : query.last_active_ip?.trim() ? 'last_active_ip' : 'search';
 			if (selector === 'email') {
-				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_EMAIL);
+				requireGrantedAdminACLs(adminUserAcls, [AdminACLs.USER_VIEW_EMAIL]);
 			} else if (selector === 'last_active_ip') {
-				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_IP);
+				requireGrantedAdminACLs(adminUserAcls, [AdminACLs.USER_VIEW_IP]);
 			}
 			const response = await adminService.searchService.searchUsers(
 				{

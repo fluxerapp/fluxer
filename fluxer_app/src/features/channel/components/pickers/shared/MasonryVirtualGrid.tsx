@@ -58,8 +58,6 @@ export function MasonryVirtualGrid<T>({
 	renderItem,
 	onContentSizeChange,
 	extraSections,
-	overscanPx = MASONRY_OVERSCAN_PX,
-	paddingPx = MASONRY_PADDING_PX,
 	bottomPaddingPx = MASONRY_PADDING_PX * 2,
 }: {
 	data: ReadonlyArray<T>;
@@ -76,8 +74,6 @@ export function MasonryVirtualGrid<T>({
 	renderItem: (args: {item: T; itemKey: string; coords: TileBox; isFocused: boolean; index: number}) => React.ReactNode;
 	onContentSizeChange?: (contentSize: number) => void;
 	extraSections?: ReadonlyArray<MasonryExtraSection>;
-	overscanPx?: number;
-	paddingPx?: number;
 	bottomPaddingPx?: number;
 }) {
 	const stableExtraSections = extraSections ?? EMPTY_EXTRA_SECTIONS;
@@ -113,7 +109,7 @@ export function MasonryVirtualGrid<T>({
 		},
 		[stableExtraSections],
 	);
-	const scrollChunkPx = Math.max(1, Math.min(MASONRY_SCROLL_CHUNK_PX, overscanPx));
+	const scrollChunkPx = Math.max(1, Math.min(MASONRY_SCROLL_CHUNK_PX, MASONRY_OVERSCAN_PX));
 	const windowStartChunk = Math.floor(scrollTop / scrollChunkPx);
 	const windowEndChunk = Math.ceil((scrollTop + viewportHeight) / scrollChunkPx);
 	const masonryState = useMemo(() => {
@@ -133,11 +129,11 @@ export function MasonryVirtualGrid<T>({
 			tileHeightOf: tileHeightForSolver,
 			sectionHeightOf: sectionHeightForSolver,
 			viewportSpan: viewportWidth,
-			padBox: {left: paddingPx, right: paddingPx, top: 0, bottom: 0},
+			padBox: {left: MASONRY_PADDING_PX, right: MASONRY_PADDING_PX, top: 0, bottom: 0},
 			layoutStamp: version,
 		});
-		const start = Math.max(0, windowStartChunk * scrollChunkPx - overscanPx);
-		const end = windowEndChunk * scrollChunkPx + overscanPx;
+		const start = Math.max(0, windowStartChunk * scrollChunkPx - MASONRY_OVERSCAN_PX);
+		const end = windowEndChunk * scrollChunkPx + MASONRY_OVERSCAN_PX;
 		masonrySolver.selectWindow(start, end);
 		const state = masonrySolver.readLayout() as {
 			tileBoxes: TileBoxMap;
@@ -160,8 +156,8 @@ export function MasonryVirtualGrid<T>({
 		windowStartChunk,
 		windowEndChunk,
 		scrollChunkPx,
-		overscanPx,
-		paddingPx,
+		MASONRY_OVERSCAN_PX,
+		MASONRY_PADDING_PX,
 		version,
 	]);
 	const {focusedItemKey} = useMasonryGridNavigation({
@@ -172,7 +168,7 @@ export function MasonryVirtualGrid<T>({
 		containerRef: containerRef as React.RefObject<HTMLElement>,
 		checkSuspension,
 	});
-	const topPadding = paddingPx;
+	const topPadding = MASONRY_PADDING_PX;
 	const contentSize = masonryState.contentHeight + topPadding + bottomPaddingPx;
 	useEffect(() => {
 		onContentSizeChange?.(contentSize);

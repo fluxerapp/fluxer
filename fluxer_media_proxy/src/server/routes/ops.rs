@@ -19,10 +19,6 @@ pub(in crate::server) async fn health(State(app): State<Arc<AppState>>) -> Strin
     )
 }
 
-fn is_loopback_peer(peer: &SocketAddr) -> bool {
-    peer.ip().to_canonical().is_loopback()
-}
-
 pub(in crate::server) async fn metrics_handler(
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     State(app): State<Arc<AppState>>,
@@ -42,6 +38,8 @@ pub(in crate::server) async fn metrics_handler(
     response
 }
 
+use fluxer_common::metrics::is_loopback_peer;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -56,23 +54,6 @@ mod tests {
         let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
             .expect("test config");
         Arc::new(AppState::for_tests(cfg))
-    }
-
-    #[test]
-    fn metrics_guard_accepts_loopback_peers() {
-        assert!(is_loopback_peer(&test_peer("127.0.0.1:5000")));
-        assert!(is_loopback_peer(&test_peer("127.0.0.2:5000")));
-        assert!(is_loopback_peer(&test_peer("[::1]:5000")));
-        assert!(is_loopback_peer(&test_peer("[::ffff:127.0.0.1]:5000")));
-    }
-
-    #[test]
-    fn metrics_guard_rejects_remote_peers() {
-        assert!(!is_loopback_peer(&test_peer("8.8.8.8:5000")));
-        assert!(!is_loopback_peer(&test_peer("10.0.0.5:5000")));
-        assert!(!is_loopback_peer(&test_peer("172.18.0.4:5000")));
-        assert!(!is_loopback_peer(&test_peer("[fe80::1]:5000")));
-        assert!(!is_loopback_peer(&test_peer("[::ffff:8.8.8.8]:5000")));
     }
 
     #[tokio::test]

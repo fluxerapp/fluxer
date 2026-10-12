@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
@@ -34,7 +35,7 @@ import styles from '@app/features/user/components/modals/tabs/GiftInventoryTab.m
 import Users from '@app/features/user/state/Users';
 import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
+
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -144,7 +145,11 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 			setTimeout(() => setCopied(false), 2000);
 		} catch (error) {
 			logger.error('Failed to copy gift URL', error);
-			showUserErrorModal(i18n._(COULDN_T_COPY_GIFT_URL_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+			showGenericErrorModal({
+				title: i18n._(COULDN_T_COPY_GIFT_URL_DESCRIPTOR),
+				message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+			});
 		}
 	};
 	const handleRedeem = async () => {

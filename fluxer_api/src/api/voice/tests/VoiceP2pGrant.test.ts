@@ -127,12 +127,6 @@ describe('VoiceService peer-to-peer grant', () => {
 		);
 	});
 
-	test('keeps the connection id the gateway supplies', async () => {
-		await setConfig({enabled: true});
-		const grant = await voiceService.getVoiceToken({...params, p2p: true, connectionId: 'brisk-forte'});
-		expect(grant).toEqual({p2p: true, connectionId: 'brisk-forte', iceServers: [], maxParticipants: 2});
-	});
-
 	test('grants a joiner outside the rollout while the experiment is enabled', async () => {
 		await setConfig({enabled: true, excluded_user_ids: [params.userId.toString()]});
 		const grant = await voiceService.getVoiceToken({...params, p2p: true, p2pInitiator: false});

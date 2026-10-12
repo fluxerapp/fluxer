@@ -25,6 +25,11 @@ import {
 import styles from '@app/features/voice/components/modals/MobileVideoViewer.module.css';
 import {useInAppMediaSoundCapture} from '@app/features/voice/hooks/useInAppMediaSoundCapture';
 import VideoVolume from '@app/features/voice/state/VideoVolume';
+import {
+	MUTE_DESCRIPTOR_2 as MUTE_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR_2 as UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
+import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {DotsThreeIcon, PauseIcon, PlayIcon, SpeakerHighIcon, SpeakerXIcon, XIcon} from '@phosphor-icons/react';
@@ -38,16 +43,7 @@ const TOGGLE_CONTROLS_DESCRIPTOR = msg({
 	message: 'Toggle controls',
 	comment: 'Aria label on the tap-to-toggle area of the mobile video viewer. Shows or hides the playback controls.',
 });
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	context: 'playback-control-action',
-	comment: 'Mute toggle button label in the mobile video viewer (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	context: 'playback-control-action',
-	comment: 'Mute toggle button label in the mobile video viewer (currently unmuted).',
-});
+
 const VIDEO_PROGRESS_DESCRIPTOR = msg({
 	message: 'Video progress',
 	comment: 'Aria label on the video scrubber / progress slider in the mobile video viewer.',
@@ -66,15 +62,6 @@ interface MobileVideoViewerProps {
 	loop?: boolean;
 	onClose: () => void;
 	onMenuOpen?: () => void;
-}
-
-function formatTime(locale: string, time: number): string {
-	const minuteFormat = getCachedNumberFormat(locale, {useGrouping: false});
-	const secondFormat = getCachedNumberFormat(locale, {minimumIntegerDigits: 2, useGrouping: false});
-	if (!Number.isFinite(time)) return `${minuteFormat.format(0)}:${secondFormat.format(0)}`;
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.floor(time % 60);
-	return `${minuteFormat.format(minutes)}:${secondFormat.format(seconds)}`;
 }
 
 export const MobileVideoViewer = observer(function MobileVideoViewer({
@@ -523,7 +510,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									aria-valuenow={Math.round(displayProgress * 100)}
 									aria-valuemin={0}
 									aria-valuemax={100}
-									aria-valuetext={formatTime(i18n.locale, displayCurrentTime)}
+									aria-valuetext={formatDuration(displayCurrentTime, i18n.locale)}
 									aria-label={i18n._(VIDEO_PROGRESS_DESCRIPTOR)}
 									data-flx="voice.mobile-video-viewer.progress-bar-wrapper.progress-seek"
 								>
@@ -546,7 +533,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									</div>
 								</div>
 								<span className={styles.timeDisplay} data-flx="voice.mobile-video-viewer.time-display">
-									{formatTime(i18n.locale, displayCurrentTime)} / {formatTime(i18n.locale, duration)}
+									{formatDuration(displayCurrentTime, i18n.locale)} / {formatDuration(duration, i18n.locale)}
 								</span>
 							</div>
 						</div>

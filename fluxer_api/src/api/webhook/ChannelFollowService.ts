@@ -5,10 +5,12 @@ import {createMessageID, createWebhookID, createWebhookToken} from '@app/api/Bra
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -72,6 +74,7 @@ export class ChannelFollowService {
 		private readonly avatarService: AvatarService,
 		private readonly cacheService: ICacheService,
 		private readonly snowflakeService: ISnowflakeService,
+		private readonly gatewayService: IGatewayService,
 	) {}
 
 	async followChannel(params: FollowChannelParams): Promise<FollowedChannel> {
@@ -238,7 +241,6 @@ export class ChannelFollowService {
 		userId,
 		source,
 		targetChannel,
-		requestCache,
 	}: {
 		webhook: Webhook;
 		userId: UserID;
@@ -265,11 +267,7 @@ export class ChannelFollowService {
 				channel: targetChannel,
 				allowEmbeds: false,
 			});
-			await this.channelService.messages.dispatch.dispatchMessageCreate({
-				channel: targetChannel,
-				message,
-				requestCache,
-			});
+			await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: targetChannel, message});
 		} catch (error) {
 			Logger.error(
 				{

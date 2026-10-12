@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 const VOICE_GRID_TILE_ASPECT_RATIO = 16 / 9;
 const VOICE_GRID_DEFAULT_GAP_PX = 12;
 const VOICE_GRID_DEFAULT_SIDE_PADDING_PX = 12;
@@ -93,10 +95,6 @@ function sanitizeCount(tileCount: number): number {
 function sanitizeDimension(value: number): number {
 	if (!Number.isFinite(value)) return 0;
 	return Math.max(0, value);
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
 }
 
 function getVoiceGridRowCount(tileCount: number, columnCount: number): number {

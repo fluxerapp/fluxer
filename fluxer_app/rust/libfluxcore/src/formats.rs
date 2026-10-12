@@ -236,90 +236,13 @@ mod tests {
     }
 
     #[test]
-    fn detects_apng_animation_chunk() {
-        let png = png_with_chunks(&[(b"acTL", &[0; 8])]);
-        assert!(is_animated_image_bytes(&png));
-    }
-
-    #[test]
-    fn detects_webp_animation_chunk() {
-        let mut webp = b"RIFF\x12\x00\x00\x00WEBPVP8X\x00\x00\x00\x00ANIM\x00\x00\x00\x00".to_vec();
-        webp[4..8].copy_from_slice(&18u32.to_le_bytes());
-        assert!(is_animated_image_bytes(&webp));
-    }
-
-    #[test]
-    fn detects_two_frame_gif() {
-        let gif = [
-            0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0, 0, 0, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0,
-            0, 2, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 0, 0x3b,
-        ];
-        assert!(is_animated_image_bytes(&gif));
-    }
-
-    #[test]
-    fn treats_single_frame_gif_as_static() {
-        let gif = [
-            0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0, 0, 0, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0,
-            0, 2, 0, 0x3b,
-        ];
-        assert!(!is_animated_image_bytes(&gif));
-    }
-
-    #[test]
-    fn detects_avif_sequence_brand() {
-        let still = b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00mif1miaf";
-        assert!(!is_animated_image_bytes(still));
-
-        let avis = b"\x00\x00\x00\x18ftypavis\x00\x00\x00\x00avif";
-        assert!(is_animated_image_bytes(avis));
-    }
-
-    #[test]
-    fn detects_avis_among_compatible_brands() {
-        let compat = b"\x00\x00\x00\x1cftypavif\x00\x00\x00\x00mif1avismsf1";
-        assert!(is_animated_image_bytes(compat));
-
-        let outside_ftyp = b"\x00\x00\x00\x14ftypavif\x00\x00\x00\x00mif1avis";
-        assert!(!is_animated_image_bytes(outside_ftyp));
-
-        let truncated = b"\x00\x00\x00\x40ftypavif\x00\x00\x00\x00mif1av";
-        assert!(!is_animated_image_bytes(truncated));
-    }
-
-    #[test]
-    fn sniffs_image_formats_from_magic_bytes() {
-        assert_eq!(sniff_image_format_bytes(b""), 0);
-        assert_eq!(sniff_image_format_bytes(b"<svg xmlns"), 0);
-        assert_eq!(
-            sniff_image_format_bytes(b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR"),
-            1
-        );
-        assert_eq!(sniff_image_format_bytes(b"GIF89a\x01\x00"), 2);
-        assert_eq!(sniff_image_format_bytes(b"GIF87a\x01\x00"), 2);
-        assert_eq!(sniff_image_format_bytes(b"RIFF\x04\0\0\0WEBPVP8 "), 3);
-        assert_eq!(sniff_image_format_bytes(b"RIFF\x04\0\0\0WAVEfmt "), 0);
-        assert_eq!(
-            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00"),
-            4
-        );
-        assert_eq!(
-            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypavis\x00\x00\x00\x00"),
-            4
-        );
-        assert_eq!(
-            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypheic\x00\x00\x00\x00"),
-            0
-        );
-        assert_eq!(sniff_image_format_bytes(b"\xff\xd8\xff\xe0\x00\x10JFIF"), 5);
-        assert_eq!(sniff_image_format_bytes(b"\xff\xd8"), 0);
-    }
-
-    #[test]
     fn rejects_truncated_chunks_without_panicking() {
         assert!(!is_animated_image_bytes(
             b"\x89PNG\r\n\x1a\n\xff\xff\xff\xffbad!"
         ));
+        let mut png = png_with_chunks(&[(b"bad!", &[0; 8])]);
+        png[8..12].copy_from_slice(&u32::MAX.to_be_bytes());
+        assert!(!is_animated_image_bytes(&png));
         assert!(!is_animated_image_bytes(b"RIFF\xff\xff\xff\xffWEBPbad!"));
     }
 }

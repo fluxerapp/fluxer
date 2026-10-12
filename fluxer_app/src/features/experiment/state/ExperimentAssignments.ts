@@ -32,7 +32,6 @@ type UnobservedField =
 	| 'generation'
 	| 'inFlight'
 	| 'lastFetchStartedAt'
-	| 'listeners'
 	| 'listening'
 	| 'notFoundStreak'
 	| 'pollTimerId'
@@ -78,7 +77,6 @@ class ExperimentAssignmentsStore {
 	private pollingDisabled = false;
 	private lastFetchStartedAt = 0;
 	private generation = 0;
-	private listeners = new Set<() => void>();
 
 	constructor() {
 		makeAutoObservable<this, UnobservedField>(
@@ -91,7 +89,6 @@ class ExperimentAssignmentsStore {
 				generation: false,
 				inFlight: false,
 				lastFetchStartedAt: false,
-				listeners: false,
 				listening: false,
 				notFoundStreak: false,
 				pollTimerId: false,
@@ -149,13 +146,6 @@ class ExperimentAssignmentsStore {
 		this.setResponse(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
 	}
 
-	subscribe(listener: () => void): () => void {
-		this.listeners.add(listener);
-		return () => {
-			this.listeners.delete(listener);
-		};
-	}
-
 	private setResponse(next: ExperimentAssignmentsResponse): void {
 		if (this.response === next) {
 			return;
@@ -163,17 +153,6 @@ class ExperimentAssignmentsStore {
 		runInAction(() => {
 			this.response = next;
 		});
-		this.notifyListeners();
-	}
-
-	private notifyListeners(): void {
-		for (const listener of [...this.listeners]) {
-			try {
-				listener();
-			} catch (err) {
-				logger.warn('Experiment assignment listener failed:', err);
-			}
-		}
 	}
 
 	private schedulePoll(): void {

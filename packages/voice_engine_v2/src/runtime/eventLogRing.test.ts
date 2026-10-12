@@ -22,7 +22,8 @@ import {
 	type VoiceEngineV2EventLogEntry as RuntimeEventLogEntry,
 	VoiceEngineV2Runtime,
 } from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 import {describe, expect, it} from 'vitest';
 
 function makeInboundVideoFrameEvent(timestampUs: number): VoiceEngineV2Event {

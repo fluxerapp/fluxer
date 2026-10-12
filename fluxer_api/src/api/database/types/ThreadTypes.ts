@@ -3,14 +3,12 @@
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {MuteConfig} from '@app/api/database/types/UserTypes';
 
-type Nullish<T> = T | null;
-
 export interface ForumTagUdt {
 	id: bigint;
 	name: string;
 	moderated: boolean;
-	emoji_id: Nullish<bigint>;
-	emoji_name: Nullish<string>;
+	emoji_id: bigint | null;
+	emoji_name: string | null;
 }
 
 export interface ThreadStateRow {
@@ -20,14 +18,14 @@ export interface ThreadStateRow {
 	type: number;
 	archived: boolean;
 	locked: boolean;
-	invitable: Nullish<boolean>;
+	invitable: boolean | null;
 	auto_archive_duration: number;
-	archive_timestamp: Nullish<Date>;
+	archive_timestamp: Date | null;
 	created_at: Date;
 	flags: number;
-	applied_tags: Nullish<Array<bigint>>;
+	applied_tags: Array<bigint> | null;
 	member_count: number;
-	member_ids_preview: Nullish<Array<UserID>>;
+	member_ids_preview: Array<UserID> | null;
 	has_starter: boolean;
 	state_version: number;
 }
@@ -53,8 +51,8 @@ export const THREAD_STATE_COLUMNS = [
 
 export interface ThreadStatsRow {
 	thread_id: ChannelID;
-	message_count: Nullish<number>;
-	total_message_sent: Nullish<number>;
+	message_count: number | null;
+	total_message_sent: number | null;
 }
 
 export const THREAD_STATS_COLUMNS = [
@@ -115,7 +113,7 @@ export interface ThreadMemberRow {
 	join_timestamp: Date;
 	flags: number;
 	muted: boolean;
-	mute_config: Nullish<MuteConfig>;
+	mute_config: MuteConfig | null;
 }
 
 export const THREAD_MEMBER_COLUMNS = [
@@ -148,16 +146,16 @@ export const THREAD_MEMBERS_BY_USER_COLUMNS = [
 export interface ThreadParentConfigRow {
 	guild_id: GuildID;
 	channel_id: ChannelID;
-	flags: Nullish<number>;
-	default_auto_archive_duration: Nullish<number>;
-	default_thread_rate_limit_per_user: Nullish<number>;
-	available_tags: Nullish<Array<ForumTagUdt>>;
-	default_reaction_emoji_id: Nullish<bigint>;
-	default_reaction_emoji_name: Nullish<string>;
-	default_sort_order: Nullish<number>;
-	default_forum_layout: Nullish<number>;
-	default_tag_setting: Nullish<string>;
-	has_threads: Nullish<boolean>;
+	flags: number | null;
+	default_auto_archive_duration: number | null;
+	default_thread_rate_limit_per_user: number | null;
+	available_tags: Array<ForumTagUdt> | null;
+	default_reaction_emoji_id: bigint | null;
+	default_reaction_emoji_name: string | null;
+	default_sort_order: number | null;
+	default_forum_layout: number | null;
+	default_tag_setting: string | null;
+	has_threads: boolean | null;
 }
 
 export const THREAD_PARENT_CONFIG_COLUMNS = [
@@ -195,9 +193,9 @@ export const THREAD_ONLY_CHANNELS_BY_GUILD_COLUMNS = ['guild_id', 'channel_id'] 
 
 export interface GuildThreadStateRow {
 	guild_id: GuildID;
-	first_active_at: Nullish<Date>;
-	perms_seeded_at: Nullish<Date>;
-	search_backfilled_at: Nullish<Date>;
+	first_active_at: Date | null;
+	perms_seeded_at: Date | null;
+	search_backfilled_at: Date | null;
 }
 
 export const GUILD_THREAD_STATE_COLUMNS = [

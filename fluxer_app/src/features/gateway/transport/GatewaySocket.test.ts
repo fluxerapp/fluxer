@@ -8,7 +8,6 @@ import {GatewayCompression} from '@app/features/gateway/transport/GatewayCompres
 import {GatewayConnectionRole} from '@app/features/gateway/transport/GatewayConnectionRole';
 import {
 	type GatewayDispatchDelivery,
-	type GatewayDispatchReceipt,
 	GatewaySocket,
 	type GatewaySocketOptions,
 	type GatewaySocketProperties,
@@ -100,14 +99,6 @@ afterEach(() => {
 	vi.useRealTimers();
 });
 
-describe('gateway url', () => {
-	test('pins the deployed query string including stream=1', async () => {
-		const url = await internals(createSocket()).buildGatewayUrl();
-
-		expect(url).toBe('wss://gateway.example/?v=9&encoding=json&compress=zstd-stream&stream=1');
-	});
-});
-
 describe('voice state payloads', () => {
 	test('two sockets each stamp only their own connection id', () => {
 		const first = createSocket();
@@ -180,21 +171,6 @@ describe('dispatch delivery', () => {
 		expect(deliveries[0].retainedByteSize).toBe(frame.length * 3);
 		expect(deliveries[0].receipt.sequence).toBe(7);
 		expect(socket.isDispatchActive(deliveries[0].receipt)).toBe(true);
-	});
-
-	test('exposes the receipt of the dispatch being emitted and nothing outside it', async () => {
-		const socket = createSocket();
-		let observed: GatewayDispatchReceipt | null = null;
-		socket.on('dispatch', (delivery) => {
-			observed = socket.currentDispatchReceipt();
-			expect(observed).toBe(delivery.receipt);
-		});
-
-		await internals(socket).handleSocketMessage({data: dispatchFrame('TYPING_START', 3, {})});
-		vi.advanceTimersByTime(5000);
-
-		expect(observed).not.toBeNull();
-		expect(() => socket.currentDispatchReceipt()).toThrow();
 	});
 
 	test('completing a dispatch retires its receipt', async () => {
@@ -349,7 +325,7 @@ describe('compression decode failure recovery', () => {
 				closes.push({code, reason});
 			},
 		};
-		internals(socket).payloadDecompressor = new GatewayCompression('zstd-stream', true);
+		internals(socket).payloadDecompressor = new GatewayCompression('zstd-stream');
 		return closes;
 	}
 

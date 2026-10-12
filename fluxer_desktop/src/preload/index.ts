@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
@@ -105,10 +106,6 @@ class DesktopCapabilityManifestContractError extends TypeError {
 interface AccessibilityStartupSettings {
 	syncReducedMotionWithSystem: boolean;
 	reducedMotionOverride: boolean | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 const NATIVE_SCREEN_CAPTURE_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleEventKind> = new Set([
@@ -460,7 +457,7 @@ const api: ElectronAPI = {
 	},
 	windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke('window-is-maximized'),
 	focusThemeStudioPopout: (): Promise<boolean> => ipcRenderer.invoke('theme-studio-popout-focus'),
-	closeThemeStudioPopout: (): Promise<boolean> => ipcRenderer.invoke('theme-studio-popout-close'),
+
 	popoutSetAlwaysOnTop: (key: string, flag: boolean): Promise<boolean> =>
 		ipcRenderer.invoke('popout:set-always-on-top', key, flag),
 	popoutFocus: (key: string): Promise<boolean> => ipcRenderer.invoke('popout:focus', key),
@@ -663,7 +660,7 @@ const api: ElectronAPI = {
 	globalKeyHookUnregister: (id: string): Promise<void> => ipcRenderer.invoke('global-key-hook-unregister', id),
 	globalKeyHookUnregisterAll: (): Promise<void> => ipcRenderer.invoke('global-key-hook-unregister-all'),
 	linuxEvdevStatus: () => ipcRenderer.invoke('linux-evdev-status'),
-	linuxEvdevGrantAccess: () => ipcRenderer.invoke('linux-evdev-grant-access'),
+
 	onGlobalKeyEvent: (callback: (event: GlobalKeyEvent) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: GlobalKeyEvent): void => {
 			callback(data);

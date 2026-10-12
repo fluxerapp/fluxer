@@ -39,6 +39,17 @@ function ensureAdminCanAuthenticate(adminUser: User): void {
 	}
 }
 
+export function hasAdminACL(granted: ReadonlySet<string>, acl: string): boolean {
+	return granted.has(acl) || granted.has(AdminACLs.WILDCARD);
+}
+
+export function requireGrantedAdminACLs(granted: ReadonlySet<string>, required: Iterable<string>): void {
+	if (granted.has(AdminACLs.WILDCARD)) return;
+	for (const acl of required) {
+		if (!granted.has(acl)) throw new MissingACLError(acl);
+	}
+}
+
 function hasAnyAdminACL(acls: Set<string>, requiredACLs: ReadonlyArray<string>): boolean {
 	return acls.has(AdminACLs.WILDCARD) || requiredACLs.some((acl) => acls.has(acl));
 }

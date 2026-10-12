@@ -7,6 +7,10 @@ import {ForumTagPicker} from '@app/features/forum/components/ForumTagPicker';
 import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
 import {reportForumError} from '@app/features/forum/utils/ForumErrors';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR as D_CANCEL_DESCRIPTOR,
+	SAVE_DESCRIPTOR as D_SAVE_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {useLingui} from '@lingui/react/macro';
@@ -48,10 +52,10 @@ export const ForumPostTagsModal = observer(({postId}: {postId: string}) => {
 			</Modal.Content>
 			<Modal.Footer data-flx="forum.forum-post-tags-modal.modal-footer">
 				<Button onClick={ModalCommands.pop} variant="secondary" data-flx="forum.forum-post-tags-modal.button.pop">
-					{i18n._(D.CANCEL_DESCRIPTOR)}
+					{i18n._(D_CANCEL_DESCRIPTOR)}
 				</Button>
 				<Button onClick={handleSave} submitting={submitting} data-flx="forum.forum-post-tags-modal.button.save">
-					{i18n._(D.SAVE_DESCRIPTOR)}
+					{i18n._(D_SAVE_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

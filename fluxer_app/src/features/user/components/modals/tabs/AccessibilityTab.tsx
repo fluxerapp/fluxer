@@ -23,7 +23,18 @@ import {KeyboardTabContent} from '@app/features/user/components/modals/tabs/acce
 import {MotionTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/MotionTab';
 import {VisualTabContent} from '@app/features/user/components/modals/tabs/accessibility_tab/VisualTab';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
+import inlineStyles from '@app/features/user/components/modals/tabs/TabInline.module.css';
+import {
+	ANIMATION_DESCRIPTOR,
+	KEYBOARD_2_DESCRIPTOR as KEYBOARD_DESCRIPTOR,
+	MOTION_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import Users from '@app/features/user/state/Users';
+import {
+	ANNOUNCE_NEW_MESSAGES_DESCRIPTOR,
+	DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR,
+	VISUAL_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {MessagePreviewContext, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -42,20 +53,13 @@ const PREVIEW_BUTTON_DESCRIPTOR = msg({
 	message: 'Preview button',
 	comment: 'Short label in the accessibility tab. Keep it concise.',
 });
-const ANNOUNCE_NEW_MESSAGES_DESCRIPTOR = msg({
-	message: 'Announce new messages',
-	comment: 'Short label in the accessibility tab. Keep it concise.',
-});
+
 const LET_SCREEN_READERS_ANNOUNCE_NEW_MESSAGES_AS_THEY_DESCRIPTOR = msg({
 	message:
 		'Let screen readers announce new messages as they arrive in the open channel. Notification sounds are unaffected.',
 	comment: 'Label in the accessibility tab.',
 });
-const DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR = msg({
-	message:
-		"Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985.",
-	comment: 'Label in the accessibility tab.',
-});
+
 const SPEECH_PLAYBACK_SPEED_DESCRIPTOR = msg({
 	message: 'Speech playback speed',
 	comment: 'Short label in the accessibility tab. Keep it concise.',
@@ -84,22 +88,7 @@ const HEAR_THE_SAMPLE_LINE_SPOKEN_WITH_YOUR_CHOSEN_DESCRIPTOR = msg({
 	message: 'Hear the sample line spoken at your chosen speed.',
 	comment: 'Description text in the accessibility tab.',
 });
-const VISUAL_DESCRIPTOR = msg({
-	message: 'Visual',
-	comment: 'Short label in the accessibility tab. Keep it concise.',
-});
-const KEYBOARD_DESCRIPTOR = msg({
-	message: 'Keyboard',
-	comment: 'Short label in the accessibility tab. Keep it concise.',
-});
-const ANIMATION_DESCRIPTOR = msg({
-	message: 'Animation',
-	comment: 'Short label in the accessibility tab. Keep it concise.',
-});
-const MOTION_DESCRIPTOR = msg({
-	message: 'Motion',
-	comment: 'Short label in the accessibility tab. Keep it concise.',
-});
+
 const TTS_RATE_OPTIONS = [0.1, 0.5, 1.0, 1.5, 2.0] as const;
 
 const getNearestTtsRate = (value: number): number => {
@@ -343,39 +332,55 @@ export const AccessibilityTtsTabContent: React.FC = observer(() => {
 		</div>
 	);
 });
-export const AccessibilityTab: React.FC = observer(() => {
+const AccessibilitySections = observer(() => {
 	const {i18n} = useLingui();
+	return (
+		<>
+			<SettingsSection id="visual" title={i18n._(VISUAL_DESCRIPTOR)} data-flx="user.accessibility-tab.visual">
+				<VisualTabContent data-flx="user.accessibility-tab.visual-tab-content" />
+			</SettingsSection>
+
+			<SettingsSection
+				id="screen-reader"
+				title={i18n._(SCREEN_READER_DESCRIPTOR)}
+				data-flx="user.accessibility-tab.screen-reader"
+			>
+				<AccessibilityScreenReaderTabContent data-flx="user.accessibility-tab.accessibility-screen-reader-tab-content" />
+			</SettingsSection>
+
+			<SettingsSection id="tts" title={i18n._(TEXT_TO_SPEECH_DESCRIPTOR)} data-flx="user.accessibility-tab.tts">
+				<AccessibilityTtsTabContent data-flx="user.accessibility-tab.accessibility-tts-tab-content" />
+			</SettingsSection>
+
+			<SettingsSection id="keyboard" title={i18n._(KEYBOARD_DESCRIPTOR)} data-flx="user.accessibility-tab.keyboard">
+				<KeyboardTabContent data-flx="user.accessibility-tab.keyboard-tab-content" />
+			</SettingsSection>
+
+			<SettingsSection id="animation" title={i18n._(ANIMATION_DESCRIPTOR)} data-flx="user.accessibility-tab.animation">
+				<AnimationTabContent data-flx="user.accessibility-tab.animation-tab-content" />
+			</SettingsSection>
+
+			<SettingsSection id="motion" title={i18n._(MOTION_DESCRIPTOR)} data-flx="user.accessibility-tab.motion">
+				<MotionTabContent data-flx="user.accessibility-tab.motion-tab-content" />
+			</SettingsSection>
+		</>
+	);
+});
+export const AccessibilityTab: React.FC = observer(() => {
 	return (
 		<SettingsTabContainer data-flx="user.accessibility-tab.settings-tab-container">
 			{!MobileLayout.enabled && <AccessibilityTabPreview data-flx="user.accessibility-tab.accessibility-tab-preview" />}
 			<SettingsTabContent data-flx="user.accessibility-tab.settings-tab-content">
-				<SettingsSection id="visual" title={i18n._(VISUAL_DESCRIPTOR)} data-flx="user.accessibility-tab.visual">
-					<VisualTabContent data-flx="user.accessibility-tab.visual-tab-content" />
-				</SettingsSection>
-				<SettingsSection
-					id="screen-reader"
-					title={i18n._(SCREEN_READER_DESCRIPTOR)}
-					data-flx="user.accessibility-tab.screen-reader"
-				>
-					<AccessibilityScreenReaderTabContent data-flx="user.accessibility-tab.accessibility-screen-reader-tab-content" />
-				</SettingsSection>
-				<SettingsSection id="tts" title={i18n._(TEXT_TO_SPEECH_DESCRIPTOR)} data-flx="user.accessibility-tab.tts">
-					<AccessibilityTtsTabContent data-flx="user.accessibility-tab.accessibility-tts-tab-content" />
-				</SettingsSection>
-				<SettingsSection id="keyboard" title={i18n._(KEYBOARD_DESCRIPTOR)} data-flx="user.accessibility-tab.keyboard">
-					<KeyboardTabContent data-flx="user.accessibility-tab.keyboard-tab-content" />
-				</SettingsSection>
-				<SettingsSection
-					id="animation"
-					title={i18n._(ANIMATION_DESCRIPTOR)}
-					data-flx="user.accessibility-tab.animation"
-				>
-					<AnimationTabContent data-flx="user.accessibility-tab.animation-tab-content" />
-				</SettingsSection>
-				<SettingsSection id="motion" title={i18n._(MOTION_DESCRIPTOR)} data-flx="user.accessibility-tab.motion">
-					<MotionTabContent data-flx="user.accessibility-tab.motion-tab-content" />
-				</SettingsSection>
+				<AccessibilitySections data-flx="user.accessibility-tab.accessibility-sections" />
 			</SettingsTabContent>
 		</SettingsTabContainer>
+	);
+});
+
+export const AccessibilityInlineContent = observer(() => {
+	return (
+		<div className={inlineStyles.container} data-flx="user.accessibility-tab.accessibility-inline-content.div">
+			<AccessibilitySections data-flx="user.accessibility-tab.accessibility-inline-content.accessibility-sections" />
+		</div>
 	);
 });

@@ -5,19 +5,10 @@ import {TYPING_BRIDGE_RIGHT_SHIFT_RATIO, TYPING_WIDTH_MULTIPLIER} from '@app/fea
 
 export interface AvatarStatusLayout {
 	supportsStatus: boolean;
-	statusSize: number;
-	borderSize: number;
-	statusWidth: number;
-	statusHeight: number;
-	typingWidth: number;
-	typingHeight: number;
 	innerStatusWidth: number;
 	innerStatusHeight: number;
 	innerTypingWidth: number;
 	innerTypingHeight: number;
-	statusRight: number;
-	statusBottom: number;
-	typingRight: number;
 	innerStatusRight: number;
 	innerStatusBottom: number;
 	innerTypingRight: number;
@@ -25,11 +16,6 @@ export interface AvatarStatusLayout {
 	cutoutCx: number;
 	cutoutCy: number;
 	cutoutRadius: number;
-	typingCutoutCx: number;
-	typingCutoutCy: number;
-	typingCutoutWidth: number;
-	typingCutoutHeight: number;
-	typingCutoutRx: number;
 }
 
 const LAYOUT_CACHE = new Map<string, AvatarStatusLayout>();
@@ -42,8 +28,6 @@ export function getAvatarStatusLayout(size: number, isMobile: boolean = false): 
 	const supportsStatus = size > 16;
 	const geom = getStatusGeometry(size, isMobile);
 	const statusSize = geom.size;
-	const borderSize = geom.borderWidth;
-	const statusWidth = statusSize;
 	const statusHeight = isMobile && geom.phoneHeight ? geom.phoneHeight : statusSize;
 	const typingWidth = Math.round(statusSize * TYPING_WIDTH_MULTIPLIER);
 	const typingHeight = statusSize;
@@ -54,35 +38,18 @@ export function getAvatarStatusLayout(size: number, isMobile: boolean = false): 
 	const cutoutCx = geom.cx;
 	const cutoutCy = geom.cy;
 	const cutoutRadius = geom.radius;
-	const typingCutoutWidth = typingWidth;
-	const typingCutoutHeight = typingHeight;
 	const typingExtension = Math.max(0, typingWidth - statusSize);
 	const typingBridgeShift = typingExtension * TYPING_BRIDGE_RIGHT_SHIFT_RATIO;
-	const typingCutoutCx = cutoutCx + statusSize / 2 - typingWidth / 2 + typingBridgeShift;
-	const typingCutoutCy = cutoutCy;
-	const typingCutoutRx = geom.radius;
 	const innerStatusRight = size - cutoutCx - statusSize / 2;
 	const innerStatusBottom = size - cutoutCy - statusHeight / 2;
 	const innerTypingRight = innerStatusRight - typingBridgeShift;
 	const innerTypingBottom = size - cutoutCy - typingHeight / 2;
-	const statusRight = innerStatusRight;
-	const statusBottom = innerStatusBottom;
-	const typingRight = innerTypingRight;
 	const layout = {
 		supportsStatus,
-		statusSize,
-		borderSize,
-		statusWidth,
-		statusHeight,
-		typingWidth,
-		typingHeight,
 		innerStatusWidth,
 		innerStatusHeight,
 		innerTypingWidth,
 		innerTypingHeight,
-		statusRight,
-		statusBottom,
-		typingRight,
 		innerStatusRight,
 		innerStatusBottom,
 		innerTypingRight,
@@ -90,11 +57,6 @@ export function getAvatarStatusLayout(size: number, isMobile: boolean = false): 
 		cutoutCx,
 		cutoutCy,
 		cutoutRadius,
-		typingCutoutCx,
-		typingCutoutCy,
-		typingCutoutWidth,
-		typingCutoutHeight,
-		typingCutoutRx,
 	};
 	LAYOUT_CACHE.set(cacheKey, layout);
 	return layout;

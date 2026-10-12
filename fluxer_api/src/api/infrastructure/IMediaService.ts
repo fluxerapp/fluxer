@@ -65,27 +65,6 @@ export interface MediaProxySniffResponse {
 	content_type: string | null;
 }
 
-export type MediaProxyFrameRequest =
-	| {
-			type: 'upload';
-			upload_filename: string;
-	  }
-	| {
-			type: 's3';
-			bucket: string;
-			key: string;
-	  };
-
-interface MediaProxyFrameData {
-	timestamp: number;
-	mime_type: string;
-	base64: string;
-}
-
-export interface MediaProxyFrameResponse {
-	frames: Array<MediaProxyFrameData>;
-}
-
 export abstract class IMediaService {
 	abstract getMetadata(
 		request: MediaProxyMetadataRequest,
@@ -94,9 +73,5 @@ export abstract class IMediaService {
 
 	abstract getExternalMediaProxyURL(url: string): string;
 
-	abstract getThumbnail(uploadFilename: string): Promise<Buffer | null>;
-
 	abstract sniffUpload(uploadFilename: string): Promise<MediaProxySniffResponse | null>;
-
-	abstract extractFrames(request: MediaProxyFrameRequest): Promise<MediaProxyFrameResponse>;
 }

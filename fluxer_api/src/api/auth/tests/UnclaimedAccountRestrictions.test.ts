@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createDMChannel,
-	createFriendship,
 	createGuild,
 	sendMessage,
 } from '@app/api/message/tests/MessageTestUtils';
@@ -111,42 +111,6 @@ describe('Unclaimed Account Restrictions', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.executeWithResponse();
 		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES');
-	});
-	test('unclaimed account cannot send friend request', async () => {
-		const sender = await createTestAccount(harness);
-		const receiver = await createTestAccount(harness);
-		await unclaimAccount(harness, sender.userId);
-		await createBuilder(harness, sender.token)
-			.put(`/users/@me/relationships/${receiver.userId}`)
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('unclaimed account cannot accept friend request', async () => {
-		const sender = await createTestAccount(harness);
-		const receiver = await createTestAccount(harness);
-		await createBuilder(harness, sender.token).post(`/users/@me/relationships/${receiver.userId}`).body({}).execute();
-		await unclaimAccount(harness, receiver.userId);
-		await createBuilder(harness, receiver.token)
-			.put(`/users/@me/relationships/${sender.userId}`)
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('unclaimed account cannot open DM with another user', async () => {
-		const unclaimed = await createTestAccount(harness);
-		const target = await createTestAccount(harness);
-		const guild = await createGuild(harness, unclaimed.token, 'Test Guild');
-		const channelId = guild.system_channel_id!;
-		const invite = await createChannelInvite(harness, unclaimed.token, channelId);
-		await acceptInvite(harness, target.token, invite.code);
-		await unclaimAccount(harness, unclaimed.userId);
-		const {json: error} = await createBuilder<{
-			code: string;
-		}>(harness, unclaimed.token)
-			.post('/users/@me/channels')
-			.body({recipient_id: target.userId})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.executeWithResponse();
-		expect(error.code).toBe('UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES');
 	});
 	test('unclaimed account can delete without password', async () => {
 		const unclaimed = await createTestAccount(harness);

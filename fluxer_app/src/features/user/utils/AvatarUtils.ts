@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {
 	buildMediaProxyURL,
 	buildMediaProxyURLForInstance,
@@ -11,19 +10,40 @@ import {
 } from '@app/features/messaging/utils/MediaProxyUtils';
 import {mediaUrl, setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import type {User} from '@app/features/user/models/User';
-import {
-	getDefaultAvatarIndex,
-	getDefaultAvatarPrimaryColor as getSharedDefaultAvatarPrimaryColor,
-	normalizeEndpoint,
-	parseAvatarHash,
-} from '@app/features/user/utils/AvatarMediaUtils';
-import {getDefaultAvatarAssetURL} from '@app/features/user/utils/DefaultAvatars';
+import avatar0 from '@app/media/images/avatars/0.png';
+import avatar1 from '@app/media/images/avatars/1.png';
+import avatar2 from '@app/media/images/avatars/2.png';
+import avatar3 from '@app/media/images/avatars/3.png';
+import avatar4 from '@app/media/images/avatars/4.png';
+import avatar5 from '@app/media/images/avatars/5.png';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {
 	MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 	MEDIA_PROXY_ICON_SIZE_DEFAULT,
 } from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
+
+const DEFAULT_AVATAR_PRIMARY_COLORS = [0x4641d9, 0xf0b100, 0x00bba7, 0x2b7fff, 0xad46ff, 0x6a7282];
+const DEFAULT_AVATAR_COUNT = BigInt(DEFAULT_AVATAR_PRIMARY_COLORS.length);
+export const normalizeEndpoint = (endpoint: string): string => endpoint.replace(/\/$/, '');
+export const parseAvatarHash = (value: string) => {
+	const animated = value.startsWith('a_');
+	const hash = animated ? value.slice(2) : value;
+	return {animated, hash};
+};
+export const getDefaultAvatarIndex = (id: string): number => Number(BigInt(id) % DEFAULT_AVATAR_COUNT);
+export const getDefaultAvatarPrimaryColor = (id: string): number =>
+	DEFAULT_AVATAR_PRIMARY_COLORS[getDefaultAvatarIndex(id)];
+
+const DEFAULT_AVATARS: ReadonlyArray<string> = [avatar0, avatar1, avatar2, avatar3, avatar4, avatar5];
+
+const DEFAULT_AVATAR_ASSET_COUNT = DEFAULT_AVATARS.length;
+
+export function getDefaultAvatarURLForIndex(index: number): string {
+	return DEFAULT_AVATARS[
+		((index % DEFAULT_AVATAR_ASSET_COUNT) + DEFAULT_AVATAR_ASSET_COUNT) % DEFAULT_AVATAR_ASSET_COUNT
+	];
+}
 
 export {snapMediaProxyImageSize};
 
@@ -74,8 +94,6 @@ const getViewportSplashSize = (): MediaProxyImageSize => {
 	return snapWideAssetImageSize(cssWidth);
 };
 
-export const getDefaultAvatarURLForIndex = (index: number): string => getDefaultAvatarAssetURL(index);
-
 export function getSystemUserBrandingAvatarURL(userId: string): string | null {
 	if (userId !== FLUXERBOT_ID || !RuntimeConfig.isSelfHosted()) return null;
 	const branding = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding;
@@ -85,10 +103,6 @@ export function getSystemUserBrandingAvatarURL(userId: string): string | null {
 export function getSystemUserBrandingColor(userId: string): string | null {
 	if (userId !== FLUXERBOT_ID || !RuntimeConfig.isSelfHosted()) return null;
 	return RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.theme_color ?? null;
-}
-
-export function getDefaultAvatarPrimaryColor(id: string) {
-	return getSharedDefaultAvatarPrimaryColor(id);
 }
 
 export function getDefaultAvatarURL(id: string) {
@@ -123,9 +137,6 @@ const parseMediaHashForRequest = (value: string, animated = false) => {
 	};
 };
 const getMediaURL = ({path, id, hash, size, format, animated, endpoint, instanceKey}: MediaURLParams) => {
-	if (DeveloperOptions.forceRenderPlaceholders) {
-		return '';
-	}
 	const baseEndpoint = endpoint === undefined ? RuntimeConfig.mediaEndpoint : endpoint;
 	if (!baseEndpoint) {
 		return '';
@@ -150,9 +161,6 @@ type GuildMemberMediaURLParams = {
 };
 
 const getGuildMemberMediaURL = ({path, guildId, userId, hash, size, format, animated}: GuildMemberMediaURLParams) => {
-	if (DeveloperOptions.forceRenderPlaceholders) {
-		return '';
-	}
 	const baseEndpoint = RuntimeConfig.mediaEndpoint;
 	if (!baseEndpoint) {
 		return '';
@@ -499,9 +507,6 @@ const EMOJI_URL_CACHE = new Map<string, string>();
 const EMOJI_URL_CACHE_LIMIT = 4096;
 
 export function getEmojiURL({id, animated, isAnimatable}: {id: string; animated?: boolean; isAnimatable?: boolean}) {
-	if (DeveloperOptions.forceRenderPlaceholders) {
-		return '';
-	}
 	const animatedFlag = isAnimatable === false ? false : animated === true;
 	const key = `${mediaURLCacheScope()}:${animatedFlag ? 'a' : 's'}:${id}`;
 	const cached = EMOJI_URL_CACHE.get(key);
@@ -528,9 +533,6 @@ export function getStickerURL({
 	isAnimatable?: boolean;
 	size?: StickerSize;
 }) {
-	if (DeveloperOptions.forceRenderPlaceholders) {
-		return '';
-	}
 	const animatedFlag = isAnimatable === false ? false : animated === true;
 	const safeSize: StickerSize = size === 320 ? 320 : 160;
 	const key = `${mediaURLCacheScope()}:${animatedFlag ? 'a' : 's'}:${safeSize}:${id}`;
@@ -540,13 +542,4 @@ export function getStickerURL({
 	if (STICKER_URL_CACHE.size >= STICKER_URL_CACHE_LIMIT) STICKER_URL_CACHE.clear();
 	STICKER_URL_CACHE.set(key, result);
 	return result;
-}
-
-export function fileToBase64(file: File) {
-	return new Promise<string>((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(reader.result as string);
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
 }

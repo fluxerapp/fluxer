@@ -122,12 +122,6 @@ fn javascript_content_type_leaves_every_other_type_alone() {
 }
 
 #[test]
-fn the_inert_content_type_is_not_javascript() {
-    assert_eq!("text/plain; charset=utf-8", INERT_CONTENT_TYPE);
-    assert!(!is_javascript_content_type(INERT_CONTENT_TYPE));
-}
-
-#[test]
 fn javascript_content_type_never_panics_on_adversarial_text() {
     for text in ADVERSARIAL_TEXT_INPUTS {
         assert!(!is_javascript_content_type(text), "{text:?}");

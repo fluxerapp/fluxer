@@ -233,7 +233,7 @@ is_move_pending(UserId, ChannelId, State) ->
 -spec dispatch_channel_visibility_change(user_id(), channel_id(), add | remove, guild_state()) ->
     ok.
 dispatch_channel_visibility_change(UserId, ChannelId, Action, State) ->
-    case guild_permissions:find_channel_by_id(ChannelId, State) of
+    case guild_permissions_check:find_channel_by_id(ChannelId, State) of
         undefined ->
             ok;
         Channel ->

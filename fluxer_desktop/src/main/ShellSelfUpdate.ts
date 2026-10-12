@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
+import {errorMessage as errorDetail} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	type AppImageTarget,
@@ -10,7 +11,7 @@ import {
 } from '@electron/main/AppImageUpdate';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {moduleNetworkFetch} from '@electron/main/ModuleNetworkFetch';
-import {compareModuleVersions, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {compareShellVersions} from '@electron/main/ModuleVersion';
 import {getUpdateBaseUrl} from '@electron/main/ShellDownloadFormats';
 import type {ShellUpdateCapability, ShellUpdatePlan} from '@electron/main/ShellUpdateCapability';
 import {
@@ -48,14 +49,6 @@ interface SelfUpdateControl {
 	readonly isSettled: () => boolean;
 	readonly clearCheckDeadline: () => void;
 	readonly addCleanup: (cleanup: () => void) => void;
-}
-
-function errorDetail(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
-
-function compareShellVersions(left: string, right: string): number {
-	return compareModuleVersions(parseModuleVersion(left, 'shell version'), parseModuleVersion(right, 'shell version'));
 }
 
 function feedUserAgent(): string {

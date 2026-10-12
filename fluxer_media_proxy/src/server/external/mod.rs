@@ -8,7 +8,7 @@ use crate::{
     byte_budget::BudgetedBytes,
     config::Config,
     constants::{self, AssetExtension},
-    external_path, mime,
+    mime,
     server::{
         download_stream::DownloadStreamPolicy,
         external::{
@@ -38,7 +38,6 @@ use crate::{
             parameters::TransformRoute, serve_bytes_or_transform,
         },
     },
-    signing,
 };
 use axum::{
     http::{HeaderMap, Method, StatusCode, header},
@@ -199,10 +198,15 @@ impl<'a> PreparedExternalRequest<'a> {
         let Some((sig, proxy_path)) = rest.split_once('/') else {
             return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
         };
-        if !signing::verify_signature(proxy_path, sig, app.cfg.secret_key.as_bytes()) {
+        if !fluxer_common::external_media_path::verify_signature(
+            proxy_path,
+            sig,
+            app.cfg.secret_key.as_bytes(),
+        ) {
             return Err(Box::new(text(StatusCode::UNAUTHORIZED, "Unauthorized")));
         }
-        let Ok(url) = external_path::reconstruct_original_url(proxy_path) else {
+        let Ok(url) = fluxer_common::external_media_path::reconstruct_original_url(proxy_path)
+        else {
             return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
         };
         let url_ext_is_svg =

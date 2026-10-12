@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Слишком много файлов. Разрешено максимум {maxFiles} {maxFiles, plural, one {файл} few {файла} many {файлов} other {файла}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Обнаружен неразрешённый URL `attachment://`. Он должен был быть разрешён до обработки встраивания.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Не удалось найти загруженное вложение {filename}.",
-	"auth_and_oauth.application_not_owned": "Ты не владелец этого приложения.",
 	"auth_and_oauth.bot_already_in_guild": "Этот бот уже находится в сообществе.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Пользователи-боты не могут создавать сессии авторизации.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Пользователи-боты не могут использовать эндпоинты авторизации.",

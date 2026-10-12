@@ -45,20 +45,29 @@ describe('Server limits', () => {
 		expect(httpServer.requestTimeout).toBe(120_000);
 		expect(httpServer.keepAliveTimeout).toBe(125_000);
 		expect(httpServer.maxRequestsPerSocket).toBe(1_000);
-		expect(httpServer.headersTimeout).toBeLessThanOrEqual(httpServer.requestTimeout);
+		expect(httpServer.headersTimeout).toBe(30_000);
 	});
 
 	test('honours explicit limit overrides', async () => {
 		const listening = await listen({
 			port: 0,
 			requestTimeoutMs: 15_000,
+			headersTimeoutMs: 10_000,
 			keepAliveTimeoutMs: 61_000,
 			maxRequestsPerSocket: 250,
 		});
 		server = listening.server;
 		const httpServer = server as Server;
 		expect(httpServer.requestTimeout).toBe(15_000);
+		expect(httpServer.headersTimeout).toBe(10_000);
 		expect(httpServer.keepAliveTimeout).toBe(61_000);
 		expect(httpServer.maxRequestsPerSocket).toBe(250);
+	});
+
+	test('clamps the header timeout to the request timeout', async () => {
+		const listening = await listen({port: 0, requestTimeoutMs: 5_000});
+		server = listening.server;
+		const httpServer = server as Server;
+		expect(httpServer.headersTimeout).toBe(5_000);
 	});
 });

@@ -114,7 +114,7 @@ forum_starter_scope(undefined, _Data) ->
 
 -spec parent_channel(integer() | undefined, map()) -> map().
 parent_channel(ParentId, Data) when is_integer(ParentId) ->
-    case maps:get(ParentId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ParentId, guild_data_index_channels:channel_index(Data), undefined) of
         Parent when is_map(Parent) -> Parent;
         _ -> #{}
     end;

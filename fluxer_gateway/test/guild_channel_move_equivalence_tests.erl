@@ -550,7 +550,7 @@ input_changes() ->
             end)},
         {roles,
             with_data(fun(D) ->
-                [E | Rest] = guild_data_index:role_list(D),
+                [E | Rest] = guild_data_index_roles:role_list(D),
                 guild_data_index:put_roles([E#{<<"permissions">> => <<"0">>} | Rest], D)
             end)},
         {role_order,
@@ -643,7 +643,9 @@ with_channels(Fun) ->
 with_channels(Fun, State) ->
     with_data(
         fun(D) ->
-            guild_data_index:put_channels([Fun(C) || C <- guild_data_index:channel_list(D)], D)
+            guild_data_index:put_channels(
+                [Fun(C) || C <- guild_data_index_channels:channel_list(D)], D
+            )
         end,
         State
     ).
@@ -882,7 +884,7 @@ run(Spec, Events, Mode) ->
 
 apply_hooks(Hooks, State, Env) ->
     State1 = lists:foldl(fun apply_hook/2, State, Hooks),
-    State2 = guild_member_list:flush_pending_member_list_syncs(State1),
+    State2 = guild_member_list_write:flush_pending_member_list_syncs(State1),
     {Log, Direct, _Fetches} = take_log(Env),
     {State2, {normalize(Log, Env), normalize(Direct, Env)}}.
 
@@ -896,7 +898,7 @@ apply_hook({channel_create, Channel}, State) ->
 apply_hook({owner, UserId}, State) ->
     guild:dispatch_event(guild_update, #{<<"owner_id">> => integer_to_binary(UserId)}, State);
 apply_hook({member_update, UserId}, State) ->
-    Member = guild_data_index:get_member(UserId, maps:get(data, State)),
+    Member = guild_data_index_members:get_member(UserId, maps:get(data, State)),
     Nick =
         case maps:get(<<"nick">>, Member, null) of
             Previous when is_binary(Previous) -> <<Previous/binary, "x">>;
@@ -906,7 +908,7 @@ apply_hook({member_update, UserId}, State) ->
         guild_member_update, member_payload(Member#{<<"nick">> => Nick}), State
     );
 apply_hook({role_permissions, Index, Perms}, State) ->
-    Role = maps:get(role_id(Index), guild_data_index:role_index(maps:get(data, State))),
+    Role = maps:get(role_id(Index), guild_data_index_roles:role_index(maps:get(data, State))),
     guild:dispatch_event(
         guild_role_update,
         #{<<"role">> => Role#{<<"permissions">> => integer_to_binary(Perms)}},
@@ -916,7 +918,7 @@ apply_hook({patch_everyone, Bit}, State) ->
     {noreply, Next} = guild:handle_cast({patch_everyone_perms, Bit}, State),
     Next;
 apply_hook({everyone_permissions, Perms}, State) ->
-    Role = maps:get(?GUILD_ID, guild_data_index:role_index(maps:get(data, State))),
+    Role = maps:get(?GUILD_ID, guild_data_index_roles:role_index(maps:get(data, State))),
     guild:dispatch_event(
         guild_role_update,
         #{<<"role">> => Role#{<<"permissions">> => integer_to_binary(Perms)}},
@@ -938,7 +940,7 @@ run_event(Kind, Data, State, Env) ->
             hook -> apply_hook(Data, State);
             _ -> guild:dispatch_event(Kind, Data, State)
         end,
-    State2 = guild_member_list:flush_pending_member_list_syncs(State1),
+    State2 = guild_member_list_write:flush_pending_member_list_syncs(State1),
     {Log, Direct, Fetches} = take_log(Env),
     Counts = read_counters(),
     Result = #{
@@ -1070,7 +1072,7 @@ voice_server_loop(VoiceStates) ->
     {visibility,
         {guild_visibility_overwrites, compute_and_dispatch_visibility_changes_for_channels, 3}},
     {prune, {guild_maintenance, prune_invalid_member_subscriptions, 1}},
-    {can_view, {guild_visibility_channels, channel_is_visible, 4}}
+    {can_view, {guild_permissions_check, can_view_channel, 4}}
 ]).
 
 start_counters() ->
@@ -1141,7 +1143,9 @@ materialize(Spec) ->
     ),
     S4 = lists:foldl(
         fun({Sid, ListId}, Acc) ->
-            {Acc1, _, _} = guild_member_list:subscribe_ranges(Sid, ListId, [{0, 99}], Acc),
+            {Acc1, _, _} = guild_member_list_subscribe:subscribe_ranges(
+                Sid, ListId, [{0, 99}], Acc
+            ),
             Acc1
         end,
         S3,
@@ -1168,7 +1172,7 @@ materialize(Spec) ->
         #{},
         #{},
         guild_maintenance:maybe_prune_invalid_member_subscriptions(
-            guild_role_update, guild_member_list:flush_pending_member_list_syncs(S5)
+            guild_role_update, guild_member_list_write:flush_pending_member_list_syncs(S5)
         )
     ),
     ok = guild_permission_cache:put_state(S6),
@@ -1189,7 +1193,7 @@ add_session(#{label := Label, user_id := UserId, pending := Pending}, Collectors
                 #{};
             false ->
                 guild_sessions:build_viewable_channel_map(
-                    guild_visibility:get_user_viewable_channels(UserId, State)
+                    guild_visibility_channels:get_user_viewable_channels(UserId, State)
                 )
         end,
     Session = #{
@@ -1235,7 +1239,7 @@ normalize_state(State, Env) ->
     EngineSnapshots = maps:map(
         fun(ListId, Ref) ->
             {
-                guild_member_list:member_list_snapshot(ListId, State),
+                guild_member_list_read:member_list_snapshot(ListId, State),
                 guild_member_list_engine:get_sorted_user_ids(Ref),
                 guild_member_list_engine:get_counts(Ref),
                 guild_member_list_engine:get_groups(Ref)

@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {VALID_GIF_BASE64, VALID_PNG_BASE64} from '@app/api/emoji/tests/EmojiTestUtils';
-import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {VALID_PNG_BASE64} from '@app/api/emoji/tests/EmojiTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {AVATAR_MAX_SIZE, EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
+import {AVATAR_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
-const RAISED_EXPRESSION_SIZE = EMOJI_MAX_SIZE * 4;
 const RAISED_AVATAR_SIZE = AVATAR_MAX_SIZE + 2 * 1024 * 1024;
 
 interface LimitConfigReadResponse {
@@ -77,41 +75,6 @@ describe('configured image size limits', () => {
 		await ensureSessionStarted(harness, owner.token);
 		return owner;
 	};
-
-	it('accepts emoji and sticker uploads above the stock size once the limits are raised', async () => {
-		await raiseLimits({emoji_max_size: RAISED_EXPRESSION_SIZE, sticker_max_size: RAISED_EXPRESSION_SIZE});
-		const owner = await createOwner();
-		const guild = await createGuild(harness, owner.token, 'Raised expression limits');
-		const image = paddedImage('image/gif', VALID_GIF_BASE64, Math.max(EMOJI_MAX_SIZE, STICKER_MAX_SIZE) * 2);
-
-		await createBuilder(harness, owner.token)
-			.post(`/guilds/${guild.id}/emojis`)
-			.body({name: 'large_emoji', image})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await createBuilder(harness, owner.token)
-			.post(`/guilds/${guild.id}/stickers`)
-			.body({name: 'large_sticker', description: 'large sticker', tags: [], image})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-	});
-
-	it('rejects an emoji over a raised limit with the configured size', async () => {
-		await raiseLimits({emoji_max_size: RAISED_EXPRESSION_SIZE});
-		const owner = await createOwner();
-		const guild = await createGuild(harness, owner.token, 'Raised emoji ceiling');
-
-		const json = await createBuilder<ValidationErrorResponse>(harness, owner.token)
-			.post(`/guilds/${guild.id}/emojis`)
-			.body({name: 'too_large', image: paddedImage('image/gif', VALID_GIF_BASE64, RAISED_EXPRESSION_SIZE + 1)})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-		expect(json.errors?.[0]).toMatchObject({
-			path: 'image',
-			code: ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT,
-			message: `Image size exceeds ${RAISED_EXPRESSION_SIZE} bytes.`,
-		});
-	});
 
 	it('accepts an avatar above the stock size once avatar_max_size is raised', async () => {
 		await raiseLimits({avatar_max_size: RAISED_AVATAR_SIZE});

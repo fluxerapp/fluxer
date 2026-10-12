@@ -6,7 +6,7 @@ import {
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import type {Channel} from '@app/features/channel/models/Channel';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
+import EmojiPicker, {getEmojiUsageKey} from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
@@ -135,7 +135,7 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			if (e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
-				EmojiPickerCommands.toggleFavorite(emoji);
+				EmojiPicker.toggleFavorite(getEmojiUsageKey(emoji));
 				return;
 			}
 			handleSelect(emoji, e.shiftKey);

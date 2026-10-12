@@ -93,16 +93,6 @@ pub fn is_signature_parameter_name(name: &str) -> bool {
         .any(|candidate| candidate.as_bytes() == decoded.as_slice())
 }
 
-pub fn strip_signature(url: &str) -> String {
-    let (head, fragment) = split_fragment(url);
-    let (base, query) = split_query(head);
-    let preserved = preserved_fields(query);
-    if preserved.is_empty() {
-        return format!("{base}{fragment}");
-    }
-    format!("{base}?{}{fragment}", preserved.join("&"))
-}
-
 pub fn with_signature(
     url: &str,
     storage_key: &str,
@@ -460,11 +450,6 @@ mod tests {
                 signer(text(case, "url"), storage_key, anchor, now, &secrets[0]),
                 "{name} signed url"
             );
-            assert_eq!(
-                text(case, "url"),
-                strip_signature(text(case, "signed")),
-                "{name} strips back"
-            );
             let signed = text(case, "signed");
             assert!(!signed.ends_with('&'), "{name} trailing separator");
             assert!(!signed.contains("&&"), "{name} doubled separator");
@@ -473,24 +458,6 @@ mod tests {
         assert_eq!(parsed.len(), run);
         assert!(run >= 8);
         assert!(data_packages >= 3);
-    }
-
-    #[test]
-    fn every_strip_vector_reproduces_byte_for_byte() {
-        let fixture = fixture();
-        let parsed = cases(&fixture, "strip");
-        let mut run = 0;
-        for case in parsed {
-            assert_eq!(
-                text(case, "stripped"),
-                strip_signature(text(case, "url")),
-                "{}",
-                text(case, "name")
-            );
-            run += 1;
-        }
-        assert_eq!(parsed.len(), run);
-        assert!(run >= 10);
     }
 
     #[test]
@@ -1057,7 +1024,6 @@ mod tests {
             assert_eq!(1, url.matches("is=").count(), "{url}");
             assert_eq!(1, url.matches("hm=").count(), "{url}");
             assert!(url.ends_with("&width=64&height=64#anchor"), "{url}");
-            assert_eq!(canonical, strip_signature(url), "{url}");
         }
         assert_eq!(1, package.matches("uc=dp&").count(), "{package}");
         assert!(!resigned.contains("uc="), "{resigned}");

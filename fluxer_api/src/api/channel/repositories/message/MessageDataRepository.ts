@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
-import type {ListMessagesOptions} from '@app/api/channel/repositories/MessageRepository';
 import {BucketScanDirection, scanBucketsWithIndex} from '@app/api/channel/repositories/message/BucketScanEngine';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type QueryTemplate} from '@app/api/database/CassandraTypes';
@@ -115,7 +114,6 @@ export class MessageDataRepository {
 		beforeMessageId?: MessageID,
 		limit: number = DEFAULT_MESSAGE_LIMIT,
 		afterMessageId?: MessageID,
-		options?: ListMessagesOptions,
 	): Promise<Array<Message>> {
 		if (limit <= 0) return [];
 		getLogger().debug(
@@ -128,13 +126,13 @@ export class MessageDataRepository {
 			'listMessages start',
 		);
 		if (beforeMessageId && afterMessageId) {
-			return this.listMessagesBetween(channelId, afterMessageId, beforeMessageId, limit, options);
+			return this.listMessagesBetween(channelId, afterMessageId, beforeMessageId, limit);
 		}
 		if (beforeMessageId) {
-			return this.listMessagesBefore(channelId, beforeMessageId, limit, options);
+			return this.listMessagesBefore(channelId, beforeMessageId, limit);
 		}
 		if (afterMessageId) {
-			return this.listMessagesAfter(channelId, afterMessageId, limit, options);
+			return this.listMessagesAfter(channelId, afterMessageId, limit);
 		}
 		return this.listMessagesLatest(channelId, limit);
 	}
@@ -151,12 +149,7 @@ export class MessageDataRepository {
 		});
 	}
 
-	private async listMessagesBefore(
-		channelId: ChannelID,
-		before: MessageID,
-		limit: number,
-		options?: ListMessagesOptions,
-	): Promise<Array<Message>> {
+	private async listMessagesBefore(channelId: ChannelID, before: MessageID, limit: number): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const maxBucket = BucketUtils.makeBucket(before);
 		const minBucket = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
@@ -168,7 +161,6 @@ export class MessageDataRepository {
 				maxBucket,
 				minBucket,
 				stateCreatedBucket: state?.created_bucket ?? null,
-				restrictToBeforeBucket: options?.restrictToBeforeBucket ?? null,
 			},
 			'listMessagesBefore: computed bucket range',
 		);
@@ -177,16 +169,10 @@ export class MessageDataRepository {
 			minBucket,
 			maxBucket,
 			before,
-			restrictToBeforeBucket: options?.restrictToBeforeBucket,
 		});
 	}
 
-	private async listMessagesAfter(
-		channelId: ChannelID,
-		after: MessageID,
-		limit: number,
-		options?: ListMessagesOptions,
-	): Promise<Array<Message>> {
+	private async listMessagesAfter(channelId: ChannelID, after: MessageID, limit: number): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const afterBucket = BucketUtils.makeBucket(after);
 		const createdMin = state?.created_bucket ?? BucketUtils.makeBucket(channelId);
@@ -201,7 +187,6 @@ export class MessageDataRepository {
 				minBucket,
 				maxBucket,
 				limit,
-				immediateAfter: options?.immediateAfter ?? false,
 			},
 			'listMessagesAfter parameters',
 		);
@@ -219,7 +204,6 @@ export class MessageDataRepository {
 		after: MessageID,
 		before: MessageID,
 		limit: number,
-		options?: ListMessagesOptions,
 	): Promise<Array<Message>> {
 		const state = await this.getChannelState(channelId);
 		const afterBucket = BucketUtils.makeBucket(after);
@@ -247,7 +231,6 @@ export class MessageDataRepository {
 			maxBucket,
 			after,
 			before,
-			restrictToBeforeBucket: options?.restrictToBeforeBucket,
 		});
 	}
 
@@ -259,15 +242,10 @@ export class MessageDataRepository {
 			maxBucket: number;
 			before?: MessageID;
 			after?: MessageID;
-			restrictToBeforeBucket?: boolean;
 		},
 	): Promise<Array<Message>> {
 		const beforeBucket = opts.before ? BucketUtils.makeBucket(opts.before) : null;
 		const afterBucket = opts.after ? BucketUtils.makeBucket(opts.after) : null;
-		const stopAfterBucket =
-			opts.restrictToBeforeBucket === true && opts.before && !opts.after && beforeBucket !== null
-				? beforeBucket
-				: undefined;
 		getLogger().debug(
 			{
 				channelId: channelId.toString(),
@@ -275,8 +253,6 @@ export class MessageDataRepository {
 				maxBucket: opts.maxBucket,
 				beforeBucket,
 				afterBucket,
-				restrictToBeforeBucket: opts.restrictToBeforeBucket ?? null,
-				stopAfterBucket: stopAfterBucket ?? null,
 			},
 			'scanBucketsDescForMessages: starting scan',
 		);
@@ -305,21 +281,9 @@ export class MessageDataRepository {
 				maxBucket: opts.maxBucket,
 				direction: BucketScanDirection.Desc,
 				indexPageSize: DEFAULT_BUCKET_INDEX_PAGE_SIZE,
-				stopAfterBucket,
 			},
 		);
-		if (out.length === 0) return [];
-		let maxId: MessageID = out[0].message_id;
-		let maxBucketForId = out[0].bucket;
-		for (const row of out) {
-			if (row.message_id > maxId) {
-				maxId = row.message_id;
-				maxBucketForId = row.bucket;
-			}
-		}
-		await this.touchChannelHasMessages(channelId);
-		await this.advanceChannelStateLastMessageIfNewer(channelId, maxId, maxBucketForId);
-		return this.repairAndMapMessages(channelId, out);
+		return this.finishScan(channelId, out);
 	}
 
 	private async scanBucketsAscForMessages(
@@ -357,6 +321,10 @@ export class MessageDataRepository {
 				indexPageSize: DEFAULT_BUCKET_INDEX_PAGE_SIZE,
 			},
 		);
+		return this.finishScan(channelId, out);
+	}
+
+	private async finishScan(channelId: ChannelID, out: Array<MessageRow>): Promise<Array<Message>> {
 		if (out.length === 0) return [];
 		let maxId: MessageID = out[0].message_id;
 		let maxBucketForId = out[0].bucket;

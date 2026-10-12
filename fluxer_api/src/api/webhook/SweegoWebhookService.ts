@@ -7,7 +7,7 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 
@@ -173,11 +173,7 @@ export class SweegoWebhookService {
 		);
 		Logger.info({userId: user.id, recipient: event.recipient, details: event.details}, 'User email marked as bounced');
 		if (updatedUser) {
-			await this.gatewayService.dispatchPresence({
-				userId: updatedUser.id,
-				event: 'USER_UPDATE',
-				data: mapUserToPrivateResponse(updatedUser),
-			});
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 		}
 	}
 }

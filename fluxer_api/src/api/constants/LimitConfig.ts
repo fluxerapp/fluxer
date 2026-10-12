@@ -14,10 +14,6 @@ const LIMIT_RULE_IDS = {
 	VERY_LARGE_GUILD: 'very_large_guild',
 } as const;
 
-export function getLegacyLimitConfigKvKey(selfHosted: boolean): string {
-	return `limit_config:${selfHosted ? 'self_hosted' : 'saas'}`;
-}
-
 export const LIMIT_CONFIG_REFRESH_CHANNEL = 'limit-config-refresh';
 
 export interface LimitBuildOptions {

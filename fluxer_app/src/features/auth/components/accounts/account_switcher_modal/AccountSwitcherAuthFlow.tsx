@@ -9,10 +9,11 @@ import {
 	AccountSwitcherAuthStep,
 	getInitialRuntimeSnapshot,
 } from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherAuthTypes';
-import {AccountSwitcherForgotPasswordStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherForgotPasswordStep';
 import {AccountSwitcherLoginStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherLoginStep';
 import {AccountSwitcherRegisterStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherRegisterStep';
+import forgotStyles from '@app/features/auth/components/pages/ForgotPasswordPage.module.css';
 import {shouldRenderInstanceStep} from '@app/features/auth/flow/auth_login_core/AuthLoginInstanceStep';
+import {ForgotPasswordForm} from '@app/features/auth/flow/ForgotPasswordForm';
 import MFAScreen from '@app/features/auth/flow/MfaScreen';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
@@ -22,6 +23,7 @@ import {
 	type AuthLayoutContextType,
 } from '@app/features/auth/state/AuthLayoutContext';
 import {AuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
+import {flxElementClassName} from '@app/lib/react';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import {observer} from 'mobx-react-lite';
@@ -40,7 +42,7 @@ function resolveInitialRuntimeSnapshot(purpose: AccountSwitcherAuthPurpose): Run
 	if (purposeSnapshot != null) {
 		return purposeSnapshot;
 	}
-	if (shouldRenderInstanceStep(null)) {
+	if (shouldRenderInstanceStep()) {
 		return null;
 	}
 	return RuntimeConfig.getSnapshotOrNull();
@@ -52,6 +54,27 @@ function requireSelectedRuntimeSnapshot(runtimeTarget: AuthRuntimeTarget): Runti
 		throw new Error('Account-switcher authentication requires its selected instance runtime');
 	}
 	return runtimeSnapshot;
+}
+
+function renderForgotPasswordContainer(children: React.ReactNode, isSent: boolean): React.ReactElement {
+	if (isSent) {
+		return (
+			<flx-auth-account-switcher-forgot-password-confirmation
+				className={flxElementClassName(forgotStyles.container)}
+				data-flx="auth.accounts.account-switcher-modal.account-switcher-forgot-password-step.confirmation"
+			>
+				{children}
+			</flx-auth-account-switcher-forgot-password-confirmation>
+		);
+	}
+	return (
+		<flx-auth-account-switcher-forgot-password
+			className={flxElementClassName()}
+			data-flx="auth.accounts.account-switcher-modal.account-switcher-forgot-password-step.root"
+		>
+			{children}
+		</flx-auth-account-switcher-forgot-password>
+	);
 }
 
 export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow({
@@ -182,8 +205,9 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 				);
 			case AccountSwitcherAuthStep.FORGOT:
 				return (
-					<AccountSwitcherForgotPasswordStep
+					<ForgotPasswordForm
 						runtimeSnapshot={requireSelectedRuntimeSnapshot(authRuntimeTarget)}
+						renderContainer={renderForgotPasswordContainer}
 						data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.forgot-password-step"
 					/>
 				);

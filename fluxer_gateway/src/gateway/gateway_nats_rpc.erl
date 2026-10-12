@@ -4,9 +4,9 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0, get_connection/0, is_connected/0, subscribe/2]).
+-export([start_link/0, get_connection/0, subscribe/2]).
 -export([enable_rpc_subscription/0, disable_rpc_subscription/0]).
--export([rpc_subjects_for_role/1, handle_rpc_request/3]).
+
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -dialyzer(
@@ -17,14 +17,6 @@
     ]}
 ).
 
--spec rpc_subjects_for_role(atom()) -> [binary()].
-rpc_subjects_for_role(Role) ->
-    gateway_nats_rpc_handler:rpc_subjects_for_role(Role).
-
--spec handle_rpc_request(binary(), binary(), binary()) -> ok.
-handle_rpc_request(Subject, Payload, ReplyTo) ->
-    gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo).
-
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -32,17 +24,6 @@ start_link() ->
 -spec get_connection() -> {ok, nats:conn() | undefined} | {error, term()}.
 get_connection() ->
     gen_server:call(?MODULE, get_connection).
-
--spec is_connected() -> boolean().
-is_connected() ->
-    try get_connection() of
-        {ok, Conn} when Conn =/= undefined -> true;
-        _ -> false
-    catch
-        throw:_ -> false;
-        error:_ -> false;
-        exit:_ -> false
-    end.
 
 -spec subscribe(binary(), binary()) -> {ok, term()} | {error, term()}.
 subscribe(Subject, QueueGroup) ->

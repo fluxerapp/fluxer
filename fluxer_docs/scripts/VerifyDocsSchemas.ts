@@ -13,23 +13,25 @@ import {
 	DOCS_ROOT,
 	HTTP_METHODS,
 	type MarkdownPage,
+	pageSlug,
 	readMarkdownPages,
 	routeShape,
 	slugifyHeading,
 	splitTableRow,
+	stripVersion,
 } from './DocsSource.ts';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
-export interface Mismatch {
+interface Mismatch {
 	readonly page: string;
 	readonly operation: string;
 	readonly kind: string;
 	readonly detail: string;
 }
 
-export interface SchemaCounters {
+interface SchemaCounters {
 	bodyTables: number;
 	bodiesByReference: number;
 	unionBodies: number;
@@ -109,13 +111,6 @@ interface ObjectBlock {
 	readonly links: Array<Inheritance>;
 	readonly undeclared: Set<string>;
 	readonly declaredOnly: Set<string>;
-}
-
-function stripVersion(routePath: string): string {
-	if (routePath.startsWith('/v1/')) {
-		return routePath.slice(3);
-	}
-	return routePath;
 }
 
 function resolveSchemaPointer(spec: Spec, reference: string): SchemaNode | boolean {
@@ -382,13 +377,6 @@ function operationIndex(spec: Spec): Map<string, Operation> {
 		}
 	}
 	return index;
-}
-
-function pageSlug(relativePath: string): string {
-	return relativePath
-		.replace(/\.(mdx|md)$/u, '')
-		.replace(/\/index$/u, '')
-		.replace(/^index$/u, '');
 }
 
 function documentReferences(page: string, line: string): Set<string> {

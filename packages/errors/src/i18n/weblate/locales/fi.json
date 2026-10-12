@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Liian monta tiedostoa. Sallittu enimmäismäärä on {maxFiles, plural, one {# tiedosto} other {# tiedostoa}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Ratkaisematon `attachment://`-URL havaittu. Se olisi tullut ratkaista ennen upotusten käsittelyä.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Ladattua liitettä {filename} ei löytynyt.",
-	"auth_and_oauth.application_not_owned": "Tämä sovellus ei ole sinun.",
 	"auth_and_oauth.bot_already_in_guild": "Tämä botti on jo yhteisössä.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Bottikäyttäjät eivät voi luoda todennusistuntoja.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Bottikäyttäjät eivät voi käyttää todennusrajapintoja.",

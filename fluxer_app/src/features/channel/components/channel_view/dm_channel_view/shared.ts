@@ -2,14 +2,9 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import type {VoiceParticipantAvatarEntry} from '@app/features/voice/components/VoiceParticipantAvatarList';
 import type {Call} from '@app/features/voice/state/CallState';
-import {
-	COMPACT_VOICE_CALL_HEIGHT_MAX,
-	getCompactVoiceCallExpansionKey,
-} from '@app/features/voice/state/CompactVoiceCallHeight';
 import {msg} from '@lingui/core/macro';
 
 export const logger = new Logger('DMChannelView');
@@ -19,9 +14,6 @@ const CALL_AVATAR_MAX_SIZE = 88;
 const CALL_AVATAR_MIN_GAP = 8;
 const CALL_AVATAR_MAX_GAP = 16;
 export const CALL_AVATAR_SPRING = {stiffness: 520, damping: 34, mass: 0.6} as const;
-export const COMPACT_CALL_RESIZE_DRAG_THRESHOLD_SQ = 9;
-const COMPACT_CALL_RESIZE_VIEWPORT_MARGIN = 32;
-export const COMPACT_CALL_RESIZE_STEP = 16;
 
 export interface CallParticipant {
 	user: User;
@@ -35,33 +27,11 @@ export interface CallParticipantsRowProps {
 	className?: string;
 }
 
-export interface CompactCallResizeListeners {
-	move: (event: PointerEvent) => void;
-	up: (event: PointerEvent) => void;
-}
-
-export interface CompactCallResizeState {
-	pointerId: number;
-	startY: number;
-	startHeight: number;
-	dragging: boolean;
-	lastHeight?: number;
-}
-
 export type CallControlRenderMode = 'mobile' | 'voiceControlBar';
 
 export interface CallParticipantLayoutMetrics {
 	avatarSize: number;
 	gap: number;
-}
-
-export function getCompactCallHeightKey(channelId: string, callMessageId: string | null): string {
-	return getCompactVoiceCallExpansionKey(channelId, callMessageId);
-}
-
-export function getCompactCallHeightMax(compactHeightMin: number): number {
-	const viewportLimitedMax = Math.round(appZoomLayoutPx(window.innerHeight) - COMPACT_CALL_RESIZE_VIEWPORT_MARGIN);
-	return Math.max(compactHeightMin, Math.min(viewportLimitedMax, COMPACT_VOICE_CALL_HEIGHT_MAX));
 }
 
 export function getCallParticipantLayoutMetrics(

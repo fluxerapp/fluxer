@@ -3,6 +3,7 @@
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -111,9 +112,9 @@ export async function enqueueStripeCustomerEmailSync(
 }
 
 async function mirrorStripeCustomer(customer: Stripe.Customer, user: User): Promise<void> {
-	try {
-		await getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id});
-	} catch (mirrorErr) {
-		Logger.error({mirrorErr, customerId: customer.id}, 'Mirror upsert failed after Stripe write; reconciler will heal');
-	}
+	await mirrorBestEffort(
+		() => getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id}),
+		{customerId: customer.id},
+		'Mirror upsert failed after Stripe write; reconciler will heal',
+	);
 }

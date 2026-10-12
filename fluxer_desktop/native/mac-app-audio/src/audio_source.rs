@@ -436,27 +436,3 @@ impl Drop for Source {
             .store(ptr::null_mut(), Ordering::Release);
     }
 }
-
-#[cfg(test)]
-mod abl_scratch_tests {
-    use super::*;
-
-    #[test]
-    fn abl_scratch_layout_matches_audio_buffer_list() {
-        assert_eq!(16, core::mem::align_of::<AblScratch>());
-        assert_eq!(8, core::mem::offset_of!(AblScratch, buffers));
-        assert!(
-            core::mem::size_of::<AblScratch>()
-                >= core::mem::size_of::<u32>()
-                    + MAX_ABL_BUFFERS * core::mem::size_of::<ac::AudioBuffer>()
-        );
-    }
-
-    #[test]
-    fn abl_scratch_empty_has_no_buffers() {
-        let scratch = AblScratch::empty();
-        assert_eq!(0, scratch.n_buffers);
-        assert!(scratch.buffers[0].m_data.is_null());
-        assert_eq!(0, scratch.buffers[MAX_ABL_BUFFERS - 1].m_data_byte_size);
-    }
-}

@@ -20,8 +20,8 @@ batched_fanout_case(RangeMode, ChannelCount, SessionsPerChannel, MemberCount) ->
         RangeMode, ChannelCount, SessionsPerChannel
     ),
     try
-        {ok, QueuedState} = guild_member_list:broadcast_all_member_list_updates(State),
-        FlushedState = guild_member_list:flush_pending_member_list_syncs(QueuedState),
+        {ok, QueuedState} = guild_member_list_write:broadcast_all_member_list_updates(State),
+        FlushedState = guild_member_list_write:flush_pending_member_list_syncs(QueuedState),
         {Dispatches, Recipients, Bytes} = collect_batched_fanout_dispatches(
             ExpectedDispatches
         ),

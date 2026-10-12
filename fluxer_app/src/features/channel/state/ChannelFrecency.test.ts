@@ -150,19 +150,6 @@ describe('channel frecency selection', () => {
 		expect(ChannelFrecency.localUseLog.has(purgedThread)).toBe(false);
 	});
 
-	it('records an unknown control channel selected before READY synchronously', () => {
-		const controlChannel = '1600000000000000003';
-		runInAction(() => {
-			initialization.hasCompletedInitialLoad = false;
-		});
-		select(controlChannel, CONTROL_GUILD);
-		expect(ChannelFrecency.useLog.get(controlChannel)?.hitCount).toBe(1);
-		runInAction(() => {
-			initialization.hasCompletedInitialLoad = true;
-		});
-		expect(ChannelFrecency.useLog.get(controlChannel)?.hitCount).toBe(1);
-	});
-
 	it('drops deferred selections on logout', () => {
 		const queued = '1500000000000000021';
 		runInAction(() => {

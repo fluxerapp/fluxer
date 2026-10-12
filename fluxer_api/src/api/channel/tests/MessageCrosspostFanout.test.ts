@@ -43,7 +43,6 @@ import {
 	sendMessage,
 	sendWithImage,
 	setupFanoutWorld,
-	workerHelpers,
 	writeRow,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
 import {Logger} from '@app/api/Logger';
@@ -53,6 +52,7 @@ import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
@@ -364,8 +364,20 @@ describe('Crosspost fan-out', () => {
 		const source = await postAndPublish(harness, world, {content: 'once'});
 		const webhookId = await followInto(harness, world, world.b.t1.id);
 		const payload = {channelId: world.a.ann.id, messageId: source.id, webhookIds: [webhookId], attempt: 0};
-		await crosspostMessageChunk(payload, workerHelpers(world.worker));
-		await crosspostMessageChunk(payload, workerHelpers(world.worker));
+		await crosspostMessageChunk(
+			payload,
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
+		await crosspostMessageChunk(
+			payload,
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
+		);
 		expect(await copiesOf(harness, world.b.owner.token, world.b.t1.id, source.id)).toHaveLength(1);
 	});
 
@@ -398,7 +410,10 @@ describe('Crosspost fan-out', () => {
 		});
 		await crosspostMessageChunk(
 			{channelId: world.a.ann.id, messageId: staleSource.id, webhookIds: [webhookId], attempt: 0},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		const [copy] = await copiesOf(harness, world.b.owner.token, world.b.t1.id, staleSource.id);
 		expect(BigInt(copy!.id)).toBeGreaterThan(staleTargetId);
@@ -406,7 +421,10 @@ describe('Crosspost fan-out', () => {
 		const recordedBefore = world.worker.recorded.length;
 		await crosspostMessageChunk(
 			{channelId: world.a.ann.id, messageId: freshSource.id, webhookIds: [webhookId], attempt: 0},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		expect(await copiesOf(harness, world.b.owner.token, world.b.t1.id, freshSource.id)).toHaveLength(0);
 		const retries = world.worker.recorded.slice(recordedBefore);
@@ -513,7 +531,8 @@ describe('Crosspost fan-out', () => {
 				allow: '0',
 				deny: Permissions.VIEW_CHANNEL.toString(),
 			});
-			const infoSpy = vi.spyOn(Logger.child({}), 'info');
+			const logger: {info(obj: object, message?: string): void} = Logger.child({});
+			const infoSpy = vi.spyOn(logger, 'info');
 			await postAndPublish(harness, world, {content: 'private'});
 			await expectNoCopies(world.b.t1.id);
 			expect(infoSpy.mock.calls.some(([, message]) => String(message).includes('cannot view'))).toBe(true);
@@ -567,7 +586,8 @@ describe('Crosspost fan-out', () => {
 			})),
 		});
 		fileShaCache.add(blockedSha);
-		const warnSpy = vi.spyOn(Logger.child({}), 'warn');
+		const logger: {warn(obj: object, message?: string): void} = Logger.child({});
+		const warnSpy = vi.spyOn(logger, 'warn');
 		try {
 			await world.worker.drain();
 		} finally {
@@ -719,7 +739,10 @@ describe('Crosspost fan-out', () => {
 		const syncCopies = (await import('@app/api/worker/tasks/SyncCrosspostCopies')).default;
 		await syncCopies(
 			{channelId: world.a.ann.id, messageId: message.id, mode: 'update', webhookIds: [webhookId]},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		expect((await mappingRow(message.id, webhookId))?.state).toBe('pending');
 		gate.release();
@@ -905,7 +928,10 @@ describe('Crosspost fan-out', () => {
 		await publish(harness, world.a.owner.token, world.a.ann.id, message.id);
 		await crosspostMessageChunk(
 			{channelId: world.a.ann.id, messageId: message.id, webhookIds: [webhookId], attempt: 0},
-			workerHelpers(world.worker),
+			createTestWorkerHelpers({
+				jobId: 0n,
+				addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+			}),
 		);
 		expect(await copiesOf(harness, world.b.owner.token, world.b.t1.id, message.id)).toHaveLength(0);
 		await world.worker.drain();
@@ -950,8 +976,20 @@ describe('Crosspost fan-out', () => {
 			webhookIds: [webhookId],
 		};
 		const results = await Promise.allSettled([
-			syncCrosspostCopies(payload, workerHelpers(world.worker)),
-			syncCrosspostCopies(payload, workerHelpers(world.worker)),
+			syncCrosspostCopies(
+				payload,
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+				}),
+			),
+			syncCrosspostCopies(
+				payload,
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+				}),
+			),
 		]);
 		vi.restoreAllMocks();
 		expect(results.some((result) => result.status === 'fulfilled')).toBe(true);

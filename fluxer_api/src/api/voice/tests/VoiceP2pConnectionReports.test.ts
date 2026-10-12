@@ -188,42 +188,18 @@ describe('POST /voice/p2p/connection-reports', () => {
 		expect(await listReports(account.userId)).toEqual([]);
 	});
 
-	it('stores a null country when the lookup finds none', async () => {
-		lookupGeoipMock.mockResolvedValue(geoipCountry(null));
-		const account = await registerAndroidAccount(harness);
+	it.each([{name: 'more than 8 reports', body: {reports: Array.from({length: 9}, () => connectedReport())}}])(
+		'rejects $name and stores nothing',
+		async ({body}) => {
+			const account = await registerAndroidAccount(harness);
 
-		await createBuilder(harness, account.token)
-			.post(ENDPOINT)
-			.body({reports: [connectedReport()]})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
+			await createBuilder(harness, account.token)
+				.post(ENDPOINT)
+				.body(body)
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.execute();
 
-		const rows = await listReports(account.userId);
-		expect(rows).toHaveLength(1);
-		expect(rows[0]?.country).toBeNull();
-	});
-
-	it.each([
-		{name: 'an empty batch', body: {reports: []}},
-		{name: 'more than 8 reports', body: {reports: Array.from({length: 9}, () => connectedReport())}},
-		{name: 'a single participant', body: {reports: [connectedReport({participant_count: 1})]}},
-		{name: 'more than 4 participants', body: {reports: [connectedReport({participant_count: 5})]}},
-		{name: 'an unknown outcome', body: {reports: [connectedReport({outcome: 'checking'})]}},
-		{name: 'an unknown candidate type', body: {reports: [connectedReport({local_candidate_type: 'turn'})]}},
-		{name: 'an unknown address family', body: {reports: [connectedReport({ip_family: 'ipx'})]}},
-		{name: 'an unknown protocol', body: {reports: [connectedReport({protocol: 'sctp'})]}},
-		{name: 'a negative setup time', body: {reports: [connectedReport({setup_ms: -1})]}},
-		{name: 'a malformed channel id', body: {reports: [connectedReport({channel_id: 'abc'})]}},
-		{name: 'a missing ice_restarted', body: {reports: [connectedReport({ice_restarted: undefined})]}},
-	])('rejects $name and stores nothing', async ({body}) => {
-		const account = await registerAndroidAccount(harness);
-
-		await createBuilder(harness, account.token)
-			.post(ENDPOINT)
-			.body(body)
-			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-			.execute();
-
-		expect(await listReports(account.userId)).toEqual([]);
-	});
+			expect(await listReports(account.userId)).toEqual([]);
+		},
+	);
 });

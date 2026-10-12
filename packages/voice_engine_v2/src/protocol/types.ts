@@ -28,8 +28,6 @@ export type VoiceEngineV2TrackSource = 'microphone' | 'camera' | 'screen' | 'scr
 
 export type VoiceEngineV2TrackKind = 'audio' | 'video';
 
-export type VoiceEngineV2ConnectionQuality = 'excellent' | 'good' | 'poor' | 'lost';
-
 export type VoiceEngineV2RemoteTrackQuality = 'low' | 'medium' | 'high';
 
 export type VoiceEngineV2VideoCodec = '' | 'vp8' | 'vp9' | 'h264' | 'h265' | 'av1';
@@ -134,12 +132,6 @@ export interface VoiceEngineV2GatewayVoiceState {
 	selfStream: boolean;
 	suppress: boolean;
 	requestToSpeakTimestamp: string | null;
-}
-
-export interface VoiceEngineV2GatewayVoiceServer {
-	guildId: string | null;
-	endpoint: string | null;
-	token: string;
 }
 
 export interface VoiceEngineV2GatewayVoiceStateWrite {
@@ -270,18 +262,6 @@ export interface VoiceEngineV2NativeCaptureOptions {
 	zeroCopyRequired: true;
 }
 
-export interface VoiceEngineV2NativeCaptureFrame {
-	captureId: string;
-	frameId: string;
-	width: number;
-	height: number;
-	timestampMs: number;
-	format: 'i420' | 'nv12' | 'rgba' | 'bgra' | 'native';
-	zeroCopy: true;
-	handle?: string;
-	byteLength?: number;
-}
-
 export interface VoiceEngineV2NativeAudioTapOptions {
 	tapId: string;
 	source: 'system' | 'application' | 'window';
@@ -295,12 +275,6 @@ export interface VoiceEngineV2NativeFrameSinkOptions {
 	captureId: string;
 	trackSid?: string;
 	zeroCopyRequired: true;
-}
-
-export interface VoiceEngineV2PcmFrame {
-	sampleRate: number;
-	numChannels: number;
-	samples: ArrayBuffer;
 }
 
 export interface VoiceEngineV2OutputDeviceOptions {
@@ -558,6 +532,16 @@ export interface VoiceEngineV2PerTrackStats {
 	concealedSamples?: number;
 	silentConcealedSamples?: number;
 	totalSamplesReceived?: number;
+	codecSdpFmtpLine?: string;
+	packetsReceived?: number;
+	bytesReceived?: number;
+	framesReceived?: number;
+	packetsSent?: number;
+	sourceSamplesDurationMs?: number;
+	packetsDiscarded?: number;
+	jitterBufferTargetDelayMs?: number;
+	insertedSamplesForDeceleration?: number;
+	removedSamplesForAcceleration?: number;
 }
 
 export interface VoiceEngineV2TransportInfo {
@@ -577,6 +561,9 @@ export interface VoiceEngineV2TransportInfo {
 	srtpCipher?: string;
 	tlsVersion?: string;
 	networkType?: string;
+	localRelayProtocol?: string;
+	localCandidateUrlHost?: string;
+	peerConnectionMode?: string;
 }
 
 export interface VoiceEngineV2VoiceStats {
@@ -674,8 +661,6 @@ export interface VoiceEngineV2WatchedStreamKey {
 	source: VoiceEngineV2TrackSource | string;
 }
 
-export type VoiceEngineV2LocalStreamSource = 'camera' | 'screen';
-
 export interface VoiceEngineV2InboundVideoTrackSubscription {
 	participantSid: string;
 	participantIdentity?: string;
@@ -693,17 +678,6 @@ export interface VoiceEngineV2InboundVideoFrame {
 	height: number;
 	timestampUs: number;
 	byteLength?: number;
-}
-
-export interface VoiceEngineV2InboundVideoFrameStats {
-	participantSid: string;
-	participantIdentity?: string;
-	trackSid: string;
-	width: number;
-	height: number;
-	frameCount: number;
-	lastFrameTimestampUs: number;
-	lastFrameByteLength: number | null;
 }
 
 export interface VoiceEngineV2InboundVideoTrack {
@@ -726,7 +700,6 @@ export interface VoiceEngineV2ConnectionModel {
 	failed: boolean;
 	gateway: {
 		selfVoiceState: VoiceEngineV2GatewayVoiceState | null;
-		voiceServer: VoiceEngineV2GatewayVoiceServer | null;
 	};
 	liveKit: VoiceEngineV2LiveKitRoomState;
 }

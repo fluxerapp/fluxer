@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{CommandSpec, command_succeeds, env_bool, output_text, run_command};
+use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -194,15 +194,7 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
         .with_context(|| format!("Failed to create {}", out_dir.display()))?;
 
     let target_dir = rust_package_dir.join("target");
-    let mut build = libfluxcore_build_command(&rust_package_dir, &target_dir);
-
-    if env_bool("FLUXCORE_WASM_SIMD") {
-        let rustflags = match env::var("RUSTFLAGS") {
-            Ok(value) if !value.trim().is_empty() => format!("{value} -C target-feature=+simd128"),
-            _ => "-C target-feature=+simd128".to_string(),
-        };
-        build = build.env("RUSTFLAGS", rustflags);
-    }
+    let build = libfluxcore_build_command(&rust_package_dir, &target_dir);
 
     run_command(apply_wasm_c_toolchain(build)?)?;
     let temp = TempDir::new().context("Failed to create libfluxcore wasm-bindgen temp dir")?;

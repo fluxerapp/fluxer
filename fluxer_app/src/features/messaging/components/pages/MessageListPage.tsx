@@ -37,7 +37,6 @@ interface MessageListPageProps {
 	emptyStateDescription: string;
 	endStateDescription: string;
 	renderActionButtons: (message: Message) => React.ReactNode;
-	renderMissingMessage?: (message: Message) => React.ReactNode;
 	hasMore?: boolean;
 	isLoadingMore?: boolean;
 	onLoadMore?: () => void;
@@ -52,7 +51,6 @@ export const MessageListPage = observer(
 		emptyStateDescription,
 		endStateDescription,
 		renderActionButtons,
-		renderMissingMessage,
 		hasMore = false,
 		isLoadingMore = false,
 		onLoadMore,
@@ -105,9 +103,6 @@ export const MessageListPage = observer(
 								{messages.map((message) => {
 									const channel = Channels.getChannel(message.channelId);
 									if (!channel) {
-										if (renderMissingMessage) {
-											return renderMissingMessage(message);
-										}
 										return null;
 									}
 									return (

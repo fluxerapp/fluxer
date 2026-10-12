@@ -6,7 +6,7 @@ import {Db, nextVersion} from '@app/api/database/CassandraTypes';
 
 export async function executeVersionedUpdate<
 	Row extends {
-		version?: number | null;
+		version?: number | bigint | null;
 	},
 	PK extends ColumnName<Row>,
 	Patch extends PatchObject = PatchObject,
@@ -19,14 +19,17 @@ export async function executeVersionedUpdate<
 	table: Table<Row, PK>,
 	opts?: {
 		initialData?: Row | null;
+		bumpVersion?: (current: NonNullable<Row['version']> | null) => NonNullable<Row['version']>;
 	},
 ): Promise<{
-	finalVersion: number | null;
+	finalVersion: NonNullable<Row['version']> | null;
 	previousData: Row | null;
 }> {
 	const current = opts?.initialData !== undefined ? opts.initialData : await fetchCurrent();
-	const currentVersion = current?.version ?? null;
-	const newVersion = nextVersion(currentVersion);
+	const currentVersion = (current?.version ?? null) as NonNullable<Row['version']> | null;
+	const newVersion = opts?.bumpVersion
+		? opts.bumpVersion(currentVersion)
+		: (nextVersion(currentVersion as number | null) as NonNullable<Row['version']>);
 	const {pk, patch} = buildPatch(current);
 	await upsertOne(
 		table.patchByPk(
@@ -51,7 +54,7 @@ export function applyPatchToRow<Row extends object>(current: Partial<Row> | null
 	return next as Partial<Row>;
 }
 
-function valuesEqual(a: unknown, b: unknown): boolean {
+export function valuesEqual(a: unknown, b: unknown): boolean {
 	if (a === b) return true;
 	if (a == null || b == null) return false;
 	if (a instanceof Date && b instanceof Date) {

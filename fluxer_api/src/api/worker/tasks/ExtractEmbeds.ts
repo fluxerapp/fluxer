@@ -3,6 +3,7 @@
 import type {ChannelID, GuildID, MessageID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	enqueueCrosspostSourceRemoval,
 	enqueueCrosspostSync,
@@ -21,7 +22,6 @@ import type {Channel} from '@app/api/models/Channel';
 import {Message} from '@app/api/models/Message';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import * as UnfurlerUtils from '@app/api/utils/UnfurlerUtils';
-import {ChannelEventDispatcher} from '@app/api/worker/services/ChannelEventDispatcher';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_EMBEDS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
@@ -35,7 +35,6 @@ const PayloadSchema = z.object({
 	messageId: z.string(),
 	guildId: z.string().nullable().optional(),
 	nsfwMode: z.enum(['block', 'flag', 'allow']).default('block'),
-	bypassUnfurlCache: z.boolean().optional().default(false),
 	expectedContentHash: z.string().optional(),
 });
 
@@ -248,22 +247,19 @@ async function processUnfurlUrl(
 	embedService: EmbedService,
 	nsfwMode: MediaProxyNsfwMode,
 	signal: AbortSignal,
-	bypassCache: boolean,
 	unfurledEmbedsByUrl: Map<string, Array<MessageEmbed>>,
 ): Promise<void> {
 	if (signal.aborted) {
 		throw new Error('Unfurl batch aborted');
 	}
-	const {embeds, cacheTtlSeconds} = await embedService.processUrlWithCachePolicy(url, nsfwMode, {
+	const {embeds} = await embedService.processUrlWithCachePolicy(url, nsfwMode, {
 		signal,
-		bypassCache,
 	});
 	if (embeds.length > 0) {
 		const messageEmbeds = embeds.map((e) => e.toMessageEmbed());
 		const safeEmbeds = nsfwMode === 'allow' ? messageEmbeds : messageEmbeds.filter((e) => !isEmbedNsfw(e));
 		if (safeEmbeds.length > 0) {
 			unfurledEmbedsByUrl.set(url, safeEmbeds);
-			await embedService.cacheEmbeds(url, embeds, cacheTtlSeconds);
 		}
 	}
 }
@@ -273,7 +269,6 @@ async function runUnfurlWorker(
 	embedService: EmbedService,
 	nsfwMode: MediaProxyNsfwMode,
 	signal: AbortSignal,
-	bypassCache: boolean,
 	unfurledEmbedsByUrl: Map<string, Array<MessageEmbed>>,
 ): Promise<void> {
 	while (!signal.aborted) {
@@ -281,7 +276,7 @@ async function runUnfurlWorker(
 		if (!url) {
 			return;
 		}
-		await processUnfurlUrl(url, embedService, nsfwMode, signal, bypassCache, unfurledEmbedsByUrl);
+		await processUnfurlUrl(url, embedService, nsfwMode, signal, unfurledEmbedsByUrl);
 	}
 }
 
@@ -289,14 +284,13 @@ async function unfurlUrls(
 	urlsToUnfurl: Array<string>,
 	embedService: EmbedService,
 	nsfwMode: MediaProxyNsfwMode,
-	bypassCache: boolean,
 ): Promise<Map<string, Array<MessageEmbed>>> {
 	const unfurledEmbedsByUrl = new Map<string, Array<MessageEmbed>>();
 	const pendingUrls = [...urlsToUnfurl];
 	const abortController = new AbortController();
 	const workerCount = Math.min(MAX_CONCURRENT_UNFURL_URLS, pendingUrls.length);
 	const workers = Array.from({length: workerCount}, () =>
-		runUnfurlWorker(pendingUrls, embedService, nsfwMode, abortController.signal, bypassCache, unfurledEmbedsByUrl),
+		runUnfurlWorker(pendingUrls, embedService, nsfwMode, abortController.signal, unfurledEmbedsByUrl),
 	);
 	const workersDone = Promise.all(workers).then(() => undefined);
 	let timeoutHandle: NodeJS.Timeout | undefined;
@@ -409,7 +403,7 @@ async function dispatchEmbedUpdate({
 		message: messageWithUpdatedEmbeds,
 		sourceGuildId: guildId ?? channel.guildId,
 	});
-	const eventDispatcher = new ChannelEventDispatcher({gatewayService});
+
 	if (guildId && !channel.guildId) {
 		await gatewayService.dispatchGuild({
 			guildId,
@@ -417,7 +411,7 @@ async function dispatchEmbedUpdate({
 			data: messageData,
 		});
 	} else {
-		await eventDispatcher.dispatchMessageUpdate(channel, messageData);
+		await dispatchChannelEvent({gatewayService, channel, event: 'MESSAGE_UPDATE', data: messageData});
 	}
 	Logger.debug({messageId: latestMessage.id.toString()}, 'Dispatched MESSAGE_UPDATE after embed processing');
 }
@@ -457,7 +451,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			{messageId: messageId.toString(), urlCount: urls.length, skippedUrlCount: extractedUrls.length - urls.length},
 			'Unfurling URLs',
 		);
-		const unfurledEmbedsByUrl = await unfurlUrls(urls, embedService, nsfwMode, validated.bypassUnfurlCache);
+		const unfurledEmbedsByUrl = await unfurlUrls(urls, embedService, nsfwMode);
 		if (unfurledEmbedsByUrl.size === 0) {
 			Logger.info({messageId: messageId.toString(), urlsAttempted: urls.length}, 'No URLs were successfully unfurled');
 			return;
@@ -502,8 +496,13 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 					);
 					await decrementThreadMessageCount(channelRepository, channel, [messageId]);
 					await deleteMessageSearchDocuments([messageId], {context: {source: 'blocked_embed_unfurl'}});
-					const eventDispatcher = new ChannelEventDispatcher({gatewayService});
-					await eventDispatcher.dispatchMessageDelete(channel, messageId);
+
+					await dispatchChannelEvent({
+						gatewayService,
+						channel,
+						event: 'MESSAGE_DELETE',
+						data: {channel_id: channel.id.toString(), id: messageId.toString()},
+					});
 					await enqueueCrosspostSourceRemoval(getWorkerDependencies().workerService, {
 						messages: [latestExpectedMessage],
 						mode: 'purge',

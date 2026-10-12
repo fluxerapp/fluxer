@@ -5,36 +5,6 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-normalize_status_test() ->
-    ?assertEqual(undefined, session_manager_shard_lookup:normalize_status(undefined)),
-    ?assertEqual(undefined, session_manager_shard_lookup:normalize_status(null)),
-    ?assertEqual(<<"online">>, session_manager_shard_lookup:normalize_status(<<"online">>)),
-    ?assertEqual(<<"idle">>, session_manager_shard_lookup:normalize_status(<<"idle">>)),
-    ?assertEqual(
-        <<"invisible">>, session_manager_shard_lookup:normalize_status(<<"invisible">>)
-    ),
-    ?assertEqual(undefined, session_manager_shard_lookup:normalize_status(123)),
-    ok.
-
-select_initial_status_test() ->
-    ?assertEqual(
-        <<"idle">>, session_manager_shard_lookup:select_initial_status(undefined, <<"idle">>)
-    ),
-    ?assertEqual(
-        <<"dnd">>, session_manager_shard_lookup:select_initial_status(<<"unknown">>, <<"dnd">>)
-    ),
-    ?assertEqual(
-        <<"idle">>, session_manager_shard_lookup:select_initial_status(<<"online">>, <<"idle">>)
-    ),
-    ?assertEqual(
-        <<"online">>,
-        session_manager_shard_lookup:select_initial_status(<<"online">>, <<"online">>)
-    ),
-    ?assertEqual(
-        <<"dnd">>, session_manager_shard_lookup:select_initial_status(<<"dnd">>, <<"online">>)
-    ),
-    ok.
-
 parse_presence_preserves_invisible_stored_status_test() ->
     Data = #{<<"user_settings">> => #{<<"status">> => <<"invisible">>}},
     IdentifyData = #{presence => #{<<"status">> => <<"online">>}},
@@ -44,32 +14,6 @@ parse_presence_preserves_invisible_identify_status_test() ->
     Data = #{<<"user_settings">> => #{<<"status">> => <<"online">>}},
     IdentifyData = #{presence => #{<<"status">> => <<"invisible">>}},
     ?assertEqual(invisible, session_manager_shard_lookup:parse_presence(Data, IdentifyData)).
-
-normalize_coordinate_test() ->
-    ?assertEqual(undefined, session_manager_shard_lookup:normalize_coordinate(undefined)),
-    ?assertEqual(undefined, session_manager_shard_lookup:normalize_coordinate(null)),
-    ?assertEqual(1.5, session_manager_shard_lookup:normalize_coordinate(1.5)),
-    ?assertEqual(<<"test">>, session_manager_shard_lookup:normalize_coordinate(<<"test">>)),
-    ok.
-
-add_coordinates_test() ->
-    Base = #{<<"type">> => <<"session">>},
-    ?assertEqual(
-        Base, session_manager_shard_lookup:add_coordinates(Base, undefined, undefined)
-    ),
-    ?assertEqual(
-        #{<<"type">> => <<"session">>, <<"latitude">> => 1.0},
-        session_manager_shard_lookup:add_coordinates(Base, 1.0, undefined)
-    ),
-    ?assertEqual(
-        #{<<"type">> => <<"session">>, <<"longitude">> => 2.0},
-        session_manager_shard_lookup:add_coordinates(Base, undefined, 2.0)
-    ),
-    ?assertEqual(
-        #{<<"type">> => <<"session">>, <<"latitude">> => 1.0, <<"longitude">> => 2.0},
-        session_manager_shard_lookup:add_coordinates(Base, 1.0, 2.0)
-    ),
-    ok.
 
 validate_transfer_token_test() ->
     GoodToken = <<"good_token">>,
@@ -102,12 +46,6 @@ lookup_or_rehydrate_restores_state_on_invalid_token_test() ->
         ?assertEqual({error, invalid_token}, Reply),
         ?assertEqual({ok, TransferState}, session_state_transfer:pop_state(SessionId))
     end).
-
-lookup_remote_on_nodes_empty_test() ->
-    ?assertEqual(
-        {error, not_found},
-        session_manager_shard_lookup:lookup_remote_on_nodes([], {session, <<"missing">>})
-    ).
 
 select_remote_session_pid_ignores_not_found_entries_test() ->
     Pid = spawn(fun() ->
@@ -151,65 +89,9 @@ remote_lookup_nodes_prioritizes_hash_owner_test() ->
     ?assertNot(lists:member(node(), LookupNodes)),
     ?assertEqual(lists:sort([RemoteA, RemoteB]), lists:sort(LookupNodes)).
 
-get_presence_custom_status_test() ->
-    ?assertEqual(null, session_manager_shard_lookup:get_presence_custom_status(null)),
-    ?assertEqual(null, session_manager_shard_lookup:get_presence_custom_status(#{})),
-    ?assertEqual(
-        #{<<"text">> => <<"hello">>},
-        session_manager_shard_lookup:get_presence_custom_status(
-            #{<<"custom_status">> => #{<<"text">> => <<"hello">>}}
-        )
-    ),
-    ?assertEqual(null, session_manager_shard_lookup:get_presence_custom_status(not_a_map)),
-    ok.
-
-parse_guild_ids_extracts_from_guilds_array_test() ->
-    Data = #{
-        <<"guilds">> => [
-            #{<<"id">> => <<"100">>},
-            #{<<"id">> => <<"200">>},
-            #{<<"id">> => <<"300">>}
-        ]
-    },
-    ?assertEqual([100, 200, 300], session_manager_shard_lookup:parse_guild_ids(Data)).
-
-parse_guild_ids_returns_empty_when_no_guilds_test() ->
-    ?assertEqual([], session_manager_shard_lookup:parse_guild_ids(#{})),
-    ?assertEqual([], session_manager_shard_lookup:parse_guild_ids(#{<<"guilds">> => []})).
-
-parse_guild_ids_skips_non_map_entries_test() ->
-    Data = #{
-        <<"guilds">> => [
-            #{<<"id">> => <<"100">>},
-            <<"not_a_map">>,
-            #{<<"id">> => <<"200">>}
-        ]
-    },
-    ?assertEqual([100, 200], session_manager_shard_lookup:parse_guild_ids(Data)).
-
-parse_guild_ids_skips_entries_without_id_test() ->
-    Data = #{
-        <<"guilds">> => [
-            #{<<"id">> => <<"100">>},
-            #{<<"name">> => <<"no_id">>},
-            #{<<"id">> => <<"200">>}
-        ]
-    },
-    ?assertEqual([100, 200], session_manager_shard_lookup:parse_guild_ids(Data)).
-
-parse_guild_ids_handles_unavailable_guilds_test() ->
-    Data = #{
-        <<"guilds">> => [
-            #{<<"id">> => <<"100">>, <<"unavailable">> => true},
-            #{<<"id">> => <<"200">>}
-        ]
-    },
-    ?assertEqual([100, 200], session_manager_shard_lookup:parse_guild_ids(Data)).
-
 new_test_state() ->
     #{
         sessions => #{},
-        identify_attempts => [],
         pending_identifies => #{},
         identify_workers => #{},
         shard_index => 0

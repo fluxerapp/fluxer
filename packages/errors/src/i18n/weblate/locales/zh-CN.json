@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "文件过多。最多允许 {maxFiles, plural, other {# 个文件}}。",
 	"attachments_and_uploads.unresolved_attachment_url": "检测到未解析的 `attachment://` URL。此 URL 应在嵌入处理前解析。",
 	"attachments_and_uploads.uploaded_attachment_not_found": "未找到上传的附件 {filename}。",
-	"auth_and_oauth.application_not_owned": "你不是此应用的拥有者。",
 	"auth_and_oauth.bot_already_in_guild": "此机器人已在社区中。",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "机器人用户无法创建身份验证会话。",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "机器人用户不能使用身份验证端点。",

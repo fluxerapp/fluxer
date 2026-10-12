@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
 import {Config} from '@app/api/Config';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -18,7 +17,6 @@ import {StripePremiumService} from '@app/api/stripe/services/StripePremiumServic
 import {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
 import {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
@@ -26,7 +24,7 @@ import type Stripe from 'stripe';
 export class StripeService {
 	private stripe: Stripe | null;
 	private productRegistry: ProductRegistry;
-	private checkoutService: StripeCheckoutService;
+	readonly checkout: StripeCheckoutService;
 	readonly subscriptions: StripeSubscriptionService;
 	readonly gifts: StripeGiftService;
 	readonly premium: StripePremiumService;
@@ -59,7 +57,7 @@ export class StripeService {
 			this.cacheService,
 			this.storeBillingRepository,
 		);
-		this.checkoutService = new StripeCheckoutService(
+		this.checkout = new StripeCheckoutService(
 			this.stripe,
 			this.userRepository,
 			this.productRegistry,
@@ -79,7 +77,7 @@ export class StripeService {
 			this.userRepository,
 			this.cacheService,
 			this.gatewayService,
-			this.checkoutService,
+			this.checkout,
 			this.premium,
 			this.subscriptions,
 			this.storeEntitlementService,
@@ -93,7 +91,7 @@ export class StripeService {
 
 	async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<string> {
 		try {
-			return await this.checkoutService.createCheckoutSession(params);
+			return await this.checkout.createCheckoutSession(params);
 		} catch (error) {
 			const periodEndSwapUrl = await this.tryScheduleBlockedRecurringCheckoutCycleSwap(params, error);
 			if (periodEndSwapUrl) {
@@ -124,24 +122,5 @@ export class StripeService {
 		}
 		await this.subscriptions.changeBillingCycle(params.userId, productInfo.billingCycle, 'period_end');
 		return `${Config.endpoints.webApp}/premium-callback?status=success`;
-	}
-
-	async createCustomerPortalSession(userId: UserID): Promise<string> {
-		return this.checkoutService.createCustomerPortalSession(userId);
-	}
-
-	async getPriceIds(countryCode?: string): Promise<{
-		monthly: string | null;
-		yearly: string | null;
-		gift_1_month: string | null;
-		gift_1_year: string | null;
-		currency: Currency;
-		gift_currency: Currency | null;
-		monthly_amount_minor: number | null;
-		yearly_amount_minor: number | null;
-		gift_1_month_amount_minor: number | null;
-		gift_1_year_amount_minor: number | null;
-	}> {
-		return this.checkoutService.getPriceIds(countryCode);
 	}
 }

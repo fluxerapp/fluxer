@@ -3,13 +3,7 @@
 import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {ThreadOnlyChannelsByGuildRow} from '@app/api/database/types/ThreadTypes';
-import {
-	everEnabled,
-	isTainted,
-	type ThreadViewer,
-	viewerActive,
-	viewerFromCtx,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted, type ThreadViewer, viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import {ThreadOnlyChannelsByGuild} from '@app/api/Tables';
@@ -37,7 +31,7 @@ export async function listThreadOnlyChannelIds(guildId: GuildID): Promise<Set<st
 export async function controlUserGuildSettingsView(
 	settings: UserGuildSettings,
 ): Promise<UserGuildSettingsThreadView | undefined> {
-	if (settings.guildId === DM_SETTINGS_GUILD_ID || settings.channelOverrides.size === 0 || !everEnabled()) {
+	if (settings.guildId === DM_SETTINGS_GUILD_ID || settings.channelOverrides.size === 0) {
 		return undefined;
 	}
 	if (!(await isTainted(settings.guildId))) return undefined;

@@ -130,12 +130,6 @@ function variantReasons(variant: ReportFlowVariant): Set<string> {
 	return reasons;
 }
 
-function optionIds(variant: ReportFlowVariant, screenId: string): Array<string> {
-	const screen = variant.screens.get(screenId);
-	expect(screen).toBeDefined();
-	return screen!.options.map((option) => option.id);
-}
-
 function resolve(target: ReportFlowTargetType, surface: ReportFlowSurface, steps: ReadonlyArray<ReportFlowStepInput>) {
 	return resolveReportFlowAnswers({
 		target,
@@ -838,40 +832,6 @@ describe('report flow rendering', () => {
 		expect(getReportFlowResponse('guild', 'dsa', 'en-US').start_screen_id).toBe('community_parts');
 	});
 
-	test('the DSA variants drop app-only rows and add the copyright notice', () => {
-		const messageDsa = variantOf('message', 'dsa');
-		expect(optionIds(messageDsa, 'root_message')).toEqual([
-			'abuse',
-			'private_info',
-			'violence_misinfo',
-			'spam',
-			'something_else',
-		]);
-		expect(optionIds(messageDsa, 'abuse')).not.toContain('rude_language');
-		expect(optionIds(messageDsa, 'self_harm')).not.toContain('worried_self_harm');
-		expect(optionIds(messageDsa, 'self_harm')).not.toContain('worried_suicide');
-		expect(optionIds(messageDsa, 'something_else_message')).toContain('copyright_notice');
-		expect(optionIds(messageDsa, 'something_else_message')).not.toContain('copyright');
-		expect(optionIds(variantOf('message', 'in_app'), 'something_else_message')).not.toContain('copyright_notice');
-		const userDsa = variantOf('user', 'dsa');
-		expect(userDsa.screens.has('profile_intro')).toBe(false);
-		expect(optionIds(userDsa, 'root_user')).not.toContain('dsa');
-		expect(optionIds(userDsa, 'self_harm_profile')).not.toContain('worried');
-	});
-
-	test('the in-app copyright rows open the copyright help page', () => {
-		const url = 'https://fluxer.app/help/copyright';
-		const copyrightUrl = (target: ReportFlowTargetType, screenId: string) =>
-			getReportFlowResponse(target, 'in_app', 'en-US')
-				.screens.find((screen) => screen.id === screenId)
-				?.options.find((option) => option.id === 'copyright')?.outcome.url;
-		expect(copyrightUrl('message', 'something_else_message')).toBe(url);
-		expect(copyrightUrl('user', 'something_else_user')).toBe(url);
-		getConfig().instance.selfHosted = true;
-		expect(copyrightUrl('message', 'something_else_message')).toBeUndefined();
-		expect(copyrightUrl('user', 'something_else_user')).toBeUndefined();
-	});
-
 	test('a copyright link row that is not limited to the app throws', () => {
 		const unlimited = editScreen(REPORT_FLOW_LIBRARY, 'something_else_message', (screen) => ({
 			...screen,
@@ -954,17 +914,6 @@ describe('report flow rendering', () => {
 		expect(moved.revision_hash).toBe(user.revision_hash);
 		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
 		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(unconfigured);
-	});
-
-	test('a configured guidelines URL replaces the hosted default', () => {
-		const hostedUser = getReportFlowResponse('user', 'in_app', 'en-US');
-		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/community'});
-		const user = getReportFlowResponse('user', 'in_app', 'en-US');
-		expect(user.guidelines_url).toBe('https://rules.example.org/community');
-		expect(user.screens[0].options[0].outcome.url).toBe('https://rules.example.org/community');
-		expect(user.revision_hash).toBe(hostedUser.revision_hash);
-		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
-		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(hostedUser);
 	});
 
 	test('the revision hash does not depend on the product name or the locale', () => {

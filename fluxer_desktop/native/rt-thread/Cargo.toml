@@ -23,10 +23,3 @@ windows = {version = "0.62.2", features = [
 	"Win32_Media",
 	"Win32_Media_Multimedia",
 ]}
-
-[dev-dependencies]
-criterion = "0.8"
-
-[[bench]]
-name = "tick"
-harness = false

@@ -392,7 +392,7 @@ dispatch_rpc_msg(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State) ->
 -spec spawn_rpc_handler(binary(), binary(), binary()) -> {pid(), reference()}.
 spawn_rpc_handler(Subject, Payload, ReplyTo) ->
     spawn_monitor(fun() ->
-        gateway_nats_rpc:handle_rpc_request(Subject, Payload, ReplyTo)
+        gateway_nats_rpc_handler:handle_rpc_request(Subject, Payload, ReplyTo)
     end).
 
 -spec send_overloaded(binary()) -> ok | {error, term()}.

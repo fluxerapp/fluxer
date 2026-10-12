@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "For mange filer. Maksimalt {maxFiles} {maxFiles, plural, one {fil} other {filer}} tilladt.",
 	"attachments_and_uploads.unresolved_attachment_url": "Der blev fundet en uafklaret `attachment://`-URL. Den skulle have været afklaret før behandlingen af indlejringer.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Den uploadede vedhæftede fil {filename} blev ikke fundet.",
-	"auth_and_oauth.application_not_owned": "Du ejer ikke denne applikation.",
 	"auth_and_oauth.bot_already_in_guild": "Denne bot er allerede i fællesskabet.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botbrugere kan ikke oprette godkendelsessessioner.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botbrugere kan ikke bruge godkendelsesendepunkter.",

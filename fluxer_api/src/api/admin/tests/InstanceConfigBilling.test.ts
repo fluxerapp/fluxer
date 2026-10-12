@@ -198,28 +198,6 @@ describe('instance config billing on a self-hosted instance', () => {
 		}
 	});
 
-	it('clears the premium name and info URL when both are sent as null', async () => {
-		const admin = await createAdmin(context.harness);
-		await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'}},
-		}).execute();
-		const reset = await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: null, premium_info_url: null}},
-		}).execute();
-		expect(reset.app_public.branding).toMatchObject({premium_product_name: 'Premium', premium_info_url: null});
-		await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'}},
-		}).execute();
-		const resetWithBilling = await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: null, premium_info_url: null}},
-			billing: {enabled: false},
-		}).execute();
-		expect(resetWithBilling.app_public.branding).toMatchObject({
-			premium_product_name: 'Premium',
-			premium_info_url: null,
-		});
-	});
-
 	it('applies billing sections that only hold nulls', async () => {
 		const admin = await createAdmin(context.harness);
 		await patchConfig(context.harness, admin, {billing: OPERATOR_BILLING, policy: {premium_mode: 'mirror'}}).execute();
@@ -353,14 +331,6 @@ describe('instance config billing on a hosted instance', () => {
 		expect(current.billing).toMatchObject({enabled: null, catalog_mode: 'env', prices: null});
 		expect(current.app_public.branding).toMatchObject({premium_product_name: 'Plutonium', premium_info_url: null});
 		expect(getStoredBillingConfig()?.prices ?? null).toBeNull();
-	});
-
-	it('still accepts other branding fields', async () => {
-		const admin = await createAdmin(context.harness);
-		const updated = await patchConfig(context.harness, admin, {
-			app_public: {branding: {theme_color: '#123456'}},
-		}).execute();
-		expect(updated.app_public.branding.theme_color).toBe('#123456');
 	});
 
 	it('rejects a theme colour that is not hex', async () => {

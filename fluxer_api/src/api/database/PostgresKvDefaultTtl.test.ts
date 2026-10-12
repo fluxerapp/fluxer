@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
-import {createServer} from 'node:net';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {Db} from '@app/api/database/CassandraTypes';
 import {
@@ -9,23 +7,12 @@ import {
 	DEFAULT_TTL_TABLES,
 	expireLegacyDefaultTtlRows,
 } from '@app/api/database/PostgresKvDefaultTtlExpiry';
-import {
-	ensurePostgresKvSchema,
-	PostgresKvQueryExecutor,
-	pruneExpiredPostgresKvRows,
-} from '@app/api/database/PostgresKvQueryExecutor';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
+import {PostgresKvQueryExecutor, pruneExpiredPostgresKvRows} from '@app/api/database/PostgresKvQueryExecutor';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
+import type {IPostgresClient} from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const KV_TABLE = 'kv_default_ttl';
-const CONTAINER = `fluxer-kvttl-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
 const DEFAULT_TTL_SECONDS = 600;
 
 interface ProbeRow {
@@ -60,26 +47,6 @@ const NoTtlProbe = defineTable<ProbeRow, 'id'>({
 	columns: ['id', 'value', 'note'],
 	primaryKey: ['id'],
 });
-
-async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
-}
 
 function expectExpiresIn(value: Date | number | null, ttlSeconds: number): void {
 	expect(value).toBeInstanceOf(Date);
@@ -158,47 +125,11 @@ RETURNING updated_at::text`,
 		return result.rows[0]!.n;
 	}
 
+	let postgresContainer: string;
 	beforeAll(async () => {
-		const port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await sleep(500);
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 4,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		raw = getDefaultPostgresClient();
-		await ensurePostgresKvSchema(raw);
+		const started = await startPostgresKv({namePrefix: 'fluxer-kvttl', kvTable: KV_TABLE, maxConnections: 4});
+		postgresContainer = started.container;
+		raw = started.client;
 		executor = new PostgresKvQueryExecutor(raw);
 	}, 900_000);
 
@@ -207,8 +138,7 @@ RETURNING updated_at::text`,
 	});
 
 	afterAll(async () => {
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+		await stopPostgresKv(postgresContainer);
 	});
 
 	it('gives every full-row write without a TTL the table default', async () => {

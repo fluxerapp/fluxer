@@ -33,6 +33,10 @@ import {
 	VOICE_SHARE_SCREEN_DESCRIPTOR,
 	VOICE_TURN_ON_CAMERA_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR as NO_CAMERA_PERMISSION_DESCRIPTOR,
+	NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -47,14 +51,7 @@ const WAITING_FOR_CONNECTION_DESCRIPTOR = msg({
 	comment:
 		'Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.',
 });
-const NO_CAMERA_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment: 'Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.',
-});
-const NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't share your screen in this channel",
-	comment: 'Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.',
-});
+
 const CONFIGURE_OR_END_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'Configure or end screen share',
 	comment: 'Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.',

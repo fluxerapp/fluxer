@@ -3,28 +3,14 @@
 import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {
 	ensureActiveGuildTainted,
-	everEnabled,
-	guildActive,
-	isTainted,
 	type ThreadViewer,
-	userActive,
-	userExcluded,
 	userViewerActive,
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
-import {
-	CHANNEL_THREADS_CLIENT_FEATURE,
-	type ProtectedBitActor,
-	type ThreadPermissionMode,
-} from '@app/api/utils/featureUtils';
+import {CHANNEL_THREADS_CLIENT_FEATURE, type ProtectedBitActor} from '@app/api/utils/featureUtils';
 import {THREAD_PERMISSIONS} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-
-export async function resolveThreadPermissionMode(guildId: GuildID): Promise<ThreadPermissionMode> {
-	if (guildActive(guildId)) return 'active';
-	return (await isTainted(guildId)) ? 'retired' : 'control';
-}
 
 export async function resolveProtectedBitActor(params: {
 	guildId: GuildID;
@@ -33,12 +19,10 @@ export async function resolveProtectedBitActor(params: {
 	viewer?: ThreadViewer;
 	isBot: () => Promise<boolean>;
 }): Promise<ProtectedBitActor> {
-	const mode = await resolveThreadPermissionMode(params.guildId);
-	if (mode === 'control') return {clientFeatures: params.clientFeatures};
-	if (mode === 'active') await ensureActiveGuildTainted(params.guildId);
+	await ensureActiveGuildTainted(params.guildId);
 	return {
 		clientFeatures: params.clientFeatures,
-		threadBits: {mode, writer: mode === 'active' && (await threadBitWriter(params))},
+		threadBits: {mode: 'active', writer: await threadBitWriter(params)},
 	};
 }
 
@@ -49,8 +33,8 @@ async function threadBitWriter(params: {
 	isBot: () => Promise<boolean>;
 }): Promise<boolean> {
 	if (params.viewer) return userViewerActive(params.viewer);
-	if (await params.isBot()) return !userExcluded(params.userId);
-	return params.clientFeatures.has(CHANNEL_THREADS_CLIENT_FEATURE) && userActive(params.userId);
+	if (await params.isBot()) return true;
+	return params.clientFeatures.has(CHANNEL_THREADS_CLIENT_FEATURE);
 }
 
 export function hasThreadPermissionBits(value: bigint | null | undefined): boolean {
@@ -75,7 +59,7 @@ export async function shouldMaskThreadPermissionBits(
 		}
 	}
 	if (!present) return false;
-	if (!guildActive(guildId) && !(await isTainted(guildId))) return false;
+
 	return !viewerActive(viewer, guildId);
 }
 
@@ -84,7 +68,7 @@ export async function maskChannelResponseThreadBits(
 	viewer: ThreadViewer | undefined,
 	responses: Array<ChannelResponse>,
 ): Promise<Array<ChannelResponse>> {
-	if (!guildId || !everEnabled()) return responses;
+	if (!guildId) return responses;
 	const values = responses.flatMap((response) =>
 		(response.permission_overwrites ?? []).flatMap((overwrite) => [BigInt(overwrite.allow), BigInt(overwrite.deny)]),
 	);
@@ -108,7 +92,7 @@ export async function maskGuildResponseThreadBits(
 	viewer: ThreadViewer,
 	guild: GuildResponse,
 ): Promise<GuildResponse> {
-	if (!everEnabled() || !guild.roles) return guild;
+	if (!guild.roles) return guild;
 	const values = guild.roles.map((role) => BigInt(role.permissions));
 	if (!(await shouldMaskThreadPermissionBits(guildId, viewer, values))) return guild;
 	return {
@@ -124,7 +108,6 @@ export async function maskUserGuildsThreadBits(
 	viewer: ThreadViewer,
 	guilds: Array<GuildResponse>,
 ): Promise<Array<GuildResponse>> {
-	if (!everEnabled()) return guilds;
 	return Promise.all(
 		guilds.map(async (guild) => {
 			if (guild.permissions == null) return guild;
@@ -137,5 +120,5 @@ export async function maskUserGuildsThreadBits(
 
 export function flagThreadActiveUserGuilds(viewer: ThreadViewer, guilds: Array<GuildResponse>): Array<GuildResponse> {
 	if (!userViewerActive(viewer)) return guilds;
-	return guilds.map((guild) => (guildActive(guild.id) ? {...guild, threads_active: true} : guild));
+	return guilds.map((guild) => ({...guild, threads_active: true}));
 }

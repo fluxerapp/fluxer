@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Çok fazla dosya. En fazla {maxFiles, plural, one {# dosya} other {# dosya}} yükleyebilirsin.",
 	"attachments_and_uploads.unresolved_attachment_url": "Çözülmemiş `attachment://` URL'si algılandı. Bu, gömülü içerik işlenmeden önce çözülmeliydi.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Yüklenen {filename} eki bulunamadı.",
-	"auth_and_oauth.application_not_owned": "Bu uygulamanın sahibi değilsin.",
 	"auth_and_oauth.bot_already_in_guild": "Bu bot zaten toplulukta.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Bot kullanıcıları kimlik doğrulama oturumu oluşturamaz.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Bot kullanıcıları kimlik doğrulama uç noktalarını kullanamaz.",

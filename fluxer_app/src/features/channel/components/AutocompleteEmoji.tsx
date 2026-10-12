@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
-import {type AutocompleteOption, isEmoji, isMeme, isSticker} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
 import {AutocompleteMemePreview} from '@app/features/channel/components/AutocompleteMemePreview';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
+import {type AutocompleteOption, isEmoji, isMeme, isSticker} from '@app/features/channel/components/AutocompleteTypes';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
+import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import {getEmojiDisplayData} from '@app/features/expressions/utils/SkinToneUtils';
@@ -90,22 +91,13 @@ export const AutocompleteEmoji = observer(
 		onMouseLeave,
 		rowRefs,
 		getOptionId,
-	}: {
-		onSelect: (option: AutocompleteOption) => void;
-		keyboardFocusIndex: number;
-		hoverIndex: number;
-		options: Array<AutocompleteOption>;
-		onMouseEnter: (index: number) => void;
-		onMouseLeave: () => void;
-		rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
-		getOptionId?: (index: number) => string;
-	}) => {
+	}: AutocompleteListProps) => {
 		const {i18n} = useLingui();
 		const emojis = options.filter(isEmoji);
 		const stickers = options.filter(isSticker);
 		const memes = options.filter(isMeme);
 		const handleEmojiSelect = (option: AutocompleteOption) => {
-			if (isEmoji(option)) EmojiPickerCommands.trackEmojiUsage(option.emoji);
+			if (isEmoji(option)) EmojiPicker.trackEmoji(option.emoji);
 			onSelect(option);
 		};
 		return (

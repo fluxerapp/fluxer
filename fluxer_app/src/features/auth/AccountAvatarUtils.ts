@@ -3,7 +3,7 @@
 import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getDefaultAvatarAssetURL} from '@app/features/user/utils/DefaultAvatars';
+import {getDefaultAvatarURLForIndex} from '@app/features/user/utils/AvatarUtils';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {useMemo} from 'react';
 
@@ -11,7 +11,7 @@ function defaultAccountAvatarURL(account: Account, size?: MediaProxyImageSize): 
 	try {
 		return AvatarUtils.getUserAvatarURL({id: account.userId, avatar: null}, false, size);
 	} catch {
-		return getDefaultAvatarAssetURL(0);
+		return getDefaultAvatarURLForIndex(0);
 	}
 }
 

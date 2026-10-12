@@ -24,10 +24,8 @@ import {
 	GATEWAY_PREBOOT_SESSION_STORAGE_KEY,
 	isRawStorageArea,
 	PREBOOT_MIRROR_KEYS,
-	rawStorageKeyAt,
 	rawStorageKeys,
 	rawStorageKind,
-	rawStorageLength,
 	readRawStorageItem,
 	writeRawStorageItem,
 } from '@app/features/platform/state/PrebootMirror';
@@ -54,9 +52,7 @@ interface EnhancedStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
 	removeItem(key: string): void;
-	clear(): void;
-	key(index: number): string | null;
-	readonly length: number;
+
 	getJSON<T>(key: string, defaultValue?: T): T | null;
 	setJSON<T>(key: string, value: T): void;
 	keys(): Array<string>;
@@ -882,28 +878,7 @@ function createStorage(): EnhancedStorage {
 			writable: false,
 			enumerable: false,
 		},
-		clear: {
-			value: () => {
-				requireMutationsAvailable();
-				removeEntries(collectEntries(() => true));
-			},
-			writable: false,
-			enumerable: false,
-		},
-		key: {
-			value: (index: number) => {
-				if (!scopedStorageActive()) {
-					return rawStorageKeyAt(index);
-				}
-				return allKeys()[index] ?? null;
-			},
-			writable: false,
-			enumerable: false,
-		},
-		length: {
-			get: () => (scopedStorageActive() ? allKeys().length : rawStorageLength()),
-			enumerable: false,
-		},
+
 		getJSON: {
 			value: <T>(key: string, defaultValue?: T): T | null => {
 				const item = readValue(key);

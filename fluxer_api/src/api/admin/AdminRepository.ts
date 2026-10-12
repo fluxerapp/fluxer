@@ -225,11 +225,6 @@ export class AdminRepository {
 		await Promise.all(Array.from(deleteKeys).map((key) => deleteOneOrMany(BannedIps.deleteByPk({ip: key}))));
 	}
 
-	async loadAllBannedIps(): Promise<Set<string>> {
-		const entries = await this.loadAllBannedIpEntries();
-		return new Set(entries.map((row) => row.ip));
-	}
-
 	async loadAllBannedIpEntries(): Promise<Array<BannedIpEntry>> {
 		const rows = await fetchMany<{
 			ip: string;

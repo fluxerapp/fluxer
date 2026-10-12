@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
@@ -117,10 +118,6 @@ const MAX_KEY_LENGTH = 64;
 const MAX_MOUSE_BUTTON = 31;
 const INPUT_DEVICE_REPROBE_DELAY_MS = 500;
 export const GLOBAL_SHORTCUT_CAPTURE_TIMEOUT_MS = 60000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function sanitizeBoundedString(value: unknown, maxLength: number): string | null {
 	if (typeof value !== 'string') return null;

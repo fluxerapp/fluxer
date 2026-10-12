@@ -128,26 +128,6 @@ describe('System DM cancellation', () => {
 		expect(msg.nak).not.toHaveBeenCalled();
 	});
 
-	it('settles the ledger row as succeeded when no cancel is requested', async () => {
-		const deps = createWorkerDependencies();
-		const {ledger, markCancelled, markSucceeded} = createLedgerStub(Number.POSITIVE_INFINITY);
-		const runner = new TestWorkerRunner({
-			tasks: {[TASK_TYPE]: sendSystemDm},
-			queue: queueStub,
-			consumerName: 'workers_batch',
-			laneName: 'batch',
-			ledger,
-			concurrency: 1,
-		});
-		const msg = createJobMessage();
-
-		await expect(runner.runJob(TASK_TYPE, msg as unknown as JsMsg)).resolves.toBe(true);
-
-		expect(deps.sentChannelIds).toHaveLength(3);
-		expect(markSucceeded).toHaveBeenCalledTimes(1);
-		expect(markCancelled).not.toHaveBeenCalled();
-	});
-
 	it('sends every message as the synthetic system account', async () => {
 		const deps = createWorkerDependencies();
 		const {ledger} = createLedgerStub(Number.POSITIVE_INFINITY);

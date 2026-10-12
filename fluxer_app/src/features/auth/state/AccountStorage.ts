@@ -29,39 +29,7 @@ import type {
 import {storedAccountRecordsFromInventory} from '@app/features/auth/state/StoredAccountInventoryPolicy';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
-export {
-	type AccountPresenceIntent,
-	type AccountRekeyContext,
-	type AccountRekeyOutcome,
-	type AccountRekeyPlan,
-	type AccountRekeyTarget,
-	type BrowserAccountStorageOperation,
-	BrowserAccountStorageTimeoutError,
-	BrowserAccountStorageUnavailableError,
-	CrossInstanceAccountCollisionError,
-	DesktopAccountStorageAuthorityError,
-	type KeyedStoredAccount,
-	planAccountRekey,
-	type QualifiedStoredAccount,
-	type StoredAccount,
-	type StoredAccountData,
-	type StoredAccountList,
-	type StoredAccountSource,
-	type UserData,
-} from '@app/features/auth/state/AccountStorageContract';
-
-export {
-	type ReadyStoredAccountEntry,
-	type ReplaceableStoredAccountEntry,
-	type StoredAccountInventory,
-	type StoredAccountInventoryReplacement,
-	StoredAccountInventoryReplacementConflictError,
-	type StoredAccountRevision,
-	type StoredAccountRuntimeRecoveryCandidate,
-	StoredAccountRuntimeRecoveryError,
-	type UnavailableStoredAccount,
-	type UnqualifiedStoredAccount,
-} from '@app/features/auth/state/StoredAccountInventoryContract';
+export {CrossInstanceAccountCollisionError} from '@app/features/auth/state/AccountStorageContract';
 
 const logger = new Logger('AccountStorage');
 

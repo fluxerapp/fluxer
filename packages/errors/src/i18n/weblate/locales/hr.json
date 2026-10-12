@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Previše datoteka. Dopušteno je najviše {maxFiles, plural, one {# datoteka} few {# datoteke} other {# datoteka}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Otkriven je nerazriješeni `attachment://` URL. Trebao je biti razriješen prije obrade ugrađenog sadržaja.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Preneseni privitak {filename} nije pronađen.",
-	"auth_and_oauth.application_not_owned": "Nisi vlasnik ove aplikacije.",
 	"auth_and_oauth.bot_already_in_guild": "Ovaj je bot već u zajednici.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botovi ne mogu stvarati sesije autentifikacije.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botovi ne mogu koristiti krajnje točke za autentifikaciju.",

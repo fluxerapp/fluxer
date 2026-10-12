@@ -22,3 +22,6 @@ pub use media::{
     fixture_audio_only_mp4, fixture_h264_mp4, fixture_jpeg, fixture_mkv_with_png_video_stream,
     fixture_mp4_with_undecodable_video, synthetic_wav,
 };
+
+mod captured_log;
+pub(crate) use captured_log::CapturedLog;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
+import {resolveAdminUsers} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {Relationship} from '@app/api/models/Relationship';
@@ -49,7 +50,7 @@ export class AdminUserRelationshipService {
 		for (const rel of relationships) {
 			targetUserIds.add(rel.targetUserId);
 		}
-		const resolvedUsers = await this.resolveUsers([...targetUserIds]);
+		const resolvedUsers = await resolveAdminUsers(this.deps.apiContext.services.users, [...targetUserIds]);
 		const friends: Array<AdminRelationshipEntry> = [];
 		const incomingRequests: Array<AdminRelationshipEntry> = [];
 		const outgoingRequests: Array<AdminRelationshipEntry> = [];
@@ -217,44 +218,5 @@ export class AdminUserRelationshipService {
 				return;
 			}
 		}
-	}
-
-	private async resolveUsers(userIds: Array<UserID>): Promise<
-		Map<
-			UserID,
-			{
-				id: string;
-				username: string;
-				discriminator: string;
-				global_name: string | null;
-				avatar: string | null;
-			}
-		>
-	> {
-		const {users: userRepository} = this.deps.apiContext.services;
-		const results = new Map<
-			UserID,
-			{
-				id: string;
-				username: string;
-				discriminator: string;
-				global_name: string | null;
-				avatar: string | null;
-			}
-		>();
-		const users = await Promise.all(userIds.map((id) => userRepository.findUnique(id)));
-		for (let i = 0; i < userIds.length; i++) {
-			const user = users[i];
-			if (user) {
-				results.set(userIds[i], {
-					id: user.id.toString(),
-					username: user.username,
-					discriminator: String(user.discriminator).padStart(4, '0'),
-					global_name: user.globalName,
-					avatar: user.avatarHash,
-				});
-			}
-		}
-		return results;
 	}
 }

@@ -9,6 +9,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Combobox, type ComboboxFilterOption, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {FRIENDS_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {getTimeZoneDisplayOptions} from '@fluxer/date_utils/src/TimeZoneUtils';
 import {msg} from '@lingui/core/macro';
@@ -59,10 +60,6 @@ const EVERYONE_DESCRIPTOR = msg({
 const EVERYONE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Allow anyone who can view your full profile to see your local time',
 	comment: 'Profile timezone privacy option description for the Everyone switch.',
-});
-const FRIENDS_DESCRIPTOR = msg({
-	message: 'Friends',
-	comment: 'Profile timezone privacy option label. Allows friends to see local time.',
 });
 const FRIENDS_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Allow your friends to see your local time',
@@ -198,7 +195,7 @@ function TimezoneProfileSettingsModal({
 							timezoneIdentifierExample: TIMEZONE_IDENTIFIER_EXAMPLE,
 						})}
 					</Modal.Description>
-					<Combobox<string, false, TimeZoneSelectOption>
+					<Combobox<string, TimeZoneSelectOption>
 						label={i18n._(TIMEZONE_DESCRIPTOR)}
 						description={i18n._(TIMEZONE_HELP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						placeholder={i18n._(SEARCH_TIMEZONES_DESCRIPTOR)}

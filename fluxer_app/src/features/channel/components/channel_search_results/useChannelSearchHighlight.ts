@@ -4,7 +4,7 @@ import {
 	applyChannelSearchHighlight,
 	clearChannelSearchHighlight,
 } from '@app/features/messaging/utils/ChannelSearchHighlight';
-import {tokenizeSearchQuery} from '@app/features/search/utils/SearchQueryTokenizer';
+import {tokenize} from '@app/features/search/utils/SearchQueryParser';
 import {useLayoutEffect} from 'react';
 
 interface UseChannelSearchHighlightRequest {
@@ -27,7 +27,8 @@ export function useChannelSearchHighlight({
 		}
 		const root = getHighlightRoot();
 		if (root == null) return;
-		const terms = tokenizeSearchQuery(searchQuery);
+		const {content, exactPhrases} = tokenize(searchQuery);
+		const terms = [...content.split(' ').filter(Boolean), ...exactPhrases];
 		if (terms.length > 0) {
 			applyChannelSearchHighlight(root, terms);
 		}

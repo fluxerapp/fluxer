@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
@@ -12,10 +12,11 @@ import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
-import {extractId} from '@app/api/stripe/StripeUtils';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -31,7 +32,6 @@ interface StripePaymentFraudServiceDeps {
 	stripe: Stripe | null;
 	userRepository: UserRepository;
 	userCacheService: UserCacheService;
-	sessionTerminator: ISessionTerminator;
 	emailService: IEmailService;
 	gatewayService: IGatewayService;
 	donationRepository: DonationRepository;
@@ -211,14 +211,13 @@ export class StripePaymentFraudService {
 					currentPendingDeletionAt: currentUser.pendingDeletionAt,
 					nextPendingDeletionAt: pendingDeletionAt,
 					deletionReasonCode: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					userRepository: this.deps.userRepository,
 					deletionQueue: this.deps.kvDeletionQueue,
 				});
-				await this.deps.sessionTerminator.terminateAllUserSessions(userId);
+				await revokeAllAuthSessions({users: this.deps.userRepository, gateway: this.deps.gatewayService}, userId);
 				await this.deps.oauth2Tokens.deleteAllAccessTokensForUser(userId);
 				await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(userId);
 				await this.deps.userCacheService.setUserPartialResponseFromUser(updatedUser);
-				await this.dispatchUser(updatedUser);
+				await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 				const metadata = new Map<string, string>([
 					['days', '60'],
 					['source', source],
@@ -366,16 +365,14 @@ export class StripePaymentFraudService {
 					},
 					{idempotencyKey: `payment-fraud-refund:${charge.id}`},
 				);
-				try {
-					await getBillingRepository().refunds.upsertFromStripe(refund, {
-						customerId: extractId(charge.customer) ?? undefined,
-					});
-				} catch (mirrorErr) {
-					Logger.error(
-						{mirrorErr, refundId: refund.id},
-						'Mirror upsert failed after Stripe write; reconciler will heal',
-					);
-				}
+				await mirrorBestEffort(
+					() =>
+						getBillingRepository().refunds.upsertFromStripe(refund, {
+							customerId: extractId(charge.customer) ?? undefined,
+						}),
+					{refundId: refund.id},
+					'Mirror upsert failed after Stripe write; reconciler will heal',
+				);
 				Logger.info({chargeId: charge.id, warningId}, 'Created fraudulent refund for Stripe early fraud warning');
 			} catch (error: unknown) {
 				const refreshedCharge = await this.retrieveCharge(charge.id);
@@ -400,14 +397,11 @@ export class StripePaymentFraudService {
 						user_report: 'fraudulent',
 					},
 				});
-				try {
-					await getBillingRepository().charges.upsertFromStripe(updatedCharge);
-				} catch (mirrorErr) {
-					Logger.error(
-						{mirrorErr, chargeId: updatedCharge.id},
-						'Mirror upsert failed after Stripe write; reconciler will heal',
-					);
-				}
+				await mirrorBestEffort(
+					() => getBillingRepository().charges.upsertFromStripe(updatedCharge),
+					{chargeId: updatedCharge.id},
+					'Mirror upsert failed after Stripe write; reconciler will heal',
+				);
 				Logger.info({chargeId}, 'Reported Stripe charge as fraudulent');
 			} catch (error: unknown) {
 				Logger.warn({chargeId, error}, 'Failed to mark Stripe charge as fraudulent; continuing');
@@ -555,7 +549,7 @@ export class StripePaymentFraudService {
 				{idempotencyKey: `payment-fraud-cancel:${user.stripeSubscriptionId}`},
 			);
 		} catch (error: unknown) {
-			if (!this.isMissingOrCancelledSubscriptionError(error)) {
+			if (!isMissingOrCancelledSubscriptionError(error)) {
 				Logger.error(
 					{error, subscriptionId: user.stripeSubscriptionId, userId: user.id},
 					'Failed to cancel Stripe subscription during payment fraud enforcement',
@@ -576,22 +570,8 @@ export class StripePaymentFraudService {
 			},
 			user.toRow(),
 		);
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 		return updatedUser;
-	}
-
-	private isMissingOrCancelledSubscriptionError(error: unknown): boolean {
-		if (!(error instanceof Error)) {
-			return false;
-		}
-		const normalisedMessage = error.message.toLowerCase();
-		return (
-			normalisedMessage.includes('no such subscription') ||
-			normalisedMessage.includes('cannot cancel a canceled subscription') ||
-			normalisedMessage.includes('cannot cancel a cancelled subscription') ||
-			normalisedMessage.includes('subscription is canceled') ||
-			normalisedMessage.includes('subscription is cancelled')
-		);
 	}
 
 	private getAuditReason({
@@ -625,14 +605,6 @@ export class StripePaymentFraudService {
 			throw new StripeError('Stripe client not available for payment fraud handling');
 		}
 		return this.deps.stripe;
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.deps.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
 	}
 
 	private async runOnce(

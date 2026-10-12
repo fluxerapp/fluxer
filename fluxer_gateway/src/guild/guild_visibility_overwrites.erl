@@ -289,8 +289,8 @@ dispatch_per_channel_changes(
             {NewState, Memo};
         true ->
             Pid = maps:get(pid, SessionData, undefined),
-            OldMember = guild_permissions:find_member_by_user_id(UserId, OldState),
-            NewMember = guild_permissions:find_member_by_user_id(UserId, NewState),
+            OldMember = guild_permissions_check:find_member_by_user_id(UserId, OldState),
+            NewMember = guild_permissions_check:find_member_by_user_id(UserId, NewState),
             ConnectedSet = maps:get(UserId, ConnectedVoiceByUser, sets:new()),
             InitialViewableMap = guild_visibility_channels:ensure_viewable_channel_map(
                 SessionData, UserId, OldState
@@ -370,7 +370,7 @@ apply_channel_change(ChannelId, {ViewableMapAcc, StateAcc}, ChangeContext) ->
         connected_set := ConnectedSet,
         old_state := OldState
     } = ChangeContext,
-    OldVisible = guild_visibility_channels:channel_is_visible(
+    OldVisible = guild_permissions_check:can_view_channel(
         UserId, ChannelId, OldMember, OldState
     ),
     {StateAfterPreserve, NewVisible} =

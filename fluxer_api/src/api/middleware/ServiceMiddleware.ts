@@ -55,7 +55,6 @@ import {
 	resolveBlueskyOAuthService,
 } from '@app/api/middleware/ServiceRegistry';
 import {
-	ensureVirusScanInitialized,
 	getAdminApiKeyService,
 	getAdminArchiveService,
 	getAdminRepository,
@@ -250,7 +249,7 @@ class RequestServices implements RequestScopedServices {
 
 	constructor(
 		private readonly context: ApiContext,
-		private readonly bluesky: IBlueskyOAuthService,
+		private readonly bluesky: IBlueskyOAuthService | null,
 		private readonly entityCache: RequestCache | undefined,
 	) {}
 
@@ -345,7 +344,7 @@ class RequestServices implements RequestScopedServices {
 		return this.guildStack.inviteService;
 	}
 
-	get blueskyOAuthService(): IBlueskyOAuthService {
+	get blueskyOAuthService(): IBlueskyOAuthService | null {
 		return this.bluesky;
 	}
 
@@ -355,10 +354,6 @@ class RequestServices implements RequestScopedServices {
 
 	get adminArchiveService() {
 		return getAdminArchiveService();
-	}
-
-	get applicationRepository() {
-		return getApplicationRepository();
 	}
 
 	get botAuthService() {
@@ -382,10 +377,6 @@ class RequestServices implements RequestScopedServices {
 
 	get emailService() {
 		return getEmailService();
-	}
-
-	get embedService() {
-		return getEmbedService();
 	}
 
 	get entityAssetService() {
@@ -444,24 +435,12 @@ class RequestServices implements RequestScopedServices {
 		return getReadStateRequestService();
 	}
 
-	get reportService() {
-		return getReportServiceInstance();
-	}
-
 	get snowflakeService() {
 		return getSnowflakeService();
 	}
 
 	get storageService() {
 		return getStorageService();
-	}
-
-	get streamPreviewService() {
-		return getStreamPreviewService();
-	}
-
-	get sweegoWebhookService() {
-		return getSweegoWebhookService();
 	}
 
 	get themeService() {
@@ -920,6 +899,7 @@ class RequestServices implements RequestScopedServices {
 			getAvatarService(),
 			getCacheService(),
 			getSnowflakeService(),
+			this.gatewayService,
 		);
 		return this.cachedChannelFollowService;
 	}
@@ -945,7 +925,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	});
 	ctx.set('apiContext', apiContext);
 	ctx.set('sudoModeValid', false);
-	await ensureVirusScanInitialized();
+	getVirusScanServiceInstance();
 	await ensureVoiceResourcesInitialized();
 	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
 	installLazyServices(ctx, new RequestServices(apiContext, blueskyOAuthService, ctx.get('requestCache')));

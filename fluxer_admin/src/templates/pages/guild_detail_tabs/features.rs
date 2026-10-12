@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
 use crate::{
     acl,
     api::types::GuildInfo,
@@ -11,49 +12,10 @@ use crate::{
 };
 use maud::{Markup, html};
 
-const GUILD_FEATURES: &[&str] = &[
-    "ANIMATED_ICON",
-    "ANIMATED_BANNER",
-    "AUDIO_BITRATE_128_KBPS",
-    "AUDIO_BITRATE_256_KBPS",
-    "AUDIO_BITRATE_384_KBPS",
-    "BANNER",
-    "CLONE_EMOJI_DISABLED",
-    "CLONE_EMOJI_ENABLED",
-    "CLONE_STICKER_DISABLED",
-    "CLONE_STICKER_ENABLED",
-    "DETACHED_BANNER",
-    "INVITE_SPLASH",
-    "INVITES_DISABLED",
-    "RAID_DETECTED",
-    "TEXT_CHANNEL_FLEXIBLE_NAMES",
-    "HIDE_OWNER_CROWN",
-    "MORE_EMOJI",
-    "MORE_STICKERS",
-    "UNLIMITED_EMOJI",
-    "UNLIMITED_STICKERS",
-    "EXPRESSION_PURGE_ALLOWED",
-    "VANITY_URL",
-    "DISCOVERABLE",
-    "PARTNERED",
-    "VERIFIED",
-    "VIP_VOICE",
-    "VOICE_E2EE",
-    "UNAVAILABLE_FOR_EVERYONE",
-    "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
-    "UNAVAILABLE_HIDDEN",
-    "VISIONARY",
-    "LARGE_GUILD_OVERRIDE",
-    "VERY_LARGE_GUILD",
-    "ANNOUNCEMENT_CHANNELS_DISABLED",
-];
-
 const HOSTED_ONLY: &[&str] = &["VISIONARY", "VIP_VOICE"];
 
-const DEPRECATED_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
-
 fn feature_label(feature: &str) -> String {
-    if DEPRECATED_FEATURES.contains(&feature) {
+    if DEPRECATED_GUILD_FEATURES.contains(&feature) {
         format!("{feature} (deprecated, no longer enforced)")
     } else {
         feature.to_owned()

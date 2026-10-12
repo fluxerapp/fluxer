@@ -195,8 +195,8 @@ add_snowflake_keyed_value(Key, Value, Acc) ->
 -spec normalize_overwrite(term()) -> false | {true, map()}.
 normalize_overwrite(Overwrite) when is_map(Overwrite) ->
     Id = snowflake_id:parse_optional(maps:get(<<"id">>, Overwrite, undefined)),
-    Allow = permission_bits:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)),
-    Deny = permission_bits:parse_optional(maps:get(<<"deny">>, Overwrite, undefined)),
+    Allow = bitset:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)),
+    Deny = bitset:parse_optional(maps:get(<<"deny">>, Overwrite, undefined)),
     Type = overwrite_type(maps:get(<<"type">>, Overwrite, undefined)),
     case {Id, Type, Allow, Deny} of
         {OverwriteId, OverwriteType, AllowBits, DenyBits} when
@@ -285,7 +285,7 @@ normalize_permission_field(Key, Map) ->
 
 -spec put_normalized_permission(binary(), term(), map()) -> map().
 put_normalized_permission(Key, Value, Map) ->
-    Map#{Key => permission_bits:parse(Value)}.
+    Map#{Key => bitset:parse(Value)}.
 
 -spec normalize_snowflake_list_field(binary(), map()) -> map().
 normalize_snowflake_list_field(Key, Map) ->

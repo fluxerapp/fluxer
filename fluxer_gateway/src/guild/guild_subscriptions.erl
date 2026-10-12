@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_subscriptions).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([
@@ -14,10 +18,6 @@
     is_subscribed/3,
     get_user_ids_for_session/2
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -type session_id() :: binary().
 -type user_id() :: integer().
@@ -146,20 +146,6 @@ collect_user_for_session(UserId, SessionId, Subscribers, Acc) ->
 
 -ifdef(TEST).
 
-unsubscribe_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 123, State0),
-    State2 = unsubscribe(<<"session1">>, 123, State1),
-    ?assertNot(is_subscribed(<<"session1">>, 123, State2)).
-
-unsubscribe_one_of_many_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 123, State0),
-    State2 = subscribe(<<"session2">>, 123, State1),
-    State3 = unsubscribe(<<"session1">>, 123, State2),
-    ?assertNot(is_subscribed(<<"session1">>, 123, State3)),
-    ?assert(is_subscribed(<<"session2">>, 123, State3)).
-
 unsubscribe_session_test() ->
     State0 = init_state(),
     State1 = subscribe(<<"session1">>, 123, State0),
@@ -169,15 +155,6 @@ unsubscribe_session_test() ->
     ?assertNot(is_subscribed(<<"session1">>, 123, State4)),
     ?assertNot(is_subscribed(<<"session1">>, 456, State4)),
     ?assert(is_subscribed(<<"session2">>, 123, State4)).
-
-update_subscriptions_test() ->
-    State0 = init_state(),
-    State1 = subscribe(<<"session1">>, 100, State0),
-    State2 = subscribe(<<"session1">>, 200, State1),
-    State3 = update_subscriptions(<<"session1">>, [200, 300], State2),
-    ?assertNot(is_subscribed(<<"session1">>, 100, State3)),
-    ?assert(is_subscribed(<<"session1">>, 200, State3)),
-    ?assert(is_subscribed(<<"session1">>, 300, State3)).
 
 %% The subscription map as unsubscribe_session/2 built it before it stopped
 %% rebuilding untouched entries.

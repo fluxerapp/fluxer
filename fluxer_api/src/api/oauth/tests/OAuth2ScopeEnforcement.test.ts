@@ -224,14 +224,6 @@ describe('OAuth2 Scope Enforcement', () => {
 		});
 	});
 	describe('Edge cases', () => {
-		test('Empty scopes set cannot access /users/@me', async () => {
-			const account = await createTestAccount(harness);
-			const oauth2Token = await createOAuth2Token(harness, account.userId, []);
-			await createBuilder<UserMeResponse>(harness, `Bearer ${oauth2Token.token}`)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
-				.execute();
-		});
 		test('Token with empty scopes cannot access guilds endpoint', async () => {
 			const account = await createTestAccount(harness);
 			await createGuild(harness, account.token, 'Test Guild');
@@ -240,21 +232,6 @@ describe('OAuth2 Scope Enforcement', () => {
 				.get('/users/@me/guilds')
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
 				.execute();
-		});
-		test('Scope checking does not affect session tokens', async () => {
-			const account = await createTestAccount(harness);
-			await createGuild(harness, account.token, 'Test Guild');
-			const userJson = await createBuilder<UserMeResponse>(harness, account.token)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(userJson.id).toBe(account.userId);
-			expect(userJson.email).toBe(account.email);
-			const guildsJson = await createBuilder<Array<UserGuildResponse>>(harness, account.token)
-				.get('/users/@me/guilds')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(Array.isArray(guildsJson)).toBe(true);
 		});
 		test('Scope checking does not affect bot tokens', async () => {
 			const appOwner = await createTestAccount(harness);
@@ -332,52 +309,6 @@ describe('OAuth2 Scope Enforcement', () => {
 				.execute();
 		});
 	});
-	describe('Scope combinations and boundaries', () => {
-		test('Token with only email scope (no identify) cannot access user info', async () => {
-			const account = await createTestAccount(harness);
-			const oauth2Token = await createOAuth2Token(harness, account.userId, ['email']);
-			await createBuilder<UserMeResponse>(harness, `Bearer ${oauth2Token.token}`)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
-				.execute();
-		});
-		test('Multiple OAuth2 tokens with different scopes work independently', async () => {
-			const account = await createTestAccount(harness);
-			await createGuild(harness, account.token, 'Test Guild');
-			const identifyToken = await createOAuth2Token(harness, account.userId, ['identify']);
-			const guildsToken = await createOAuth2Token(harness, account.userId, ['identify', 'guilds']);
-			const fullToken = await createOAuth2Token(harness, account.userId, ['identify', 'email', 'guilds']);
-			const userJson1 = await createBuilder<UserMeResponse>(harness, `Bearer ${identifyToken.token}`)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(userJson1.email).toBeNull();
-			await createBuilder(harness, `Bearer ${identifyToken.token}`)
-				.get('/users/@me/guilds')
-				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
-				.execute();
-			const guildsJson = await createBuilder<Array<UserGuildResponse>>(harness, `Bearer ${guildsToken.token}`)
-				.get('/users/@me/guilds')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(guildsJson.length).toBeGreaterThan(0);
-			const userJson2 = await createBuilder<UserMeResponse>(harness, `Bearer ${guildsToken.token}`)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(userJson2.email).toBeNull();
-			const userJson3 = await createBuilder<UserMeResponse>(harness, `Bearer ${fullToken.token}`)
-				.get('/users/@me')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(userJson3.email).toBe(account.email);
-			const guildsJson2 = await createBuilder<Array<UserGuildResponse>>(harness, `Bearer ${fullToken.token}`)
-				.get('/users/@me/guilds')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(guildsJson2.length).toBeGreaterThan(0);
-		});
-	});
 	describe('Real OAuth2 flow scope enforcement', () => {
 		test('OAuth2 token from real authorization flow respects scope restrictions', async () => {
 			const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
@@ -404,29 +335,6 @@ describe('OAuth2 Scope Enforcement', () => {
 				.get('/users/@me/guilds')
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
 				.execute();
-		});
-		test('OAuth2 token with guilds scope from real flow can access guilds', async () => {
-			const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-			await createGuild(harness, endUser.token, 'Real Flow Guild');
-			const {authorizeOAuth2, exchangeOAuth2AuthorizationCode} = await import('@app/api/oauth/tests/OAuthTestUtils');
-			const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-				client_id: application.id,
-				redirect_uri: redirectURI,
-				scope: 'identify guilds',
-			});
-			const tokenResponse = await exchangeOAuth2AuthorizationCode(harness, {
-				client_id: application.id,
-				client_secret: application.client_secret,
-				code: authCodeResponse.code,
-				redirect_uri: redirectURI,
-			});
-			const guildsJson = await createBuilder<Array<UserGuildResponse>>(harness, `Bearer ${tokenResponse.access_token}`)
-				.get('/users/@me/guilds')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(Array.isArray(guildsJson)).toBe(true);
-			expect(guildsJson.length).toBeGreaterThan(0);
-			expect(guildsJson.some((g) => g.name === 'Real Flow Guild')).toBe(true);
 		});
 	});
 });

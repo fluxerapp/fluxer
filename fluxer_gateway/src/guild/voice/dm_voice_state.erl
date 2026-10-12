@@ -1,20 +1,20 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_state).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([handle_dm_disconnect/4, disconnect_voice_user/2]).
 -export([resolve_call_region/1, resolve_call_region/2, voice_region_for_rpc/1]).
 -export([call_voice_states/1]).
--export([normalize_session_id/1, resolve_effective_session_id/2]).
+-export([resolve_effective_session_id/2]).
 -export([validate_dm_viewer_stream_keys/3]).
 -export([maybe_attach_voice_routing_metadata/3]).
 -export([clear_dm_e2ee_room_key_if_channel_empty/3]).
 -export([clear_dm_e2ee_room_keys_for_removed_voice_states/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -56,7 +56,7 @@ leave_call_if_needed(null, _SessionId, ConnectionId, _State) ->
     _ = voice_state_counts_cache:remove_connection(ConnectionId),
     ok;
 leave_call_if_needed(ChannelId, SessionId, ConnectionId, State) ->
-    case guild_voice_connection_normalize:normalize_positive_snowflake(ChannelId) of
+    case snowflake_id:parse_maybe(ChannelId) of
         undefined ->
             _ = voice_state_counts_cache:remove_connection(ConnectionId),
             ok;
@@ -98,7 +98,9 @@ broadcast_disconnect_if_needed(OldChannelId, DisconnectVS, State) ->
 -spec disconnect_voice_user(integer(), dm_state()) -> {reply, map(), dm_state()}.
 disconnect_voice_user(UserId, State) ->
     VoiceStates = maps:get(dm_voice_states, State, #{}),
-    SessionId = normalize_session_id(maps:get(id, State, undefined)),
+    SessionId = guild_voice_connection_normalize:normalize_session_id(
+        maps:get(id, State, undefined)
+    ),
     UserVoiceStates = maps:filter(
         fun(_ConnId, VS) ->
             snowflake_id:equal(UserId, maps:get(<<"user_id">>, VS, undefined)) andalso
@@ -115,7 +117,11 @@ disconnect_voice_user(UserId, State) ->
 voice_state_session_matches(_VoiceState, undefined) ->
     true;
 voice_state_session_matches(VoiceState, SessionId) ->
-    case normalize_session_id(maps:get(<<"session_id">>, VoiceState, undefined)) of
+    case
+        guild_voice_connection_normalize:normalize_session_id(
+            maps:get(<<"session_id">>, VoiceState, undefined)
+        )
+    of
         undefined -> true;
         SessionId -> true;
         _ -> false
@@ -164,7 +170,7 @@ broadcast_user_disconnect(ConnId, VoiceState, NewState) ->
 -spec clear_dm_e2ee_room_key_if_channel_empty(term(), voice_state_map(), dm_state()) ->
     dm_state().
 clear_dm_e2ee_room_key_if_channel_empty(ChannelId, VoiceStates, State) ->
-    case guild_voice_connection_normalize:normalize_positive_snowflake(ChannelId) of
+    case snowflake_id:parse_maybe(ChannelId) of
         undefined ->
             State;
         ChannelIdInt ->
@@ -232,14 +238,12 @@ voice_region_for_rpc(<<"automatic">>) -> null;
 voice_region_for_rpc(Region) when is_binary(Region) -> Region;
 voice_region_for_rpc(_) -> null.
 
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
-
 -spec resolve_effective_session_id(term(), term()) -> binary() | undefined.
 resolve_effective_session_id(ExistingSessionId, RequestSessionId) ->
-    ExistingNormalized = normalize_session_id(ExistingSessionId),
-    RequestNormalized = normalize_session_id(RequestSessionId),
+    ExistingNormalized = guild_voice_connection_normalize:normalize_session_id(
+        ExistingSessionId
+    ),
+    RequestNormalized = guild_voice_connection_normalize:normalize_session_id(RequestSessionId),
     case ExistingNormalized of
         undefined -> RequestNormalized;
         RequestNormalized -> RequestNormalized;

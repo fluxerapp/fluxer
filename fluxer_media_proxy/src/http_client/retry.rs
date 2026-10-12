@@ -43,8 +43,8 @@ impl RetryPolicy for ObservableRetryPolicy {
             self.inner.should_retry(request_start_time, n_past_retries)
         };
         match decision {
-            RetryDecision::Retry { .. } => self.metrics.record_retry(),
-            RetryDecision::DoNotRetry => self.metrics.record_retries_exhausted(),
+            RetryDecision::Retry { .. } => self.metrics.http_retries.inc(),
+            RetryDecision::DoNotRetry => self.metrics.http_retries_exhausted.inc(),
         }
         decision
     }
@@ -65,13 +65,13 @@ impl RetryableStrategy for MediaProxyRetryStrategy {
         match result {
             Ok(response) => retryable_status(response.status()).map(|retryable| {
                 if retryable == Retryable::Transient {
-                    self.metrics.record_retryable_status();
+                    self.metrics.http_retryable_status.inc();
                 }
                 retryable
             }),
             Err(error) => retryable_error(error).map(|retryable| {
                 if retryable == Retryable::Transient {
-                    self.metrics.record_retryable_error();
+                    self.metrics.http_retryable_error.inc();
                 }
                 retryable
             }),
@@ -352,7 +352,7 @@ mod tests {
         ObservableRetryPolicy::new(
             ExponentialBackoff::builder().build_with_max_retries(2),
             window,
-            Arc::new(HTTPClientMetrics::new()),
+            Arc::new(HTTPClientMetrics::default()),
         )
     }
 

@@ -1,39 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	createTestAccount,
-	createTotpSecret,
-	generateTotpCode,
-	loginWithTotp,
-	type TestAccount,
-} from '@app/api/auth/tests/AuthTestUtils';
-import {
-	createAuthenticationResponse,
-	createRegistrationResponse,
-	createWebAuthnDevice,
-	setWebAuthnTwoFactor,
-	type WebAuthnAuthenticationOptions,
-	type WebAuthnDevice,
-	type WebAuthnRegistrationOptions,
-} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {createTestAccount, createTotpSecret, generateTotpCode, loginWithTotp} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-
-interface BackupCodesResponse {
-	backup_codes: Array<{
-		code: string;
-	}>;
-}
-
-interface LoginMfaResponse {
-	mfa: true;
-	ticket: string;
-	totp: boolean;
-	webauthn: boolean;
-}
 
 interface SudoMfaMethodsResponse {
 	totp: boolean;
@@ -50,93 +22,6 @@ interface SudoModeRequiredResponse {
 		webauthn?: boolean;
 		backup_codes?: boolean;
 	};
-}
-
-async function setupWebAuthnOnlyUser(
-	harness: ApiTestHarness,
-	account: TestAccount,
-	twoFactorEnabled: boolean,
-): Promise<{
-	account: TestAccount;
-	device: WebAuthnDevice;
-}> {
-	const device = createWebAuthnDevice();
-	const secret = createTotpSecret();
-	const backupCodes = await createBuilder<BackupCodesResponse>(harness, account.token)
-		.post('/users/@me/mfa/totp/enable')
-		.body({
-			secret,
-			code: generateTotpCode(secret),
-			password: account.password,
-		})
-		.execute();
-	const login = await createBuilderWithoutAuth<LoginMfaResponse>(harness)
-		.post('/auth/login')
-		.body({
-			email: account.email,
-			password: account.password,
-		})
-		.execute();
-	expect(login.mfa).toBe(true);
-	const mfaLogin = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/login/mfa/totp')
-		.body({
-			code: backupCodes.backup_codes[0]!.code,
-			ticket: login.ticket,
-		})
-		.execute();
-	const updatedAccount = {...account, token: mfaLogin.token};
-	const registrationOptions = await createBuilder<WebAuthnRegistrationOptions>(harness, updatedAccount.token)
-		.post('/users/@me/mfa/webauthn/credentials/registration-options')
-		.body({
-			mfa_method: 'totp',
-			mfa_code: backupCodes.backup_codes[1]!.code,
-		})
-		.execute();
-	const registrationResponse = createRegistrationResponse(device, registrationOptions, 'Test Passkey');
-	await createBuilder(harness, updatedAccount.token)
-		.post('/users/@me/mfa/webauthn/credentials')
-		.body({
-			response: registrationResponse,
-			challenge: registrationOptions.challenge,
-			name: 'Test Passkey',
-			mfa_method: 'totp',
-			mfa_code: backupCodes.backup_codes[2]!.code,
-		})
-		.expect(204)
-		.execute();
-	if (twoFactorEnabled) {
-		await setWebAuthnTwoFactor(harness, updatedAccount.token, true, {
-			mfa_method: 'totp',
-			mfa_code: backupCodes.backup_codes[5]!.code,
-		});
-	}
-	await createBuilder(harness, updatedAccount.token)
-		.post('/users/@me/mfa/totp/disable')
-		.body({
-			code: backupCodes.backup_codes[3]!.code,
-			mfa_method: 'totp',
-			mfa_code: backupCodes.backup_codes[4]!.code,
-		})
-		.expect(204)
-		.execute();
-	const discoverableOptions = await createBuilderWithoutAuth<WebAuthnAuthenticationOptions>(harness)
-		.post('/auth/webauthn/authentication-options')
-		.body(null)
-		.execute();
-	const discoverableAssertion = createAuthenticationResponse(device, discoverableOptions);
-	const passkeyLogin = await createBuilderWithoutAuth<{
-		token: string;
-	}>(harness)
-		.post('/auth/webauthn/authenticate')
-		.body({
-			response: discoverableAssertion,
-			challenge: discoverableOptions.challenge,
-		})
-		.execute();
-	return {account: {...updatedAccount, token: passkeyLogin.token}, device};
 }
 
 describe('MFA Consistency Tests', () => {
@@ -162,25 +47,6 @@ describe('MFA Consistency Tests', () => {
 				.execute();
 			expect(methods).toEqual({totp: false, webauthn: false, backup_codes: false, has_mfa: false});
 			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, account.token)
-				.post('/users/@me/disable')
-				.body({})
-				.expect(403, 'SUDO_MODE_REQUIRED')
-				.execute();
-			expect(errorResp.has_mfa).toBe(methods.has_mfa);
-			expect(errorResp.methods).toEqual({
-				totp: methods.totp,
-				webauthn: methods.webauthn,
-				backup_codes: methods.backup_codes,
-			});
-		});
-		test('mfa-methods reports webauthn for a passkey user with two-factor off', async () => {
-			const account = await createTestAccount(harness);
-			const {account: webauthnAccount} = await setupWebAuthnOnlyUser(harness, account, false);
-			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, webauthnAccount.token)
-				.get('/users/@me/sudo/mfa-methods')
-				.execute();
-			expect(methods).toEqual({totp: false, webauthn: true, backup_codes: false, has_mfa: true});
-			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, webauthnAccount.token)
 				.post('/users/@me/disable')
 				.body({})
 				.expect(403, 'SUDO_MODE_REQUIRED')

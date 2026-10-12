@@ -25,7 +25,8 @@
 		"astro": "catalog:",
 		"send": "catalog:",
 		"sharp": "catalog:",
-		"tsx": "catalog:"
+		"tsx": "catalog:",
+		"@fluxer/constants": "workspace:*"
 	},
 	"devDependencies": {
 		"@astrojs/check": "catalog:",

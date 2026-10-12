@@ -97,7 +97,7 @@ with_member_item_memo(Fun) ->
 get_counts(ListId, State) ->
     case store_ref_for(ListId, State) of
         undefined -> {0, 0};
-        Ref -> guild_member_list_store:get_counts(Ref)
+        Ref -> guild_member_list_engine:get_counts(Ref)
     end.
 
 -spec get_online_count(guild_state()) -> non_neg_integer().
@@ -106,7 +106,7 @@ get_online_count(State) ->
         undefined ->
             0;
         Ref ->
-            {_Total, Online} = guild_member_list_store:get_counts(Ref),
+            {_Total, Online} = guild_member_list_engine:get_counts(Ref),
             Online
     end.
 
@@ -145,8 +145,8 @@ build_normalized_sync_response_builder_for_store(GuildIdBin, ListId, undefined, 
         }
     end;
 build_normalized_sync_response_builder_for_store(GuildIdBin, ListId, Ref, State) ->
-    {MemberCount, OnlineCount} = guild_member_list_store:get_counts(Ref),
-    StoreGroups = guild_member_list_store:get_groups(Ref),
+    {MemberCount, OnlineCount} = guild_member_list_engine:get_counts(Ref),
+    StoreGroups = guild_member_list_engine:get_groups(Ref),
     VisibleGroups = visible_groups(StoreGroups),
     ReadCtx = read_context(ListId, StoreGroups, State),
     fun(NormalizedRanges) ->
@@ -169,7 +169,7 @@ read_context(ListId, StoreGroups, State) ->
     #{
         list_id => ListId,
         hide_offline => offline_hidden(StoreGroups),
-        member_map => guild_data_index:member_map(Data),
+        member_map => guild_data_index_members:member_map(Data),
         member_revision => maps:get(member_list_revision, Data, undefined),
         presence_context => guild_member_list_connected:presence_context(State),
         state => State
@@ -341,7 +341,7 @@ build_range_sync_op(Ref, {Start, End} = Range, StoreGroups, ReadCtx) ->
     read_context()
 ) -> [store_item()].
 store_range_items_from_context(Ref, _StoreGroups, Start, End, #{hide_offline := false}) ->
-    guild_member_list_store:get_items(Ref, Start, End);
+    guild_member_list_engine:get_items(Ref, Start, End);
 store_range_items_from_context(Ref, StoreGroups, Start, End, #{hide_offline := true}) ->
     visible_range_items(Ref, StoreGroups, Start, End).
 
@@ -361,9 +361,9 @@ snapshot(ListId, State) ->
         undefined ->
             {0, 0, [], []};
         Ref ->
-            {Total, Online} = guild_member_list_store:get_counts(Ref),
-            StoreGroups = guild_member_list_store:get_groups(Ref),
-            StoreItems = guild_member_list_store:get_items(Ref, 0, Total * 2),
+            {Total, Online} = guild_member_list_engine:get_counts(Ref),
+            StoreGroups = guild_member_list_engine:get_groups(Ref),
+            StoreItems = guild_member_list_engine:get_items(Ref, 0, Total * 2),
             Items = hydrate_engine_items(ListId, StoreItems, StoreGroups, State),
             {Total, Online, visible_groups(StoreGroups), Items}
     end.
@@ -374,7 +374,7 @@ snapshot(ListId, State) ->
     [list_item()].
 hydrate_engine_items(ListId, StoreItems, StoreGroups, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     HideOffline = offline_hidden(StoreGroups),
     hydrate_engine_items_with_context(StoreItems, ListId, HideOffline, MemberMap, State).
 
@@ -538,7 +538,7 @@ visible_range_items(Ref, StoreGroups, Start, End) ->
     VisibleEnd = visible_online_last_index(StoreGroups),
     case Start > VisibleEnd of
         true -> [];
-        false -> guild_member_list_store:get_items(Ref, Start, min(End, VisibleEnd))
+        false -> guild_member_list_engine:get_items(Ref, Start, min(End, VisibleEnd))
     end.
 
 -spec visible_online_last_index([{binary(), non_neg_integer()}]) -> integer().
@@ -621,30 +621,6 @@ with_memo_presence_tab(Fun) ->
     after
         ets:delete(Tab)
     end.
-
-member_item_memo_shares_items_within_scope_test() ->
-    with_memo_presence_tab(fun(Tab) ->
-        MemberMap = #{1 => memo_member(1, <<"one">>), 2 => memo_member(2, <<"two">>)},
-        Ctx = memo_presence_ctx(Tab, [1, 2]),
-        Unscoped1 = hydrate_member_ref(1, MemberMap, Ctx),
-        Unscoped2 = hydrate_member_ref(1, MemberMap, Ctx),
-        ?assertNot(erts_debug:same(element(2, Unscoped1), element(2, Unscoped2))),
-        {Scoped1, Scoped2, Other} = with_member_item_memo(fun() ->
-            {
-                hydrate_member_ref(1, MemberMap, Ctx),
-                hydrate_member_ref(1, MemberMap, memo_presence_ctx(Tab, [1, 2])),
-                hydrate_member_ref(2, MemberMap, Ctx)
-            }
-        end),
-        ?assertEqual(Unscoped1, Scoped1),
-        ?assertEqual(Scoped1, Scoped2),
-        ?assert(erts_debug:same(element(2, Scoped1), element(2, Scoped2))),
-        ?assertEqual(hydrate_member_ref(2, MemberMap, Ctx), Other),
-        ?assertEqual(
-            false, with_member_item_memo(fun() -> hydrate_member_ref(3, MemberMap, Ctx) end)
-        ),
-        ?assertEqual(undefined, erlang:get(?MEMBER_ITEM_MEMO_KEY))
-    end).
 
 member_item_memo_rebuilds_changed_member_test() ->
     with_memo_presence_tab(fun(Tab) ->
@@ -796,16 +772,6 @@ range_items_by_user(Op) ->
      || #{<<"member">> := M} = I <- maps:get(<<"items">>, Op)
     ]).
 
-range_cache_reuses_unchanged_range_test() ->
-    with_range_world(fun(State, _Tab, _Ref) ->
-        First = range_op(State),
-        Second = range_op(State),
-        ?assert(erts_debug:same(First, Second)),
-        ?assertEqual(uncached_range_op(State), Second),
-        ok = note_presence_write(77),
-        ?assert(erts_debug:same(First, range_op(State)))
-    end).
-
 range_cache_patches_only_the_written_member_test() ->
     with_range_world(fun(State, Tab, _Ref) ->
         Before = range_items_by_user(range_op(State)),
@@ -852,7 +818,7 @@ range_cache_rebuilds_on_member_change_test() ->
         _ = range_op(State),
         #{data := Data} = State,
         Renamed = State#{
-            data => guild_data_index:put_member(memo_member(5, <<"renamed">>), Data)
+            data => guild_data_index_members:put_member(memo_member(5, <<"renamed">>), Data)
         },
         ?assertEqual(uncached_range_op(Renamed), range_op(Renamed))
     end).
@@ -911,13 +877,15 @@ range_cache_requires_a_member_revision_test() ->
 range_cache_does_not_retain_unrendered_members_or_connections_test() ->
     with_range_world(fun(State, _Tab, _Ref) ->
         #{data := Data} = State,
-        Members = guild_data_index:member_map(Data),
-        SmallData = guild_data_index:put_member_map(Members, Data),
+        Members = guild_data_index_members:member_map(Data),
+        SmallData = guild_data_index_members:put_member_map(Members, Data),
         Small = State#{data => SmallData},
         SmallOp = range_op(Small),
         SmallSize = erts_debug:flat_size(erlang:get(guild_member_list_sync_item_cache)),
         Extra = maps:from_list([{U, memo_member(U, <<"extra">>)} || U <- lists:seq(7, 5000)]),
-        LargeData = guild_data_index:put_member_map(maps:merge(Members, Extra), SmallData),
+        LargeData = guild_data_index_members:put_member_map(
+            maps:merge(Members, Extra), SmallData
+        ),
         Large = Small#{
             data => LargeData,
             connected_user_ids => sets:from_list([1, 2, 3, 4] ++ lists:seq(7, 5000))

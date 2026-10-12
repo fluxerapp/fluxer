@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod probe_helpers;
+
 use napi_derive::napi;
 
 pub const SOURCE_METAL: &str = "metal";
@@ -64,8 +66,7 @@ fn base_device(
         active,
         vendor_id,
         device_id,
-        vendor_name: fluxer_desktop_native::platform_info::probe_helpers::vendor_name(vendor_id)
-            .map(str::to_owned),
+        vendor_name: crate::probe_helpers::vendor_name(vendor_id).map(str::to_owned),
         device_string: None,
         driver_vendor: None,
         driver_version: None,
@@ -94,9 +95,7 @@ fn empty_info(source: &str) -> PlatformGpuInfo {
 
 #[cfg(target_os = "macos")]
 mod platform {
-    use fluxer_desktop_native::platform_info::probe_helpers::{
-        vendor_id_from_name, vendor_name, write_hex_u64,
-    };
+    use crate::probe_helpers::{vendor_id_from_name, vendor_name, write_hex_u64};
     use objc2::exception::catch;
     use objc2::rc::autoreleasepool;
     use objc2_metal::{MTLCopyAllDevices, MTLCreateSystemDefaultDevice, MTLDevice};
@@ -198,7 +197,7 @@ mod dxgi_helpers {
 #[cfg(target_os = "windows")]
 mod platform {
     use super::dxgi_helpers::{luid_string, utf16_description};
-    use fluxer_desktop_native::platform_info::probe_helpers::vendor_name;
+    use crate::probe_helpers::vendor_name;
     use windows::Win32::Graphics::Dxgi::{
         CreateDXGIFactory1, DXGI_ADAPTER_DESC1, DXGI_ADAPTER_FLAG_SOFTWARE,
         DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IDXGIAdapter1, IDXGIFactory1, IDXGIFactory6,
@@ -300,9 +299,7 @@ mod platform {
     use std::fs;
     use std::path::Path;
 
-    use fluxer_desktop_native::platform_info::probe_helpers::{
-        basename, is_drm_card_name, parse_hex_id, vendor_name,
-    };
+    use crate::probe_helpers::{basename, is_drm_card_name, parse_hex_id, vendor_name};
 
     use super::{PlatformGpuDeviceInfo, PlatformGpuInfo, SOURCE_LINUX_SYSFS, base_device};
 

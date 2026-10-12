@@ -44,10 +44,6 @@ export class VoiceTopology {
 		return this.defaultRegionId;
 	}
 
-	getRegion(regionId: string): VoiceRegionRecord | null {
-		return this.regions.get(regionId) ?? null;
-	}
-
 	getAllRegions(): Array<VoiceRegionRecord> {
 		return Array.from(this.regions.values());
 	}

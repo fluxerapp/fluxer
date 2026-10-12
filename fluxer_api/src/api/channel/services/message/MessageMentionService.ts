@@ -9,8 +9,9 @@ import {
 	type RoleID,
 	type UserID,
 } from '@app/api/BrandedTypes';
-import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
@@ -483,7 +484,7 @@ export class MessageMentionService {
 		mentionHere?: boolean;
 	}): Promise<void> {
 		const {guildId, message, authorId, mentionHere = false} = params;
-		if (isPersonalNotesChannel({userId: authorId, channelId: message.channelId})) return;
+		if (isPersonalNotesChannelId({userId: authorId, channelId: message.channelId})) return;
 		const mentionUserIds = Array.from(message.mentionedUserIds ?? []);
 		const mentionRoleIds = Array.from(message.mentionedRoleIds ?? []);
 		const mentionEveryone = message.mentionEveryone && !mentionHere;

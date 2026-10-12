@@ -8,7 +8,6 @@ import {after, describe, test} from 'node:test';
 import {pathToFileURL} from 'node:url';
 
 const {
-	decideModuleSystemDisableRequest,
 	getOfflineRendererRoot,
 	hasOfflineRenderer,
 	readModuleSystemDisableRequest,
@@ -75,21 +74,6 @@ describe('the launch decision on a build with the module system flag off', () =>
 
 	test('an empty environment value is not a disable request', () => {
 		assert.equal(readModuleSystemDisableRequest([], {FLUXER_MODULE_SYSTEM: '   '}), false);
-	});
-});
-
-describe('decideModuleSystemDisableRequest, a pure decision no shipped build can reach', () => {
-	test('is honoured when an offline renderer can take over', () => {
-		assert.deepEqual(decideModuleSystemDisableRequest(true, true), {kind: 'honoured'});
-	});
-
-	test('is ignored when there is no offline renderer to take over', () => {
-		assert.deepEqual(decideModuleSystemDisableRequest(true, false), {kind: 'ignored-without-offline-renderer'});
-	});
-
-	test('that was never made is neither honoured nor ignored', () => {
-		assert.deepEqual(decideModuleSystemDisableRequest(false, false), {kind: 'not-requested'});
-		assert.deepEqual(decideModuleSystemDisableRequest(false, true), {kind: 'not-requested'});
 	});
 });
 

@@ -19,7 +19,6 @@ import {
 	EMPTY_AUTH_REGISTER_FORM_DRAFT,
 	useAuthRegisterDraftContext,
 } from '@app/features/auth/state/AuthRegisterDraftContext';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {
 	DISPLAY_NAME_OPTIONAL_DESCRIPTOR,
 	EMAIL_DESCRIPTOR,
@@ -29,6 +28,7 @@ import {
 	WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import {createRecoveryKitWithPasswordAndOpen} from '@app/features/user/commands/RecoveryKitCommands';
 import {useUsernameSuggestions} from '@app/features/user/hooks/useUsernameSuggestions';
@@ -134,7 +134,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 		const value = new URLSearchParams(location.search).get('registration_url')?.trim();
 		return value || undefined;
 	}, [location.search]);
-	const registrationTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const registrationTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
 	const isPublicRegistrationClosed = runtimeSnapshot.registration.mode === 'closed' && !registrationUrlCode;
 	const collectDateOfBirth = runtimeSnapshot.appPublic.registration.collect_date_of_birth;
 	const {getRegisterFormDraft, setRegisterFormDraft, clearRegisterFormDraft} = useAuthRegisterDraftContext();
@@ -289,7 +289,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const {suggestions} = useUsernameSuggestions({
 		globalName: form.getValue('global_name'),
 		username: form.getValue('username'),
-		target: registrationTarget.http,
+		target: registrationTarget,
 		enabled: showUsername,
 	});
 	const missingFields = useMemo(() => {
@@ -336,7 +336,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const usernameFormatValid = trimmedUsername.length <= MAX_USERNAME_LENGTH && USERNAME_PATTERN.test(trimmedUsername);
 	const uniqueUsernames = usesUniqueUsernames(runtimeSnapshot.features);
 	const usernameAvailability = useUsernameAvailability(
-		registrationTarget.http,
+		registrationTarget,
 		trimmedUsername,
 		showUsername && uniqueUsernames && trimmedUsername.length > 0 && usernameFormatValid,
 	);

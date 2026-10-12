@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
+import {randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import type {SessionOrigin} from '@app/api/auth/AuthSession';
+import {randomBase64Url, secretMatchesHash, sha256Hex} from '@app/api/utils/SecretHash';
 import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCodeExpiredError';
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
 import {
@@ -68,28 +69,8 @@ function requireNormalizedHandoffCode(code: string): string {
 	return normalized;
 }
 
-function generateSecret(byteLength: number): string {
-	return randomBytes(byteLength).toString('base64url');
-}
-
-function hashPollSecret(secret: string): string {
-	return createHash('sha256').update(secret).digest('hex');
-}
-
 function resolveReturnMethod(handoffData: HandoffData): DesktopHandoffReturnMethod {
 	return handoffData.returnUri ? 'deep_link' : 'code';
-}
-
-function secretMatches(presented: string | undefined, storedHash: string | undefined): boolean {
-	if (!presented || !storedHash) {
-		return false;
-	}
-	const presentedHash = Buffer.from(hashPollSecret(presented), 'hex');
-	const stored = Buffer.from(storedHash, 'hex');
-	if (presentedHash.length !== stored.length) {
-		return false;
-	}
-	return timingSafeEqual(presentedHash, stored);
 }
 
 export class DesktopHandoffService {
@@ -107,13 +88,13 @@ export class DesktopHandoffService {
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = generateNormalizedHandoffCode();
-		const pollSecret = generateSecret(POLL_SECRET_BYTES);
+		const pollSecret = randomBase64Url(POLL_SECRET_BYTES);
 		const handoffData: HandoffData = {
 			createdAt: Date.now(),
 			origin: args.origin,
 			initiatorOrigin: args.initiatorOrigin ?? null,
 			infoLookupCount: 0,
-			pollSecretHash: hashPollSecret(pollSecret),
+			pollSecretHash: sha256Hex(pollSecret),
 			returnUri: args.returnUri ?? null,
 		};
 		const expirySeconds = seconds('5 minutes');
@@ -157,12 +138,12 @@ export class DesktopHandoffService {
 			throw new HandoffCodeExpiredError();
 		}
 		const {token, userId} = await createTokenData(handoffData.origin);
-		const grant = returnMethod === 'deep_link' ? generateSecret(GRANT_BYTES) : null;
+		const grant = returnMethod === 'deep_link' ? randomBase64Url(GRANT_BYTES) : null;
 		const tokenData: HandoffTokenData = {
 			token,
 			userId,
 			pollSecretHash: handoffData.pollSecretHash,
-			...(grant ? {grantHash: hashPollSecret(grant)} : {}),
+			...(grant ? {grantHash: sha256Hex(grant)} : {}),
 		};
 		await cache.set(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`, tokenData, remainingSeconds);
 		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
@@ -243,7 +224,7 @@ export class DesktopHandoffService {
 		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
 		if (tokenData) {
-			if (!secretMatches(pollSecret, tokenData.pollSecretHash)) {
+			if (!secretMatchesHash(pollSecret, tokenData.pollSecretHash)) {
 				await this.recordFailedAttempt(pollerIp);
 				return {status: 'pending'};
 			}
@@ -251,7 +232,7 @@ export class DesktopHandoffService {
 				if (!grant) {
 					return {status: 'pending'};
 				}
-				if (!secretMatches(grant, tokenData.grantHash)) {
+				if (!secretMatchesHash(grant, tokenData.grantHash)) {
 					await this.recordFailedAttempt(pollerIp);
 					return {status: 'pending'};
 				}
@@ -278,7 +259,7 @@ export class DesktopHandoffService {
 		const handoffData = await cache.get<HandoffData>(codeKey);
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
 		const storedHash = handoffData?.pollSecretHash ?? tokenData?.pollSecretHash;
-		if (!secretMatches(pollSecret, storedHash)) {
+		if (!secretMatchesHash(pollSecret, storedHash)) {
 			throw new InvalidHandoffCodeError();
 		}
 		await cache.delete(codeKey);

@@ -6,7 +6,7 @@ import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/Authe
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import {originOf} from '@app/features/auth/InstanceBranding';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FormUtils from '@app/lib/forms';

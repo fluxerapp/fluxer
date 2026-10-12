@@ -11,18 +11,10 @@ pub const CREATE_PREFIX: &str = "WebAuthn registration failed";
 pub const GET_PREFIX: &str = "WebAuthn authentication failed";
 
 pub const TRANSPORT_USB: u32 = 0x0000_0001;
-#[allow(dead_code)]
-pub const TRANSPORT_NFC: u32 = 0x0000_0002;
-#[allow(dead_code)]
-pub const TRANSPORT_BLE: u32 = 0x0000_0004;
 pub const TRANSPORT_INTERNAL: u32 = 0x0000_0010;
 
 #[allow(dead_code)]
 pub const ATTACHMENT_ANY: u32 = 0;
-#[allow(dead_code)]
-pub const ATTACHMENT_PLATFORM: u32 = 1;
-#[allow(dead_code)]
-pub const ATTACHMENT_CROSS_PLATFORM: u32 = 2;
 
 #[allow(dead_code)]
 pub const USER_VERIFICATION_REQUIRED: u32 = 1;
@@ -189,14 +181,8 @@ mod tests {
             Some("cross-platform"),
             attachment_from_transport(TRANSPORT_USB)
         );
-        assert_eq!(
-            Some("cross-platform"),
-            attachment_from_transport(TRANSPORT_NFC)
-        );
-        assert_eq!(
-            Some("cross-platform"),
-            attachment_from_transport(TRANSPORT_BLE)
-        );
+        assert_eq!(Some("cross-platform"), attachment_from_transport(0x2));
+        assert_eq!(Some("cross-platform"), attachment_from_transport(0x4));
         assert_eq!(None, attachment_from_transport(0));
     }
 

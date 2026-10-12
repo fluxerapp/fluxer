@@ -23,7 +23,7 @@
 -spec user_ids_for_any_role([role_id()], guild_state()) -> [user_id()].
 user_ids_for_any_role(RoleIds, State) ->
     Data = guild_members_common:guild_data(State),
-    MemberRoleIndex = guild_data_index:member_role_index(Data),
+    MemberRoleIndex = guild_data_index_members:member_role_index(Data),
     gb_sets:to_list(
         lists:foldl(
             fun(RoleId, AccSet) ->
@@ -58,13 +58,13 @@ can_manage_roles(#{user_id := UserId, role_id := RoleId}, State) ->
 -spec can_manage_role(map(), guild_state()) -> guild_reply(map()).
 can_manage_role(#{user_id := UserId, role_id := RoleId}, State) ->
     Data = guild_members_common:guild_data(State),
-    Roles = guild_data_index:role_index(Data),
+    Roles = guild_data_index_roles:role_index(Data),
     Reply =
-        case guild_permissions:find_role_by_id(RoleId, Roles) of
+        case guild_permissions_check:find_role_by_id(RoleId, Roles) of
             undefined ->
                 false;
             Role ->
-                UserMax = guild_permissions:get_max_role_position(UserId, State),
+                UserMax = guild_permissions_check:get_max_role_position(UserId, State),
                 RolePos = maps:get(<<"position">>, Role, 0),
                 can_rank_manage_role(UserMax, RolePos, UserId, RoleId, State)
         end,
@@ -111,25 +111,25 @@ check_can_manage(UserId, _RoleId, UserId, _State) ->
     true;
 check_can_manage(UserId, RoleId, _OwnerId, State) ->
     UserPerms = guild_permissions:get_member_permissions(UserId, undefined, State),
-    case permission_bits:has(UserPerms, constants:manage_roles_permission()) of
+    case bitset:has(UserPerms, constants:manage_roles_permission()) of
         false ->
             false;
         true ->
             Data = guild_members_common:guild_data(State),
-            Roles = guild_data_index:role_index(Data),
+            Roles = guild_data_index_roles:role_index(Data),
             check_role_position(UserId, RoleId, Roles, State)
     end.
 
 -spec check_role_position(user_id(), role_id(), map(), guild_state()) -> boolean().
 check_role_position(UserId, RoleId, Roles, State) ->
-    case guild_permissions:find_role_by_id(RoleId, Roles) of
+    case guild_permissions_check:find_role_by_id(RoleId, Roles) of
         undefined -> false;
         Role -> check_role_position_for_role(UserId, Role, State)
     end.
 
 -spec check_role_position_for_role(user_id(), role(), guild_state()) -> boolean().
 check_role_position_for_role(UserId, Role, State) ->
-    UserMax = guild_permissions:get_max_role_position(UserId, State),
+    UserMax = guild_permissions_check:get_max_role_position(UserId, State),
     RolePos = maps:get(<<"position">>, Role, 0),
     case role_id(Role) of
         undefined -> false;
@@ -144,13 +144,13 @@ can_rank_manage_role(UserMax, RolePos, UserId, RoleId, State) ->
 
 -spec compare_role_ids_eq_pos(user_id(), role_id(), guild_state()) -> boolean().
 compare_role_ids_eq_pos(UserId, TargetRoleId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->
             MemberRoles = guild_members_common:member_roles(Member),
             Data = guild_members_common:guild_data(State),
-            Roles = guild_data_index:role_index(Data),
+            Roles = guild_data_index_roles:role_index(Data),
             highest_role_below(get_highest_role(MemberRoles, Roles), TargetRoleId)
     end.
 
@@ -175,7 +175,7 @@ get_highest_role(MemberRoleIds, Roles) ->
 
 -spec maybe_highest_role(role_id(), [role()] | map(), role() | undefined) -> role() | undefined.
 maybe_highest_role(RoleId, Roles, Acc) ->
-    case guild_permissions:find_role_by_id(RoleId, Roles) of
+    case guild_permissions_check:find_role_by_id(RoleId, Roles) of
         undefined -> Acc;
         Role -> compare_roles(Role, Acc)
     end.
@@ -209,7 +209,7 @@ check_can_manage_target(UserId, TargetUserId, _OwnerId, State) ->
 
 -spec get_member_role_rank(user_id(), guild_state()) -> {integer(), integer()}.
 get_member_role_rank(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> {-1, 0};
         Member -> member_role_rank(Member, State)
     end.
@@ -217,7 +217,7 @@ get_member_role_rank(UserId, State) ->
 -spec member_role_rank(map(), guild_state()) -> {integer(), integer()}.
 member_role_rank(Member, State) ->
     Data = guild_members_common:guild_data(State),
-    Roles = guild_data_index:role_index(Data),
+    Roles = guild_data_index_roles:role_index(Data),
     case get_highest_role(guild_members_common:member_roles(Member), Roles) of
         undefined -> {-1, 0};
         HighestRole -> role_rank(HighestRole)

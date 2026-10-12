@@ -6,10 +6,10 @@ import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrast
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import type {Event} from '@app/api/infrastructure/activity/Contract.generated';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 class CapturingPublisher implements ActivityPublisher {

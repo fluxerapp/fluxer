@@ -50,12 +50,11 @@ import {
 	useAutocompleteGifSearch,
 } from '@app/features/lexical/composer/useAutocompleteGifSearch';
 import {
-	useAutocompleteMemberSearch,
-	useAutocompleteSlotMemberSearch,
+	isMemberSearchTrigger,
+	useGuildMemberAutocompleteSearch,
 } from '@app/features/lexical/composer/useAutocompleteMemberSearch';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
@@ -77,11 +76,11 @@ import {
 	SPECIAL_MENTIONS,
 } from '@app/features/messaging/utils/AutocompleteOptionBuilders';
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
-import {toReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
 import {
 	getReactionShortcodeName,
 	getReactionShorthandTargetId,
 } from '@app/features/messaging/utils/ReactionShorthandUtils';
+import {toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {
 	type AutocompleteTrigger,
 	detectAutocompleteTrigger,
@@ -95,7 +94,7 @@ import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
-import {formatUserTagForStreamerMode} from '@app/features/user/utils/DisplayNameUtils';
+import {formatUserTagForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {UserId} from '@fluxer/schema/src/branded/WireIds';
 import type {I18n} from '@lingui/core';
@@ -206,9 +205,7 @@ export function useLexicalAutocomplete({
 	const gifCacheRef = useRef<Map<string, Array<Gif>>>(new Map());
 	const currentGifSearchRef = useRef<string | null>(null);
 	const gifDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const memberSearchContextRef = useRef<SearchContext | null>(null);
-	const currentGuildIdRef = useRef<string | null>(null);
-	const memberFetchDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 	const [slotAutocompleteContext, setSlotAutocompleteContext] = useState<SlashSlotAutocompleteContext | null>(null);
 	const slotAutocompleteContextRef = useRef<SlashSlotAutocompleteContext | null>(null);
 	slotAutocompleteContextRef.current = slotAutocompleteContext;
@@ -216,9 +213,6 @@ export function useLexicalAutocomplete({
 	const slotOptionalContextRef = useRef<SlashOptionalContext | null>(null);
 	slotOptionalContextRef.current = slotOptionalContext;
 	const [slotMemberSearchResults, setSlotMemberSearchResults] = useState<Array<GuildMember>>([]);
-	const slotSearchContextRef = useRef<SearchContext | null>(null);
-	const slotCurrentGuildIdRef = useRef<string | null>(null);
-	const slotMemberFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const refreshTextUpToCursor = useCallback(() => {
 		const handle = handleRef.current;
@@ -285,13 +279,9 @@ export function useLexicalAutocomplete({
 	const memberSearchRank = useMemo(() => buildMemberSearchRank(memberSearchResults), [memberSearchResults]);
 	const slotMemberSearchRank = useMemo(() => buildMemberSearchRank(slotMemberSearchResults), [slotMemberSearchResults]);
 
-	useAutocompleteMemberSearch({
-		triggerType: autocompleteTriggerType,
-		matchedText: autocompleteTriggerMatchedText,
+	useGuildMemberAutocompleteSearch({
 		guildId: channel == null ? undefined : channel.guildId,
-		searchContextRef: memberSearchContextRef,
-		currentGuildIdRef,
-		debounceTimerRef: memberFetchDebounceTimerRef,
+		query: isMemberSearchTrigger(autocompleteTriggerType) ? autocompleteTriggerMatchedText : null,
 		setResults: setMemberSearchResults,
 	});
 
@@ -582,12 +572,9 @@ export function useLexicalAutocomplete({
 		};
 	}, [autocompleteTriggerType, baseAutocompleteMenu.options]);
 
-	useAutocompleteSlotMemberSearch({
+	useGuildMemberAutocompleteSearch({
 		guildId: channel == null ? undefined : channel.guildId,
-		context: slotAutocompleteContext,
-		searchContextRef: slotSearchContextRef,
-		currentGuildIdRef: slotCurrentGuildIdRef,
-		debounceTimerRef: slotMemberFetchTimerRef,
+		query: slotAutocompleteContext?.optionType === 'user' ? normalizeSlotQuery(slotAutocompleteContext) : null,
 		setResults: setSlotMemberSearchResults,
 	});
 

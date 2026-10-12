@@ -76,7 +76,6 @@ export interface ReadyPayload {
 	user_settings?: UserSettingsResponse;
 	user_guild_settings?: Array<GatewayGuildSettings>;
 	read_states?: Array<GatewayReadState>;
-	read_state_proto?: string;
 	presences?: Array<PresenceRecord>;
 	auth_session_id_hash?: string;
 	rtc_regions?: Array<RtcRegionResponse>;
@@ -180,7 +179,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	WebAuthnCredentials.handleGatewayReady(data.webauthn_credentials);
 	ReadStates.handleGatewayReady({
 		readState: data.read_states ?? [],
-		readStateProto: data.read_state_proto,
 		channels,
 	});
 	GuildReadState.handleGatewayReady();

@@ -66,10 +66,6 @@ export interface ScrollerHandle {
 	pageForward(options?: {animate?: boolean; callback?: () => void}): void;
 	jumpToStartEdge(options?: {animate?: boolean; callback?: () => void}): void;
 	jumpToEndEdge(options?: {animate?: boolean; callback?: () => void}): void;
-	atStartEdge(): boolean;
-	atEndEdge(): boolean;
-	remainingToStartEdge(): number;
-	remainingToEndEdge(): number;
 }
 
 type ScrollAxis = 'vertical' | 'horizontal';
@@ -609,30 +605,6 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 					return;
 				}
 				this.scrollTo({to: getMaxScroll(node), animate, callback});
-			},
-			atStartEdge() {
-				const node = scrollRef.current;
-				if (!node) return false;
-				return getScrollPos(node) === 0;
-			},
-			atEndEdge() {
-				const node = scrollRef.current;
-				if (!node) return false;
-				const scrollPos = getScrollPos(node);
-				const maxScroll = getMaxScroll(node);
-				return scrollPos >= maxScroll;
-			},
-			remainingToStartEdge() {
-				const node = scrollRef.current;
-				if (!node) return 0;
-				return Math.max(0, getScrollPos(node));
-			},
-			remainingToEndEdge() {
-				const node = scrollRef.current;
-				if (!node) return 0;
-				const scrollPos = getScrollPos(node);
-				const maxScroll = getMaxScroll(node);
-				return Math.max(0, maxScroll - scrollPos);
 			},
 		}),
 		[

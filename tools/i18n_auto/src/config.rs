@@ -65,3 +65,13 @@ pub fn positive_int_env(key: &str, fallback: usize, env_overrides: &EnvOverlay) 
 pub fn trim_trailing_slash(value: &str) -> String {
     value.trim_end_matches('/').to_string()
 }
+
+pub(crate) trait EmptyFallback {
+    fn if_empty(self, fallback: impl FnOnce() -> String) -> String;
+}
+
+impl EmptyFallback for String {
+    fn if_empty(self, fallback: impl FnOnce() -> String) -> String {
+        if self.is_empty() { fallback() } else { self }
+    }
+}

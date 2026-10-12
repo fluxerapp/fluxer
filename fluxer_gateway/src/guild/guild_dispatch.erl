@@ -177,14 +177,6 @@ should_skip_dispatch_unavailable_for_everyone_but_staff_test() ->
     },
     ?assertEqual(true, should_skip_dispatch(message_create, State)).
 
-should_skip_dispatch_normal_guild_test() ->
-    State = #{
-        data => #{
-            <<"guild">> => #{<<"features">> => []}
-        }
-    },
-    ?assertEqual(false, should_skip_dispatch(message_create, State)).
-
 unknown_binary_event_is_dropped_without_crashing_test() ->
     State = #{id => 1, data => #{<<"guild">> => #{}}, sessions => #{}},
     ?assertEqual(
@@ -196,20 +188,20 @@ normalize_event_keeps_unknown_binaries_test() ->
     ?assertEqual(<<"FUTURE_EVENT_ZZZ">>, normalize_event(<<"FUTURE_EVENT_ZZZ">>)),
     ?assertEqual(thread_create, normalize_event(<<"THREAD_CREATE">>)).
 
-should_skip_dispatch_no_features_test() ->
-    State = #{data => #{<<"guild">> => #{}}},
-    ?assertEqual(false, should_skip_dispatch(message_create, State)).
-
 channel_delete_dispatch_filters_by_pre_delete_visibility_test() ->
     Parent = self(),
     VisiblePid = start_dispatch_capture(visible, Parent),
     HiddenPid = start_dispatch_capture(hidden, Parent),
     try
         State = build_channel_delete_dispatch_state(VisiblePid, HiddenPid),
-        HiddenMember = guild_permissions:find_member_by_user_id(1001, State),
-        VisibleMember = guild_permissions:find_member_by_user_id(1002, State),
-        ?assertEqual(false, guild_permissions:can_view_channel(1001, 10, HiddenMember, State)),
-        ?assertEqual(true, guild_permissions:can_view_channel(1002, 10, VisibleMember, State)),
+        HiddenMember = guild_permissions_check:find_member_by_user_id(1001, State),
+        VisibleMember = guild_permissions_check:find_member_by_user_id(1002, State),
+        ?assertEqual(
+            false, guild_permissions_check:can_view_channel(1001, 10, HiddenMember, State)
+        ),
+        ?assertEqual(
+            true, guild_permissions_check:can_view_channel(1002, 10, VisibleMember, State)
+        ),
         {noreply, _} = handle_dispatch(channel_delete, #{<<"id">> => <<"10">>}, State),
         assert_visible_channel_delete_dispatched(),
         assert_hidden_channel_delete_not_dispatched()

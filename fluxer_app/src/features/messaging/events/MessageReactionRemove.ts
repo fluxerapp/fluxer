@@ -48,6 +48,5 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		messageId: data.message_id,
 		userId: data.user_id,
 		emoji,
-		skipReactionStore: true,
 	});
 }

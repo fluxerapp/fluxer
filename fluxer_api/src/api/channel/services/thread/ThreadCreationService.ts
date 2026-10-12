@@ -387,7 +387,6 @@ export class ThreadCreationService {
 			identifier: slowmodeThreadKey(parentAuth.channel.id, user.id),
 			maxAttempts: 1,
 			windowMs: rateLimitPerUser * 1000,
-			algorithm: 'leaky_bucket',
 		});
 		if (!result.allowed) {
 			throw new SlowmodeRateLimitError({retryAfter: result.retryAfter, retryAfterDecimal: result.retryAfterDecimal});
@@ -486,7 +485,7 @@ export class ThreadCreationService {
 	}
 
 	private async recordCreateAudit(view: ThreadView, userId: UserID, auditLogReason: string | null): Promise<void> {
-		await this.ctx.recordAudit({
+		await this.ctx.guildAuditLogService.record({
 			guildId: view.state.guildId,
 			userId,
 			action: AuditLogActionType.THREAD_CREATE,

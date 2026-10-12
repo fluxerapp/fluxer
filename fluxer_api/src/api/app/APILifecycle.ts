@@ -5,8 +5,7 @@ import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
-import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
-import type {ILogger} from '@app/api/ILogger';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {
 	jetStreamActivityPublisher,
 	renderActivityMetrics,
@@ -47,6 +46,7 @@ import {VoiceDataInitializer} from '@app/api/voice/VoiceDataInitializer';
 import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {registerMetricsSection} from '@fluxer/hono/src/middleware/Metrics';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {ensureGeoipDatabaseOnStartup} from '@pkgs/geoip/src/GeoipStartup';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
@@ -63,13 +63,17 @@ interface RefreshCacheLifecycle {
 const refreshCaches = new Map<RefreshCacheLifecycle, string>();
 let refreshCacheShutdownPromise: Promise<void> | null = null;
 
-async function initializeRefreshCache(cache: RefreshCacheLifecycle, name: string, logger: ILogger): Promise<void> {
+async function initializeRefreshCache(
+	cache: RefreshCacheLifecycle,
+	name: string,
+	logger: LoggerInterface,
+): Promise<void> {
 	refreshCaches.set(cache, name);
 	await cache.initialize();
 	logger.info(`${name} initialized`);
 }
 
-async function shutdownRefreshCaches(logger: ILogger): Promise<void> {
+async function shutdownRefreshCaches(logger: LoggerInterface): Promise<void> {
 	if (refreshCacheShutdownPromise) return await refreshCacheShutdownPromise;
 	const caches = [...refreshCaches];
 	refreshCaches.clear();
@@ -95,7 +99,7 @@ function unsupportedDatabaseBackend(backend: never): never {
 	throw new Error(`Unsupported database backend during shutdown: ${String(backend)}`);
 }
 
-export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
+export function createInitializer(config: APIConfig, logger: LoggerInterface): () => Promise<void> {
 	return async (): Promise<void> => {
 		try {
 			logger.info('Initializing API service...');
@@ -211,7 +215,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 					try {
 						await warmupAdminSearchIndexes({
 							userRepository: getUserRepository(),
-							guildRepository: new GuildDataRepository(),
+							guildRepository: new GuildRepository(),
 							reportRepository: getReportRepository(),
 							logger,
 						});
@@ -260,7 +264,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 	};
 }
 
-export function createShutdown(config: APIConfig, logger: ILogger): () => Promise<void> {
+export function createShutdown(config: APIConfig, logger: LoggerInterface): () => Promise<void> {
 	return async (): Promise<void> => {
 		logger.info('Shutting down API service...');
 		try {

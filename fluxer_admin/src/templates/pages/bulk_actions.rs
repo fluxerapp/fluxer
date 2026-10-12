@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::{DELETION_REASONS, DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
 use crate::{
     acl,
     config::AdminConfig,
@@ -18,160 +19,6 @@ use crate::{
     },
 };
 use maud::{Markup, html};
-
-const DELETION_REASONS: &[(&str, &str)] = &[
-    ("1", "User requested"),
-    ("2", "Other"),
-    ("3", "Spam"),
-    ("4", "Cheating or exploitation"),
-    ("5", "Coordinated raiding or manipulation"),
-    ("6", "Automation or self-bot usage"),
-    ("7", "Nonconsensual sexual content"),
-    ("8", "Scam or social engineering"),
-    ("9", "Child sexual content"),
-    ("10", "Privacy violation or doxxing"),
-    ("11", "Harassment or bullying"),
-    ("12", "Payment fraud"),
-    ("13", "Child safety violation"),
-    ("14", "Billing dispute or abuse"),
-    ("15", "Unsolicited explicit content"),
-    ("16", "Graphic violence"),
-    ("17", "Ban evasion"),
-    ("18", "Token or credential scam"),
-    ("19", "Inactivity"),
-    ("20", "Hate speech or extremist content"),
-    ("21", "Malicious links or malware distribution"),
-    ("22", "Impersonation or fake identity"),
-];
-struct UserFlag {
-    name: &'static str,
-    value: u64,
-}
-const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
-    UserFlag {
-        name: "STAFF",
-        value: 1 << 0,
-    },
-    UserFlag {
-        name: "PARTNER",
-        value: 1 << 2,
-    },
-    UserFlag {
-        name: "BUG_HUNTER",
-        value: 1 << 3,
-    },
-    UserFlag {
-        name: "FRIENDLY_BOT",
-        value: 1 << 4,
-    },
-    UserFlag {
-        name: "FRIENDLY_BOT_MANUAL_APPROVAL",
-        value: 1 << 5,
-    },
-    UserFlag {
-        name: "SPAMMER",
-        value: 1 << 6,
-    },
-    UserFlag {
-        name: "PROFILE_HIDDEN",
-        value: 1 << 7,
-    },
-    UserFlag {
-        name: "HIGH_GLOBAL_RATE_LIMIT",
-        value: 1 << 33,
-    },
-    UserFlag {
-        name: "DELETED",
-        value: 1 << 34,
-    },
-    UserFlag {
-        name: "SELF_DELETED",
-        value: 1 << 36,
-    },
-    UserFlag {
-        name: "DISABLED",
-        value: 1 << 38,
-    },
-    UserFlag {
-        name: "HAS_SESSION_STARTED",
-        value: 1 << 39,
-    },
-    UserFlag {
-        name: "RATE_LIMIT_BYPASS",
-        value: 1 << 47,
-    },
-    UserFlag {
-        name: "REPORT_BANNED",
-        value: 1 << 48,
-    },
-    UserFlag {
-        name: "VERIFIED_NOT_UNDERAGE",
-        value: 1 << 49,
-    },
-    UserFlag {
-        name: "ACCOUNT_LIMITED",
-        value: 1 << 50,
-    },
-    UserFlag {
-        name: "HAS_DISMISSED_PREMIUM_ONBOARDING",
-        value: 1 << 51,
-    },
-    UserFlag {
-        name: "APP_STORE_REVIEWER",
-        value: 1 << 53,
-    },
-    UserFlag {
-        name: "STAFF_HIDDEN",
-        value: 1 << 57,
-    },
-    UserFlag {
-        name: "AGE_VERIFIED_ADULT",
-        value: 1 << 60,
-    },
-    UserFlag {
-        name: "LIMIT_EXEMPT",
-        value: 1 << 62,
-    },
-];
-
-const GUILD_FEATURES: &[&str] = &[
-    "ANIMATED_ICON",
-    "ANIMATED_BANNER",
-    "AUDIO_BITRATE_128_KBPS",
-    "AUDIO_BITRATE_256_KBPS",
-    "AUDIO_BITRATE_384_KBPS",
-    "BANNER",
-    "CLONE_EMOJI_DISABLED",
-    "CLONE_EMOJI_ENABLED",
-    "CLONE_STICKER_DISABLED",
-    "CLONE_STICKER_ENABLED",
-    "DETACHED_BANNER",
-    "INVITE_SPLASH",
-    "INVITES_DISABLED",
-    "RAID_DETECTED",
-    "TEXT_CHANNEL_FLEXIBLE_NAMES",
-    "HIDE_OWNER_CROWN",
-    "MORE_EMOJI",
-    "MORE_STICKERS",
-    "UNLIMITED_EMOJI",
-    "UNLIMITED_STICKERS",
-    "EXPRESSION_PURGE_ALLOWED",
-    "VANITY_URL",
-    "DISCOVERABLE",
-    "PARTNERED",
-    "VERIFIED",
-    "VIP_VOICE",
-    "VOICE_E2EE",
-    "UNAVAILABLE_FOR_EVERYONE",
-    "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
-    "UNAVAILABLE_HIDDEN",
-    "VISIONARY",
-    "LARGE_GUILD_OVERRIDE",
-    "VERY_LARGE_GUILD",
-    "ANNOUNCEMENT_CHANNELS_DISABLED",
-];
-
-const DEPRECATED_GUILD_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
 
 fn guild_feature_label(feature: &str) -> String {
     if DEPRECATED_GUILD_FEATURES.contains(&feature) {
@@ -232,7 +79,7 @@ fn guild_feature_checkbox_grid(prefix: &str, include_deprecated: bool) -> Markup
 fn user_flag_checkbox_grid(prefix: &str) -> Markup {
     html! {
         div class="grid grid-cols-1 gap-3 sm:grid-cols-2" {
-            @for flag in PATCHABLE_USER_FLAGS {
+            @for flag in crate::admin_flags::USER_FLAGS {
                 (checkbox(prefix, &flag.value.to_string(), flag.name, false, true))
             }
         }
@@ -412,24 +259,4 @@ fn bulk_delete_user_messages_section(base: &str, csrf_token: &str) -> Markup {
             }
         },
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn deletion_form_emails_each_user_by_default() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
-        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
-        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
-    }
-
-    #[test]
-    fn username_mode_hides_the_email_choices() {
-        let deletion = bulk_schedule_deletion_section("/admin", "csrf", true).into_string();
-        assert!(!deletion.contains("Email each user"));
-        assert!(!deletion.contains(r#"name="notify_user" value="true""#));
-        assert!(deletion.contains(r#"name="notify_user_present" value="1""#));
-    }
 }

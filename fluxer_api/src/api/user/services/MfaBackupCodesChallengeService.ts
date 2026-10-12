@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID, timingSafeEqual} from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {userHasMfa} from '@app/api/auth/services/SudoMethods';
@@ -12,6 +12,7 @@ import {
 	checkChangeRateLimit,
 	generateChangeVerificationCode,
 } from '@app/api/user/services/UserChangeChallengeUtils';
+import {constantTimeEquals} from '@app/api/utils/SecretHash';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -41,15 +42,6 @@ function getChallengeCacheKey(ticket: string): string {
 
 function normalizeVerificationCode(code: string): string {
 	return code.trim().toUpperCase().replaceAll('-', '');
-}
-
-function constantTimeEquals(a: string, b: string): boolean {
-	const bufferA = Buffer.from(a);
-	const bufferB = Buffer.from(b);
-	if (bufferA.length !== bufferB.length) {
-		return false;
-	}
-	return timingSafeEqual(bufferA, bufferB);
 }
 
 export class MfaBackupCodesChallengeService {

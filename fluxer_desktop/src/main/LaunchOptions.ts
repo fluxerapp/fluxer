@@ -25,11 +25,11 @@ const DISABLE_V8_CODE_CACHE_ARGS = new Set(['--fluxer-disable-v8-code-cache']);
 const DISABLE_NATIVE_GATEWAY_ARGS = new Set(['--fluxer-disable-native-gateway']);
 const DESKTOP_UPDATE_ARGS = new Set(['--fluxer-update']);
 
-function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
+export function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
 	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
 }
 
-function getArgValue(argv: ReadonlyArray<string>, names: ReadonlySet<string>): string | null {
+export function getArgValue(argv: ReadonlyArray<string>, names: ReadonlySet<string>): string | null {
 	for (let index = 0; index < argv.length; index += 1) {
 		const arg = argv[index];
 		for (const name of names) {

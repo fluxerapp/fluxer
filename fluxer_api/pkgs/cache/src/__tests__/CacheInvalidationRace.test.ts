@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {describe, expect, it, vi} from 'vitest';
 
 const INFLIGHT_OVERFLOW_ENTRIES = 10000;
@@ -31,13 +33,13 @@ function settleWithin<T>(pending: Promise<T>, ms: number): Promise<T | 'pinned' 
 	]);
 }
 
-function trackedProduceKeys(cache: InMemoryProvider): Array<string> {
+function trackedProduceKeys(cache: ICacheService): Array<string> {
 	return [...(cache as unknown as {produceInvalidations: Map<string, unknown>}).produceInvalidations.keys()];
 }
 
 describe('cache invalidation during an in-flight produce', () => {
 	it('does not resurrect a value deleted while the factory was running', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gate = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await gate.promise, 30);
 		await cache.delete('session');
@@ -47,7 +49,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('still stores the value when no invalidation happens', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gate = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await gate.promise, 30);
 		gate.resolve('live-session');
@@ -56,7 +58,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not resurrect a value deleted while a retried produce was running', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gates: Array<ReturnType<typeof deferred<string>>> = [];
 		const factory = async () => {
 			const gate = deferred<string>();
@@ -77,7 +79,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('stores the value a retried produce built when no invalidation happens', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gates: Array<ReturnType<typeof deferred<string>>> = [];
 		const factory = async () => {
 			const gate = deferred<string>();
@@ -96,7 +98,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('stores the value a retried produce built after the first produce was invalidated', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gates: Array<ReturnType<typeof deferred<string>>> = [];
 		const factory = async () => {
 			const gate = deferred<string>();
@@ -117,7 +119,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not resurrect a value deleted after a concurrent caller released its produce', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gate = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await gate.promise, 30);
 		await flush();
@@ -130,7 +132,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not resurrect a value deleted while a second overflow produce was running', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const fillers: Array<ReturnType<typeof deferred<string>>> = [];
 		const filling: Array<Promise<string>> = [];
 		for (let index = 0; index < INFLIGHT_OVERFLOW_ENTRIES; index++) {
@@ -157,7 +159,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('drops produce tracking once the last produce for a key settles', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		for (let index = 0; index < 50; index++) {
 			const gate = deferred<string>();
 			const pending = cache.getOrSet(`session:${index}`, async () => await gate.promise, 30);
@@ -184,7 +186,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not pin a key forever when the factory never settles', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const stuck = deferred<string>();
 		const pinned = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
 		await expect(settleWithin(pinned, 500)).resolves.toBe('rejected');
@@ -197,7 +199,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not store a value produced by a factory that settled after the timeout', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const stuck = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
 		await expect(pending).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
@@ -208,7 +210,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('retries once for the joiners when the producer times out', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const gates: Array<ReturnType<typeof deferred<string>>> = [];
 		const factory = async () => {
 			const gate = deferred<string>();
@@ -229,7 +231,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('releases produce tracking when the factory never settles', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const stuck = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
 		await expect(pending).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
@@ -238,7 +240,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('stores a sibling produce that succeeded after an overflow produce timed out', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const fillers: Array<ReturnType<typeof deferred<string>>> = [];
 		const filling: Array<Promise<string>> = [];
 		for (let index = 0; index < INFLIGHT_OVERFLOW_ENTRIES; index++) {
@@ -262,7 +264,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('does not hold the event loop open while a produce is in flight', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const stuck = deferred<string>();
 		const timers: Array<NodeJS.Timeout> = [];
 		const scheduled = globalThis.setTimeout;
@@ -282,7 +284,7 @@ describe('cache invalidation during an in-flight produce', () => {
 	});
 
 	it('keeps a later produce cacheable after an earlier one was invalidated', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const first = deferred<string>();
 		const pending = cache.getOrSet('session', async () => await first.promise, 30);
 		await cache.delete('session');

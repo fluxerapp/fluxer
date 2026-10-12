@@ -20,7 +20,6 @@ use tracing::{debug, info, warn};
 pub const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_BROADCAST_CONCURRENCY: usize = 32;
 const MAX_ROUTER_REQUEST_BYTES: usize = 2 * 1024 * 1024;
-const LEGACY_SHARD_DECODE_ERROR: &[u8] = br#"{"error":"shard_request_decode_error"}"#;
 type InflightKey = (String, String);
 type InflightCall = Shared<BoxFuture<'static, Result<Vec<u8>, Arc<anyhow::Error>>>>;
 type Inflight = Arc<Mutex<HashMap<InflightKey, InflightCall>>>;
@@ -33,6 +32,9 @@ pub trait RouterService: Send + Sync + 'static {
 
     fn service_name(&self) -> &str;
     fn route_key(request: &Self::Request) -> String;
+    fn shard_for(&self, request: &Self::Request, ring: &HashRing) -> u32 {
+        ring.owner(&Self::route_key(request))
+    }
     fn coalesce_key(_request: &Self::Request) -> Option<String> {
         None
     }
@@ -48,66 +50,33 @@ pub trait RouterService: Send + Sync + 'static {
         None
     }
     fn l1_insert(&self, _req: &Self::Request, _resp: &Self::Response) {}
-    fn l1_invalidate(&self, _key: &str) {}
 }
 
-fn shard_subject<S: RouterService>(service: &S, ring: &HashRing, route_key: &str) -> String {
-    let shard_id = ring.owner(route_key);
+fn shard_subject<S: RouterService>(service: &S, ring: &HashRing, request: &S::Request) -> String {
+    let shard_id = service.shard_for(request, ring);
     format!("svc.{}.shard.{shard_id}", service.service_name())
 }
 
 async fn forward_to_shard<S: RouterService>(
     transport: &impl Transport,
-    service: &S,
-    ring: &HashRing,
+    subject: &str,
     request: &S::Request,
-    route_key: &str,
 ) -> anyhow::Result<Vec<u8>> {
-    let shard_subject = shard_subject(service, ring, route_key);
-
     let msgpack_payload = rmp_serde::to_vec_named(request)
         .map_err(|e| anyhow::anyhow!("failed to encode request as msgpack: {e}"))?;
-
     transport
-        .request(&shard_subject, &msgpack_payload, SHARD_REQUEST_TIMEOUT)
+        .request(subject, &msgpack_payload, SHARD_REQUEST_TIMEOUT)
         .await
 }
 
-async fn forward_to_shard_verbatim<S: RouterService>(
+async fn forward_to_shard_verbatim(
     transport: &impl Transport,
-    service: &S,
-    ring: &HashRing,
-    request: &S::Request,
-    route_key: &str,
+    subject: &str,
     payload: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
-    let shard_subject = shard_subject(service, ring, route_key);
-    let response_bytes = transport
-        .request(&shard_subject, payload, SHARD_REQUEST_TIMEOUT)
-        .await?;
-    if response_bytes != LEGACY_SHARD_DECODE_ERROR {
-        return Ok(response_bytes);
-    }
-
-    warn!(
-        subject = shard_subject,
-        "shard rejected a pass-through request, retrying with the legacy msgpack encoding"
-    );
-    let legacy_bytes = forward_to_shard::<S>(transport, service, ring, request, route_key).await?;
-    match rmp_serde::from_slice::<S::Response>(&legacy_bytes) {
-        Ok(response) => serde_json::to_vec(&response).map_err(|err| {
-            anyhow::anyhow!("failed to encode legacy shard response as json: {err}")
-        }),
-        Err(err) => {
-            if serde_json::from_slice::<serde_json::Value>(&legacy_bytes).is_ok() {
-                Ok(legacy_bytes)
-            } else {
-                Err(anyhow::anyhow!(
-                    "failed to decode legacy shard response: {err}"
-                ))
-            }
-        }
-    }
+    transport
+        .request(subject, payload, SHARD_REQUEST_TIMEOUT)
+        .await
 }
 
 async fn dispatch_to_shard<S: RouterService>(
@@ -115,13 +84,13 @@ async fn dispatch_to_shard<S: RouterService>(
     service: &S,
     ring: &HashRing,
     request: &S::Request,
-    route_key: &str,
     payload: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
+    let subject = shard_subject(service, ring, request);
     if S::CACHES_RESPONSES {
-        forward_to_shard::<S>(transport, service, ring, request, route_key).await
+        forward_to_shard::<S>(transport, &subject, request).await
     } else {
-        forward_to_shard_verbatim::<S>(transport, service, ring, request, route_key, payload).await
+        forward_to_shard_verbatim(transport, &subject, payload).await
     }
 }
 
@@ -285,7 +254,6 @@ async fn handle_router_request<S, T>(
         let forward_transport = transport.clone();
         let forward_service = service.clone();
         let forward_ring = ring.clone();
-        let forward_route_key = route_key.clone();
         let forward_request = request.clone();
         let forward_payload = if S::CACHES_RESPONSES {
             Vec::new()
@@ -299,7 +267,6 @@ async fn handle_router_request<S, T>(
                 forward_service.as_ref(),
                 forward_ring.as_ref(),
                 &forward_request,
-                &forward_route_key,
                 &forward_payload,
             )
             .await
@@ -311,7 +278,6 @@ async fn handle_router_request<S, T>(
             service.as_ref(),
             ring.as_ref(),
             &request,
-            &route_key,
             msg.payload(),
         )
         .await
@@ -447,33 +413,6 @@ where
             }
         }
     });
-
-    if S::CACHES_RESPONSES {
-        let inv_transport = transport.clone();
-        let inv_service = service.clone();
-        let invalidate_prefix = format!("svc.{name}.invalidate.");
-        let invalidate_subject = format!("{invalidate_prefix}>");
-        tasks.spawn(async move {
-            loop {
-                let mut sub = inv_transport.subscribe(&invalidate_subject).await?;
-                info!(
-                    subject = invalidate_subject,
-                    "router listening for cache invalidations"
-                );
-
-                while let Some(msg) = sub.next().await {
-                    if let Some(key) = msg
-                        .subject()
-                        .strip_prefix(&invalidate_prefix)
-                        .filter(|key| !key.is_empty())
-                    {
-                        inv_service.l1_invalidate(key);
-                    }
-                }
-                warn!("router invalidation subscription stream ended, will re-subscribe");
-            }
-        });
-    }
 
     tokio::select! {
         result = tasks.join_next() => {
@@ -963,62 +902,6 @@ mod tests {
         assert_eq!(response_a, br#"{"key":"shared"}"#);
         assert_eq!(response_b, br#"{"key":"shared"}"#);
         assert_eq!(calls.load(Ordering::SeqCst), 1);
-
-        shard_task.abort();
-        router_task.abort();
-    }
-
-    #[tokio::test]
-    async fn router_retries_pass_through_requests_that_legacy_shards_reject() {
-        let transport = InMemoryTransport::new();
-        let mut shard_sub = transport
-            .subscribe("svc.passthrough-mock.shard.0")
-            .await
-            .unwrap();
-
-        let shard_transport = transport.clone();
-        let shard_task = tokio::spawn(async move {
-            while let Some(msg) = shard_sub.next().await {
-                let response_bytes = match rmp_serde::from_slice::<MockRequest>(msg.payload()) {
-                    Ok(_) => rmp_serde::to_vec_named(&MockResponse {
-                        key: "legacy".to_owned(),
-                    })
-                    .unwrap(),
-                    Err(_) => serde_json::to_vec(
-                        &serde_json::json!({"error": "shard_request_decode_error"}),
-                    )
-                    .unwrap(),
-                };
-                reply_message(&msg, &shard_transport, &response_bytes)
-                    .await
-                    .unwrap();
-            }
-        });
-
-        let router_config = test_config(4);
-        let router_transport = transport.clone();
-        let router_task = tokio::spawn(async move {
-            run_router(&router_config, PassThroughRouter, router_transport).await
-        });
-
-        tokio::time::sleep(Duration::from_millis(25)).await;
-
-        let request = serde_json::to_vec(&MockRequest {
-            key: "a".to_owned(),
-        })
-        .unwrap();
-
-        let response = transport
-            .request("svc.passthrough-mock", &request, Duration::from_secs(1))
-            .await
-            .unwrap();
-
-        assert_eq!(
-            serde_json::from_slice::<MockResponse>(&response).unwrap(),
-            MockResponse {
-                key: "legacy".to_owned()
-            }
-        );
 
         shard_task.abort();
         router_task.abort();

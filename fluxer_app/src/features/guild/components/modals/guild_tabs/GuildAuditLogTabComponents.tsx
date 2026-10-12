@@ -53,11 +53,11 @@ export const InlineCode: React.FC<{children: React.ReactNode; className?: string
 interface ClickableUserProps {
 	user: User;
 	guildId?: string;
-	className?: string;
+
 	showAvatar?: boolean;
 }
 
-export const ClickableUser: React.FC<ClickableUserProps> = observer(({user, guildId, className, showAvatar = true}) => {
+export const ClickableUser: React.FC<ClickableUserProps> = observer(({user, guildId, showAvatar = true}) => {
 	const handleClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
 		UserProfileCommands.openUserProfile(user.id, guildId);
@@ -72,7 +72,7 @@ export const ClickableUser: React.FC<ClickableUserProps> = observer(({user, guil
 	return (
 		<FocusRing offset={-2} data-flx="guild.guild-tabs.guild-audit-log-tab-components.clickable-user.focus-ring">
 			<span
-				className={clsx(styles.clickableUser, className)}
+				className={styles.clickableUser}
 				onClick={handleClick}
 				onKeyDown={handleKeyDown}
 				role="button"
@@ -101,10 +101,9 @@ export const ClickableUser: React.FC<ClickableUserProps> = observer(({user, guil
 interface CopyIdInlineProps {
 	id: string;
 	children: React.ReactNode;
-	className?: string;
 }
 
-export const CopyIdInline: React.FC<CopyIdInlineProps> = ({id, children, className}) => {
+export const CopyIdInline: React.FC<CopyIdInlineProps> = ({id, children}) => {
 	const {i18n} = useLingui();
 	const copyId = useCallback(() => {
 		void TextCopyCommands.copy(i18n, id);
@@ -133,7 +132,7 @@ export const CopyIdInline: React.FC<CopyIdInlineProps> = ({id, children, classNa
 		>
 			<FocusRing offset={-2} data-flx="guild.guild-tabs.guild-audit-log-tab-components.copy-id-inline.focus-ring">
 				<span
-					className={clsx(styles.copyIdInline, className)}
+					className={styles.copyIdInline}
 					onClick={handleClick}
 					onKeyDown={handleKeyDown}
 					role="button"

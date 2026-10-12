@@ -6,13 +6,13 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {
-	VOICE_P2P_LEAVE_DESCRIPTOR,
 	VOICE_P2P_PEER_FAILED_DESCRIPTION_DESCRIPTOR,
 	VOICE_P2P_PEER_FAILED_SWITCH_HINT_DESCRIPTOR,
 	VOICE_P2P_PEER_FAILED_TITLE_DESCRIPTOR,
 	VOICE_P2P_STAY_DESCRIPTOR,
 	VOICE_P2P_SWITCH_TO_STANDARD_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {LEAVE_CALL_DESCRIPTOR as VOICE_P2P_LEAVE_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 

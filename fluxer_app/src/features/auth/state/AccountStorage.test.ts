@@ -14,7 +14,7 @@ import type {
 	AccountRekeyOutcome,
 	KeyedStoredAccount,
 	StoredAccount,
-} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
 import {installRuntimeBootstrap} from '@app/features/platform/state/__fixtures__/RuntimeBootstrapFixture';
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -256,7 +256,8 @@ describe('unusable IndexedDB', () => {
 
 	test('a transaction failure on an open database is still refused', async () => {
 		await seed([storedRecord('1')]);
-		const {default: accountStorage, BrowserAccountStorageUnavailableError} = await loadAccountStorage();
+		const {default: accountStorage} = await loadAccountStorage();
+		const {BrowserAccountStorageUnavailableError} = await import('@app/features/auth/state/AccountStorageContract');
 		await accountStorage.init();
 		vi.spyOn(IDBDatabase.prototype, 'transaction').mockImplementation(() => {
 			throw new DOMException('broken', 'UnknownError');

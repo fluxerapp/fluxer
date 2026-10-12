@@ -57,15 +57,6 @@
 	font-size: 0.65625rem;
 }
 
-.icon {
-	display: inline-flex;
-	color: var(--studio-fg-muted);
-	width: 0.875rem;
-	height: 0.875rem;
-	align-items: center;
-	justify-content: center;
-}
-
 .body {
 	display: flex;
 	flex-direction: column;

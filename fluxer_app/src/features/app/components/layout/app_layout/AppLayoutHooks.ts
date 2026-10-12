@@ -16,7 +16,7 @@ import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PremiumState from '@app/features/premium/state/PremiumState';
@@ -241,7 +241,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowVoiceSessionRestore = (() => {
 		if (nagbarState.forceHideVoiceSessionRestore) return false;
 		if (nagbarState.forceVoiceSessionRestore) return true;
-		if (!GatewayConnection.socket || !Initialization.canNavigateToProtectedRoutes) return false;
+		if (!GatewaySessions.foregroundConnection.socket || !Initialization.canNavigateToProtectedRoutes) return false;
 		if (!voiceSessionRestoreHydrated || !currentUserId) return false;
 		if (!voiceSessionRestoreSnapshot || !voiceSessionRestoreChannel) return false;
 		if (voiceEngineV2Connection.connected || voiceEngineV2Connection.connecting) return false;

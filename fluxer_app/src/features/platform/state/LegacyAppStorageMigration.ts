@@ -8,7 +8,7 @@ import {
 	BrowserAccountStorageUnavailableError,
 	type KeyedStoredAccount,
 	type StoredAccount,
-} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {BROWSER_ACCOUNT_FALLBACK_STORAGE_KEY} from '@app/features/auth/state/BrowserAccountFallbackStore';
 import {APP_STORAGE_MIGRATION_LOCK_NAME, withAppStorageLock} from '@app/features/platform/state/AppStorageBroadcast';

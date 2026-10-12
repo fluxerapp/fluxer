@@ -5,35 +5,26 @@ import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
-import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {ChannelDuplicateModal} from '@app/features/channel/components/modals/ChannelDuplicateModal';
 import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
-import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
-import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {duplicateChannel, getDuplicateChannelDefaultValues} from '@app/features/channel/utils/ChannelCreateModalUtils';
 import {canFollowAnnouncementChannel, FOLLOW_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {
-	CLOSE_DM_DESCRIPTOR,
 	DELETE_CHANNEL_DESCRIPTOR,
 	DELETE_MY_MESSAGES_DESCRIPTOR,
-	LEAVE_GROUP_DESCRIPTOR,
 	MUTE_CHANNEL_DESCRIPTOR,
-	PIN_DM_DESCRIPTOR,
-	PIN_GROUP_DM_DESCRIPTOR,
 	UNMUTE_CHANNEL_DESCRIPTOR,
-	UNPIN_DM_DESCRIPTOR,
-	UNPIN_GROUP_DM_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
+import {CHANNEL_RECORD_DESCRIPTOR, RecordDebugModal} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {isNewPostsUnreadEnabled, setNewPostsUnreadEnabled} from '@app/features/forum/state/ForumReadState';
 import {NEW_POSTS_NOTIFICATION_DESCRIPTOR} from '@app/features/forum/utils/ForumMessageDescriptors';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
-import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
+
 import type {Guild} from '@app/features/guild/models/Guild';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {
@@ -44,18 +35,14 @@ import {
 	COPY_CHANNEL_ID_DESCRIPTOR,
 	COPY_LINK_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
-	EDIT_GROUP_DESCRIPTOR,
 	INVITE_PEOPLE_DESCRIPTOR,
-	INVITES_DESCRIPTOR,
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
 	NOTIFICATION_SETTINGS_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
-	PINNED_DM_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 	REMOVED_FROM_FAVORITES_TOAST_DESCRIPTOR,
 	RESET_MATURE_CONTENT_AGREE_STATE_DESCRIPTOR,
-	UNPINNED_DM_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {InviteModal} from '@app/features/invite/components/modals/InviteModal';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
@@ -68,23 +55,18 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {
-	CloseDMIcon,
 	CopyIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
 	DebugChannelIcon,
 	DeleteIcon,
-	EditGroupIcon,
 	FavoriteIcon,
 	InviteIcon,
-	LeaveIcon,
 	MarkAsReadIcon,
 	MessageUserIcon,
 	MuteIcon,
 	NotificationSettingsIcon,
 	OpenLinkIcon,
-	PinIcon,
-	SendInvitesIcon,
 	SettingsIcon,
 	VoiceCallIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -121,26 +103,6 @@ const CHANNEL_ID_COPIED_DESCRIPTOR = msg({
 	message: 'Channel ID copied',
 	comment: 'Toast confirming the channel ID was copied to the clipboard.',
 });
-const PINNED_GROUP_DM_DESCRIPTOR = msg({
-	message: 'Pinned group DM',
-	comment: 'Toast confirming a group DM was pinned in the sidebar.',
-});
-const UNPINNED_GROUP_DM_DESCRIPTOR = msg({
-	message: 'Unpinned group DM',
-	comment: 'Toast confirming a group DM was unpinned in the sidebar.',
-});
-const PIN_FAILED_TITLE_DESCRIPTOR = msg({
-	message: "Couldn't pin this conversation",
-	comment: 'Title of the error modal shown when pinning a DM or group DM fails.',
-});
-const UNPIN_FAILED_TITLE_DESCRIPTOR = msg({
-	message: "Couldn't unpin this conversation",
-	comment: 'Title of the error modal shown when unpinning a DM or group DM fails.',
-});
-const PIN_FAILED_MESSAGE_DESCRIPTOR = msg({
-	message: 'Something went wrong. Please try again in a moment.',
-	comment: 'Body of the error modal shown when pinning or unpinning a DM or group DM fails.',
-});
 const COPY_CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'Copy channel link',
 	comment: 'Action that copies a deep link to the selected channel.',
@@ -175,44 +137,13 @@ export interface ChannelMenuDataOptions {
 
 export interface ChannelMenuData {
 	groups: Array<MenuGroupType>;
-	handlers: ChannelMenuHandlers;
 	state: ChannelMenuState;
 }
 
-interface ChannelMenuHandlers {
-	handleMarkAsRead: () => void;
-	handleToggleFavorite: () => void;
-	handleInviteMembers: () => void;
-	handleFollowChannel: () => void;
-	handleCopyChannelLink: () => Promise<void>;
-	handleOpenChannelLink: () => void;
-	handleCopyLinkChannelUrl: () => Promise<void>;
-	handleOpenChat: () => void;
-	handleStartP2pCall: () => void;
-	handleOpenMuteSheet: () => void;
-	handleNotificationSettings: () => void;
-	handleDuplicateChannel: (event?: MenuActionEvent) => void;
-	handleChannelSettings: () => void;
-	handleDeleteChannel: () => void;
-	handleCopyChannelId: () => Promise<void>;
-	handleEditGroup: () => void;
-	handleShowInvites: () => void;
-	handlePinChannel: () => Promise<void>;
-	handleUnpinChannel: () => Promise<void>;
-	handleLeaveGroup: () => void;
-	handleDeleteMyMessagesInChannel: () => void;
-	handleCloseDM: () => void;
-	handleDebugChannel: () => void;
-	handleResetMatureContentAgreeState: () => void;
-}
-
 interface ChannelMenuState {
-	isGroupDM: boolean;
-	isDM: boolean;
 	isTextChannel: boolean;
 	isVoiceChannel: boolean;
 	isLinkChannel: boolean;
-	isOwner: boolean;
 	isMuted: boolean;
 	isFavorited: boolean;
 	hasUnread: boolean;
@@ -222,18 +153,13 @@ interface ChannelMenuState {
 	canStartP2pCall: boolean;
 	canFollow: boolean;
 	developerMode: boolean;
-	isPinned: boolean;
 	mutedText: string | undefined;
 }
 
 function getChannelMenuState(channel: Channel, guild: Guild | undefined): ChannelMenuState {
-	const currentUserId = Authentication.currentUserId;
-	const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
-	const isDM = channel.type === ChannelTypes.DM;
 	const isTextChannel = channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_ANNOUNCEMENT;
 	const isVoiceChannel = channel.type === ChannelTypes.GUILD_VOICE;
 	const isLinkChannel = channel.type === ChannelTypes.GUILD_LINK;
-	const isOwner = isGroupDM && channel.ownerId === currentUserId;
 	const settingsGuildId = guild?.id ?? null;
 	const channelOverride = UserGuildSettings.getChannelOverride(settingsGuildId, channel.id);
 	const isMuted = channelOverride?.muted ?? false;
@@ -262,14 +188,10 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		Permission.can(Permissions.CONNECT, {channelId: channel.id, guildId: channel.guildId});
 	const canFollow = canFollowAnnouncementChannel(channel);
 	const developerMode = UserSettings.developerMode;
-	const isPinned = channel.isPinned;
 	return {
-		isGroupDM,
-		isDM,
 		isTextChannel,
 		isVoiceChannel,
 		isLinkChannel,
-		isOwner,
 		isMuted,
 		isFavorited,
 		hasUnread,
@@ -279,7 +201,6 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		canStartP2pCall,
 		canFollow,
 		developerMode,
-		isPinned,
 		mutedText,
 	};
 }
@@ -291,7 +212,6 @@ export function useChannelMenuData(
 ): ChannelMenuData {
 	const {i18n} = useLingui();
 	const {onClose, onOpenMuteSheet, preserveInitialMarkAsReadVisibility = false} = options;
-	const leaveGroup = useLeaveGroup();
 	const deleteMyMessagesInChannel = useDeleteMyMessagesInChannel();
 	const state = getChannelMenuState(channel, guild);
 	const initialHasUnread = useMemo(() => ReadStates.hasUnread(channel.id), [channel.id]);
@@ -483,89 +403,17 @@ export function useChannelMenuData(
 				});
 				onClose();
 			},
-			handleEditGroup: () => {
-				ModalCommands.pushAfterBottomSheetClose(
-					onClose,
-					modal(() => (
-						<EditGroupModal
-							channelId={channel.id}
-							data-flx="ui.action-menu.items.channel-menu-data.handle-edit-group.edit-group-modal"
-						/>
-					)),
-				);
-			},
-			handleShowInvites: () => {
-				ModalCommands.pushAfterBottomSheetClose(
-					onClose,
-					modal(() => (
-						<GroupInvitesModal
-							channelId={channel.id}
-							data-flx="ui.action-menu.items.channel-menu-data.handle-show-invites.group-invites-modal"
-						/>
-					)),
-				);
-			},
-			handlePinChannel: async () => {
-				onClose();
-				const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
-				try {
-					await PrivateChannelCommands.pinDmChannel(channel.id);
-					ToastCommands.createToast({
-						type: 'success',
-						children: isGroupDM ? i18n._(PINNED_GROUP_DM_DESCRIPTOR) : i18n._(PINNED_DM_DESCRIPTOR),
-					});
-				} catch (error) {
-					logger.error('Failed to pin:', error);
-					ModalCommands.push(
-						modal(() => (
-							<GenericErrorModal
-								title={i18n._(PIN_FAILED_TITLE_DESCRIPTOR)}
-								message={i18n._(PIN_FAILED_MESSAGE_DESCRIPTOR)}
-								data-flx="ui.action-menu.items.channel-menu-data.pin-channel.generic-error-modal"
-							/>
-						)),
-					);
-				}
-			},
-			handleUnpinChannel: async () => {
-				onClose();
-				const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
-				try {
-					await PrivateChannelCommands.unpinDmChannel(channel.id);
-					ToastCommands.createToast({
-						type: 'success',
-						children: isGroupDM ? i18n._(UNPINNED_GROUP_DM_DESCRIPTOR) : i18n._(UNPINNED_DM_DESCRIPTOR),
-					});
-				} catch (error) {
-					logger.error('Failed to unpin:', error);
-					ModalCommands.push(
-						modal(() => (
-							<GenericErrorModal
-								title={i18n._(UNPIN_FAILED_TITLE_DESCRIPTOR)}
-								message={i18n._(PIN_FAILED_MESSAGE_DESCRIPTOR)}
-								data-flx="ui.action-menu.items.channel-menu-data.unpin-channel.generic-error-modal"
-							/>
-						)),
-					);
-				}
-			},
-			handleLeaveGroup: () => {
-				ModalCommands.runAfterBottomSheetClose(onClose, () => leaveGroup?.(channel.id));
-			},
 			handleDeleteMyMessagesInChannel: () => {
 				ModalCommands.runAfterBottomSheetClose(onClose, () => deleteMyMessagesInChannel(channel.id));
-			},
-			handleCloseDM: () => {
-				onClose();
-				ChannelCommands.remove(channel.id);
 			},
 			handleDebugChannel: () => {
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
 					modal(() => (
-						<ChannelDebugModal
+						<RecordDebugModal
+							label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 							title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-							channel={channel}
+							record={channel}
 							data-flx="ui.action-menu.items.channel-menu-data.handle-debug-channel.channel-debug-modal"
 						/>
 					)),
@@ -576,116 +424,11 @@ export function useChannelMenuData(
 				onClose();
 			},
 		}),
-		[channel, deleteMyMessagesInChannel, guild, i18n.locale, leaveGroup, onClose, onOpenMuteSheet],
+		[channel, deleteMyMessagesInChannel, guild, i18n.locale, onClose, onOpenMuteSheet],
 	);
 	const groups = ((): Array<MenuGroupType> => {
 		const menuGroups: Array<MenuGroupType> = [];
-		if (state.isGroupDM) {
-			const primaryItems: Array<MenuItemType> = [
-				{
-					icon: <EditGroupIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.edit-group-icon" />,
-					label: i18n._(EDIT_GROUP_DESCRIPTOR),
-					onClick: handlers.handleEditGroup,
-				},
-				state.isPinned
-					? {
-							icon: <PinIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.pin-icon" />,
-							label: i18n._(UNPIN_GROUP_DM_DESCRIPTOR),
-							onClick: handlers.handleUnpinChannel,
-						}
-					: {
-							icon: <PinIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.pin-icon--2" />,
-							label: i18n._(PIN_GROUP_DM_DESCRIPTOR),
-							onClick: handlers.handlePinChannel,
-						},
-			];
-			if (state.isOwner) {
-				primaryItems.push({
-					icon: (
-						<SendInvitesIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.send-invites-icon" />
-					),
-					label: i18n._(INVITES_DESCRIPTOR),
-					onClick: handlers.handleShowInvites,
-				});
-			}
-			menuGroups.push({items: primaryItems});
-			const secondaryItems: Array<MenuItemType> = [
-				{
-					icon: <DeleteIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.delete-icon" />,
-					label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),
-					onClick: handlers.handleDeleteMyMessagesInChannel,
-					danger: true,
-				},
-				{
-					icon: <LeaveIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.leave-icon" />,
-					label: i18n._(LEAVE_GROUP_DESCRIPTOR),
-					onClick: handlers.handleLeaveGroup,
-					danger: true,
-				},
-			];
-			if (state.developerMode) {
-				secondaryItems.push({
-					icon: (
-						<DebugChannelIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.debug-channel-icon" />
-					),
-					label: i18n._(DEBUG_CHANNEL_DESCRIPTOR),
-					onClick: handlers.handleDebugChannel,
-				});
-			}
-			secondaryItems.push({
-				icon: <CopyIdIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.copy-id-icon" />,
-				label: i18n._(COPY_CHANNEL_ID_DESCRIPTOR),
-				onClick: handlers.handleCopyChannelId,
-			});
-			menuGroups.push({items: secondaryItems});
-			return menuGroups;
-		}
-		if (state.isDM) {
-			const items: Array<MenuItemType> = [
-				state.isPinned
-					? {
-							icon: <PinIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.pin-icon--3" />,
-							label: i18n._(UNPIN_DM_DESCRIPTOR),
-							onClick: handlers.handleUnpinChannel,
-						}
-					: {
-							icon: <PinIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.pin-icon--4" />,
-							label: i18n._(PIN_DM_DESCRIPTOR),
-							onClick: handlers.handlePinChannel,
-						},
-				{
-					icon: <DeleteIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.delete-icon--2" />,
-					label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),
-					onClick: handlers.handleDeleteMyMessagesInChannel,
-					danger: true,
-				},
-				{
-					icon: <CloseDMIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.close-dm-icon" />,
-					label: i18n._(CLOSE_DM_DESCRIPTOR),
-					onClick: handlers.handleCloseDM,
-					danger: true,
-				},
-			];
-			if (state.developerMode) {
-				items.push({
-					icon: (
-						<DebugChannelIcon
-							size={20}
-							data-flx="ui.action-menu.items.channel-menu-data.groups.debug-channel-icon--2"
-						/>
-					),
-					label: i18n._(DEBUG_CHANNEL_DESCRIPTOR),
-					onClick: handlers.handleDebugChannel,
-				});
-			}
-			items.push({
-				icon: <CopyIdIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.copy-id-icon--2" />,
-				label: i18n._(COPY_CHANNEL_ID_DESCRIPTOR),
-				onClick: handlers.handleCopyChannelId,
-			});
-			menuGroups.push({items});
-			return menuGroups;
-		}
+
 		if (guild && (state.isTextChannel || state.isVoiceChannel || state.isLinkChannel || channel.isThreadOnly())) {
 			const voiceItems: Array<MenuItemType> = [];
 			if (state.isVoiceChannel && !Accessibility.voiceChannelJoinRequiresDoubleClick) {
@@ -886,7 +629,7 @@ export function useChannelMenuData(
 	})();
 	return {
 		groups,
-		handlers,
+
 		state,
 	};
 }

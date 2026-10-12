@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
@@ -67,10 +68,6 @@ export async function checkChangeRateLimit(
 ): Promise<void> {
 	const result = await rateLimit.checkLimit(params);
 	if (!result.allowed) {
-		throw new RateLimitError({
-			retryAfter: result.retryAfter || 0,
-			limit: result.limit,
-			resetTime: result.resetTime,
-		});
+		throw createRateLimitError(result);
 	}
 }

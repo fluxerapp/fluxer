@@ -20,16 +20,18 @@ import {
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {
+	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+	LATER_DESCRIPTOR,
+	RESTART_NOW_DESCRIPTOR,
+	RESTART_DESCRIPTOR as RESTART_PRODUCT_DESCRIPTOR,
+	USE_NATIVE_TITLE_BAR_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
-
-const DOWNLOAD_SOURCE_MAPS_DESCRIPTOR = msg({
-	message: 'Download source maps',
-	comment: 'Short label for a desktop setting that downloads debugging symbols.',
-});
 
 export const SourceMapsControl = observer(() => {
 	const {i18n} = useLingui();
@@ -47,10 +49,6 @@ export const SourceMapsControl = observer(() => {
 	);
 });
 
-const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Use native title bar',
-	comment: 'Short label for an advanced desktop preference.',
-});
 const USE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Use hardware acceleration',
 	comment: 'Short label for an advanced desktop troubleshooting preference.',
@@ -62,18 +60,6 @@ const ENABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 const DISABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Disable hardware acceleration?',
 	comment: 'Confirmation prompt in advanced settings.',
-});
-const RESTART_NOW_DESCRIPTOR = msg({
-	message: 'Restart now',
-	comment: 'Short confirmation button label in advanced settings.',
-});
-const RESTART_PRODUCT_DESCRIPTOR = msg({
-	message: 'Restart {productName}?',
-	comment: 'Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.',
-});
-const LATER_DESCRIPTOR = msg({
-	message: 'Later',
-	comment: 'Short confirmation button label in advanced settings.',
 });
 
 export function useDesktopWindowBehaviorSettings() {

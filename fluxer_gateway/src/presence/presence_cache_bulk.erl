@@ -193,7 +193,7 @@ add_user_to_owner_group(UserId, Acc) ->
 
 -spec local_shard_count() -> pos_integer().
 local_shard_count() ->
-    {Count, _Source} = presence_cache_shards:determine_count(presence_cache_shards),
+    {Count, _Source} = clustered_ets_cache:determine_shard_count([presence_cache_shards]),
     Count.
 
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().

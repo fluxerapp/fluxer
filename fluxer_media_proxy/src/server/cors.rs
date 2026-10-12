@@ -123,6 +123,9 @@ fn origin_for_log(request: &HeaderMap) -> &str {
 }
 
 #[cfg(test)]
+use crate::test_fixtures::CapturedLog;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
@@ -132,43 +135,9 @@ mod tests {
         test_fixtures::ADVERSARIAL_TEXT_INPUTS,
     };
     use axum::body::to_bytes;
-    use std::sync::{Arc, Mutex};
-    use tracing_subscriber::fmt::MakeWriter;
 
     const WEB: &str = "https://web.fluxer.app";
     const CANARY: &str = "https://web.canary.fluxer.app";
-
-    #[derive(Clone, Default)]
-    struct CapturedLog(Arc<Mutex<Vec<u8>>>);
-
-    impl CapturedLog {
-        fn text(&self) -> String {
-            String::from_utf8(self.0.lock().expect("captured log is not poisoned").clone())
-                .expect("captured log is utf-8")
-        }
-    }
-
-    impl std::io::Write for CapturedLog {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0
-                .lock()
-                .expect("captured log is not poisoned")
-                .extend_from_slice(buf);
-            Ok(buf.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-
-    impl<'a> MakeWriter<'a> for CapturedLog {
-        type Writer = Self;
-
-        fn make_writer(&'a self) -> Self::Writer {
-            self.clone()
-        }
-    }
 
     fn allowlist() -> Vec<HeaderValue> {
         vec![

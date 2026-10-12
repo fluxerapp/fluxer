@@ -88,10 +88,20 @@ pub fn simple_tab_content(
             csrf_token,
             admin_acls,
         ),
-        "emojis" => guild_detail_tabs::emojis::emojis_tab(config, &guild_info, &[], csrf_token),
-        "stickers" => {
-            guild_detail_tabs::stickers::stickers_tab(config, &guild_info, &[], csrf_token)
-        }
+        "emojis" => guild_detail_tabs::emojis::guild_assets_tab(
+            config,
+            &guild_info,
+            &[],
+            csrf_token,
+            guild_detail_tabs::emojis::GuildAssetKind::Emoji,
+        ),
+        "stickers" => guild_detail_tabs::emojis::guild_assets_tab(
+            config,
+            &guild_info,
+            &[],
+            csrf_token,
+            guild_detail_tabs::emojis::GuildAssetKind::Sticker,
+        ),
         _ => guild_detail_tabs::overview::overview_tab(config, guild, csrf_token),
     }
 }

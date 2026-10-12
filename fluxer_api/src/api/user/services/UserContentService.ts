@@ -14,12 +14,7 @@ import {
 	maskThreadArtifactsByChannel,
 } from '@app/api/channel/services/message/ThreadMessageResponses';
 import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
-import {
-	everEnabled,
-	THREAD_FEATURE_CHANNEL_TYPES,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -34,7 +29,6 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {PushSubscription} from '@app/api/models/PushSubscription';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {
@@ -50,6 +44,7 @@ import {
 } from '@app/api/user/services/WebPushOriginReplacement';
 import {UserHarvest} from '@app/api/user/UserHarvestModel';
 import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
@@ -188,7 +183,6 @@ const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof NsfwContentRequiresAgeVerificationError;
 
 export class UserContentService {
-	private readonly updatePropagator: BaseUserUpdatePropagator;
 	private readonly userRepository: UserRepository;
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
@@ -197,7 +191,7 @@ export class UserContentService {
 
 	constructor(
 		apiContext: ApiContext,
-		userCacheService: UserCacheService,
+
 		private channelService: ChannelService,
 		private channelRepository: ChannelRepository,
 		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
@@ -209,10 +203,6 @@ export class UserContentService {
 		this.workerService = worker;
 		this.snowflakeService = snowflake;
 		this.kv = kv;
-		this.updatePropagator = new BaseUserUpdatePropagator({
-			userCacheService,
-			gatewayService: this.gatewayService,
-		});
 	}
 
 	async getRecentMentions(params: {
@@ -397,7 +387,6 @@ export class UserContentService {
 		viewer: ThreadViewer,
 		messagesByChannel: ReadonlyMap<string, Map<string, Message> | null>,
 	): Promise<Set<string>> {
-		if (!everEnabled()) return new Set();
 		const unreachable = Array.from(messagesByChannel)
 			.filter(([, messages]) => messages === null)
 			.map(([channelId]) => createChannelID(BigInt(channelId)));
@@ -838,7 +827,7 @@ export class UserContentService {
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.scheduleDeletion(userId, scheduledAt);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	async bulkDeleteSelfMessagesImmediate(params: {userId: UserID; filter: BulkDeleteSelfMessagesFilter}): Promise<void> {
@@ -868,7 +857,7 @@ export class UserContentService {
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
 	private async countBulkDeletionTargets(

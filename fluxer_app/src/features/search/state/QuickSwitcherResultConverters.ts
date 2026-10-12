@@ -1,25 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {FAVORITES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {
 	Candidate,
 	HeaderResult,
 	QuickSwitcherExecutableResult,
 	QuickSwitcherResult,
 } from '@app/features/search/state/QuickSwitcherTypes';
-import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-import type {I18n} from '@lingui/core';
 
 function assertNever(value: never): never {
 	throw new Error(`Unexpected quick switcher type: ${String(value)}`);
 }
 
-export function candidateToResult(
-	candidate: Candidate,
-	i18n: I18n,
-	viewContext?: string,
-): QuickSwitcherExecutableResult {
+export function candidateToResult(candidate: Candidate): QuickSwitcherExecutableResult {
 	switch (candidate.type) {
 		case QuickSwitcherResultTypes.USER:
 			return {
@@ -29,7 +22,6 @@ export function candidateToResult(
 				subtitle: candidate.subtitle,
 				user: candidate.user,
 				dmChannelId: candidate.dmChannelId,
-				viewContext,
 			};
 		case QuickSwitcherResultTypes.GROUP_DM:
 			return {
@@ -38,7 +30,6 @@ export function candidateToResult(
 				title: candidate.title,
 				subtitle: candidate.subtitle,
 				channel: candidate.channel,
-				viewContext,
 			};
 		case QuickSwitcherResultTypes.TEXT_CHANNEL:
 		case QuickSwitcherResultTypes.VOICE_CHANNEL: {
@@ -46,10 +37,9 @@ export function candidateToResult(
 				type: candidate.type,
 				id: candidate.id,
 				title: candidate.title,
-				subtitle: getCandidateSubtitle(candidate.subtitle, i18n, viewContext),
+				subtitle: candidate.subtitle,
 				channel: candidate.channel,
 				guild: candidate.guild,
-				viewContext,
 			};
 		}
 		case QuickSwitcherResultTypes.GUILD:
@@ -84,13 +74,6 @@ export function candidateToResult(
 
 export function createHeaderResult(id: string, title: string): HeaderResult {
 	return {type: QuickSwitcherResultTypes.HEADER, id, title};
-}
-
-function getCandidateSubtitle(subtitle: string | undefined, i18n: I18n, viewContext?: string): string | undefined {
-	if (viewContext === FAVORITES_GUILD_ID) {
-		return i18n._(FAVORITES_DESCRIPTOR);
-	}
-	return subtitle;
 }
 
 export function getFirstSelectableIndex(results: ReadonlyArray<QuickSwitcherResult>): number {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import {AssetCropModal, type AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
@@ -8,11 +9,7 @@ import {showAnimatedAvifUnsupportedModal} from '@app/features/expressions/utils/
 import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
-import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
-import {
-	blobToDataUrl,
-	revokeObjectUrl,
-} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/utils/ImageAsset';
+import {revokeObjectUrl} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/utils/ImageAsset';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
 import {
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -20,10 +17,10 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {readBlobAsDataUrl as blobToDataUrl, readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
 import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -93,10 +90,6 @@ export interface ImageAssetFieldController {
 	isProcessing: boolean;
 }
 
-interface ApplyDataUrlOptions {
-	skipAspectRatio?: boolean;
-}
-
 export function useGuildImageAssetField({
 	form,
 	fieldName,
@@ -124,10 +117,13 @@ export function useGuildImageAssetField({
 	}, [previewUrl]);
 	const showErrorModal = useCallback(
 		(message: React.ReactNode) => {
-			showGuildErrorModal({
-				title: i18n._(IMAGE_COULDN_T_BE_USED_DESCRIPTOR),
-				message,
-				dataFlx: 'guild.guild-tabs.guild-overview-tab.use-guild-image-asset-field.error-modal',
+			showGenericErrorModal({
+				...{
+					title: i18n._(IMAGE_COULDN_T_BE_USED_DESCRIPTOR),
+					message,
+					dataFlx: 'guild.guild-tabs.guild-overview-tab.use-guild-image-asset-field.error-modal',
+				},
+				defer: true,
 			});
 		},
 		[i18n],
@@ -156,19 +152,16 @@ export function useGuildImageAssetField({
 		[aspectRatio],
 	);
 	const applyDataUrl = useCallback(
-		async (dataUrl: string, blob: Blob, requestId: number, options?: ApplyDataUrlOptions) => {
+		async (dataUrl: string, blob: Blob, requestId: number) => {
 			if (requestId !== requestIdRef.current) return;
 			const nextPreviewUrl = URL.createObjectURL(blob);
 			setFieldValue(dataUrl);
 			setPreviewUrl(nextPreviewUrl);
 			setHasCleared(false);
-			if (options?.skipAspectRatio) {
-				aspectRatio?.set(undefined);
-				return;
-			}
+
 			applyAspectRatio(dataUrl, requestId);
 		},
-		[applyAspectRatio, aspectRatio, setFieldValue, setHasCleared, setPreviewUrl],
+		[applyAspectRatio, setFieldValue, setHasCleared, setPreviewUrl],
 	);
 	const handleFile = useCallback(
 		async (file: File | null) => {
@@ -211,7 +204,7 @@ export function useGuildImageAssetField({
 			setIsProcessing(true);
 			let sourceBase64: string;
 			try {
-				sourceBase64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
+				sourceBase64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
 			} catch {
 				setIsProcessing(false);
 				showErrorModal(i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR));

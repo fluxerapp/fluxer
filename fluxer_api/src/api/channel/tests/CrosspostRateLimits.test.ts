@@ -4,7 +4,6 @@ import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/At
 import {
 	type AnnouncementWorld,
 	channelBudgetRemaining,
-	createAnnouncementChannel,
 	createAnnouncementWorld,
 	crosspostRequest,
 	editMessage,
@@ -13,6 +12,7 @@ import {
 	publishedEditBudgetRemaining,
 	RecordingWorkerService,
 } from '@app/api/channel/tests/CrosspostTestUtils';
+import {createChannel} from '@app/api/guild/tests/GuildTestUtils';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -24,7 +24,7 @@ import {
 	PUBLISHED_MESSAGE_EDIT_RATE_LIMIT,
 } from '@fluxer/constants/src/AnnouncementConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -87,7 +87,13 @@ describe('Publishing and published-edit limits', () => {
 		await crosspostRequest(harness, world.mod.token, world.announcement.id, byMod.id)
 			.expect(429, APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED)
 			.execute();
-		const second = await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-two');
+		const second = await createChannel(
+			harness,
+			world.owner.token,
+			world.guild.id,
+			'news-two',
+			ChannelTypes.GUILD_ANNOUNCEMENT,
+		);
 		const elsewhere = await postMessage(harness, world.author.token, second.id, 'Different channel');
 		await publish(harness, world.author.token, second.id, elsewhere.id);
 	});
@@ -95,9 +101,9 @@ describe('Publishing and published-edit limits', () => {
 	test('a community has no shared publish allowance across its announcement channels', async () => {
 		const channels = [
 			world.announcement,
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-b'),
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-c'),
-			await createAnnouncementChannel(harness, world.owner.token, world.guild.id, 'news-d'),
+			await createChannel(harness, world.owner.token, world.guild.id, 'news-b', ChannelTypes.GUILD_ANNOUNCEMENT),
+			await createChannel(harness, world.owner.token, world.guild.id, 'news-c', ChannelTypes.GUILD_ANNOUNCEMENT),
+			await createChannel(harness, world.owner.token, world.guild.id, 'news-d', ChannelTypes.GUILD_ANNOUNCEMENT),
 		];
 		for (const channel of channels) {
 			await publishMany(channel.id, CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);

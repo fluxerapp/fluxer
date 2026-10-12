@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MEDIA_DESCRIPTOR as MEDIA_TAG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {SettingsCategoryTag} from '@app/features/user/components/settings_utils/SettingsMetadata';
 import type {
 	SearchableSettingItem,
 	UserSettingsTabType,
 } from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
+import {
+	ACCESSIBILITY_DESCRIPTOR as ACCESSIBILITY_TAG_DESCRIPTOR,
+	ACCOUNT_DESCRIPTOR as ACCOUNT_TAG_DESCRIPTOR,
+	PRIVACY_DESCRIPTOR as PRIVACY_TAG_DESCRIPTOR,
+	VOICE_DESCRIPTOR as VOICE_TAG_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	LOOK_AND_FEEL_DESCRIPTOR as APPEARANCE_TAG_DESCRIPTOR,
+	MESSAGES_AND_MEDIA_DESCRIPTOR as CHAT_TAG_DESCRIPTOR,
+	DESKTOP_DESCRIPTOR as DESKTOP_TAG_DESCRIPTOR,
+	DEVELOPER_DESCRIPTOR as DEVELOPER_TAG_DESCRIPTOR,
+	NOTIFICATIONS_2_DESCRIPTOR as NOTIFICATIONS_TAG_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {MessageDescriptor} from '@lingui/core';
-import {msg} from '@lingui/core/macro';
-
-const ACCOUNT_TAG_DESCRIPTOR = msg({message: 'Account', comment: 'Advanced settings category tag.'});
-const PRIVACY_TAG_DESCRIPTOR = msg({message: 'Privacy', comment: 'Advanced settings category tag.'});
-const APPEARANCE_TAG_DESCRIPTOR = msg({message: 'Appearance', comment: 'Advanced settings category tag.'});
-const ACCESSIBILITY_TAG_DESCRIPTOR = msg({message: 'Accessibility', comment: 'Advanced settings category tag.'});
-const CHAT_TAG_DESCRIPTOR = msg({message: 'Chat', comment: 'Advanced settings category tag.'});
-const MEDIA_TAG_DESCRIPTOR = msg({message: 'Media', comment: 'Advanced settings category tag.'});
-const VOICE_TAG_DESCRIPTOR = msg({message: 'Voice', comment: 'Advanced settings category tag.'});
-const NOTIFICATIONS_TAG_DESCRIPTOR = msg({message: 'Notifications', comment: 'Advanced settings category tag.'});
-const DESKTOP_TAG_DESCRIPTOR = msg({message: 'Desktop', comment: 'Advanced settings category tag.'});
-const DEVELOPER_TAG_DESCRIPTOR = msg({message: 'Developer', comment: 'Advanced settings category tag.'});
 
 export const ADVANCED_SETTINGS_TAG_ORDER: ReadonlyArray<SettingsCategoryTag> = [
 	'account',

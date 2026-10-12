@@ -40,12 +40,6 @@ pub(in crate::server) fn explicit_output_format(
     AssetExtension::parse(raw).map(Some).ok_or(())
 }
 
-#[cfg(test)]
-fn parse_dimension(raw: Option<&str>, limits: &MediaLimits) -> Option<u32> {
-    raw.and_then(|v| v.parse::<u32>().ok())
-        .filter(|v| *v > 0 && *v <= limits.image_dimension())
-}
-
 pub(in crate::server) fn parse_optional_dimension_param(
     params: &HashMap<String, String>,
     key: &str,
@@ -123,14 +117,6 @@ pub(in crate::server) fn extension_of(filename: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn dimensions_are_bounded() {
-        let limits = MediaLimits::default_from_config();
-        assert_eq!(Some(128), parse_dimension(Some("128"), &limits));
-        assert_eq!(None, parse_dimension(Some("0"), &limits));
-        assert_eq!(None, parse_dimension(Some("999999999"), &limits));
-    }
 
     #[test]
     fn asset_manual_format_override_is_v1_compatible() {

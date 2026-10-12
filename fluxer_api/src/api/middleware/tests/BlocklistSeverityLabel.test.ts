@@ -65,8 +65,8 @@ describe('blocklist severity is a stored label', () => {
 		]);
 		await bannedAvatarHashCache.refresh();
 		expect(bannedAvatarHashCache.size).toBe(1);
-		expect(bannedAvatarHashCache.contains(AVATAR_HASH)).toBe(true);
-		expect(bannedAvatarHashCache.contains(`a_${AVATAR_HASH}`)).toBe(true);
-		expect(bannedAvatarHashCache.contains('c'.repeat(8))).toBe(false);
+		expect(bannedAvatarHashCache.isBanned(AVATAR_HASH)).toBe(true);
+		expect(bannedAvatarHashCache.isBanned(`a_${AVATAR_HASH}`)).toBe(true);
+		expect(bannedAvatarHashCache.isBanned('c'.repeat(8))).toBe(false);
 	});
 });

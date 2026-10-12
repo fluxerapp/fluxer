@@ -23,6 +23,10 @@ import MediaEngine, {useMediaEngineVersion, useVoiceEngineV2Model} from '@app/fe
 import {selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {
+	UNKNOWN_USER_DESCRIPTOR,
+	VIEW_PROFILE_FOR_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -32,19 +36,11 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
-const VIEW_PROFILE_FOR_DESCRIPTOR = msg({
-	message: 'View profile for {displayName}',
-	comment:
-		"Aria label on an avatar tile in the voice participants list. {displayName} is the participant's display name.",
-});
 const VOICE_PARTICIPANTS_DESCRIPTOR = msg({
 	message: 'Voice participants',
 	comment: 'Aria label on the voice participants avatar list container.',
 });
-const UNKNOWN_USER_DESCRIPTOR = msg({
-	message: 'Unknown user',
-	comment: 'Fallback voice participant display name when the user record has no usable name.',
-});
+
 const DEFAULT_WRAPPED_AVATAR_GAP_PX = 12;
 const WRAPPED_AVATAR_SLOT_TRANSITION = {
 	width: {duration: 0.22, ease: [0.22, 1, 0.36, 1]},

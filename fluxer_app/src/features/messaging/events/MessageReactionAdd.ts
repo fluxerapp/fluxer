@@ -48,6 +48,5 @@ export function handleMessageReactionAdd(data: MessageReactionAddPayload, _conte
 		messageId: data.message_id,
 		userId: data.user_id,
 		emoji,
-		skipReactionStore: true,
 	});
 }

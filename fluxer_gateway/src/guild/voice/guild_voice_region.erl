@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_voice_region).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([switch_voice_region_handler/2]).
@@ -17,14 +21,10 @@
 -type guild_reply(T) :: {reply, T | {error, atom(), atom()}, guild_state()}.
 -type voice_state() :: map().
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -spec switch_voice_region_handler(map(), guild_state()) -> guild_reply(map()).
 switch_voice_region_handler(Request, State) ->
     #{channel_id := ChannelId} = Request,
-    Channel = guild_voice_member:find_channel_by_id(ChannelId, State),
+    Channel = guild_permissions_check:find_channel_by_id(ChannelId, State),
     case Channel of
         undefined ->
             {reply, gateway_errors:error(voice_channel_not_found), State};
@@ -41,7 +41,7 @@ switch_voice_region_channel_reply(Channel, ChannelId, State) ->
 
 -spec switch_to_sfu(integer(), guild_state()) -> guild_state().
 switch_to_sfu(ChannelId, State) ->
-    Channel = guild_voice_member:find_channel_by_id(ChannelId, State),
+    Channel = guild_permissions_check:find_channel_by_id(ChannelId, State),
     NewState = convert_to_sfu(Channel, ChannelId, State),
     ok = spawn_switch_if_converted(ChannelId, State, NewState),
     NewState.
@@ -182,7 +182,7 @@ request_and_broadcast_region_switch(
     TokenNonce = voice_utils:generate_token_nonce(),
     Lat = maps:get(<<"latitude">>, ExistingVoiceState, undefined),
     Lng = maps:get(<<"longitude">>, ExistingVoiceState, undefined),
-    TokenResult = guild_voice_connection:request_voice_token(
+    TokenResult = guild_voice_connection_token:request_voice_token(
         GuildId,
         ChannelId,
         UserId,
@@ -277,16 +277,12 @@ build_pending_metadata(
 
 -spec store_pending_connection(integer(), pid(), binary(), map()) -> ok.
 store_pending_connection(GuildId, GuildPid, ConnectionId, Metadata) ->
-    TargetPid = resolve_voice_server(GuildId, GuildPid),
+    TargetPid = guild_voice_server:resolve(GuildId, GuildPid),
     gen_server:call(
         TargetPid,
         {store_pending_connection, ConnectionId, Metadata},
         10000
     ).
-
--spec resolve_voice_server(integer(), pid()) -> pid().
-resolve_voice_server(GuildId, FallbackPid) ->
-    guild_voice_server:resolve(GuildId, FallbackPid).
 
 -ifdef(TEST).
 

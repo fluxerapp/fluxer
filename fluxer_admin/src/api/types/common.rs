@@ -62,11 +62,6 @@ pub struct LookupGuildResponse {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct GuildUpdateResponse {
-    pub guild: GuildInfo,
-}
-
-#[derive(Clone, Debug, Deserialize)]
 pub struct ListUserGuildsResponse {
     pub guilds: Vec<GuildInfo>,
 }

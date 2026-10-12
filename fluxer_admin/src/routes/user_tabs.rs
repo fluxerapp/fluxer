@@ -161,7 +161,12 @@ pub async fn render(
                 .await
                 .map_err(|error| tracing::warn!(%error, user_id, "admin API request failed: list user applications"))
                 .unwrap_or_default();
-            Some(tabs::applications::applications_tab(config, &apps))
+            Some(tabs::applications::applications_tab(
+                config,
+                &apps,
+                "No applications owned",
+                "This user does not own any applications.",
+            ))
         }
         "archives" => {
             if !acl::has_any_permission(

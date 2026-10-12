@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 import {msg} from '@lingui/core/macro';
 import type {MouseEventHandler, ReactNode} from 'react';
 
@@ -26,8 +28,6 @@ export interface MediaModalProps {
 	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReply?: () => void;
 	onForward?: () => void;
-	onInfo?: () => void;
-	additionalActions?: ReactNode;
 	children: ReactNode;
 	enablePanZoom?: boolean;
 	currentIndex?: number;
@@ -43,7 +43,6 @@ export interface MediaModalProps {
 	onMenuOpen?: () => void;
 }
 
-export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 export const getViewportPadding = () => {
 	const minSide = Math.min(window.innerWidth, window.innerHeight);
 	return Math.round(clamp(minSide * 0.05, 16, 64));

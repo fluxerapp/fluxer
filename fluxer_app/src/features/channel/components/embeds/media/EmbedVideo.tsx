@@ -16,7 +16,6 @@ import {
 	resolveVideoLayout,
 } from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
@@ -367,9 +366,6 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		useEffect(() => {
 			if (!shouldLoadMedia) return;
 			if (!posterSrc) return;
-			if (DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading) {
-				return;
-			}
 			if (loadedPosterSrc === posterSrc) return;
 			let active = true;
 			const cleanup = ImageCacheUtils.loadImage(

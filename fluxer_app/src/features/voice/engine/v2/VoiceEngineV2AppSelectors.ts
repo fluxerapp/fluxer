@@ -2,16 +2,16 @@
 
 import assert from 'node:assert/strict';
 import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
-import {
-	selectVoiceEngineV2Model,
-	type VoiceEngineV2AudioControls,
-	type VoiceEngineV2AudioMode,
-	type VoiceEngineV2ConnectionStatus,
-	type VoiceEngineV2MediaStatus,
-	type VoiceEngineV2Model,
-	type VoiceEngineV2Participant,
-	type VoiceEngineV2Snapshot,
-} from '@fluxer/voice_engine_v2';
+import {selectVoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/core/selectors';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2AudioControls,
+	VoiceEngineV2AudioMode,
+	VoiceEngineV2ConnectionStatus,
+	VoiceEngineV2MediaStatus,
+	VoiceEngineV2Model,
+	VoiceEngineV2Participant,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export type VoiceEngineV2AppProjectionSource = VoiceEngineV2Model | VoiceEngineV2Snapshot;
 

@@ -21,7 +21,9 @@
     channel_id(), map(), guild_state(), map(), integer()
 ) -> map().
 maybe_ensure_parent_category_visible(ChannelId, ViewableMap, State, SessionData, GuildId) ->
-    case {snowflake_id(GuildId), guild_permissions:find_channel_by_id(ChannelId, State)} of
+    case
+        {snowflake_id(GuildId), guild_permissions_check:find_channel_by_id(ChannelId, State)}
+    of
         {undefined, _} ->
             ViewableMap;
         {_, undefined} ->
@@ -129,7 +131,7 @@ send_sync_for_list(SessionId, SessionData, SessionPid, ChannelId, GuildId, ListI
 maybe_dispatch_sync(SessionUserId, SessionPid, ChannelId, GuildId, ListId, Ranges, State) ->
     case can_send_member_list(SessionUserId, ChannelId, State) of
         true ->
-            SyncResponse = guild_member_list:build_sync_response(
+            SyncResponse = guild_member_list_read:build_sync_response(
                 GuildId, ListId, Ranges, State
             ),
             SyncResponseWithChannel = SyncResponse#{
@@ -146,14 +148,16 @@ maybe_dispatch_sync(SessionUserId, SessionPid, ChannelId, GuildId, ListId, Range
 can_send_member_list(UserId, ChannelId, State) ->
     case snowflake_id(ChannelId) of
         ResolvedChannelId when is_integer(UserId), is_integer(ResolvedChannelId) ->
-            guild_permissions:can_view_channel(UserId, ResolvedChannelId, undefined, State);
+            guild_permissions_check:can_view_channel(
+                UserId, ResolvedChannelId, undefined, State
+            );
         undefined ->
             false
     end.
 
 -spec maybe_dispatch_channel_delete(channel_id(), pid(), guild_state(), integer()) -> ok.
 maybe_dispatch_channel_delete(ChannelId, SessionPid, OldState, GuildId) ->
-    case guild_permissions:find_channel_by_id(ChannelId, OldState) of
+    case guild_permissions_check:find_channel_by_id(ChannelId, OldState) of
         undefined ->
             ok;
         _Channel ->
@@ -166,7 +170,7 @@ maybe_dispatch_channel_delete(ChannelId, SessionPid, OldState, GuildId) ->
 
 -spec maybe_dispatch_channel_create(channel_id(), map(), guild_state(), integer()) -> ok.
 maybe_dispatch_channel_create(ChannelId, #{pid := SessionPid} = SessionData, NewState, GuildId) ->
-    case guild_permissions:find_channel_by_id(ChannelId, NewState) of
+    case guild_permissions_check:find_channel_by_id(ChannelId, NewState) of
         undefined ->
             ok;
         Channel ->

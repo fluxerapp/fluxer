@@ -3,7 +3,6 @@
 use crate::{
     asset_hash::AssetHash,
     constants::{AssetExtension, AssetKind},
-    external_path,
     storage::safe_key,
 };
 use std::fmt;
@@ -204,7 +203,10 @@ pub(in crate::server) enum StorageKeyDecodeError {
 }
 
 pub(in crate::server) fn decode_storage_key(path: &str) -> Result<String, StorageKeyDecodeError> {
-    let key = external_path::percent_decode_string(path.trim_start_matches('/'), false);
+    let key = fluxer_common::external_media_path::percent_decode_string(
+        path.trim_start_matches('/'),
+        false,
+    );
     safe_key(&key).map_err(|_| StorageKeyDecodeError::InvalidKey)?;
     Ok(key)
 }

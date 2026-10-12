@@ -3,12 +3,8 @@
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createUserID} from '@app/api/BrandedTypes';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {getReadStateRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -34,7 +30,7 @@ describe('thread pins ack', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -42,12 +38,11 @@ describe('thread pins ack', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const outsider = await createTestAccount(harness);
@@ -87,22 +82,6 @@ describe('thread pins ack', () => {
 		const row = await pinAckRow(s.owner, s.threadId);
 		expect(row).not.toBeNull();
 		expect(row?.flags).toBe(ReadStateFlags.IS_GUILD_CHANNEL | ReadStateFlags.IS_THREAD);
-	});
-
-	it('treats a thread as an unknown channel for non-viewers', async () => {
-		const s = await setup();
-		const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchPresence');
-		for (const account of [s.member, s.outsider]) {
-			await threadsRequest(harness, account.token, {capable: false})
-				.post(`/channels/${s.threadId}/pins/ack`)
-				.expect(204)
-				.execute();
-			expect(await pinAckRow(account, s.threadId)).toBeNull();
-		}
-		await setChannelThreadsConfig({...ALL_THREADS_ACTIVE, enabled: false});
-		await threadsRequest(harness, s.owner.token).post(`/channels/${s.threadId}/pins/ack`).expect(204).execute();
-		expect(await pinAckRow(s.owner, s.threadId)).toBeNull();
-		expect(pinsAckDispatches(dispatch)).toEqual([]);
 	});
 
 	it('refuses viewers who cannot see the private thread', async () => {

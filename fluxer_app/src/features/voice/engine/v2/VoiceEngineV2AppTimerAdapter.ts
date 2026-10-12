@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {TimerPort, VoiceEngineV2TimerOptions} from '@fluxer/voice_engine_v2';
-import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
+import type {TimerPort} from '@fluxer/voice_engine_v2/src/ports';
+import type {VoiceEngineV2TimerOptions} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 const VOICE_ENGINE_V2_TIMER_REGISTRY_CAP = 256;
 const VOICE_ENGINE_V2_TIMER_ID_MAX_LENGTH = 128;

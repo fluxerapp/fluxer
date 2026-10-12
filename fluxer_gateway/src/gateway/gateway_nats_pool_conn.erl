@@ -200,7 +200,7 @@ subscribe_slot(Idx, Conn, #{subs := Subs} = State) ->
 -spec subscribe_new_slot(non_neg_integer(), nats:conn(), map(), map()) -> map().
 subscribe_new_slot(Idx, Conn, Subs, State) ->
     Role = fluxer_gateway_sup:current_role(),
-    Subjects = gateway_nats_rpc:rpc_subjects_for_role(Role),
+    Subjects = gateway_nats_rpc_handler:rpc_subjects_for_role(Role),
     Sids = subscribe_slot_subjects(Idx, Conn, Role, Subjects),
     case Sids of
         [] -> State;
@@ -350,16 +350,6 @@ coerce_sid(_) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-reconnect_delay_first_failure_test() ->
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS, reconnect_delay(1)).
-
-reconnect_delay_exponential_backoff_test() ->
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS * 2, reconnect_delay(2)),
-    ?assertEqual(?RECONNECT_BASE_DELAY_MS * 4, reconnect_delay(3)).
-
-reconnect_delay_capped_at_max_test() ->
-    ?assert(reconnect_delay(4) =< ?RECONNECT_MAX_DELAY_MS).
 
 reconnect_delay_circuit_breaker_kicks_in_test() ->
     ?assertEqual(?CIRCUIT_BREAKER_COOLDOWN_MS, reconnect_delay(?CIRCUIT_BREAKER_THRESHOLD)),

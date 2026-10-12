@@ -53,16 +53,39 @@ pub(in crate::server) fn media_response(response: MediaResponse<'_>) -> Response
         (StatusCode::OK, retained)
     };
     let body_len = body_bytes.len();
-    let mut response = if method == Method::HEAD {
-        Response::new(Body::empty())
+    let body = if method == Method::HEAD {
+        Body::empty()
     } else {
-        Response::new(Body::from(body_bytes))
+        Body::from(body_bytes)
     };
+    media_body_response(
+        body,
+        status,
+        total_len,
+        content_type,
+        byte_range,
+        Some(body_len as u64),
+        disposition,
+    )
+}
+
+pub(in crate::server) fn media_body_response(
+    body: Body,
+    status: StatusCode,
+    total_len: usize,
+    content_type: &str,
+    byte_range: Option<range::ByteRange>,
+    content_length: Option<u64>,
+    disposition: Option<HeaderValue>,
+) -> Response {
+    let mut response = Response::new(body);
     *response.status_mut() = status;
     http_headers::add_media_headers(response.headers_mut(), total_len, content_type, byte_range);
-    response
-        .headers_mut()
-        .insert(header::CONTENT_LENGTH, HeaderValue::from(body_len));
+    if let Some(length) = content_length {
+        response
+            .headers_mut()
+            .insert(header::CONTENT_LENGTH, HeaderValue::from(length));
+    }
     if let Some(value) = disposition {
         response
             .headers_mut()
@@ -168,16 +191,5 @@ mod tests {
         );
         assert!(!value.contains("tail.png"));
         assert!(value.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
-    }
-
-    #[test]
-    fn a_long_multi_byte_external_filename_still_gets_a_disposition() {
-        let filename = "\u{e9}".repeat(1100);
-        let inline = disposition_string("image/png", false, Some(&filename));
-        assert!(inline.starts_with("inline; filename=\""));
-        assert!(inline.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
-        let attachment = disposition_string("application/octet-stream", false, Some(&filename));
-        assert!(attachment.starts_with("attachment; filename=\""));
-        assert!(attachment.len() <= disposition::PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES);
     }
 }

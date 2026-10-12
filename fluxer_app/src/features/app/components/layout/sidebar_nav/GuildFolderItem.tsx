@@ -40,7 +40,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {AnimePresence, AnimeSpan, createAnimeFlxElement} from '@app/features/ui/motion/AnimeElement';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {flxElementClassName} from '@app/lib/react';
 import {

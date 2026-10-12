@@ -59,8 +59,8 @@ visibility_inputs(State) ->
     Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
     {
         maps:get(<<"owner_id">>, Guild, undefined),
-        role_inputs(guild_data_index:role_index(Data)),
-        channel_inputs(guild_data_index:channel_index(Data)),
+        role_inputs(guild_data_index_roles:role_index(Data)),
+        channel_inputs(guild_data_index_channels:channel_index(Data)),
         maps:get(virtual_channel_access, State, #{})
     }.
 

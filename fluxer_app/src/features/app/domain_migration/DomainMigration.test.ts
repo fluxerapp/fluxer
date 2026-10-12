@@ -17,7 +17,7 @@ import {
 import {runDomainMigrationPreMount} from '@app/features/app/domain_migration/DomainMigrationPreMount';
 import InstanceSnapshotStore from '@app/features/app/state/InstanceSnapshotStore';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {LEGACY_APP_STORAGE_MIGRATION_MARKER_KEY} from '@app/features/platform/state/LegacyAppStorageMigration';

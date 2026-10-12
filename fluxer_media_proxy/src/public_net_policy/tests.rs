@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::ip_tables::is_public_ip;
 use super::resolver::{MAX_PUBLIC_DNS_ADDRESSES, ResolveError, screen_resolved_addresses};
 use super::*;
+use fluxer_common::public_ip::is_public_ip;
 use std::net::SocketAddr;
 
 fn public(literal: &str) -> bool {
@@ -16,12 +16,12 @@ fn socket_addresses(literal: &str, count: usize) -> Vec<SocketAddr> {
 
 #[test]
 fn blocks_private_and_special_ip_literals() {
-    assert!(is_blocked_ip_literal("127.0.0.1"));
-    assert!(is_blocked_ip_literal("10.1.2.3"));
-    assert!(is_blocked_ip_literal("::1"));
-    assert!(is_blocked_ip_literal("::ffff:192.168.1.1"));
-    assert!(!is_blocked_ip_literal("8.8.8.8"));
-    assert!(!is_blocked_ip_literal("2606:4700:4700::1111"));
+    assert!(!public("127.0.0.1"));
+    assert!(!public("10.1.2.3"));
+    assert!(!public("::1"));
+    assert!(!public("::ffff:192.168.1.1"));
+    assert!(public("8.8.8.8"));
+    assert!(public("2606:4700:4700::1111"));
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn blocks_every_documented_ipv4_ssrf_range() {
         "240.0.0.1",
         "255.255.255.255",
     ] {
-        assert!(is_blocked_ip_literal(ip), "{ip}");
+        assert!(!public(ip), "{ip}");
     }
 }
 
@@ -84,7 +84,7 @@ fn blocks_every_documented_ipv6_ssrf_range() {
         "::7f00:1",
         "2002:a9fe:a9fe::",
     ] {
-        assert!(is_blocked_ip_literal(ip), "{ip}");
+        assert!(!public(ip), "{ip}");
     }
 }
 
@@ -188,14 +188,6 @@ fn ipv4_written_in_ipv6_notation_is_revalidated_against_the_v4_table() {
     for literal in ["::ffff:93.184.216.34", "64:ff9b::93.184.216.34"] {
         assert!(public(literal), "{literal}");
     }
-}
-
-#[test]
-fn unparseable_ip_literals_fail_closed() {
-    assert!(is_blocked_ip_literal(""));
-    assert!(is_blocked_ip_literal("example.com"));
-    assert!(is_blocked_ip_literal("127.0.0.1:80"));
-    assert!(is_blocked_ip_literal("0x7f000001"));
 }
 
 #[test]
@@ -312,4 +304,23 @@ fn redirect_targets_are_checked_on_their_canonical_host() {
     assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
     let next = resolve_redirect("https://example.com/start.gif", "//0x7f.0x0.0x0.0x1/a").unwrap();
     assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
+}
+
+use fluxer_common::external_media_path::{
+    build_external_media_proxy_path, reconstruct_original_url,
+};
+
+#[test]
+fn a_signed_path_never_decodes_into_a_url_the_fetch_policy_refuses() {
+    let credentialed = "https://reader:secret@cdn.example.com/i.png";
+    assert_eq!(
+        Err(super::Error::BlockedUrl),
+        super::parse_url(credentialed)
+    );
+
+    let path = build_external_media_proxy_path(credentialed).expect("path builds");
+    let decoded = reconstruct_original_url(&path).expect("path decodes");
+
+    assert_eq!("https://cdn.example.com/i.png", decoded);
+    assert!(super::parse_url(&decoded).is_ok());
 }

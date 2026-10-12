@@ -85,11 +85,9 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const rawAuthHeader = ctx.req.header('Authorization');
 	const parsed = parseAuthHeader(rawAuthHeader);
 	const resolvedClientIp = getRequestClientIp(ctx);
-	ctx.set('oauthBearerToken', undefined);
 	ctx.set('oauthBearerApplicationId', undefined);
 	ctx.set('oauthBearerAllowed', false);
 	ctx.set('oauthBearerScopes', undefined);
-	ctx.set('oauthBearerUserId', undefined);
 	ctx.set('authToken', undefined);
 	if (!parsed) {
 		if (rawAuthHeader) {
@@ -127,14 +125,10 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (type === 'bearer') {
 		const oauth2TokenRepository = ctx.get('oauth2TokenRepository');
 		const accessToken = await oauth2TokenRepository.getAccessToken(token);
-		const tokenUser = accessToken?.userId
-			? await ctx.get('apiContext').services.users.findUnique(accessToken.userId)
-			: null;
+		const tokenUser = accessToken ? await ctx.get('apiContext').services.users.findUnique(accessToken.userId) : null;
 		if (accessToken && !(tokenUser && isSignInRefused(tokenUser))) {
-			ctx.set('oauthBearerToken', token);
 			ctx.set('oauthBearerApplicationId', accessToken.applicationId);
 			ctx.set('oauthBearerScopes', accessToken.scope);
-			ctx.set('oauthBearerUserId', accessToken.userId ?? undefined);
 			ctx.set('authTokenType', 'bearer');
 			if (tokenUser) {
 				setUserInContext(ctx, tokenUser, false);
@@ -173,7 +167,6 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			const user = await ctx.get('apiContext').services.users.findUnique(apiKey.createdById);
 			if (user) {
 				ctx.set('authTokenType', 'admin_api_key');
-				ctx.set('adminApiKey', apiKey);
 				ctx.set('adminApiKeyAcls', apiKey.acls);
 				setUserInContext(ctx, user, false);
 			}

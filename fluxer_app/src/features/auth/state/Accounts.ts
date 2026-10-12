@@ -12,11 +12,11 @@ import AccountAccess, {
 	AccountAccessPhase,
 	AccountInstanceUnavailableError,
 } from '@app/features/auth/state/AccountAccess';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey, parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {ForegroundGatewayConnectionRecoverableError} from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {abandonUnreachableLastLocation} from '@app/features/navigation/utils/ChannelRouteReachability';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
@@ -374,17 +374,20 @@ class Accounts {
 				`Reauthentication activated ${this.currentAccountKey ?? 'no account'} instead of ${targetAccountKey}`,
 			);
 		}
-		if (GatewayConnection.foregroundAccountKey === targetAccountKey && GatewayConnection.isReady) {
+		if (
+			GatewaySessions.foregroundConnection.foregroundAccountKey === targetAccountKey &&
+			GatewaySessions.foregroundConnection.isReady
+		) {
 			const currentToken = SessionManager.token;
 			if (currentToken === null) {
 				throw new Error(`Reauthenticated account ${targetAccountKey} has no session token`);
 			}
-			GatewayConnection.reuseReadyForegroundSession(targetAccountKey, currentToken);
+			GatewaySessions.foregroundConnection.reuseReadySession(targetAccountKey, currentToken);
 		}
 		this.assertNoStaleForegroundGateway();
 		let outcome: AccountActivationOutcome = {kind: 'ready'};
 		try {
-			await GatewayConnection.waitForForegroundReady(targetAccountKey);
+			await GatewaySessions.waitForForegroundReady(targetAccountKey);
 		} catch (cause) {
 			if (!(cause instanceof ForegroundGatewayConnectionRecoverableError)) {
 				throw cause;
@@ -427,7 +430,7 @@ class Accounts {
 		previous: PreviousAccountState,
 		suspension: AccountScopedWorkSuspension,
 	): Promise<AccountActivationOutcome> {
-		await GatewayConnection.beginForegroundPromotion(request.targetAccountKey);
+		await GatewaySessions.beginPromote(request.targetAccountKey);
 		const previousRoute = RouterUtils.getCurrentPath();
 		const stopAwaitingLiveView = this.beginViewReplacement(request, previous);
 		try {
@@ -441,11 +444,11 @@ class Accounts {
 				ResettableStates.prepareForAccountTransition('account-switch');
 			}
 			this.assertNoStaleForegroundGateway();
-			await GatewayConnection.completeForegroundPromotion(request.targetAccountKey);
+			await GatewaySessions.completePromote(request.targetAccountKey);
 			if (previous.kind === 'none') {
 				this.revealReplacementView();
 			}
-			await GatewayConnection.waitForForegroundReady(request.targetAccountKey);
+			await GatewaySessions.waitForForegroundReady(request.targetAccountKey);
 			if (previous.kind === 'none' && request.redirectPath === Routes.ME) {
 				abandonUnreachableLastLocation();
 			}
@@ -455,7 +458,7 @@ class Accounts {
 			stopAwaitingLiveView();
 			const recoveryErrors: Array<unknown> = [];
 			try {
-				await GatewayConnection.rollbackForegroundPromotion(request.targetAccountKey);
+				await GatewaySessions.rollbackPromote(request.targetAccountKey);
 			} catch (rollbackError) {
 				recoveryErrors.push(rollbackError);
 			}
@@ -516,7 +519,7 @@ class Accounts {
 	}
 
 	private assertNoStaleForegroundGateway(): void {
-		const foregroundAccountKey = GatewayConnection.foregroundAccountKey;
+		const foregroundAccountKey = GatewaySessions.foregroundConnection.foregroundAccountKey;
 		if (foregroundAccountKey === null || foregroundAccountKey === SessionManager.currentAccountKey) {
 			return;
 		}
@@ -545,7 +548,7 @@ class Accounts {
 			await this.waitForRestoredForeground(previous.accountKey);
 			return;
 		}
-		await GatewayConnection.beginForegroundPromotion(previous.accountKey);
+		await GatewaySessions.beginPromote(previous.accountKey);
 		try {
 			const previousAccount = SessionManager.getAccount(previous.accountKey);
 			if (previousAccount === null || !previousAccount.isValid) {
@@ -562,11 +565,11 @@ class Accounts {
 			this.assertNoStaleForegroundGateway();
 			await this.restorePreviousRuntimeSnapshot(previous.runtimeSnapshot);
 			ResettableStates.prepareForAccountTransition('account-switch');
-			await GatewayConnection.completeForegroundPromotion(previous.accountKey);
+			await GatewaySessions.completePromote(previous.accountKey);
 			await this.waitForRestoredForeground(previous.accountKey);
 		} catch (recoveryError) {
 			try {
-				await GatewayConnection.rollbackForegroundPromotion(previous.accountKey);
+				await GatewaySessions.rollbackPromote(previous.accountKey);
 			} catch (rollbackError) {
 				throw new AggregateError(
 					[recoveryError, rollbackError],
@@ -600,7 +603,7 @@ class Accounts {
 
 	private async waitForRestoredForeground(accountKey: string): Promise<void> {
 		try {
-			await GatewayConnection.waitForForegroundReady(accountKey);
+			await GatewaySessions.waitForForegroundReady(accountKey);
 		} catch (error) {
 			if (!(error instanceof ForegroundGatewayConnectionRecoverableError)) {
 				throw error;
@@ -673,10 +676,13 @@ class Accounts {
 		if (accountKey === null || !SessionManager.isAuthenticated) {
 			return;
 		}
-		if (GatewayConnection.foregroundAccountKey === accountKey && GatewayConnection.isReady) {
+		if (
+			GatewaySessions.foregroundConnection.foregroundAccountKey === accountKey &&
+			GatewaySessions.foregroundConnection.isReady
+		) {
 			return;
 		}
-		GatewayConnection.recoverForegroundSession(accountKey);
+		GatewaySessions.recoverForegroundSession(accountKey);
 	}
 
 	private continueForegroundRecovery(accountKey: string, outcome: AccountActivationOutcome): void {
@@ -684,7 +690,7 @@ class Accounts {
 			return;
 		}
 		logger.warn(`Account ${accountKey} authenticated while its foreground gateway is still recovering`, outcome.cause);
-		GatewayConnection.recoverForegroundSession(accountKey);
+		GatewaySessions.recoverForegroundSession(accountKey);
 	}
 
 	private shouldManagePushSubscriptions(): boolean {

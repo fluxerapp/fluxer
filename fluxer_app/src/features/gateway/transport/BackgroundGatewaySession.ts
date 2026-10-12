@@ -9,7 +9,6 @@ import {
 import {SNAPSHOT_SCHEMA_EPOCH} from '@app/features/gateway/snapshot/SnapshotEntities';
 import SnapshotSync from '@app/features/gateway/snapshot/SnapshotSync';
 import type {StateSnapshotCapture, StateSnapshotEntries} from '@app/features/gateway/snapshot/SnapshotTypes';
-import BackgroundAccountPresence from '@app/features/gateway/transport/BackgroundAccountPresence';
 import {sumMentionCounts} from '@app/features/gateway/transport/BackgroundGatewayAccounts';
 import {
 	type BackgroundDispatchHandoverEnd,
@@ -310,7 +309,7 @@ export class BackgroundGatewaySession {
 
 	private identifyPresence(): GatewayPresence {
 		return {
-			status: BackgroundAccountPresence.appearOffline ? StatusTypes.INVISIBLE : StatusTypes.ONLINE,
+			status: StatusTypes.INVISIBLE,
 			afk: Idle.isAfk(),
 			mobile: false,
 		};

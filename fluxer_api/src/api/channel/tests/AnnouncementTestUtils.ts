@@ -41,7 +41,6 @@ import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
 import type {FollowedChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelFollowSchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 export interface AnnouncementSourceGuild {
@@ -181,19 +180,6 @@ export async function follow(
 	return followRequest(harness, token, sourceChannelId, targetChannelId).execute();
 }
 
-export function publishRequest(harness: ApiTestHarness, token: string, channelId: string, messageId: string) {
-	return createBuilder<MessageResponse>(harness, token).post(`/channels/${channelId}/messages/${messageId}/crosspost`);
-}
-
-export async function publish(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-	messageId: string,
-): Promise<MessageResponse> {
-	return publishRequest(harness, token, channelId, messageId).execute();
-}
-
 export async function findWebhookRow(webhookId: string) {
 	return new WebhookRepository().findUnique(createWebhookID(BigInt(webhookId)));
 }
@@ -209,7 +195,7 @@ export async function setGuildFeatures(
 		.execute();
 }
 
-const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
+export const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
 	crosspostMessage,
 	crosspostMessageChunk,
 	syncCrosspostedMessage,
@@ -248,3 +234,5 @@ export function disableCrosspostWorker(): void {
 	resetApiServicesForTesting();
 	clearWorkerDependencies();
 }
+
+export {crosspostRequest as publishRequest, publish} from '@app/api/channel/tests/CrosspostTestUtils';

@@ -16,11 +16,7 @@ import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getKVClient, getWorkerService} from '@app/api/middleware/ServiceRegistry';
-import {
-	getGatewayRolloutConfigPublisher,
-	getInstanceConfigRepository,
-	getPushRelayConfigPublisher,
-} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getNatsConfigPublisher} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
@@ -404,7 +400,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				const landed = await instanceConfigRepository.updateGatewayRolloutConfig((current) =>
 					GatewayRolloutConfigSchema.parse({...current, ...patch}),
 				);
-				await getGatewayRolloutConfigPublisher().publish(landed);
+				await getNatsConfigPublisher().publish('config.gateway.rollout', 'gateway_rollout_config', landed);
 			}
 			if (data.push_relay) {
 				const patch = omitUndefinedFields(data.push_relay);
@@ -415,7 +411,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						...patch,
 						...relayConsentStamp(current, patch, adminUserId),
 					}));
-					await getPushRelayConfigPublisher().publish(landed);
+					await getNatsConfigPublisher().publish('config.push.delivery', 'push_service_delivery_config', landed);
 				}
 			}
 			if (data.domain_migration) {
@@ -933,11 +929,9 @@ async function updatePendingRegistrationUser(
 	if (decision === 'approve' && wasPendingApproval) {
 		await ctx.get('singleCommunityService').joinStockCommunity(user.id, ctx.get('requestCache'));
 	}
-	await ctx.get('adminService').auditService.createAuditLog({
-		adminUserId: ctx.get('adminUserId'),
+	await recordAdminWrite(ctx, {
 		targetType: 'user',
 		targetId: user.id,
 		action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
-		auditLogReason: ctx.get('auditLogReason'),
 	});
 }

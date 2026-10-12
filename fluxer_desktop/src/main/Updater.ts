@@ -1,6 +1,9 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage as getErrorMessage} from '@electron/common/ErrorMessage';
 import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {compareShellVersions} from '@electron/main/ModuleVersion';
 import {MANUAL_DESKTOP_FORMATS, type ManualDesktopFormat} from '@electron/main/ShellDownloadFormats';
 import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {
@@ -48,46 +51,9 @@ function send(win: BrowserWindow | null, event: UpdaterEvent) {
 	win?.webContents.send('updater-event', event);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function getErrorMessage(error: unknown): string {
-	if (error instanceof Error) {
-		return error.message;
-	}
-	return String(error);
-}
-
 let manualLatestCache: {at: number; info: ManualLatestInfo} | null = null;
 
 const MANUAL_CACHE_TTL_MS = 5 * 60 * 1000;
-
-function parseSemverTuple(input: string): [number, number, number, string] {
-	const trimmed = input.trim().replace(/^v/, '');
-	const [core, ...preParts] = trimmed.split('-');
-	const pre = preParts.join('-');
-	const segments = core.split('.').map((part) => Number.parseInt(part, 10));
-	const [major = 0, minor = 0, patch = 0] = segments;
-	return [
-		Number.isFinite(major) ? major : 0,
-		Number.isFinite(minor) ? minor : 0,
-		Number.isFinite(patch) ? patch : 0,
-		pre,
-	];
-}
-
-function compareVersions(a: string, b: string): number {
-	const [aMaj, aMin, aPat, aPre] = parseSemverTuple(a);
-	const [bMaj, bMin, bPat, bPre] = parseSemverTuple(b);
-	if (aMaj !== bMaj) return aMaj < bMaj ? -1 : 1;
-	if (aMin !== bMin) return aMin < bMin ? -1 : 1;
-	if (aPat !== bPat) return aPat < bPat ? -1 : 1;
-	if (aPre === bPre) return 0;
-	if (!aPre) return 1;
-	if (!bPre) return -1;
-	return aPre < bPre ? -1 : 1;
-}
 
 function parseManualLatestFiles(value: unknown): Partial<Record<ManualDesktopFormat, ManualLatestFile>> {
 	if (!isRecord(value)) {
@@ -142,7 +108,7 @@ export async function findNewerManualShell(): Promise<ManualLatestInfo | null> {
 		return null;
 	}
 	const latest = await fetchManualLatest({forceRefresh: true});
-	return compareVersions(latest.version, app.getVersion()) > 0 ? latest : null;
+	return compareShellVersions(latest.version, app.getVersion()) > 0 ? latest : null;
 }
 
 function sendManualUpdateAvailable(
@@ -165,7 +131,7 @@ async function checkManualUpdate(context: UpdaterContext, getMainWindow: () => B
 	try {
 		const latest = await fetchManualLatest({forceRefresh: context === 'user'});
 		const current = app.getVersion();
-		if (compareVersions(latest.version, current) > 0) {
+		if (compareShellVersions(latest.version, current) > 0) {
 			sendManualUpdateAvailable(getMainWindow, context, latest);
 		} else {
 			send(getMainWindow(), {type: 'not-available', context});

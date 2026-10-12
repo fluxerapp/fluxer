@@ -2,9 +2,9 @@
 
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import type {ThemeVariableKind} from '@app/features/theme/variables/ThemeVariableManifest';
 import styles from '@app/features/theme_studio/ui/StudioToken.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import type {ThemeVariableKind} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeConstants';
 import {
 	cssColorStringToHex,
 	stripCssColorPriority,

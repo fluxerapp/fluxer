@@ -3,61 +3,12 @@
 import {createUserID} from '@app/api/BrandedTypes';
 import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import type {User} from '@app/api/models/User';
-import {BatchRecordingKVProvider} from '@app/api/test/mocks/BatchRecordingKVProvider';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
-import type {IKVPipeline} from '@pkgs/kv_client/src/IKVProvider';
+import {FanoutRecordingKVProvider} from '@pkgs/kv_client/src/testing/FanoutRecordingKVProvider';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const REBUILD_KV_BATCH_SIZE = 1000;
 const MAX_CONCURRENT_ROUND_TRIPS = 16;
-
-class FanoutRecordingKVProvider extends BatchRecordingKVProvider {
-	inFlight = 0;
-	peakInFlight = 0;
-	failingKey: string | null = null;
-
-	private insidePipeline = 0;
-
-	override pipeline(): IKVPipeline {
-		const inner = super.pipeline();
-		return {
-			...inner,
-			exec: async () =>
-				await this.trackRoundTrip(async () => {
-					this.insidePipeline += 1;
-					try {
-						return await inner.exec();
-					} finally {
-						this.insidePipeline -= 1;
-					}
-				}),
-		};
-	}
-
-	override async setex(key: string, ttlSeconds: number, value: string): Promise<void> {
-		if (key === this.failingKey) {
-			throw new Error('write rejected');
-		}
-		if (this.insidePipeline > 0) {
-			await super.setex(key, ttlSeconds, value);
-			return;
-		}
-		await this.trackRoundTrip(async () => {
-			await super.setex(key, ttlSeconds, value);
-		});
-	}
-
-	private async trackRoundTrip<T>(run: () => Promise<T>): Promise<T> {
-		this.inFlight += 1;
-		this.peakInFlight = Math.max(this.peakInFlight, this.inFlight);
-		try {
-			await new Promise((resolve) => setTimeout(resolve, 0));
-			return await run();
-		} finally {
-			this.inFlight -= 1;
-		}
-	}
-}
 
 function mockUserPage(count: number): Array<User> {
 	const lastActiveAt = new Date('2026-06-01T00:00:00.000Z');
@@ -81,7 +32,8 @@ describe('KVActivityTracker rebuild fan out', () => {
 
 		await new KVActivityTracker(kvClient).rebuildActivities();
 
-		expect(kvClient.batches.map((batch) => batch.keys.length)).toEqual([REBUILD_KV_BATCH_SIZE]);
+		expect(kvClient.batches.map((batch) => batch.keys.length)).toEqual([REBUILD_KV_BATCH_SIZE, 1]);
+		expect(kvClient.batches[1]?.keys).toEqual(['activity_tracker:state_version']);
 		expect(kvClient.peakInFlight).toBe(1);
 	});
 
@@ -93,7 +45,10 @@ describe('KVActivityTracker rebuild fan out', () => {
 
 		expect(kvClient.peakInFlight).toBeLessThanOrEqual(MAX_CONCURRENT_ROUND_TRIPS);
 		expect(kvClient.crossSlotBatches()).toEqual([]);
-		expect(kvClient.batches.flatMap((batch) => batch.keys).length).toBe(REBUILD_KV_BATCH_SIZE);
+		expect(
+			kvClient.batches.flatMap((batch) => batch.keys).filter((key) => key.startsWith('user_activity:')).length,
+		).toBe(REBUILD_KV_BATCH_SIZE);
+		expect(kvClient.batches.at(-1)?.keys).toEqual(['activity_tracker:state_version']);
 		expect(await kvClient.get(`user_activity:${users[0].id}`)).toBe(users[0].lastActiveAt?.getTime().toString());
 	});
 
@@ -103,5 +58,6 @@ describe('KVActivityTracker rebuild fan out', () => {
 		kvClient.failingKey = `user_activity:${users[0].id}`;
 
 		await expect(new KVActivityTracker(kvClient).rebuildActivities()).rejects.toThrow('write rejected');
+		expect(await kvClient.get('activity_tracker:state_version')).toBeNull();
 	});
 });

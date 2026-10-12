@@ -9,6 +9,7 @@ import SearchEngine from '@app/features/search/state/SearchEngine';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import {ADD_SEARCH_ENGINE_DESCRIPTOR, NAME_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -23,10 +24,7 @@ const ADD_TRANSLATION_PROVIDER_DESCRIPTOR = msg({
 	message: 'Add translation provider',
 	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
 });
-const ADD_SEARCH_ENGINE_DESCRIPTOR = msg({
-	message: 'Add search engine',
-	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
-});
+
 const EDIT_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR = msg({
 	message: 'Edit reverse image search engine',
 	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
@@ -73,10 +71,7 @@ const URL_PATTERN_MUST_BE_A_VALID_URL_DESCRIPTOR = msg({
 	message: 'URL pattern must be a valid URL.',
 	comment: 'Description text in the add custom search engine modal.',
 });
-const NAME_DESCRIPTOR = msg({
-	message: 'Name',
-	comment: 'Short label in the add custom search engine modal. Keep it concise.',
-});
+
 const MY_REVERSE_IMAGE_SEARCH_DESCRIPTOR = msg({
 	message: 'My reverse image search',
 	comment: 'Label in the add custom search engine modal.',

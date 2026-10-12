@@ -4,37 +4,16 @@ import {createChannelID, createMessageID, createUserID, type MessageID} from '@a
 import {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
 import {MessageDeletionRepository} from '@app/api/channel/repositories/message/MessageDeletionRepository';
 import {setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
-import type {KvQueryMeta} from '@app/api/database/CassandraTypes';
 import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import {Messages} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-class BatchRecordingCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
-	readonly batchedQueries: Array<string> = [];
-
-	override async executeBatch(queries: Array<{query: string; params: object; meta?: KvQueryMeta}>): Promise<void> {
-		for (const {query} of queries) {
-			this.batchedQueries.push(query);
-		}
-		await super.executeBatch(queries);
-	}
-
-	override reset(): void {
-		super.reset();
-		this.batchedQueries.length = 0;
-	}
-
-	countReactionDeletes(): number {
-		return this.batchedQueries.filter((query) => /^\s*DELETE FROM message_reactions\b/.test(query)).length;
-	}
-}
-
 const CHANNEL_ID = createChannelID(10n);
 const AUTHOR_ID = createUserID(20n);
 
-let executor: BatchRecordingCassandraQueryExecutor;
+let executor: InMemoryCassandraQueryExecutor;
 
 function buildMessageRow(messageId: MessageID, hasReaction: boolean | null): MessageRow {
 	return {
@@ -75,7 +54,7 @@ function createRepository(): MessageDeletionRepository {
 
 describe('MessageDeletionRepository reaction tombstones', () => {
 	beforeEach(() => {
-		executor = new BatchRecordingCassandraQueryExecutor();
+		executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 	});
 	afterEach(() => {
@@ -86,23 +65,23 @@ describe('MessageDeletionRepository reaction tombstones', () => {
 		const messageId = createMessageID(100n);
 		await seedMessage(messageId, false);
 		await createRepository().deleteMessage(CHANNEL_ID, messageId, AUTHOR_ID);
-		expect(executor.countReactionDeletes()).toBe(0);
+		expect(executor.countStatements('delete:message_reactions')).toBe(0);
 	});
 	it('still deletes reactions when the message has one', async () => {
 		const messageId = createMessageID(101n);
 		await seedMessage(messageId, true);
 		await createRepository().deleteMessage(CHANNEL_ID, messageId, AUTHOR_ID);
-		expect(executor.countReactionDeletes()).toBe(1);
+		expect(executor.countStatements('delete:message_reactions')).toBe(1);
 	});
 	it('still deletes reactions when the message predates the has_reaction column', async () => {
 		const messageId = createMessageID(102n);
 		await seedMessage(messageId, null);
 		await createRepository().deleteMessage(CHANNEL_ID, messageId, AUTHOR_ID);
-		expect(executor.countReactionDeletes()).toBe(1);
+		expect(executor.countStatements('delete:message_reactions')).toBe(1);
 	});
 	it('still deletes reactions when the message row is gone', async () => {
 		await createRepository().deleteMessage(CHANNEL_ID, createMessageID(103n), AUTHOR_ID);
-		expect(executor.countReactionDeletes()).toBe(1);
+		expect(executor.countStatements('delete:message_reactions')).toBe(1);
 	});
 	it('only deletes reactions for the reacted messages in a bulk delete', async () => {
 		const unreacted = [createMessageID(200n), createMessageID(201n), createMessageID(202n)];
@@ -114,6 +93,6 @@ describe('MessageDeletionRepository reaction tombstones', () => {
 		await seedMessage(reacted, true);
 		await seedMessage(legacy, null);
 		await createRepository().bulkDeleteMessages(CHANNEL_ID, [...unreacted, reacted, legacy]);
-		expect(executor.countReactionDeletes()).toBe(2);
+		expect(executor.countStatements('delete:message_reactions')).toBe(2);
 	});
 });

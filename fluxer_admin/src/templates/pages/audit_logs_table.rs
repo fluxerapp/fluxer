@@ -10,7 +10,7 @@ use crate::{
         resource_link::{ResourceType, resource_link},
         table::{table_body, table_cell, table_head, table_header_cell, table_row},
     },
-    utils::{bigint::format_discriminator, user_tag::user_tag},
+    utils::{bigint::format_discriminator, user_tag::display_with_tag},
 };
 use maud::{Markup, html};
 
@@ -43,19 +43,12 @@ fn type_label(target_type: &str) -> String {
 }
 
 fn user_label(user: &AuditLogUserSummary) -> String {
-    let tag = user_tag(
+    display_with_tag(
+        user.global_name.as_deref(),
         &user.username,
         &format_discriminator(&user.discriminator),
         false,
-    );
-    match user
-        .global_name
-        .as_ref()
-        .filter(|value| !value.trim().is_empty())
-    {
-        Some(global_name) => format!("{global_name} ({tag})"),
-        None => tag,
-    }
+    )
 }
 
 fn channel_label(channel: &AuditLogChannelSummary) -> String {

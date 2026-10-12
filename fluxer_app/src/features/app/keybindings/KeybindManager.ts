@@ -65,7 +65,6 @@ import Keybind, {
 } from '@app/features/input/state/InputKeybind';
 import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUtils';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
 import {shouldUseKeyboardShortcutsOverlayFallbackFromEvent} from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
 import {jsKeyToUiohookKeycode} from '@app/features/input/utils/UiohookKeycodes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -75,7 +74,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
-import NativePermission from '@app/features/permissions/system/state/NativePermission';
+import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import {ensureMacPermission} from '@app/features/permissions/system/utils/MacPermissionGate';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -102,6 +101,7 @@ import type {
 } from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 import type {I18n} from '@lingui/core';
 import CombokeysImport from 'combokeys';
 import {autorun, compareStructural, computed, reaction} from 'mobx';
@@ -475,18 +475,18 @@ class KeybindManager {
 		if (this.inputMonitoringHookStatus === 'granted') return true;
 		const electronApi = getElectronAPI();
 		if (await electronApi?.checkInputMonitoringAccess?.()) {
-			NativePermission.setInputMonitoringStatus('granted');
+			MacPermissions.applyPermissionResult('input-monitoring', 'granted');
 			this.inputMonitoringHookStatus = 'granted';
 			return true;
 		}
 		const result = await ensureMacPermission('input-monitoring', {behavior: 'passive'});
 		switch (result) {
 			case 'granted':
-				NativePermission.setInputMonitoringStatus('granted');
+				MacPermissions.applyPermissionResult('input-monitoring', 'granted');
 				this.inputMonitoringHookStatus = 'granted';
 				return true;
 			case 'denied':
-				NativePermission.setInputMonitoringStatus('denied');
+				MacPermissions.applyPermissionResult('input-monitoring', 'denied');
 				this.inputMonitoringHookStatus = 'denied';
 				return false;
 			case 'unsupported-platform':
@@ -1132,7 +1132,7 @@ class KeybindManager {
 	private localKeyEventMatchesBinding(binding: HoldBindingRuntime, event: KeyboardEvent): boolean {
 		const expectedCode = binding.combo.code ?? null;
 		const expectedKey = binding.combo.key ?? null;
-		if (shouldPreferLayoutKeyForShortcut(binding.combo) && expectedKey) {
+		if (shouldPreferLayoutKey(binding.combo) && expectedKey) {
 			if (normalizeKeyboardShortcutKey(event.key) !== normalizeKeyboardShortcutKey(expectedKey)) return false;
 		} else if (expectedCode && event.code !== expectedCode) {
 			return false;

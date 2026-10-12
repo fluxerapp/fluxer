@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {DiagnosticsPort} from '@fluxer/voice_engine_v2';
+import type {DiagnosticsPort} from '@fluxer/voice_engine_v2/src/ports';
 
 const VOICE_ENGINE_V2_DIAGNOSTICS_CODE_MAX_LENGTH = 128;
 const VOICE_ENGINE_V2_DIAGNOSTICS_MESSAGE_MAX_LENGTH = 4096;

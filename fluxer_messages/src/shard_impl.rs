@@ -9,7 +9,7 @@ use crate::types::{
     ApiMessageAttachmentResponse, ApiMessageCallResponse, ApiMessageEmbedChildResponse,
     ApiMessageEmbedResponse, ApiMessageReactionResponse, ApiMessageReferenceResponse,
     ApiMessageResponse, ApiMessageSnapshotResponse, ApiMessageStickerResponse,
-    ApiReactionEmojiResponse, ApiUserPartialResponse, Message, MessageAttachment, MessageCall,
+    ApiReactionEmojiResponse, ApiUserPartial, Message, MessageAttachment, MessageCall,
     MessageEmbed, MessageEmbedAuthor, MessageEmbedChild, MessageEmbedField, MessageEmbedFooter,
     MessageEmbedMedia, MessageEmbedProvider, MessageReference, MessageRequest, MessageResponse,
     MessageSnapshot, MessageStickerItem,
@@ -17,7 +17,8 @@ use crate::types::{
 use crate::udt;
 use base64::prelude::{BASE64_STANDARD, Engine};
 use chrono::{DateTime, Utc};
-use fluxer_common::user_flags::{USER_FLAG_STAFF, visible_user_flags};
+use fluxer_common::time::{unix_millis, unix_seconds};
+use fluxer_common::user_partial::{FLUXER_SYSTEM_USER_ID, UserPartialFields, fluxer_system_user};
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::transport::Transport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
@@ -34,7 +35,6 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 #[cfg(feature = "scylla")]
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
 const BUCKET_DURATION_MS: i64 = 864_000_000;
@@ -93,11 +93,6 @@ const MESSAGE_TYPE_THREAD_CREATED: i32 = 18;
 const THREAD_MESSAGE_FLAG_MASK: i64 = 0x120;
 const THREAD_FEATURE_CHANNEL_TYPES: [i32; 5] = [10, 11, 12, 15, 16];
 const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG: i32 = 1 << 30;
-#[cfg(test)]
-const USER_FLAG_DELETED: i64 = 1_i64 << 34;
-const FLUXER_SYSTEM_USER_ID: i64 = 0;
-const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
-const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
@@ -427,7 +422,7 @@ impl ResponseBuildOptions {
 
 #[derive(Debug, Default)]
 struct ResponseContext {
-    users: HashMap<i64, ApiUserPartialResponse>,
+    users: HashMap<i64, ApiUserPartial>,
     reactions: HashMap<i64, Vec<ApiMessageReactionResponse>>,
     referenced_messages: HashMap<(i64, i64), Message>,
     attachment_decay: HashMap<i64, DateTime<Utc>>,
@@ -1551,11 +1546,7 @@ impl<T: Transport> MessagesShard<T> {
         }
     }
 
-    fn resolve_author(
-        &self,
-        message: &Message,
-        context: &ResponseContext,
-    ) -> ApiUserPartialResponse {
+    fn resolve_author(&self, message: &Message, context: &ResponseContext) -> ApiUserPartial {
         if let Some(author_id) = message.author_id {
             return context
                 .users
@@ -1566,7 +1557,7 @@ impl<T: Transport> MessagesShard<T> {
         if let (Some(webhook_id), Some(webhook_name)) =
             (message.webhook_id, message.webhook_name.clone())
         {
-            return ApiUserPartialResponse {
+            return ApiUserPartial {
                 id: webhook_id.to_string(),
                 username: webhook_name,
                 discriminator: "0000".to_owned(),
@@ -1593,14 +1584,14 @@ impl<T: Transport> MessagesShard<T> {
         let filename = attachment.filename.clone().unwrap_or_default();
         let decay = context.attachment_decay.get(&attachment_id);
         let expired =
-            decay.is_some_and(|expires_at| expires_at.timestamp_millis() <= now_epoch_millis());
+            decay.is_some_and(|expires_at| expires_at.timestamp_millis() <= unix_millis());
         let url = (!expired).then(|| {
             attachment_cdn_url(
                 channel_id,
                 attachment_id,
                 &filename,
                 options,
-                now_epoch_secs(),
+                unix_seconds(),
             )
         });
         let content_type = attachment.content_type.clone().unwrap_or_else(|| {
@@ -2786,20 +2777,6 @@ impl<T: Transport> ShardService for MessagesShard<T> {
     }
 }
 
-fn now_epoch_millis() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as i64
-}
-
-fn now_epoch_secs() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs()
-}
-
 fn message_row_key(channel_id: i64, bucket: i32, message_id: i64) -> anyhow::Result<String> {
     postgres::kv_key(&[
         KeyPart::BigInt(channel_id),
@@ -2963,11 +2940,7 @@ fn snowflake_to_bucket(snowflake: i64) -> i32 {
 }
 
 fn current_bucket() -> i32 {
-    let now_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as i64;
-    epoch_millis_to_bucket(now_ms)
+    epoch_millis_to_bucket(unix_millis())
 }
 
 fn epoch_millis_to_iso(epoch_millis: i64) -> String {
@@ -3163,45 +3136,26 @@ fn collect_user_ids_from_embed_child(embed: &MessageEmbedChild, target: &mut Has
     target.extend(mentions.users);
 }
 
-fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartialResponse {
-    if partial.user_id == FLUXER_SYSTEM_USER_ID {
-        return fluxer_system_user();
-    }
-    let flags = partial.flags.unwrap_or_default();
-    ApiUserPartialResponse {
-        id: partial.user_id.to_string(),
+fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartial {
+    ApiUserPartial::from(UserPartialFields {
+        user_id: partial.user_id,
         username: partial.username,
-        discriminator: format!("{:04}", partial.discriminator),
+        discriminator: partial.discriminator,
         global_name: partial.global_name,
-        avatar: partial.avatar_hash,
+        avatar_hash: partial.avatar_hash,
         avatar_color: partial.avatar_color,
-        bot: partial.bot.filter(|bot| *bot),
-        system: partial.system.filter(|system| *system),
-        flags: i64::from(visible_user_flags(flags)),
-        mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
-    }
+        bot: partial.bot,
+        system: partial.system,
+        flags: partial.flags,
+        mention_flags: partial.mention_flags,
+    })
 }
 
-fn fluxer_system_user() -> ApiUserPartialResponse {
-    ApiUserPartialResponse {
-        id: FLUXER_SYSTEM_USER_ID.to_string(),
-        username: FLUXER_SYSTEM_USERNAME.to_owned(),
-        discriminator: FLUXER_SYSTEM_DISCRIMINATOR.to_owned(),
-        global_name: None,
-        avatar: None,
-        avatar_color: None,
-        bot: Some(true),
-        system: Some(true),
-        flags: USER_FLAG_STAFF,
-        mention_flags: None,
-    }
-}
-
-fn deleted_user(user_id: i64) -> ApiUserPartialResponse {
+fn deleted_user(user_id: i64) -> ApiUserPartial {
     if user_id == FLUXER_SYSTEM_USER_ID {
         return fluxer_system_user();
     }
-    ApiUserPartialResponse {
+    ApiUserPartial {
         id: user_id.to_string(),
         username: DELETED_USER_USERNAME.to_owned(),
         discriminator: "0000".to_owned(),
@@ -3378,23 +3332,6 @@ fn attachment_cdn_url(
     )
 }
 
-fn is_own_endpoint(media_endpoint: &str, target: &Url) -> bool {
-    let Ok(base) = Url::parse(media_endpoint) else {
-        return false;
-    };
-    let same_host = match (base.host_str(), target.host_str()) {
-        (Some(base_host), Some(target_host)) => base_host.eq_ignore_ascii_case(target_host),
-        _ => false,
-    };
-    same_host
-        && base.scheme().eq_ignore_ascii_case(target.scheme())
-        && base.port_or_known_default() == target.port_or_known_default()
-        && target
-            .path()
-            .strip_prefix(base.path().trim_end_matches('/'))
-            .is_some_and(|rest| rest.starts_with('/'))
-}
-
 fn raw_url_path(url: &str) -> &str {
     let Some((_, after_scheme)) = url.split_once("://") else {
         return "";
@@ -3457,13 +3394,13 @@ fn sign_own_url(input_url: &str, options: &ResponseBuildOptions) -> String {
     sign_own_media_url(
         input_url,
         options.media_endpoint.trim_end_matches('/'),
-        now_epoch_secs(),
+        unix_seconds(),
         &options.attachment_url_secret,
     )
 }
 
 fn external_media_proxy_url(input_url: &str, options: &ResponseBuildOptions) -> String {
-    media_proxy_url_at(input_url, options, now_epoch_secs())
+    media_proxy_url_at(input_url, options, unix_seconds())
 }
 
 fn media_proxy_url_at(input_url: &str, options: &ResponseBuildOptions, now_secs: u64) -> String {
@@ -3472,7 +3409,7 @@ fn media_proxy_url_at(input_url: &str, options: &ResponseBuildOptions, now_secs:
         Ok(url) => url,
         Err(_) => return input_url.to_owned(),
     };
-    if is_own_endpoint(media_endpoint, &parsed_url) {
+    if fluxer_common::external_media_path::is_own_media_url(media_endpoint, &parsed_url) {
         return sign_own_media_url(
             input_url,
             media_endpoint,
@@ -3732,31 +3669,6 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn id_zero_is_always_fluxer_system_user() {
-        let mapped = map_user_partial(UserPartialServiceResponse {
-            user_id: 0,
-            username: DELETED_USER_USERNAME.to_owned(),
-            discriminator: 0,
-            global_name: Some(DELETED_USER_GLOBAL_NAME.to_owned()),
-            avatar_hash: None,
-            bot: Some(true),
-            system: Some(true),
-            flags: Some(USER_FLAG_DELETED),
-            avatar_color: None,
-            mention_flags: None,
-            content_hidden_since: None,
-        });
-
-        assert_eq!(mapped.id, "0");
-        assert_eq!(mapped.username, "Fluxer");
-        assert_eq!(mapped.discriminator, "0000");
-        assert_eq!(mapped.global_name, None);
-        assert_eq!(mapped.bot, Some(true));
-        assert_eq!(mapped.system, Some(true));
-        assert_eq!(mapped.flags, USER_FLAG_STAFF);
-    }
-
-    #[test]
     fn missing_id_zero_fallback_is_fluxer_system_user() {
         let mapped = deleted_user(0);
 
@@ -3779,30 +3691,6 @@ mod tests {
         );
         assert_eq!(mapped.bot, None);
         assert_eq!(mapped.system, None);
-    }
-
-    #[test]
-    fn deleted_flagged_user_partials_are_not_synthetically_masked() {
-        let mapped = map_user_partial(UserPartialServiceResponse {
-            user_id: 42,
-            username: "Ada".to_owned(),
-            discriminator: 7,
-            global_name: Some("Ada Lovelace".to_owned()),
-            avatar_hash: Some("avatar_hash".to_owned()),
-            bot: Some(false),
-            system: Some(false),
-            flags: Some(USER_FLAG_DELETED),
-            avatar_color: Some(0x336699),
-            mention_flags: None,
-            content_hidden_since: None,
-        });
-
-        assert_eq!(mapped.id, "42");
-        assert_eq!(mapped.username, "Ada");
-        assert_eq!(mapped.discriminator, "0007");
-        assert_eq!(mapped.global_name, Some("Ada Lovelace".to_owned()));
-        assert_eq!(mapped.avatar, Some("avatar_hash".to_owned()));
-        assert_eq!(mapped.flags, 0);
     }
 
     fn reaction(
@@ -3960,24 +3848,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn bucket_page_limit_is_large_enough_for_sparse_channels() {
-        assert_eq!(bucket_page_limit(0), 32);
-        assert_eq!(bucket_page_limit(25), 32);
-        assert_eq!(bucket_page_limit(50), 50);
-        assert_eq!(bucket_page_limit(500), BUCKET_INDEX_PAGE_SIZE);
-    }
-
-    #[test]
-    fn bucket_wave_ramp_is_bounded_by_scan_concurrency() {
-        assert_eq!(next_bucket_wave(BUCKET_SCAN_WAVE), BUCKET_SCAN_WAVE * 2);
-        assert_eq!(
-            next_bucket_wave(BUCKET_SCAN_CONCURRENCY),
-            BUCKET_SCAN_CONCURRENCY
-        );
-        assert_eq!(next_bucket_wave(usize::MAX), BUCKET_SCAN_CONCURRENCY);
-    }
-
     #[tokio::test]
     async fn bucket_scan_stops_once_the_newest_buckets_fill_the_page() {
         let buckets = (0..50).map(|index| 500 - index).collect::<Vec<i32>>();
@@ -4083,24 +3953,6 @@ mod tests {
         assert_eq!(snowflake_to_bucket(1_474_193_838_282_432_581), 406);
         assert_eq!(snowflake_to_bucket(1_488_946_116_942_273_651), 410);
         assert_eq!(snowflake_to_bucket(1_509_256_674_043_502_592), 416);
-    }
-
-    #[test]
-    fn message_id_descending_order_matches_api_contract() {
-        let mut ids = [
-            1_506_928_431_237_816_380_i64,
-            1_507_125_930_562_373_970_i64,
-            1_507_125_959_675_038_036_i64,
-        ];
-        ids.sort_unstable_by(|left, right| right.cmp(left));
-        assert_eq!(
-            ids,
-            [
-                1_507_125_959_675_038_036_i64,
-                1_507_125_930_562_373_970_i64,
-                1_506_928_431_237_816_380_i64,
-            ]
-        );
     }
 
     #[test]
@@ -4633,7 +4485,7 @@ mod tests {
             &url,
             &unsigned_attachment_url(&options),
             &options,
-            now_epoch_secs(),
+            unix_seconds(),
         );
     }
 
@@ -4700,7 +4552,7 @@ mod tests {
         let context = ResponseContext {
             attachment_decay: [(
                 SIGNED_ATTACHMENT_ID,
-                DateTime::<Utc>::from_timestamp_millis(now_epoch_millis() - 1_000).unwrap(),
+                DateTime::<Utc>::from_timestamp_millis(unix_millis() - 1_000).unwrap(),
             )]
             .into_iter()
             .collect(),
@@ -4737,7 +4589,7 @@ mod tests {
         let shard = MessagesShard {
             storage: MessagesStorage::Expiries(std::sync::Arc::new(HashMap::from([(
                 SIGNED_ATTACHMENT_ID,
-                DateTime::<Utc>::from_timestamp_millis(now_epoch_millis() - 1_000).unwrap(),
+                DateTime::<Utc>::from_timestamp_millis(unix_millis() - 1_000).unwrap(),
             )]))),
             transport: InMemoryTransport::new(),
         };
@@ -4796,7 +4648,7 @@ mod tests {
 
         let mapped = shard.map_embed(&embed, &options);
 
-        let now = now_epoch_secs();
+        let now = unix_seconds();
         let base = mapped.base;
         let author = base.author.expect("the embed has an author");
         let provider = base.provider.expect("the embed has a provider");
@@ -5724,7 +5576,7 @@ mod tests {
                 &storage_key,
                 Some(query),
                 &[&options.attachment_url_secret],
-                now_epoch_secs(),
+                unix_seconds(),
             )
             .verdict,
             "{url}"

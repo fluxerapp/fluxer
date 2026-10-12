@@ -7,13 +7,13 @@ import {
 	buildVoiceParticipantIdentity,
 	parseVoiceParticipantIdentity,
 } from '@app/features/voice/utils/VoiceParticipantIdentity';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
 import type {
-	VoiceEngineV2Controller,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
-	VoiceEngineV2Snapshot,
 	VoiceEngineV2WatchedStream,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import type {Participant, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceMediaEngineBridge');

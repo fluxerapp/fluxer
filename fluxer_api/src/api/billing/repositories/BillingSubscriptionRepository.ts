@@ -6,13 +6,8 @@ import {
 	normalizeBillingSubscriptionRow,
 	type StripeSubscriptionPayload,
 } from '@app/api/billing/mappers/StripeToBillingMapper';
-import {
-	buildPatchFromRow,
-	executeBillingVersionedUpdate,
-	isExistingNewer,
-	rowsEquivalent,
-} from '@app/api/billing/repositories/BillingRepoHelpers';
-import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {hydrateByRefs, upsertVersionedMirrorRow} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {BillingSubscriptionRow} from '@app/api/database/types/BillingTypes';
 import {BILLING_SUBSCRIPTION_COLUMNS} from '@app/api/database/types/BillingTypes';
 import {BillingSubscriptions, BillingSubscriptionsByCustomer, BillingSubscriptionsByUser} from '@app/api/Tables';
@@ -38,22 +33,16 @@ export class BillingSubscriptionRepository {
 	}
 
 	async listByCustomer(customerId: string): Promise<Array<BillingSubscriptionRow>> {
-		const refs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_BY_CUSTOMER, {customer_id: customerId});
-		if (refs.length === 0) return [];
-		const ids = refs.map((r) => r.provider_id);
-		const rows = await fetchMany<BillingSubscriptionRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		const rows = await hydrateByRefs<BillingSubscriptionRow>(
+			FETCH_BY_CUSTOMER,
+			{customer_id: customerId},
+			FETCH_BY_PROVIDER_IDS,
+		);
 		return rows.map(normalizeBillingSubscriptionRow);
 	}
 
 	async listByUser(userId: bigint): Promise<Array<BillingSubscriptionRow>> {
-		const refs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_BY_USER, {user_id: userId});
-		if (refs.length === 0) return [];
-		const ids = refs.map((r) => r.provider_id);
-		const rows = await fetchMany<BillingSubscriptionRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		const rows = await hydrateByRefs<BillingSubscriptionRow>(FETCH_BY_USER, {user_id: userId}, FETCH_BY_PROVIDER_IDS);
 		return rows.map(normalizeBillingSubscriptionRow);
 	}
 
@@ -66,25 +55,16 @@ export class BillingSubscriptionRepository {
 	}> {
 		const mapped = mapStripeSubscriptionToRow(s, hints);
 		const existing = await this.findById(mapped.primary.provider_id);
-		if (isExistingNewer(existing, mapped.primary)) {
-			return {changed: false, row: existing!};
-		}
-		if (existing && rowsEquivalent(existing, mapped.primary, ['mirrored_at', 'version'])) {
-			return {changed: false, row: existing};
-		}
-		const result = await executeBillingVersionedUpdate<BillingSubscriptionRow, 'provider_id'>(
-			async () => existing,
-			(current) => ({
-				pk: {provider_id: mapped.primary.provider_id},
-				patch: buildPatchFromRow(mapped.primary, current, BILLING_SUBSCRIPTION_COLUMNS, ['provider_id']),
-			}),
+		const result = await upsertVersionedMirrorRow(
 			BillingSubscriptions,
-			{initialData: existing},
+			BILLING_SUBSCRIPTION_COLUMNS,
+			existing,
+			mapped.primary,
 		);
-		await upsertOne(BillingSubscriptionsByCustomer.upsertAll(mapped.byCustomer));
-		if (mapped.byUser) {
-			await upsertOne(BillingSubscriptionsByUser.upsertAll(mapped.byUser));
+		if (result.changed) {
+			await upsertOne(BillingSubscriptionsByCustomer.upsertAll(mapped.byCustomer));
+			if (mapped.byUser) await upsertOne(BillingSubscriptionsByUser.upsertAll(mapped.byUser));
 		}
-		return {changed: true, row: {...mapped.primary, version: result.finalVersion}};
+		return result;
 	}
 }

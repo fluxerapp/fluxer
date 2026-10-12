@@ -11,13 +11,13 @@ import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
 import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
 const FEED_BUCKET = 'fluxer-geoip';
@@ -27,18 +27,6 @@ const ADMIN_BAZAAR_SHA = 'b2'.repeat(32);
 const ADMIN_MANUAL_SHA = 'c3'.repeat(32);
 const UNOWNED_NCMEC_SHA = 'd4'.repeat(32);
 const ADMIN_USER_ID = 42n;
-
-function createHelpers(overrides: Partial<WorkerTaskHelpers> = {}): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 4242n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-		...overrides,
-	};
-}
 
 function fileShaRow(sha256Hex: string, category: string, addedBy: bigint | null): BannedFileShaRow {
 	return {
@@ -102,26 +90,12 @@ describe('blocklist feeds turned off', () => {
 		await seedFileShas();
 		Config.blocklistFeeds.enabled = false;
 
-		await syncFileShaBlocklists({}, createHelpers());
+		await syncFileShaBlocklists({}, createTestWorkerHelpers({jobId: 4242n, ...{}}));
 
 		const remaining = (await getAdminRepository().loadAllBannedFileShas()).map((row) => row.sha256_hex).sort();
 		expect(remaining).toEqual([ADMIN_BAZAAR_SHA, ADMIN_MANUAL_SHA, UNOWNED_NCMEC_SHA]);
 		expect(publishCalls()).toEqual([[BANNED_FILE_SHAS_REFRESH_CHANNEL, 'refresh']]);
 		expect(fetchSpy).not.toHaveBeenCalled();
-	});
-
-	it('keeps a file-SHA ban an Admin took over after the purge read the table', async () => {
-		const adminRepository = getAdminRepository();
-		await adminRepository.banFileSha(fileShaRow(FEED_SHA, ContentBlocklistCategory.MALWARE_BAZAAR, null));
-		const staleRows = await adminRepository.loadAllBannedFileShas();
-		await adminRepository.banFileSha(fileShaRow(FEED_SHA, ContentBlocklistCategory.MALWARE_BAZAAR, ADMIN_USER_ID));
-		const staleRead = vi.spyOn(adminRepository, 'loadAllBannedFileShas').mockResolvedValueOnce(staleRows);
-		Config.blocklistFeeds.enabled = false;
-
-		await syncFileShaBlocklists({}, createHelpers());
-
-		staleRead.mockRestore();
-		expect((await adminRepository.loadAllBannedFileShas()).map((row) => row.sha256_hex)).toContain(FEED_SHA);
 	});
 
 	it('file-SHA cache skips feed rows only while feeds are off', async () => {
@@ -147,7 +121,7 @@ describe('blocklist feeds turned off', () => {
 		});
 		Config.blocklistFeeds.enabled = false;
 
-		await syncUrlBlocklists({}, createHelpers());
+		await syncUrlBlocklists({}, createTestWorkerHelpers({jobId: 4242n, ...{}}));
 
 		expect(harness.storageService.deleteObjectSpy).toHaveBeenCalledWith(FEED_BUCKET, FEED_KEY);
 		expect(harness.storageService.hasObject(FEED_BUCKET, FEED_KEY)).toBe(false);
@@ -159,13 +133,17 @@ describe('blocklist feeds turned off', () => {
 		vi.spyOn(harness.storageService, 'deleteObject').mockRejectedValueOnce(
 			Object.assign(new Error('The specified bucket does not exist'), {name: 'NoSuchBucket'}),
 		);
-		await expect(syncUrlBlocklists({}, createHelpers({logger: quietLogger}))).resolves.toBeUndefined();
+		await expect(
+			syncUrlBlocklists({}, createTestWorkerHelpers({jobId: 4242n, ...{logger: quietLogger}})),
+		).resolves.toBeUndefined();
 		expect(quietWarn).not.toHaveBeenCalled();
 
 		const loudLogger = new NoopLogger();
 		const loudWarn = vi.spyOn(loudLogger, 'warn');
 		harness.storageService.configure({shouldFailDelete: true});
-		await expect(syncUrlBlocklists({}, createHelpers({logger: loudLogger}))).resolves.toBeUndefined();
+		await expect(
+			syncUrlBlocklists({}, createTestWorkerHelpers({jobId: 4242n, ...{logger: loudLogger}})),
+		).resolves.toBeUndefined();
 		expect(loudWarn).toHaveBeenCalledTimes(1);
 	});
 

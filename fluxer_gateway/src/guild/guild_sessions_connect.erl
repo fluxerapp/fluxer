@@ -98,7 +98,7 @@ admit_session_connect(UserId, State) ->
 
 -spec admit_existing_member_connect(user_id(), guild_state()) -> admit | reject_not_member.
 admit_existing_member_connect(UserId, State) ->
-    case guild_data_members:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined -> reject_not_member;
         _Member -> admit
     end.
@@ -205,7 +205,7 @@ finalize_connect(SessionId, UserId, GuildId, InitialGuildId, State, CachedGuildS
 build_unavailable_reply(GuildId, State) ->
     Base = #{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true},
     Response =
-        case guild_availability:is_unavailable_hidden_enabled(State) of
+        case guild_availability_check:is_unavailable_hidden_enabled(State) of
             true -> Base#{<<"unavailable_hidden">> => true};
             false -> Base
         end,
@@ -424,7 +424,7 @@ cleanup_session_subscriptions(Session, State) ->
     SessionId = maps:get(session_id, Session),
     GuildId = require_guild_id(maps:get(id, State)),
     passive_sync_registry:delete(SessionId, GuildId),
-    State1 = guild_member_list:unsubscribe_session(SessionId, State),
+    State1 = guild_member_list_subscribe:unsubscribe_session(SessionId, State),
     MemberSubs = maps:get(member_subscriptions, State1, guild_subscriptions:init_state()),
     NewMemberSubs = guild_subscriptions:unsubscribe_session(SessionId, MemberSubs),
     State2 = State1#{member_subscriptions => NewMemberSubs},
@@ -566,7 +566,7 @@ lookup_or_compute_viewable(UserId, RoleKey, CacheTab, State) ->
 -spec compute_viewable_channel_map(user_id(), guild_state()) -> map().
 compute_viewable_channel_map(UserId, State) ->
     guild_sessions:build_viewable_channel_map(
-        guild_visibility:get_user_viewable_channels(UserId, State)
+        guild_visibility_channels:get_user_viewable_channels(UserId, State)
     ).
 
 -spec invalidate_viewable_channels_cache(guild_state()) -> ok.

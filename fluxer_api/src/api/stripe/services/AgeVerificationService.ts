@@ -4,10 +4,9 @@ import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
-import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {ensureStripeCustomer} from '@app/api/stripe/StripeCustomer';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {AgeVerificationAlreadyVerifiedError} from '@fluxer/errors/src/domains/payment/AgeVerificationAlreadyVerifiedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -63,14 +62,6 @@ export class AgeVerificationService {
 				success_url: `${Config.endpoints.webApp}/age-verification-callback?status=success`,
 				cancel_url: `${Config.endpoints.webApp}/age-verification-callback?status=cancel`,
 			});
-			try {
-				await getBillingRepository().checkoutSessions.upsertFromStripe(session, {knownUserId: userId});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, sessionId: session.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
 			if (!session.url) {
 				Logger.error({userId, sessionId: session.id}, 'Stripe age verification session missing url');
 				throw new StripeError('Stripe age verification session missing url');
@@ -129,11 +120,7 @@ export class AgeVerificationService {
 			Logger.error({userId}, 'User not found during age verification completion');
 			return;
 		}
-		await this.gatewayService.dispatchPresence({
-			userId: updatedUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		Logger.info({userId}, 'Age verification completed successfully');
 	}
 }

@@ -27,7 +27,7 @@ type UserProfileLoadingSkeletonVariant = 'popout' | 'modal';
 interface UserProfileLoadingSkeletonProps {
 	variant: UserProfileLoadingSkeletonVariant;
 	borderColor?: string;
-	className?: string;
+
 	[themeAttr: `data-flx${string}`]: string | undefined;
 }
 
@@ -339,7 +339,7 @@ const ModalSkeletonContent = () => (
 );
 
 export const UserProfileLoadingSkeleton: React.FC<UserProfileLoadingSkeletonProps> = observer(
-	({variant, borderColor, className, ...props}) => {
+	({variant, borderColor, ...props}) => {
 		const {i18n} = useLingui();
 		const reactId = useId();
 		const maskId = `profile_skeleton_${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -361,7 +361,7 @@ export const UserProfileLoadingSkeleton: React.FC<UserProfileLoadingSkeletonProp
 			: {};
 		return (
 			<div
-				className={clsx(styles.surface, variant === 'modal' ? styles.modal : styles.popout, className)}
+				className={clsx(styles.surface, variant === 'modal' ? styles.modal : styles.popout)}
 				style={style}
 				role="status"
 				aria-label={i18n._(LOADING_PROFILE_DESCRIPTOR)}

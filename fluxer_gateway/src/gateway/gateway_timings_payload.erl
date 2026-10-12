@@ -9,13 +9,13 @@
 
 -spec finalize(term()) -> map().
 finalize(Recorder0) ->
-    Recorder = ensure_map(Recorder0),
+    Recorder = map_utils:ensure_map(Recorder0),
     Trace = sanitize_trace(lists:reverse(ensure_trace(maps:get(trace, Recorder, [])))),
     build_payload(Recorder, Trace, total_us(Recorder, Trace)).
 
 -spec sanitize(term()) -> map().
 sanitize(Timings0) ->
-    Timings = ensure_map(Timings0),
+    Timings = map_utils:ensure_map(Timings0),
     Trace = sanitize_trace(ensure_trace(first_present([<<"trace">>, trace], Timings, []))),
     build_payload(Timings, Trace, sanitized_total_us(Timings, Trace)).
 
@@ -39,12 +39,6 @@ build_payload(Source, Trace, TotalUs) ->
         <<"pod_name">> => recorder_pod_name(Source),
         <<"trace">> => Trace
     }.
-
--spec ensure_map(term()) -> map().
-ensure_map(Value) when is_map(Value) ->
-    Value;
-ensure_map(_) ->
-    #{}.
 
 -spec ensure_trace(term()) -> [map()].
 ensure_trace(Trace) when is_list(Trace) ->

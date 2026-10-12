@@ -21,7 +21,6 @@ import {ChannelViewScaffold} from '@app/features/channel/components/channel_view
 import {useChannelSearchState} from '@app/features/channel/components/channel_view/useChannelSearchState';
 import {useVoiceCallChromePinState} from '@app/features/channel/components/channel_view/useVoiceCallChromePinState';
 import {MatureContentChannelGate} from '@app/features/channel/components/MatureContentChannelGate';
-import {useMessagesBottomBarVisibility} from '@app/features/channel/components/MessagesBottomBarVisibility';
 import {VerificationBarrier} from '@app/features/channel/components/VerificationBarrier';
 import {useChannelPanelVisibility} from '@app/features/channel/hooks/useChannelPanelVisibility';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -204,7 +203,6 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 		activeSearchSegments,
 	} = searchState;
 	const isSearchPanelVisible = isSearchActive && !isMobileLayout;
-	const {onBottomBarVisibilityChange} = useMessagesBottomBarVisibility(channelId);
 	const {
 		showFullscreenView: showVoiceCallFullscreenView,
 		fullscreenRequestNonce: voiceCallFullscreenRequestNonce,
@@ -517,7 +515,6 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 								key={channel.id}
 								channel={channel}
 								allowAutoAck={!isVoiceTextCallExpanded}
-								onBottomBarVisibilityChange={onBottomBarVisibilityChange}
 								data-flx="channel.channel-view.guild-channel-view.messages"
 							/>
 						}
@@ -572,7 +569,6 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 						<Messages
 							key={channel.id}
 							channel={channel}
-							onBottomBarVisibilityChange={onBottomBarVisibilityChange}
 							data-flx="channel.channel-view.guild-channel-view.messages--2"
 						/>
 					}

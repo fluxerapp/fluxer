@@ -4,14 +4,8 @@ import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
-interface MobileLayoutState {
-	navExpanded: boolean;
-	chatExpanded: boolean;
-}
-
 class Location {
 	lastLocation: string | null = null;
-	lastMobileLayoutState: MobileLayoutState | null = null;
 	isHydrated = false;
 
 	constructor() {
@@ -20,7 +14,7 @@ class Location {
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'Location', ['lastLocation', 'lastMobileLayoutState']);
+		await makePersistent(this, 'Location', ['lastLocation']);
 		this.isHydrated = true;
 	}
 
@@ -36,7 +30,6 @@ class Location {
 
 	clearLastLocation(): void {
 		this.lastLocation = null;
-		this.lastMobileLayoutState = null;
 	}
 }
 

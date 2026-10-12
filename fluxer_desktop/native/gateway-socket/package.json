@@ -14,7 +14,6 @@
 		"index.js",
 		"index.d.ts",
 		"loader-diagnostics.cjs",
-		"pure.cjs",
 		"gateway-socket.darwin-x64.node",
 		"gateway-socket.darwin-arm64.node",
 		"gateway-socket.win32-x64-msvc.node",

@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createRoleID,
+	createUserID,
+	type GuildID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	enqueueChannelFollowerRemoval,
@@ -10,6 +18,8 @@ import {
 } from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import {dispatchChannelDelete, dispatchDmChannelDelete} from '@app/api/channel/services/group_dm/GroupDmHelpers';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {dispatchThreadEvents} from '@app/api/channel/services/thread/ThreadDispatch';
 import {
 	loadConvertibleParentThreads,
@@ -25,8 +35,6 @@ import {
 } from '@app/api/channel/services/thread/ThreadParentSettings';
 import {enqueueDeleteChannelThreads} from '@app/api/channel/threads/ThreadJobs';
 import {
-	everEnabled,
-	guildActive,
 	isTainted,
 	THREAD_FEATURE_CHANNEL_TYPES,
 	type ThreadViewer,
@@ -37,17 +45,17 @@ import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ChannelHelpers} from '@app/api/guild/services/channel/ChannelHelpers';
-import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import {requireGuildPermission} from '@app/api/guild/services/GuildMfaEnforcement';
 import {hasThreadPermissionBits, resolveProtectedBitActor} from '@app/api/guild/services/ThreadPermissionBits';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
@@ -70,19 +78,16 @@ import {
 	WebhookTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, clampVoiceChannelBitrate, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {ChannelHasFollowedChannelsError} from '@fluxer/errors/src/domains/channel/ChannelHasFollowedChannelsError';
 import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
-import {MaxCategoryChannelsError} from '@fluxer/errors/src/domains/channel/MaxCategoryChannelsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {CannotExecuteOnDmError} from '@fluxer/errors/src/domains/core/CannotExecuteOnDmError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -122,10 +127,37 @@ function assertOverwriteTarget(channel: Channel, viewer: ThreadViewer | undefine
 }
 
 export class ChannelOperationsService {
+	private async persistOverwritesAndDispatch(
+		channel: Channel,
+		overwrites: NonNullable<Channel['permissionOverwrites']>,
+		previousPermissionOverwrites: Channel['permissionOverwrites'],
+		requestCache: RequestCache,
+		guildId: GuildID,
+	): Promise<void> {
+		const updated = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				permission_overwrites: new Map(
+					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
+				),
+			},
+			channel.toRow(),
+		);
+		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: requestCache});
+		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
+			await this.propagatePermissionsToSyncedChildren({
+				categoryChannel: updated,
+				previousPermissionOverwrites,
+				guildId,
+				requestCache: requestCache,
+			});
+		}
+	}
 	constructor(
 		private channelRepository: ChannelRepository,
 		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
+		private userCacheService: UserCacheService,
 		private channelAuthService: ChannelAuthService,
 		private channelUtilsService: ChannelUtilsService,
 		private voiceRoomStore: IVoiceRoomStore,
@@ -229,17 +261,16 @@ export class ChannelOperationsService {
 		const nextType = resolveNextChannelType(channel, typeConversion ?? null);
 		const guildIdValue = createGuildID(BigInt(guild.id));
 		const parentConfig = await loadThreadParentConfig(this.channelRepository.threads, channel);
-		const parentPatch =
-			threadParent && guildActive(guildIdValue)
-				? await buildThreadParentPatch({
-						channelType: channel.type,
-						guildId: guildIdValue,
-						input: threadParent,
-						current: parentConfig,
-						guildRepository: this.guildRepository,
-						generateId: () => this.snowflakeService.generate(),
-					})
-				: null;
+		const parentPatch = threadParent
+			? await buildThreadParentPatch({
+					channelType: channel.type,
+					guildId: guildIdValue,
+					input: threadParent,
+					current: parentConfig,
+					guildRepository: this.guildRepository,
+					generateId: () => this.snowflakeService.generate(),
+				})
+			: null;
 		contentModerationService.scanText(data.name ?? null, {
 			userId,
 			guildId: guildIdValue,
@@ -414,7 +445,7 @@ export class ChannelOperationsService {
 		const toAnnouncement =
 			nextType === ChannelTypes.GUILD_ANNOUNCEMENT && channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT;
 		const updatedChannel =
-			toAnnouncement || (nextType !== channel.type && everEnabled())
+			toAnnouncement || nextType !== channel.type
 				? await withChannelFollowLock(
 						this.cacheService,
 						channelId,
@@ -438,7 +469,7 @@ export class ChannelOperationsService {
 							retypedThreads = active;
 							return parent;
 						},
-						everEnabled() ? PARENT_CONVERSION_LOCK_TTL_SECONDS : undefined,
+						PARENT_CONVERSION_LOCK_TTL_SECONDS,
 					)
 				: await this.channelRepository.channelData.upsert(updatedChannelData);
 		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && nextType !== ChannelTypes.GUILD_ANNOUNCEMENT) {
@@ -455,7 +486,7 @@ export class ChannelOperationsService {
 		) {
 			try {
 				await this.rateLimitService.clearLimitsByIdentifierPrefix(`slowmode:${channelId}:`);
-				if (everEnabled() && (await isTainted(guildIdValue))) {
+				if (await isTainted(guildIdValue)) {
 					await this.rateLimitService.clearLimitsByIdentifierPrefix(`slowmode-thread:${channelId}:`);
 				}
 			} catch (error) {
@@ -555,7 +586,7 @@ export class ChannelOperationsService {
 			viewer,
 			skipNsfwValidation: true,
 		});
-		if (this.channelAuthService.isPersonalNotesChannel({userId, channelId})) {
+		if (isPersonalNotesChannelId({userId, channelId})) {
 			throw new CannotExecuteOnDmError();
 		}
 		if (guild) {
@@ -569,7 +600,6 @@ export class ChannelOperationsService {
 						...childChannel.toRow(),
 						parent_id: null,
 					});
-					if (THREAD_ONLY_CHANNEL_TYPES.has(updatedChild.type) && !guildActive(guildId)) continue;
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}
 			}
@@ -589,9 +619,14 @@ export class ChannelOperationsService {
 			await this.channelUtilsService.purgeChannelAttachments(channel);
 			await this.channelRepository.messages.deleteAllChannelMessages(channelId);
 			await deleteChannelMessageSearchDocuments(channelId, {context: {source: 'channel_delete'}});
-			await this.channelUtilsService.dispatchChannelDelete({channel, requestCache});
+			await dispatchChannelDelete({
+				gatewayService: this.gatewayService,
+				userCacheService: this.userCacheService,
+				channel,
+				requestCache,
+			});
 			const guildIdValue = createGuildID(BigInt(guild.id));
-			const changes = this.guildAuditLogService.computeChanges(ChannelHelpers.serializeChannelForAudit(channel), null);
+			const changes = this.guildAuditLogService.computeChanges(serializeChannelForAudit(channel), null);
 			const builder = this.guildAuditLogService
 				.createBuilder(guildIdValue, userId)
 				.withAction(AuditLogActionType.CHANNEL_DELETE, channel.id.toString())
@@ -615,7 +650,7 @@ export class ChannelOperationsService {
 				);
 			}
 			await this.channelRepository.channelData.delete(channelId, guildId, channel.type);
-			if (channel.isThreadParent() && everEnabled() && (await isTainted(guildId, {fresh: true}))) {
+			if (channel.isThreadParent() && (await isTainted(guildId, {fresh: true}))) {
 				await enqueueDeleteChannelThreads(guildId, channelId);
 				await this.channelRepository.threads.deleteParentConfig(guildId, channelId);
 			}
@@ -637,7 +672,13 @@ export class ChannelOperationsService {
 			}
 		} else {
 			await this.userRepository.closeDmForUser(userId, channelId);
-			await this.channelUtilsService.dispatchDmChannelDelete({channel, userId, requestCache});
+			await dispatchDmChannelDelete({
+				gatewayService: this.gatewayService,
+				userCacheService: this.userCacheService,
+				channel,
+				userId,
+				requestCache,
+			});
 		}
 	}
 
@@ -706,7 +747,6 @@ export class ChannelOperationsService {
 							]),
 						),
 					});
-					if (THREAD_ONLY_CHANNEL_TYPES.has(updatedChild.type) && !guildActive(guildId)) return;
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}),
 			);
@@ -741,22 +781,6 @@ export class ChannelOperationsService {
 		await this.gatewayService.switchVoiceRegion({guildId, channelId});
 	}
 
-	private async ensureCategoryHasCapacity(params: {guildId: GuildID; categoryId: ChannelID}): Promise<void> {
-		const count = await this.gatewayService.getCategoryChannelCount(params);
-		let maxChannels = MAX_CHANNELS_PER_CATEGORY;
-		const guild = await this.guildRepository.findUnique(params.guildId);
-		const ctx = createLimitMatchContext({user: null, guildFeatures: guild?.features ?? null});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, 'max_channels_per_category', {
-			evaluationContext: 'guild',
-		});
-		if (Number.isFinite(resolved) && resolved >= 0) {
-			maxChannels = Math.floor(resolved);
-		}
-		if (count >= maxChannels) {
-			throw new MaxCategoryChannelsError(maxChannels);
-		}
-	}
-
 	private async validateParentCategory(params: {
 		guildId: GuildID;
 		channel: Channel;
@@ -770,15 +794,14 @@ export class ChannelOperationsService {
 			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENTS);
 		}
 		const guildChannels = await this.channelRepository.channelData.listGuildChannels(params.guildId, 'enrolled');
-		const parentChannel = guildChannels.find((channel) => channel.id === params.parentId);
-		if (!parentChannel) {
-			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.INVALID_PARENT_CHANNEL);
-		}
-		if (parentChannel.type !== ChannelTypes.GUILD_CATEGORY) {
-			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.PARENT_MUST_BE_CATEGORY);
-		}
+		ChannelHelpers.assertValidParentCategory(params.parentId, params.channel.type, guildChannels);
 		if (params.validateCapacity) {
-			await this.ensureCategoryHasCapacity({guildId: params.guildId, categoryId: params.parentId});
+			await ChannelHelpers.assertCategoryCapacity({
+				gatewayService: this.gatewayService,
+				guildRepository: this.guildRepository,
+				limitConfigService: this.limitConfigService,
+				...{guildId: params.guildId, categoryId: params.parentId},
+			});
 		}
 	}
 
@@ -787,20 +810,10 @@ export class ChannelOperationsService {
 		userId: UserID;
 		channelId: ChannelID;
 	}): Promise<void> {
-		const canManageRoles = await this.gatewayService.checkPermission({
-			guildId: params.guildId,
-			userId: params.userId,
-			channelId: params.channelId,
+		await requireGuildPermission(this.gatewayService, this.userRepository, {
+			...params,
 			permission: Permissions.MANAGE_ROLES,
 		});
-		if (!canManageRoles) throw new MissingPermissionsError();
-		const guildData = await this.gatewayService.getGuildData({guildId: params.guildId, userId: params.userId});
-		const enforceGuildMfa = await createGuildMfaEnforcer({
-			userRepository: this.userRepository,
-			guildData,
-			userId: params.userId,
-		});
-		enforceGuildMfa(Permissions.MANAGE_ROLES);
 	}
 
 	async setChannelPermissionOverwrite(params: {
@@ -861,24 +874,13 @@ export class ChannelOperationsService {
 		});
 		const overwrites = new Map(channel.permissionOverwrites ?? []);
 		overwrites.set(targetId, nextOverwrite);
-		const updated = await this.channelRepository.channelData.upsert(
-			{
-				...channel.toRow(),
-				permission_overwrites: new Map(
-					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
-				),
-			},
-			channel.toRow(),
+		await this.persistOverwritesAndDispatch(
+			channel,
+			overwrites,
+			previousPermissionOverwrites,
+			params.requestCache,
+			channel.guildId,
 		);
-		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: params.requestCache});
-		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
-			await this.propagatePermissionsToSyncedChildren({
-				categoryChannel: updated,
-				previousPermissionOverwrites,
-				guildId: channel.guildId,
-				requestCache: params.requestCache,
-			});
-		}
 		await this.guildAuditLogService.recordPermissionOverwriteDiff({
 			guildId: channel.guildId,
 			userId: params.userId,
@@ -941,24 +943,13 @@ export class ChannelOperationsService {
 				}),
 			);
 		}
-		const updated = await this.channelRepository.channelData.upsert(
-			{
-				...channel.toRow(),
-				permission_overwrites: new Map(
-					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
-				),
-			},
-			channel.toRow(),
+		await this.persistOverwritesAndDispatch(
+			channel,
+			overwrites,
+			previousPermissionOverwrites,
+			params.requestCache,
+			channel.guildId,
 		);
-		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: params.requestCache});
-		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
-			await this.propagatePermissionsToSyncedChildren({
-				categoryChannel: updated,
-				previousPermissionOverwrites,
-				guildId: channel.guildId,
-				requestCache: params.requestCache,
-			});
-		}
 		if (removed) {
 			const removedTargetId = removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
 			await this.guildAuditLogService.recordPermissionOverwriteDiff({

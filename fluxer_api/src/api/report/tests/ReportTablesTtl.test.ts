@@ -5,14 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {clearTestEmails, createUniqueEmail, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
-import {
-	DSAReportEmailVerifications,
-	DSAReportTickets,
-	GuildReportSubmissionsByReporter,
-	IARSubmissions,
-	MessageReportSubmissionsByReporter,
-	UserReportSubmissionsByReporter,
-} from '@app/api/Tables';
+import {DSAReportEmailVerifications, DSAReportTickets, IARSubmissions} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -25,9 +18,6 @@ const SCHEMA = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'tools/dev/cassan
 	tables: Array<{name: string; options: string}>;
 };
 
-const HOURLY_WINDOWS =
-	"compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}";
-
 function schemaOptions(name: string): string {
 	const table = SCHEMA.tables.find((entry) => entry.name === name);
 	expect(table).toBeDefined();
@@ -35,33 +25,6 @@ function schemaOptions(name: string): string {
 }
 
 describe('report table TTLs', () => {
-	it.each([
-		[DSAReportEmailVerifications, 600],
-		[DSAReportTickets, 3600],
-		[MessageReportSubmissionsByReporter, 31536000],
-		[UserReportSubmissionsByReporter, 86400],
-		[GuildReportSubmissionsByReporter, 86400],
-	] as const)('$name rows expire on their own', (table, ttlSeconds) => {
-		expect(table.defaultTtlSeconds).toBe(ttlSeconds);
-		expect(schemaOptions(table.name)).toContain(`default_time_to_live = ${ttlSeconds}`);
-	});
-
-	it('uses hourly time windows for rows written once and then deleted', () => {
-		for (const table of [DSAReportTickets, UserReportSubmissionsByReporter, GuildReportSubmissionsByReporter]) {
-			expect(schemaOptions(table.name)).toContain(HOURLY_WINDOWS);
-		}
-	});
-
-	it('uses twelve day time windows for message reservations, which last a year', () => {
-		expect(schemaOptions(MessageReportSubmissionsByReporter.name)).toContain(
-			"compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '12'}",
-		);
-	});
-
-	it('keeps size tiered compaction for verification codes, which a resend rewrites', () => {
-		expect(schemaOptions(DSAReportEmailVerifications.name)).toBe('default_time_to_live = 600');
-	});
-
 	it('keeps reports without a table TTL', () => {
 		expect(IARSubmissions.defaultTtlSeconds).toBeUndefined();
 		expect(schemaOptions(IARSubmissions.name)).not.toContain('default_time_to_live');

@@ -3,10 +3,8 @@
 import type {
 	VoiceEngineV2InboundStats,
 	VoiceEngineV2OutboundStats,
-	VoiceEngineV2SendStats,
 	VoiceEngineV2Stats,
-	VoiceEngineV2TrackKind,
-} from '@fluxer/voice_engine_v2/src/protocol';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export const VoiceEngineV2StatsTrackSource = Object.freeze({
 	Microphone: 'microphone',
@@ -109,136 +107,6 @@ export interface VoiceEngineV2StatsTrackRoleSelection {
 interface IndexedVoiceEngineV2StatsTrack {
 	index: number;
 	track: VoiceEngineV2StatsTrackRoleCandidate;
-}
-
-function asTrackKind(value: unknown): VoiceEngineV2TrackKind {
-	return value === 'video' ? 'video' : 'audio';
-}
-
-function asNumber(value: unknown): number {
-	return typeof value === 'number' && Number.isFinite(value) ? value : 0;
-}
-
-function asNonNegativeNumber(value: unknown): number {
-	return Math.max(0, asNumber(value));
-}
-
-function asOptionalNumber(value: unknown): number | undefined {
-	return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-}
-
-function asOptionalCount(value: unknown): number | undefined {
-	const number = asOptionalNumber(value);
-	return number == null ? undefined : Math.max(0, Math.trunc(number));
-}
-
-function asString(value: unknown): string | undefined {
-	return typeof value === 'string' && value.length > 0 ? value : undefined;
-}
-
-function coerceVoiceEngineV2SendStats(value: unknown): VoiceEngineV2SendStats | null | undefined {
-	if (value == null || typeof value !== 'object') return value === null ? null : undefined;
-	const payload = value as Record<string, unknown>;
-	return {
-		outgoingVideoQueueDepth: asNonNegativeNumber(payload.outgoingVideoQueueDepth),
-		outgoingVideoQueueCapacity: asNonNegativeNumber(payload.outgoingVideoQueueCapacity),
-		outgoingVideoMaxQueueDepth: asNonNegativeNumber(payload.outgoingVideoMaxQueueDepth),
-		outgoingVideoFramesProduced: asNonNegativeNumber(payload.outgoingVideoFramesProduced),
-		outgoingVideoFramesAccepted: asNonNegativeNumber(payload.outgoingVideoFramesAccepted),
-		outgoingVideoFramesDropped: asNonNegativeNumber(payload.outgoingVideoFramesDropped),
-		outgoingVideoFramesCoalesced: asNonNegativeNumber(payload.outgoingVideoFramesCoalesced),
-		outgoingVideoFramesCaptured: asNonNegativeNumber(payload.outgoingVideoFramesCaptured),
-		outgoingVideoCaptureFailures: asNonNegativeNumber(payload.outgoingVideoCaptureFailures),
-		outgoingVideoEffectiveFps: asNonNegativeNumber(payload.outgoingVideoEffectiveFps),
-		outgoingVideoTargetFps: asNonNegativeNumber(payload.outgoingVideoTargetFps),
-		outgoingVideoPacingTargetFps: asNonNegativeNumber(payload.outgoingVideoPacingTargetFps),
-		outgoingVideoMaxQueueAgeMs: asNonNegativeNumber(payload.outgoingVideoMaxQueueAgeMs),
-		outgoingVideoMaxPushLatencyMs: asNonNegativeNumber(payload.outgoingVideoMaxPushLatencyMs),
-		outgoingVideoPacingMode: asString(payload.outgoingVideoPacingMode) ?? 'unknown',
-		outgoingVideoBusActive: payload.outgoingVideoBusActive === true,
-		outgoingAudioBufferTargetMs: asNonNegativeNumber(payload.outgoingAudioBufferTargetMs),
-		outgoingAudioBufferMaxMs: asNonNegativeNumber(payload.outgoingAudioBufferMaxMs),
-		outgoingAudioUnderruns: asNonNegativeNumber(payload.outgoingAudioUnderruns),
-		outgoingAudioRebuffers: asNonNegativeNumber(payload.outgoingAudioRebuffers),
-		outgoingAudioMaxFrameGapMs: asNonNegativeNumber(payload.outgoingAudioMaxFrameGapMs),
-		adaptiveSendTier: asString(payload.adaptiveSendTier) ?? 'unknown',
-		adaptiveSendReason: asString(payload.adaptiveSendReason) ?? 'unknown',
-	};
-}
-
-export function coerceVoiceEngineV2Stats(payload: Record<string, unknown>): VoiceEngineV2Stats {
-	const rttRaw = payload.rttMs;
-	const rttMs = typeof rttRaw === 'number' && Number.isFinite(rttRaw) ? rttRaw : null;
-	const droppedVideoFrameCallbacks = asOptionalCount(payload.droppedVideoFrameCallbacks);
-	const droppedNativeVideoFrames = asOptionalCount(payload.droppedNativeVideoFrames);
-	const outbound = Array.isArray(payload.outbound)
-		? payload.outbound.flatMap((entry) => {
-				if (entry == null || typeof entry !== 'object') return [];
-				const e = entry as Record<string, unknown>;
-				const zeroCopy = e.zeroCopy === true ? true : undefined;
-				return [
-					{
-						trackSid: asString(e.trackSid) ?? '',
-						source: asString(e.source) ?? '',
-						kind: asTrackKind(e.kind),
-						codec: asString(e.codec),
-						bitrateKbps: asNumber(e.bitrateKbps),
-						packetsLost: asNumber(e.packetsLost),
-						packetsSent: asOptionalCount(e.packetsSent),
-						fps: asOptionalNumber(e.fps),
-						audioLevel: asOptionalNumber(e.audioLevel),
-						width: asOptionalCount(e.width),
-						height: asOptionalCount(e.height),
-						sourceWidth: asOptionalCount(e.sourceWidth),
-						sourceHeight: asOptionalCount(e.sourceHeight),
-						targetBitrateKbps: asOptionalNumber(e.targetBitrateKbps),
-						configuredFps: asOptionalNumber(e.configuredFps),
-						targetFps: asOptionalNumber(e.targetFps),
-						effectiveFps: asOptionalNumber(e.effectiveFps),
-						framesProduced: asOptionalCount(e.framesProduced),
-						framesAccepted: asOptionalCount(e.framesAccepted),
-						framesDropped: asOptionalCount(e.framesDropped),
-						framesCoalesced: asOptionalCount(e.framesCoalesced),
-						framesCaptured: asOptionalCount(e.framesCaptured),
-						captureFailures: asOptionalCount(e.captureFailures),
-						maxQueueAgeMs: asOptionalNumber(e.maxQueueAgeMs),
-						maxPushLatencyMs: asOptionalNumber(e.maxPushLatencyMs),
-						adaptiveSendTier: asString(e.adaptiveSendTier),
-						adaptiveSendReason: asString(e.adaptiveSendReason),
-						...(zeroCopy === true ? {zeroCopy} : {}),
-					},
-				];
-			})
-		: [];
-	const inbound = Array.isArray(payload.inbound)
-		? payload.inbound.flatMap((entry) => {
-				if (entry == null || typeof entry !== 'object') return [];
-				const e = entry as Record<string, unknown>;
-				const participantIdentity = asString(e.participantIdentity);
-				return [
-					{
-						...(participantIdentity ? {participantIdentity} : {}),
-						participantSid: asString(e.participantSid) ?? '',
-						trackSid: asString(e.trackSid) ?? '',
-						source: asString(e.source),
-						kind: asTrackKind(e.kind),
-						codec: asString(e.codec),
-						bitrateKbps: asNumber(e.bitrateKbps),
-						packetsLost: asNumber(e.packetsLost),
-						packetsReceived: asOptionalCount(e.packetsReceived),
-						jitterMs: asOptionalNumber(e.jitterMs),
-						audioLevel: asOptionalNumber(e.audioLevel),
-						width: asOptionalCount(e.width),
-						height: asOptionalCount(e.height),
-						fps: asOptionalNumber(e.fps),
-						sourceWidth: asOptionalCount(e.sourceWidth),
-						sourceHeight: asOptionalCount(e.sourceHeight),
-					},
-				];
-			})
-		: [];
-	const send = coerceVoiceEngineV2SendStats(payload.send);
-	return {rttMs, outbound, inbound, droppedVideoFrameCallbacks, droppedNativeVideoFrames, send};
 }
 
 export function asVoiceEngineV2StatsTrackSource(source: unknown): VoiceEngineV2StatsTrackSource {
@@ -628,11 +496,3 @@ export function classifyVoiceEngineV2TrackStats(
 		),
 	};
 }
-
-export type VoiceStatsNetworkSummary = VoiceEngineV2StatsNetworkSummary;
-export type VoiceStatsTrackSummary = VoiceEngineV2StatsTrackSummary;
-export type VoiceStatsSummary = VoiceEngineV2StatsSummary;
-export type VoiceStatsTrackRoleCandidate = VoiceEngineV2StatsTrackRoleCandidate;
-export type VoiceStatsTrackPublicationIds = VoiceEngineV2StatsTrackPublicationIds;
-export type VoiceStatsTrackClassificationInput = VoiceEngineV2StatsTrackClassificationInput;
-export type VoiceStatsTrackRoleSelection = VoiceEngineV2StatsTrackRoleSelection;

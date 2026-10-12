@@ -101,7 +101,7 @@ pub fn resolve_media_url(base_url: &Url, value: &str) -> Option<String> {
     matches!(url.scheme(), "http" | "https").then(|| url.to_string())
 }
 
-fn normalize_url(url: &str) -> Option<String> {
+pub fn normalize_url(url: &str) -> Option<String> {
     Url::parse(url)
         .ok()
         .map(|u| u.as_str().trim_end_matches('/').to_owned())
@@ -204,6 +204,41 @@ pub fn parse_hex_color(s: &str) -> Option<u32> {
         }
         _ => None,
     }
+}
+
+use crate::text_limits;
+
+pub fn parse_text(value: &str, max_len: usize) -> String {
+    text_limits::truncate(decode_html_text(value).trim(), max_len)
+}
+
+pub fn decode_html_text(input: &str) -> String {
+    scraper::Html::parse_fragment(input)
+        .root_element()
+        .text()
+        .collect()
+}
+
+pub fn resolve_http_url(base_url: &Url, media_url: &str) -> Option<String> {
+    let url = base_url.join(media_url).ok()?;
+    if matches!(url.scheme(), "http" | "https") {
+        Some(url.to_string())
+    } else {
+        None
+    }
+}
+
+pub fn normalize_timestamp(value: &str) -> String {
+    chrono::DateTime::parse_from_rfc3339(value)
+        .map(|dt| {
+            dt.with_timezone(&chrono::Utc)
+                .to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+        })
+        .unwrap_or_else(|_| value.to_owned())
+}
+
+pub fn sanitize_absolute_url(value: &str) -> Option<String> {
+    Url::parse(value.trim()).ok().map(|url| url.to_string())
 }
 
 #[cfg(test)]

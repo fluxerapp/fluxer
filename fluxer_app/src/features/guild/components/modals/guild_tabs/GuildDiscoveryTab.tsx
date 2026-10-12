@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
-import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
+
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.module.css';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -305,10 +306,13 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 			});
 		} catch (err) {
 			logger.error('Failed to withdraw discovery application', err);
-			showGuildErrorModal({
-				title: i18n._(COULDN_T_WITHDRAW_DISCOVERY_APPLICATION_DESCRIPTOR),
-				message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
-				dataFlx: 'guild.guild-tabs.guild-discovery-tab.withdraw-application-error-modal',
+			showGenericErrorModal({
+				...{
+					title: i18n._(COULDN_T_WITHDRAW_DISCOVERY_APPLICATION_DESCRIPTOR),
+					message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+					dataFlx: 'guild.guild-tabs.guild-discovery-tab.withdraw-application-error-modal',
+				},
+				defer: true,
 			});
 		} finally {
 			setIsWithdrawing(false);
@@ -519,21 +523,27 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 										const value = normalizeDiscoveryTag(rawValue);
 										if (!value) return;
 										if (!isValidDiscoveryTag(value)) {
-											showGuildErrorModal({
-												title: i18n._(COULDN_T_ADD_DISCOVERY_TAG_DESCRIPTOR),
-												message: i18n._(DISCOVERY_TAG_REQUIREMENTS_DESCRIPTOR, {
-													maxLength: DISCOVERY_TAG_MAX_LENGTH,
-												}),
-												dataFlx: 'guild.guild-tabs.guild-discovery-tab.invalid-tag-error-modal',
+											showGenericErrorModal({
+												...{
+													title: i18n._(COULDN_T_ADD_DISCOVERY_TAG_DESCRIPTOR),
+													message: i18n._(DISCOVERY_TAG_REQUIREMENTS_DESCRIPTOR, {
+														maxLength: DISCOVERY_TAG_MAX_LENGTH,
+													}),
+													dataFlx: 'guild.guild-tabs.guild-discovery-tab.invalid-tag-error-modal',
+												},
+												defer: true,
 											});
 											return;
 										}
 										if (tags.includes(value)) return;
 										if (tags.length >= DISCOVERY_MAX_TAGS) {
-											showGuildErrorModal({
-												title: i18n._(COULDN_T_ADD_DISCOVERY_TAG_DESCRIPTOR),
-												message: i18n._(DISCOVERY_TAG_LIMIT_DESCRIPTOR, {maxTags: DISCOVERY_MAX_TAGS}),
-												dataFlx: 'guild.guild-tabs.guild-discovery-tab.tag-limit-error-modal',
+											showGenericErrorModal({
+												...{
+													title: i18n._(COULDN_T_ADD_DISCOVERY_TAG_DESCRIPTOR),
+													message: i18n._(DISCOVERY_TAG_LIMIT_DESCRIPTOR, {maxTags: DISCOVERY_MAX_TAGS}),
+													dataFlx: 'guild.guild-tabs.guild-discovery-tab.tag-limit-error-modal',
+												},
+												defer: true,
 											});
 											return;
 										}

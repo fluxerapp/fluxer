@@ -199,21 +199,6 @@ async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Result<
 mod tests {
     use super::*;
 
-    #[test]
-    fn default_max_bytes_is_8mib() {
-        assert_eq!(DEFAULT_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_html_max_bytes_matches_old_unfurl_document_limit() {
-        assert_eq!(DEFAULT_HTML_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_timeout_is_10s() {
-        assert_eq!(DEFAULT_TIMEOUT, Duration::from_secs(10));
-    }
-
     #[tokio::test]
     async fn rejects_blocked_ip_literal_before_fetch() {
         let client = reqwest::Client::builder()
@@ -249,28 +234,5 @@ mod tests {
                 "should reject {url}"
             );
         }
-    }
-
-    #[tokio::test]
-    async fn fetch_url_maybe_body_skips_body_when_policy_returns_false() {
-        let client = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .unwrap();
-        let result = fetch_url_maybe_body(
-            &client,
-            "http://127.0.0.1/",
-            DEFAULT_MAX_BYTES,
-            Duration::from_secs(1),
-            |_| false,
-        )
-        .await;
-        assert!(result.is_err());
-    }
-
-    #[test]
-    #[allow(clippy::assertions_on_constants)]
-    fn default_max_redirects_is_reasonable() {
-        assert!(DEFAULT_MAX_REDIRECTS >= 3 && DEFAULT_MAX_REDIRECTS <= 10);
     }
 }

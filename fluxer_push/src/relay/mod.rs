@@ -7,7 +7,7 @@ pub mod reject;
 
 use crate::config::{FcmConfig, ProviderEnvironment, RelayConfig};
 use crate::metrics::{Metrics, RelayLeg, RelayResult};
-use crate::server::{Sidecar, serve, sidecar_router};
+use crate::server::{Sidecar, serve};
 use crate::tokens::{TokenCache, TokenError};
 use crate::unix_seconds;
 use crate::vendor::{self, ApnsRequest, DeadToken, Refusal, VendorOutcome};
@@ -117,7 +117,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route(FCM_ROUTE, post(fcm_route))
         .fallback(unmatched_route)
         .with_state(state)
-        .merge(sidecar_router(sidecar))
+        .merge(sidecar.router())
 }
 
 async fn unmatched_route(State(state): State<Arc<AppState>>) -> Response {

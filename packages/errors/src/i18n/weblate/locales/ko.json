@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "파일이 너무 많아요. 최대 {maxFiles, plural, other {#개}}까지 허용돼요.",
 	"attachments_and_uploads.unresolved_attachment_url": "미해결 `attachment://` URL이 감지되었어요. 임베드 처리 전에 해결되었어야 해요.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "업로드한 첨부 파일 {filename}을 찾을 수 없어요.",
-	"auth_and_oauth.application_not_owned": "이 애플리케이션의 소유자가 아니에요.",
 	"auth_and_oauth.bot_already_in_guild": "이 봇은 이미 커뮤니티에 있어요.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "봇 사용자는 인증 세션을 생성할 수 없어요.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "봇 사용자는 인증 엔드포인트를 사용할 수 없어요.",

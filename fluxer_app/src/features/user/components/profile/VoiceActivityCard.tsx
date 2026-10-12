@@ -21,9 +21,11 @@ import {
 	VOICE_ACTIVITY_AVATAR_MAX_VISIBLE,
 	VOICE_ACTIVITY_AVATAR_SIZE_PX,
 } from '@app/features/user/components/profile/VoiceActivityCardMetrics';
+import {JOIN_VOICE_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {STREAM_PREVIEW_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceStreamWatchCommands from '@app/features/voice/commands/VoiceStreamWatchCommands';
 import {useStreamPreview} from '@app/features/voice/components/useStreamPreview';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
@@ -64,10 +66,6 @@ const OPEN_VOICE_DESCRIPTOR = msg({
 	message: 'Open voice',
 	comment: 'Button or menu action label in the user settings voice activity card. Keep it concise.',
 });
-const JOIN_VOICE_DESCRIPTOR = msg({
-	message: 'Join voice',
-	comment: 'Button or menu action label in the user settings voice activity card. Keep it concise.',
-});
 const WATCHING_DESCRIPTOR = msg({
 	message: 'Watching',
 	comment: 'Short label in the user settings voice activity card. Keep it concise.',
@@ -87,10 +85,7 @@ const OPEN_3_DESCRIPTOR = msg({
 	comment:
 		'Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.',
 });
-const STREAM_PREVIEW_DESCRIPTOR = msg({
-	message: 'Stream preview',
-	comment: 'Short label in the user settings voice activity card. Keep it concise.',
-});
+
 const NO_PREVIEW_YET_DESCRIPTOR = msg({
 	message: 'No preview yet',
 	comment: 'Empty-state text in the user settings voice activity card.',

@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Store} from '@app/features/voice/engine/Store';
-import type {LatencyDataPoint} from '@app/features/voice/engine/VoiceLatencyTracker';
 import {voiceMediaGraphStatsObservationsFromPerTrackStats} from '@app/features/voice/engine/VoiceMediaGraphStats';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {
@@ -25,140 +24,19 @@ import {
 } from '@app/features/voice/utils/VideoAccelerationClassification';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import type {
+	VoiceEngineV2LatencyDataPoint as LatencyDataPoint,
+	VoiceEngineV2PerTrackStats as PerTrackStats,
+	VoiceEngineV2TransportInfo as TransportInfo,
 	VoiceEngineV2InboundStats,
 	VoiceEngineV2OutboundStats,
 	VoiceEngineV2Stats,
 	VoiceEngineV2TrackKind,
-} from '@fluxer/voice_engine_v2';
+	VoiceEngineV2VoiceStats as VoiceStats,
+	VoiceEngineV2StatsSample as VoiceStatsSample,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppStatsHostAdapter');
-
-export type {LatencyDataPoint} from '@app/features/voice/engine/VoiceLatencyTracker';
-
-export interface VoiceStats {
-	audioSendBitrate: number;
-	audioRecvBitrate: number;
-	videoSendBitrate: number;
-	videoRecvBitrate: number;
-	audioPacketLoss: number;
-	videoPacketLoss: number;
-	rtt: number;
-	jitter: number;
-	participantCount: number;
-	duration: number;
-}
-
-export interface PerTrackStats {
-	direction: 'send' | 'recv';
-	kind: 'audio' | 'video' | 'unknown';
-	ssrc?: number;
-	rid?: string;
-	active?: boolean;
-	mid?: string;
-	trackIdentifier?: string;
-	mediaSourceId?: string;
-	codec?: string;
-	codecSdpFmtpLine?: string;
-	payloadType?: number;
-	bitrateKbps: number;
-	bitrateWindowMs?: number;
-	packetsLost?: number;
-	packetsLossPercent?: number;
-	packetsReceived?: number;
-	bytesReceived?: number;
-	framesReceived?: number;
-	jitterMs?: number;
-	framesPerSecond?: number;
-	sourceFramesPerSecond?: number;
-	configuredFramesPerSecond?: number;
-	targetFramesPerSecond?: number;
-	effectiveFramesPerSecond?: number;
-	frameWidth?: number;
-	frameHeight?: number;
-	sourceFrameWidth?: number;
-	sourceFrameHeight?: number;
-	framesProduced?: number;
-	framesAccepted?: number;
-	framesCoalesced?: number;
-	framesCaptured?: number;
-	captureFailures?: number;
-	maxQueueAgeMs?: number;
-	maxPushLatencyMs?: number;
-	adaptiveSendTier?: string;
-	adaptiveSendReason?: string;
-	framesEncoded?: number;
-	framesDecoded?: number;
-	framesDropped?: number;
-	framesSent?: number;
-	freezeCount?: number;
-	totalFreezesDurationMs?: number;
-	totalEncodeTimeMs?: number;
-	encoderImplementation?: string;
-	powerEfficientEncoder?: boolean;
-	encoderAcceleration?: VideoAccelerationStatus;
-	scalabilityMode?: string;
-	qualityLimitationReason?: string;
-	qualityLimitationResolutionChanges?: number;
-	targetBitrateKbps?: number;
-	totalPacketSendDelayMs?: number;
-	nackCount?: number;
-	pliCount?: number;
-	firCount?: number;
-	packetsSent?: number;
-	sourceSamplesDurationMs?: number;
-	retransmittedPacketsSent?: number;
-	retransmittedBytesSent?: number;
-	keyFramesEncoded?: number;
-	keyFramesDecoded?: number;
-	decoderImplementation?: string;
-	powerEfficientDecoder?: boolean;
-	decoderAcceleration?: VideoAccelerationStatus;
-	totalDecodeTimeMs?: number;
-	packetsDiscarded?: number;
-	jitterBufferDelayMs?: number;
-	jitterBufferTargetDelayMs?: number;
-	jitterBufferEmittedCount?: number;
-	concealedSamples?: number;
-	silentConcealedSamples?: number;
-	insertedSamplesForDeceleration?: number;
-	removedSamplesForAcceleration?: number;
-	totalSamplesReceived?: number;
-}
-
-export interface TransportInfo {
-	candidatePairState?: string;
-	localCandidateType?: string;
-	localProtocol?: string;
-	localRelayProtocol?: string;
-	localCandidateUrlHost?: string;
-	peerConnectionMode?: string;
-	localNetworkType?: string;
-	remoteCandidateType?: string;
-	remoteProtocol?: string;
-	currentRoundTripTimeMs?: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	dtlsState?: string;
-	iceState?: string;
-	selectedCandidatePairChanges?: number;
-	dtlsCipher?: string;
-	srtpCipher?: string;
-	tlsVersion?: string;
-	networkType?: string;
-}
-
-export interface VoiceStatsSample {
-	timestamp: number;
-	rtt: number;
-	jitter: number;
-	audioPacketLoss: number;
-	videoPacketLoss: number;
-	audioSendBitrate: number;
-	audioRecvBitrate: number;
-	videoSendBitrate: number;
-	videoRecvBitrate: number;
-}
 
 type RoomWithEngine = Room & {
 	engine?: {
@@ -721,7 +599,6 @@ export class VoiceEngineV2AppStatsHostAdapter extends Store {
 	statsTimeSeries: Array<VoiceStatsSample> = [];
 	publisherTransport: TransportInfo | null = null;
 	subscriberTransport: TransportInfo | null = null;
-	connectionStartTime: number | null = null;
 	reconnectionCount: number = 0;
 	private graphStatsConnectionId: string | null = null;
 
@@ -754,7 +631,6 @@ export class VoiceEngineV2AppStatsHostAdapter extends Store {
 		this.statsTimeSeries = context.statsTimeSeries;
 		this.publisherTransport = context.publisherTransport;
 		this.subscriberTransport = context.subscriberTransport;
-		this.connectionStartTime = context.connectionStartTime;
 		this.reconnectionCount = context.reconnectionCount;
 	}
 

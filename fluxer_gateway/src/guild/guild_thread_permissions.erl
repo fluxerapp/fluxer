@@ -38,7 +38,7 @@ resolve(UserId, Thread, Member, State) ->
 alias_permissions(?ALL_PERMISSIONS) ->
     ?ALL_PERMISSIONS;
 alias_permissions(Perms) ->
-    case permission_bits:has(Perms, constants:send_messages_in_threads_permission()) of
+    case bitset:has(Perms, constants:send_messages_in_threads_permission()) of
         true -> Perms bor ?SEND_MESSAGES;
         false -> Perms band bnot ?SEND_MESSAGES
     end.
@@ -47,8 +47,8 @@ alias_permissions(Perms) ->
 is_moderator(?ALL_PERMISSIONS, _Member) ->
     true;
 is_moderator(Perms, Member) ->
-    permission_bits:has(Perms, constants:administrator_permission()) orelse
-        (permission_bits:has(Perms, constants:manage_threads_permission()) andalso
+    bitset:has(Perms, constants:administrator_permission()) orelse
+        (bitset:has(Perms, constants:manage_threads_permission()) andalso
             not timed_out(Member)).
 
 -spec can_view_thread_from_parent(
@@ -56,7 +56,7 @@ is_moderator(Perms, Member) ->
 ) ->
     boolean().
 can_view_thread_from_parent(UserId, Thread, Perms, Member, State) ->
-    permission_bits:has(Perms, constants:view_channel_permission()) andalso
+    bitset:has(Perms, constants:view_channel_permission()) andalso
         (not is_private(Thread) orelse is_moderator(Perms, Member) orelse
             is_thread_member(UserId, Thread, State)).
 
@@ -72,7 +72,7 @@ parent_id(Thread) ->
 parent_channel(Thread, State) ->
     case parent_id(Thread) of
         ParentId when is_integer(ParentId) ->
-            case guild_permissions:find_channel_by_id(ParentId, State) of
+            case guild_permissions_check:find_channel_by_id(ParentId, State) of
                 undefined -> undefined;
                 _Channel -> ParentId
             end;

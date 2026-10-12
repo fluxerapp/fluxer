@@ -11,6 +11,7 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {
 	getFirstInvoicePaymentIntentId,
 	getPrimarySubscriptionItem,
@@ -18,12 +19,12 @@ import {
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
-import {extractId} from '@app/api/stripe/StripeUtils';
+import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from '@app/api/stripe/services/StripeCheckoutService';
 import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -157,13 +158,6 @@ export class StripeCheckoutWebhookHandler {
 					clientReferenceId: session.client_reference_id,
 				},
 				'No payment record found for checkout session and recovery failed, skipping event',
-			);
-			return;
-		}
-		if (payment.status === 'completed' && payment.isGift && !payment.giftCode) {
-			Logger.warn(
-				{sessionId: session.id, userId: payment.userId},
-				'Legacy completed gift payment with no gift code — skipping (no longer recoverable via webhook)',
 			);
 			return;
 		}
@@ -355,10 +349,7 @@ export class StripeCheckoutWebhookHandler {
 	}
 
 	private async applyCheckoutPremiumGrant(context: CheckoutPremiumGrantContext): Promise<CheckoutPremiumApplyResult> {
-		const {session, payment, user, productInfo, subscriptionId, recovery} = context;
-		if (productInfo.premiumType === UserPremiumTypes.LIFETIME && user.stripeSubscriptionId && this.stripe) {
-			await this.cancelStripeSubscriptionImmediately(user);
-		}
+		const {session, payment, productInfo, subscriptionId, recovery} = context;
 		if (this.productRegistry.isRecurringSubscription(productInfo) && subscriptionId) {
 			const duplicate = await this.detectDuplicateRecurringSubscription(payment.userId, subscriptionId, productInfo);
 			if (duplicate) {
@@ -366,16 +357,11 @@ export class StripeCheckoutWebhookHandler {
 				return 'refunded_duplicate_subscription';
 			}
 		}
-		if (productInfo.premiumType === UserPremiumTypes.LIFETIME) {
-			await this.premiumService.setPremiumLifetime(payment.userId, true);
-			return 'granted';
-		}
 		if (this.productRegistry.isRecurringSubscription(productInfo)) {
 			const period = await this.resolveCheckoutSubscriptionPeriod(session, productInfo);
 			recovery.expectedPremiumUntil = period.end;
 			await this.premiumService.setPremiumFromSubscriptionPeriod(
 				payment.userId,
-				productInfo.premiumType,
 				period.end,
 				productInfo.billingCycle || null,
 				true,
@@ -386,7 +372,7 @@ export class StripeCheckoutWebhookHandler {
 		}
 		await this.premiumService.extendPremiumByGift(
 			payment.userId,
-			productInfo.premiumType,
+			UserPremiumTypes.SUBSCRIPTION,
 			'months',
 			productInfo.durationMonths,
 			true,
@@ -468,7 +454,7 @@ export class StripeCheckoutWebhookHandler {
 				{stripe_subscription_id: existingSubscriptionId},
 				latestUser.toRow(),
 			);
-			await this.dispatchUser(restoredUser);
+			await dispatchUserUpdate(this.gatewayService, restoredUser);
 		}
 		await this.userRepository.updatePayment({
 			...payment.toRow(),
@@ -515,14 +501,11 @@ export class StripeCheckoutWebhookHandler {
 			},
 			{idempotencyKey: `duplicate-sub-refund:${checkoutSessionId}`},
 		);
-		try {
-			await getBillingRepository().refunds.upsertFromStripe(refund);
-		} catch (mirrorErr) {
-			Logger.error(
-				{mirrorErr, refundId: refund.id},
-				'Mirror upsert failed for duplicate-sub refund; reconciler will heal',
-			);
-		}
+		await mirrorBestEffort(
+			() => getBillingRepository().refunds.upsertFromStripe(refund),
+			{refundId: refund.id},
+			'Mirror upsert failed for duplicate-sub refund; reconciler will heal',
+		);
 	}
 
 	private async resolveCheckoutSubscriptionPeriod(
@@ -561,10 +544,7 @@ export class StripeCheckoutWebhookHandler {
 		if (!latestUser) {
 			return false;
 		}
-		if (productInfo.premiumType === UserPremiumTypes.LIFETIME) {
-			return latestUser.premiumType === UserPremiumTypes.LIFETIME && latestUser.premiumUntil === null;
-		}
-		if (latestUser.premiumType !== productInfo.premiumType) {
+		if (latestUser.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
 			return false;
 		}
 		if (this.productRegistry.isRecurringSubscription(productInfo)) {
@@ -752,37 +732,6 @@ export class StripeCheckoutWebhookHandler {
 		);
 	}
 
-	private async cancelStripeSubscriptionImmediately(user: User): Promise<void> {
-		if (!this.stripe) {
-			throw new StripeError('Stripe client not available for immediate cancellation');
-		}
-		if (!user.stripeSubscriptionId) {
-			throw new StripeError('User missing subscription id for immediate cancellation');
-		}
-		const canceledSubscription = await this.stripe.subscriptions.cancel(user.stripeSubscriptionId, {
-			invoice_now: false,
-			prorate: false,
-		});
-		try {
-			await getBillingRepository().subscriptions.upsertFromStripe(canceledSubscription, {
-				knownUserId: user.id,
-				snapshotCapturedAt: new Date(),
-			});
-		} catch (mirrorErr) {
-			Logger.error(
-				{mirrorErr, subId: canceledSubscription.id},
-				'Mirror upsert failed after Stripe write; reconciler will heal',
-			);
-		}
-		const updatedUser = await this.userRepository.patchUpsert(user.id, {
-			stripe_subscription_id: null,
-			premium_billing_cycle: null,
-			premium_will_cancel: false,
-		});
-		await this.dispatchUser(updatedUser);
-		Logger.debug({userId: user.id}, 'Canceled active subscription due to lifetime grant');
-	}
-
 	private async cancelStripeSubscriptionById(
 		subscriptionId: string,
 		checkoutSessionId: string,
@@ -797,18 +746,16 @@ export class StripeCheckoutWebhookHandler {
 				{invoice_now: false, prorate: false},
 				{idempotencyKey: `localized-card-country-cancel:${checkoutSessionId}`},
 			);
-			try {
-				await getBillingRepository().subscriptions.upsertFromStripe(canceledSubscription, {
-					snapshotCapturedAt: new Date(),
-				});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, subId: canceledSubscription.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
+			await mirrorBestEffort(
+				() =>
+					getBillingRepository().subscriptions.upsertFromStripe(canceledSubscription, {
+						snapshotCapturedAt: new Date(),
+					}),
+				{subId: canceledSubscription.id},
+				'Mirror upsert failed after Stripe write; reconciler will heal',
+			);
 		} catch (error) {
-			if (this.isMissingOrCancelledSubscriptionError(error)) {
+			if (isMissingOrCancelledSubscriptionError(error)) {
 				Logger.warn(
 					{subscriptionId, checkoutSessionId, userId},
 					'Stripe subscription was already unavailable while rejecting localized card payment',
@@ -821,28 +768,6 @@ export class StripeCheckoutWebhookHandler {
 			);
 			throw error;
 		}
-	}
-
-	private isMissingOrCancelledSubscriptionError(error: unknown): boolean {
-		if (!(error instanceof Error)) {
-			return false;
-		}
-		const normalizedMessage = error.message.toLowerCase();
-		return (
-			normalizedMessage.includes('no such subscription') ||
-			normalizedMessage.includes('cannot cancel a canceled subscription') ||
-			normalizedMessage.includes('cannot cancel a cancelled subscription') ||
-			normalizedMessage.includes('subscription is canceled') ||
-			normalizedMessage.includes('subscription is cancelled')
-		);
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
 	}
 
 	private async tryRecoverPaymentFromSessionMetadata(session: Stripe.Checkout.Session): Promise<Payment | null> {

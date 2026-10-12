@@ -4,16 +4,16 @@ import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/Se
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	PRIVACY_SETUP_STATE_FRIENDS_DESCRIPTOR as FRIENDS_ONLY_OPTION_DESCRIPTOR,
+	PROFILE_PRIVACY_LABEL_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {type ProfilePrivacyLevel, ProfilePrivacyLevels} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const PROFILE_PRIVACY_LABEL_DESCRIPTOR = msg({
-	message: 'Profile privacy',
-	comment: 'Privacy > Profile privacy: aria-label for the radio group controlling who sees the user profile.',
-});
 const WHO_CAN_SEE_YOUR_FULL_PROFILE_DESCRIPTOR = msg({
 	message: 'Who can see your full profile',
 	comment: 'Privacy > Profile privacy: section title.',
@@ -34,17 +34,14 @@ const SMALL_COMMUNITIES_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Your full profile is visible to friends and members of your communities with 200 or fewer members',
 	comment: 'Privacy > Profile privacy: helper text under the Small communities option.',
 });
-const FRIENDS_ONLY_OPTION_DESCRIPTOR = msg({
-	message: 'Friends only',
-	comment: 'Privacy > Profile privacy: radio option label restricting the profile to friends only.',
-});
+
 const FRIENDS_ONLY_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Your full profile is only visible to your friends',
 	comment: 'Privacy > Profile privacy: helper text under the Friends only option.',
 });
 export const ProfilePrivacyTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const profilePrivacy = UserSettings.getProfilePrivacy();
+	const profilePrivacy = UserSettings.profilePrivacy;
 	const handleChange = async (value: ProfilePrivacyLevel) => {
 		await UserSettingsCommands.update({profilePrivacy: value});
 	};

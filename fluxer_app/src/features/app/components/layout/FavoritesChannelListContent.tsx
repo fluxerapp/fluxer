@@ -38,7 +38,7 @@ import Favorites, {type FavoriteChannel} from '@app/features/messaging/state/Fav
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import ReadStates from '@app/features/read_state/state/ReadStates';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {FavoritesCategoryContextMenu} from '@app/features/ui/action_menu/FavoritesCategoryContextMenu';
 import {FavoritesChannelContextMenu} from '@app/features/ui/action_menu/FavoritesChannelContextMenu';
 import {FavoritesChannelListContextMenu} from '@app/features/ui/action_menu/FavoritesChannelListContextMenu';
@@ -210,7 +210,7 @@ const FavoriteChannelResolvedItem = observer(
 		const isDM = channel.isDM();
 		const recipientId = isDM ? (channel.recipientIds[0] ?? '') : '';
 		const recipient = recipientId ? (Users.getUser(recipientId) ?? null) : null;
-		const isTyping = recipientId ? TypingIndicator.isTyping(channel.id, recipientId) : false;
+		const isTyping = recipientId ? RollingTypingStore.isTyping(channel.id, recipientId) : false;
 		const channelDisplayName = channel.isPrivate() ? ChannelUtils.getDMDisplayName(channel) : channel.name;
 		const displayName = favoriteChannel.nickname || channelDisplayName || i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
 		const isChannelDirectlyMuted = channel.guildId

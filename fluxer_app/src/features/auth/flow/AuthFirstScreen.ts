@@ -10,7 +10,7 @@ import {
 	resolveMissingResetTokenRedirect,
 } from '@app/features/auth/flow/AccountRecoveryRedirects';
 import {warmAuthRuntimeTarget} from '@app/features/auth/flow/AuthRuntimeTargetBoundary';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 
@@ -48,7 +48,7 @@ async function prepareRuntimeDependentFirstScreen(runtime: RuntimeConfigSnapshot
 	const {warmResetPasswordTokenCheck} = await loadLazyModule(
 		() => import('@app/features/auth/state/ResetPasswordTokenCheck'),
 	);
-	await warmResetPasswordTokenCheck(token, authRequestTargetFromSnapshot(runtime));
+	await warmResetPasswordTokenCheck(token, instanceTargetFromSnapshot(runtime));
 }
 
 export async function prepareSignedOutFirstScreen(): Promise<void> {

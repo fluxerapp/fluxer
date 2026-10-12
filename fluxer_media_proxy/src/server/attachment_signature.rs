@@ -166,50 +166,19 @@ fn now_secs() -> u64 {
 }
 
 #[cfg(test)]
+use crate::test_fixtures::CapturedLog;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{config::PolicyMode, http_headers, request_log::ErrorReason};
     use axum::body::to_bytes;
     use base64::{Engine as _, engine::general_purpose};
     use fluxer_common::attachment_url_signature::{UrlKind, issue_window, sign};
-    use std::sync::{Arc, Mutex};
-    use tracing_subscriber::fmt::MakeWriter;
 
     const SECRET: [u8; 32] = [3u8; 32];
     const KEY: &str = "attachments/1/2/cat.gif";
     const PATH: &str = "/attachments/1/2/cat.gif";
-
-    #[derive(Clone, Default)]
-    struct CapturedLog(Arc<Mutex<Vec<u8>>>);
-
-    impl CapturedLog {
-        fn text(&self) -> String {
-            String::from_utf8(self.0.lock().expect("captured log is not poisoned").clone())
-                .expect("captured log is utf-8")
-        }
-    }
-
-    impl std::io::Write for CapturedLog {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0
-                .lock()
-                .expect("captured log is not poisoned")
-                .extend_from_slice(buf);
-            Ok(buf.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-
-    impl<'a> MakeWriter<'a> for CapturedLog {
-        type Writer = Self;
-
-        fn make_writer(&'a self) -> Self::Writer {
-            self.clone()
-        }
-    }
 
     fn enforcing_config() -> AttachmentSignatureConfig {
         crate::config::Config::load_from_iter([

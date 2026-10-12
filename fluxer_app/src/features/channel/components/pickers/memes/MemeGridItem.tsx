@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import gifStyles from '@app/features/channel/components/GifPicker.module.css';
 import {useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
 import styles from '@app/features/channel/components/MemesPicker.module.css';
+import {
+	buildDeleteMemeConfirmation,
+	DELETE_SAVED_MEDIA_DESCRIPTOR,
+} from '@app/features/channel/components/pickers/memes/DeleteMemeConfirmation';
 import {formatDuration, getFileExtension} from '@app/features/channel/components/pickers/memes/MediaFormat';
 import {PickerThumbnail} from '@app/features/channel/components/pickers/shared/PickerThumbnail';
 import {usePooledVideo} from '@app/features/channel/components/pickers/shared/usePooledVideo';
 import MemesPicker from '@app/features/emoji/state/MemesPicker';
-import * as FavoriteMemeCommands from '@app/features/expressions/commands/FavoriteMemeCommands';
+
 import {EditFavoriteMemeModal} from '@app/features/expressions/components/modals/EditFavoriteMemeModal';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
@@ -28,19 +31,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-const DELETE_SAVED_MEDIA_DESCRIPTOR = msg({
-	message: 'Delete saved media',
-	comment: 'Title of the destructive delete confirmation alert in the saved media (memes) picker.',
-});
-const ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR = msg({
-	message: 'Delete "{memeName}"? Can\'t be undone.',
-	comment:
-		'Body of the destructive delete confirmation alert in the saved media picker. memeName is the user-chosen name. Keep quotation marks.',
-});
-const DELETE_DESCRIPTOR = msg({
-	message: 'Delete',
-	comment: 'Confirm button label on the destructive delete-saved-media alert.',
-});
 const SEND_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'Send saved media {memeName}',
 	comment:
@@ -181,20 +171,7 @@ export const MemeGridItem = observer(
 		};
 		const handleDelete = (event: React.MouseEvent) => {
 			event.stopPropagation();
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(DELETE_SAVED_MEDIA_DESCRIPTOR)}
-						description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR, {memeName: meme.name})}
-						primaryText={i18n._(DELETE_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={() => {
-							FavoriteMemeCommands.deleteFavoriteMeme(i18n, meme.id);
-						}}
-						data-flx="channel.pickers.memes.meme-grid-item.handle-delete.confirm-modal"
-					/>
-				)),
-			);
+			ModalCommands.push(modal(() => buildDeleteMemeConfirmation(i18n, meme)));
 		};
 		return (
 			<div

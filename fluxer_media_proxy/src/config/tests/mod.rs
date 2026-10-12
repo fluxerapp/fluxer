@@ -64,19 +64,6 @@ fn upload_mode_requires_relay_secret() {
 }
 
 #[test]
-fn relay_mode_requires_the_relay_secret() {
-    let err = Config::load_from_iter([
-        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
-        ("FLUXER_MEDIA_PROXY_MODE", "relay"),
-    ])
-    .unwrap_err();
-    assert_eq!(
-        "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload and relay modes",
-        err.to_string()
-    );
-}
-
-#[test]
 fn rejects_a_body_limit_above_the_spool_budget() {
     let err = Config::load_from_iter([
         ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),

@@ -24,6 +24,10 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/LanguageTab.module.css';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
+import {
+	INTERFACE_LANGUAGE_DESCRIPTOR,
+	PERSONAL_DICTIONARY_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {SpellcheckEngine} from '@app/types/electron.d';
 import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
 import {getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
@@ -80,10 +84,7 @@ const SELECT_INTERFACE_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Select interface language',
 	comment: 'Button or menu action label in the language tab. Keep it concise.',
 });
-const INTERFACE_LANGUAGE_DESCRIPTOR = msg({
-	message: 'Interface language',
-	comment: 'Settings section title in the language tab. Keep it concise.',
-});
+
 const ENABLE_SPELLCHECK_DESCRIPTOR = msg({
 	message: 'Enable spellcheck',
 	comment: 'Button or menu action label in the language tab. Keep it concise.',
@@ -129,10 +130,7 @@ const AUTO_DETECT_LANGUAGE_DESCRIPTOR = msg({
 	comment:
 		'Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.',
 });
-const PERSONAL_DICTIONARY_DESCRIPTOR = msg({
-	message: 'Personal dictionary',
-	comment: 'Subsection title for personal dictionary settings. Keep it concise.',
-});
+
 const PICK_ONE_OR_MORE_DICTIONARIES_DESCRIPTOR = msg({
 	message:
 		'Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats.',
@@ -275,7 +273,7 @@ export const LanguageSelector = observer(function LanguageSelector({
 		return query.length === 0 || option.data.searchText.includes(query);
 	}, []);
 	return (
-		<Combobox<string, false, LanguageSelectOption>
+		<Combobox<string, LanguageSelectOption>
 			options={localeOptions}
 			value={value}
 			onChange={onChange}
@@ -301,7 +299,7 @@ const LanguageTab = observer(() => {
 	const {timeFormat} = UserSettings;
 	const isDesktop = NativeUtils.isDesktop();
 	const getAutoTimeFormatDescription = () => {
-		const appLocale = UserSettings.getLocale();
+		const appLocale = UserSettings.locale;
 		const browserLocale = navigator.language;
 		const effectiveLocale = Accessibility.useBrowserLocaleForTimeFormat ? browserLocale : appLocale;
 		const uses12Hour = localeUses12Hour(effectiveLocale);
@@ -313,12 +311,12 @@ const LanguageTab = observer(() => {
 		return i18n._(APP_LANGUAGE_DESCRIPTOR, {format});
 	};
 	const get12HourExample = () => {
-		const locale = UserSettings.getLocale();
+		const locale = UserSettings.locale;
 		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
 		return getFormattedTime(sampleDate, locale, true);
 	};
 	const get24HourExample = () => {
-		const locale = UserSettings.getLocale();
+		const locale = UserSettings.locale;
 		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
 		return getFormattedTime(sampleDate, locale, false);
 	};

@@ -322,12 +322,12 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 	artifacts.push({
 		label: '@fluxer/app-store',
 		relativePath: `app-store.${tag}.node`,
-		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 	});
 	artifacts.push({
 		label: '@fluxer/gateway-socket',
 		relativePath: `gateway-socket.${tag}.node`,
-		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 	});
 	if (platform === 'darwin') {
 		artifacts.push({
@@ -357,7 +357,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'win32') {
 		artifacts.push({
@@ -380,7 +380,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'linux') {
 		artifacts.push({
@@ -410,7 +410,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	}
 	return artifacts;

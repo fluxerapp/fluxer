@@ -3,17 +3,17 @@
 import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
 import {createUserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
-import type {ILogger} from '@app/api/ILogger';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {describe, expect, it} from 'vitest';
 
 const WORKER_PAGE_COUNT = 2;
 
-class RecordingLogger implements ILogger {
+class RecordingLogger implements LoggerInterface {
 	readonly errors: Array<string> = [];
 
 	trace(): void {}
@@ -26,7 +26,7 @@ class RecordingLogger implements ILogger {
 		this.errors.push(typeof obj === 'string' ? obj : (msg ?? ''));
 	}
 
-	child(): ILogger {
+	child(): LoggerInterface {
 		return this;
 	}
 }

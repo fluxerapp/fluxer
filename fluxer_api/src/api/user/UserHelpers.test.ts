@@ -8,7 +8,6 @@ import {
 	getPremiumPaymentRecoveryGraceMs,
 	isSignInRefused,
 	isTemporarilyBanned,
-	PREMIUM_GRACE_PERIOD_MS,
 } from '@app/api/user/UserHelpers';
 import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, it} from 'vitest';
@@ -127,9 +126,5 @@ describe('premium grace lengths', () => {
 		expect(getPremiumPaymentRecoveryGraceMs('yearly')).toBe(14 * day);
 		expect(getPremiumPaymentRecoveryGraceMs(null)).toBe(7 * day);
 		expect(getPremiumPaymentRecoveryGraceMs(undefined)).toBe(7 * day);
-	});
-
-	it('keeps the fallback grace at 3 days', () => {
-		expect(PREMIUM_GRACE_PERIOD_MS).toBe(3 * 24 * 60 * 60 * 1000);
 	});
 });

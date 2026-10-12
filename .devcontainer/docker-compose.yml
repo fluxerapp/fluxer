@@ -166,11 +166,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-api-locale-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/locale/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-api-media-proxy-utils-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/media_proxy_utils/node_modules
         volume:
@@ -360,7 +355,6 @@ volumes:
   fluxer-api-geoip-node-modules:
   fluxer-api-http-client-node-modules:
   fluxer-api-kv-client-node-modules:
-  fluxer-api-locale-node-modules:
   fluxer-api-media-proxy-utils-node-modules:
   fluxer-api-mime-utils-node-modules:
   fluxer-api-nats-node-modules:

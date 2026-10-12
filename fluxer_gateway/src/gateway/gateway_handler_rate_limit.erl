@@ -4,10 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
-    check_rate_limit/2,
-    check_shared_ip_rate/1,
-    check_shared_user_rate/1,
-    rate_limits_disabled/0
+    check_rate_limit/2, check_shared_ip_rate/1, check_shared_user_rate/1, rate_limits_disabled/0
 ]).
 
 -export_type([state/0]).
@@ -33,7 +30,7 @@
 -type state() :: gateway_handler:state().
 
 -ifdef(TEST).
--export([prune_old_window_entries/2]).
+
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 

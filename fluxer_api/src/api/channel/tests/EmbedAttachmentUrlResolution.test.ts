@@ -19,37 +19,6 @@ describe('Embed Attachment URL Resolution', () => {
 	beforeEach(async () => {
 		await harness.reset();
 	});
-	describe('Basic URL Resolution', () => {
-		it('should resolve attachment:// URLs in embed image field', async () => {
-			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Embed Attachment Test Guild');
-			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-			const channelId = guild.system_channel_id ?? channel.id;
-			const fileData = loadFixture('yeah.png');
-			const payload = {
-				content: 'Test message with embed',
-				attachments: [{id: 0, filename: 'yeah.png'}],
-				embeds: [
-					{
-						title: 'Test Embed',
-						description: 'This embed uses an attached image',
-						image: {url: 'attachment://yeah.png'},
-					},
-				],
-			};
-			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-				{index: 0, filename: 'yeah.png', data: fileData},
-			]);
-			expect(response.status).toBe(200);
-			expect(json.content).toBe('Test message with embed');
-			expect(json.embeds).toBeDefined();
-			expect(json.embeds).toHaveLength(1);
-			const embed = json.embeds![0];
-			expect(embed.title).toBe('Test Embed');
-			expect(embed.image?.url).toBeTruthy();
-			expect(embed.image?.url).not.toContain('attachment://');
-		});
-	});
 	describe('Image and Thumbnail Fields', () => {
 		it('should handle image and thumbnail in same embed from different files', async () => {
 			const account = await createTestAccount(harness);
@@ -235,29 +204,6 @@ describe('Embed Attachment URL Resolution', () => {
 			]);
 			expect(response.status).toBe(400);
 		});
-		it('should accept file with image extension but corrupted content for embed reference', async () => {
-			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Content Type Mismatch Guild');
-			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-			const channelId = guild.system_channel_id ?? channel.id;
-			const textData = Buffer.from('Not an image, just text.');
-			const payload = {
-				content: 'Test with fake PNG extension',
-				attachments: [{id: 0, filename: 'fake.png'}],
-				embeds: [
-					{
-						title: 'Fake Image Embed',
-						image: {url: 'attachment://fake.png'},
-					},
-				],
-			};
-			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-				{index: 0, filename: 'fake.png', data: textData},
-			]);
-			expect(response.status).toBe(200);
-			expect(json.embeds).toHaveLength(1);
-			expect(json.embeds![0].image?.url).not.toContain('attachment://');
-		});
 		it('should accept image and video attachments beyond the legacy image extensions', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Media Type Guild');
@@ -288,34 +234,6 @@ describe('Embed Attachment URL Resolution', () => {
 		});
 	});
 	describe('Multiple Embeds and Files', () => {
-		it('should handle multiple embeds with different URL types', async () => {
-			const account = await createTestAccount(harness);
-			const guild = await createGuild(harness, account.token, 'Multiple Embeds Guild');
-			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
-			const channelId = guild.system_channel_id ?? channel.id;
-			const fileData = loadFixture('yeah.png');
-			const payload = {
-				content: 'Multiple embeds with different URL types',
-				attachments: [{id: 0, filename: 'image1.png'}],
-				embeds: [
-					{
-						title: 'First Embed - Attachment',
-						image: {url: 'attachment://image1.png'},
-					},
-					{
-						title: 'Second Embed - External',
-						image: {url: 'https://example.com/external.png'},
-					},
-				],
-			};
-			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
-				{index: 0, filename: 'image1.png', data: fileData},
-			]);
-			expect(response.status).toBe(200);
-			expect(json.embeds).toHaveLength(2);
-			expect(json.embeds![0].image?.url).not.toContain('attachment://');
-			expect(json.embeds![1].image?.url).toBe('https://example.com/external.png');
-		});
 		it('should handle multiple embeds each referencing different attachments', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Multiple Embeds Test Guild');

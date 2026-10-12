@@ -12,5 +12,8 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"typescript": "catalog:ts7"
+	},
+	"dependencies": {
+		"@fluxer/record_utils": "workspace:*"
 	}
 }

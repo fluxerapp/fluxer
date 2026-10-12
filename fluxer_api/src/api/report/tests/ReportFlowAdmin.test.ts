@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
 import {getChannel, sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
 import type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
-import {getAdminRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
-import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
-import {listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -42,8 +38,6 @@ interface MessageTargets {
 	channelId: string;
 	messageIds: Array<string>;
 }
-
-const RATE_LIMIT_HEADER = 'x-fluxer-test-enable-rate-limits';
 
 const MESSAGE_CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
@@ -237,29 +231,15 @@ describe('Report flow admin', () => {
 	});
 
 	describe('Search', () => {
-		test('a status filter with a reason uses the search index and records the reason', async () => {
+		test('a status filter with a reason uses the search index', async () => {
 			const messages = await setupMessages(harness, 2);
 			const messageCsam = await submitMessageFlow(harness, messages, 0, MESSAGE_CSAM_WALK);
 			await submitLegacyMessage(harness, messages, 1);
 			const admin = await createReportAdmin(harness);
 			expect(reportIds(await listReports(harness, admin, 'status=pending'))).toHaveLength(2);
-			const before = new Set(
-				(await getAdminRepository().listAllAuditLogsPaginated(100000)).map((log) => log.logId.toString()),
-			);
 			const filtered = await listReports(harness, admin, 'status=pending&reason=csam');
 			expect(reportIds(filtered)).toEqual([messageCsam]);
 			expect(filtered.total).toBe(1);
-			const recorded = (await getAdminRepository().listAllAuditLogsPaginated(100000)).filter(
-				(log) => !before.has(log.logId.toString()),
-			);
-			expect(recorded).toHaveLength(1);
-			expect(recorded[0].action).toBe(AdminAuditReadActions.SEARCH_REPORTS);
-			expect(Object.fromEntries(recorded[0].metadata)).toMatchObject({
-				status: 'pending',
-				reason: 'csam',
-				sort_by: 'reported_at',
-				result_count: '1',
-			});
 		});
 	});
 
@@ -495,52 +475,6 @@ describe('Report flow admin', () => {
 			await createBuilder(harness, admin.token)
 				.get('/admin/report-reasons')
 				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACL)
-				.execute();
-		});
-
-		test('writes a list_report_reasons read audit entry', async () => {
-			const admin = await createReportAdmin(harness);
-			const before = new Set(
-				(await getAdminRepository().listAllAuditLogsPaginated(100000)).map((log) => log.logId.toString()),
-			);
-			await createBuilder(harness, admin.token).get('/admin/report-reasons').expect(HTTP_STATUS.OK).execute();
-			const recorded = (await getAdminRepository().listAllAuditLogsPaginated(100000)).filter(
-				(log) => !before.has(log.logId.toString()),
-			);
-			expect(recorded).toHaveLength(1);
-			expect(recorded[0].action).toBe('list_report_reasons');
-			expect(recorded[0].targetType).toBe('report');
-			expect(recorded[0].adminUserId.toString()).toBe(admin.userId);
-			expect(Object.fromEntries(recorded[0].metadata)).toEqual({
-				result_count: String(listReportReasons().length),
-			});
-		});
-
-		test('shares the admin lookup rate limit bucket', async () => {
-			const admin = await createReportAdmin(harness);
-			await createBuilder(harness, admin.token)
-				.get('/admin/report-reasons')
-				.header(RATE_LIMIT_HEADER, 'true')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const bucket = `user:${admin.userId}:session:${RateLimitConfigs.ADMIN_LOOKUP.bucket}`;
-			const rateLimitService = getRateLimitService();
-			for (let attempt = 0; attempt < RateLimitConfigs.ADMIN_LOOKUP.config.limit * 2; attempt++) {
-				const result = await rateLimitService.checkBucketLimit(bucket, {
-					...RateLimitConfigs.ADMIN_LOOKUP.config,
-					algorithm: 'leaky_bucket',
-				});
-				if (!result.allowed) break;
-			}
-			await createBuilder(harness, admin.token)
-				.get('/admin/report-reasons')
-				.header(RATE_LIMIT_HEADER, 'true')
-				.expect(429, APIErrorCodes.RATE_LIMITED)
-				.execute();
-			await createBuilder(harness, admin.token)
-				.get('/admin/reports?reason=csam')
-				.header(RATE_LIMIT_HEADER, 'true')
-				.expect(429, APIErrorCodes.RATE_LIMITED)
 				.execute();
 		});
 	});

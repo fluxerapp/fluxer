@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {FIXTURE_CURRENT_INSTANCE_SNAPSHOT} from '@app/features/auth/state/__fixtures__/AccountRecordFixtures';
-import type {KeyedStoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {KeyedStoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {
 	type LegacySessionAccountStore,

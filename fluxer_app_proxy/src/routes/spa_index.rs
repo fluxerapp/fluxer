@@ -700,7 +700,7 @@ mod tests {
     }
 
     use crate::branding_images::InstanceBranding;
-    use crate::config::{AppProxyConfig, ReleaseChannel};
+    use crate::config::AppProxyConfig;
     use crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX;
     use axum::Router;
     use axum::body::Body;
@@ -1047,27 +1047,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_self_hosted_instance_serves_its_branded_favicon() {
-        let (served, _) = served_self_hosted_head(BrandingSnapshot {
-            image_origins: Arc::from([branding_origin()]),
-            favicon_url: Some(Arc::from("https://example.test/favicon.png?v=1&size=32")),
-            ..BrandingSnapshot::default()
-        })
-        .await;
-
-        assert_eq!(served.matches(r#"<link rel="icon""#).count(), 1);
-        assert!(served.contains(
-            r#"<link rel="icon" href="https://example.test/favicon.png?v=1&amp;size=32">"#
-        ));
-        assert!(!served.contains("/web/favicon-32x32.png"));
-        assert_eq!(served.matches(r#"<link rel="apple-touch-icon""#).count(), 1);
-        assert!(served.contains(
-            r#"<link rel="apple-touch-icon" href="https://example.test/favicon.png?v=1&amp;size=32">"#
-        ));
-        assert!(!served.contains("/web/apple-touch-icon.png"));
-    }
-
-    #[tokio::test]
     async fn a_self_hosted_instance_serves_its_branded_head() {
         let (served, policy) = served_self_hosted_head(full_branding()).await;
 
@@ -1094,18 +1073,6 @@ mod tests {
         assert!(!served.contains("Fluxer</title>"));
         assert!(!served.contains(r#"name="description""#));
         assert_every_inline_script_is_granted(&served, &policy);
-    }
-
-    #[tokio::test]
-    async fn a_self_hosted_instance_without_branding_keeps_the_default_head() {
-        let (served, _) = served_self_hosted_head(BrandingSnapshot::default()).await;
-
-        assert_eq!(
-            served,
-            strip_link_preview_metadata(
-                &render_spa_document(SHIPPED_APP_SHELL, "", "", None).unwrap()
-            )
-        );
     }
 
     #[test]
@@ -1318,7 +1285,6 @@ mod tests {
         self_hosted: bool,
     ) -> AppState {
         let mut config = AppProxyConfig::from_env();
-        config.release_channel = ReleaseChannel::Stable;
         config.index_upstream_url = match &spa_index_source {
             SpaIndexSource::Bundled { .. } => None,
             SpaIndexSource::Upstream(url) => Some((**url).clone()),

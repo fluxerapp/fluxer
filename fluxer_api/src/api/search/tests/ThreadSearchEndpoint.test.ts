@@ -2,18 +2,14 @@
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {getThreadSearchService} from '@app/api/SearchFactory';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
@@ -28,7 +24,7 @@ import type {
 	ThreadSearchResponse,
 } from '@fluxer/schema/src/domains/channel/ForumRequestSchemas';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
-import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const HANDLERS: Record<string, WorkerTaskHandler> = {
@@ -36,18 +32,6 @@ const HANDLERS: Record<string, WorkerTaskHandler> = {
 	backfillThreadSearch,
 	refreshSearchIndex,
 };
-
-function helpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-		attempt: {isLastAttempt: true},
-	};
-}
 
 interface Setup {
 	owner: TestAccount;
@@ -67,7 +51,7 @@ describe('thread search', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		setWorkerDependencies(await initializeWorkerDependencies(getSnowflakeService()));
 		pending = [];
 		vi.spyOn(NoopWorkerService.prototype, 'addJob').mockImplementation((async (
@@ -75,7 +59,7 @@ describe('thread search', () => {
 			payload: Record<string, unknown>,
 		) => {
 			const handler = HANDLERS[task];
-			if (handler) pending.push(handler(payload, helpers()));
+			if (handler) pending.push(handler(payload, createTestWorkerHelpers({attempt: {isLastAttempt: true}})));
 			return 0n;
 		}) as () => Promise<bigint>);
 		await getThreadSearchService()!.deleteAllDocuments();
@@ -87,7 +71,7 @@ describe('thread search', () => {
 
 	afterAll(async () => {
 		clearWorkerDependencies();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -96,7 +80,6 @@ describe('thread search', () => {
 	}
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		await ensureSessionStarted(harness, owner.token);

@@ -110,7 +110,7 @@ export class InviteRequestService {
 		channelId: ChannelID;
 		requestCache: RequestCache;
 	}): Promise<Array<InviteMetadataResponseSchema>> {
-		const invites = await this.inviteService.getChannelInvitesSorted({
+		const invites = await this.inviteService.getChannelInvites({
 			userId: params.userId,
 			viewer: params.viewer,
 			channelId: params.channelId,
@@ -123,7 +123,7 @@ export class InviteRequestService {
 		guildId: GuildID;
 		requestCache: RequestCache;
 	}): Promise<Array<InviteMetadataResponseSchema>> {
-		const invites = await this.inviteService.getGuildInvitesSorted({
+		const invites = await this.inviteService.getGuildInvites({
 			userId: params.userId,
 			guildId: params.guildId,
 		});

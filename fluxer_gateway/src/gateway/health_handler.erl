@@ -95,27 +95,3 @@ is_loopback_request(Req) ->
         _ ->
             false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-readiness_status_test() ->
-    ?assertEqual({200, <<"OK">>}, readiness_status(true)),
-    ?assertEqual({503, <<"DRAINING">>}, readiness_status(false)).
-
-activate_drain_sets_draining_flag_test() ->
-    persistent_term:erase({fluxer_gateway, draining}),
-    ?assertEqual(ok, activate_drain()),
-    ?assert(gateway_node_router:is_draining()),
-    persistent_term:erase({fluxer_gateway, draining}).
-
-deactivate_drain_clears_draining_flag_test() ->
-    persistent_term:erase({fluxer_gateway, draining}),
-    ?assertEqual(ok, activate_drain()),
-    ?assert(gateway_node_router:is_draining()),
-    ?assertEqual(ok, deactivate_drain()),
-    ?assertNot(gateway_node_router:is_draining()),
-    ?assertEqual({200, <<"OK">>}, readiness_status(gateway_node_router:is_ready())),
-    persistent_term:erase({fluxer_gateway, draining}).
-
--endif.

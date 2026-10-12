@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "יותר מדי קבצים. מותרים לכל היותר {maxFiles} {maxFiles, plural, one {קובץ} other {קבצים}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "זוהתה כתובת URL של `attachment://` שלא נפתרה. היה עליה להיפתר לפני עיבוד ההטמעה.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "הקובץ המצורף שהועלה {filename} לא נמצא.",
-	"auth_and_oauth.application_not_owned": "אינך הבעלים של האפליקציה הזו.",
 	"auth_and_oauth.bot_already_in_guild": "הבוט כבר חבר בקהילה.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "משתמשי בוט אינם יכולים ליצור סשנים של אימות.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "משתמשי בוט אינם יכולים להשתמש בנקודות קצה של אימות.",

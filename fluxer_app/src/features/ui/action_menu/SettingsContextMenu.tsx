@@ -2,9 +2,9 @@
 
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {

@@ -2,7 +2,7 @@
 
 use crate::relay::reject::{REASON_COUNT, Reason};
 use crate::relay_consent::ConsentUpdate;
-use fluxer_svc::metrics::now_ms;
+use fluxer_common::metrics::{Histogram, now_ms, render_counter};
 use std::fmt::{self, Write as _};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -10,65 +10,6 @@ const ORDERING: Ordering = Ordering::Relaxed;
 
 pub fn elapsed_ms(started_ms: i64) -> u64 {
     u64::try_from(now_ms() - started_ms).unwrap_or(0)
-}
-
-const HISTOGRAM_BUCKETS_MS: &[u64] = &[
-    1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000,
-];
-
-struct Histogram {
-    buckets: [AtomicU64; 13],
-    inf: AtomicU64,
-    sum_ms: AtomicU64,
-    count: AtomicU64,
-}
-
-impl Histogram {
-    const fn new() -> Self {
-        Self {
-            buckets: [const { AtomicU64::new(0) }; 13],
-            inf: AtomicU64::new(0),
-            sum_ms: AtomicU64::new(0),
-            count: AtomicU64::new(0),
-        }
-    }
-
-    fn observe(&self, ms: u64) {
-        for (index, upper) in HISTOGRAM_BUCKETS_MS.iter().copied().enumerate() {
-            if ms <= upper {
-                self.buckets[index].fetch_add(1, ORDERING);
-                break;
-            }
-        }
-        self.inf.fetch_add(1, ORDERING);
-        self.sum_ms.fetch_add(ms, ORDERING);
-        self.count.fetch_add(1, ORDERING);
-    }
-
-    fn render_series(&self, out: &mut String, name: &str, labels: &str) -> fmt::Result {
-        let mut cumulative = 0;
-        for (index, upper) in HISTOGRAM_BUCKETS_MS.iter().copied().enumerate() {
-            cumulative += self.buckets[index].load(ORDERING);
-            writeln!(out, "{name}_bucket{{{labels},le=\"{upper}\"}} {cumulative}")?;
-        }
-        writeln!(
-            out,
-            "{name}_bucket{{{labels},le=\"+Inf\"}} {}",
-            self.inf.load(ORDERING)
-        )?;
-        writeln!(out, "{name}_sum{{{labels}}} {}", self.sum_ms.load(ORDERING))?;
-        writeln!(
-            out,
-            "{name}_count{{{labels}}} {}",
-            self.count.load(ORDERING)
-        )
-    }
-}
-
-impl Default for Histogram {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -659,11 +600,6 @@ impl Default for Metrics {
     }
 }
 
-fn render_counter(out: &mut String, name: &str, counter: &AtomicU64) -> fmt::Result {
-    writeln!(out, "# TYPE {name} counter")?;
-    writeln!(out, "{name} {}", counter.load(ORDERING))
-}
-
 fn render_gauge(out: &mut String, name: &str, gauge: &AtomicU64) -> fmt::Result {
     writeln!(out, "# TYPE {name} gauge")?;
     writeln!(out, "{name} {}", gauge.load(ORDERING))
@@ -716,7 +652,7 @@ fn render_labelled_histogram<const N: usize>(
 ) -> fmt::Result {
     writeln!(out, "# TYPE {name} histogram")?;
     for (index, value) in values.into_iter().enumerate() {
-        histograms[index].render_series(out, name, &format!("{label}=\"{value}\""))?;
+        histograms[index].render_series(out, name, Some(&format!("{label}=\"{value}\"")))?;
     }
     Ok(())
 }

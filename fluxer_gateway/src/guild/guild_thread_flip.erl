@@ -228,7 +228,10 @@ apply_flip(FlipData, Held, OldState) ->
 merge_channels(FlipData, Held, Data) ->
     case maps:get(<<"channels">>, FlipData, undefined) of
         Channels when is_list(Channels) ->
-            Live = [C || C <- guild_data_index:channel_list(Data), not thread_only_channel(C)],
+            Live = [
+                C
+             || C <- guild_data_index_channels:channel_list(Data), not thread_only_channel(C)
+            ],
             Gated = lists:foldl(
                 fun replay_channel/2,
                 [C || C <- Channels, thread_only_channel(C)],
@@ -243,7 +246,7 @@ merge_channels(FlipData, Held, Data) ->
 thread_only_ids(Data) ->
     lists:sort([
         snowflake_id:parse_optional(maps:get(<<"id">>, C, undefined))
-     || C <- guild_data_index:channel_list(Data), thread_only_channel(C)
+     || C <- guild_data_index_channels:channel_list(Data), thread_only_channel(C)
     ]).
 
 -spec replay_channel({atom(), map()}, [map()]) -> [map()].
@@ -762,7 +765,7 @@ merge_channels_keeps_live_channels_and_replays_forum_events_test() ->
     Merged = merge_channels(Snapshot, Held, Live),
     Names = maps:from_list([
         {maps:get(<<"id">>, C), maps:get(<<"name">>, C)}
-     || C <- guild_data_index:channel_list(Merged)
+     || C <- guild_data_index_channels:channel_list(Merged)
     ]),
     ?assertEqual(
         #{1 => <<"live">>, 2 => <<"renamed-forum">>, 5 => <<"new-forum">>},

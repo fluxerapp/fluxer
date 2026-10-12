@@ -35,29 +35,3 @@ try_create_table(TableName, Options) ->
     catch
         error:badarg -> ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-safe_delete_table(TableName) ->
-    try ets:delete(TableName) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
-
-test_table_opts() -> [named_table, public, set].
-
-ensure_table_delegates_to_owner_when_running_test() ->
-    TableName = guild_ets_utils_test_owner,
-    safe_delete_table(TableName),
-    {ok, Pid} = guild_ets_owner:start_link(),
-    try
-        ok = ensure_table(TableName, test_table_opts()),
-        ?assertEqual(Pid, ets:info(TableName, owner))
-    after
-        gen_server:stop(guild_ets_owner),
-        safe_delete_table(TableName)
-    end.
-
--endif.

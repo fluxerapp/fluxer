@@ -5,12 +5,7 @@
 
 -export([get_guild_data/2]).
 -export([get_auth_context/2]).
--export([get_guild_member/2]).
--export([get_guild_members_batch/2]).
--export([has_member/2]).
--export([list_guild_members/2]).
--export([search_guild_members/2]).
--export([get_vanity_url_channel/1]).
+
 -export([get_first_viewable_text_channel/1]).
 -export([get_guild_state/2, get_guild_state/3]).
 -export([build_connect_snapshot/2]).
@@ -56,7 +51,7 @@ get_auth_context(#{user_id := UserId, channel_id := ChannelId}, State) ->
 -spec get_auth_context_for_member(user_id(), integer() | null, map(), guild_state()) ->
     guild_reply(map()).
 get_auth_context_for_member(UserId, ChannelId, Data, State) ->
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined ->
             {reply, #{auth_context => null, error_reason => <<"forbidden">>}, State};
         _Member ->
@@ -76,16 +71,16 @@ build_auth_guild(Data, State) ->
     GuildProperties#{
         <<"roles">> => map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
         <<"member_count">> => maps:get(
-            member_count, State, guild_data_index:member_count(Data)
+            member_count, State, guild_data_index_members:member_count(Data)
         ),
-        <<"online_count">> => guild_member_list:get_online_count(State)
+        <<"online_count">> => guild_member_list_read:get_online_count(State)
     }.
 
 -spec find_channel(integer() | null, map()) -> map() | null.
 find_channel(null, _Data) ->
     null;
 find_channel(ChannelId, Data) ->
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     case maps:get(ChannelId, Index, null) of
         null -> find_thread_parent_channel(ChannelId, Index, Data);
         Channel -> Channel
@@ -101,30 +96,6 @@ find_thread_parent_channel(ChannelId, Index, Data) when is_integer(ChannelId) ->
     end;
 find_thread_parent_channel(_ChannelId, _Index, _Data) ->
     null.
-
--spec get_guild_member(map(), guild_state()) -> guild_reply(map()).
-get_guild_member(Request, State) ->
-    guild_data_members:get_guild_member(Request, State).
-
--spec get_guild_members_batch(map(), guild_state()) -> guild_reply(map()).
-get_guild_members_batch(Request, State) ->
-    guild_data_members:get_guild_members_batch(Request, State).
-
--spec has_member(map(), guild_state()) -> guild_reply(map()).
-has_member(Request, State) ->
-    guild_data_members:has_member(Request, State).
-
--spec list_guild_members(map(), guild_state()) -> guild_reply(map()).
-list_guild_members(Request, State) ->
-    guild_data_members:list_guild_members(Request, State).
-
--spec search_guild_members(map(), guild_state()) -> guild_reply(map()).
-search_guild_members(Request, State) ->
-    guild_data_members:search_guild_members(Request, State).
-
--spec get_vanity_url_channel(guild_state()) -> guild_reply(map()).
-get_vanity_url_channel(State) ->
-    get_everyone_viewable_text_channel(State).
 
 -spec get_first_viewable_text_channel(guild_state()) -> guild_reply(map()).
 get_first_viewable_text_channel(State) ->
@@ -152,10 +123,10 @@ get_guild_state(UserId, State, Opts) ->
 
 -spec apply_thread_view(user_id(), map(), guild_state(), map()) -> map().
 apply_thread_view(UserId, #{thread_viewer := true} = Opts, State, GuildState) ->
-    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     GuildState#{<<"threads">> => guild_thread_view:guild_threads(UserId, Opts, Member, State)};
 apply_thread_view(UserId, _Opts, State, GuildState) ->
-    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     Channels = guild_thread_view:hide_for_non_viewer(
         UserId, Member, State, maps:get(<<"channels">>, GuildState, [])
     ),
@@ -170,19 +141,19 @@ base_guild_state(UserId, State) ->
     Data = guild_data_index:ensure_data_map(State),
     GuildId = guild_id(State),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     {ViewableChannels, JoinedAt} = guild_data_channels:derive_member_view(
         UserId, Member, State, AllChannels
     ),
-    OnlineCount = guild_member_list:get_online_count(State),
+    OnlineCount = guild_member_list_read:get_online_count(State),
     OwnMemberList = own_member_list(Member),
     StateWithVoice = fetch_latest_voice_states(State),
-    AllVoiceStates = guild_voice:get_voice_states_list(StateWithVoice),
+    AllVoiceStates = guild_voice_state:get_voice_states_list(StateWithVoice),
     ViewableChannelIds = channel_id_set(ViewableChannels),
     VoiceStates = filter_voice_states(AllVoiceStates, ViewableChannelIds),
     VoiceMembers = resolve_voice_members(VoiceStates, Data),
     Members = guild_data_channels:merge_members(OwnMemberList, VoiceMembers),
-    MemberCount = maps:get(member_count, State, guild_data_index:member_count(Data)),
+    MemberCount = maps:get(member_count, State, guild_data_index_members:member_count(Data)),
     build_guild_state_map(
         GuildId,
         Data,
@@ -352,7 +323,7 @@ fetch_latest_voice_states(State) ->
 
 -spec get_guild_data_for_user(user_id(), map(), guild_state()) -> guild_reply(map()).
 get_guild_data_for_user(UserId, Data, State) ->
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined ->
             {reply, #{guild_data => null, error_reason => <<"forbidden">>}, State};
         Member ->
@@ -386,9 +357,9 @@ build_guild_collection_data(Data, Channels, State) ->
         <<"emojis">> => map_utils:ensure_list(maps:get(<<"emojis">>, Data, [])),
         <<"stickers">> => map_utils:ensure_list(maps:get(<<"stickers">>, Data, [])),
         <<"member_count">> => maps:get(
-            member_count, State, guild_data_index:member_count(Data)
+            member_count, State, guild_data_index_members:member_count(Data)
         ),
-        <<"online_count">> => guild_member_list:get_online_count(State)
+        <<"online_count">> => guild_member_list_read:get_online_count(State)
     }.
 
 -spec own_member_list(map() | undefined) -> [map()].
@@ -398,7 +369,7 @@ own_member_list(M) -> [M].
 -spec filter_voice_states([map()], sets:set(integer())) -> [map()].
 filter_voice_states(AllVoiceStates, ViewableChannelIds) ->
     [
-        guild_data_channels:sanitize_voice_state(VS)
+        voice_state_utils:sanitize_voice_state_for_broadcast(VS)
      || VS <- AllVoiceStates,
         voice_state_in_viewable_channel(VS, ViewableChannelIds)
     ].

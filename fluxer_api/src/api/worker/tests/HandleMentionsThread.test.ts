@@ -9,12 +9,12 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {ThreadState} from '@app/api/models/ThreadState';
 import type {ReadStateMentionUpdate} from '@app/api/read_state/ReadStateRepository';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
 import handleMentions from '@app/api/worker/tasks/HandleMentions';
@@ -27,9 +27,8 @@ import {
 	ServerMessageFlags,
 } from '@fluxer/constants/src/ThreadConstants';
 import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThreadMembersError';
-import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, describe, expect, test, vi} from 'vitest';
 
 vi.mock('@app/api/channel/services/message/MessageGatewayDispatch', () => ({
 	buildBroadcastMessageData: async ({message}: {message: {id: bigint; flags: number}}) => ({
@@ -61,13 +60,6 @@ const AUTHOR = createUserID(1n);
 interface EnqueuedChunk {
 	thread?: boolean;
 	mentions: Array<{userId: string; direct: boolean; role: boolean; everyone: boolean}>;
-}
-
-function activate(active: boolean): void {
-	const config = ChannelThreadsConfigSchema.parse(
-		active ? {enabled: true, guild_basis_points: 10000, user_basis_points: 10000} : {},
-	);
-	syncChannelThreadsConfig(JSON.stringify(config), (raw) => ChannelThreadsConfigSchema.parse(JSON.parse(raw ?? '{}')));
 }
 
 function createHarness(params: {
@@ -162,17 +154,12 @@ function createHarness(params: {
 
 async function run(): Promise<Array<EnqueuedChunk>> {
 	const chunks: Array<EnqueuedChunk> = [];
-	const helpers: WorkerTaskHelpers = {
-		logger: new NoopLogger(),
-		jobId: 1n,
+	const helpers: WorkerTaskHelpers = createTestWorkerHelpers({
 		addJob: async (_name: string, payload: unknown) => {
 			chunks.push(payload as EnqueuedChunk);
 			return 0n;
 		},
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	} as unknown as WorkerTaskHelpers;
+	}) as unknown as WorkerTaskHelpers;
 	await handleMentions(
 		{
 			channelId: THREAD.toString(),
@@ -190,11 +177,8 @@ function entry(userId: number, source: Partial<GatewayMentionSourceEntry>): Gate
 }
 
 describe('thread mentions', () => {
-	beforeEach(() => activate(true));
-
 	afterEach(() => {
 		clearWorkerDependencies();
-		activate(false);
 	});
 
 	test('notifies members for @everyone, keeps direct mentions and adds role members', async () => {
@@ -283,13 +267,6 @@ describe('thread mentions', () => {
 		expect(harness.upserts).toEqual([ServerMessageFlags.FAILED_TO_MENTION_SOME_ROLES_IN_THREAD]);
 	});
 
-	test('mentions nobody in a thread once the guild leaves the experiment', async () => {
-		activate(false);
-		const harness = createHarness({mentions: [entry(12, {direct: true})]});
-		expect(await run()).toEqual([]);
-		expect(harness.added).toEqual([]);
-	});
-
 	test('leaves ordinary channels untouched', async () => {
 		createHarness({channelType: ChannelTypes.GUILD_TEXT, mentions: [entry(11, {everyone: true})]});
 		const chunks = await run();
@@ -302,7 +279,6 @@ describe('thread mentions', () => {
 describe('thread mention chunks', () => {
 	afterEach(() => {
 		clearWorkerDependencies();
-		activate(false);
 	});
 
 	function chunkHarness() {
@@ -334,7 +310,6 @@ describe('thread mention chunks', () => {
 	}
 
 	test('stamps thread read states on increment', async () => {
-		activate(true);
 		const increments = chunkHarness();
 		await runChunk();
 		expect(increments).toEqual([
@@ -343,12 +318,5 @@ describe('thread mention chunks', () => {
 				marker: {flags: ReadStateFlags.IS_GUILD_CHANNEL | ReadStateFlags.IS_THREAD, guildId: GUILD},
 			}),
 		]);
-	});
-
-	test('drops a thread chunk that lands after the guild left the experiment', async () => {
-		activate(false);
-		const increments = chunkHarness();
-		await runChunk();
-		expect(increments).toEqual([]);
 	});
 });

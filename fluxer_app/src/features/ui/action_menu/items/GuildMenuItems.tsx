@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
-import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
+import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	MUTE_COMMUNITY_DESCRIPTOR,
 	UNMUTE_COMMUNITY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {EditProfileIcon, MuteIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
+import {EditProfileIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {MuteTargetMenuItem} from '@app/features/ui/action_menu/items/MuteTargetMenuItem';
+
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
@@ -21,7 +22,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useMemo} from 'react';
+import {useCallback} from 'react';
 
 const EDIT_COMMUNITY_PROFILE_DESCRIPTOR = msg({
 	message: 'Edit community profile',
@@ -38,15 +39,10 @@ export const MuteCommunityMenuItem: React.FC<GuildMenuItemProps> = observer(({gu
 	const isMuted = settings?.muted ?? false;
 	const muteConfig = settings?.mute_config;
 	const mutedText = getMutedText(isMuted, muteConfig);
-	const muteDurations = useMemo(() => getMuteDurationOptions(i18n), [i18n.locale]);
+
 	const handleMute = useCallback(
 		(duration: number | null) => {
-			const computedMuteConfig = duration
-				? {
-						selected_time_window: duration,
-						end_time: new Date(Date.now() + duration).toISOString(),
-					}
-				: null;
+			const computedMuteConfig = createMuteConfig(duration);
 			UserGuildSettingsCommands.updateGuildSettings(
 				guild.id,
 				{
@@ -70,36 +66,17 @@ export const MuteCommunityMenuItem: React.FC<GuildMenuItemProps> = observer(({gu
 		);
 		onClose();
 	}, [guild.id, onClose]);
-	if (isMuted) {
-		return (
-			<MenuItem
-				icon={<MuteIcon data-flx="ui.action-menu.items.guild-menu-items.mute-community-menu-item.mute-icon" />}
-				onClick={handleUnmute}
-				hint={mutedText ?? undefined}
-				data-flx="ui.action-menu.items.guild-menu-items.mute-community-menu-item.menu-item.unmute"
-			>
-				{i18n._(UNMUTE_COMMUNITY_DESCRIPTOR)}
-			</MenuItem>
-		);
-	}
+
 	return (
-		<MenuItemSubmenu
-			label={i18n._(MUTE_COMMUNITY_DESCRIPTOR)}
-			onTriggerSelect={() => handleMute(null)}
-			render={() => (
-				<MenuGroup data-flx="ui.action-menu.items.guild-menu-items.mute-community-menu-item.menu-group">
-					{muteDurations.map((duration) => (
-						<MenuItem
-							key={duration.value ?? 'until'}
-							onClick={() => handleMute(duration.value)}
-							data-flx="ui.action-menu.items.guild-menu-items.mute-community-menu-item.menu-item.mute"
-						>
-							{duration.label}
-						</MenuItem>
-					))}
-				</MenuGroup>
-			)}
-			data-flx="ui.action-menu.items.guild-menu-items.mute-community-menu-item.menu-item-submenu"
+		<MuteTargetMenuItem
+			showUnmute={isMuted}
+			mutedText={mutedText}
+			muteLabel={i18n._(MUTE_COMMUNITY_DESCRIPTOR)}
+			unmuteLabel={i18n._(UNMUTE_COMMUNITY_DESCRIPTOR)}
+			onMute={handleMute}
+			onUnmute={handleUnmute}
+			dataFlx="ui.action-menu.items.guild-menu-items.mute-community-menu-item"
+			data-flx="ui.action-menu.items.guild-menu-items.mute-target-menu-item"
 		/>
 	);
 });

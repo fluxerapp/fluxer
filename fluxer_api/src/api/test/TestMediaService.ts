@@ -4,8 +4,6 @@ import crypto from 'node:crypto';
 import {Config} from '@app/api/Config';
 import {
 	IMediaService,
-	type MediaProxyFrameRequest,
-	type MediaProxyFrameResponse,
 	type MediaProxyMetadataRequest,
 	type MediaProxyMetadataResponse,
 	type MediaProxySniffResponse,
@@ -84,24 +82,8 @@ export class TestMediaService extends IMediaService {
 		return 'https://media-proxy.test';
 	}
 
-	async getThumbnail(): Promise<Buffer | null> {
-		return Buffer.alloc(1024);
-	}
-
 	async sniffUpload(_uploadFilename: string): Promise<MediaProxySniffResponse | null> {
 		return {content_type: null};
-	}
-
-	async extractFrames(_request: MediaProxyFrameRequest): Promise<MediaProxyFrameResponse> {
-		return {
-			frames: [
-				{
-					timestamp: 0,
-					mime_type: 'image/png',
-					base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-				},
-			],
-		};
 	}
 
 	private analyzeBase64Image(base64: string): MediaProxyMetadataResponse | null {

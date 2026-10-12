@@ -23,7 +23,7 @@ import {ariaCurrentPage} from '@app/features/platform/ARIAProps';
 import {Edge} from '@app/features/ui/AxisOrientation';
 import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import {AnimePresence, AnimeSpan, type AnimeStyle, createAnimeFlxElement} from '@app/features/ui/motion/AnimeElement';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {ExclamationMarkIcon, PauseIcon} from '@phosphor-icons/react';

@@ -11,12 +11,8 @@ import {
 	createChannelInvite,
 	createGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -50,7 +46,7 @@ describe('thread limits and timeouts', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -58,7 +54,7 @@ describe('thread limits and timeouts', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -71,7 +67,6 @@ describe('thread limits and timeouts', () => {
 	}
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
 		const channel = await createChannel(harness, owner.token, guild.id, 'general');

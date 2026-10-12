@@ -93,10 +93,13 @@ import type {
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	actorPlaceholder,
+	channelPlaceholder,
 	decodeAuditReason,
 	entryTime,
+	namePlaceholder,
 	readBoolean,
 	readChange,
+	readColor,
 	readNumber,
 	readOption,
 	readSnowflake,
@@ -104,12 +107,11 @@ import {
 	readStringArray,
 	readTimestamp,
 	roleIdDiff,
+	summaryOnly,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {MS_PER_SECOND, SECONDS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageDescriptor} from '@lingui/core';
-
-const MAX_COLOR_VALUE = 0xffffff;
 
 type SentenceValues = AuditLogSentence['values'];
 
@@ -253,16 +255,8 @@ function detailRow(
 	return {id, tone, sentence: {descriptor, values}};
 }
 
-function summaryOnly(summary: AuditLogSentence): AuditLogDomainResult {
-	return {summary, rows: [], blocks: []};
-}
-
 function userPlaceholder(id: string): AuditLogPlaceholder {
 	return {kind: 'user', id};
-}
-
-function channelPlaceholder(id: string): AuditLogPlaceholder {
-	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
 }
 
 function rolePlaceholder(id: string, recordedName: string | null): AuditLogPlaceholder {
@@ -271,15 +265,6 @@ function rolePlaceholder(id: string, recordedName: string | null): AuditLogPlace
 
 function datePlaceholder(timestamp: number): AuditLogPlaceholder {
 	return {kind: 'date', timestamp};
-}
-
-function namePlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'name', value};
-}
-
-function readColor(value: unknown): number | null {
-	const color = readNumber(value);
-	return color !== null && Number.isInteger(color) && color >= 0 && color <= MAX_COLOR_VALUE ? color : null;
 }
 
 function readMemberSubject(entry: GuildAuditLogEntryResponse): MemberSubject {

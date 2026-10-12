@@ -5,7 +5,6 @@ import {trySendAdminNotification} from '@app/api/admin/services/AdminNotificatio
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
@@ -13,6 +12,7 @@ import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import type {IARSubmission} from '@app/api/report/ReportModels';
+import {sendSystemDmMessage} from '@app/api/user/services/SystemDmMessage';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
@@ -145,17 +145,13 @@ export class ReporterResolutionNotifier {
 		const requestCache = createRequestCache();
 		try {
 			const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
-			const dmChannel = await systemDm.userChannelService.ensureDmOpenForBothUsers({
-				userId: systemUser.id,
+			await sendSystemDmMessage({
+				systemUser,
 				recipientId: reporter.id,
+				content: template.value.body,
+				userChannelService: systemDm.userChannelService,
+				channelService: systemDm.channelService,
 				userCacheService: systemDm.userCacheService,
-				requestCache,
-			});
-			await systemDm.channelService.messages.send.sendMessage({
-				user: systemUser,
-				viewer: SYSTEM_THREAD_VIEWER,
-				channelId: dmChannel.id,
-				data: {content: template.value.body},
 				requestCache,
 			});
 			return true;

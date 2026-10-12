@@ -63,8 +63,6 @@ function getProfileAvatarUrl(
 export function getProfileAvatarMenuUrl(
 	context: ProfileDisplayContext,
 	overrides?: ProfilePreviewOverrides,
-	animated = false,
-	size: MediaProxyImageSize = MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 ): string | null {
 	const {user, guildId, guildMember} = context;
 	const {previewAvatarUrl, hasClearedAvatar, ignoreGuildAvatar} = overrides || {};
@@ -84,18 +82,18 @@ export function getProfileAvatarMenuUrl(
 				userId: user.id,
 				avatar: user.avatar,
 				memberAvatar: guildMember.avatar,
-				animated,
-				size,
+				animated: false,
+				size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 			});
 		}
 	}
 	if (user.avatar) {
-		return AvatarUtils.getUserAvatarURL(user, animated, size);
+		return AvatarUtils.getUserAvatarURL(user, false, MEDIA_PROXY_AVATAR_SIZE_DEFAULT);
 	}
 	return null;
 }
 
-function getProfileBannerUrl(
+export function getProfileBannerUrl(
 	context: ProfileDisplayContext,
 	overrides?: ProfilePreviewOverrides,
 	animated = false,
@@ -140,15 +138,6 @@ function getProfileBannerUrl(
 		return AvatarUtils.getUserBannerURL({id: user.id, banner: effectiveBanner}, animated, size);
 	}
 	return null;
-}
-
-export function getProfileBannerMenuUrl(
-	context: ProfileDisplayContext,
-	overrides?: ProfilePreviewOverrides,
-	animated = false,
-	size: MediaProxyImageSize = MEDIA_PROXY_PROFILE_BANNER_SIZE_MODAL,
-): string | null {
-	return getProfileBannerUrl(context, overrides, animated, size);
 }
 
 export function getProfileBannerUrls(

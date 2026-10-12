@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '@app/api/Config';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {HostedOnlyRoute, routeAvailableWhen} from '@app/api/middleware/BillingRouteAvailability';
 import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -13,7 +13,7 @@ import {
 	isStripeServiceable,
 } from '@app/api/stripe/BillingConfigCache';
 import {mapGiftCodeToMetadataResponse, mapGiftCodeToResponse} from '@app/api/stripe/StripeModel';
-import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Validator} from '@app/api/Validator';
 import {AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
@@ -37,20 +37,10 @@ import {
 	UrlResponse,
 	WebhookReceivedResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
-import {createMiddleware} from 'hono/factory';
 
 async function getPurchaseGeoipCountryCode(request: Request): Promise<string | null> {
 	const geoip = await lookupGeoip(request);
 	return geoip.countryCode ?? null;
-}
-
-function routeAvailableWhen(isAvailable: () => boolean) {
-	return createMiddleware<HonoEnv>(async (ctx, next) => {
-		if (Config.instance.selfHosted && !isAvailable()) {
-			return AppNotFoundHandler(ctx);
-		}
-		return next();
-	});
 }
 
 function isStripeWebhookAvailable(): boolean {
@@ -58,7 +48,6 @@ function isStripeWebhookAvailable(): boolean {
 	return billing.webhookSecret !== null && isStripeServiceable(billing);
 }
 
-const HostedOnlyRoute = routeAvailableWhen(() => false);
 const GiftRouteAvailable = routeAvailableWhen(isPremiumTieringActive);
 const BillingRouteAvailable = routeAvailableWhen(() => isBillingActive());
 const StripeServicingRouteAvailable = routeAvailableWhen(() => isStripeServiceable());
@@ -268,7 +257,7 @@ export function StripeController(app: HonoApp) {
 		async (ctx) => {
 			const {country_code} = ctx.req.valid('query');
 			const geoipCountryCode = await getPurchaseGeoipCountryCode(ctx.req.raw);
-			const priceIds = await ctx.get('stripeService').getPriceIds(geoipCountryCode ?? country_code);
+			const priceIds = await ctx.get('stripeService').checkout.getPriceIds(geoipCountryCode ?? country_code);
 			return ctx.json(priceIds);
 		},
 	);
@@ -312,7 +301,7 @@ export function StripeController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			const url = await ctx.get('stripeService').createCustomerPortalSession(userId);
+			const url = await ctx.get('stripeService').checkout.createCustomerPortalSession(userId);
 			return ctx.json({url});
 		},
 	);

@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Trop de fichiers. {maxFiles, plural, =1 {Un seul fichier est autorisé.} other {Le nombre maximal de fichiers autorisés est de #.}}",
 	"attachments_and_uploads.unresolved_attachment_url": "Une URL `attachment://` non résolue a été détectée. Elle aurait dû être résolue avant le traitement du contenu intégré.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "La pièce jointe envoyée {filename} n'a pas été trouvée.",
-	"auth_and_oauth.application_not_owned": "Vous n’êtes pas propriétaire de cette application.",
 	"auth_and_oauth.bot_already_in_guild": "Ce bot est déjà dans la communauté.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Les comptes de bots ne peuvent pas créer de sessions d’authentification.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Les comptes de bots ne peuvent pas utiliser les points d’accès d’authentification.",

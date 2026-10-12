@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
-import {createServer} from 'node:net';
 import {createAttachmentID, createReportID, createUserID} from '@app/api/BrandedTypes';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
 import {ReportRepository} from '@app/api/report/ReportRepository';
@@ -15,45 +13,17 @@ import {
 	IARSubmissions,
 	MessageReportSubmissionsByReporter,
 } from '@app/api/Tables';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 import {
 	type ReportProfileSnapshot,
 	serializeReportProfileSnapshot,
 } from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
+import type {IPostgresClient} from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const KV_TABLE = 'kv_report_repository';
-const CONTAINER = `fluxer-reportkv-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
-
-async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
-}
-
 function attachment(id: bigint, filename: string): MessageAttachment {
 	return {
 		attachment_id: createAttachmentID(id),
@@ -196,47 +166,11 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 		expect(remainingSeconds).toBeLessThanOrEqual(ttlSeconds);
 	}
 
+	let postgresContainer: string;
 	beforeAll(async () => {
-		const port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await sleep(500);
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 8,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		raw = getDefaultPostgresClient();
-		await ensurePostgresKvSchema(raw);
+		const started = await startPostgresKv({namePrefix: 'fluxer-reportkv', kvTable: KV_TABLE, maxConnections: 8});
+		postgresContainer = started.container;
+		raw = started.client;
 	}, 900_000);
 
 	beforeEach(async () => {
@@ -246,8 +180,7 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 
 	afterAll(async () => {
 		setCassandraQueryExecutorForTesting(null);
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+		await stopPostgresKv(postgresContainer);
 	});
 
 	it('round-trips the context channel, missing attachments, profile snapshot and hold columns', async () => {

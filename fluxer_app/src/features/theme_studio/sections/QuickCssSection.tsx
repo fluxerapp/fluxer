@@ -5,6 +5,7 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
+import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
 import type {QuickCssEditorProps} from '@app/features/theme_studio/sections/QuickCssEditor';
 import styles from '@app/features/theme_studio/sections/QuickCssSection.module.css';
@@ -15,11 +16,7 @@ import type {ThemeStudioBaseTheme} from '@app/features/theme_studio/utils/ThemeS
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
-import {
-	copyText,
-	downloadTextFile,
-	readFileText,
-} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
+import {copyText, readFileText} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {

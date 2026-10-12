@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getCachedDateTimeFormat} from '@app/features/i18n/utils/IntlCache';
 import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/form/DateTimePickerField.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CalendarBlankIcon} from '@phosphor-icons/react';
@@ -72,7 +72,7 @@ function formatDisplayDate(locale: string, date: Date | null): string {
 	if (!date) {
 		return '';
 	}
-	return getCachedDateTimeFormat(locale, {dateStyle: 'medium', timeStyle: 'short'}).format(date);
+	return getDateFormatter(locale, {dateStyle: 'medium', timeStyle: 'short'}).format(date);
 }
 
 function toTimeString(date: Date): string {

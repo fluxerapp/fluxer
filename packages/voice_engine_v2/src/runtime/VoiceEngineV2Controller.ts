@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {selectVoiceEngineV2Model, type VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core';
+import {selectVoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/core/selectors';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -28,8 +30,7 @@ import type {
 	VoiceEngineV2TimerOptions,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from '@fluxer/voice_engine_v2/src/protocol';
-import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {
 	VoiceEngineV2Runtime,
 	VoiceEngineV2RuntimeListener,
@@ -168,10 +169,6 @@ export class VoiceEngineV2Controller {
 
 	collectStats(): void {
 		this.runtime.dispatch({type: 'stats.collectRequested'});
-	}
-
-	queryHardwareEncoderCapabilities(): void {
-		this.runtime.dispatch({type: 'capabilities.hardwareEncoderQueryRequested'});
 	}
 
 	checkPermission(name: VoiceEngineV2PermissionName): void {

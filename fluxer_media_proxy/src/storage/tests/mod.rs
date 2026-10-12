@@ -14,7 +14,6 @@ use crate::{
     },
     constants,
     metrics::{Metrics, http_client::HTTPClientMetrics, storage::StorageMetrics},
-    secret::{SecretBytes, SecretString},
     storage::Store,
 };
 use axum::response::Response;
@@ -95,11 +94,11 @@ fn test_config(root: &Path) -> Config {
 }
 
 fn store(cfg: Config) -> Store {
-    store_with_storage_metrics(cfg, Arc::new(StorageMetrics::new()))
+    store_with_storage_metrics(cfg, Arc::new(StorageMetrics::default()))
 }
 
 fn store_with_storage_metrics(cfg: Config, metrics: Arc<StorageMetrics>) -> Store {
-    Store::new(cfg, metrics, Arc::new(HTTPClientMetrics::new()))
+    Store::new(cfg, metrics, Arc::new(HTTPClientMetrics::default()))
 }
 
 fn rendered_counter(metrics: &Metrics, name: &str) -> u64 {
@@ -321,3 +320,5 @@ pub(crate) async fn connection_dropping_front(
     });
     (endpoint, accepted)
 }
+
+use fluxer_common::secret::{SecretBytes, SecretString};

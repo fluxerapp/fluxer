@@ -13,7 +13,6 @@ use crate::charset;
 use crate::direct_media::MediaKind;
 use crate::html_parser::{self, OgMetadata, TwitterCardMetadata};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::oembed;
 use crate::sanitizer;
 use crate::text_limits;
@@ -447,15 +446,9 @@ async fn resolve_media_with_metadata_and_size(
             None
         }
         Ok(m) => Some(EmbedMedia {
-            url: Some(url.to_owned()),
             width: width.or(m.width),
             height: height.or(m.height),
-            content_type: Some(m.content_type.clone()),
-            content_hash: Some(m.content_hash.clone()),
-            placeholder: m.placeholder.clone(),
-            duration: m.duration.map(|duration| duration as u32),
-            flags: embed_media_flags(&m),
-            ..Default::default()
+            ..m.to_embed_media(url)
         }),
         Err(err) => {
             tracing::warn!(error = %err, url, "failed to resolve default embed media metadata");

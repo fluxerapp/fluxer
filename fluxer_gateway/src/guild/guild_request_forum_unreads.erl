@@ -122,7 +122,9 @@ scope(_Session, _Request, _State) ->
 is_forum(ChannelId, State) ->
     case
         maps:get(
-            ChannelId, guild_data_index:channel_index(maps:get(data, State, #{})), undefined
+            ChannelId,
+            guild_data_index_channels:channel_index(maps:get(data, State, #{})),
+            undefined
         )
     of
         #{<<"type">> := Type} -> guild_thread_gate:is_thread_only_type(Type);

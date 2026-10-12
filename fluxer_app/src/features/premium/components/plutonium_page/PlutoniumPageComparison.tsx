@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
+import {AVAILABLE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
 import {
@@ -9,7 +10,6 @@ import {
 	type PlutoniumPageIconName,
 } from '@app/features/premium/components/plutonium_page/PlutoniumPageIcons';
 import {
-	AVAILABLE_DESCRIPTOR,
 	COMPARE_TITLE_DESCRIPTOR,
 	FEATURE_COLUMN_DESCRIPTOR,
 	FREE_COLUMN_DESCRIPTOR,

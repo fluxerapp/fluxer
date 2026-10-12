@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isPlainRecord as isPlainObject} from '@electron/common/PlainRecord';
+
 import type {StagedLegacyHarvest} from '@electron/main/LegacyOriginHarvestStore';
 import {officialClientApiEndpointForAlias} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 
@@ -12,14 +14,6 @@ interface OfficialInstanceRekey {
 	readonly harvestedApiEndpoint: string;
 	readonly officialOrigin: string;
 	readonly officialApiEndpoint: string;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	if (typeof value !== 'object' || value === null) {
-		return false;
-	}
-	const prototype = Object.getPrototypeOf(value);
-	return prototype === Object.prototype || prototype === null;
 }
 
 function planOfficialInstanceRekey(harvestedOrigin: string): OfficialInstanceRekey | null {

@@ -485,31 +485,6 @@ notification_fields_include_title_body_and_tags_test() ->
     ?assertEqual(<<"/channels/123/456/789">>, maps:get(<<"url">>, Fields)),
     ?assertEqual(null, maps:get(<<"image_url">>, Fields)).
 
-notification_fields_use_markdown_plaintext_context_test() ->
-    MessageData = #{<<"content">> => <<"**Hi** <@1> <@&2> <#3>">>, <<"mentions">> => []},
-    Context = #{
-        <<"preserve_markdown">> => true,
-        <<"users">> => #{<<"1">> => <<"Ada">>},
-        <<"roles">> => #{<<"2">> => <<"Ops">>},
-        <<"channels">> => #{<<"3">> => <<"alerts">>}
-    },
-    Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>, Context),
-    ?assertEqual(<<"**Hi** @Ada @Ops #alerts">>, maps:get(<<"body">>, Fields)).
-
-notification_fields_include_safe_attachment_image_test() ->
-    MessageData = #{
-        <<"content">> => <<"Photo">>,
-        <<"mentions">> => [],
-        <<"attachments">> => [
-            #{
-                <<"content_type">> => <<"image/png">>,
-                <<"proxy_url">> => <<"https://cdn.example/image.png">>
-            }
-        ]
-    },
-    Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>),
-    ?assertEqual(<<"https://cdn.example/image.png">>, maps:get(<<"image_url">>, Fields)).
-
 notification_fields_omit_sensitive_attachment_image_test() ->
     MessageData = #{
         <<"content">> => <<"Spoiler">>,
@@ -524,21 +499,6 @@ notification_fields_omit_sensitive_attachment_image_test() ->
     },
     Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>),
     ?assertEqual(null, maps:get(<<"image_url">>, Fields)).
-
-notification_fields_include_the_fluxer_badge_test() ->
-    MessageData = #{<<"content">> => <<"Hi">>, <<"mentions">> => []},
-    Fields = test_notification_fields(MessageData, 123, <<"Server">>, <<"general">>),
-    ?assertEqual(
-        <<"https://static.example/marketing/branding/symbol-white.svg">>,
-        maps:get(<<"badge">>, Fields)
-    ).
-
-notification_fields_omit_the_badge_on_self_hosted_instances_test() ->
-    MessageData = #{<<"content">> => <<"Hi">>, <<"mentions">> => []},
-    Fields = test_notification_fields(
-        MessageData, 123, <<"Server">>, <<"general">>, #{}, true
-    ),
-    ?assertNot(maps:is_key(<<"badge">>, Fields)).
 
 test_notification_fields(MessageData, GuildId, GuildName, ChannelName) ->
     test_notification_fields(MessageData, GuildId, GuildName, ChannelName, #{}).

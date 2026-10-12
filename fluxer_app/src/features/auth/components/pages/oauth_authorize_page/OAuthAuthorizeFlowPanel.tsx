@@ -3,11 +3,11 @@
 import {OAuthAccountStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep';
 import {OAuthCommunityStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep';
 import {OAuthErrorState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthErrorState';
-import {OAuthLoadingState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthLoadingState';
 import {OAuthPermissionsStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep';
 import {OAuthScopesStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep';
 import {OAuthSuccessState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState';
 import type {AuthorizeFlow} from '@app/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow';
+import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -40,7 +40,7 @@ export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = o
 		switch (flow.phase.kind) {
 			case 'loading':
 				return (
-					<OAuthLoadingState data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.o-auth-loading-state" />
+					<AuthLoadingState data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.o-auth-loading-state" />
 				);
 			case 'session_expired':
 				return (

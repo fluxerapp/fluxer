@@ -4,7 +4,6 @@ import {APP_PROTOCOL} from '@electron/common/Constants';
 import {updateFromCommandLine} from '@electron/main/DesktopUpdatePrompt';
 import {parseJumpListTaskFromArgv} from '@electron/main/JumpList';
 import {isDesktopUpdateRequested} from '@electron/main/LaunchOptions';
-import {recordRecentDeepLink} from '@electron/main/RecentDocuments';
 import {getMainWindow, isMainWindowTakenOver, onMainWindowTakeoverEnded, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
 import log from 'electron-log';
@@ -239,4 +238,13 @@ export function handleSecondInstance(argv: Array<string>): void {
 
 export function consumeInitialJumpListTask(): 'open-settings' | 'new-dm' | null {
 	return parseJumpListTaskFromArgv(process.argv);
+}
+
+function recordRecentDeepLink(url: string): void {
+	if (process.platform !== 'win32' && process.platform !== 'darwin') return;
+	try {
+		app.addRecentDocument(url);
+	} catch (error) {
+		log.debug('addRecentDocument failed', {error});
+	}
 }

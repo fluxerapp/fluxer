@@ -56,18 +56,11 @@ impl Store {
         &self,
         request: BufferedObjectReadRequest<'_>,
     ) -> Result<BufferedStorageObject, StorageError> {
-        let result = self.read_object_direct(request).await;
-        record_storage_outcome(&self.metrics, &result);
-        result
-    }
-
-    async fn read_object_direct(
-        &self,
-        request: BufferedObjectReadRequest<'_>,
-    ) -> Result<BufferedStorageObject, StorageError> {
-        match self.cfg.storage.backend {
+        let result = match self.cfg.storage.backend {
             StorageBackend::Local => self.read_local(request).await,
             StorageBackend::S3 => self.read_s3(request).await,
-        }
+        };
+        record_storage_outcome(&self.metrics, &result);
+        result
     }
 }

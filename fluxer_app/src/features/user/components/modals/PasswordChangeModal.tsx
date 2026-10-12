@@ -20,6 +20,10 @@ import * as RecoveryKitCommands from '@app/features/user/commands/RecoveryKitCom
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import RecoveryKitStatus from '@app/features/user/state/RecoveryKitStatus';
 import Users from '@app/features/user/state/Users';
+import {
+	INVALID_OR_EXPIRED_CODE_DESCRIPTOR,
+	UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import {pushApiErrorModal} from '@app/lib/forms';
 import type {I18n} from '@lingui/core';
@@ -33,14 +37,7 @@ const UNABLE_TO_START_PASSWORD_CHANGE_DESCRIPTOR = msg({
 	message: 'Unable to start password change',
 	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
 });
-const INVALID_OR_EXPIRED_CODE_DESCRIPTOR = msg({
-	message: 'Invalid or expired code',
-	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
-});
-const UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR = msg({
-	message: 'Unable to resend code right now',
-	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
-});
+
 const UPDATE_YOUR_PASSWORD_DESCRIPTOR = msg({
 	message: 'Update your password',
 	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',

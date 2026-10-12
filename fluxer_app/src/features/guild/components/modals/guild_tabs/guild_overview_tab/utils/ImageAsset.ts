@@ -7,12 +7,3 @@ export function revokeObjectUrl(url: string | null | undefined): void {
 		URL.revokeObjectURL(url);
 	} catch {}
 }
-
-export function blobToDataUrl(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(reader.result as string);
-		reader.onerror = () => reject(new Error('Failed to read blob as data URL'));
-		reader.readAsDataURL(blob);
-	});
-}

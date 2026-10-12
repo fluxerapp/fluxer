@@ -6,7 +6,7 @@ import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
-import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthSsoPanel, isSsoLoginEnforced, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {AUTH_LOGIN_METHOD_QUERY_PARAM} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import {AuthClientPermissionStep} from '@app/features/auth/flow/client_intro/AuthClientPermissionStep';
 import {AuthClientPreferencesStep} from '@app/features/auth/flow/client_intro/AuthClientPreferencesStep';
@@ -54,7 +54,7 @@ function selectRegisterPageStep(showPreferences: boolean, permission: Permission
 
 function isSsoEnforcedForSnapshot(runtimeSnapshot: RuntimeConfigSnapshot): boolean {
 	const ssoConfig = resolveAuthPanelSso(runtimeSnapshot);
-	return Boolean(ssoConfig?.enabled && ssoConfig.enforced);
+	return isSsoLoginEnforced(ssoConfig);
 }
 
 interface RegisterPageContentProps {

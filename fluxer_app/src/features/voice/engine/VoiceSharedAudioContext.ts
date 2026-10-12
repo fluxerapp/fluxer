@@ -146,7 +146,7 @@ function installMasterSoftClip(context: AudioContext): void {
 
 let sharedAudioContext: AudioContext | null = null;
 
-function resolveAudioContextConstructor(): AudioContextConstructor | null {
+export function resolveAudioContextConstructor(): AudioContextConstructor | null {
 	if (typeof window === 'undefined') return null;
 	const ctor =
 		window.AudioContext ||

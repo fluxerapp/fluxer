@@ -4,8 +4,8 @@ import {createUserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {ms} from 'itty-time';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 

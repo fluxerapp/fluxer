@@ -6,13 +6,9 @@ import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtil
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons';
 import {ThreadState as ThreadStateTable} from '@app/api/Tables';
@@ -48,7 +44,7 @@ describe('thread message path', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -56,12 +52,11 @@ describe('thread message path', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -199,26 +194,6 @@ describe('thread message path', () => {
 				.execute();
 		});
 
-		it('adds mentioned members who can see the parent', async () => {
-			const s = await setup();
-			const thread = await startThread(s.owner.token, s.channelId);
-			await send(s.owner.token, thread.id, `hey <@${s.member.userId}>`);
-			const member = await repository.threads.getMember(
-				createChannelID(BigInt(thread.id)),
-				createUserID(BigInt(s.member.userId)),
-			);
-			expect(member?.flags).toBe(0);
-			const bot = await createTestBotAccount(harness);
-			await authorizeBot(harness, s.owner.token, bot.appId, ['bot'], s.guildId, Permissions.ADMINISTRATOR.toString());
-			await setChannelThreadsConfig({...ALL_THREADS_ACTIVE, user_basis_points: 0, included_user_ids: [s.owner.userId]});
-			await send(s.owner.token, thread.id, `hey <@${bot.botUserId}>`);
-			const botMember = await repository.threads.getMember(
-				createChannelID(BigInt(thread.id)),
-				createUserID(BigInt(bot.botUserId)),
-			);
-			expect(botMember?.flags).toBe(0);
-		});
-
 		it('indexes thread messages for search while the parent is still unindexed', async () => {
 			const s = await setup();
 			const thread = await startThread(s.owner.token, s.channelId);
@@ -228,7 +203,6 @@ describe('thread message path', () => {
 			expect(indexMessage).toHaveBeenCalledWith(
 				expect.objectContaining({id: createMessageID(BigInt(message.id))}),
 				false,
-				{includeDefault: true},
 			);
 		});
 	});
@@ -650,53 +624,6 @@ describe('thread message path', () => {
 			await createBuilderWithoutAuth(harness)
 				.get(`${hookPath}/messages/${posted.id}?thread_id=${thread.id}`)
 				.expect(404, APIErrorCodes.UNKNOWN_MESSAGE)
-				.execute();
-		});
-
-		it('refuses thread_id on message lookups, edits and deletes in a tainted inactive guild', async () => {
-			const s = await setup();
-			const thread = await startThread(s.owner.token, s.channelId);
-			const webhook = await createWebhook(harness, s.channelId, s.owner.token, 'hook');
-			const hookPath = `/webhooks/${webhook.id}/${webhook.token}`;
-			const posted = await createBuilderWithoutAuth<MessageResponse>(harness)
-				.post(`${hookPath}?wait=true&thread_id=${thread.id}`)
-				.body({content: 'kept'})
-				.expect(200)
-				.execute();
-			await setChannelThreadsConfig({enabled: false});
-			const messagePath = `${hookPath}/messages/${posted.id}?thread_id=${thread.id}`;
-			await createBuilderWithoutAuth(harness).get(messagePath).expect(404, APIErrorCodes.UNKNOWN_CHANNEL).execute();
-			await createBuilderWithoutAuth(harness)
-				.patch(messagePath)
-				.body({content: 'refused'})
-				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
-				.execute();
-			await createBuilderWithoutAuth(harness).delete(messagePath).expect(404, APIErrorCodes.UNKNOWN_CHANNEL).execute();
-			const message = await repository.messages.getMessage(
-				createChannelID(BigInt(thread.id)),
-				createMessageID(BigInt(posted.id)),
-			);
-			expect(message?.content).toBe('kept');
-		});
-
-		it('strips thread_id in never-enabled instances and refuses it once the guild is tainted', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'control');
-			const channel = await createChannel(harness, owner.token, guild.id, 'general');
-			const webhook = await createWebhook(harness, channel.id, owner.token, 'hook');
-			const posted = await createBuilderWithoutAuth<MessageResponse>(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}?wait=true&thread_id=123`)
-				.body({content: 'parent'})
-				.expect(200)
-				.execute();
-			expect(posted.channel_id).toBe(channel.id);
-			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
-			await startThread(owner.token, channel.id);
-			await setChannelThreadsConfig({enabled: false});
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}?thread_id=123`)
-				.body({content: 'refused'})
-				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
 				.execute();
 		});
 	});

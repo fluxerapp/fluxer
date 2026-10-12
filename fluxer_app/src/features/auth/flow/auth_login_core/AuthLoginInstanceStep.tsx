@@ -8,12 +8,8 @@ import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {flxElementClassName} from '@app/lib/react';
 import type {ReactNode} from 'react';
 
-export function resolveShouldShowInstanceSelector(shouldShowInstanceSelector: boolean | null | undefined): boolean {
-	return shouldShowInstanceSelector ?? hasDesktopAppStore();
-}
-
-export function shouldRenderInstanceStep(shouldShowInstanceSelector: boolean | null | undefined): boolean {
-	return hasDesktopAppStore() && resolveShouldShowInstanceSelector(shouldShowInstanceSelector);
+export function shouldRenderInstanceStep(): boolean {
+	return hasDesktopAppStore();
 }
 
 function hasDesktopAppStore(): boolean {

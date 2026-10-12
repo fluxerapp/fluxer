@@ -27,12 +27,13 @@ import type {ThreadRepository} from '@app/api/channel/repositories/ThreadReposit
 import {
 	isChannelEligible,
 	isTimestampInWindow,
+	loadSelfMessageEligibilityContext,
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
-import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
@@ -68,7 +69,6 @@ import {ContentAddressedAttachmentCollector} from '@app/api/worker/utils/Content
 import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	decodeSyncedPreferencesLenient,
 	syncedPreferencesToJson,
@@ -421,7 +421,6 @@ export async function collectThreadMemberships(
 	userId: UserID,
 	guildIds: ReadonlyArray<GuildID>,
 ): Promise<Array<ThreadMember>> {
-	if (!everEnabled()) return [];
 	const perGuild = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
 		if (!(await isTainted(guildId, {fresh: true}))) return [];
 		const threadIds = await threads.listJoinedThreadIds(userId, guildId);
@@ -471,11 +470,11 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			email_bounced: user.emailBounced,
 			avatar_hash: user.avatarHash,
 			avatar_url: user.avatarHash
-				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${user.avatarHash.startsWith('a_') ? 'gif' : 'png'}`
+				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${getAnimatedAssetExtension(user.avatarHash)}`
 				: null,
 			banner_hash: user.bannerHash,
 			banner_url: user.bannerHash
-				? `${Config.endpoints.media}/banners/${userId}/${user.bannerHash}.${user.bannerHash.startsWith('a_') ? 'gif' : 'png'}`
+				? `${Config.endpoints.media}/banners/${userId}/${user.bannerHash}.${getAnimatedAssetExtension(user.bannerHash)}`
 				: null,
 			bio: user.bio,
 			pronouns: user.pronouns,
@@ -831,20 +830,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		let filterArgs: HarvestMessagesFilterArgs | null = null;
 		if (validated.filter) {
 			const filter = deserializeSelfMessageFilter(validated.filter);
-			const [privateChannelsForFilter, userGuildsForFilter] = await Promise.all([
-				userRepository.listPrivateChannels(userId),
-				guildRepository.listUserGuilds(userId),
-			]);
-			const openDmChannelIds = new Set<string>();
-			for (const channel of privateChannelsForFilter) {
-				if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
-					openDmChannelIds.add(channel.id.toString());
-				}
-			}
-			const context: SelfMessageEligibilityContext = {
-				currentGuildIds: new Set(userGuildsForFilter.map((guild) => guild.id.toString())),
-				openDmChannelIds,
-			};
+			const context = await loadSelfMessageEligibilityContext(userId, {userRepository, guildRepository});
 			filterArgs = {
 				filter,
 				context,

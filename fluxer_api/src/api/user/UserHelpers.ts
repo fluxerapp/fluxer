@@ -55,7 +55,7 @@ interface PremiumCheckable {
 	premiumType: number | null;
 	premiumUntil: Date | null;
 	premiumGiftExtensionEndsAt: Date | null;
-	premiumWillCancel: boolean;
+
 	premiumGraceEndsAt: Date | null;
 	flags: bigint;
 	premiumFlags: number;

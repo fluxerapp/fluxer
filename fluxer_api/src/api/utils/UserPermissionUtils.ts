@@ -3,7 +3,6 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Guild} from '@app/api/models/Guild';
-import type {Relationship} from '@app/api/models/Relationship';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {FriendSourceFlags, GroupDmAddPermissionFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
@@ -126,22 +125,5 @@ export class UserPermissionUtils {
 	checkMutualGuilds(userGuildIds: Array<GuildID>, targetGuildIds: Array<GuildID>): boolean {
 		const userGuildIdSet = new Set(userGuildIds.map((id) => id.toString()));
 		return targetGuildIds.some((id) => userGuildIdSet.has(id.toString()));
-	}
-
-	async getMutualFriends({userId, targetId}: {userId: UserID; targetId: UserID}): Promise<Array<Relationship>> {
-		const userFriends = await this.userRepository.listRelationships(userId);
-		const targetFriends = await this.userRepository.listRelationships(targetId);
-		const targetFriendIds = new Set(
-			targetFriends.filter((rel) => rel.type === RelationshipTypes.FRIEND).map((rel) => rel.targetUserId.toString()),
-		);
-		return userFriends.filter(
-			(rel) => rel.type === RelationshipTypes.FRIEND && targetFriendIds.has(rel.targetUserId.toString()),
-		);
-	}
-
-	async getMutualGuildIds({userId, targetId}: {userId: UserID; targetId: UserID}): Promise<Array<GuildID>> {
-		const {userGuildIds, targetGuildIds} = await this.fetchGuildIdsForUsers({userId, targetId});
-		const targetGuildIdSet = new Set(targetGuildIds.map((guildId) => guildId.toString()));
-		return userGuildIds.filter((guildId) => targetGuildIdSet.has(guildId.toString()));
 	}
 }

@@ -1,3 +1,5 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const LEGACY_SKELETON_LAYOUT_MEMORY_KEY = 'SkeletonLayoutMemory';
@@ -58,10 +60,6 @@ const MIN_SIDEBAR_WIDTH_PX = 200;
 const MAX_SIDEBAR_WIDTH_PX = 480;
 const MAX_ACCOUNT_KEY_LENGTH = 256;
 const NO_SELECTED_ROW_INDEX = -1;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function parseRecord(value: unknown): Record<string, unknown> | null {
 	if (typeof value !== 'string') return null;

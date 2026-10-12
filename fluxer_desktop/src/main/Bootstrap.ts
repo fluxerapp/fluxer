@@ -7,9 +7,7 @@ import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {WINDOWS_APP_USER_MODEL_ID, WINDOWS_TOAST_ACTIVATOR_CLSID} from '@electron/common/DesktopIdentity';
 import {type ModulePollPlan, nextModulePollDelay, resolveModulePollPlan} from '@electron/common/ModulePollPlan';
 import {
-	decideModuleSystemDisableRequest,
 	hasOfflineRenderer,
-	ModuleSystemDisableDecision,
 	ModuleSystemLaunchDecision,
 	readBundledRendererVersion,
 	resolveModuleSystemLaunch,
@@ -219,7 +217,7 @@ async function runModuleBootstrap(): Promise<void> {
 		setSecondInstanceSink,
 	} = await import('@electron/main/ModuleBootHandoff');
 	const {armDesktopUpdate, publishDesktopUpdateCheck} = await import('@electron/main/DesktopUpdateGate');
-	const {instanceTurnedModulesOff} = await import('@electron/main/InstanceModulePreference');
+
 	const {createOnDemandModuleInstaller} = await import('@electron/main/ModuleOnDemand');
 	const {getModuleStoreRoot, ModuleStore} = await import('@electron/main/ModuleStore');
 	const {ModuleUpdater} = await import('@electron/main/ModuleUpdater');
@@ -266,26 +264,6 @@ async function runModuleBootstrap(): Promise<void> {
 		return;
 	}
 	armSecondInstanceForwarding();
-
-	const instancePreference = decideModuleSystemDisableRequest(
-		instanceTurnedModulesOff(userDataConfig.base),
-		CAN_TURN_MODULE_SYSTEM_OFF,
-	);
-	switch (instancePreference.kind) {
-		case ModuleSystemDisableDecision.NOT_REQUESTED:
-			break;
-		case ModuleSystemDisableDecision.IGNORED_WITHOUT_OFFLINE_RENDERER:
-			logger.warn(
-				'Ignoring the instance desktop module preference, only a development build with a bundled renderer may turn the module system off',
-			);
-			break;
-		case ModuleSystemDisableDecision.HONOURED:
-			logger.warn(
-				'The instance turned the desktop module system off on an earlier boot, launching the offline renderer instead',
-			);
-			await import(MAIN_PROCESS_ENTRY_URL);
-			return;
-	}
 
 	loadDesktopConfig(userDataConfig.base);
 	applyPreReadyChromiumConfiguration(userDataConfig.channel, process.argv);

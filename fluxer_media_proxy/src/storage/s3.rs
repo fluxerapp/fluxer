@@ -178,34 +178,6 @@ impl Store {
         })
     }
 
-    pub(super) async fn write_s3(
-        &self,
-        bucket: &str,
-        key: &str,
-        data: &[u8],
-        content_type: &str,
-    ) -> Result<(), StorageError> {
-        let url = self.s3_url(bucket, key)?;
-        let extra = [aws_sigv4::Header {
-            name: "Content-Type",
-            value: content_type,
-        }];
-        let signed = self.sign(Method::PUT, &url, data, None, &extra)?;
-        let mut headers = signed_headers(&signed, &self.cfg);
-        headers.insert(header::CONTENT_TYPE, content_type_header(content_type));
-        let response = self
-            .client
-            .put(&url)
-            .headers(headers)
-            .body(data.to_vec())
-            .send()
-            .await?;
-        if !response.status().is_success() {
-            return Err(StorageError::S3(response.status().to_string()));
-        }
-        Ok(())
-    }
-
     pub(super) async fn relay_put_s3(
         &self,
         bucket: &str,

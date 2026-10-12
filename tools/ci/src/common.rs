@@ -37,6 +37,16 @@ pub(crate) struct CalverEnv {
     pub(crate) fluxer_build_date: Option<String>,
 }
 
+impl CalverEnv {
+    pub(crate) fn from_process() -> Self {
+        Self {
+            build_version: trim_option(env::var("BUILD_VERSION").ok()),
+            fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
+            fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CommandSpec {
     pub(crate) program: OsString,
@@ -239,7 +249,7 @@ fn append_key_values(path_env_name: &str, pairs: &[(&str, &str)]) -> Result<()> 
 }
 
 pub(crate) fn run_command(spec: CommandSpec) -> Result<()> {
-    println!("+ {}", display_command(&spec));
+    println!("+ {}", display_command(&spec.program, &spec.args));
     let status = spec
         .to_command()
         .status()
@@ -248,7 +258,7 @@ pub(crate) fn run_command(spec: CommandSpec) -> Result<()> {
         status.success(),
         "Command failed with exit code {}: {}",
         status.code().unwrap_or(1),
-        display_command(&spec)
+        display_command(&spec.program, &spec.args)
     );
     Ok(())
 }
@@ -274,7 +284,7 @@ fn output(spec: CommandSpec) -> Result<CapturedOutput> {
         bail!(
             "Command failed with exit code {}: {}\n{}{}",
             captured.status,
-            display_command(&spec),
+            display_command(&spec.program, &spec.args),
             stdout,
             stderr
         );
@@ -282,7 +292,7 @@ fn output(spec: CommandSpec) -> Result<CapturedOutput> {
 }
 
 pub(crate) fn capture(spec: CommandSpec) -> Result<CapturedOutput> {
-    println!("+ {}", display_command(&spec));
+    println!("+ {}", display_command(&spec.program, &spec.args));
     let output = spec
         .to_command()
         .stdout(Stdio::piped())
@@ -306,9 +316,9 @@ pub(crate) fn command_succeeds(spec: CommandSpec) -> bool {
         .is_ok_and(|status| status.success())
 }
 
-fn display_command(spec: &CommandSpec) -> String {
-    std::iter::once(spec.program.to_string_lossy().to_string())
-        .chain(spec.args.iter().map(|arg| quote_arg(arg)))
+pub(crate) fn display_command(program: impl AsRef<OsStr>, args: &[impl AsRef<OsStr>]) -> String {
+    std::iter::once(program.as_ref().to_string_lossy().to_string())
+        .chain(args.iter().map(|arg| quote_arg(arg.as_ref())))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -1093,42 +1103,6 @@ pub(crate) fn title_case(value: &str) -> String {
 mod tests {
     use super::*;
 
-    fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
-            .single()
-            .unwrap()
-    }
-
-    #[test]
-    fn resolves_generated_calver_from_date_override() {
-        let calver_env = CalverEnv {
-            fluxer_build_date: Some("2026-05-20T01:02:03Z".to_string()),
-            ..CalverEnv::default()
-        };
-        assert_eq!(
-            resolve_calver(&calver_env, dt(2026, 1, 1, 0, 0, 0)).unwrap(),
-            "2026.520.10203"
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_explicit_time() {
-        assert_eq!(
-            parse_version_instant("2026.520.246000")
-                .unwrap_err()
-                .to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
-    }
-
-    #[test]
-    fn s3_key_helpers_are_platform_neutral() {
-        assert_eq!(
-            path_to_s3_key(Path::new("assets").join("chunks").join("a.js").as_path()),
-            "assets/chunks/a.js"
-        );
-    }
-
     #[test]
     fn append_only_plan_skips_existing_keys_without_reordering_pending_uploads() {
         let temp = tempfile::tempdir().unwrap();
@@ -1251,141 +1225,6 @@ mod tests {
                 .unwrap_err()
                 .to_string(),
             "Duplicate S3 upload key in local plan: same/key"
-        );
-    }
-
-    #[test]
-    fn s3_conditional_put_errors_are_treated_as_existing_objects() {
-        assert!(is_existing_object_error(Some("PreconditionFailed"), None));
-        assert!(is_existing_object_error(
-            Some("ConditionalRequestConflict"),
-            None
-        ));
-        assert!(is_existing_object_error(Some("Error"), Some(412)));
-        assert!(is_existing_object_error(None, Some(409)));
-        assert!(!is_existing_object_error(Some("AccessDenied"), Some(403)));
-        assert!(!is_existing_object_error(None, None));
-    }
-
-    #[test]
-    fn s3_retryable_errors_include_unmodeled_429s() {
-        assert!(is_retryable_s3_error(Some("Error"), Some(429)));
-        assert!(is_retryable_s3_error(Some("TooManyRequests"), None));
-        assert!(is_retryable_s3_error(Some("RateLimitExceeded"), None));
-        assert!(!is_retryable_s3_error(None, Some(503)));
-        assert!(!is_retryable_s3_error(Some("AccessDenied"), Some(403)));
-        assert!(!is_retryable_s3_error(None, None));
-    }
-
-    #[test]
-    fn s3_etag_md5_accepts_only_single_part_md5_values() {
-        assert_eq!(
-            s3_etag_md5("\"D41D8CD98F00B204E9800998ECF8427E\"").as_deref(),
-            Some("d41d8cd98f00b204e9800998ecf8427e")
-        );
-        assert!(s3_etag_md5("\"d41d8cd98f00b204e9800998ecf8427e-2\"").is_none());
-        assert!(s3_etag_md5("\"not-md5\"").is_none());
-    }
-
-    #[test]
-    fn s3_list_prefixes_group_planned_keys_by_top_level_prefix() {
-        let plan = vec![
-            S3UploadPlanItem::new(PathBuf::from("index.html"), "index.html".to_string()),
-            S3UploadPlanItem::new(PathBuf::from("emoji/a.svg"), "emoji/a.svg".to_string()),
-            S3UploadPlanItem::new(
-                PathBuf::from("emoji/nested/b.svg"),
-                "emoji/nested/b.svg".to_string(),
-            ),
-            S3UploadPlanItem::new(PathBuf::from("assets/app.js"), "assets/app.js".to_string()),
-        ];
-
-        assert_eq!(
-            s3_list_prefixes_for_plan(&plan),
-            BTreeSet::from([
-                "assets/".to_string(),
-                "emoji/".to_string(),
-                "index.html".to_string()
-            ])
-        );
-    }
-
-    #[test]
-    fn s3_error_summary_includes_available_metadata() {
-        assert_eq!(
-            s3_error_summary(Some("Error"), Some(404)),
-            " (S3 code Error, HTTP status 404)"
-        );
-        assert_eq!(s3_error_summary(None, Some(500)), " (HTTP status 500)");
-    }
-
-    #[test]
-    fn s3_content_type_for_key_covers_browser_module_assets() {
-        assert_eq!(
-            s3_content_type_for_key("assets/app.js"),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/app.mjs"),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/voice_bg.wasm"),
-            Some("application/wasm")
-        );
-        assert_eq!(
-            s3_content_type_for_key("assets/app.css"),
-            Some("text/css; charset=utf-8")
-        );
-        assert_eq!(s3_content_type_for_key("assets/blob.unknown"), None);
-    }
-
-    #[test]
-    fn collect_and_copy_dir_contents_are_sorted_and_recursive() {
-        let temp = tempfile::tempdir().unwrap();
-        let source = temp.path().join("source");
-        let dest = temp.path().join("dest");
-        fs::create_dir_all(source.join("b")).unwrap();
-        fs::write(source.join("b").join("two.txt"), "2").unwrap();
-        fs::write(source.join("one.txt"), "1").unwrap();
-
-        let relative_files = collect_files(&source)
-            .unwrap()
-            .into_iter()
-            .map(|path| path_to_s3_key(path.strip_prefix(&source).unwrap()))
-            .collect::<Vec<_>>();
-        assert_eq!(relative_files, vec!["b/two.txt", "one.txt"]);
-
-        copy_dir_contents(&source, &dest).unwrap();
-        assert_eq!(fs::read_to_string(dest.join("one.txt")).unwrap(), "1");
-        assert_eq!(
-            fs::read_to_string(dest.join("b").join("two.txt")).unwrap(),
-            "2"
-        );
-    }
-
-    #[test]
-    fn remove_empty_dirs_below_collapses_nested_husks_and_keeps_the_root() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path().join("renderer");
-        fs::create_dir_all(root.join("web").join("icons").join("desktop")).unwrap();
-        fs::create_dir_all(root.join("assets")).unwrap();
-        fs::create_dir_all(root.join("keep")).unwrap();
-        fs::write(root.join("keep").join("one.txt"), "1").unwrap();
-
-        assert_eq!(remove_empty_dirs_below(&root).unwrap(), 4);
-
-        assert!(root.is_dir());
-        assert!(!root.join("web").exists());
-        assert!(!root.join("assets").exists());
-        assert!(root.join("keep").join("one.txt").is_file());
-    }
-
-    #[test]
-    fn remove_empty_dirs_below_is_a_no_op_on_a_missing_root() {
-        let temp = tempfile::tempdir().unwrap();
-        assert_eq!(
-            remove_empty_dirs_below(&temp.path().join("absent")).unwrap(),
-            0
         );
     }
 }

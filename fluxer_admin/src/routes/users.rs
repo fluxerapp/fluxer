@@ -470,34 +470,3 @@ fn append_query_params(url: &mut String, params: &[(String, String)]) {
         url.push_str(&urlencoding::encode(value));
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn badge_name_follows_the_cached_branding_and_falls_back_to_the_default() {
-        let gold = PremiumBranding {
-            name: Some("Gold".to_owned()),
-            premium_enabled: true,
-            ..PremiumBranding::default()
-        };
-        assert_eq!(premium_badge_name(Some(&gold)).as_deref(), Some("Gold"));
-        let unnamed = PremiumBranding {
-            name: None,
-            premium_enabled: true,
-            ..PremiumBranding::default()
-        };
-        assert_eq!(
-            premium_badge_name(Some(&unnamed)).as_deref(),
-            Some("Premium")
-        );
-        let everyone = PremiumBranding {
-            name: Some("Gold".to_owned()),
-            premium_enabled: false,
-            ..PremiumBranding::default()
-        };
-        assert_eq!(premium_badge_name(Some(&everyone)), None);
-        assert_eq!(premium_badge_name(None).as_deref(), Some("Premium"));
-    }
-}

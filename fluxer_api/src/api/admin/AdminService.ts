@@ -22,7 +22,7 @@ import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -63,7 +63,7 @@ export class AdminService {
 		private readonly channelRepository: ChannelRepository,
 		private readonly adminRepository: AdminRepository,
 		private readonly inviteRepository: InviteRepository,
-		private readonly discriminatorService: IDiscriminatorService,
+		private readonly discriminatorService: DiscriminatorService,
 		private readonly guildService: GuildService,
 		private readonly userCacheService: UserCacheService,
 		private readonly channelService: ChannelService,

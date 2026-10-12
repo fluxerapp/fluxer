@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
-import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {AuthSessionRow, AuthSessionTombstoneRow} from '@app/api/database/types/AuthTypes';
 import {Logger} from '@app/api/Logger';
 import {getCacheService, getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
@@ -170,14 +170,6 @@ export class AuthSessionRepository {
 			user_id: userId,
 		});
 		return rows.map((row) => new AuthSessionTombstone(row));
-	}
-
-	async updateAuthSessionLastUsed(sessionIdHash: Buffer): Promise<void> {
-		const approximateLastUsedAt = new Date();
-		await upsertOne(
-			AuthSessions.patchByPk({session_id_hash: sessionIdHash}, {approx_last_used_at: Db.set(approximateLastUsedAt)}),
-		);
-		await invalidateAuthSessionCache([sessionIdHash]);
 	}
 
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {

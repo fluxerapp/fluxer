@@ -2,7 +2,7 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createRoleID} from '@app/api/BrandedTypes';
-import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {
 	acceptInvite,
 	createChannelInvite,
@@ -65,7 +65,7 @@ describe('Guild Role Operations', () => {
 		});
 		const guildId = createGuildID(BigInt(guild.id));
 		const roleId = createRoleID(BigInt(role.id));
-		const roleRepository = new GuildRoleRepository();
+		const roleRepository = new GuildRepository();
 		const staleRole = await roleRepository.getRole(roleId, guildId);
 		expect(staleRole).toBeDefined();
 		if (!staleRole) {

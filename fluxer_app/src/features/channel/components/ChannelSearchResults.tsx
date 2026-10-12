@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {useSearchResultCollapsedGroups} from '@app/features/channel/hooks/useSearchResultCollapsedGroups';
 import '@app/features/channel/components/ChannelSearchHighlight.css';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {Message as MessageComponent} from '@app/features/channel/components/ChannelMessage';
 import styles from '@app/features/channel/components/ChannelSearchResults.module.css';
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {
-	AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR,
 	applyMatureContentToParamsIfNeeded,
 	applySortModeToParams,
 	type ChannelSearchSortMode,
@@ -19,10 +19,10 @@ import {
 	RESULTS_PER_PAGE,
 	renderScopeIcon,
 	renderSortIcon,
+	runChannelSearch,
 } from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {shouldSearchResultRowJump} from '@app/features/channel/components/channel_search_results/SearchResultRowClick';
 import {SearchResultsHeader} from '@app/features/channel/components/channel_search_results/SearchResultsHeader';
-import {SearchResultsPagination} from '@app/features/channel/components/channel_search_results/SearchResultsPagination';
 import {
 	SearchEmptyState,
 	SearchErrorState,
@@ -31,10 +31,6 @@ import {
 } from '@app/features/channel/components/channel_search_results/SearchResultsStateViews';
 import {useChannelSearchHighlight} from '@app/features/channel/components/channel_search_results/useChannelSearchHighlight';
 import type {MessageGroupRenderWrapperProps} from '@app/features/channel/components/MessageGroup';
-import {
-	buildSearchResultGroups,
-	buildSearchResultGroupsByMessageId,
-} from '@app/features/channel/components/SearchResultGrouping';
 import {SearchResultMessageList} from '@app/features/channel/components/SearchResultMessageList';
 import {areSegmentsEqual} from '@app/features/channel/components/SearchResultsUtils';
 import {DEFAULT_SCOPE_VALUE, getScopeOptionsForChannel} from '@app/features/channel/components/SearchScopeOptions';
@@ -44,7 +40,6 @@ import {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch, {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
 import Channels from '@app/features/channel/state/Channels';
 import {getChannelSearchIndexingPollInterval} from '@app/features/channel/utils/ChannelSearchPolling';
-import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {JUMP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {MessageContextPrefix} from '@app/features/messaging/components/message_context_prefix/MessageContextPrefix';
@@ -53,17 +48,13 @@ import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/
 import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
-import {getCollapsedMessageGroupKey} from '@app/features/messaging/utils/MessageGroupingUtils';
-import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {SearchResultOpenFailedModal} from '@app/features/search/components/alerts/SearchResultOpenFailedModal';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import {
-	isIndexing,
 	type MessageSearchParams,
 	type MessageSearchScope,
 	parseSearchQueryWithSegments,
-	searchMessages,
 } from '@app/features/search/utils/SearchUtils';
 import {ContextMenuCloseProvider} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -71,9 +62,10 @@ import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {Pagination} from '@app/features/ui/components/Pagination';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import * as FormUtils from '@app/lib/forms';
+
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
@@ -123,7 +115,7 @@ export const ChannelSearchResults = observer(
 		const normalizedRefreshKey = refreshKey ?? null;
 		const lastObservedRefreshKey = searchContext?.lastSearchRefreshKey ?? null;
 		const [visiblePageSlots, setVisiblePageSlots] = useState(() => getAdaptiveVisiblePageCount());
-		const [revealedGroupKeys, setRevealedGroupKeys] = useState<Set<string>>(new Set());
+
 		const [sortMode, setSortMode] = useState<ChannelSearchSortMode>(
 			() => searchContext?.lastSearchSortMode ?? 'newest',
 		);
@@ -138,43 +130,18 @@ export const ChannelSearchResults = observer(
 		const sortModeOptions = useMemo(() => getSortModeOptions(i18n), [i18n.locale]);
 		const successResults = successMachineState?.results ?? EMPTY_SEARCH_MESSAGES;
 		const successChannels = successMachineState?.channels ?? EMPTY_SEARCH_CHANNELS;
-		const searchChannelsById = useMemo(
-			() => new Map(successChannels.map((searchChannel) => [searchChannel.id, searchChannel])),
-			[successChannels],
-		);
-		const resultGroups = useMemo(() => buildSearchResultGroups(successResults), [successResults]);
-		const resultGroupsByMessageId = useMemo(() => buildSearchResultGroupsByMessageId(resultGroups), [resultGroups]);
+		const {
+			spammerOverrideVersion,
+			searchChannelsById,
+			resultGroups,
+			collapsedMessageVisibility,
+			revealedGroupKeys,
+			setRevealedGroupKeys,
+			handleCollapsedGroupRevealChange,
+		} = useSearchResultCollapsedGroups(successResults, successChannels);
+
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(successResults);
-		const spammerOverrideVersion = LocalUserSpamOverride.version;
-		const collapsedMessageVisibility = useMemo(
-			() => ({
-				isMessageRevealed: (message: Message) => {
-					const resultGroup = resultGroupsByMessageId.get(message.id);
-					if (!resultGroup) return false;
-					const messageChannel = searchChannelsById.get(message.channelId) ?? Channels.getChannel(message.channelId);
-					if (!messageChannel) return false;
-					const groupKey = getCollapsedMessageGroupKey({
-						channel: messageChannel,
-						messages: resultGroup.messages,
-						messageId: message.id,
-						treatSpam: true,
-					});
-					return groupKey != null && revealedGroupKeys.has(groupKey);
-				},
-			}),
-			[resultGroupsByMessageId, revealedGroupKeys, searchChannelsById, spammerOverrideVersion],
-		);
-		const handleCollapsedGroupRevealChange = useCallback((groupKey: string, revealed: boolean) => {
-			setRevealedGroupKeys((current) => {
-				const next = new Set(current);
-				if (revealed) {
-					next.add(groupKey);
-				} else {
-					next.delete(groupKey);
-				}
-				return next;
-			});
-		}, []);
+
 		useEffect(() => {
 			if (!scopeOptions.length || !contextId) return;
 			const fallbackScope = scopeOptions[0].value;
@@ -274,23 +241,10 @@ export const ChannelSearchResults = observer(
 		const performSearch = useCallback(
 			async (page = 1, sortOverride?: ChannelSearchSortMode, scopeOverride?: MessageSearchScope | null) => {
 				if (!currentSearchQuery.current.trim() || !contextId) return;
-				if (GuildMatureContentAgree.shouldShowGate({channelId: channelId.current, guildId: channelGuildId.current})) {
-					sendContextMachineEvent({
-						type: 'channelSearch.succeeded',
-						channels: [],
-						results: [],
-						total: 0,
-						hitsPerPage: RESULTS_PER_PAGE,
-						page: 1,
-					});
-					return;
-				}
 				const params = buildSearchParams(page, scopeOverride);
 				const searchScope = params.scope ?? DEFAULT_SCOPE_VALUE;
 				const searchSortMode = sortOverride ?? sortModeRef.current;
-				if (sortOverride) {
-					applySortModeToParams(params, sortOverride);
-				}
+				if (sortOverride) applySortModeToParams(params, sortOverride);
 				const attemptSegments = currentSearchSegments.current.map((segment) => ({...segment}));
 				lastSearchAttempt.current = {
 					query: currentSearchQuery.current,
@@ -301,36 +255,14 @@ export const ChannelSearchResults = observer(
 				};
 				sendContextMachineEvent({type: 'channelSearch.loading'});
 				resetScrollerToTop();
-				try {
-					const result = await searchMessages(
-						i18n,
-						{contextChannelId: channelId.current, contextGuildId: channelGuildId.current},
-						params,
-					);
-					if (currentChannelId.current !== channelId.current) return;
-					if (isIndexing(result)) {
-						sendContextMachineEvent({type: 'channelSearch.indexingStarted'});
-						return;
-					}
-					sendContextMachineEvent(
-						{
-							type: 'channelSearch.succeeded',
-							channels: result.channels,
-							results: result.messages,
-							total: result.total,
-							hitsPerPage: result.hitsPerPage,
-							page: result.page,
-						},
-						searchScope,
-						searchSortMode,
-					);
-				} catch (error) {
-					if (currentChannelId.current !== channelId.current) return;
-					sendContextMachineEvent({
-						type: 'channelSearch.failed',
-						error: FormUtils.extractErrorMessage(i18n, error) || i18n._(AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR),
-					});
-				}
+				const event = await runChannelSearch(
+					i18n,
+					{contextChannelId: channelId.current, contextGuildId: channelGuildId.current},
+					params,
+				);
+				if (currentChannelId.current !== channelId.current) return;
+				if (event.type === 'channelSearch.succeeded') sendContextMachineEvent(event, searchScope, searchSortMode);
+				else sendContextMachineEvent(event);
 			},
 			[contextId, sendContextMachineEvent, resetScrollerToTop, buildSearchParams, i18n, normalizedRefreshKey],
 		);
@@ -339,54 +271,23 @@ export const ChannelSearchResults = observer(
 				stopPolling();
 				return;
 			}
-			if (GuildMatureContentAgree.shouldShowGate({channelId: channelId.current, guildId: channelGuildId.current})) {
-				stopPolling();
-				sendContextMachineEvent({
-					type: 'channelSearch.succeeded',
-					channels: [],
-					results: [],
-					total: 0,
-					hitsPerPage: RESULTS_PER_PAGE,
-					page: 1,
-				});
+			const page = successMachineState?.page ?? 1;
+			const params = buildSearchParams(page);
+			const searchScope = params.scope ?? DEFAULT_SCOPE_VALUE;
+			const searchSortMode = sortModeRef.current;
+			const event = await runChannelSearch(
+				i18n,
+				{contextChannelId: channelId.current, contextGuildId: channelGuildId.current},
+				params,
+			);
+			if (currentChannelId.current !== channelId.current) return;
+			if (event.type === 'channelSearch.indexingStarted') {
+				sendContextMachineEvent({type: 'channelSearch.indexingPolled'});
 				return;
 			}
-			try {
-				const page = successMachineState?.page ?? 1;
-				const params = buildSearchParams(page);
-				const searchScope = params.scope ?? DEFAULT_SCOPE_VALUE;
-				const searchSortMode = sortModeRef.current;
-				const result = await searchMessages(
-					i18n,
-					{contextChannelId: channelId.current, contextGuildId: channelGuildId.current},
-					params,
-				);
-				if (currentChannelId.current !== channelId.current) return;
-				if (isIndexing(result)) {
-					sendContextMachineEvent({type: 'channelSearch.indexingPolled'});
-					return;
-				}
-				stopPolling();
-				sendContextMachineEvent(
-					{
-						type: 'channelSearch.succeeded',
-						channels: result.channels,
-						results: result.messages,
-						total: result.total,
-						hitsPerPage: result.hitsPerPage,
-						page: result.page,
-					},
-					searchScope,
-					searchSortMode,
-				);
-			} catch (error) {
-				if (currentChannelId.current !== channelId.current) return;
-				stopPolling();
-				sendContextMachineEvent({
-					type: 'channelSearch.failed',
-					error: FormUtils.extractErrorMessage(i18n, error) || i18n._(AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR),
-				});
-			}
+			stopPolling();
+			if (event.type === 'channelSearch.succeeded') sendContextMachineEvent(event, searchScope, searchSortMode);
+			else sendContextMachineEvent(event);
 		}, [stopPolling, sendContextMachineEvent, successMachineState?.page, buildSearchParams, i18n]);
 		const handleSortSelect = useCallback(
 			(mode: ChannelSearchSortMode) => {
@@ -730,7 +631,7 @@ export const ChannelSearchResults = observer(
 										className={styles.resultsSpacer}
 										data-flx="channel.channel-search-results.render-content.results-spacer"
 									/>
-									<SearchResultsPagination
+									<Pagination
 										currentPage={currentPage}
 										totalPages={totalPages}
 										visiblePageSlots={visiblePageSlots}

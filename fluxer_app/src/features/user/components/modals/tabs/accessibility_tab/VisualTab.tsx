@@ -11,6 +11,10 @@ import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import styles from '@app/features/user/components/modals/tabs/accessibility_tab/VisualTab.module.css';
 import {DIM_STRIKETHROUGH_TEXT_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	ALWAYS_UNDERLINE_LINKS_DESCRIPTOR,
+	SUMMARY_NONE_DESCRIPTOR as NONE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -34,18 +38,12 @@ const ONLY_SHOW_MESSAGE_PREVIEWS_FOR_DMS_WITH_UNREAD_DESCRIPTOR = msg({
 	message: 'Only show message previews for DMs with unread messages',
 	comment: 'Label in the visual tab.',
 });
-const NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Short label in the visual tab. Keep it concise.',
-});
+
 const DON_T_SHOW_MESSAGE_PREVIEWS_IN_THE_DM_DESCRIPTOR = msg({
 	message: "Don't show message previews in the DM list",
 	comment: 'Label in the visual tab.',
 });
-const ALWAYS_UNDERLINE_LINKS_DESCRIPTOR = msg({
-	message: 'Always underline links',
-	comment: 'Short label in the visual tab. Keep it concise.',
-});
+
 const DM_MESSAGE_PREVIEW_MODE_DESCRIPTOR = msg({
 	message: 'DM message preview mode',
 	comment: 'Label in the visual tab.',

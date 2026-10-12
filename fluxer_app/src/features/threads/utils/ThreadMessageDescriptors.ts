@@ -42,10 +42,6 @@ export const OPEN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open in full view',
 	comment: 'Action that opens a thread as the main channel view instead of the side panel.',
 });
-export const CLOSE_THREAD_PANEL_DESCRIPTOR = msg({
-	message: 'Close',
-	comment: 'Button that closes the thread side panel.',
-});
 export const JOIN_THREAD_DESCRIPTOR = msg({
 	message: 'Join thread',
 	comment: 'Action that adds the current user to a thread.',
@@ -106,10 +102,6 @@ export const UNMUTE_THREAD_DESCRIPTOR = msg({
 	message: 'Unmute thread',
 	comment: 'Action that unmutes a thread.',
 });
-export const COPY_THREAD_LINK_DESCRIPTOR = msg({
-	message: 'Copy link',
-	comment: 'Action that copies a link to the thread.',
-});
 export const COPY_THREAD_ID_DESCRIPTOR = msg({
 	message: 'Copy thread ID',
 	comment: 'Developer mode action that copies the thread ID.',
@@ -130,21 +122,9 @@ export const NOTIFICATION_DEFAULT_DESCRIPTOR = msg({
 	message: 'Use channel default',
 	comment: 'Thread notification option that follows the parent channel setting.',
 });
-export const NOTIFICATION_ALL_DESCRIPTOR = msg({
-	message: 'All messages',
-	comment: 'Thread notification option that notifies for every message.',
-});
 export const NOTIFICATION_MENTIONS_DESCRIPTOR = msg({
 	message: 'Only @mentions',
 	comment: 'Thread notification option that notifies only for mentions.',
-});
-export const NOTIFICATION_NOTHING_DESCRIPTOR = msg({
-	message: 'Nothing',
-	comment: 'Thread notification option that never notifies.',
-});
-export const THREAD_NOTIFICATIONS_DESCRIPTOR = msg({
-	message: 'Notification settings',
-	comment: 'Submenu label for the thread notification options.',
 });
 export const THREAD_ARCHIVED_NOTICE_DESCRIPTOR = msg({
 	message: 'This thread is closed. Sending a message will open it again.',
@@ -161,10 +141,6 @@ export const THREAD_JOIN_NOTICE_DESCRIPTOR = msg({
 export const THREAD_MEMBERS_DESCRIPTOR = msg({
 	message: 'Thread members',
 	comment: 'Title of the thread member list.',
-});
-export const MESSAGE_COUNT_DESCRIPTOR = msg({
-	message: '{count, plural, one {# message} other {# messages}}',
-	comment: 'Message count on a thread chip and in the thread browser. count is the number of messages.',
 });
 export const NO_RECENT_MESSAGES_DESCRIPTOR = msg({
 	message: 'There are no recent messages in this thread.',
@@ -235,10 +211,6 @@ export const INVITABLE_DESCRIPTOR = msg({
 	message: 'Allow anyone to invite',
 	comment: 'Private thread setting that lets non-moderators add other members.',
 });
-export const ONE_HOUR_DESCRIPTOR = msg({
-	message: '1 hour',
-	comment: 'Thread auto archive duration option.',
-});
 export const ONE_DAY_DESCRIPTOR = msg({
 	message: '24 hours',
 	comment: 'Thread auto archive duration option.',
@@ -247,17 +219,9 @@ export const THREE_DAYS_DESCRIPTOR = msg({
 	message: '3 days',
 	comment: 'Thread auto archive duration option.',
 });
-export const ONE_WEEK_DESCRIPTOR = msg({
-	message: '1 week',
-	comment: 'Thread auto archive duration option.',
-});
 export const THREAD_SETTINGS_DESCRIPTOR = msg({
 	message: 'Thread settings',
 	comment: 'Title of the thread settings modal.',
-});
-export const SAVE_DESCRIPTOR = msg({
-	message: 'Save',
-	comment: 'Save button in the thread settings modal.',
 });
 export const SLOWMODE_COOLDOWN_DESCRIPTOR = msg({
 	message: 'You can start another thread in {seconds, plural, one {# second} other {# seconds}}.',
@@ -290,12 +254,4 @@ export const NO_MATCHING_THREADS_HINT_DESCRIPTOR = msg({
 export const THREAD_SEARCH_FAILED_DESCRIPTOR = msg({
 	message: "Couldn't search threads. Try again later.",
 	comment: 'Error state of the thread browser search.',
-});
-export const THREAD_SEARCH_INDEXING_DESCRIPTOR = msg({
-	message: 'Search is getting ready for this community. Trying again shortly...',
-	comment: 'Shown in the thread browser while the search index is being built.',
-});
-export const RETRY_SEARCH_DESCRIPTOR = msg({
-	message: 'Retry',
-	comment: 'Button that retries a failed thread search.',
 });

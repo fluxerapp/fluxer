@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {SCREEN_SHARE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	contextAllowsScreenShareResolution,
 	OFFERED_SCREEN_SHARE_RESOLUTIONS,
@@ -26,10 +27,7 @@ export const SCREEN_SHARE_PRESET_DESCRIPTORS: Record<Exclude<StreamingMode, 'cus
 		message: 'Gaming',
 		comment: 'Video settings label for the motion-focused screen share quality preset.',
 	}),
-	screenshare: msg({
-		message: 'Screen share',
-		comment: 'Video settings label for the text-focused screen share quality preset.',
-	}),
+	screenshare: SCREEN_SHARE_DESCRIPTOR,
 };
 
 const FREE_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['low_480p', 'medium'];

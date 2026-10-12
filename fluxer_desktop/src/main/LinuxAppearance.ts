@@ -4,6 +4,7 @@ import {createRequire} from 'node:module';
 import {createChildLogger} from '@electron/common/Logger';
 import type {LinuxAppearanceSnapshot} from '@electron/common/Types';
 import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 
 export type {LinuxAppearanceSnapshot} from '@electron/common/Types';
 
@@ -27,35 +28,6 @@ interface PortalsModule {
 	readAccentColor: () => {r: number; g: number; b: number} | null;
 	Settings: SettingsCtor | null;
 	loadError: Error | null;
-}
-
-let cached: PortalsModule | null | undefined;
-
-function loadAddon(): PortalsModule | null {
-	if (cached !== undefined) return cached;
-	if (process.platform !== 'linux') {
-		cached = null;
-		return cached;
-	}
-	if (getLinuxPortalsMode(process.argv) === 'off') {
-		logger.info('@fluxer/linux-portals disabled by launch diagnostics; appearance reads disabled');
-		cached = null;
-		return cached;
-	}
-	try {
-		const mod = requireModule('@fluxer/linux-portals') as PortalsModule;
-		if (mod.loadError) {
-			logger.info('@fluxer/linux-portals reported load error', {error: mod.loadError});
-			cached = null;
-			return cached;
-		}
-		cached = mod;
-		return cached;
-	} catch (error) {
-		logger.info('@fluxer/linux-portals not available; appearance reads disabled', {error});
-		cached = null;
-		return cached;
-	}
 }
 
 export function readLinuxAppearance(): LinuxAppearanceSnapshot {
@@ -118,3 +90,13 @@ export function subscribeLinuxAppearance(listener: LinuxAppearanceListener): Lin
 		},
 	};
 }
+
+const loadAddon = loadOptionalNativeAddon<PortalsModule>({
+	platform: 'linux',
+	load: () => requireModule('@fluxer/linux-portals'),
+	logger: logger,
+	level: 'info',
+	unavailableMessage: '@fluxer/linux-portals not available; appearance reads disabled',
+	disabled: () => getLinuxPortalsMode(process.argv) === 'off',
+	disabledMessage: '@fluxer/linux-portals disabled by launch diagnostics; appearance reads disabled',
+});

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	hookKeyNameForLayoutKey,
 	hookKeyNameToDomCode,
 	MODIFIER_KEY_CODES,
 	type ModifierKind,
 	modifierKindForCode,
-	shouldPreferLayoutKey,
 	usLayoutKeyToDomCode,
 } from '@electron/main/GlobalShortcutKeys';
+import {hookKeyNameForLayoutKey, shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 interface ShortcutModifiers {
 	ctrl: boolean;

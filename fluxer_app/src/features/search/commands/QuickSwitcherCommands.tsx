@@ -10,12 +10,11 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import type {QuickSwitcherExecutableResult} from '@app/features/search/state/QuickSwitcherTypes';
+import {QUICK_SWITCHER_OVERLAY_ID} from '@app/features/search/state/QuickSwitcherTypes';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-
-const QUICK_SWITCHER_OVERLAY_ID = 'nav_quick_switcher';
 
 export function hide(): void {
 	QuickSwitcher.hide();
@@ -55,9 +54,7 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 				break;
 			}
 			case QuickSwitcherResultTypes.TEXT_CHANNEL: {
-				if (result.viewContext === FAVORITES_GUILD_ID) {
-					NavigationCommands.selectChannel(FAVORITES_GUILD_ID, result.channel.id);
-				} else if (result.guild) {
+				if (result.guild) {
 					NavigationCommands.selectChannel(result.guild.id, result.channel.id);
 				} else {
 					NavigationCommands.selectChannel(ME, result.channel.id);
@@ -66,9 +63,7 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 				break;
 			}
 			case QuickSwitcherResultTypes.VOICE_CHANNEL: {
-				if (result.viewContext === FAVORITES_GUILD_ID) {
-					NavigationCommands.selectChannel(FAVORITES_GUILD_ID, result.channel.id);
-				} else if (result.guild) {
+				if (result.guild) {
 					NavigationCommands.selectChannel(result.guild.id, result.channel.id);
 				}
 				break;

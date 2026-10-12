@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {
 	getPremiumProductFullName,
 	getPremiumProductName,
 	getStoreOwnedSubscription,
 } from '@app/features/premium/utils/PremiumUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
@@ -125,21 +121,7 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	const handleOpenPremiumSettings = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');
 		void UserCommands.update({has_dismissed_premium_onboarding: true});
-		if (PlutoniumPageRollout.enabled) {
-			PlutoniumPageCommands.openPlutoniumPage();
-			return;
-		}
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal
-						initialTab="plutonium"
-						data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.handle-open-premium-settings.user-settings-modal"
-					/>
-				),
-				'user-settings',
-			),
-		);
+		PlutoniumPageCommands.openPlutoniumPage();
 	}, []);
 	const handleDismiss = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');

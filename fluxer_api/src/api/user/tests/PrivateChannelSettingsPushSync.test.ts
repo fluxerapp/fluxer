@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
 import {GatewayService} from '@app/api/infrastructure/GatewayService';
@@ -9,7 +8,6 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {updateGuildSettings} from '@app/api/user/tests/UserTestUtils';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const DM_CHANNEL_ID = '1500000000000000005';
@@ -67,15 +65,6 @@ describe('Private channel settings push sync', () => {
 		});
 	});
 
-	it('still mutes a DM when the gateway predates private scope sync', async () => {
-		const account = await createTestAccount(harness);
-		routeSyncThrough(gatewayRejectingSyncWith(GatewayRpcMethodErrorCodes.INVALID_PARAMS));
-
-		const {json} = await updateGuildSettings(harness, account.token, MUTE_DM);
-
-		expect(json).toMatchObject({channel_overrides: {[DM_CHANNEL_ID]: {muted: true}}});
-	});
-
 	it('fails the DM settings update on any other gateway sync error', async () => {
 		const account = await createTestAccount(harness);
 		routeSyncThrough(gatewayRejectingSyncWith(GatewayRpcMethodErrorCodes.INTERNAL_ERROR));
@@ -85,13 +74,5 @@ describe('Private channel settings push sync', () => {
 			.body(MUTE_DM)
 			.expect(502)
 			.execute();
-	});
-
-	it('keeps rejecting invalid_params for a real guild', async () => {
-		const gateway = gatewayRejectingSyncWith(GatewayRpcMethodErrorCodes.INVALID_PARAMS);
-
-		await expect(
-			gateway.syncPushUserGuildSettings({userId: createUserID(2n), guildId: createGuildID(1n), settings: {}}),
-		).rejects.toBeInstanceOf(BadRequestError);
 	});
 });

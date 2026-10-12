@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createWebhookID} from '@app/api/BrandedTypes';
+import {
+	createChannelID,
+	createWebhookID,
+	type EmojiID,
+	type GuildID,
+	type StickerID,
+	type UserID,
+} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
-import {everEnabled, isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {resolveExpressionSourceGuild} from '@app/api/guild/ExpressionSourceGuild';
 import {
 	collectAuditLogChannelIds,
@@ -24,7 +30,7 @@ import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
 import {GuildDataService} from '@app/api/guild/services/GuildDataService';
 import {GuildMemberService} from '@app/api/guild/services/GuildMemberService';
-import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
 import {GuildModerationService} from '@app/api/guild/services/GuildModerationService';
 import {GuildRoleService} from '@app/api/guild/services/GuildRoleService';
 import {GuildSearchService} from '@app/api/guild/services/GuildSearchService';
@@ -39,7 +45,6 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import type {Webhook} from '@app/api/models/Webhook';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -47,7 +52,6 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {ResourceLockedError} from '@fluxer/errors/src/domains/core/ResourceLockedError';
 import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGuildEmojiError';
@@ -74,17 +78,6 @@ interface StoredAuditLogWebhookResponse extends Omit<AuditLogWebhookResponse, 't
 interface StoredGuildAuditLogListResponse extends Omit<GuildAuditLogListResponse, 'audit_log_entries' | 'webhooks'> {
 	audit_log_entries: Array<StoredGuildAuditLogEntryResponse>;
 	webhooks: Array<StoredAuditLogWebhookResponse>;
-}
-
-interface GuildAuth {
-	guildData: GuildResponse;
-	checkPermission: (permission: bigint) => Promise<void>;
-	checkTargetMember: (targetUserId: UserID) => Promise<void>;
-	getAssignableRoleIds: () => Promise<Array<RoleID>>;
-	getMaxRolePosition: () => Promise<number>;
-	getMyPermissions: () => Promise<bigint>;
-	hasPermission: (permission: bigint) => Promise<boolean>;
-	canManageRoles: (targetUserId: UserID, targetRoleId: RoleID) => Promise<boolean>;
 }
 
 const GUILD_UPDATE_LOCK_TTL_SECONDS = 10;
@@ -341,7 +334,7 @@ export class GuildService {
 	}): Promise<StoredGuildAuditLogListResponse> {
 		const {guildId, requestCache, limit = 50, beforeLogId, afterLogId, filterUserId, actionType} = params;
 		const threadsVisible = params.viewer === undefined || viewerActive(params.viewer, guildId);
-		const hideThreadEntries = !threadsVisible && everEnabled() && (await isTainted(guildId));
+		const hideThreadEntries = !threadsVisible && (await isTainted(guildId));
 		if (beforeLogId !== undefined && afterLogId !== undefined) {
 			throw InputValidationError.fromCode('before', ValidationErrorCodes.CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER);
 		}
@@ -392,11 +385,7 @@ export class GuildService {
 			}
 		}
 		const [userPartials, webhookRecords] = await Promise.all([
-			getCachedUserPartialResponses({
-				userIds: Array.from(userIdSet),
-				userCacheService: this.userCacheService,
-				requestCache,
-			}),
+			this.userCacheService.getUserPartialResponses(Array.from(userIdSet), requestCache),
 			this.loadAuditLogWebhooks(processedLogs),
 		]);
 		const entries = processedLogs.map((log) => mapGuildAuditLogEntry(log));
@@ -521,35 +510,7 @@ export class GuildService {
 		);
 	}
 
-	async getGuildAuthenticated({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildAuth> {
-		const guildData = await this.gatewayService.getGuildData({guildId, userId});
-		if (!guildData) throw new MissingAccessError();
-		const enforceGuildMfa = await createGuildMfaEnforcer({userRepository: this.userRepository, guildData, userId});
-		const checkPermission = async (permission: bigint) => {
-			const hasPermission = await this.gatewayService.checkPermission({guildId, userId, permission});
-			if (!hasPermission) throw new MissingPermissionsError();
-			enforceGuildMfa(permission);
-		};
-		const checkTargetMember = async (targetUserId: UserID) => {
-			const canManage = await this.gatewayService.checkTargetMember({guildId, userId, targetUserId});
-			if (!canManage) throw new MissingPermissionsError();
-		};
-		const getAssignableRoleIds = async () => this.gatewayService.getAssignableRoles({guildId, userId});
-		const getMaxRolePosition = async () => this.gatewayService.getUserMaxRolePosition({guildId, userId});
-		const getMyPermissions = async () => this.gatewayService.getUserPermissions({guildId, userId});
-		const hasPermission = async (permission: bigint) =>
-			this.gatewayService.checkPermission({guildId, userId, permission});
-		const canManageRoles = async (targetUserId: UserID, targetRoleId: RoleID) =>
-			this.gatewayService.canManageRoles({guildId, userId, targetUserId, roleId: targetRoleId});
-		return {
-			guildData,
-			checkPermission,
-			checkTargetMember,
-			getAssignableRoleIds,
-			getMaxRolePosition,
-			getMyPermissions,
-			hasPermission,
-			canManageRoles,
-		};
+	async getGuildAuthenticated(params: {userId: UserID; guildId: GuildID}) {
+		return getGuildAuth(this.gatewayService, this.userRepository, params);
 	}
 }

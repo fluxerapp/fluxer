@@ -21,13 +21,11 @@ const cardVariantClassNames: Record<AuthCardVariant, string | undefined> = {
 	default: undefined,
 	standard: authLayoutStyles.cardStandard,
 	compact: authLayoutStyles.cardCompact,
-	wide: authLayoutStyles.cardWide,
 };
 const formSideVariantClassNames: Record<AuthCardVariant, string | undefined> = {
 	default: undefined,
 	standard: authLayoutStyles.formSideStandard,
 	compact: authLayoutStyles.formSideCompact,
-	wide: authLayoutStyles.formSideWide,
 };
 
 function resolveContainerClassName(isFullscreen: boolean, className: string | undefined): string {

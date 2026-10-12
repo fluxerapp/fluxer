@@ -107,7 +107,6 @@ export const MobileHeaderWithBanner: React.FC<MobileHeaderWithBannerProps> = obs
 									flashBanner ? headerStyles.bannerTextWhite : headerStyles.bannerTextPrimary
 								}`}
 								actionsClassName={headerStyles.bannerActions}
-								smallActions={true}
 								defaultSaveLabel={<Trans>Save</Trans>}
 								dataFlx={{
 									textContainer: 'app.mobile-settings-components.mobile-header-with-banner.div--2',
@@ -266,7 +265,6 @@ interface MobileSettingsListProps<T extends SettingsTab> {
 	footer?: React.ReactNode;
 	categoryLabels?: Record<string, string>;
 	hiddenCategories?: Array<string>;
-	additionalContent?: React.ReactNode;
 	dangerContent?: React.ReactNode;
 	scrollRef?: React.Ref<ScrollerHandle>;
 	onScroll?: (event: UIEvent<HTMLDivElement>) => void;
@@ -278,7 +276,6 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 	footer,
 	categoryLabels = {},
 	hiddenCategories = [],
-	additionalContent,
 	dangerContent,
 	scrollRef,
 	onScroll,
@@ -360,14 +357,6 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 					>
 						{dangerContent}
 					</div>
-				</div>
-			)}
-			{additionalContent && (
-				<div
-					className={styles.extraContent}
-					data-flx="app.mobile-settings-components.mobile-settings-list.additional-content"
-				>
-					{additionalContent}
 				</div>
 			)}
 			{footer && (

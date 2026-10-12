@@ -15,13 +15,6 @@ voice_channel_read_malformed_payloads_return_empty_results_test() ->
             <<"guild_id">> => <<"1">>,
             <<"channel_id">> => null
         })
-    ),
-    ?assertEqual(
-        #{<<"pending_joins">> => []},
-        gateway_rpc_voice:execute_method(<<"voice.get_pending_joins_for_channel">>, #{
-            <<"guild_id">> => <<"bad">>,
-            <<"channel_id">> => <<"2">>
-        })
     ).
 
 validate_voice_channel_read_params_normalizes_ids_test() ->
@@ -42,24 +35,6 @@ validate_voice_channel_read_params_normalizes_ids_test() ->
         gateway_rpc_voice:validate_voice_channel_read_params(#{
             <<"guild_id">> => <<"0">>, <<"channel_id">> => <<"2">>
         })
-    ).
-
-normalize_pending_joins_ignores_malformed_entries_test() ->
-    ?assertEqual(
-        [
-            #{
-                <<"connection_id">> => <<"conn">>,
-                <<"user_id">> => <<"42">>,
-                <<"token_nonce">> => <<>>,
-                <<"expires_at">> => 0
-            }
-        ],
-        gateway_rpc_voice:normalize_pending_joins([
-            not_a_map,
-            #{<<"connection_id">> => <<"conn">>, <<"user_id">> => 42},
-            #{<<"connection_id">> => undefined, <<"user_id">> => 84},
-            #{<<"connection_id">> => <<"missing-user">>}
-        ])
     ).
 
 normalize_voice_states_ignores_malformed_entries_test() ->

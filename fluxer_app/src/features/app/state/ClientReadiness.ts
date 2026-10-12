@@ -3,7 +3,7 @@
 import Initialization from '@app/features/app/state/Initialization';
 import Accounts from '@app/features/auth/state/Accounts';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 
 export function isClientBooting(): boolean {
 	if (DeveloperOptions.bypassLoadingSkeleton) {
@@ -19,5 +19,5 @@ export function isClientReconnecting(): boolean {
 	if (isClientBooting() || Accounts.transitioning) {
 		return false;
 	}
-	return GatewayConnection.isConnectionInterrupted || !Initialization.isReady;
+	return GatewaySessions.foregroundConnection.isConnectionInterrupted || !Initialization.isReady;
 }

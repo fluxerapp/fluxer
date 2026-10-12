@@ -207,9 +207,9 @@ const PrivacyReviewAlert = observer(() => {
 });
 export const ConnectionsTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const friendSourceFlags = UserSettings.getFriendSourceFlags();
-	const defaultGuildsRestricted = UserSettings.getDefaultGuildsRestricted();
-	const botDefaultGuildsRestricted = UserSettings.getBotDefaultGuildsRestricted();
+	const friendSourceFlags = UserSettings.friendSourceFlags;
+	const defaultGuildsRestricted = UserSettings.defaultGuildsRestricted;
+	const botDefaultGuildsRestricted = UserSettings.botDefaultGuildsRestricted;
 	const everyoneEnabled = (friendSourceFlags & FriendSourceFlags.NO_RELATION) === FriendSourceFlags.NO_RELATION;
 	const hasFriendFlag = (flag: number) => (friendSourceFlags & flag) === flag;
 	const handleFriendRequestToggle = async (flag: number, value: boolean) => {

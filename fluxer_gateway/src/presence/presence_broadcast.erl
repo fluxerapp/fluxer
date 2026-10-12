@@ -8,10 +8,6 @@
     force_publish_global_presence/1,
     dispatch_global_presence/3,
     dispatch_to_all_sessions/3,
-    ensure_initial_global_subscriptions/1,
-    sync_friend_subscriptions/3,
-    sync_group_dm_subscriptions/2,
-    send_cached_presences_to_session/2,
     publish_user_update_to_bus/3,
     is_last_published_visible/1,
     cache_if_visible/2,
@@ -101,22 +97,6 @@ safe_cast_or_shed(Pid, Msg) ->
         {error, overloaded} ->
             ok
     end.
-
--spec ensure_initial_global_subscriptions(state()) -> state().
-ensure_initial_global_subscriptions(State) ->
-    presence_broadcast_subscriptions:ensure_initial_global_subscriptions(State).
-
--spec sync_friend_subscriptions([user_id()], [user_id()], state()) -> state().
-sync_friend_subscriptions(FriendIds, FlushedIds, State) ->
-    presence_broadcast_subscriptions:sync_friend_subscriptions(FriendIds, FlushedIds, State).
-
--spec sync_group_dm_subscriptions(map(), state()) -> state().
-sync_group_dm_subscriptions(RecipientsByChannel, State) ->
-    presence_broadcast_subscriptions:sync_group_dm_subscriptions(RecipientsByChannel, State).
-
--spec send_cached_presences_to_session(pid(), state()) -> ok.
-send_cached_presences_to_session(SessionPid, State) ->
-    presence_broadcast_subscriptions:send_cached_presences_to_session(SessionPid, State).
 
 -spec publish_user_update_to_bus(user_id(), map(), state()) -> ok.
 publish_user_update_to_bus(UserId, UserData, State) ->

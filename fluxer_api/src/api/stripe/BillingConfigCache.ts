@@ -128,10 +128,6 @@ export function getStoredBillingConfig(): StoredBillingConfig | null {
 	return storedBillingConfig;
 }
 
-export function getActiveStoredBillingConfig(): StoredBillingConfig | null {
-	return Config.instance.selfHosted ? storedBillingConfig : null;
-}
-
 function trackWebhookSecret(): void {
 	if (!Config.instance.selfHosted) {
 		previousWebhookSecrets = [];

@@ -26,6 +26,10 @@ import {
 	AccountSecuritySwitchRow,
 } from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/SecurityTab.module.css';
+import {
+	AUTHORIZED_APPS_DESCRIPTOR,
+	DEVICES_DESCRIPTOR as LINKED_DEVICES_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import type {User} from '@app/features/user/models/User';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -144,17 +148,9 @@ const MANAGE_APPS_AND_DEVICES_WITH_ACCESS_TO_YOUR_DESCRIPTOR = msg({
 	message: 'Manage apps and devices with access to your account',
 	comment: 'Security settings section description for account access controls.',
 });
-const AUTHORIZED_APPS_DESCRIPTOR = msg({
-	message: 'Authorized apps',
-	comment: 'Security settings row label for OAuth applications authorized by the user.',
-});
 const REVIEW_APPS_THAT_CAN_ACCESS_YOUR_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Review apps that can access your account.',
 	comment: 'Security settings row description for authorized apps.',
-});
-const LINKED_DEVICES_DESCRIPTOR = msg({
-	message: 'Devices',
-	comment: 'Security settings row label for signed-in devices linked to the account.',
 });
 const REVIEW_SIGNED_IN_DEVICES_DESCRIPTOR = msg({
 	message: "Review signed-in devices and sign out of sessions you don't recognize.",

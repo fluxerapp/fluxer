@@ -18,7 +18,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {useLastLocationPersistence} from '@app/features/navigation/hooks/useLastLocationPersistence';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -85,7 +85,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	}, [pathname]);
 	const shouldShowSelfHostedSetup = requiresSelfHostedSetup && !isStandaloneRoute;
 	const shouldBypassGateway = requiresSelfHostedSetup || isStandaloneRoute;
-	const authToken = Authentication.authToken;
+	const authToken = SessionManager.token;
 	const shouldShowLoadingSkeleton = getShouldShowLoadingSkeleton({
 		booting: isClientBooting(),
 		isAuthenticated,
@@ -168,8 +168,12 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 				}
 				return;
 			}
-			if (GatewayConnection.isConnected || GatewayConnection.isConnecting || GatewayConnection.socket) {
-				GatewayConnection.logout();
+			if (
+				GatewaySessions.foregroundConnection.isConnected ||
+				GatewaySessions.foregroundConnection.isConnecting ||
+				GatewaySessions.foregroundConnection.socket
+			) {
+				GatewaySessions.foregroundConnection.logout();
 			}
 			return;
 		}
@@ -186,8 +190,8 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		authToken,
 		Accounts.isSwitching,
 		Authentication.isAuthenticated,
-		GatewayConnection.isConnected,
-		GatewayConnection.isConnecting,
+		GatewaySessions.foregroundConnection.isConnected,
+		GatewaySessions.foregroundConnection.isConnecting,
 		shouldBypassGateway,
 		shouldSkipAutoRedirect,
 		pendingRedirectRef,

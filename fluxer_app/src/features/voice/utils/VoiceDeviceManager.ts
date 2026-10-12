@@ -4,7 +4,7 @@ import {ensureNativePermission} from '@app/features/permissions/system/utils/Nat
 import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import type {VoiceEngineV2AudioDeviceRole} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2AudioDeviceRole} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const logger = new Logger('VoiceDeviceManager');
 

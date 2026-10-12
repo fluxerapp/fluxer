@@ -195,9 +195,9 @@ compute_voice_permissions(UserId, ChannelId, State) ->
     SpeakPerm = constants:speak_permission(),
     StreamPerm = constants:stream_permission(),
     AdminPerm = constants:administrator_permission(),
-    IsAdmin = permission_bits:has(Permissions, AdminPerm),
-    CanSpeak = IsAdmin orelse permission_bits:has(Permissions, SpeakPerm),
-    CanStream = IsAdmin orelse permission_bits:has(Permissions, StreamPerm),
+    IsAdmin = bitset:has(Permissions, AdminPerm),
+    CanSpeak = IsAdmin orelse bitset:has(Permissions, SpeakPerm),
+    CanStream = IsAdmin orelse bitset:has(Permissions, StreamPerm),
     HasVirtualAccess = guild_virtual_channel_access:has_voice_access(
         UserId, ChannelId, State
     ),

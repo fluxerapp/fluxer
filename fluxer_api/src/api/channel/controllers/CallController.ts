@@ -55,9 +55,9 @@ export function CallController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const {region, latitude, longitude} = ctx.req.valid('json');
+			const {region} = ctx.req.valid('json');
 			const channelService = ctx.get('channelService');
-			await channelService.calls.updateCall({userId, channelId, region, latitude, longitude});
+			await channelService.calls.updateCall({userId, channelId, region});
 			return ctx.body(null, 204);
 		},
 	);
@@ -81,7 +81,7 @@ export function CallController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const {recipients, latitude, longitude} = ctx.req.valid('json');
+			const {recipients} = ctx.req.valid('json');
 			const channelService = ctx.get('channelService');
 			const requestCache = ctx.get('requestCache');
 			const recipientIds = recipients ? recipients.map(createUserID) : undefined;
@@ -89,8 +89,6 @@ export function CallController(app: HonoApp) {
 				userId,
 				channelId,
 				recipients: recipientIds,
-				latitude,
-				longitude,
 				requestCache,
 			});
 			return ctx.body(null, 204);

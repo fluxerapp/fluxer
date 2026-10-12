@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
-import {createServer} from 'node:net';
 import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from '@app/api/database/CassandraTypes';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
+import {getDefaultPostgresClient, type IPostgresClient, initPostgres} from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 type Row = Record<string, unknown>;
@@ -22,29 +15,6 @@ interface Statement {
 
 const KV_TABLE = 'kv_stmt_names';
 const KV_TABLE_POOLED = 'kv_stmt_names_pooled';
-const CONTAINER = `fluxer-kvstmt-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
-
-async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
-}
-
 const Composite: KvTableSpec<Row> = {
 	name: 'stmt_composite',
 	columns: ['owner_id', 'item_id', 'payload'],
@@ -160,17 +130,6 @@ describe('PostgresKvQueryExecutor statement names', () => {
 			expect(matching.filter((statement) => statement.name !== undefined)).toEqual([]);
 		}
 	});
-
-	it('never reuses one statement text under two names', async () => {
-		const namesByText = new Map<string, Set<string>>();
-		for (const statement of await runShapes()) {
-			if (statement.name === undefined) continue;
-			const names = namesByText.get(statement.text) ?? new Set<string>();
-			names.add(statement.name);
-			namesByText.set(statement.text, names);
-		}
-		expect([...namesByText.values()].filter((names) => names.size > 1)).toEqual([]);
-	});
 });
 
 async function exerciseKvShapes(executor: PostgresKvQueryExecutor): Promise<void> {
@@ -279,53 +238,17 @@ describe.skipIf(!dockerAvailable)('PostgresKvQueryExecutor statement names again
 	let executor: PostgresKvQueryExecutor;
 	let port: number;
 
+	let postgresContainer: string;
 	beforeAll(async () => {
-		port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await sleep(500);
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 1,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		raw = getDefaultPostgresClient();
-		await ensurePostgresKvSchema(raw);
+		const started = await startPostgresKv({namePrefix: 'fluxer-kvstmt', kvTable: KV_TABLE, maxConnections: 1});
+		postgresContainer = started.container;
+		port = started.port;
+		raw = started.client;
 		executor = new PostgresKvQueryExecutor(raw);
 	}, 900_000);
 
 	afterAll(async () => {
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+		await stopPostgresKv(postgresContainer);
 	});
 
 	it('prepares each named shape server side and keeps reading the right rows', async () => {

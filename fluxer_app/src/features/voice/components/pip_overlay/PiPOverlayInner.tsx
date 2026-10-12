@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import '@app/features/voice/components/VoiceCallView.module.css';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import Channels from '@app/features/channel/state/Channels';
@@ -17,7 +18,6 @@ import {PiPHeader} from '@app/features/voice/components/pip_overlay/PiPHeader';
 import {PiPOverlayContextMenu} from '@app/features/voice/components/pip_overlay/PiPOverlayContextMenu';
 import {
 	type Corner,
-	clamp,
 	clampPiPWidth,
 	computePiPResize,
 	getCornerPositions,

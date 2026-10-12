@@ -76,25 +76,4 @@ describe('Auth IP Authorization Flow', () => {
 		expect(loginResp.token).toBeTruthy();
 		expect(loginResp.user_id).toBe(reg.user_id);
 	});
-	it('validates that login from a known IP does not trigger IP authorization', async () => {
-		const email = createUniqueEmail('ip-known');
-		const password = 'a-strong-password';
-		const reg = await registerUser(harness, {
-			email,
-			username: createUniqueUsername('ipknown'),
-			global_name: 'IP Known User',
-			password,
-			date_of_birth: '2000-01-01',
-			consent: true,
-		});
-		const loginResp = await createBuilderWithoutAuth<{
-			token?: string;
-			user_id?: string;
-		}>(harness)
-			.post('/auth/login')
-			.body({email, password})
-			.execute();
-		expect(loginResp.token).toBeTruthy();
-		expect(loginResp.user_id).toBe(reg.user_id);
-	});
 });

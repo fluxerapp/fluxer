@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import * as AuthPassword from '@app/api/auth/AuthPassword';
-import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
+import {createSudoModeRequiredError, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
 import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
 import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import type {Context} from 'hono';
@@ -89,7 +88,7 @@ async function verifySudoMode(
 		if (!user.passwordHash) {
 			throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
 		}
-		const passwordValid = await AuthPassword.verifyPassword(apiContext, {
+		const passwordValid = await verifyPassword({
 			password: body.password,
 			passwordHash: user.passwordHash,
 		});
@@ -98,8 +97,7 @@ async function verifySudoMode(
 		}
 		return {verified: true, method: 'password'};
 	}
-	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(apiContext, user.id);
-	throw new SudoModeRequiredError(hasSudoCapability, deriveSudoMethods(user, hasPasskeyCredentials, hasBackupCodes));
+	throw await createSudoModeRequiredError(apiContext, user, hasPasskeyCredentials);
 }
 
 function setSudoTokenHeader(

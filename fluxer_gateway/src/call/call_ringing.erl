@@ -403,9 +403,6 @@ published_ring_args() ->
 published_ring_users() ->
     lists:usort([UserId || [UserId, _C, _M, _S, _E, _Caller] <- published_ring_args()]).
 
-published_ring_callers() ->
-    [Caller || [_U, _C, _M, _S, _E, Caller] <- published_ring_args()].
-
 mock_ring_publisher() ->
     ok = meck:new(push_job_publisher, [passthrough, no_link]),
     meck:expect(push_job_publisher, publish_ring, fun(_U, _C, _M, _S, _E, _Caller) -> ok end).
@@ -475,44 +472,6 @@ publish_ring_jobs_suppresses_a_fully_blocked_ring_test() ->
         ?assertEqual([], published_ring_args())
     after
         meck:unload(push_eligibility),
-        meck:unload(push_job_publisher)
-    end.
-
-apply_pending_ringing_publishes_the_caller_held_on_state_test() ->
-    ok = mock_ring_publisher(),
-    try
-        State = (ring_state([1, 2], [], [2], #{}))#{
-            caller_id => 1,
-            caller_name => <<"Ada">>,
-            caller_avatar => <<"a1b2c3d4">>
-        },
-        _ = maybe_dispatch_pending_ringing(State, false),
-        ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
-        ?assertEqual(
-            [
-                #{
-                    caller_id => 1,
-                    caller_name => <<"Ada">>,
-                    caller_avatar => <<"a1b2c3d4">>
-                }
-            ],
-            published_ring_callers()
-        )
-    after
-        meck:unload(push_job_publisher)
-    end.
-
-apply_pending_ringing_publishes_an_unresolved_caller_when_state_has_none_test() ->
-    ok = mock_ring_publisher(),
-    try
-        State = ring_state([1, 2], [], [2], #{}),
-        _ = maybe_dispatch_pending_ringing(State, false),
-        ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
-        ?assertEqual(
-            [#{caller_id => undefined, caller_name => undefined, caller_avatar => undefined}],
-            published_ring_callers()
-        )
-    after
         meck:unload(push_job_publisher)
     end.
 

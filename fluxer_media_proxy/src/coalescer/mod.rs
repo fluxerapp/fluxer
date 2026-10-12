@@ -177,7 +177,7 @@ impl ByteCoalescer {
         let _waiter_permit = waiter_permit;
 
         if let Some(permit) = coordinator_permit {
-            self.metrics.record_leader();
+            self.metrics.coalescer_leader.inc();
             let mut guard = CoordinatorGuard {
                 coalescer: self,
                 key: key.as_str(),
@@ -199,7 +199,7 @@ impl ByteCoalescer {
 
         drop(work);
         drop(complete);
-        self.metrics.record_waiter();
+        self.metrics.coalescer_waiter.inc();
         loop {
             let notified = slot.notify.notified();
             tokio::pin!(notified);
@@ -232,7 +232,7 @@ impl ByteCoalescer {
                 .try_acquire_owned()
                 .map_err(|error| match error {
                     TryAcquireError::NoPermits => {
-                        self.metrics.record_waiter_rejected();
+                        self.metrics.coalescer_waiter_rejected.inc();
                         CoalescerError::Overloaded
                     }
                     TryAcquireError::Closed => CoalescerError::Unavailable,

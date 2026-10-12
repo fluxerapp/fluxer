@@ -9,7 +9,7 @@ import {
 import {GifPicker} from '@app/features/channel/components/pickers/gif/GifPicker';
 import {MemesPicker} from '@app/features/channel/components/pickers/memes/MemesPicker';
 import {StickersPicker} from '@app/features/channel/components/StickersPicker';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+
 import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import styles from '@app/features/expressions/components/popouts/ExpressionPickerPopout.module.css';
@@ -170,8 +170,6 @@ interface ExpressionPickerPopoutProps {
 	onEmojiSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	onClose?: () => void;
 	visibleTabs?: Array<ExpressionPickerTabType>;
-	selectedTab?: ExpressionPickerTabType;
-	onTabChange?: (tab: ExpressionPickerTabType) => void;
 }
 
 const RESIZE_HANDLE_LABELS: ResizablePaneHandleLabels = {
@@ -191,8 +189,6 @@ export const ExpressionPickerPopout = observer(
 		onEmojiSelect,
 		onClose,
 		visibleTabs = ['gifs', 'memes', 'stickers', 'emojis'],
-		selectedTab: controlledSelectedTab,
-		onTabChange,
 	}: ExpressionPickerPopoutProps) => {
 		const {i18n} = useLingui();
 		const categories = useMemo(() => {
@@ -201,31 +197,20 @@ export const ExpressionPickerPopout = observer(
 				(category) => visibleTabs.includes(category.type) && (category.type !== 'gifs' || RuntimeConfig.gifEnabled),
 			);
 		}, [i18n.locale, visibleTabs, RuntimeConfig.gifEnabled]);
-		const [internalSelectedTab, setInternalSelectedTab] = useState<ExpressionPickerTabType>(() => {
-			const firstCategory = categories[0];
-			return firstCategory == null ? 'emojis' : firstCategory.type;
-		});
-		const storeSelectedTab = ExpressionPicker.selectedTab;
-		let selectedTab = internalSelectedTab;
-		if (controlledSelectedTab != null) selectedTab = controlledSelectedTab;
-		if (storeSelectedTab != null) selectedTab = storeSelectedTab;
+
+		const selectedTab = ExpressionPicker.selectedTab;
 		const setSelectedTab = useCallback(
 			(tab: ExpressionPickerTabType) => {
 				if (tab === selectedTab) {
 					return;
 				}
-				if (onTabChange) {
-					onTabChange(tab);
-					return;
-				}
+
 				const pickerChannelId = ExpressionPicker.channelId;
 				if (pickerChannelId) {
-					ExpressionPickerCommands.toggle(pickerChannelId, tab);
-				} else {
-					setInternalSelectedTab(tab);
+					ExpressionPicker.toggle(pickerChannelId, tab);
 				}
 			},
-			[onTabChange, selectedTab],
+			[selectedTab],
 		);
 		const selectedCategory = categories.find((category) => category.type === selectedTab) || categories[0];
 		const containerRef = useRef<HTMLDivElement>(null);

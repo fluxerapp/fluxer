@@ -6,6 +6,7 @@ import {isSsoPendingContextKey, ssoPendingContextKey} from '@app/features/platfo
 import AppStorage, {flushAppStorageWrites} from '@app/features/platform/state/PersistentStorage';
 import {getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isRecord as isPlainRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const PENDING_SSO_CONTEXT_TTL_MS = 30 * 60 * 1000;
 const PENDING_SSO_CONTEXT_MAX_ENTRIES = 16;
@@ -67,10 +68,6 @@ export function isValidOAuthState(state: string): boolean {
 		}
 	}
 	return true;
-}
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
 }
 
 function isExactRecord(value: unknown, expectedKeys: ReadonlyArray<string>): value is Record<string, unknown> {

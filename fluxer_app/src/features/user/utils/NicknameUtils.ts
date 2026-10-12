@@ -8,7 +8,6 @@ import Relationships from '@app/features/relationship/state/Relationships';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import type {User} from '@app/features/user/models/User';
-import {truncateStreamerModeName} from '@app/features/user/utils/DisplayNameUtils';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 
@@ -52,23 +51,83 @@ export function getNickname(user: User, guildId?: string | null, channelId?: str
 		const productName = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.product_name;
 		if (productName) return formatNicknameForStreamerMode(productName);
 	}
+	return formatNicknameForStreamerMode(getUntruncatedNickname(user, guildId, channelId));
+}
+
+export function truncateStreamerModeName(name: string): string {
+	const trimmed = name.trim();
+	if (!trimmed) return '…';
+	return `${Array.from(trimmed)[0]}…`;
+}
+
+function resolveRelationshipNickname(userId: string): string | null {
+	const relationship = Relationships.getRelationship(userId);
+	if (relationship === null || relationship === undefined) {
+		return null;
+	}
+	if (!relationship.nickname) {
+		return null;
+	}
+	return relationship.nickname;
+}
+
+function resolveGuildMemberNickname(guildId: string, userId: string): string | null {
+	const member = GuildMembers.getMember(guildId, userId);
+	if (member === null || member === undefined) {
+		return null;
+	}
+	if (!member.nick) {
+		return null;
+	}
+	return member.nick;
+}
+
+export function getUntruncatedNickname(user: User, guildId?: string | null, channelId?: string): string {
 	let name = user.displayName || user.globalName || user.username || user.id || '';
-	const relationship = Relationships.getRelationship(user.id);
-	if (relationship?.nickname) {
-		name = relationship.nickname;
+	const relationshipNickname = resolveRelationshipNickname(user.id);
+	if (relationshipNickname !== null) {
+		name = relationshipNickname;
 	}
 	const channel = channelId ? Channels.getChannel(channelId) : null;
-	const selectedGuildId = channelId ? undefined : (SelectedGuild.selectedGuildId ?? undefined);
-	const resolvedGuildId = guildId === null ? undefined : (guildId ?? channel?.guildId ?? selectedGuildId);
+	let selectedGuildId: string | undefined;
+	if (!channelId && SelectedGuild.selectedGuildId !== null) {
+		selectedGuildId = SelectedGuild.selectedGuildId;
+	}
+	let resolvedGuildId: string | undefined;
+	if (guildId === null) {
+		resolvedGuildId = undefined;
+	} else if (guildId !== undefined) {
+		resolvedGuildId = guildId;
+	} else if (channel !== null && channel !== undefined && channel.guildId !== undefined) {
+		resolvedGuildId = channel.guildId;
+	} else {
+		resolvedGuildId = selectedGuildId;
+	}
 	if (resolvedGuildId) {
-		const member = GuildMembers.getMember(resolvedGuildId, user.id);
-		if (member?.nick) {
-			name = member.nick;
+		const memberNickname = resolveGuildMemberNickname(resolvedGuildId, user.id);
+		if (memberNickname !== null) {
+			name = memberNickname;
 		}
-	} else if (channel) {
-		if (channel?.nicks?.[user.id]) {
-			name = channel.nicks[user.id];
+	} else if (channel !== null && channel !== undefined) {
+		const channelNickname = channel.nicks[user.id];
+		if (channelNickname) {
+			name = channelNickname;
 		}
 	}
-	return formatNicknameForStreamerMode(name);
+	return name;
+}
+
+export function getUntruncatedGuildMemberNickname(member: {guildId: string; nick: string | null; user: User}): string {
+	const relationshipNickname = resolveRelationshipNickname(member.user.id);
+	if (relationshipNickname !== null) {
+		return relationshipNickname;
+	}
+	if (member.nick !== null && member.nick.length > 0) {
+		return member.nick;
+	}
+	return member.user.displayName || member.user.globalName || member.user.username || member.user.id || '';
+}
+
+export function getGuildMemberNickname(member: {guildId: string; nick: string | null; user: User}): string {
+	return formatNameForStreamerMode(getUntruncatedGuildMemberNickname(member));
 }

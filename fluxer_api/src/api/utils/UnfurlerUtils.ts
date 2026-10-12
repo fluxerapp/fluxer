@@ -6,7 +6,6 @@ import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import * as InviteUtils from '@app/api/utils/InviteUtils';
 import {URL_REGEX} from '@fluxer/constants/src/Core';
-import * as idna from 'idna-uts46-hx';
 
 const CLIENT_ROUTE_PATH_PREFIXES = ['/channels/', '/theme/', '/invite/', '/gift/', '/oauth2/', '/users/'];
 
@@ -60,8 +59,6 @@ function getExcludedLinkBases(): Array<ExcludedLinkBase> {
 function idnaEncodeURL(url: string) {
 	try {
 		const parsedUrl = new URL(url);
-		const encodedDomain = idna.toAscii(parsedUrl.hostname).toLowerCase();
-		parsedUrl.hostname = encodedDomain;
 		parsedUrl.username = '';
 		parsedUrl.password = '';
 		return parsedUrl.toString();

@@ -1,11 +1,11 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(gateway_handler_dispatch).
+-export([handle_dispatch/4]).
 -typing([eqwalizer]).
 
 -export([
     handle_opcode/3,
-    handle_dispatch/4,
     handle_gateway_error/2,
     handle_session_down/1,
     handle_session_reconnect/1,
@@ -117,20 +117,11 @@ handle_rate_limited_resume(Data, State) ->
 
 -spec handle_dispatch(
     atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
-) -> ws_result().
-handle_dispatch(Event, Data, Seq, State) ->
-    case gateway_event_pause:is_frozen() of
-        true -> {ok, State};
-        false -> do_dispatch(Event, Data, Seq, State)
-    end.
-
--spec do_dispatch(
-    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) ->
     ws_result().
-do_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
+handle_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
     dispatch_pre_encoded(Event, EncodedData, Seq, State);
-do_dispatch(Event, Data, Seq, State) ->
+handle_dispatch(Event, Data, Seq, State) ->
     dispatch_standard(Event, Data, Seq, State).
 
 -spec handle_gateway_error(atom(), state()) -> ws_result().

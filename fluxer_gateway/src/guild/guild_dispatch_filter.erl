@@ -171,7 +171,7 @@ has_view_audit_log_permission(SessionData, State) ->
     case maps:get(user_id, SessionData, undefined) of
         UserId when is_integer(UserId) ->
             Permissions = guild_permissions:get_member_permissions(UserId, undefined, State),
-            permission_bits:has(Permissions, constants:view_audit_log_permission());
+            bitset:has(Permissions, constants:view_audit_log_permission());
         _ ->
             false
     end.
@@ -203,10 +203,10 @@ extract_channel_id(Event, FinalData) when
     Event =:= channel_create; Event =:= channel_update; Event =:= channel_delete
 ->
     ChannelIdBin = maps:get(<<"id">>, FinalData, undefined),
-    guild_dispatch_decorate:require_snowflake(<<"id">>, ChannelIdBin);
+    validation:snowflake_or_throw(<<"id">>, ChannelIdBin);
 extract_channel_id(_, FinalData) ->
     ChannelIdBin = maps:get(<<"channel_id">>, FinalData, undefined),
-    guild_dispatch_decorate:require_snowflake(<<"channel_id">>, ChannelIdBin).
+    validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

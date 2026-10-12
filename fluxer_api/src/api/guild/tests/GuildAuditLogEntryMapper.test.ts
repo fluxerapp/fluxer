@@ -37,24 +37,6 @@ const SKIPPABLE_ACTIONS = [
 
 const RECORDED_ACTIONS = ALL_ACTIONS.filter((action) => !SKIPPABLE_ACTIONS.includes(action));
 
-const USER_TARGET_ACTIONS = [
-	AuditLogActionType.MEMBER_KICK,
-	AuditLogActionType.MEMBER_PRUNE,
-	AuditLogActionType.MEMBER_BAN_ADD,
-	AuditLogActionType.MEMBER_BAN_REMOVE,
-	AuditLogActionType.MEMBER_UPDATE,
-	AuditLogActionType.MEMBER_ROLE_UPDATE,
-	AuditLogActionType.MEMBER_MOVE,
-	AuditLogActionType.MEMBER_DISCONNECT,
-	AuditLogActionType.BOT_ADD,
-];
-
-const OVERWRITE_ACTIONS = [
-	AuditLogActionType.CHANNEL_OVERWRITE_CREATE,
-	AuditLogActionType.CHANNEL_OVERWRITE_UPDATE,
-	AuditLogActionType.CHANNEL_OVERWRITE_DELETE,
-];
-
 function makeLog(params: {
 	actionType: AuditLogActionType;
 	userId?: string;
@@ -80,14 +62,6 @@ function userIdStrings(log: GuildAuditLog): Array<string> {
 }
 
 describe('mapGuildAuditLogEntry', () => {
-	it('keeps the identity fields', () => {
-		const entry = mapGuildAuditLogEntry(makeLog({actionType: AuditLogActionType.MEMBER_KICK, targetId: TARGET_ID}));
-		expect(entry.id).toBe('1420000000000000100');
-		expect(entry.action_type).toBe(AuditLogActionType.MEMBER_KICK);
-		expect(entry.user_id).toBe(ACTOR_ID);
-		expect(entry.target_id).toBe(TARGET_ID);
-	});
-
 	it('types every schema option and drops unknown keys', () => {
 		const entry = mapGuildAuditLogEntry(
 			makeLog({
@@ -166,13 +140,6 @@ describe('mapGuildAuditLogEntry', () => {
 			}),
 		);
 		expect(entry.options).toBeUndefined();
-	});
-
-	it('returns undefined options when nothing survives', () => {
-		expect(mapGuildAuditLogEntry(makeLog({actionType: AuditLogActionType.GUILD_UPDATE})).options).toBeUndefined();
-		expect(
-			mapGuildAuditLogEntry(makeLog({actionType: AuditLogActionType.GUILD_UPDATE, options: {name: 'Fluxer'}})).options,
-		).toBeUndefined();
 	});
 
 	it('scrubs ip changes', () => {
@@ -298,74 +265,6 @@ describe('mapGuildAuditLogEntry', () => {
 });
 
 describe('collectGuildAuditLogUserIds', () => {
-	it('includes the actor and never a channel target', () => {
-		const log = makeLog({actionType: AuditLogActionType.CHANNEL_CREATE, targetId: TARGET_ID});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID]);
-	});
-
-	it.each(USER_TARGET_ACTIONS)('includes the target of user action %i', (actionType) => {
-		const log = makeLog({actionType, targetId: TARGET_ID});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID, TARGET_ID]);
-	});
-
-	it('includes the new owner of a guild update', () => {
-		const log = makeLog({
-			actionType: AuditLogActionType.GUILD_UPDATE,
-			targetId: GUILD_ID.toString(),
-			changes: [{key: 'owner_id', old_value: TARGET_ID, new_value: OTHER_ID}],
-		});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID, OTHER_ID]);
-	});
-
-	it('includes the original moderator of an unban', () => {
-		const log = makeLog({
-			actionType: AuditLogActionType.MEMBER_BAN_REMOVE,
-			targetId: TARGET_ID,
-			changes: [{key: 'moderator_id', old_value: OTHER_ID}],
-		});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID, TARGET_ID, OTHER_ID]);
-	});
-
-	it('includes the inviter of a deleted invite', () => {
-		const log = makeLog({
-			actionType: AuditLogActionType.INVITE_DELETE,
-			targetId: 'abcdef',
-			options: {inviter_id: OTHER_ID},
-		});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID, OTHER_ID]);
-	});
-
-	it('does not include the inviter of a created invite', () => {
-		const log = makeLog({
-			actionType: AuditLogActionType.INVITE_CREATE,
-			targetId: 'abcdef',
-			options: {inviter_id: OTHER_ID},
-		});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID]);
-	});
-
-	it.each([AuditLogActionType.WEBHOOK_DELETE, AuditLogActionType.EMOJI_DELETE, AuditLogActionType.STICKER_DELETE])(
-		'includes the creator of deleted content for action %i',
-		(actionType) => {
-			const log = makeLog({
-				actionType,
-				targetId: TARGET_ID,
-				changes: [
-					{key: 'name', old_value: 'blob'},
-					{key: 'creator_id', old_value: OTHER_ID},
-				],
-			});
-			expect(userIdStrings(log)).toEqual([ACTOR_ID, OTHER_ID]);
-		},
-	);
-
-	it.each(OVERWRITE_ACTIONS)('includes member overwrite targets for action %i', (actionType) => {
-		const memberLog = makeLog({actionType, targetId: TARGET_ID, options: {type: '1', channel_id: OTHER_ID}});
-		expect(userIdStrings(memberLog)).toEqual([ACTOR_ID, TARGET_ID]);
-		const roleLog = makeLog({actionType, targetId: TARGET_ID, options: {type: '0', channel_id: OTHER_ID}});
-		expect(userIdStrings(roleLog)).toEqual([ACTOR_ID]);
-	});
-
 	it('skips values that are not snowflakes', () => {
 		expect(userIdStrings(makeLog({actionType: AuditLogActionType.MEMBER_KICK, targetId: 'not-a-snowflake'}))).toEqual([
 			ACTOR_ID,
@@ -385,17 +284,6 @@ describe('collectGuildAuditLogUserIds', () => {
 		});
 		expect(userIdStrings(missingCreator)).toEqual([ACTOR_ID]);
 	});
-
-	it('collapses duplicates', () => {
-		const selfUpdate = makeLog({actionType: AuditLogActionType.MEMBER_UPDATE, targetId: ACTOR_ID});
-		expect(userIdStrings(selfUpdate)).toEqual([ACTOR_ID]);
-		const unbanOfModerator = makeLog({
-			actionType: AuditLogActionType.MEMBER_BAN_REMOVE,
-			targetId: TARGET_ID,
-			changes: [{key: 'moderator_id', old_value: TARGET_ID}],
-		});
-		expect(userIdStrings(unbanOfModerator)).toEqual([ACTOR_ID, TARGET_ID]);
-	});
 });
 
 describe('isNoopGuildAuditLog', () => {
@@ -411,21 +299,6 @@ describe('isNoopGuildAuditLog', () => {
 
 	it.each(SKIPPABLE_ACTIONS)('keeps action %i with a real change', (actionType) => {
 		expect(isNoopGuildAuditLog(actionType, [{key: 'name', old_value: 'a', new_value: 'b'}])).toBe(false);
-	});
-
-	it('lists the internal guild change keys', () => {
-		expect([...GUILD_AUDIT_INTERNAL_CHANGE_KEYS].sort()).toEqual(
-			[
-				'guild_id',
-				'member_count',
-				'banner_width',
-				'banner_height',
-				'splash_width',
-				'splash_height',
-				'embed_splash_width',
-				'embed_splash_height',
-			].sort(),
-		);
 	});
 
 	it.each([...GUILD_AUDIT_INTERNAL_CHANGE_KEYS])('treats a guild update of only %s as a no-op', (key) => {

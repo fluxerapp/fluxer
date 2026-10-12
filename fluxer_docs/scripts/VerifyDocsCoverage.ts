@@ -1,3 +1,4 @@
+import {stripVersion as stripVersionPrefix} from './DocsSource.ts';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {spawnSync} from 'node:child_process';
@@ -277,16 +278,6 @@ interface SpecOperation {
 interface EffectiveSpecSecurity {
 	readonly schemes: ReadonlySet<string>;
 	readonly allowsAnonymous: boolean;
-}
-
-function stripVersionPrefix(routePath: string): string {
-	if (routePath === '/v1') {
-		return '/';
-	}
-	if (routePath.startsWith('/v1/')) {
-		return routePath.slice(3);
-	}
-	return routePath;
 }
 
 function indexDocumentedRoutes(routes: ReadonlyArray<DocsRouteHeader>): Map<string, DocsRouteHeader> {

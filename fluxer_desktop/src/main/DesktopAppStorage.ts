@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
+import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import type {AppStoreBoundary, AppStoreBoundaryFactory} from '@electron/main/AppStoreNativeBoundary';
 import {desktopAppStoreStateFile} from '@electron/main/DesktopAppStoreHealth';
 import type {
@@ -100,10 +101,6 @@ export class DesktopAppStoreWriteRefusedError extends Error {
 
 function byteLength(value: string): number {
 	return Buffer.byteLength(value, 'utf8');
-}
-
-function describeError(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 function requireString(value: unknown, context: string): string {

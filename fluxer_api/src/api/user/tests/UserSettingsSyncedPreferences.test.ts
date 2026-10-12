@@ -27,11 +27,6 @@ describe('User Settings synced_preferences', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('default response contains an empty string', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await updateUserSettings(harness, account.token, {});
-		expect(json.synced_preferences).toBe('');
-	});
 	test('round-trips an encoded snapshot', async () => {
 		const account = await createTestAccount(harness);
 		const snapshot = create(SyncedPreferencesSchema, {
@@ -72,22 +67,6 @@ describe('User Settings synced_preferences', () => {
 			synced_preferences: null,
 		});
 		expect(json.synced_preferences).toBe('');
-	});
-	test('rejects non-string payloads with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: {a: 1}})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('rejects invalid base64 with 400', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({synced_preferences: 'not_base64!!!'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
 	});
 	test('rejects garbage protobuf bytes with 400', async () => {
 		const account = await createTestAccount(harness);

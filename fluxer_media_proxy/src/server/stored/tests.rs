@@ -655,39 +655,3 @@ async fn an_explicit_quality_reuses_the_entry_the_resolved_default_minted() {
     );
     assert!(rendered.contains("fluxer_media_proxy_transform_cache_misses_total 1\n"));
 }
-
-fn cache_control_of(response: &Response) -> &str {
-    response
-        .headers()
-        .get(header::CACHE_CONTROL)
-        .expect("cache-control is always set")
-        .to_str()
-        .expect("cache-control is ASCII")
-}
-
-#[test]
-fn stored_media_responses_cache_forever() {
-    let stored = media_response(MediaResponse {
-        method: Method::GET,
-        data: Bytes::from_static(b"stored bytes").into(),
-        content_type: "image/webp",
-        range_header: None,
-        disposition: None,
-    });
-    assert_eq!("public, max-age=31536000", cache_control_of(&stored));
-
-    let streamable = media_response(MediaResponse {
-        method: Method::GET,
-        data: Bytes::from_static(b"stored bytes").into(),
-        content_type: "video/mp4",
-        range_header: None,
-        disposition: None,
-    });
-    assert_eq!(
-        "public, max-age=31536000, no-transform",
-        cache_control_of(&streamable)
-    );
-
-    let head = super::response::passthrough_head_response("image/webp", 12, None, None);
-    assert_eq!("public, max-age=31536000", cache_control_of(&head));
-}

@@ -3,6 +3,7 @@
 import {TextEntryElementPolicy} from '@app/features/input/TextEntryElementPolicy';
 import {Edge, type VerticalEdge} from '@app/features/ui/AxisOrientation';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {cancelOwnedAnimationFrame, type OwnedAnimationFrame} from '@app/features/ui/utils/OwnerWindow';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
@@ -43,19 +44,12 @@ interface NavigationListPosition {
 	readonly setSize: number;
 }
 
-interface ResolveMissingNavigationActiveKeyRequest {
-	readonly missingActiveKey: string;
-}
-
-type MissingNavigationActiveKeyResolver = (request: ResolveMissingNavigationActiveKeyRequest) => string | null;
-
 interface NavigationListOptions {
 	readonly scrollerRef: React.RefObject<ScrollerHandle | null>;
 	readonly rows: ReadonlyArray<NavigationRow>;
 	readonly focusableSelector: string;
 	readonly keyboardNavigationEnabled: boolean;
 	readonly preferredActiveKey: string | null;
-	readonly resolveMissingActiveKey: MissingNavigationActiveKeyResolver | null;
 }
 
 interface NavigationListResult {
@@ -481,11 +475,6 @@ interface FocusRenderedNavigationRowRequest {
 	readonly shouldFocus: () => boolean;
 }
 
-interface OwnedAnimationFrame {
-	readonly id: number;
-	readonly ownerWindow: Window;
-}
-
 function focusRenderedNavigationRow({
 	edge,
 	focusableSelector,
@@ -500,11 +489,6 @@ function focusRenderedNavigationRow({
 	if (target == null) return false;
 	target.focus();
 	return target.ownerDocument.activeElement === target;
-}
-
-function cancelOwnedAnimationFrame(frame: OwnedAnimationFrame | null): void {
-	if (frame == null) return;
-	frame.ownerWindow.cancelAnimationFrame(frame.id);
 }
 
 function shouldAlwaysFocusNavigationRow(): boolean {
@@ -740,29 +724,6 @@ function restoreOwnedNavigationFocus({
 	return true;
 }
 
-interface ResolveReplacementActiveKeyRequest {
-	readonly activeKey: string | null;
-	readonly layout: NavigationLayout;
-	readonly preferredActiveKey: string | null;
-	readonly resolveMissingActiveKey: MissingNavigationActiveKeyResolver | null;
-}
-
-function resolveReplacementActiveKey({
-	activeKey,
-	layout,
-	preferredActiveKey,
-	resolveMissingActiveKey,
-}: ResolveReplacementActiveKeyRequest): string | null {
-	let candidate: string | null = null;
-	if (activeKey != null && resolveMissingActiveKey != null) {
-		candidate = resolveMissingActiveKey({missingActiveKey: activeKey});
-	}
-	if (candidate == null) {
-		candidate = preferredActiveKey;
-	}
-	return layout.resolveActiveKey(candidate);
-}
-
 interface NavigationFocusReconciliationOptions {
 	readonly activeFocusTargetIdentity: string | object | null;
 	readonly activeKey: string | null;
@@ -773,7 +734,6 @@ interface NavigationFocusReconciliationOptions {
 	readonly layout: NavigationLayout;
 	readonly navigationNode: HTMLElement | null;
 	readonly preferredActiveKey: string | null;
-	readonly resolveMissingActiveKey: MissingNavigationActiveKeyResolver | null;
 	readonly rowIndexByKey: ReadonlyMap<string, number>;
 	readonly scrollerRef: React.RefObject<ScrollerHandle | null>;
 	readonly setActiveKey: (key: string | null) => void;
@@ -789,7 +749,6 @@ function useNavigationFocusReconciliation({
 	layout,
 	navigationNode,
 	preferredActiveKey,
-	resolveMissingActiveKey,
 	rowIndexByKey,
 	scrollerRef,
 	setActiveKey,
@@ -808,12 +767,7 @@ function useNavigationFocusReconciliation({
 			});
 			return;
 		}
-		const nextActiveKey = resolveReplacementActiveKey({
-			activeKey,
-			layout,
-			preferredActiveKey,
-			resolveMissingActiveKey,
-		});
+		const nextActiveKey = layout.resolveActiveKey(preferredActiveKey);
 		if (nextActiveKey === activeKey) return;
 		if (activeKey != null && nextActiveKey != null) {
 			const nextActiveRowIndex = rowIndexByKey.get(nextActiveKey);
@@ -849,7 +803,6 @@ function useNavigationFocusReconciliation({
 		layout,
 		navigationNode,
 		preferredActiveKey,
-		resolveMissingActiveKey,
 		rowIndexByKey,
 		scrollerRef,
 		setActiveKey,
@@ -874,7 +827,6 @@ export function useNavigationList({
 	focusableSelector,
 	keyboardNavigationEnabled,
 	preferredActiveKey,
-	resolveMissingActiveKey,
 }: NavigationListOptions): NavigationListResult {
 	const [navigationNode, setNavigationNode] = useState<HTMLElement | null>(null);
 	const [activeKey, setActiveKey] = useState<string | null>(() => resolveInitialActiveKey(preferredActiveKey));
@@ -962,7 +914,6 @@ export function useNavigationList({
 		layout,
 		navigationNode,
 		preferredActiveKey,
-		resolveMissingActiveKey,
 		rowIndexByKey,
 		scrollerRef,
 		setActiveKey,

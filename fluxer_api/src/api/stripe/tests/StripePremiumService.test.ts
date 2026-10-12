@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
-import type {GuildService} from '@app/api/guild/services/GuildService';
 import {createGuild, createRole, getMember} from '@app/api/guild/tests/GuildTestUtils';
-import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -64,33 +58,6 @@ describe('StripePremiumService', () => {
 				.post('/premium/visionary/rejoin')
 				.expect(403, APIErrorCodes.MISSING_ACCESS)
 				.execute();
-		});
-	});
-	describe('premium duration and stacking', () => {
-		test('keeps Visionary number 0 when a lifetime grant comes from a subscription period', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.LIFETIME,
-					premium_lifetime_sequence: 0,
-				})
-				.execute();
-			const premiumService = new StripePremiumService(
-				new UserRepository(),
-				new NoopGatewayService(),
-				{} as GuildRepository,
-				{} as GuildService,
-			);
-			await premiumService.setPremiumFromSubscriptionPeriod(
-				createUserID(BigInt(account.userId)),
-				UserPremiumTypes.LIFETIME,
-				new Date(Date.now() + 86_400_000),
-			);
-			const me = await createBuilder<{premium_lifetime_sequence: number | null}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_lifetime_sequence).toBe(0);
 		});
 	});
 });

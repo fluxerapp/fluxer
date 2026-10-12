@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "檔案過多。最多允許 {maxFiles, plural, other {# 個檔案}}。",
 	"attachments_and_uploads.unresolved_attachment_url": "偵測到未解析的 `attachment://` URL。這應該在嵌入處理之前完成解析。",
 	"attachments_and_uploads.uploaded_attachment_not_found": "找不到已上傳的附件 {filename}。",
-	"auth_and_oauth.application_not_owned": "你沒有此應用程式的擁有權。",
 	"auth_and_oauth.bot_already_in_guild": "此機器人已在社群中。",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "機器人無法建立驗證工作階段。",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "機器人無法使用驗證端點。",

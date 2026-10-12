@@ -23,9 +23,7 @@ export type ReactionMachineEvent =
 	| {type: 'reaction.remove'; emoji: ReactionEmoji; userId: string; isCurrentUser: boolean}
 	| {type: 'reaction.removeAll'}
 	| {type: 'reaction.removeEmoji'; emoji: ReactionEmoji}
-	| {type: 'reaction.trackReactors'; emoji: ReactionEmoji; userIds: ReadonlyArray<string>}
-	| {type: 'reaction.trackReactor'; emoji: ReactionEmoji; userId: string}
-	| {type: 'reaction.untrackReactor'; emoji: ReactionEmoji; userId: string};
+	| {type: 'reaction.trackReactors'; emoji: ReactionEmoji; userIds: ReadonlyArray<string>};
 
 export function getEmojiKey(emoji: ReactionEmoji): string {
 	return `${emoji.id ?? ''}:${emoji.name}`;
@@ -53,10 +51,6 @@ export function mapToReactions(map: ReactionMap): ReadonlyArray<MessageReaction>
 		if (record.count > 0) out.push(recordToReaction(record));
 	}
 	return out.length > 0 ? Object.freeze(out) : EMPTY_REACTIONS;
-}
-
-export function getRecord(map: ReactionMap, emoji: ReactionEmoji): ReactionRecord | undefined {
-	return map.get(getEmojiKey(emoji));
 }
 
 function withRecord(map: ReactionMap, key: string, record: ReactionRecord | null): ReactionMap {
@@ -244,16 +238,6 @@ function trackReactorsInMap(map: ReactionMap, emoji: ReactionEmoji, userIds: Rea
 	return next;
 }
 
-function untrackReactorInMap(map: ReactionMap, emoji: ReactionEmoji, userId: string): ReactionMap {
-	const key = getEmojiKey(emoji);
-	const existing = map.get(key);
-	if (!existing) return map;
-	if (!existing.knownReactors.has(userId)) return map;
-	const reactors = new Set(existing.knownReactors);
-	reactors.delete(userId);
-	return withRecord(map, key, {...existing, knownReactors: reactors});
-}
-
 export function transitionReactionMap(
 	map: ReactionMap,
 	event: ReactionMachineEvent,
@@ -270,50 +254,9 @@ export function transitionReactionMap(
 			return removeAllFromMap(map);
 		case 'reaction.removeEmoji':
 			return removeEmojiFromMap(map, event.emoji);
-		case 'reaction.trackReactor':
-			return trackReactorInMap(map, event.emoji, event.userId);
 		case 'reaction.trackReactors':
 			return trackReactorsInMap(map, event.emoji, event.userIds);
-		case 'reaction.untrackReactor':
-			return untrackReactorInMap(map, event.emoji, event.userId);
 	}
-}
-
-export function applyAdd(map: ReactionMap, emoji: ReactionEmoji, userId: string, isCurrentUser: boolean): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.add', emoji, userId, isCurrentUser});
-}
-
-export function applyRemove(
-	map: ReactionMap,
-	emoji: ReactionEmoji,
-	userId: string,
-	isCurrentUser: boolean,
-): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.remove', emoji, userId, isCurrentUser});
-}
-
-export function applyRemoveEmoji(map: ReactionMap, emoji: ReactionEmoji): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.removeEmoji', emoji});
-}
-
-export function applyRemoveAll(map: ReactionMap): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.removeAll'});
-}
-
-export function hydrate(
-	map: ReactionMap,
-	wire: ReadonlyArray<MessageReaction> | null | undefined,
-	currentUserId?: string | null,
-): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.hydrate', reactions: wire, currentUserId}, currentUserId);
-}
-
-export function trackReactor(map: ReactionMap, emoji: ReactionEmoji, userId: string): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.trackReactor', emoji, userId});
-}
-
-export function untrackReactor(map: ReactionMap, emoji: ReactionEmoji, userId: string): ReactionMap {
-	return transitionReactionMap(map, {type: 'reaction.untrackReactor', emoji, userId});
 }
 
 function mapsEqual(a: ReactionMap, b: ReactionMap): boolean {

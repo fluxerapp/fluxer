@@ -86,7 +86,7 @@ export const EditingMessageInput = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const maxMessageLength = Limits.getMaxMessageLength();
-		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
+		const premiumMaxLength = Limits.getStockValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 		const [initial] = useState(() => {
 			let wire = MessageEdit.getEditingContent(channel.id, message.id);
 			if (wire == null) {
@@ -379,7 +379,6 @@ export const EditingMessageInput = observer(
 						channelId={channel.id}
 						onEmojiSelect={handleEmojiSelect}
 						visibleTabs={['emojis']}
-						selectedTab="emojis"
 						data-flx="channel.editing-message-input.expression-picker-sheet"
 					/>
 				)}

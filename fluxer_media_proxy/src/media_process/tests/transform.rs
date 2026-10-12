@@ -3,11 +3,8 @@
 use super::super::image_probe::{load_image, probe_image_dims};
 use super::super::loaded_image::validate_jxl_decode_pixels;
 use super::super::native_runtime::ensure_vips_init;
-use super::super::transform::source_supports_pages;
 use super::super::{ImageDimensions, ImageOptions, MediaError, NativeCost, image_transform_cost};
-use super::fixtures::{
-    animated_mode, metadata_value, png_zlib_level, test_media_limits, transform_image,
-};
+use super::fixtures::{animated_mode, metadata_value, test_media_limits, transform_image};
 use crate::{
     constants,
     metrics::transform::TransformMetrics,
@@ -19,22 +16,6 @@ use crate::{
         synthetic_bmp, synthetic_png,
     },
 };
-
-#[test]
-fn transforms_png_to_webp() {
-    let png = synthetic_png(32, 24);
-    let out = transform_image(
-        &png,
-        &ImageOptions {
-            width: Some(16),
-            format: OutputFormat::WebP,
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert_eq!("image/webp", out.content_type);
-    assert!(out.bytes.starts_with(b"RIFF"));
-}
 
 #[test]
 fn transforms_static_png_with_animated_flag_does_not_pass_n_to_pngload() {
@@ -98,19 +79,6 @@ fn reports_bmp_metadata_dimensions_and_placeholder() {
     assert_eq!(48, meta["height"]);
     assert_eq!(false, meta["animated"]);
     assert!(meta["placeholder"].as_str().is_some_and(|p| !p.is_empty()));
-}
-
-#[test]
-fn source_supports_pages_matches_libvips_loader_list() {
-    assert!(source_supports_pages("image/webp"));
-    assert!(source_supports_pages("image/gif"));
-    assert!(source_supports_pages("image/apng"));
-    assert!(source_supports_pages("image/heif"));
-    assert!(source_supports_pages("image/avif"));
-    assert!(!source_supports_pages("image/png"));
-    assert!(!source_supports_pages("image/jpeg"));
-    assert!(!source_supports_pages("image/bmp"));
-    assert!(!source_supports_pages("application/octet-stream"));
 }
 
 #[test]
@@ -229,7 +197,7 @@ fn full_size_jxl_is_downscaled_to_fit_the_native_memory_budget() {
         JXL_7000X4000_LOSSY_RGB,
         &options,
         &media_limits,
-        &TransformMetrics::new(),
+        &TransformMetrics::default(),
     )
     .unwrap();
     let dims = probe_image_dims(&test_media_limits(), &out.bytes).unwrap();
@@ -343,17 +311,4 @@ fn transforms_a_rotated_jpeg_with_mismatched_scan_headers_at_full_size() {
     )
     .unwrap();
     assert_eq!(Some((768, 1024)), png_dimensions(&out.bytes));
-}
-
-#[test]
-fn png_outputs_above_a_megapixel_use_default_zlib_compression() {
-    let png_options = ImageOptions {
-        format: OutputFormat::PNG,
-        ..Default::default()
-    };
-    let small = transform_image(&synthetic_bmp(160, 160), &png_options).unwrap();
-    assert_eq!(Some(3), png_zlib_level(&small.bytes));
-    let large = transform_image(&synthetic_bmp(1100, 1000), &png_options).unwrap();
-    assert_eq!(Some((1100, 1000)), png_dimensions(&large.bytes));
-    assert_eq!(Some(2), png_zlib_level(&large.bytes));
 }

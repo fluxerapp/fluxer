@@ -17,15 +17,17 @@ vi.mock('@lingui/react/macro', () => ({Trans: () => null, useLingui: () => ({i18
 
 vi.mock('@app/features/platform/transport/RestTransport', () => ({http: {get: mocks.get}}));
 
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
 	default: {
-		get isReady() {
-			return mocks.gatewayReady;
+		foregroundConnection: {
+			get isReady() {
+				return mocks.gatewayReady;
+			},
+			get isConnected() {
+				return mocks.gatewayReady;
+			},
+			connectionEpoch: 1,
 		},
-		get isConnected() {
-			return mocks.gatewayReady;
-		},
-		connectionEpoch: 1,
 	},
 }));
 

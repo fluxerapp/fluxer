@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	EXPRESSIONS_DESCRIPTOR as EXPRESSIONS_CATEGORY_DESCRIPTOR,
+	INTEGRATIONS_DESCRIPTOR as INTEGRATIONS_CATEGORY_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -215,18 +219,9 @@ export const GUILD_SETTINGS_LABEL_DESCRIPTOR = msg({
 	message: 'Community settings',
 	comment: 'Root label for community settings modal and settings search paths.',
 });
-
-const EXPRESSIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Expressions',
-	comment: 'Community settings sidebar category grouping the emoji and stickers tabs.',
-});
 const COMMUNITY_CATEGORY_DESCRIPTOR = msg({
 	message: 'Community',
 	comment: 'Community settings sidebar category grouping discovery and the vanity URL.',
-});
-const INTEGRATIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Integrations',
-	comment: 'Community settings sidebar category grouping webhooks.',
 });
 const PEOPLE_CATEGORY_DESCRIPTOR = msg({
 	message: 'People',

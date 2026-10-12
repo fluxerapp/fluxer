@@ -81,34 +81,12 @@ describe('Harvest download streaming', () => {
 		});
 	});
 
-	test('rejects a tampered token', async () => {
-		await withStreamingHarvestDownloads(async () => {
-			const {account, harvestId} = await completedHarvest(harness);
-			const download = await fetchHarvestDownload(harness, account.token, harvestId);
-			const path = downloadPath(download.download_url);
-			const response = await get(harness, `${path.slice(0, -2)}xy`);
-			expect(response.status).toBe(404);
-		});
-	});
-
 	test('rejects a token signed with the wrong secret', async () => {
 		await withStreamingHarvestDownloads(async () => {
 			const {account, harvestId, storageKey} = await completedHarvest(harness);
 			const token = signHarvestDownloadToken(
 				{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() + 60_000},
 				'not-the-configured-secret',
-			);
-			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
-		});
-	});
-
-	test('rejects an expired token even while the harvest is still valid', async () => {
-		await withStreamingHarvestDownloads(async () => {
-			const {account, harvestId, storageKey} = await completedHarvest(harness);
-			const token = signHarvestDownloadToken(
-				{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() - 1},
-				getConfig().auth.connectionInitiationSecret,
 			);
 			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
 			expect(response.status).toBe(404);

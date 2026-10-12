@@ -19,95 +19,88 @@ import type {Profile} from '@app/features/user/models/Profile';
 import {User} from '@app/features/user/models/User';
 import UserProfileMobile from '@app/features/user/state/UserProfileMobile';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {MUTUAL_FRIENDS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {msg, plural} from '@lingui/core/macro';
+import {plural} from '@lingui/core/macro';
 import {useLingui as useLinguiRuntime} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const MUTUAL_FRIENDS_DESCRIPTOR = msg({
-	message: 'Mutual friends',
-	comment: 'Short label in the mutual items sheet. Keep it concise.',
-});
-
 type MutualItemsView = 'friends' | 'communities_groups';
 
 interface MutualItemsSheetProps {
-	isOpen: boolean;
 	onClose: () => void;
 	view: MutualItemsView;
 	profile: Profile;
 	mutualGroups: ReadonlyArray<Channel>;
 }
 
-export const MutualItemsSheet: React.FC<MutualItemsSheetProps> = observer(
-	({isOpen, onClose, view, profile, mutualGroups}) => {
-		const {i18n} = useLingui();
-		const mutualCommunitiesCount = getMutualCommunityDisplayItems(profile.mutualGuilds ?? []).length;
-		const mutualGroupsCount = mutualGroups.length;
-		const title = (() => {
-			switch (view) {
-				case 'friends':
-					return i18n._(MUTUAL_FRIENDS_DESCRIPTOR);
-				case 'communities_groups':
-					return i18n._(
-						getMutualItemsDescriptor({
-							mutualCommunitiesCount,
-							mutualGroupsCount,
-							includeCount: false,
-						}),
-					);
+export const MutualItemsSheet: React.FC<MutualItemsSheetProps> = observer(({onClose, view, profile, mutualGroups}) => {
+	const {i18n} = useLingui();
+	const mutualCommunitiesCount = getMutualCommunityDisplayItems(profile.mutualGuilds ?? []).length;
+	const mutualGroupsCount = mutualGroups.length;
+	const title = (() => {
+		switch (view) {
+			case 'friends':
+				return i18n._(MUTUAL_FRIENDS_DESCRIPTOR);
+			case 'communities_groups':
+				return i18n._(
+					getMutualItemsDescriptor({
+						mutualCommunitiesCount,
+						mutualGroupsCount,
+						includeCount: false,
+					}),
+				);
+		}
+	})();
+	return (
+		<BottomSheet
+			isOpen
+			onClose={onClose}
+			snapPoints={[0, 1]}
+			initialSnap={1}
+			disablePadding={true}
+			surface="primary"
+			showCloseButton={false}
+			leadingAction={
+				<button
+					type="button"
+					onClick={onClose}
+					className={styles.backButton}
+					aria-label={i18n._(GO_BACK_DESCRIPTOR)}
+					data-flx="user.mutual-items-sheet.back-button.close"
+				>
+					<ArrowLeftIcon className={styles.backIcon} weight="bold" data-flx="user.mutual-items-sheet.back-icon" />
+				</button>
 			}
-		})();
-		return (
-			<BottomSheet
-				isOpen={isOpen}
-				onClose={onClose}
-				snapPoints={[0, 1]}
-				initialSnap={1}
-				disablePadding={true}
-				surface="primary"
-				showCloseButton={false}
-				leadingAction={
-					<button
-						type="button"
-						onClick={onClose}
-						className={styles.backButton}
-						aria-label={i18n._(GO_BACK_DESCRIPTOR)}
-						data-flx="user.mutual-items-sheet.back-button.close"
-					>
-						<ArrowLeftIcon className={styles.backIcon} weight="bold" data-flx="user.mutual-items-sheet.back-icon" />
-					</button>
-				}
-				title={title}
-				data-flx="user.mutual-items-sheet.bottom-sheet"
-			>
-				<Scroller className={styles.container} data-flx="user.mutual-items-sheet.container">
-					<div className={styles.list} data-flx="user.mutual-items-sheet.list">
-						{view === 'friends' && (
-							<MutualFriendsList
-								profile={profile}
-								onClose={onClose}
-								data-flx="user.mutual-items-sheet.mutual-friends-list"
-							/>
-						)}
-						{view === 'communities_groups' && (
-							<MutualCommunitiesGroupsList
-								profile={profile}
-								groups={mutualGroups}
-								onClose={onClose}
-								data-flx="user.mutual-items-sheet.mutual-communities-groups-list"
-							/>
-						)}
-					</div>
-				</Scroller>
-			</BottomSheet>
-		);
-	},
-);
+			title={title}
+			data-flx="user.mutual-items-sheet.bottom-sheet"
+		>
+			<Scroller className={styles.container} data-flx="user.mutual-items-sheet.container">
+				<div className={styles.list} data-flx="user.mutual-items-sheet.list">
+					{view === 'friends' && (
+						<MutualFriendsList
+							profile={profile}
+							onClose={onClose}
+							data-flx="user.mutual-items-sheet.mutual-friends-list"
+						/>
+					)}
+					{view === 'communities_groups' && (
+						<MutualCommunitiesGroupsList
+							profile={profile}
+							groups={mutualGroups}
+							onClose={onClose}
+							data-flx="user.mutual-items-sheet.mutual-communities-groups-list"
+						/>
+					)}
+				</div>
+			</Scroller>
+		</BottomSheet>
+	);
+});
 const MutualFriendsList: React.FC<{profile: Profile; onClose: () => void}> = observer(({profile, onClose}) => {
 	const friends = profile.mutualFriends ?? [];
 	return (

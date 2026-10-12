@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::secret::SecretString;
+use fluxer_common::config::{parse_bool, parse_number};
+
 use anyhow::Context as _;
+use fluxer_common::secret::SecretString;
 use serde::Deserialize;
 use std::net::{IpAddr, SocketAddr};
 
@@ -667,42 +669,6 @@ fn parse_apps(var_name: &str, raw: Option<&str>) -> anyhow::Result<Vec<ProviderA
 fn parse_environment(var_name: &str, raw: &str) -> anyhow::Result<ProviderEnvironment> {
     ProviderEnvironment::from_label(&raw.trim().to_ascii_lowercase())
         .ok_or_else(|| anyhow::anyhow!("{var_name} must be one of: production, development"))
-}
-
-fn parse_bool(var_name: &str, raw: Option<&str>) -> anyhow::Result<Option<bool>> {
-    let Some(raw) = raw else {
-        return Ok(None);
-    };
-    match raw.to_ascii_lowercase().as_str() {
-        "true" | "1" | "yes" => Ok(Some(true)),
-        "false" | "0" | "no" => Ok(Some(false)),
-        _ => Err(anyhow::anyhow!(
-            "{var_name} must be a boolean: true, false, 1, 0, yes, or no"
-        )),
-    }
-}
-
-fn parse_number<T>(
-    var_name: &str,
-    raw: Option<&str>,
-    default_value: T,
-    min_value: T,
-    max_value: T,
-) -> anyhow::Result<T>
-where
-    T: std::str::FromStr + PartialOrd + std::fmt::Display + Copy,
-{
-    let Some(raw) = raw else {
-        return Ok(default_value);
-    };
-    let parsed = raw
-        .parse::<T>()
-        .map_err(|_| anyhow::anyhow!("{var_name} must be a number"))?;
-    anyhow::ensure!(
-        parsed >= min_value && parsed <= max_value,
-        "{var_name} must be between {min_value} and {max_value}"
-    );
-    Ok(parsed)
 }
 
 struct Env(Vec<(String, String)>);

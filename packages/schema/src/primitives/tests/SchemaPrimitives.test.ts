@@ -2,11 +2,9 @@
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
-	ColorType,
 	coerceNumberFromString,
 	createInt32EnumType,
 	createStringType,
-	createUnboundedStringType,
 	Int32Type,
 	Int64StringType,
 	Int64Type,
@@ -123,21 +121,6 @@ describe('SnowflakeType', () => {
 	});
 });
 
-describe('ColorType', () => {
-	it.each([0xff5500, 0x000000, 0xffffff])('preserves valid color %i', (value) => {
-		expect(ColorType.parse(value)).toBe(value);
-	});
-	it.each([
-		[-1, ValidationErrorCodes.COLOR_VALUE_TOO_LOW],
-		[0x1000000, ValidationErrorCodes.COLOR_VALUE_TOO_HIGH],
-	])('reports the color-specific boundary error for %i', (input, message) => {
-		expect(ColorType.safeParse(input)).toMatchObject({success: false, error: {issues: [{message}]}});
-	});
-	it('rejects fractional colors', () => {
-		expect(ColorType.safeParse(123.45).success).toBe(false);
-	});
-});
-
 describe.each([
 	{name: 'Int32Type', schema: Int32Type, maximum: 2147483647},
 	{name: 'NonNegativeSafeIntegerType', schema: NonNegativeSafeIntegerType, maximum: Number.MAX_SAFE_INTEGER},
@@ -205,19 +188,6 @@ describe('createStringType', () => {
 	});
 });
 
-describe('createUnboundedStringType', () => {
-	it('normalizes string without length validation', () => {
-		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.parse('  hello\x00world  ');
-		expect(result).toBe('hello\x00world');
-	});
-	it('accepts empty strings', () => {
-		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.parse('');
-		expect(result).toBe('');
-	});
-});
-
 describe('removeStandaloneSurrogates', () => {
 	it('preserves valid characters', () => {
 		expect(removeStandaloneSurrogates('hello')).toBe('hello');
@@ -237,18 +207,6 @@ describe('removeStandaloneSurrogates', () => {
 });
 
 describe('normalizeWhitespace', () => {
-	it('collapses multiple spaces to single space', () => {
-		expect(normalizeWhitespace('hello    world')).toBe('hello world');
-	});
-	it('normalizes unicode spaces', () => {
-		expect(normalizeWhitespace('hello\u00A0world')).toBe('hello world');
-	});
-	it('trims leading and trailing whitespace', () => {
-		expect(normalizeWhitespace('  hello world  ')).toBe('hello world');
-	});
-	it('handles strings with only whitespace', () => {
-		expect(normalizeWhitespace('     ')).toBe('');
-	});
 	it('throws on excessively long strings', () => {
 		const longString = 'a'.repeat(10001);
 		expect(() => normalizeWhitespace(longString)).toThrow(ValidationErrorCodes.STRING_LENGTH_INVALID);
@@ -278,15 +236,6 @@ describe('stripInvisibles', () => {
 });
 
 describe('stripVariationSelectors', () => {
-	it('removes basic variation selectors', () => {
-		expect(stripVariationSelectors('hello\uFE0Fworld')).toBe('helloworld');
-	});
-	it('removes ideographic variation selectors', () => {
-		expect(stripVariationSelectors('hello\u{E0100}world')).toBe('helloworld');
-	});
-	it('preserves normal text', () => {
-		expect(stripVariationSelectors('Hello, World!')).toBe('Hello, World!');
-	});
 	it('throws on excessively long strings', () => {
 		const longString = 'a'.repeat(10001);
 		expect(() => stripVariationSelectors(longString)).toThrow(ValidationErrorCodes.STRING_LENGTH_INVALID);

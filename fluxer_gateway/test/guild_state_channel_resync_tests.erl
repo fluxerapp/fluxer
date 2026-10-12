@@ -29,16 +29,16 @@ run_resync_case(Event, EventData) ->
     PidB = spawn(fun idle/0),
     SubsTab = guild_member_list_subs:new(),
     State0 = base_state(SubsTab, PidA, PidB),
-    {State1, _SyncA, _RangesA} = guild_member_list:subscribe_ranges(
+    {State1, _SyncA, _RangesA} = guild_member_list_subscribe:subscribe_ranges(
         <<"s_a">>, list_id(), [{0, 99}], State0
     ),
-    {State2, _SyncB, _RangesB} = guild_member_list:subscribe_ranges(
+    {State2, _SyncB, _RangesB} = guild_member_list_subscribe:subscribe_ranges(
         <<"s_b">>, list_id(), [{0, 99}], State1
     ),
     try
-        ?assertEqual({3, 0}, guild_member_list:get_counts(list_id(), State2)),
+        ?assertEqual({3, 0}, guild_member_list_read:get_counts(list_id(), State2)),
         {noreply, UpdatedState} = guild_dispatch:handle_dispatch(Event, EventData, State2),
-        ?assertEqual({2, 0}, guild_member_list:get_counts(list_id(), UpdatedState)),
+        ?assertEqual({2, 0}, guild_member_list_read:get_counts(list_id(), UpdatedState)),
         {Pids, Raw, Payload} = receive_member_list_dispatch(),
         ?assertEqual(lists:sort([PidA, PidB]), lists:sort(Pids)),
         ?assertEqual(list_id(), maps:get(<<"channel_id">>, Payload)),

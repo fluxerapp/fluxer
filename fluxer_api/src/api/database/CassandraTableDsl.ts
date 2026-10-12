@@ -34,14 +34,6 @@ function assertCqlIdentifier(value: string): string {
 }
 
 function compileWhere<Row extends object>(w: WhereExpr<Row>): string {
-	if (w.kind === 'tupleGt') {
-		if (w.cols.length !== w.params.length || w.cols.length === 0) {
-			throw new Error('tupleGt requires equal-length non-empty cols/params');
-		}
-		const cols = `(${w.cols.map((c) => assertCqlIdentifier(c as string)).join(', ')})`;
-		const params = `(${w.params.map((p) => `:${assertCqlIdentifier(p as string)}`).join(', ')})`;
-		return `${cols} > ${params}`;
-	}
 	const col = assertCqlIdentifier(w.col as string);
 	const param = assertCqlIdentifier(w.param as string);
 	switch (w.kind) {
@@ -496,12 +488,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
 	const insertBaseCql = `INSERT INTO ${def.name} (${columns.join(', ')}) VALUES (${columns.map((c) => `:${c}`).join(', ')})`;
-	function insertCql(opts: {ttlParam?: string} = {}): string {
-		const cql = opts.ttlParam ? `${insertBaseCql} USING TTL :${opts.ttlParam};` : `${insertBaseCql};`;
-		const kvMeta: KvQueryMeta<Row> = {action: 'upsert', table: tableSpec, ttlParamName: opts.ttlParam};
-		registerKvMeta(cql, kvMeta as KvQueryMeta<Record<string, unknown>>);
-		return cql;
-	}
 	function insert(row: Row): PreparedQuery {
 		const params = paramsFromRow(row);
 		const kvMeta: KvQueryMeta<Row> = {action: 'upsert', table: tableSpec};
@@ -626,37 +612,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
-	function patchByPkWithTtlParam(
-		pkValues: Pick<Row, PK>,
-		patch: Partial<{
-			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
-		}>,
-		ttlParamName: string,
-		ttlValue: number,
-	): PreparedQuery {
-		const patchKeys = Object.keys(patch) as Array<Exclude<ColumnName<Row>, PK>>;
-		if (patchKeys.length === 0) {
-			throw new Error(`Refusing to execute empty PATCH update on table "${def.name}"`);
-		}
-		patchKeys.sort((a, b) => columns.indexOf(a) - columns.indexOf(b));
-		const cql = `UPDATE ${def.name} USING TTL :${ttlParamName}
-SET ${patchKeys.map((c) => `${c} = :${c}`).join(', ')}
-WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
-`;
-		const params: CassandraParams = {};
-		for (const k of pk) params[k] = pkValues[k] as CassandraParam;
-		for (const c of patchKeys) params[c] = opToValue(patch[c] as DbOp<unknown>);
-		params[ttlParamName] = ttlValue;
-		const kvMeta: KvQueryMeta<Row> = {
-			action: 'patch',
-			table: tableSpec,
-			patch: patch as Partial<Record<ColumnName<Row>, DbOp<unknown>>>,
-			patchKeys,
-			pkColumns: pk,
-			ttlParamName,
-		};
-		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
-	}
 	function upsertAllWithTtl(row: Row, ttlSeconds: number): PreparedQuery {
 		const cql =
 			nonPkColumns.length > 0
@@ -674,19 +629,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
-	function upsertAllWithTtlParam(row: Row, ttlParamName: string, ttlValue: number): PreparedQuery {
-		const cql =
-			nonPkColumns.length > 0
-				? `UPDATE ${def.name} USING TTL :${ttlParamName}
-SET ${nonPkColumns.map((c) => `${c} = :${c}`).join(', ')}
-WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
-`
-				: `INSERT INTO ${def.name} (${columns.join(', ')}) VALUES (${columns.map((c) => `:${c}`).join(', ')}) USING TTL :${ttlParamName};`;
-		const params = paramsFromRow(row);
-		params[ttlParamName] = ttlValue;
-		const kvMeta: KvQueryMeta<Row> = {action: 'upsert', table: tableSpec, ttlParamName};
-		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
-	}
 	return {
 		name: def.name,
 		columns: def.columns,
@@ -695,10 +637,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		defaultTtlSeconds: def.defaultTtlSeconds,
 		selectCql,
 		select,
-		updateAllCql() {
-			return updateAll;
-		},
-		paramsFromRow,
 		upsertAll(row: Row) {
 			const hasAllColumns = columns.every((c) => row[c as keyof Row] !== undefined);
 			const kvMeta: KvQueryMeta<Row> = {action: 'upsert', table: tableSpec};
@@ -718,7 +656,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		deleteByPk,
 		conditionalDeleteByPk,
 		deletePartition,
-		insertCql,
 		insert,
 		insertIfNotExists,
 		insertIfNotExistsWithTtl,
@@ -728,9 +665,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		selectCount,
 		insertWithNow,
 		patchByPkWithTtl,
-		patchByPkWithTtlParam,
 		upsertAllWithTtl,
-		upsertAllWithTtlParam,
 		where: {
 			eq: (col, param) => ({kind: 'eq', col, param: param ?? col}),
 			in: (col, param) => ({kind: 'in', col, param}),
@@ -739,7 +674,6 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			lte: (col, param) => ({kind: 'lte', col, param: param ?? col}),
 			gte: (col, param) => ({kind: 'gte', col, param: param ?? col}),
 			tokenGt: (col, param) => ({kind: 'tokenGt', col, param}),
-			tupleGt: (cols, params) => ({kind: 'tupleGt', cols, params}),
 		},
 	};
 }

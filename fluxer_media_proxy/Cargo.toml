@@ -14,12 +14,8 @@ path = "src/lib.rs"
 name = "fluxer-media-proxy"
 path = "src/main.rs"
 
-[[bench]]
-name = "core"
-harness = false
-
 [dependencies]
-fluxer_common = { path = "../fluxer_common" }
+fluxer_common = { path = "../fluxer_common", features = ["healthcheck"] }
 anyhow = "1.0.104"
 axum = {version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"]}
 base64 = "0.23.1"
@@ -59,7 +55,6 @@ cc = "1.4.6"
 pkg-config = "0.3.34"
 
 [dev-dependencies]
-criterion = "0.8.2"
 flate2 = "1.1.10"
 proptest = "1.11.0"
 tower = {version = "0.5.3", features = ["util"]}

@@ -102,7 +102,7 @@ export abstract class BaseChannelAuthService {
 		viewer: ThreadViewer;
 		skipNsfwValidation?: boolean;
 	}): Promise<AuthenticatedChannel> {
-		if (this.isPersonalNotesChannel({userId, channelId})) {
+		if (isPersonalNotesChannelId({userId, channelId})) {
 			const channel = await ensurePersonalNotesChannelExists({
 				channelRepository: this.channelRepository.channelData,
 				userId,
@@ -124,10 +124,6 @@ export abstract class BaseChannelAuthService {
 		return this.getGuildChannelAuth({channel, userId, skipNsfwValidation});
 	}
 
-	isPersonalNotesChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
-		return isPersonalNotesChannelId({userId, channelId});
-	}
-
 	protected async getRealPersonalNotesChannelAuth({
 		channel,
 		userId,
@@ -135,7 +131,7 @@ export abstract class BaseChannelAuthService {
 		channel: Channel;
 		userId: UserID;
 	}): Promise<AuthenticatedChannel> {
-		if (!this.isPersonalNotesChannel({userId, channelId: channel.id})) {
+		if (!isPersonalNotesChannelId({userId, channelId: channel.id})) {
 			throw new UnknownChannelError();
 		}
 		if (channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {

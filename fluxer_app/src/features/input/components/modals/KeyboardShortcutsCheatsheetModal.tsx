@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import styles from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal.module.css';
 import Keybind, {type KeybindConfig, type KeybindSection} from '@app/features/input/state/InputKeybind';
 import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
 	chipsForDefaultEntry,
@@ -70,7 +70,7 @@ function getShortcutChipGroups(i18n: I18n, entry: KeybindConfig, hasCustomBindin
 
 const ShortcutLabel: React.FC<{label: string}> = ({label}) => {
 	const labelRef = useRef<HTMLSpanElement>(null);
-	const isLabelOverflowing = useTextOverflow(labelRef);
+	const isLabelOverflowing = useTextOverflow(labelRef, {content: label});
 	return (
 		<Tooltip text={isLabelOverflowing ? label : ''} data-flx="input.keyboard-shortcuts-cheatsheet-modal.tooltip">
 			<span ref={labelRef} className={styles.shortcutLabel} data-flx="input.keyboard-shortcuts-cheatsheet-modal.label">

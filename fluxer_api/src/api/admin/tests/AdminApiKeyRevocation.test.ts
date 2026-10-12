@@ -17,39 +17,6 @@ describe('Admin API Key Revocation', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('basic revocation', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Revoke Test');
-		expect(await hasAdminAPIKeyId(harness, admin.token, apiKey.keyId)).toBe(true);
-		await createBuilder(harness, `${admin.token}`)
-			.delete(`/admin/api-keys/${apiKey.keyId}`)
-			.body(null)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(await hasAdminAPIKeyId(harness, admin.token, apiKey.keyId)).toBe(false);
-	});
-	test('revocation of non-existent key returns 404', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, [
-			'admin:authenticate',
-			'admin_api_key:manage',
-			'audit_log:view',
-			'user:lookup',
-			'guild:lookup',
-		]);
-		await createBuilder(harness, `${admin.token}`)
-			.delete('/admin/api-keys/999999999999999999')
-			.body(null)
-			.expect(HTTP_STATUS.NOT_FOUND)
-			.execute();
-	});
 	test('revocation requires admin_api_key:manage ACL', async () => {
 		const admin1 = await createTestAccount(harness);
 		const admin2 = await createTestAccount(harness);

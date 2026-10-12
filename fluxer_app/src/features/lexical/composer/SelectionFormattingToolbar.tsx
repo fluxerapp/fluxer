@@ -271,11 +271,10 @@ function SelectionToolbarSurface({
 		}),
 		[editor],
 	);
-	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
+	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, {
 		placement: 'top',
 		offsetMainAxis: 8,
 		shouldAutoUpdate: true,
-		enableSmartBoundary: true,
 	});
 	useEffect(() => {
 		updatePosition();

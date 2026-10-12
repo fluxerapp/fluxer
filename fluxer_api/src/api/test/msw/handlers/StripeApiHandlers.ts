@@ -55,7 +55,6 @@ interface PortalSessionParams {
 }
 
 interface StripeApiMockConfig {
-	checkoutShouldFail?: boolean;
 	portalShouldFail?: boolean;
 	subscriptionShouldFail?: boolean;
 	customerShouldFail?: boolean;
@@ -109,15 +108,12 @@ interface SubscriptionScheduleParams {
 interface StripeApiMockSpies {
 	createdCheckoutSessions: Array<CheckoutSessionParams>;
 	createdPortalSessions: Array<PortalSessionParams>;
-	createdCustomers: Array<{
-		id: string;
-		email: string | null;
-	}>;
+
 	retrievedSubscriptions: Array<string>;
 	cancelledSubscriptions: Array<string>;
-	retrievedCustomers: Array<string>;
+
 	retrievedPaymentIntents: Array<string>;
-	retrievedSetupIntents: Array<string>;
+
 	retrievedCharges: Array<string>;
 	updatedCustomers: Array<{
 		id: string;
@@ -416,23 +412,22 @@ export interface StripeApiHandlers {
 	handlers: Array<RequestHandler>;
 	spies: StripeApiMockSpies;
 	reset: () => void;
-	resetAll: () => void;
 }
 
 export function createStripeApiHandlers(config: StripeApiMockConfig = {}): StripeApiHandlers {
 	const spies: StripeApiMockSpies = {
 		createdCheckoutSessions: [],
 		createdPortalSessions: [],
-		createdCustomers: [],
+
 		createdRefunds: [],
 		createdValueListItems: [],
 		createdValueLists: [],
 		retrievedCharges: [],
 		retrievedSubscriptions: [],
 		cancelledSubscriptions: [],
-		retrievedCustomers: [],
+
 		retrievedPaymentIntents: [],
-		retrievedSetupIntents: [],
+
 		updatedCharges: [],
 		updatedCustomers: [],
 		updatedSubscriptions: [],
@@ -932,18 +927,6 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 	hydrateStores();
 	const handlers = [
 		http.post(`${STRIPE_API_BASE}/v1/checkout/sessions`, async ({request}) => {
-			if (config.checkoutShouldFail) {
-				return HttpResponse.json(
-					{
-						error: {
-							type: 'invalid_request_error',
-							message: 'Mock checkout failure',
-							code: 'resource_missing',
-						},
-					},
-					{status: 400},
-				);
-			}
 			const formData = await request.formData();
 			const params = parseFormDataToObject<CheckoutSessionParams>(formData);
 			spies.createdCheckoutSessions.push(params);
@@ -1018,7 +1001,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		http.get(`${STRIPE_API_BASE}/v1/setup_intents/:id`, ({params}) => {
 			const {id} = params;
 			const setupIntentId = id as string;
-			spies.retrievedSetupIntents.push(setupIntentId);
+
 			return HttpResponse.json(getSetupIntent(setupIntentId));
 		}),
 		http.get(`${STRIPE_API_BASE}/v1/customers/:id/payment_methods`, ({params, request}) => {
@@ -1491,23 +1474,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				],
 			});
 		}),
-		http.get(`${STRIPE_API_BASE}/v1/customers/search`, ({request}) => {
-			const requestUrl = new URL(request.url);
-			const query = requestUrl.searchParams.get('query') ?? '';
-			const metadataMatch = query.match(/metadata\['([^']+)'\]:'([^']+)'/);
-			const matchedCustomers = metadataMatch
-				? [...customerStore.values()].filter(
-						(customer) => String(customer.metadata[metadataMatch[1]!] ?? '') === metadataMatch[2],
-					)
-				: [];
-			return HttpResponse.json({
-				object: 'search_result',
-				url: '/v1/customers/search',
-				has_more: false,
-				next_page: null,
-				data: matchedCustomers,
-			});
-		}),
+
 		http.get(`${STRIPE_API_BASE}/v1/customers/:id`, ({params}) => {
 			if (config.customerShouldFail) {
 				return HttpResponse.json(
@@ -1524,14 +1491,14 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			}
 			const {id} = params;
 			const customerId = id as string;
-			spies.retrievedCustomers.push(customerId);
+
 			return HttpResponse.json(getCustomer(customerId));
 		}),
 		http.post(`${STRIPE_API_BASE}/v1/customers`, async ({request}) => {
 			const formData = await request.formData();
 			const email = formData.get('email') as string | null;
 			const customerId = `cus_test_new_${Date.now()}`;
-			spies.createdCustomers.push({id: customerId, email});
+
 			customerStore.set(customerId, createDefaultCustomer(customerId, email));
 			return HttpResponse.json(getCustomer(customerId));
 		}),
@@ -1724,16 +1691,16 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 	function reset() {
 		spies.createdCheckoutSessions.length = 0;
 		spies.createdPortalSessions.length = 0;
-		spies.createdCustomers.length = 0;
+
 		spies.createdRefunds.length = 0;
 		spies.createdValueListItems.length = 0;
 		spies.createdValueLists.length = 0;
 		spies.retrievedCharges.length = 0;
 		spies.retrievedSubscriptions.length = 0;
 		spies.cancelledSubscriptions.length = 0;
-		spies.retrievedCustomers.length = 0;
+
 		spies.retrievedPaymentIntents.length = 0;
-		spies.retrievedSetupIntents.length = 0;
+
 		spies.updatedCustomers.length = 0;
 		spies.updatedCharges.length = 0;
 		spies.updatedSubscriptions.length = 0;
@@ -1747,10 +1714,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		subscriptionScheduleCounter = 0;
 		hydrateStores();
 	}
-	function resetAll() {
-		reset();
-	}
-	return {handlers, spies, reset, resetAll};
+	return {handlers, spies, reset};
 }
 
 export interface StripeWebhookEventData {

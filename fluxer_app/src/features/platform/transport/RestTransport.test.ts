@@ -147,61 +147,16 @@ describe('RestClient interceptor selection', () => {
 		expect(sent[1].headers['x-captcha-token']).toBe('global-token');
 	});
 
-	test('a per-request interceptor replaces the global one', async () => {
-		const client = createClient();
-		const global = captchaRetryingInterceptor('global-token');
-		const own = captchaRetryingInterceptor('own-token');
-		client.installHooks({intercept: global});
-		replies.push(CAPTCHA_REPLY, {status: 200, body: {}});
-
-		await client.post('https://other.test/api/v1/auth/register', {body: {}, intercept: own, auth: 'none'});
-
-		expect(global).not.toHaveBeenCalled();
-		expect(own).toHaveBeenCalledTimes(1);
-		expect(sent.map((request) => request.url)).toEqual([
-			'https://other.test/api/v1/auth/register',
-			'https://other.test/api/v1/auth/register',
-		]);
-		expect(sent[1].headers['x-captcha-token']).toBe('own-token');
-	});
-
 	test('the interceptor retry runs with no interceptor at all', async () => {
 		const client = createClient();
 		const global = captchaRetryingInterceptor('global-token');
-		const own = captchaRetryingInterceptor('own-token');
 		client.installHooks({intercept: global});
 		replies.push(CAPTCHA_REPLY, CAPTCHA_REPLY);
 
-		await expect(client.post('/auth/register', {body: {}, intercept: own})).rejects.toMatchObject({status: 400});
+		await expect(client.post('/auth/register', {body: {}})).rejects.toMatchObject({status: 400});
 
-		expect(own).toHaveBeenCalledTimes(1);
-		expect(global).not.toHaveBeenCalled();
+		expect(global).toHaveBeenCalledTimes(1);
 		expect(sent).toHaveLength(2);
-	});
-
-	test('the sudo reissue keeps the per-request interceptor', async () => {
-		const client = createClient();
-		const global = captchaRetryingInterceptor('global-token');
-		const own = captchaRetryingInterceptor('own-token');
-		client.installHooks({intercept: global});
-		client.installSudo({
-			tokenProvider: () => null,
-			tokenListener: () => undefined,
-			invalidate: () => undefined,
-			prompt: async () => ({password: 'hunter2'}),
-			onFailure: () => undefined,
-		});
-		replies.push(SUDO_REQUIRED_REPLY, CAPTCHA_REPLY, {status: 200, body: {}});
-
-		const reply = await client.post('/users/@me/disable', {body: {}, intercept: own});
-
-		expect(reply.status).toBe(200);
-		expect(global).not.toHaveBeenCalled();
-		expect(captchaCalls(own)).toBe(1);
-		expect(sent).toHaveLength(3);
-		expect(JSON.parse(sent[1].body as string)).toEqual({password: 'hunter2'});
-		expect(JSON.parse(sent[2].body as string)).toEqual({password: 'hunter2'});
-		expect(sent[2].headers['x-captcha-token']).toBe('own-token');
 	});
 
 	test('the sudo reissue falls back to the global interceptor', async () => {

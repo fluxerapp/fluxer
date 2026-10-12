@@ -38,7 +38,6 @@ interface MessageCopyTextOptions extends MarkdownCopyContext {
 }
 
 interface EmbedCopyTextOptions extends MarkdownCopyContext {
-	includeFields?: boolean;
 	omittedUrls?: ReadonlySet<string>;
 }
 
@@ -191,7 +190,7 @@ export function buildMessageEmbedCopyText(embed: MessageEmbed, options: EmbedCop
 		appendCopyBlock(blocks, embed.title);
 		appendCopyBlock(blocks, embed.description);
 	}
-	if (options.includeFields !== false && embed.type !== MessageEmbedTypes.BLUESKY) {
+	if (embed.type !== MessageEmbedTypes.BLUESKY) {
 		for (const field of embed.fields ?? []) {
 			const fieldName = renderMarkdownCopyText(field.name, EMBED_INLINE_COPY_PARSER_FLAGS, options);
 			const fieldValue = renderMarkdownCopyText(field.value, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options);

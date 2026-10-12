@@ -8,6 +8,7 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import type {NotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {getNotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl as readBlobAsDataURL} from '@app/features/platform/utils/BlobDataUrl';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import Sound from '@app/features/ui/state/Sound';
@@ -95,15 +96,6 @@ export async function openNotificationTarget(accountKey: string | null, url: str
 }
 
 const NATIVE_NOTIFICATION_ICON_URL_PATTERN = /^(?:https?:|data:)/i;
-
-function readBlobAsDataURL(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-		reader.onerror = () => reject(reader.error);
-		reader.readAsDataURL(blob);
-	});
-}
 
 export async function resolveNativeNotificationIcon(icon: string | undefined): Promise<string> {
 	if (!icon) return '';

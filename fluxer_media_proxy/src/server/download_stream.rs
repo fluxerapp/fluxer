@@ -119,7 +119,7 @@ impl ActiveDownloadStream {
 
     fn overrun(&self) -> GuardedFrame {
         if let Some(overruns) = &self.overruns {
-            overruns.record_stream_overrun();
+            overruns.external_stream_overruns.inc();
         }
         fail(io::Error::new(io::ErrorKind::InvalidData, OVERRUN_MESSAGE))
     }

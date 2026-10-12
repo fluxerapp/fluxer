@@ -12,6 +12,7 @@ import type {
 import {getAppStoreProductSlot, STORE_PRODUCT_SLOTS} from '@app/api/store_billing/StoreBillingConfig';
 import {
 	buildAppStoreStoreKey,
+	normalizeAccountToken,
 	type StoreEnvironment,
 	type StorePurchaseSnapshot,
 	type StorePurchaseState,
@@ -54,10 +55,6 @@ function resolveSlot(productId: string): StoreSlot {
 		throw new AppStorePurchaseSyncError('unknown_product');
 	}
 	return slot;
-}
-
-function normalizeAccountToken(token: string | null | undefined): string | null {
-	return token ? token.toLowerCase() : null;
 }
 
 function revocationReason(transaction: AppStoreTransactionPayload): string | null {

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::app_wasm::resolve_app_dir;
-use crate::functions::sha256_file;
+use crate::common::display_command;
+use crate::functions::{remove_dir_if_exists, sha256_file};
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
@@ -157,7 +158,7 @@ impl AppDevServer {
             return Ok(());
         }
 
-        self.clean_dist()?;
+        remove_dir_if_exists(&self.project_root.join("dist"))?;
         let mut css_type_watcher = self.start_css_type_watcher()?;
         let rspack_result = self.run_rspack(&mut shutdown_rx).await;
         terminate_child(&mut css_type_watcher).await;
@@ -278,17 +279,6 @@ impl AppDevServer {
             status.code().unwrap_or(1)
         );
         Ok(())
-    }
-
-    fn clean_dist(&self) -> Result<()> {
-        let dist_path = self.project_root.join("dist");
-        match fs::remove_dir_all(&dist_path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(error) => {
-                Err(error).with_context(|| format!("Failed to remove {}", dist_path.display()))
-            }
-        }
     }
 
     fn start_css_type_watcher(&self) -> Result<Child> {
@@ -554,22 +544,4 @@ fn timestamp_ms(timestamp: SystemTime) -> Result<f64> {
         .context("File timestamp predates UNIX epoch")?
         .as_secs_f64()
         * 1000.0)
-}
-
-fn display_command(command: &str, args: &[&str]) -> String {
-    std::iter::once(command.to_string())
-        .chain(args.iter().map(|arg| quote_arg(arg)))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn quote_arg(arg: &str) -> String {
-    if arg
-        .chars()
-        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.' | '/' | ':' | '='))
-    {
-        arg.to_string()
-    } else {
-        format!("{arg:?}")
-    }
 }

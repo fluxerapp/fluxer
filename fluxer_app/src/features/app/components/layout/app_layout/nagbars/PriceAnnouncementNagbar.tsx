@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {VIEW_PLANS_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import NagbarState from '@app/features/ui/state/Nagbar';
 import Users from '@app/features/user/state/Users';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
@@ -31,21 +27,7 @@ export const PriceAnnouncementNagbar = observer(function PriceAnnouncementNagbar
 		if (campaignId != null) {
 			NagbarState.dismissPriceAnnouncement(campaignId);
 		}
-		if (PlutoniumPageRollout.enabled) {
-			PlutoniumPageCommands.openPlutoniumPage();
-			return;
-		}
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal
-						initialTab="plutonium"
-						data-flx="app.app-layout.nagbars.price-announcement-nagbar.handle-open-plans.user-settings-modal"
-					/>
-				),
-				'user-settings',
-			),
-		);
+		PlutoniumPageCommands.openPlutoniumPage();
 	}, [campaignId]);
 	const handleDismiss = useCallback(() => {
 		if (campaignId == null) return;

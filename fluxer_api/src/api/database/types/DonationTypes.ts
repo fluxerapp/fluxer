@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-type Nullish<T> = T | null;
-
 export interface DonorRow {
 	email: string;
-	stripe_customer_id: Nullish<string>;
-	business_name: Nullish<string>;
-	tax_id: Nullish<string>;
-	tax_id_type: Nullish<string>;
-	stripe_subscription_id: Nullish<string>;
-	subscription_amount_cents: Nullish<number>;
-	subscription_currency: Nullish<string>;
-	subscription_interval: Nullish<string>;
-	subscription_current_period_end: Nullish<Date>;
-	subscription_cancel_at: Nullish<Date>;
-	subscription_status: Nullish<string>;
+	stripe_customer_id: string | null;
+	business_name: string | null;
+	tax_id: string | null;
+	tax_id_type: string | null;
+	stripe_subscription_id: string | null;
+	subscription_amount_cents: number | null;
+	subscription_currency: string | null;
+	subscription_interval: string | null;
+	subscription_current_period_end: Date | null;
+	subscription_cancel_at: Date | null;
+	subscription_status: string | null;
 	created_at: Date;
 	updated_at: Date;
 	version: number;
@@ -34,7 +32,7 @@ export interface DonorMagicLinkTokenRow {
 	token_: string;
 	donor_email: string;
 	expires_at: Date;
-	used_at: Nullish<Date>;
+	used_at: Date | null;
 }
 
 export interface DonorMagicLinkTokenByEmailRow {

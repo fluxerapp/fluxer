@@ -179,7 +179,6 @@ export class ScrollManager {
 			tolerance: BOTTOM_LOCK_TOLERANCE,
 			wasPinned: this.pinIsAtBottom,
 			hasMoreAfter: this.props.messages.hasMoreAfter,
-			allowPinWhenHasMoreAfter: false,
 		});
 	}
 

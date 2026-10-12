@@ -12,6 +12,7 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {MESSAGE_LAYOUT_SPEC} from '@app/features/theme/layout/MessageLayoutSpec';
 import {getRemScaleForDocument, REM_BASE_PX} from '@app/features/theme/layout/RemFromPx';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const STORAGE_KEY = 'SkeletonLayoutMemory';
 const STORAGE_VERSION = 9;
@@ -710,10 +711,6 @@ const SIMPLE_PAGE_ROUTES = new Set<string>(Object.values(SkeletonSimplePageRoute
 const SIMPLE_PAGE_BODIES = new Set<string>(Object.values(SkeletonSimplePageBody));
 const SKELETON_FRIENDS_TAB_COUNT = FRIENDS_TABS.size;
 const MAX_SIMPLE_PAGE_LAYOUTS = SIMPLE_PAGE_ROUTES.size;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
-}
 
 function hasOnlyKeys(record: Record<string, unknown>, allowedKeys: ReadonlySet<string>): boolean {
 	return Object.keys(record).every((key) => allowedKeys.has(key));

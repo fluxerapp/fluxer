@@ -35,27 +35,10 @@ jobs:
           toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
-      - name: Restore ci helper
-        id: ci-helper
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
         with:
-          path: target/debug/fluxer-ci
-          key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
-
-      - name: Build ci helper
-        if: steps.ci-helper.outputs.cache-hit != 'true'
-        run: cargo build --locked --package fluxer-ci
-
-      - name: Save ci helper
-        if: github.ref == 'refs/heads/main' && steps.ci-helper.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: target/debug/fluxer-ci
-          key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
+          save: 'true'
 
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -90,18 +73,8 @@ jobs:
           toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
-      - name: Restore ci helper
-        id: ci-helper
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: target/debug/fluxer-ci
-          key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
-
-      - name: Build ci helper
-        if: steps.ci-helper.outputs.cache-hit != 'true'
-        run: cargo build --locked --package fluxer-ci
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
 
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -118,21 +91,9 @@ jobs:
 
       - name: Restore fluxer_app wasm artifacts
         id: app-wasm
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        uses: ./.github/actions/app-wasm-cache
         with:
-          path: |
-            fluxer_app/pkgs/libfluxcore
-            fluxer_app/pkgs/libfluxwebp
-            fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
-          key: >-
-            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
-            'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
-            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
-            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
-            'fluxer_app/rust/libfluxwebp/simd/**',
-            'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
-            'packages/markdown_parser/rust/src/**') }}
+          mode: restore
 
       - name: Run tests
         run: |
@@ -140,21 +101,9 @@ jobs:
 
       - name: Save fluxer_app wasm artifacts
         if: always() && github.ref == 'refs/heads/main' && steps.app-wasm.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        uses: ./.github/actions/app-wasm-cache
         with:
-          path: |
-            fluxer_app/pkgs/libfluxcore
-            fluxer_app/pkgs/libfluxwebp
-            fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
-          key: >-
-            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
-            'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
-            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
-            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
-            'fluxer_app/rust/libfluxwebp/simd/**',
-            'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
-            'packages/markdown_parser/rust/src/**') }}
+          mode: save
 
   rust:
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -274,6 +223,9 @@ jobs:
           FLUXER_REQUIRE_MEDIA_FIXTURES: "1"
         run: cargo test --workspace --all-features --locked
 
+      - name: Run tests (libfluxcore)
+        run: cargo test --locked --manifest-path fluxer_app/rust/libfluxcore/Cargo.toml
+
       - name: Run desktop native workspace tests on Linux
         run: tools/ci/check-desktop-native-workspaces.sh test
 
@@ -299,18 +251,8 @@ jobs:
             fluxer_gateway/native/push_markdown_plaintext_nif -> target
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: Restore ci helper
-        id: ci-helper
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: target/debug/fluxer-ci
-          key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
-
-      - name: Build ci helper
-        if: steps.ci-helper.outputs.cache-hit != 'true'
-        run: cargo build --locked --package fluxer-ci
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
 
       - name: Set up Erlang
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
@@ -380,18 +322,8 @@ jobs:
           toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
-      - name: Restore ci helper
-        id: ci-helper
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: target/debug/fluxer-ci
-          key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
-            'tools/ci/Cargo.toml', 'tools/ci/src/**') }}
-
-      - name: Build ci helper
-        if: steps.ci-helper.outputs.cache-hit != 'true'
-        run: cargo build --locked --package fluxer-ci
+      - name: Set up ci helper
+        uses: ./.github/actions/ci-helper
 
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -408,21 +340,9 @@ jobs:
 
       - name: Restore fluxer_app wasm artifacts
         id: app-wasm
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        uses: ./.github/actions/app-wasm-cache
         with:
-          path: |
-            fluxer_app/pkgs/libfluxcore
-            fluxer_app/pkgs/libfluxwebp
-            fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
-          key: >-
-            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
-            'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
-            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
-            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
-            'fluxer_app/rust/libfluxwebp/simd/**',
-            'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
-            'packages/markdown_parser/rust/src/**') }}
+          mode: restore
 
       - name: Run knip
         run: |
@@ -430,21 +350,9 @@ jobs:
 
       - name: Save fluxer_app wasm artifacts
         if: always() && github.ref == 'refs/heads/main' && steps.app-wasm.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        uses: ./.github/actions/app-wasm-cache
         with:
-          path: |
-            fluxer_app/pkgs/libfluxcore
-            fluxer_app/pkgs/libfluxwebp
-            fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
-          key: >-
-            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
-            'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
-            'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
-            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
-            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
-            'fluxer_app/rust/libfluxwebp/simd/**',
-            'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
-            'packages/markdown_parser/rust/src/**') }}
+          mode: save
 
   lint:
     runs-on: ubuntu-24.04

@@ -3,7 +3,7 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {EMOJI_CLAP} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
-import * as EmojiCommands from '@app/features/emoji/commands/EmojiCommands';
+
 import Emoji from '@app/features/emoji/state/Emoji';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -21,7 +21,7 @@ interface SkinTonePickerProps {
 const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProps) => {
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const handleSelect = (surrogate: string) => {
-		EmojiCommands.setSkinTone(surrogate);
+		Emoji.setSkinTone(surrogate);
 		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 		onClose();
 	};

@@ -6,6 +6,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as UserNoteCommands from '@app/features/user/commands/UserNoteCommands';
 import styles from '@app/features/user/components/modals/NoteEditSheet.module.css';
+import {EDIT_NOTE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon} from '@phosphor-icons/react';
@@ -14,10 +15,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useId, useState} from 'react';
 
-const EDIT_NOTE_DESCRIPTOR = msg({
-	message: 'Edit note',
-	comment: 'Button or menu action label in the note edit sheet. Keep it concise.',
-});
 const TAP_TO_ADD_A_NOTE_DESCRIPTOR = msg({
 	message: 'Tap to add a note',
 	comment: 'Label in the note edit sheet.',

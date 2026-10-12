@@ -35,7 +35,7 @@ mod napi_bindings {
         },
         gnome_shell, kwin,
         session_monitor::{MonitorEvent, SessionMonitor},
-        settings::{self, ChangeEvent, ChangePayload, ColorScheme, Contrast},
+        settings::{self, ChangeEvent, ChangePayload},
         x11,
     };
 
@@ -620,9 +620,6 @@ mod napi_bindings {
             }
         }
     }
-
-    #[allow(dead_code)]
-    fn _link_unused(_c: Contrast, _s: ColorScheme) {}
 }
 
 #[cfg(not(target_os = "linux"))]

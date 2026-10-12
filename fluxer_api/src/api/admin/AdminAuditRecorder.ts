@@ -48,6 +48,4 @@ export async function recordAdminRead(
 	await recordAdminAuditEntry(ctx, entry);
 }
 
-export async function recordAdminWrite(ctx: Context<HonoEnv>, entry: AdminAuditEntryInput<string>): Promise<void> {
-	await recordAdminAuditEntry(ctx, entry);
-}
+export {recordAdminAuditEntry as recordAdminWrite};

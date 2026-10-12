@@ -185,7 +185,7 @@ archived(_) -> false.
 bump_forum_parent(Thread, State) ->
     Data = maps:get(data, State),
     ParentId = guild_thread_permissions:parent_id(Thread),
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     case maps:get(ParentId, Index, undefined) of
         #{<<"type">> := Type} = Parent when Type =:= 15; Type =:= 16 ->
             Updated = Parent#{<<"last_message_id">> => maps:get(<<"id">>, Thread)},
@@ -242,7 +242,9 @@ regular_channel_event(Event, Data, State) when
 ->
     case snowflake_id:parse_maybe(maps:get(<<"channel_id">>, Data, undefined)) of
         ChannelId when is_integer(ChannelId) ->
-            maps:is_key(ChannelId, guild_data_index:channel_index(maps:get(data, State, #{})));
+            maps:is_key(
+                ChannelId, guild_data_index_channels:channel_index(maps:get(data, State, #{}))
+            );
         _ ->
             true
     end;
@@ -478,7 +480,7 @@ out_of_order_live_messages_still_count_test() ->
 forum_parent_last_message_id_follows_new_posts_test() ->
     State0 = state(),
     State1 = apply_event(thread_create, thread_payload(300, 200), State0),
-    Index = guild_data_index:channel_index(maps:get(data, State1)),
+    Index = guild_data_index_channels:channel_index(maps:get(data, State1)),
     ?assertEqual(300, maps:get(<<"last_message_id">>, maps:get(200, Index))),
     guild_thread_store:destroy(guild_thread_gate:store(State0)).
 

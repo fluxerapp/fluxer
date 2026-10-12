@@ -49,11 +49,11 @@ async function resetAppDataExceptDrafts(): Promise<void> {
 
 async function cleanupRuntimeStateOnCrash(): Promise<void> {
 	LayerManager.closeAll();
-	const [{default: GatewayConnection}, {default: MediaEngine}] = await Promise.all([
-		import('@app/features/gateway/transport/GatewayConnection'),
+	const [{default: GatewaySessions}, {default: MediaEngine}] = await Promise.all([
+		import('@app/features/gateway/transport/GatewaySessionPool'),
 		import('@app/features/voice/engine/MediaEngineFacade'),
 	]);
-	GatewayConnection.logout();
+	GatewaySessions.foregroundConnection.logout();
 	MediaEngine.cleanup();
 }
 

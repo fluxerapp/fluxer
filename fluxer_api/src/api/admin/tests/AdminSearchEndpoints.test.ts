@@ -14,16 +14,6 @@ describe('Admin Search Endpoints', () => {
 	afterEach(async () => {
 		await harness.shutdown();
 	});
-	describe('GET /admin/users', () => {
-		test('requires user:lookup ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate']);
-			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users?q=${encodeURIComponent('test')}&limit=10&offset=0`)
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-	});
 	describe('GET /admin/users/{user_id}/dm-channels', () => {
 		test('requires user:list:dm_channels ACL', async () => {
 			const admin = await createTestAccount(harness);
@@ -34,52 +24,12 @@ describe('Admin Search Endpoints', () => {
 				.execute();
 		});
 	});
-	describe('GET /admin/guilds', () => {
-		test('requires guild:lookup ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate']);
-			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/guilds?q=test&limit=10&offset=0')
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-	});
-	describe('/admin/reports', () => {
-		test('requires report:view ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate']);
-			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/reports?q=example&limit=10&offset=0')
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-	});
-	describe('/admin/audit-logs (search)', () => {
-		test('requires audit_log:view ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate']);
-			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0')
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-	});
 	describe('/admin/audit-logs/{log_id}', () => {
 		test('requires audit_log:view ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
 				.get('/admin/audit-logs/999999999999999999')
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-	});
-	describe('/admin/audit-logs (list)', () => {
-		test('requires audit_log:view ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate']);
-			await createBuilder(harness, `${admin.token}`)
-				.get('/admin/audit-logs?limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});

@@ -276,7 +276,7 @@ member_user(Member) ->
 
 -spec member_role_ids(term()) -> [snowflake_id()].
 member_role_ids(Member) when is_map(Member) ->
-    guild_data_index:extract_integer_list(maps:get(<<"roles">>, Member, []));
+    snowflake_id:parse_list(maps:get(<<"roles">>, Member, []));
 member_role_ids(_) ->
     [].
 

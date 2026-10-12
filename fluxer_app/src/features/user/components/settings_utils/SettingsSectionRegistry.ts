@@ -45,13 +45,6 @@ function sectionMatchesTab(section: SectionDefinition, tabType: UserSettingsTabT
 	return section.tabType === tabType;
 }
 
-function sectionMatchesAllowedTabs(
-	section: SectionDefinition,
-	allowedTabTypes: Set<UserSettingsTabType> | undefined,
-): boolean {
-	return !allowedTabTypes || allowedTabTypes.has(section.tabType);
-}
-
 function toSettingsSectionConfig(section: SectionDefinition, i18n: I18n): SettingsSectionConfig {
 	return {
 		id: section.id,
@@ -120,11 +113,8 @@ export function isSectionIdValid(sectionId: string, tabType?: UserSettingsTabTyp
 	});
 }
 
-export function getSearchableItemsFromRegistry(
-	i18n: I18n,
-	allowedTabTypes?: Set<UserSettingsTabType>,
-): Array<SearchableSettingItem> {
-	return SECTION_REGISTRY.filter(
-		(section) => sectionMatchesAllowedTabs(section, allowedTabTypes) && isSectionVisible(section),
-	).map((section) => toSearchableSettingItem(section, i18n));
+export function getSearchableItemsFromRegistry(i18n: I18n): Array<SearchableSettingItem> {
+	return SECTION_REGISTRY.filter((section) => isSectionVisible(section)).map((section) =>
+		toSearchableSettingItem(section, i18n),
+	);
 }

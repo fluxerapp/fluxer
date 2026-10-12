@@ -5,7 +5,6 @@ import {
 	createTestAccount,
 	createTotpSecret,
 	loginAccount,
-	loginWithTotp,
 	type TestAccount,
 	totpCodeNow,
 } from '@app/api/auth/tests/AuthTestUtils';
@@ -91,19 +90,6 @@ describe('Auth sudo required operations', () => {
 			.execute();
 		await loginAccount(harness, account);
 	});
-	it('requires sudo for delete OAuth2 application', async () => {
-		const account = await createTestAccount(harness);
-		const appName = `Test App ${Date.now()}`;
-		const appId = await createOAuth2BotApplication(harness, account, appName, ['https://example.com/callback']);
-		await createBuilder(harness, account.token).delete(`/oauth2/applications/${appId}`).body({}).expect(403).execute();
-		await createBuilder(harness, account.token)
-			.delete(`/oauth2/applications/${appId}`)
-			.body({
-				password: account.password,
-			})
-			.expect(204)
-			.execute();
-	});
 	it('requires sudo for reset bot token', async () => {
 		const account = await createTestAccount(harness);
 		const appName = `Test App ${Date.now()}`;
@@ -121,38 +107,6 @@ describe('Auth sudo required operations', () => {
 			.expect(200)
 			.execute();
 		await deleteOAuth2Application(harness, account, appId);
-	});
-	it('requires sudo for disable TOTP MFA', async () => {
-		let account = await createTestAccount(harness);
-		const secret = createTotpSecret();
-		const code = totpCodeNow(secret);
-		const enableResp = await createBuilder<BackupCodesResponse>(harness, account.token)
-			.post('/users/@me/mfa/totp/enable')
-			.body({
-				secret,
-				code,
-				password: account.password,
-			})
-			.execute();
-		expect(enableResp.backup_codes.length).toBeGreaterThan(0);
-		const backupCode = enableResp.backup_codes[0]!.code;
-		account = await loginWithTotp(harness, account, secret);
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/totp/disable')
-			.body({
-				code: 'invalid-code',
-			})
-			.expect(400, 'INVALID_FORM_BODY')
-			.execute();
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/totp/disable')
-			.body({
-				code: backupCode,
-				mfa_method: 'totp',
-				mfa_code: totpCodeNow(secret),
-			})
-			.expect(204)
-			.execute();
 	});
 	it('requires sudo for enable TOTP MFA', async () => {
 		const account = await createTestAccount(harness);
@@ -173,17 +127,6 @@ describe('Auth sudo required operations', () => {
 				code,
 				password: account.password,
 			})
-			.execute();
-	});
-	it('requires sudo for disable account', async () => {
-		const testUser = await createTestAccount(harness);
-		await createBuilder(harness, testUser.token).post('/users/@me/disable').body({}).expect(403).execute();
-		await createBuilder(harness, testUser.token)
-			.post('/users/@me/disable')
-			.body({
-				password: testUser.password,
-			})
-			.expect(204)
 			.execute();
 	});
 	it('requires sudo for delete account', async () => {

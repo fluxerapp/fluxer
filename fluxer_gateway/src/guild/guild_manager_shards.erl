@@ -4,17 +4,13 @@
 -typing([eqwalizer]).
 
 -export([
-    determine_shard_count/0,
-    default_shard_count/0,
     start_shards/1,
     start_shard/1,
     restart_shard/2,
     ensure_shard/2,
     ensure_shard_for_index/2,
     select_shard/2,
-    group_ids_by_shard/2,
-    find_shard_by_ref/2,
-    find_shard_by_pid/2
+    group_ids_by_shard/2
 ]).
 
 -type guild_id() :: integer().
@@ -22,14 +18,6 @@
 -type state() :: #{shards := #{non_neg_integer() => shard_map()}, shard_count := pos_integer()}.
 
 -export_type([guild_id/0, shard_map/0, state/0]).
-
--spec determine_shard_count() -> {pos_integer(), configured | auto}.
-determine_shard_count() ->
-    shard_utils:determine_shard_count(guild_shards).
-
--spec default_shard_count() -> pos_integer().
-default_shard_count() ->
-    clustered_ets_cache:default_shard_count().
 
 -spec start_shards(pos_integer()) -> #{non_neg_integer() => shard_map()}.
 start_shards(Count) ->
@@ -97,16 +85,6 @@ group_ids_by_shard(GuildIds, ShardCount) ->
     [{non_neg_integer(), [guild_id()]}].
 normalize_grouped_ids(Groups) ->
     [{Index, [GuildId || GuildId <- Ids, is_integer(GuildId)]} || {Index, Ids} <- Groups].
-
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard_map()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    shard_utils:find_shard_by_ref(Ref, Shards).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard_map()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec start_shard_into_map(non_neg_integer(), #{non_neg_integer() => shard_map()}) ->
     #{non_neg_integer() => shard_map()}.

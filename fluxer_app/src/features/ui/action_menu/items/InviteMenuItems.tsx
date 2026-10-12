@@ -11,6 +11,7 @@ import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {SendInviteToCommunityIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {INVITE_SENT_FOR_DESCRIPTOR} from '@app/features/ui/action_menu/items/dm_menu_data/shared';
 import {
@@ -20,7 +21,6 @@ import {
 } from '@app/features/ui/action_menu/items/InviteToCommunityGuard';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
 import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';

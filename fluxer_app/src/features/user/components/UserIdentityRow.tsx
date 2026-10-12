@@ -3,7 +3,7 @@
 import {Avatar} from '@app/features/ui/components/Avatar';
 import styles from '@app/features/user/components/UserIdentityRow.module.css';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {observer} from 'mobx-react-lite';
 

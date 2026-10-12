@@ -10,7 +10,7 @@ import {
 	setStoredBillingConfig,
 } from '@app/api/stripe/BillingConfigCache';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const INSTANCE_BILLING_CONFIG_KEY = 'instance_billing_config';

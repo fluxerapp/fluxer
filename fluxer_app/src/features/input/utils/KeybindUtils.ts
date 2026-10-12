@@ -2,11 +2,11 @@
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
 import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
 
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-const isMac = () => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 const CONTROL_KEY_SYMBOL = '⌃';
 
 const isCodeForDisplayNumpadKey = (code: string | undefined): boolean => !!code && /^Numpad/.test(code);
@@ -123,10 +123,10 @@ function formatGamepadButton(i18n: I18n, button: number): string {
 function formatBothSidesModifier(i18n: I18n, combo: KeyCombo): Array<string> | null {
 	let keyName: string | null = null;
 	if (combo.shift) keyName = i18n._(SHIFT_KEY_DESCRIPTOR);
-	else if (combo.ctrl) keyName = isMac() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR);
-	else if (combo.ctrlOrMeta) keyName = isMac() ? '⌘' : i18n._(CTRL_DESCRIPTOR);
-	else if (combo.alt) keyName = isMac() ? '⌥' : i18n._(ALT_DESCRIPTOR);
-	else if (combo.meta) keyName = isMac() ? '⌘' : i18n._(WIN_DESCRIPTOR);
+	else if (combo.ctrl) keyName = isMacPlatform() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR);
+	else if (combo.ctrlOrMeta) keyName = isMacPlatform() ? '⌘' : i18n._(CTRL_DESCRIPTOR);
+	else if (combo.alt) keyName = isMacPlatform() ? '⌥' : i18n._(ALT_DESCRIPTOR);
+	else if (combo.meta) keyName = isMacPlatform() ? '⌘' : i18n._(WIN_DESCRIPTOR);
 	if (!keyName) return null;
 	return [i18n._(LEFT_KEY_DESCRIPTOR, {keyName}), i18n._(RIGHT_KEY_DESCRIPTOR, {keyName})];
 }
@@ -142,17 +142,17 @@ export function formatKeyComboParts(i18n: I18n, combo: KeyCombo): Array<string> 
 		if (formatted) return formatted;
 	}
 	if (combo.ctrl) {
-		parts.push(isMac() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR));
+		parts.push(isMacPlatform() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR));
 	} else if (combo.ctrlOrMeta) {
-		parts.push(isMac() ? '⌘' : i18n._(CTRL_DESCRIPTOR));
+		parts.push(isMacPlatform() ? '⌘' : i18n._(CTRL_DESCRIPTOR));
 	}
 	if (combo.meta && !combo.ctrlOrMeta) {
-		parts.push(isMac() ? '⌘' : i18n._(WIN_DESCRIPTOR));
+		parts.push(isMacPlatform() ? '⌘' : i18n._(WIN_DESCRIPTOR));
 	}
 	if (combo.shift) {
 		parts.push(i18n._(SHIFT_KEY_DESCRIPTOR));
 	}
-	if (combo.alt) parts.push(isMac() ? '⌥' : i18n._(ALT_DESCRIPTOR));
+	if (combo.alt) parts.push(isMacPlatform() ? '⌥' : i18n._(ALT_DESCRIPTOR));
 	if (combo.mouseButton !== undefined && combo.mouseButton !== null) {
 		parts.push(formatMouseButton(i18n, combo.mouseButton));
 		return parts;
@@ -178,7 +178,7 @@ function formatNumpadKey(i18n: I18n, rawKey: string): string | null {
 	if (/^Numpad[0-9]$/.test(rawKey)) {
 		keyName = rawKey.slice(6);
 	} else if (rawKey === 'NumpadEnter') {
-		keyName = isMac() ? '⏎' : i18n._(ENTER_DESCRIPTOR);
+		keyName = isMacPlatform() ? '⏎' : i18n._(ENTER_DESCRIPTOR);
 	} else {
 		const symbols: Partial<Record<string, string>> = {
 			NumpadDecimal: '.',
@@ -199,16 +199,16 @@ function formatNumpadKey(i18n: I18n, rawKey: string): string | null {
 export function formatPrimaryKeySymbol(i18n: I18n, rawKey: string): string {
 	if (rawKey === ' ' || rawKey === 'Spacebar' || rawKey === 'Space') return i18n._(SPACE_DESCRIPTOR);
 	if (isShiftKeyName(rawKey)) return i18n._(SHIFT_KEY_DESCRIPTOR);
-	if (isControlKeyName(rawKey)) return isMac() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR);
-	if (isAltKeyName(rawKey)) return isMac() ? '⌥' : i18n._(ALT_DESCRIPTOR);
-	if (isMetaKeyName(rawKey)) return isMac() ? '⌘' : i18n._(WIN_DESCRIPTOR);
+	if (isControlKeyName(rawKey)) return isMacPlatform() ? CONTROL_KEY_SYMBOL : i18n._(CTRL_DESCRIPTOR);
+	if (isAltKeyName(rawKey)) return isMacPlatform() ? '⌥' : i18n._(ALT_DESCRIPTOR);
+	if (isMetaKeyName(rawKey)) return isMacPlatform() ? '⌘' : i18n._(WIN_DESCRIPTOR);
 	if (rawKey === 'ArrowUp') return '▲';
 	if (rawKey === 'ArrowDown') return '▼';
 	if (rawKey === 'ArrowLeft') return '◀';
 	if (rawKey === 'ArrowRight') return '▶';
 	if (rawKey === 'Escape') return i18n._(ESC_DESCRIPTOR);
 	if (rawKey === 'Backspace') return '⌫';
-	if (rawKey === 'Enter' || rawKey === 'Return') return isMac() ? '⏎' : i18n._(ENTER_DESCRIPTOR);
+	if (rawKey === 'Enter' || rawKey === 'Return') return isMacPlatform() ? '⏎' : i18n._(ENTER_DESCRIPTOR);
 	if (rawKey === 'Tab') return i18n._(TAB_DESCRIPTOR);
 	if (rawKey === 'Backquote' || rawKey === '`') return '`';
 	if (rawKey === '[' || rawKey === ']') return rawKey;

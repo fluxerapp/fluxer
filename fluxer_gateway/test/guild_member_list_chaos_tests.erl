@@ -38,11 +38,11 @@ guild_member_add_batched_sync() ->
             JoinedMember = event_member(JoinedUserId, 0, []),
             ok = dispatch_event(GuildPid, guild_member_add, JoinedMember),
             StateAfterAdd = get_guild_state(GuildPid),
-            AddedMember = guild_data_index:get_member(
+            AddedMember = guild_data_index_members:get_member(
                 JoinedUserId, maps:get(data, StateAfterAdd, #{})
             ),
             ?assert(
-                guild_permissions:can_view_channel(
+                guild_permissions_check:can_view_channel(
                     JoinedUserId, ?PUBLIC_CHANNEL_ID, AddedMember, StateAfterAdd
                 )
             ),
@@ -425,7 +425,7 @@ payload_member_ids(Payload) ->
 
 assert_default_engine_consistent(State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     Ref = maps:get(member_list_engine, State),
     assert_engine_matches_ids(<<"0">>, Ref, maps:keys(MemberMap), State).
 
@@ -457,7 +457,7 @@ assert_ref_has_user(Label, Ref, UserId, State) ->
                 engine_missing_user,
                 Label,
                 UserId,
-                guild_data_index:get_member(UserId, Data),
+                guild_data_index_members:get_member(UserId, Data),
                 guild_member_list_engine:get_counts(Ref),
                 lists:sublist(lists:sort(Ids), 10)
             })
@@ -481,7 +481,7 @@ assert_engine_matches_ids(ListId, Ref, ExpectedIds0, State) ->
 assert_snapshot_matches_engine(ListId, Ref, State) ->
     {Total, Online} = guild_member_list_engine:get_counts(Ref),
     {SnapshotTotal, SnapshotOnline, SnapshotGroups, SnapshotItems} =
-        guild_member_list:member_list_snapshot(ListId, State),
+        guild_member_list_read:member_list_snapshot(ListId, State),
     ?assertEqual(Total, SnapshotTotal),
     ?assertEqual(Online, SnapshotOnline),
     ?assertEqual(
@@ -507,7 +507,7 @@ visible_groups(Groups) ->
 
 expected_channel_member_ids(ChannelId, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     [
         UserId
      || {UserId, Member} <- maps:to_list(MemberMap),
@@ -515,7 +515,7 @@ expected_channel_member_ids(ChannelId, State) ->
     ].
 
 can_view_channel(UserId, ChannelId, Member, State) ->
-    try guild_permissions:can_view_channel(UserId, ChannelId, Member, State) of
+    try guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State) of
         Bool when is_boolean(Bool) -> Bool;
         _ -> false
     catch
@@ -524,7 +524,7 @@ can_view_channel(UserId, ChannelId, Member, State) ->
 
 expected_groups(ExpectedIds, State) ->
     Data = maps:get(data, State, #{}),
-    Roles = guild_data_index:role_list(Data),
+    Roles = guild_data_index_roles:role_list(Data),
     HoistedRoleIds = guild_member_list_store:prepare_hoisted_role_ids(
         Roles, maps:get(id, State, undefined)
     ),
@@ -534,7 +534,7 @@ expected_groups(ExpectedIds, State) ->
     ),
     Counts = lists:foldl(
         fun(UserId, Acc) ->
-            Member = guild_data_index:get_member(UserId, Data),
+            Member = guild_data_index_members:get_member(UserId, Data),
             GroupId = expected_group_id(Member, HoistedRoleIds, UserId, State),
             maps:update_with(GroupId, fun(N) -> N + 1 end, 1, Acc)
         end,
@@ -575,7 +575,7 @@ assert_removed_members_absent(State) ->
     Data = maps:get(data, State, #{}),
     lists:foreach(
         fun(UserId) ->
-            ?assertEqual(undefined, guild_data_index:get_member(UserId, Data))
+            ?assertEqual(undefined, guild_data_index_members:get_member(UserId, Data))
         end,
         removed_user_ids()
     ).
@@ -584,7 +584,7 @@ assert_added_members_present(State) ->
     Data = maps:get(data, State, #{}),
     lists:foreach(
         fun(UserId) ->
-            ?assertMatch(#{}, guild_data_index:get_member(UserId, Data))
+            ?assertMatch(#{}, guild_data_index_members:get_member(UserId, Data))
         end,
         added_user_ids()
     ).

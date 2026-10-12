@@ -194,14 +194,6 @@ describe('Account identity mode', () => {
 		});
 	});
 
-	it('stamps tags for a fresh email instance when the env asks for them', async () => {
-		useFreshSelfHostedInstance();
-		config.instance.accountIdentity = AccountIdentityModes.EMAIL;
-		config.instance.tagStyle = 'random';
-		await repository.ensureAccountIdentityMode();
-		expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.EMAIL, tag_style: 'random'});
-	});
-
 	it.each([
 		[{mode: AccountIdentityModes.USERNAME, unique_usernames: true}, 'none'],
 		[{mode: AccountIdentityModes.USERNAME, unique_usernames: false}, 'none'],
@@ -228,13 +220,6 @@ describe('Account identity mode', () => {
 		await repository.ensureAccountIdentityMode();
 		expect(await readStoredRow()).toMatchObject({tag_style: tagStyle, source: 'new_instance'});
 		expect((await fetchDiscovery()).features.tag_style).toBe(tagStyle);
-	});
-
-	it('uses the env override for a fresh instance', async () => {
-		useFreshSelfHostedInstance();
-		config.instance.accountIdentity = AccountIdentityModes.EMAIL;
-		await repository.ensureAccountIdentityMode();
-		expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.EMAIL, source: 'new_instance'});
 	});
 
 	it('stamps email when a users row exists', async () => {
@@ -552,15 +537,6 @@ describe('Account identity mode', () => {
 			await cache.releaseLock('account-identity-setup', token!);
 			expect((await pending).token).toBeTruthy();
 			expect(await repository.isAccountIdentityLocked()).toBe(true);
-		});
-
-		it('rejects an unknown mode', async () => {
-			useFreshSelfHostedInstance();
-			await createBuilderWithoutAuth(harness)
-				.put('/instance/setup/account-identity')
-				.body({mode: 'phone'})
-				.expect(400)
-				.execute();
 		});
 	});
 

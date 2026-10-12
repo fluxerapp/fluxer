@@ -51,19 +51,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluxer_gpu_rebuild"
-version = "0.0.0"
-dependencies = [
- "parking_lot",
-]
-
-[[package]]
 name = "fluxer_mac_app_audio"
 version = "0.0.0"
 dependencies = [
  "block2",
  "dispatch2",
- "fluxer_screen_frame_bus",
+ "fluxer_sample_pool",
  "libc",
  "napi",
  "napi-build",
@@ -80,12 +73,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluxer_screen_frame_bus"
+name = "fluxer_sample_pool"
 version = "0.0.0"
-dependencies = [
- "fluxer_gpu_rebuild",
- "parking_lot",
-]
 
 [[package]]
 name = "futures"

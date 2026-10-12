@@ -3,7 +3,6 @@
 import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
 import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
 import {ERROR_I18N_MESSAGES, type ErrorI18nCatalog, type ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
-import {identityLocale} from '@fluxer/i18n/src/normalization/IdentityLocale';
 import {compileMessage} from '@fluxer/i18n/src/runtime/CompileMessage';
 import {createStaticI18n} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
@@ -22,7 +21,6 @@ const errorI18n = createStaticI18n<ErrorI18nKey, string, ErrorI18nRuntimeVariabl
 		defaultLocale: DEFAULT_LOCALE,
 		defaultMessages: ERROR_I18N_MESSAGES,
 		localeMessages: ERROR_I18N_LOCALE_MESSAGES,
-		normalizeLocale: (locale) => identityLocale(locale),
 		onWarning: (message) => {
 			console.warn(message);
 		},

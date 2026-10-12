@@ -113,7 +113,7 @@ import type {
 	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2MicrophoneOptions,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {
 	AudioCaptureOptions,
 	LocalAudioTrack,

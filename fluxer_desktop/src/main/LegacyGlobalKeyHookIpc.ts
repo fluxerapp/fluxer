@@ -27,12 +27,6 @@ interface LegacyLinuxEvdevStatus {
 	inInputGroup: boolean;
 }
 
-interface LegacyLinuxEvdevGrantResult {
-	success: boolean;
-	needsRelogin: boolean;
-	error?: string;
-}
-
 export interface LegacyHostEnvironment {
 	platform: NodeJS.Platform;
 	sandboxed: boolean;
@@ -198,12 +192,6 @@ export function buildLegacyLinuxEvdevStatus(
 	};
 }
 
-export const LEGACY_LINUX_EVDEV_GRANT_RESULT: LegacyLinuxEvdevGrantResult = Object.freeze({
-	success: false,
-	needsRelogin: false,
-	error: 'unsupported',
-});
-
 export function registerLegacyGlobalKeyHookHandlers(
 	engine: GlobalShortcutsEngine,
 	adapter: LegacyGlobalKeyHookAdapter,
@@ -261,9 +249,5 @@ export function registerLegacyGlobalKeyHookHandlers(
 	ipcMain.handle('linux-evdev-status', (event): LegacyLinuxEvdevStatus => {
 		requirePrivilegedRendererDocumentSender(event, 'linux-evdev-status');
 		return buildLegacyLinuxEvdevStatus(host);
-	});
-	ipcMain.handle('linux-evdev-grant-access', (event): LegacyLinuxEvdevGrantResult => {
-		requirePrivilegedRendererDocumentSender(event, 'linux-evdev-grant-access');
-		return {...LEGACY_LINUX_EVDEV_GRANT_RESULT};
 	});
 }

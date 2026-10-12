@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     AccountIdentitySettings, CreateRegistrationUrlRequest, CreateRegistrationUrlResponse,
@@ -30,32 +32,43 @@ impl AdminApiClient {
         &self,
         update: &InstanceConfigUpdateRequest,
     ) -> ApiResult<InstanceConfigResponse> {
-        self.patch_typed_with_reason("/admin/instance/config", update, None)
+        self.send(Method::PATCH, "/admin/instance/config", Some(update), None)
             .await
     }
 
     pub async fn test_saved_instance_smtp_config(
         &self,
     ) -> ApiResult<InstanceEmailSmtpTestResponse> {
-        self.post_typed("/admin/instance/config/smtp-tests", &serde_json::json!({}))
-            .await
+        self.send(
+            Method::POST,
+            "/admin/instance/config/smtp-tests",
+            Some(&serde_json::json!({})),
+            None,
+        )
+        .await
     }
 
     pub async fn create_registration_url(
         &self,
         request: &CreateRegistrationUrlRequest,
     ) -> ApiResult<CreateRegistrationUrlResponse> {
-        self.post_typed("/admin/instance/registration-urls", request)
-            .await
+        self.send(
+            Method::POST,
+            "/admin/instance/registration-urls",
+            Some(request),
+            None,
+        )
+        .await
     }
 
     pub async fn revoke_registration_url(&self, id: &str) -> ApiResult<InstanceConfigResponse> {
-        self.delete_with_reason(
+        self.send(
+            Method::DELETE,
             &format!(
                 "/admin/instance/registration-urls/{}",
                 urlencoding::encode(id)
             ),
-            None,
+            None::<&serde_json::Value>,
             None,
         )
         .await
@@ -81,7 +94,8 @@ impl AdminApiClient {
         status: &str,
     ) -> ApiResult<InstanceConfigResponse> {
         let body = serde_json::json!({"status": status});
-        self.patch_with_reason(
+        self.send(
+            Method::PATCH,
             &format!(
                 "/admin/instance/pending-registrations/{}",
                 urlencoding::encode(user_id)

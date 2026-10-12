@@ -7,7 +7,6 @@ import {
 } from '@app/features/app/config/I18nDisplayConstants';
 import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {AssetType, getAssetConfig} from '@app/features/expressions/components/modals/AssetCropModal';
-import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {getAspectRatioFromDimensions} from '@app/features/expressions/utils/AssetImageGeometry';
 import {formatImageUploadMinimumHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import styles from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTab.module.css';
@@ -17,6 +16,7 @@ import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOvervie
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';

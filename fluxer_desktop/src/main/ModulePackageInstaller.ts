@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage} from '@electron/common/ErrorMessage';
+
 import {
 	ModulePackageHashMismatchError,
 	ModulePackageIOError,
@@ -115,10 +117,6 @@ class ModulePackageUrlPolicyError extends Error {
 		this.name = 'ModulePackageUrlPolicyError';
 		this.module = moduleName;
 	}
-}
-
-function errorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 export function describeErrorChain(error: unknown): string {

@@ -2,7 +2,21 @@
 
 import {MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
-import {INBOX_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+import {
+	INBOX_DESCRIPTOR,
+	KEYBOARD_2_DESCRIPTOR as KEYBOARD_DESCRIPTOR,
+	KEYBOARD_SHORTCUTS_DESCRIPTOR,
+	PUSH_TO_TALK_DESCRIPTOR,
+	SHORTCUT_DESCRIPTOR,
+	SHORTCUTS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	BOOKMARK_DESCRIPTOR,
+	CUSTOM_SHORTCUTS_DESCRIPTOR,
+	DEFAULT_SHORTCUTS_DESCRIPTOR,
+	RESET_TO_DEFAULTS_DESCRIPTOR,
+	SYNC_SHORTCUTS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	VOICE_DEAFEN_DESCRIPTOR,
 	VOICE_DEAFEN_SHORTCUT_DESCRIPTOR,
@@ -11,20 +25,8 @@ import {
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Shortcuts',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const HOTKEYS_DESCRIPTOR = msg({
 	message: 'Hotkeys',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const KEYBOARD_DESCRIPTOR = msg({
-	message: 'Keyboard',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const KEYS_DESCRIPTOR = msg({
@@ -35,10 +37,7 @@ const HOTKEY_DESCRIPTOR = msg({
 	message: 'Hotkey',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SHORTCUT_DESCRIPTOR = msg({
-	message: 'Shortcut',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const BIND_DESCRIPTOR = msg({
 	message: 'Bind',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -59,10 +58,7 @@ const MARK_CHANNEL_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark channel as read',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const BOOKMARK_DESCRIPTOR = msg({
-	message: 'Bookmark',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const BOOKMARK_MESSAGE_DESCRIPTOR = msg({
 	message: 'Bookmark message',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -99,26 +95,17 @@ const CONFIGURE_KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
 	message: 'Configure keyboard shortcuts',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const CUSTOM_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Custom shortcuts',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
+
 const ADD_A_SHORTCUT_DESCRIPTOR = msg({
 	message: 'Add a shortcut',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const RESET_TO_DEFAULTS_DESCRIPTOR = msg({
-	message: 'Reset to defaults',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DISABLE_BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
 	message: 'Disable built-in shortcuts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SYNC_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Sync shortcuts',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SHORTCUT_CONFLICTS_DESCRIPTOR = msg({
 	message: 'Shortcut conflicts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -127,10 +114,7 @@ const ADD_CUSTOM_SHORTCUTS_DISABLE_BUILT_IN_SHORTCUTS_AND_DESCRIPTOR = msg({
 	message: 'Add custom shortcuts, disable built-in shortcuts, and sync shortcut preferences',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
+
 const BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
 	message: 'Built-in shortcuts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -159,10 +143,7 @@ const PUSH_TO_TALK_KEY_DESCRIPTOR = msg({
 	message: 'Push to talk key',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
-const PUSH_TO_TALK_DESCRIPTOR = msg({
-	message: 'Push to talk',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const KEY_DESCRIPTOR = msg({
 	message: 'Key',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

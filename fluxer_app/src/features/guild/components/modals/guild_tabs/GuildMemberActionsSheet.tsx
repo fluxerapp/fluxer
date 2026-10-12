@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
@@ -8,13 +7,11 @@ import {canReportMessage} from '@app/features/channel/components/MessageActionUt
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.module.css';
 import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
 import {ManageRolesBottomSheet} from '@app/features/guild/components/RoleManagement';
-import Guilds from '@app/features/guild/state/Guilds';
 import {
-	resolveGuildModerationCapabilities,
 	resolveGuildScopedModerationActionKeys,
+	useGuildMemberModerationCapabilities,
 } from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {
-	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	CHANGE_NICKNAME_DESCRIPTOR,
 	COPY_USER_ID_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
@@ -35,8 +32,6 @@ import {
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
-import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -55,6 +50,7 @@ import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNi
 import type {User} from '@app/features/user/models/User';
 import UserProfileMobile from '@app/features/user/state/UserProfileMobile';
 import Users from '@app/features/user/state/Users';
+import {blockedDmConfirmModal} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
@@ -119,33 +115,20 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const relationship = Relationships.getRelationship(user.id);
 		const relationshipType = relationship?.type;
 		const isBlocked = relationshipType === RelationshipTypes.BLOCKED;
-		const canKickMembers = Permission.can(Permissions.KICK_MEMBERS, {guildId});
-		const canBanMembers = Permission.can(Permissions.BAN_MEMBERS, {guildId});
-		const canModerateMembers = Permission.can(Permissions.MODERATE_MEMBERS, {guildId});
-		const guild = Guilds.getGuild(guildId);
-		const guildSnapshot = guild?.toJSON();
-		const {canManageTarget} = useRoleHierarchy(guild);
-		const targetHasAdministratorPermission =
-			guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-		const {canKick, canBan, canTimeout} = resolveGuildModerationCapabilities({
+
+		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+			guildId,
+			user,
 			isCurrentUser,
-			canManageTarget: canManageTarget(user.id),
-			canKickMembers,
-			canBanMembers,
-			canModerateMembers,
-			targetHasAdministratorPermission,
-		});
+			member,
+		);
 		const memberIsTimedOut = member.isTimedOut();
 		const isOwner = guild?.ownerId === currentUserId;
 		const canTransfer = !isCurrentUser && !isBot && isOwner;
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const manageRolesLabel = PermissionUtils.formatPermissionLabel(i18n, Permissions.MANAGE_ROLES);
 		const [manageRolesSheetOpen, setManageRolesSheetOpen] = useState(false);
-		const hasChangeNicknamePermission = Permission.can(Permissions.CHANGE_NICKNAME, {guildId});
-		const hasManageNicknamesPermission = Permission.can(Permissions.MANAGE_NICKNAMES, {guildId});
-		const canManageNicknames =
-			(isCurrentUser && hasChangeNicknamePermission && !memberIsTimedOut) ||
-			(!isCurrentUser && hasManageNicknamesPermission);
+
 		const displayName = NicknameUtils.getNickname(user, guildId);
 		const handleViewProfile = () => {
 			ModalCommands.runAfterBottomSheetClose(onClose, () => UserProfileMobile.open(user.id, guildId));
@@ -164,16 +147,12 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const handleOpenBlockedDm = () => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(OPEN_DM_DESCRIPTOR)}
-						description={i18n._(BLOCKED_USER_DM_WARNING_DESCRIPTOR, {userName: displayName})}
-						primaryText={i18n._(OPEN_DM_DESCRIPTOR)}
-						primaryVariant="primary"
-						onPrimary={openDmChannel}
-						data-flx="guild.guild-tabs.guild-member-actions-sheet.handle-open-blocked-dm.confirm-modal"
-					/>
-				)),
+				blockedDmConfirmModal(
+					i18n,
+					displayName,
+					openDmChannel,
+					'guild.guild-tabs.guild-member-actions-sheet.handle-open-blocked-dm.confirm-modal',
+				),
 			);
 		};
 		const handleStartVoiceCall = async () => {

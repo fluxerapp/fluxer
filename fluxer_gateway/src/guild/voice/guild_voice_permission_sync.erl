@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_voice_permission_sync).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([
@@ -21,10 +25,6 @@
 -type voice_state() :: map().
 -type user_id() :: integer().
 -type channel_id() :: integer().
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec sync_user_voice_permissions(user_id(), guild_state()) -> ok.
 sync_user_voice_permissions(UserId, State) ->
@@ -166,8 +166,8 @@ user_has_base_voice_access(UserId, ChannelId, State) ->
             Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
             ViewPerm = constants:view_channel_permission(),
             ConnectPerm = constants:connect_permission(),
-            HasView = permission_bits:has(Permissions, ViewPerm),
-            HasConnect = permission_bits:has(Permissions, ConnectPerm),
+            HasView = bitset:has(Permissions, ViewPerm),
+            HasConnect = bitset:has(Permissions, ConnectPerm),
             HasView andalso HasConnect
     end.
 
@@ -187,7 +187,7 @@ dispatch_force_disconnect(GuildId, ChannelId, UserId, ConnectionId, State) ->
 -spec spawn_force_disconnect(integer(), channel_id(), user_id(), binary()) -> pid().
 spawn_force_disconnect(GuildId, ChannelId, UserId, ConnectionId) ->
     spawn(fun() ->
-        guild_voice_disconnect:force_disconnect_participant(
+        guild_voice_disconnect_user:force_disconnect_participant(
             GuildId, ChannelId, UserId, ConnectionId
         )
     end).
@@ -260,8 +260,10 @@ affected_role_users(GuildId, RoleIds, OldState, State) ->
         true ->
             all;
         false ->
-            OldIndex = guild_data_index:member_role_index(maps:get(data, OldState, #{})),
-            NewIndex = guild_data_index:member_role_index(maps:get(data, State, #{})),
+            OldIndex = guild_data_index_members:member_role_index(
+                maps:get(data, OldState, #{})
+            ),
+            NewIndex = guild_data_index_members:member_role_index(maps:get(data, State, #{})),
             sets:from_list(
                 lists:append([
                     maps:keys(maps:get(RoleId, OldIndex, #{})) ++
@@ -296,13 +298,13 @@ is_affected(UserId, Affected) -> sets:is_element(UserId, Affected).
 -spec get_member_user_id(map()) -> user_id() | undefined.
 get_member_user_id(MemberUpdate) ->
     User = map_utils:ensure_map(maps:get(<<"user">>, MemberUpdate, #{})),
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         maps:get(<<"id">>, User, undefined)
     ).
 
 -spec state_guild_id(guild_state()) -> integer() | undefined.
 state_guild_id(State) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         maps:get(id, State, undefined)
     ).
 

@@ -31,6 +31,7 @@ import styles from '@app/features/user/components/modals/FluxerTagChangeModal.mo
 import type {User} from '@app/features/user/models/User';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
 import {isVisionaryDiscriminator0000Blocked} from '@app/features/user/utils/FluxerTagDiscriminatorUtils';
+import {CHANGE_YOUR_USERNAME_DESCRIPTOR, TAG_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -50,19 +51,13 @@ const CHANGE_USERNAME_FORM_DESCRIPTOR = msg({
 	message: 'Change username form',
 	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
 });
-const CHANGE_YOUR_USERNAME_DESCRIPTOR = msg({
-	message: 'Change your username',
-	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
-});
+
 const GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR = msg({
 	message: 'Get {premiumProductName} to customize your tag or keep it when changing your username',
 	comment:
 		'Description text in the FluxerTag change modal. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.',
 });
-const TAG_DESCRIPTOR = msg({
-	message: 'Tag',
-	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
-});
+
 const CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR = msg({
 	message: 'Custom discriminators are not available on this instance',
 	comment: 'Error message in the FluxerTag change modal.',

@@ -115,14 +115,10 @@ node_id(TargetNode) ->
 
 -spec decode_integer(term()) -> non_neg_integer().
 decode_integer(Value) ->
-    case maybe_integer(Value) of
+    case type_conv:to_integer(Value) of
         Integer when is_integer(Integer), Integer >= 0 -> Integer;
         _ -> 0
     end.
-
--spec maybe_integer(term()) -> integer() | undefined.
-maybe_integer(Value) ->
-    type_conv:to_integer(Value).
 
 -spec compare_node_ids(map(), map()) -> boolean().
 compare_node_ids(Left, Right) ->
@@ -143,12 +139,8 @@ local_hostname() ->
 trimmed_hostname(Hostname) ->
     case string:trim(Hostname) of
         "" -> undefined;
-        Trimmed -> hostname_binary(Trimmed)
+        Trimmed -> type_conv:unicode_to_binary(Trimmed)
     end.
-
--spec hostname_binary(term()) -> binary() | undefined.
-hostname_binary(Value) ->
-    type_conv:unicode_to_binary(Value).
 
 -spec get_manager_count(atom()) -> non_neg_integer().
 get_manager_count(Manager) ->
@@ -224,7 +216,7 @@ aggregate_uptime(NodeStats) ->
     Uptimes = [
         U
      || N <- NodeStats,
-        U <- [maybe_integer(maps:get(<<"uptime_seconds">>, N, undefined))],
+        U <- [type_conv:to_integer(maps:get(<<"uptime_seconds">>, N, undefined))],
         is_integer(U),
         U >= 0
     ],

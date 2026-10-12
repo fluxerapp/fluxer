@@ -349,36 +349,6 @@ pub fn hardware_encoder_capability() -> HardwareEncoderCapability {
     )
 }
 
-pub fn require_publish_codec_runtime_support(canonical_codec: &str) -> Result<(), String> {
-    let capability = hardware_encoder_capability();
-    require_publish_codec_runtime_support_for_capability(canonical_codec, &capability)
-}
-
-fn require_publish_codec_runtime_support_for_capability(
-    canonical_codec: &str,
-    capability: &HardwareEncoderCapability,
-) -> Result<(), String> {
-    if !canonical_codec.eq_ignore_ascii_case("h265") {
-        return Ok(());
-    }
-    if capability.available
-        && capability
-            .codecs
-            .iter()
-            .any(|codec| codec.eq_ignore_ascii_case(canonical_codec))
-    {
-        return Ok(());
-    }
-    let detail = capability
-        .detail
-        .as_deref()
-        .or(capability.reason.as_deref())
-        .unwrap_or("hardware encoder is unavailable");
-    Err(format!(
-        "H.265 publishing requires hardware encoder support; {detail}"
-    ))
-}
-
 fn current_platform() -> CapabilityPlatform {
     if cfg!(target_os = "linux") {
         CapabilityPlatform::Linux
@@ -930,10 +900,8 @@ fn probe_macos_videotoolbox_runtime() -> Option<VideoToolboxRuntimeProbe> {
     }
 
     unsafe fn hardware_required_dictionary() -> CFDictionaryRef {
-        let key = unsafe {
-            kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder as *const c_void
-        };
-        let value = unsafe { kCFBooleanTrue as *const c_void };
+        let key = unsafe { kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder };
+        let value = unsafe { kCFBooleanTrue };
         let keys = [key];
         let values = [value];
         unsafe {
@@ -1046,26 +1014,6 @@ mod tests {
         assert!(capability.available);
         assert_eq!(capability.codecs, vec!["h264"]);
         assert!(capability.zero_copy);
-    }
-
-    #[test]
-    fn publish_codec_runtime_gate_only_requires_hardware_for_h265() {
-        let unavailable = describe_capability(CapabilityPlatform::Linux, false, None);
-
-        assert!(require_publish_codec_runtime_support_for_capability("h264", &unavailable).is_ok());
-        assert!(require_publish_codec_runtime_support_for_capability("vp8", &unavailable).is_ok());
-        let error =
-            require_publish_codec_runtime_support_for_capability("h265", &unavailable).unwrap_err();
-        assert!(error.contains("H.265 publishing requires hardware encoder support"));
-        assert!(error.contains("vendored CUDA Driver API header"));
-    }
-
-    #[test]
-    fn publish_codec_runtime_gate_accepts_h265_when_reported_available() {
-        let capability = describe_videotoolbox_capability(Some(videotoolbox_ready()));
-
-        assert!(require_publish_codec_runtime_support_for_capability("h265", &capability).is_ok());
-        assert!(require_publish_codec_runtime_support_for_capability("H265", &capability).is_ok());
     }
 
     #[test]

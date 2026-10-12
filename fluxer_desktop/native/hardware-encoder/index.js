@@ -39,10 +39,6 @@ try {
 	loadError = error instanceof Error ? error : new Error(String(error));
 }
 
-function isSupported() {
-	return Boolean(binding);
-}
-
 function unavailableHardwareEncoderCapability(reason, detail) {
 	return {
 		available: false,
@@ -78,6 +74,5 @@ function getHardwareEncoderCapabilities() {
 }
 
 module.exports = {
-	isSupported,
 	getHardwareEncoderCapabilities,
 };

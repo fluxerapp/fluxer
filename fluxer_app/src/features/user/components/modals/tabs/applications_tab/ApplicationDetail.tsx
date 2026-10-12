@@ -29,6 +29,7 @@ import {BotProfileSection} from '@app/features/user/components/modals/tabs/appli
 import {OAuthBuilderSection} from '@app/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection';
 import {SecretsSection} from '@app/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {REGENERATE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {pushApiErrorModal} from '@app/lib/forms';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {OAuth2Scopes} from '@fluxer/constants/src/OAuth2Constants';
@@ -77,10 +78,7 @@ const REGENERATE_BOT_TOKEN_DESCRIPTOR = msg({
 	message: 'Regenerate bot token?',
 	comment: 'Confirmation prompt in the application detail. Keep the tone plain and specific.',
 });
-const REGENERATE_DESCRIPTOR = msg({
-	message: 'Regenerate',
-	comment: 'Short label in the application detail. Keep it concise.',
-});
+
 const COPIED_URL_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'Copied URL to clipboard',
 	comment: 'Label in the application detail.',

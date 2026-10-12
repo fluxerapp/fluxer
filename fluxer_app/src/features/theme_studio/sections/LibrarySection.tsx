@@ -3,6 +3,7 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {CANCEL_DESCRIPTOR, DESCRIPTION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
+import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {upsertThemeCssHeader} from '@app/features/theme/utils/ThemeCssUtils';
 import styles from '@app/features/theme_studio/sections/LibrarySection.module.css';
@@ -23,7 +24,6 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
 	createThemeExportFileName,
-	downloadTextFile,
 	parseTagInput,
 	readFileText,
 } from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';

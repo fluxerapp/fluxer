@@ -78,8 +78,8 @@ dispatch_single_batch(Pid, GuildId, Batch) ->
 -spec get_members_from_guild_state(map()) -> [map()].
 get_members_from_guild_state(GuildState) ->
     case maps:get(data, GuildState, undefined) of
-        undefined -> guild_data_index:member_values(GuildState);
-        Data -> guild_data_index:member_values(Data)
+        undefined -> guild_data_index_members:member_values(GuildState);
+        Data -> guild_data_index_members:member_values(Data)
     end.
 
 -spec member_user_id(map()) -> user_id() | undefined.

@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::sync::atomic::{AtomicBool, AtomicU64};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use fluxer_screen_frame_bus::NativeScreenFrameSinkHandleRef;
 use pipewire as pw;
 use pw::channel::{Sender as PwSender, channel as pw_channel};
 
 use fluxer_rt_thread::{MonotonicClock, SystemMonotonicClock};
 
 use crate::audio_contract::DIRECT_CAPTURE_MAX_READ_SAMPLES;
-use crate::backend::{CaptureBridge, CapturedFrame, DirectCapture};
+use crate::direct_buffer::CapturedFrame;
 use crate::direct_buffer::DirectAudioBuffer;
 use crate::pipewire::common::{
     InventorySnapshot, READY_TIMEOUT_MS, daemon_reachable as common_daemon_reachable,
@@ -21,7 +20,6 @@ use crate::pipewire::common::{
 use crate::pipewire::event_loop::{
     BridgeCommand, DirectCommand, DirectWorkerInputs, run_bridge_worker, run_direct_worker,
 };
-use crate::pipewire::stream_ops::ScreenAudioSinkSlot;
 use crate::routing::{PropMap, RoutingRule, SelfIdentity};
 
 pub fn daemon_reachable() -> bool {
@@ -76,28 +74,24 @@ impl Drop for PipeWireBridge {
     }
 }
 
-impl CaptureBridge for PipeWireBridge {
-    fn inventory(&self) -> Vec<PropMap> {
+impl PipeWireBridge {
+    pub fn inventory(&self) -> Vec<PropMap> {
         match self.snapshot.lock() {
             Ok(guard) => guard.enriched_node_values(),
             Err(_) => Vec::new(),
         }
     }
 
-    fn apply(&self, rule: RoutingRule) -> bool {
+    pub fn apply(&self, rule: RoutingRule) -> bool {
         self.tx.send(BridgeCommand::Apply(rule)).is_ok()
     }
 
-    fn release(&self) {
+    pub fn release(&self) {
         let _ = self.tx.send(BridgeCommand::Release);
     }
 
-    fn populate_self_identity(&self, identity: SelfIdentity) {
+    pub fn populate_self_identity(&self, identity: SelfIdentity) {
         let _ = self.tx.send(BridgeCommand::SetIdentity(identity));
-    }
-
-    fn backend_name(&self) -> &'static str {
-        "pipewire"
     }
 }
 
@@ -108,9 +102,6 @@ pub struct PipeWireDirectCapture {
     running: Arc<AtomicBool>,
     thread: Mutex<Option<JoinHandle<()>>>,
     identity: Mutex<SelfIdentity>,
-    #[allow(dead_code)]
-    last_push_ns: Arc<AtomicU64>,
-    screen_audio_sink: ScreenAudioSinkSlot,
 }
 
 impl PipeWireDirectCapture {
@@ -126,8 +117,6 @@ impl PipeWireDirectCapture {
         let inventory = Arc::new(Mutex::new(InventorySnapshot::default()));
         let owned_link_snapshot = Arc::new(Mutex::new(Vec::new()));
         let running = Arc::new(AtomicBool::new(false));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let screen_audio_sink: ScreenAudioSinkSlot = Arc::new(RwLock::new(None));
         let (tx, rx) = pw_channel::<DirectCommand>();
         let sink_node_name = next_direct_sink_name();
         let inputs = DirectWorkerInputs {
@@ -136,9 +125,7 @@ impl PipeWireDirectCapture {
             owned_link_snapshot,
             running: running.clone(),
             sink_node_name,
-            last_push_ns: last_push_ns.clone(),
             clock,
-            screen_audio_sink: screen_audio_sink.clone(),
         };
         let (ready_tx, ready_rx) = std::sync::mpsc::sync_channel::<bool>(1);
         let handle = thread::Builder::new()
@@ -154,8 +141,6 @@ impl PipeWireDirectCapture {
                 running,
                 thread: Mutex::new(Some(handle)),
                 identity: Mutex::new(SelfIdentity::default()),
-                last_push_ns,
-                screen_audio_sink,
             }),
             _ => {
                 let _ = tx.send(DirectCommand::Shutdown);
@@ -163,11 +148,6 @@ impl PipeWireDirectCapture {
                 None
             }
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn last_push_ns(&self) -> u64 {
-        self.last_push_ns.load(std::sync::atomic::Ordering::Acquire)
     }
 }
 
@@ -182,8 +162,8 @@ impl Drop for PipeWireDirectCapture {
     }
 }
 
-impl DirectCapture for PipeWireDirectCapture {
-    fn start(&self, rule: RoutingRule) -> bool {
+impl PipeWireDirectCapture {
+    pub fn start(&self, rule: RoutingRule) -> bool {
         let Ok(identity) = self.identity.lock().map(|guard| guard.clone()) else {
             return false;
         };
@@ -195,11 +175,11 @@ impl DirectCapture for PipeWireDirectCapture {
             .is_ok()
     }
 
-    fn set_rule(&self, rule: RoutingRule) -> bool {
+    pub fn set_rule(&self, rule: RoutingRule) -> bool {
         self.tx.send(DirectCommand::UpdateRule { rule }).is_ok()
     }
 
-    fn read(&self) -> Option<CapturedFrame> {
+    pub fn read(&self) -> Option<CapturedFrame> {
         let mut out = Vec::with_capacity(DIRECT_CAPTURE_MAX_READ_SAMPLES);
         let meta = {
             let Ok(mut guard) = self.samples.lock() else {
@@ -215,23 +195,11 @@ impl DirectCapture for PipeWireDirectCapture {
         })
     }
 
-    fn stop(&self) {
+    pub fn stop(&self) {
         let _ = self.tx.send(DirectCommand::Stop);
     }
 
-    fn set_screen_audio_sink(&self, sink: Arc<NativeScreenFrameSinkHandleRef>) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = Some(sink);
-        }
-    }
-
-    fn clear_screen_audio_sink(&self) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = None;
-        }
-    }
-
-    fn populate_self_identity(&self, identity: SelfIdentity) {
+    pub fn populate_self_identity(&self, identity: SelfIdentity) {
         if let Ok(mut guard) = self.identity.lock() {
             *guard = identity;
         }
@@ -242,65 +210,12 @@ impl DirectCapture for PipeWireDirectCapture {
 mod tests {
     use super::*;
     use crate::pipewire::common::{
-        DIRECT_SINK_PREFIX, MEDIA_CLASS_CAPTURE_STREAM, PortRecord, SINK_NODE_DESCRIPTION,
-        SINK_NODE_NAME, VirtualSinkKind, build_link_props, build_virtual_sink_props,
-        build_virtual_sink_props_for, is_routable_media_class, pick_node_ports,
-        pick_source_output_ports,
+        MEDIA_CLASS_CAPTURE_STREAM, PortRecord, pick_node_ports, pick_source_output_ports,
     };
     use crate::pipewire::routing::{default_sink_target_id, matching_pinned_capture_nodes};
-    use crate::pipewire::stream_ops::{
-        DIRECT_CAPTURE_APM_FRAME_SAMPLES, DirectCaptureApm, build_direct_audio_info,
-        build_direct_stream_props, direct_chunk_payload_range, f32_sample_to_i16,
-        i16_sample_to_f32,
-    };
-    use crate::routing::MEDIA_CLASS_PLAYBACK_STREAM;
+    use crate::pipewire::stream_ops::{build_direct_stream_props, direct_chunk_payload_range};
+    use crate::routing::{MEDIA_CLASS_PLAYBACK_STREAM, should_route_node};
     use std::collections::{HashMap, HashSet};
-
-    use crate::audio_contract::{DIRECT_CAPTURE_CHANNELS, DIRECT_CAPTURE_SAMPLE_RATE};
-    use crate::routing::should_route_node;
-    use pipewire::spa::sys as spa_sys;
-
-    #[test]
-    fn is_routable_media_class_matches_audio_node_classes() {
-        assert!(is_routable_media_class(MEDIA_CLASS_PLAYBACK_STREAM));
-        assert!(is_routable_media_class(MEDIA_CLASS_CAPTURE_STREAM));
-        assert!(is_routable_media_class("Audio/Source"));
-        assert!(is_routable_media_class("Audio/Sink"));
-        assert!(!is_routable_media_class("Video/Source"));
-        assert!(!is_routable_media_class(""));
-    }
-
-    #[test]
-    fn virtual_sink_props_match_legacy_contract() {
-        let props = build_virtual_sink_props();
-        let dict = props.dict();
-        assert_eq!(dict.get("factory.name"), Some("support.null-audio-sink"));
-        assert_eq!(dict.get("node.name"), Some(SINK_NODE_NAME));
-        assert_eq!(dict.get("node.nick"), Some(SINK_NODE_NAME));
-        assert_eq!(dict.get("node.description"), Some(SINK_NODE_DESCRIPTION));
-        assert_eq!(dict.get("media.class"), Some("Audio/Source/Virtual"));
-        assert_eq!(dict.get("node.virtual"), Some("true"));
-        assert_eq!(dict.get("node.passive"), Some("true"));
-        assert_eq!(dict.get("node.dont-move"), Some("true"));
-        assert_eq!(dict.get("node.dont-reconnect"), Some("true"));
-        assert_eq!(dict.get("node.latency"), Some("4096/48000"));
-        assert_eq!(dict.get("audio.rate"), Some("48000"));
-        assert_eq!(dict.get("audio.channels"), Some("2"));
-        assert_eq!(dict.get("audio.position"), Some("[FL,FR]"));
-        assert_eq!(dict.get("monitor.channel-volumes"), Some("true"));
-    }
-
-    #[test]
-    fn link_props_include_per_port_routing() {
-        let props = build_link_props(101, 7, 202, 13);
-        let dict = props.dict();
-        assert_eq!(dict.get("link.output.node"), Some("101"));
-        assert_eq!(dict.get("link.output.port"), Some("7"));
-        assert_eq!(dict.get("link.input.node"), Some("202"));
-        assert_eq!(dict.get("link.input.port"), Some("13"));
-        assert_eq!(dict.get("object.linger"), Some("false"));
-        assert_eq!(dict.get("link.passive"), Some("true"));
-    }
 
     #[test]
     fn direct_stream_props_capture_private_sink_monitor() {
@@ -342,28 +257,6 @@ mod tests {
         assert_eq!(direct_chunk_payload_range(64, 64, 16), None);
         assert_eq!(direct_chunk_payload_range(64, 8, 0), None);
         assert_eq!(direct_chunk_payload_range(10, 8, 2), None);
-    }
-
-    #[test]
-    fn direct_audio_info_advertises_stereo_fl_fr() {
-        let info = build_direct_audio_info();
-        assert_eq!(
-            info.format(),
-            pipewire::spa::param::audio::AudioFormat::F32LE
-        );
-        assert_eq!(info.rate(), DIRECT_CAPTURE_SAMPLE_RATE);
-        assert_eq!(info.channels(), DIRECT_CAPTURE_CHANNELS);
-        assert_eq!(info.position()[0], spa_sys::SPA_AUDIO_CHANNEL_FL);
-        assert_eq!(info.position()[1], spa_sys::SPA_AUDIO_CHANNEL_FR);
-    }
-
-    #[test]
-    fn next_direct_sink_name_is_unique_per_call() {
-        let a = next_direct_sink_name();
-        let b = next_direct_sink_name();
-        assert_ne!(a, b, "concurrent captures must not collide on sink names");
-        assert!(a.starts_with(DIRECT_SINK_PREFIX));
-        assert!(b.starts_with(DIRECT_SINK_PREFIX));
     }
 
     #[test]
@@ -451,27 +344,6 @@ mod tests {
             matching_pinned_capture_nodes(&nodes, &rule, 10).is_empty(),
             "the bridge's own sink id must never be pinned"
         );
-    }
-
-    #[test]
-    fn private_sink_props_advertise_hidden_audio_sink() {
-        let private = build_virtual_sink_props_for(
-            "fluxer-direct-capture-7-1",
-            crate::pipewire::common::DIRECT_SINK_DESCRIPTION,
-            VirtualSinkKind::PrivateAudioSink,
-        );
-        let legacy = build_virtual_sink_props_for(
-            SINK_NODE_NAME,
-            SINK_NODE_DESCRIPTION,
-            VirtualSinkKind::LegacyVirtualSource,
-        );
-        assert_eq!(private.dict().get("media.class"), Some("Audio/Sink"));
-        assert_eq!(private.dict().get("node.hidden"), Some("true"));
-        assert_eq!(
-            legacy.dict().get("media.class"),
-            Some("Audio/Source/Virtual")
-        );
-        assert_eq!(legacy.dict().get("node.hidden"), None);
     }
 
     #[test]
@@ -669,111 +541,6 @@ mod tests {
         assert!(pick_source_output_ports(42, &ports).is_none());
     }
 
-    #[test]
-    fn direct_capture_apm_processes_one_full_frame_increments_counter() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        assert_eq!(apm.apm_frames_processed(), 0);
-        let frame_len = DIRECT_CAPTURE_APM_FRAME_SAMPLES;
-        let mut samples = vec![0.5_f32; frame_len];
-        let processed = apm.process_in_place(&mut samples).expect("process");
-        assert_eq!(processed, frame_len);
-        assert_eq!(apm.apm_frames_processed(), 1);
-        assert_eq!(apm.pending_accumulator_len(), 0);
-    }
-
-    #[test]
-    fn direct_capture_apm_accumulates_partial_frames_across_calls() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        let half = DIRECT_CAPTURE_APM_FRAME_SAMPLES / 2;
-        let mut first = vec![0.1_f32; half];
-        let processed1 = apm.process_in_place(&mut first).expect("first");
-        assert_eq!(processed1, 0);
-        assert_eq!(apm.apm_frames_processed(), 0);
-        assert_eq!(apm.pending_accumulator_len(), half);
-        let mut second = vec![0.2_f32; half];
-        let processed2 = apm.process_in_place(&mut second).expect("second");
-        assert_eq!(processed2, half);
-        assert_eq!(apm.apm_frames_processed(), 1);
-        assert_eq!(apm.pending_accumulator_len(), 0);
-    }
-
-    #[test]
-    fn direct_capture_apm_handles_many_frames_in_one_call() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        let frame_len = DIRECT_CAPTURE_APM_FRAME_SAMPLES;
-        let mut samples = vec![0.25_f32; frame_len * 5];
-        let processed = apm.process_in_place(&mut samples).expect("process");
-        assert_eq!(processed, frame_len * 5);
-        assert_eq!(apm.apm_frames_processed(), 5);
-        assert_eq!(apm.pending_accumulator_len(), 0);
-    }
-
-    #[test]
-    fn direct_capture_apm_stub_preserves_samples_within_tolerance() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        let frame_len = DIRECT_CAPTURE_APM_FRAME_SAMPLES;
-        let mut samples = vec![0.0_f32; frame_len];
-        for (n, sample) in samples.iter_mut().enumerate() {
-            *sample = ((n as f32) / (frame_len as f32) - 0.5) * 0.5;
-        }
-        let original = samples.clone();
-        let _ = apm.process_in_place(&mut samples).expect("process");
-        for (after, before) in samples.iter().zip(original.iter()) {
-            let diff = (after - before).abs();
-            assert!(diff < 1e-3);
-        }
-    }
-
-    #[test]
-    fn direct_capture_apm_reconfigure_is_noop_when_format_unchanged() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        let half = DIRECT_CAPTURE_APM_FRAME_SAMPLES / 2;
-        let mut samples = vec![0.3_f32; half];
-        let _ = apm.process_in_place(&mut samples).expect("first");
-        assert_eq!(apm.pending_accumulator_len(), half);
-        apm.reconfigure(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-            .expect("noop");
-        assert_eq!(apm.pending_accumulator_len(), half);
-    }
-
-    #[test]
-    fn direct_capture_apm_reconfigure_changes_format_and_resets_accum() {
-        let mut apm =
-            DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-                .expect("apm");
-        let half = DIRECT_CAPTURE_APM_FRAME_SAMPLES / 2;
-        let mut samples = vec![0.3_f32; half];
-        let _ = apm.process_in_place(&mut samples).expect("first");
-        assert!(apm.pending_accumulator_len() > 0);
-        apm.reconfigure(16_000, 1).expect("reconfigure");
-        assert_eq!(apm.pending_accumulator_len(), 0);
-    }
-
-    #[test]
-    fn f32_to_i16_clamps_above_one() {
-        assert_eq!(f32_sample_to_i16(2.0), i16::MAX);
-        assert_eq!(f32_sample_to_i16(-2.0), i16::MIN);
-        assert_eq!(f32_sample_to_i16(0.0), 0);
-    }
-
-    #[test]
-    fn i16_to_f32_round_trip_is_bounded() {
-        for sample in [-32_768_i16, -1, 0, 1, 32_767] {
-            let f = i16_sample_to_f32(sample);
-            assert!((-1.001..=1.001).contains(&f));
-        }
-    }
-
     use crate::pipewire::stream_ops::{build_test_user_data, process_audio_chunk};
     use fluxer_rt_thread::MonotonicClock;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -811,12 +578,8 @@ mod tests {
     #[test]
     fn callback_path_does_not_allocate_in_steady_state() {
         let clock = Arc::new(FakeClock::new(1_000));
-        let last_push_ns = Arc::new(AtomicU64::new(u64::MAX));
-        let mut data = build_test_user_data(
-            last_push_ns.clone(),
-            Arc::clone(&clock) as Arc<dyn MonotonicClock>,
-        );
-        let frame = vec![0.05_f32; DIRECT_CAPTURE_APM_FRAME_SAMPLES];
+        let mut data = build_test_user_data(Arc::clone(&clock) as Arc<dyn MonotonicClock>);
+        let frame = vec![0.05_f32; 960];
         let payload = make_f32_payload(&frame);
         for _ in 0..400 {
             clock.set(clock.now_ns() + 10_000_000);

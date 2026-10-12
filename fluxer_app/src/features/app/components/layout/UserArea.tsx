@@ -11,7 +11,6 @@ import {reportSkeletonVoicePresence} from '@app/features/app/components/skeleton
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import Presence from '@app/features/presence/state/Presence';
@@ -148,8 +147,7 @@ const UserAreaInner = observer(
 			? i18n._(USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
 			: i18n._(USER_SETTINGS_LABEL_DESCRIPTOR);
 		const storeConnectedChannelId = MediaEngine.channelId;
-		const forceShowVoiceConnection = DeveloperOptions.forceShowVoiceConnection;
-		const hasVoiceConnection = !MobileLayout.enabled && (forceShowVoiceConnection || !!storeConnectedChannelId);
+		const hasVoiceConnection = !MobileLayout.enabled && !!storeConnectedChannelId;
 		useEffect(() => {
 			const root = document.documentElement;
 			const clearHeight = () => {

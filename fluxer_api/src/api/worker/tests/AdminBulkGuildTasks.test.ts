@@ -35,7 +35,7 @@ import {
 	getWebhookRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import bulkAddGuildMembers from '@app/api/worker/tasks/admin_bulk/BulkAddGuildMembers';
@@ -46,7 +46,6 @@ import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const JOB_ID = 4242n;
@@ -59,17 +58,6 @@ interface BulkJobResult {
 		id: string;
 		error: string;
 	}>;
-}
-
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: JOB_ID,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
 }
 
 function installWorkerDependencies(): void {
@@ -160,7 +148,7 @@ describe('admin bulk guild worker tasks', () => {
 				admin_user_id: admin.userId,
 				audit_log_reason: auditLogReason,
 			},
-			createHelpers(),
+			createTestWorkerHelpers({jobId: JOB_ID}),
 		);
 		return result as unknown as BulkJobResult;
 	}
@@ -178,7 +166,7 @@ describe('admin bulk guild worker tasks', () => {
 				admin_user_id: admin.userId,
 				audit_log_reason: auditLogReason,
 			},
-			createHelpers(),
+			createTestWorkerHelpers({jobId: JOB_ID}),
 		);
 		return result as unknown as BulkJobResult;
 	}

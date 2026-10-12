@@ -14,12 +14,18 @@ import {
 	WINDOWS_LEGACY_APP_USER_MODEL_IDS,
 } from '@electron/common/DesktopIdentity';
 import {isPortableMode} from '@electron/common/UserDataPath';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {AUTOSTART_LAUNCH_ARG} from '@electron/main/AutostartLaunch';
 import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
-import {GENERATED_MARKER} from '@electron/main/LinuxDesktopEntry';
+import {
+	escapeDesktopValue as escapeDesktopEntry,
+	GENERATED_MARKER,
+	quoteExecArg as quoteDesktopExecArg,
+} from '@electron/main/LinuxDesktopEntry';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {t} from '@electron/main/MainI18n';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 import {app, ipcMain} from 'electron';
 import log from 'electron-log';
 
@@ -106,39 +112,6 @@ interface LinuxPortalsBinding {
 		  }) => Promise<{response: number; cancelled: boolean; background: boolean; autostart: boolean}>)
 		| null;
 	loadError: Error | null;
-}
-
-let cachedWinShellBinding: WinShellBinding | null | undefined;
-let cachedLinuxPortalsBinding: LinuxPortalsBinding | null | undefined;
-
-function loadWinShell(): WinShellBinding | null {
-	if (!isWindows) return null;
-	if (cachedWinShellBinding !== undefined) return cachedWinShellBinding;
-	try {
-		cachedWinShellBinding = requireModule('@fluxer/win-shell') as WinShellBinding;
-	} catch (error) {
-		log.warn('[Autostart] Failed to load @fluxer/win-shell:', error);
-		cachedWinShellBinding = null;
-	}
-	if (cachedWinShellBinding?.loadError) {
-		log.warn('[Autostart] @fluxer/win-shell load error:', cachedWinShellBinding.loadError);
-	}
-	return cachedWinShellBinding;
-}
-
-function loadLinuxPortals(): LinuxPortalsBinding | null {
-	if (!isLinux || getLinuxPortalsMode(process.argv) === 'off') return null;
-	if (cachedLinuxPortalsBinding !== undefined) return cachedLinuxPortalsBinding;
-	try {
-		cachedLinuxPortalsBinding = requireModule('@fluxer/linux-portals') as LinuxPortalsBinding;
-	} catch (error) {
-		log.warn('[Autostart] Failed to load @fluxer/linux-portals:', error);
-		cachedLinuxPortalsBinding = null;
-	}
-	if (cachedLinuxPortalsBinding?.loadError) {
-		log.warn('[Autostart] @fluxer/linux-portals load error:', cachedLinuxPortalsBinding.loadError);
-	}
-	return cachedLinuxPortalsBinding;
 }
 
 function getWindowsLoginItemPath(): string {
@@ -296,14 +269,6 @@ function getLinuxDesktopFilePath(): string {
 	return path.join(getLinuxAutostartDir(), LINUX_DESKTOP_FILE_BASENAME);
 }
 
-function escapeDesktopEntry(value: string): string {
-	return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r');
-}
-
-function quoteDesktopExecArg(value: string): string {
-	return `"${value.replace(/(["\\$`])/g, '\\$1')}"`;
-}
-
 function tryParseDesktopEntry(contents: string): Map<string, string> {
 	const entry = new Map<string, string>();
 	let inDesktopEntry = false;
@@ -414,14 +379,11 @@ async function enableLinuxAutostart(): Promise<void> {
 async function writeLinuxAutostartFile(contents: string): Promise<void> {
 	const dir = getLinuxAutostartDir();
 	const filePath = getLinuxDesktopFilePath();
-	const tempPath = `${filePath}.${process.pid}.tmp`;
 	try {
 		await fs.promises.mkdir(dir, {recursive: true, mode: 0o700});
-		await fs.promises.writeFile(tempPath, contents, {encoding: 'utf8', mode: 0o644});
-		await fs.promises.rename(tempPath, filePath);
+		await writeFileAtomically(filePath, contents, 0o644);
 		log.info('[Autostart] Wrote Linux autostart entry', {filePath});
 	} catch (error) {
-		await fs.promises.rm(tempPath, {force: true}).catch(() => {});
 		log.error('[Autostart] Failed to write Linux autostart entry:', error);
 		throw error;
 	}
@@ -703,3 +665,20 @@ export function registerAutostartHandlers(): void {
 		markInitialized();
 	});
 }
+
+const loadWinShell = loadOptionalNativeAddon<WinShellBinding>({
+	platform: 'win32',
+	load: () => requireModule('@fluxer/win-shell'),
+	logger: log,
+	level: 'warn',
+	unavailableMessage: '[Autostart] Failed to load @fluxer/win-shell:',
+});
+
+const loadLinuxPortals = loadOptionalNativeAddon<LinuxPortalsBinding>({
+	platform: 'linux',
+	load: () => requireModule('@fluxer/linux-portals'),
+	logger: log,
+	level: 'warn',
+	unavailableMessage: '[Autostart] Failed to load @fluxer/linux-portals:',
+	disabled: () => getLinuxPortalsMode(process.argv) === 'off',
+});

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::cache_policy::{
-    UnfurlEntryExpiry, default_empty_entry_lifetime, every_unfurl_cache_key, provider_capability,
-    unfurl_cache_key,
+    UnfurlEntryExpiry, default_empty_entry_lifetime, provider_capability, unfurl_cache_key,
 };
 use crate::embed_normalizer::normalize_embeds;
 use crate::media_proxy::MediaProxyClient;
 use crate::resolvers::{self, ResolveContext, ResolverResult};
-use crate::types::{InvalidatedResponse, NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
+use crate::types::{NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
 use fluxer_svc::config::optional_env;
 use fluxer_svc::shard::ShardService;
 use moka::future::Cache;
@@ -314,14 +313,6 @@ impl ShardService for UnfurlShard {
                 self.cache.insert(cache_key, result.clone()).await;
                 Ok(UnfurlResponse::Resolved(result))
             }
-            UnfurlRequest::Invalidate { ref url } => {
-                for key in every_unfurl_cache_key(url) {
-                    self.cache.invalidate(&key).await;
-                }
-                Ok(UnfurlResponse::Invalidated(InvalidatedResponse {
-                    invalidated: true,
-                }))
-            }
         }
     }
 }
@@ -489,23 +480,6 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn invalidate_clears_the_shard_entry_for_every_provider_capability() {
-        let shard = UnfurlShard::for_test();
-        seed_keyless_entry(&shard).await;
-
-        shard
-            .handle(UnfurlRequest::Invalidate {
-                url: BLOCKED_URL.to_owned(),
-            })
-            .await
-            .unwrap();
-
-        assert_eq!(
-            0,
-            embed_count(&shard.handle(unfurl(BLOCKED_URL, None)).await.unwrap())
-        );
-    }
     #[tokio::test]
     async fn a_url_that_produced_no_embed_is_written_to_the_shard_cache() {
         let shard = UnfurlShard::for_test();

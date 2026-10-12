@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -205,9 +207,10 @@ impl AdminApiClient {
         let body = generated_types::BulkBanFileShasRequest {
             sha256_list: sha256_list.to_vec(),
         };
-        self.put_typed_with_reason(
+        self.send(
+            Method::PUT,
             "/admin/blocklists/file-sha/entries",
-            &body,
+            Some(&body),
             audit_log_reason,
         )
         .await

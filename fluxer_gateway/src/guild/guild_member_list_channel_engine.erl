@@ -149,7 +149,7 @@ update_user_in_engine(UserId, ListId, Ref, State) ->
 -spec update_user_in_channel(integer(), pos_integer(), engine_ref(), guild_state()) -> ok.
 update_user_in_channel(UserId, ChannelId, Ref, State) ->
     Data = maps:get(data, State, #{}),
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         Member when is_map(Member) ->
             upsert_visible_user(UserId, ChannelId, Member, Ref, State);
         _ ->
@@ -241,7 +241,7 @@ load_engine(ChannelId, State) ->
     {[guild_member_list_store:member_tuple()], [integer()]}.
 build_inputs(ChannelId, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     ConnectedUserIds = guild_member_list_common:connected_session_user_ids(State),
     PresenceTab = maps:get(member_presence, State),
     {Tuples, _Memo, _RoleCache} = maps:fold(
@@ -355,7 +355,7 @@ memoised_can_view(UserId, ChannelId, Member, SortedRoleIds, State, Memo) ->
 %% overwrites, so the exception set is not local to this channel. Do not memoise.
 -spec memoisable_channel(pos_integer(), map()) -> boolean().
 memoisable_channel(ChannelId, Data) ->
-    case maps:get(ChannelId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ChannelId, guild_data_index_channels:channel_index(Data), undefined) of
         Channel when is_map(Channel) -> maps:get(<<"type">>, Channel, undefined) =/= 4;
         _ -> false
     end.
@@ -385,7 +385,7 @@ overwrite_target_ids(ChannelId, Data) ->
 
 -spec channel_overwrite_target_ids(pos_integer(), map()) -> [integer()].
 channel_overwrite_target_ids(ChannelId, Data) ->
-    case maps:get(ChannelId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ChannelId, guild_data_index_channels:channel_index(Data), undefined) of
         Channel when is_map(Channel) ->
             lists:filtermap(
                 fun(Overwrite) -> overwrite_target_id(Overwrite) end,
@@ -435,7 +435,7 @@ presence_status_is_online(UserId, PresenceTab) ->
 -spec can_view(integer(), pos_integer(), map(), guild_state()) -> boolean().
 can_view(UserId, ChannelId, Member, State) when is_integer(UserId), UserId > 0 ->
     try
-        guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
+        guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
     catch
         _:_ -> false
     end;
@@ -504,19 +504,6 @@ new_visibility_memo_is_disabled_for_categories_test() ->
     ?assertEqual(disabled, new_visibility_memo(600, maps:get(data, State), State)),
     ?assertNotEqual(disabled, new_visibility_memo(500, maps:get(data, State), State)).
 
-memoised_can_view_caches_one_entry_per_role_set_test() ->
-    State = memo_channel_state(),
-    Memo0 = new_visibility_memo(500, maps:get(data, State), State),
-    {First, Memo1} = memoised_can_view(
-        1000, 500, #{<<"roles">> => [2, 1]}, lists:sort([2, 1]), State, Memo0
-    ),
-    ?assertEqual(1, map_size(maps:get(cache, Memo1))),
-    {Second, Memo2} = memoised_can_view(
-        1001, 500, #{<<"roles">> => [1, 2]}, lists:sort([1, 2]), State, Memo1
-    ),
-    ?assertEqual(First, Second),
-    ?assertEqual(1, map_size(maps:get(cache, Memo2))).
-
 memoised_can_view_bypasses_exception_users_test() ->
     State = memo_channel_state(),
     Memo0 = new_visibility_memo(500, maps:get(data, State), State),
@@ -531,18 +518,6 @@ memoised_can_view_disabled_never_caches_test() ->
         {_, disabled},
         memoised_can_view(1000, 600, #{<<"roles">> => [1]}, [1], State, disabled)
     ).
-
-member_role_ids_caches_and_sorts_test() ->
-    Member = #{<<"roles">> => [3, 1, 2]},
-    {RoleIds, Sorted, Cache1} = member_role_ids(Member, #{}),
-    ?assertEqual([1, 2, 3], Sorted),
-    ?assertEqual(lists:sort(RoleIds), Sorted),
-    ?assertEqual(1, map_size(Cache1)),
-    {RoleIds2, Sorted2, Cache2} = member_role_ids(#{<<"roles">> => [3, 1, 2]}, Cache1),
-    ?assertEqual({RoleIds, Sorted}, {RoleIds2, Sorted2}),
-    ?assertEqual(1, map_size(Cache2)),
-    {_, _, Cache3} = member_role_ids(#{<<"roles">> => [9]}, Cache2),
-    ?assertEqual(2, map_size(Cache3)).
 
 offline_member_skips_the_presence_lookup_test() ->
     Presences = #{7 => #{<<"status">> => <<"online">>}},

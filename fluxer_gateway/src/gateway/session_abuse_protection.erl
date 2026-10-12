@@ -11,10 +11,6 @@
     check_identify_rate/1
 ]).
 
--ifdef(TEST).
--export([prune_old_identify_entries/1]).
--endif.
-
 -define(IDENTIFY_TABLE, gateway_identify_rate).
 -define(SESSION_USER_COUNTS, session_user_counts).
 -define(IDENTIFY_MAX_PER_IP, 300).

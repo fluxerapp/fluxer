@@ -11,7 +11,8 @@ import {
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
 } from '@fluxer/voice_engine_v2/src/core/state';
-import type {VoiceEngineV2Command, VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import {describe, expect, it} from 'vitest';
 
 interface LocalMediaSnapshotExpectation {

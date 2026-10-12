@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -125,7 +125,7 @@ export function checkMultipleConnections(
 ): boolean {
 	const user = Users.getCurrentUser();
 	if (!user) return true;
-	if (!GatewayConnection.socket) return true;
+	if (!GatewaySessions.foregroundConnection.socket) return true;
 	const voiceStateGuildId = guildId ?? ME;
 	const voiceStates = getAllVoiceStatesInChannelFromMediaEngine(voiceStateGuildId, channelId);
 	const currentConnectionId = getVoiceConnectionContextFromMediaEngine()?.connectionId;
@@ -172,7 +172,7 @@ export function sendVoiceStateConnect(
 	channelId: string,
 	viewerStreamKeys: ReadonlyArray<string> = [],
 ): void {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) {
 		logger.warn('No socket');
 		return;
@@ -199,7 +199,7 @@ export function sendVoiceStateConnect(
 }
 
 export function sendVoiceStateDisconnect(guildId: string | null, connectionId: string | null): void {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) {
 		logger.warn('No socket');
 		return;
@@ -223,7 +223,7 @@ export function syncVoiceStateToServer(
 	partial?: VoiceStateSyncPartial,
 	p2p?: false,
 ): void {
-	const socket = GatewayConnection.socket;
+	const socket = GatewaySessions.foregroundConnection.socket;
 	if (!socket) return;
 	const snapshot = getVoiceEngineV2SnapshotFromMediaEngine();
 	const effectiveSelfMute = snapshot

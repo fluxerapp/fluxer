@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(call_manager).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
@@ -9,10 +13,6 @@
 -export([start_link/0, local_call_ids/0, handoff_to_topology/1]).
 -export([lookup/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -type channel_id() :: integer().
 -type call_data() :: map().

@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 import {describe, test} from 'node:test';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
+import {loadTsModule} from './fixtures/TsModuleLoader.mjs';
 
 const require = createRequire(import.meta.url);
 const esbuild = require('esbuild');
@@ -52,6 +53,9 @@ function loadDesktopDebugInfo(options = {}) {
 		}
 		if (specifier === '@electron/main/PlatformInfo') {
 			return {getDesktopInfo: async () => ({})};
+		}
+		if (specifier === '@electron/main/LaunchOptions' || specifier === '@fluxer/desktop_ipc/src/DesktopLabels') {
+			return loadTsModule(specifier);
 		}
 		return require(specifier);
 	}

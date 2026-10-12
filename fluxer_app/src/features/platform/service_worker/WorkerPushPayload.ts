@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 export interface PushPayload {
 	type?: string;
 	action?: string;
@@ -17,8 +19,6 @@ export interface PushNotificationClientState {
 	hasWindowClient: boolean;
 	hasVisibleClient: boolean;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 export const normalizePushPayload = (raw: unknown): PushPayload => {
 	const payload = (raw ?? {}) as PushPayload;

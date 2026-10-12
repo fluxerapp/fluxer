@@ -74,7 +74,6 @@ const POSITIVE_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
 	'devices.selectCameraRequested',
 	'permissions.checkRequested',
 	'permissions.requestRequested',
-	'capabilities.hardwareEncoderQueryRequested',
 	'localAudio.muteRequested',
 	'localAudio.deafenRequested',
 	'lifecycle.teardownRequested',
@@ -499,8 +498,6 @@ function tryMaterialiseControlEvent(
 	if (kind === 'devices.selectCameraRequested') return {type: 'devices.selectCameraRequested', deviceId: ctx.identity};
 	if (kind === 'permissions.checkRequested') return {type: 'permissions.checkRequested', name: 'microphone'};
 	if (kind === 'permissions.requestRequested') return {type: 'permissions.requestRequested', name: 'microphone'};
-	if (kind === 'capabilities.hardwareEncoderQueryRequested')
-		return {type: 'capabilities.hardwareEncoderQueryRequested'};
 	if (kind === 'localAudio.muteRequested') return {type: 'localAudio.muteRequested', muted: ctx.enabled};
 	if (kind === 'localAudio.deafenRequested') return {type: 'localAudio.deafenRequested', deafened: ctx.enabled};
 	if (kind === 'lifecycle.teardownRequested') {

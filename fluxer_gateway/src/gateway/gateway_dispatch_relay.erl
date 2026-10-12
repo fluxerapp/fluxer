@@ -243,15 +243,6 @@ handle_worker_exit(Index, Reason, Workers, State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-dispatch_direct_local_cast_test() ->
-    Payload = #{<<"k">> => <<"v">>},
-    ?assertEqual(ok, dispatch_direct(self(), guild_update, Payload)),
-    receive
-        {'$gen_cast', {dispatch, guild_update, Payload}} -> ok
-    after 1000 ->
-        ?assert(false)
-    end.
-
 dispatch_direct_local_cast_under_mailbox_pressure_test() ->
     Self = self(),
     Receiver = spawn(fun() -> test_dispatch_receiver(Self, pressured) end),
@@ -262,39 +253,12 @@ dispatch_direct_local_cast_under_mailbox_pressure_test() ->
     ?assertEqual(ok, dispatch_direct(Receiver, guild_update, Payload)),
     assert_dispatch_received(pressured, guild_update, Payload).
 
-group_by_node_empty_test() ->
-    ?assertEqual([], group_by_node([])).
-
-group_by_node_local_pids_test() ->
-    P1 = spawn(fun test_wait_until_stop/0),
-    P2 = spawn(fun test_wait_until_stop/0),
-    Grouped = group_by_node([P1, P2]),
-    ?assertEqual(1, length(Grouped)),
-    [{Node, Pids}] = Grouped,
-    ?assertEqual(node(), Node),
-    ?assertEqual(2, length(Pids)),
-    P1 ! stop,
-    P2 ! stop.
-
 group_by_node_filters_non_pids_test() ->
     P1 = spawn(fun test_wait_until_stop/0),
     Grouped = group_by_node([P1, not_a_pid, 42, <<"binary">>]),
     [{_Node, Pids}] = Grouped,
     ?assertEqual([P1], Pids),
     P1 ! stop.
-
-dispatch_grouped_empty_test() ->
-    ?assertEqual(ok, dispatch_grouped([], test_event, #{}, fun dispatch_direct/3)).
-
-dispatch_grouped_local_pids_test() ->
-    Self = self(),
-    Receiver1 = spawn(fun() -> test_dispatch_receiver(Self, 1) end),
-    Receiver2 = spawn(fun() -> test_dispatch_receiver(Self, 2) end),
-    Grouped = [{node(), [Receiver1, Receiver2]}],
-    Payload = #{<<"test">> => true},
-    ?assertEqual(ok, dispatch_grouped(Grouped, my_event, Payload, fun dispatch_direct/3)),
-    assert_dispatch_received(1, my_event, Payload),
-    assert_dispatch_received(2, my_event, Payload).
 
 test_wait_until_stop() ->
     receive

@@ -2,7 +2,7 @@
 
 import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import type {UserID} from '@app/api/BrandedTypes';
-import {requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
@@ -10,7 +10,6 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {AdminBulkJobCreateRequest, AdminBulkTaskType} from '@fluxer/schema/src/domains/admin/AdminBulkSchemas';
 import {BulkJobResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
@@ -120,9 +119,7 @@ export function BulkAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			const body = ctx.req.valid('json');
 			const requiredAcl = BULK_TASK_ACLS[body.task];
-			if (!adminAcls.has(requiredAcl) && !adminAcls.has(AdminACLs.WILDCARD)) {
-				throw new MissingACLError(requiredAcl);
-			}
+			requireGrantedAdminACLs(adminAcls, [requiredAcl]);
 			const jobId = await queueBulkJob(body, adminUserId, auditLogReason);
 			await recordAdminWrite(ctx, {
 				targetType: 'bulk_job',

@@ -71,10 +71,7 @@ import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePe
 import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import VoiceSettings, {
-	type LastScreenShareSourceKind,
-	type ScreenshareResolution,
-} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings, {type ScreenshareResolution} from '@app/features/voice/state/VoiceSettings';
 import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {isScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
@@ -100,6 +97,14 @@ import {
 	formatFallbackCameraLabel,
 	formatVoiceAudioDeviceLabel,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	CUSTOM_DESCRIPTOR,
+	GAMING_DESCRIPTOR,
+	SCREENSHARE_DESCRIPTOR,
+	SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR as SOURCE_DESCRIPTOR,
+	SYSTEM_DEFAULT_DESCRIPTOR,
+	UNNAMED_INPUT_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {DesktopSource, NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -226,18 +231,7 @@ const STREAM_SETTINGS_DESCRIPTOR = msg({
 	message: 'Stream settings',
 	comment: 'Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.',
 });
-const GAMING_DESCRIPTOR = msg({
-	message: 'Gaming',
-	comment: 'Footer summary label for the gaming screen-share quality preset.',
-});
-const SCREENSHARE_DESCRIPTOR = msg({
-	message: 'Screen share',
-	comment: 'Footer summary label for the text-focused screen-share quality preset.',
-});
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Footer summary label for custom screen-share quality settings.',
-});
+
 const SMOOTHER_VIDEO_DESCRIPTOR = msg({
 	message: 'Smoother video',
 	comment: 'Footer summary description for the gaming screen-share quality preset.',
@@ -246,10 +240,7 @@ const CLEARER_TEXT_DESCRIPTOR = msg({
 	message: 'Clearer text',
 	comment: 'Footer summary description for the text-focused screen-share quality preset.',
 });
-const SOURCE_DESCRIPTOR = msg({
-	message: 'Source',
-	comment: 'Footer summary resolution label for native source resolution.',
-});
+
 const FPS_DESCRIPTOR = msg({
 	message: '{fps} FPS',
 	comment:
@@ -259,14 +250,7 @@ const DEVICE_AUDIO_MUTED_DESCRIPTOR = msg({
 	message: 'Audio muted',
 	comment: 'Footer summary status shown when capture-device audio is disabled.',
 });
-const SYSTEM_DEFAULT_DESCRIPTOR = msg({
-	message: 'System default',
-	comment: 'Footer summary fallback for the default capture-device audio input.',
-});
-const UNNAMED_INPUT_DESCRIPTOR = msg({
-	message: 'Unnamed input',
-	comment: 'Footer summary fallback for an audio input without a reported name.',
-});
+
 const SCREEN_SHARE_PREVIEWS_ENABLED_DESCRIPTOR = msg({
 	message: 'Screen share previews are enabled.',
 	comment: 'Compact footer status in the screen-share picker when preview frame uploads are enabled.',
@@ -339,15 +323,6 @@ let screenSharePickerPreloadCache: {
 	expiresAt: number;
 	promise: Promise<ScreenSharePickerPreload>;
 } | null = null;
-
-function recordLastScreenShareSource(kind: LastScreenShareSourceKind, sourceId: string | null, title: string): void {
-	VoiceSettings.setLastScreenShareSource({
-		kind,
-		sourceId,
-		title,
-		updatedAt: Date.now(),
-	});
-}
 
 async function loadScreenSharePickerPreload(): Promise<ScreenSharePickerPreload> {
 	const displayShareEnvironment = await getDisplayShareEnvironment();
@@ -1225,14 +1200,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 					}
 					if (didSelect) {
 						resumeDevicePreviews = false;
-						const selectedCard = tabCards[activeTab].find((card) => card.id === cardId);
-						const kind: LastScreenShareSourceKind =
-							activeTab === 'devices' ? 'device' : activeTab === 'apps' ? 'app' : 'display';
-						recordLastScreenShareSource(
-							kind,
-							activeTab === 'devices' ? cardId : (selectedSource?.id ?? cardId),
-							selectedCard?.title ?? selectedSource?.name ?? cardId,
-						);
 						ModalCommands.pop();
 					} else if (activeTab !== 'devices') {
 						void loadDesktopSources({force: true, silent: true});

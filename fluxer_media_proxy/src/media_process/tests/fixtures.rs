@@ -3,7 +3,7 @@
 use super::super::native_runtime::ensure_vips_init;
 use super::super::{
     AnimationLimits, AnimationMode, EncodeEffort, ImageOptions, MediaError, MediaLimits,
-    MetadataOptions, PNG_SIGNATURE, ProcessedMedia, metadata_json_with_options,
+    MetadataOptions, PNG_SIGNATURE, ProcessedMedia, finish_metadata, prepare_metadata,
 };
 use crate::{
     constants,
@@ -69,12 +69,6 @@ pub(super) fn png_ihdr_dimensions(ihdr: &[u8]) -> Option<(u32, u32)> {
     ))
 }
 
-pub(super) fn png_zlib_level(bytes: &[u8]) -> Option<u8> {
-    let chunks = parse_png_chunks(bytes).ok()?;
-    let idat = chunks.iter().find(|chunk| chunk.kind == *b"IDAT")?;
-    Some(idat.data.get(1)? >> 6)
-}
-
 pub(super) fn test_media_limits() -> MediaLimits {
     MediaLimits::default_from_config()
 }
@@ -100,22 +94,24 @@ pub(super) fn transform_image(
         input,
         options,
         &test_media_limits(),
-        &TransformMetrics::new(),
+        &TransformMetrics::default(),
     )
 }
 
-pub(super) fn metadata_value(input: &[u8], filename: &str) -> serde_json::Value {
+pub(super) fn metadata_value(input: &[u8], _filename: &str) -> serde_json::Value {
     let meta = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
         .block_on(async {
-            metadata_json_with_options(
-                input,
-                filename,
-                MetadataOptions::default(),
-                &test_media_limits(),
+            finish_metadata(
+                prepare_metadata(
+                    input,
+                    &MetadataOptions::default(),
+                    &test_media_limits(),
+                    &TransformMetrics::default(),
+                )
+                .expect("metadata prepares"),
                 &NSFWClient::disabled(),
-                &TransformMetrics::new(),
             )
             .await
             .unwrap()

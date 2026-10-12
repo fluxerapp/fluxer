@@ -8,8 +8,8 @@ import {act, useImperativeHandle, useRef, useState} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 import {afterEach, beforeEach, expect, test, vi} from 'vitest';
 
-vi.mock('@app/features/typing/utils/TypingUtils', () => ({
-	TypingUtils: {handleComposerChange: vi.fn(), clear: vi.fn(), handleOwnMessageSent: vi.fn()},
+vi.mock('@app/features/typing/rolling/RollingTypingSender', () => ({
+	default: {handleComposerChange: vi.fn(), stopTyping: vi.fn(), handleOwnMessageSent: vi.fn()},
 }));
 
 type StorageModule = typeof import('@app/features/platform/state/PersistentStorage');

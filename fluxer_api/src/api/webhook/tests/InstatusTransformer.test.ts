@@ -42,51 +42,6 @@ describe('Instatus transformer', () => {
 	});
 
 	describe('Instatus delivery', () => {
-		it('parses and renders an incident payload', () => {
-			const raw = {
-				meta: {
-					unsubscribe:
-						'https://jiralite.instatus.com/unsubscribe?id=cmr9oat950nga0kqg1688424b&token=221d8f1d-7e2f-43d1-b528-af72e7bb098c',
-					documentation: '',
-				},
-				page: {
-					id: 'cmr9kdnbr0mh40rqg5opm1nrj',
-					status_indicator: 'UP',
-					status_description: '',
-					url: 'https://jiralite.instatus.com',
-				},
-				incident: {
-					backfilled: false,
-					created_at: '2026-07-06T20:34:47.965Z',
-					name: 'test',
-					resolved_at: null,
-					status: 'Investigating',
-					updated_at: '2026-07-06T20:34:47.965Z',
-					id: 'cmr9oi6n11bde0rmj0fooyzcc',
-					incident_updates: [
-						{
-							id: 'cmr9oi6wh1bdf0rmj5ii7bf0d',
-							incident_id: 'cmr9oi6n11bde0rmj0fooyzcc',
-							markdown: 'Hope Kevin Fang picks this incident up because we are so bored.',
-							status: 'Investigating',
-							created_at: '2026-07-06T20:34:48.305Z',
-							updated_at: '2026-07-06T20:34:48.305Z',
-						},
-					],
-					affected_components: [],
-					url: 'https://jiralite.instatus.com/cmr9oi6n11bde0rmj0fooyzcc',
-				},
-			};
-			const embed = transformInstatusWebhook(InstatusWebhook.parse(raw));
-			expect(embed?.title).toBe('test');
-			expect(embed?.color).toBe(0xe23c39);
-			expect(embed?.description).toBe('Hope Kevin Fang picks this incident up because we are so bored.');
-			expect(embed?.url).toBe('https://jiralite.instatus.com/cmr9oi6n11bde0rmj0fooyzcc');
-			expect(embed?.fields?.[0]).toEqual({name: 'Status', value: 'Investigating', inline: true});
-			expect(embed?.footer?.text).toBe('All systems operational');
-			expect(embed?.timestamp).toBeInstanceOf(Date);
-		});
-
 		it('uses the latest update and lists affected components', () => {
 			const raw = {
 				meta: {
@@ -173,36 +128,6 @@ describe('Instatus transformer', () => {
 			expect(embed?.url).toBe('https://jiralite.instatus.com');
 		});
 
-		it('parses a component going under maintenance', () => {
-			const raw = {
-				meta: {
-					unsubscribe:
-						'https://jiralite.instatus.com/unsubscribe?id=cmr9oat950nga0kqg1688424b&token=221d8f1d-7e2f-43d1-b528-af72e7bb098c',
-					documentation: '',
-				},
-				page: {
-					id: 'cmr9kdnbr0mh40rqg5opm1nrj',
-					status_indicator: 'HASISSUES',
-					status_description: '',
-					url: 'https://jiralite.instatus.com',
-				},
-				component_update: {
-					created_at: '2026-07-06T20:43:43.775Z',
-					new_status: 'UNDERMAINTENANCE',
-					component_id: 'cmr9ot5ld15is1aqfjptygehv',
-				},
-				component: {
-					created_at: '2026-07-06T20:43:19.825Z',
-					id: 'cmr9ot5ld15is1aqfjptygehv',
-					name: 'Component with no group',
-					status: 'UNDERMAINTENANCE',
-				},
-			};
-			const embed = transformInstatusWebhook(InstatusWebhook.parse(raw));
-			expect(embed?.title).toBe('Component with no group - under maintenance');
-			expect(embed?.color).toBe(0x3b82f6);
-		});
-
 		it('accepts a very long update and truncates the rendered description', () => {
 			const sentence =
 				'We implemented a fix somewhere. We have no idea where. In fact, not even sure it was implemented.';
@@ -241,55 +166,6 @@ describe('Instatus transformer', () => {
 			expect(embed?.color).toBe(0xf5a623);
 			expect((embed?.description ?? '').length).toBeLessThanOrEqual(RICH_EMBED_DESCRIPTION_MAX_LENGTH);
 			expect(embed?.description?.startsWith('We implemented a fix')).toBe(true);
-		});
-
-		it('renders a resolved incident from its latest update', () => {
-			const sentence =
-				'We implemented a fix somewhere. We have no idea where. In fact, not even sure it was implemented.';
-			const raw = {
-				meta: {unsubscribe: '', documentation: ''},
-				page: {
-					id: 'cmr9kdnbr0mh40rqg5opm1nrj',
-					status_indicator: 'UNDERMAINTENANCE',
-					status_description: '',
-					url: 'https://jiralite.instatus.com',
-				},
-				incident: {
-					backfilled: false,
-					created_at: '2026-07-06T21:51:54.422Z',
-					name: 'Monitoring',
-					resolved_at: '2026-07-06T21:53:27.289Z',
-					status: 'Resolved',
-					updated_at: '2026-07-06T21:53:27.663Z',
-					id: 'cmr9r9cfq008f1apmu4mt0g4f',
-					incident_updates: [
-						{
-							id: 'cmr9r9cg7008g1apm0cvk6ob4',
-							incident_id: 'cmr9r9cfq008f1apmu4mt0g4f',
-							markdown: Array.from({length: 150}, () => sentence).join('\n\n'),
-							status: 'Monitoring',
-							created_at: '2026-07-06T21:51:54.439Z',
-							updated_at: '2026-07-06T21:53:27.655Z',
-						},
-						{
-							id: 'cmr9rbce7008v1apmlpf6zh5x',
-							incident_id: 'cmr9r9cfq008f1apmu4mt0g4f',
-							markdown: 'This incident has been resolved.',
-							status: 'Resolved',
-							created_at: '2026-07-06T21:53:27.679Z',
-							updated_at: '2026-07-06T21:53:27.679Z',
-						},
-					],
-					affected_components: [{id: 'cmr9osz9s1c9p0rqfgeiwp97t', name: 'Component', status: 'Under maintenance'}],
-					url: 'https://jiralite.instatus.com/cmr9r9cfq008f1apmu4mt0g4f',
-				},
-			};
-			const embed = transformInstatusWebhook(InstatusWebhook.parse(raw));
-			expect(embed?.title).toBe('Monitoring');
-			expect(embed?.color).toBe(0x3ecf8e);
-			expect(embed?.description).toBe('This incident has been resolved.');
-			const affected = embed?.fields?.find((entry) => entry.name === 'Affected components');
-			expect(affected?.value).toBe('Component (under maintenance)');
 		});
 
 		it('renders a scheduled maintenance', () => {

@@ -96,7 +96,7 @@ administrator_role_grants_all_permissions_test() ->
     ?assertEqual(
         all_permissions(), guild_permissions:get_member_permissions(UserId, ChannelId, State)
     ),
-    ?assert(guild_permissions:can_view_channel(UserId, ChannelId, undefined, State)).
+    ?assert(guild_permissions_check:can_view_channel(UserId, ChannelId, undefined, State)).
 
 cached_role_permissions_matches_uncached_test() ->
     Roles = [
@@ -105,7 +105,7 @@ cached_role_permissions_matches_uncached_test() ->
         #{<<"id">> => <<"300">>, <<"permissions">> => <<"2048">>}
     ],
     RoleIndex = guild_data_index:build_id_index(Roles),
-    Cache = guild_data_index:build_role_perms_cache(Roles),
+    Cache = guild_data_index_roles:build_role_perms_cache(Roles),
     MemberRoles = [100, 200, 300],
     Uncached = uncached_role_permissions(MemberRoles, RoleIndex, 0),
     Cached = guild_permissions:aggregate_role_permissions_cached(
@@ -119,7 +119,7 @@ cached_role_permissions_with_base_test() ->
         #{<<"id">> => <<"10">>, <<"permissions">> => <<"128">>}
     ],
     RoleIndex = guild_data_index:build_id_index(Roles),
-    Cache = guild_data_index:build_role_perms_cache(Roles),
+    Cache = guild_data_index_roles:build_role_perms_cache(Roles),
     BasePerms = 64,
     MemberRoles = [10],
     Uncached = uncached_role_permissions(MemberRoles, RoleIndex, BasePerms),
@@ -209,7 +209,7 @@ can_view_channel_members_grants_when_bit_set_test() ->
             <<"channels">> => [#{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}]
         }
     },
-    ?assert(guild_permissions:can_view_channel_members(UserId, 500, undefined, State)).
+    ?assert(guild_permissions_check:can_view_channel_members(UserId, 500, undefined, State)).
 
 can_view_channel_members_denies_when_bit_unset_test() ->
     GuildId = 101,
@@ -228,7 +228,7 @@ can_view_channel_members_denies_when_bit_unset_test() ->
             <<"channels">> => [#{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}]
         }
     },
-    ?assertNot(guild_permissions:can_view_channel_members(UserId, 500, undefined, State)).
+    ?assertNot(guild_permissions_check:can_view_channel_members(UserId, 500, undefined, State)).
 
 can_view_channel_members_owner_always_true_test() ->
     GuildId = 102,
@@ -246,7 +246,7 @@ can_view_channel_members_owner_always_true_test() ->
             <<"channels">> => [#{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}]
         }
     },
-    ?assert(guild_permissions:can_view_channel_members(OwnerId, 500, undefined, State)).
+    ?assert(guild_permissions_check:can_view_channel_members(OwnerId, 500, undefined, State)).
 
 can_view_channel_members_admin_grants_test() ->
     Admin = constants:administrator_permission(),
@@ -269,7 +269,7 @@ can_view_channel_members_admin_grants_test() ->
             <<"channels">> => [#{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}]
         }
     },
-    ?assert(guild_permissions:can_view_channel_members(UserId, 500, undefined, State)).
+    ?assert(guild_permissions_check:can_view_channel_members(UserId, 500, undefined, State)).
 
 can_view_channel_members_channel_deny_overwrite_blocks_test() ->
     Bit = constants:view_channel_members_permission(),
@@ -306,25 +306,26 @@ can_view_channel_members_channel_deny_overwrite_blocks_test() ->
             ]
         }
     },
-    ?assertNot(guild_permissions:can_view_channel_members(UserId, 500, undefined, State)).
+    ?assertNot(guild_permissions_check:can_view_channel_members(UserId, 500, undefined, State)).
 
 can_access_message_with_read_history_test() ->
     ReadHistory = constants:read_message_history_permission(),
     State = #{data => #{<<"guild">> => #{}}},
     ?assertEqual(
-        true, guild_permissions:can_access_message_by_permissions(ReadHistory, <<"100">>, State)
+        true,
+        guild_permissions_check:can_access_message_by_permissions(ReadHistory, <<"100">>, State)
     ).
 
 can_access_message_no_read_history_no_cutoff_test() ->
     State = #{data => #{<<"guild">> => #{}}},
     ?assertEqual(
-        false, guild_permissions:can_access_message_by_permissions(0, <<"100">>, State)
+        false, guild_permissions_check:can_access_message_by_permissions(0, <<"100">>, State)
     ).
 
 can_access_message_no_read_history_null_cutoff_test() ->
     State = #{data => #{<<"guild">> => #{<<"message_history_cutoff">> => null}}},
     ?assertEqual(
-        false, guild_permissions:can_access_message_by_permissions(0, <<"100">>, State)
+        false, guild_permissions_check:can_access_message_by_permissions(0, <<"100">>, State)
     ).
 
 can_access_message_no_read_history_message_before_cutoff_test() ->
@@ -336,7 +337,7 @@ can_access_message_no_read_history_message_before_cutoff_test() ->
     MessageId = integer_to_binary(Snowflake),
     State = #{data => #{<<"guild">> => #{<<"message_history_cutoff">> => CutoffMs}}},
     ?assertEqual(
-        false, guild_permissions:can_access_message_by_permissions(0, MessageId, State)
+        false, guild_permissions_check:can_access_message_by_permissions(0, MessageId, State)
     ).
 
 can_access_message_no_read_history_message_after_cutoff_test() ->
@@ -348,7 +349,7 @@ can_access_message_no_read_history_message_after_cutoff_test() ->
     MessageId = integer_to_binary(Snowflake),
     State = #{data => #{<<"guild">> => #{<<"message_history_cutoff">> => CutoffMs}}},
     ?assertEqual(
-        true, guild_permissions:can_access_message_by_permissions(0, MessageId, State)
+        true, guild_permissions_check:can_access_message_by_permissions(0, MessageId, State)
     ).
 
 can_access_message_no_read_history_message_at_cutoff_test() ->
@@ -359,7 +360,7 @@ can_access_message_no_read_history_message_at_cutoff_test() ->
     MessageId = integer_to_binary(Snowflake),
     State = #{data => #{<<"guild">> => #{<<"message_history_cutoff">> => CutoffMs}}},
     ?assertEqual(
-        true, guild_permissions:can_access_message_by_permissions(0, MessageId, State)
+        true, guild_permissions_check:can_access_message_by_permissions(0, MessageId, State)
     ).
 
 can_access_message_with_rfc3339_cutoff_test() ->
@@ -372,7 +373,7 @@ can_access_message_with_rfc3339_cutoff_test() ->
     MessageId = integer_to_binary(Snowflake),
     State = #{data => #{<<"guild">> => #{<<"message_history_cutoff">> => CutoffBin}}},
     ?assertEqual(
-        true, guild_permissions:can_access_message_by_permissions(0, MessageId, State)
+        true, guild_permissions_check:can_access_message_by_permissions(0, MessageId, State)
     ).
 
 all_permissions() ->

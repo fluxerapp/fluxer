@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::cache_policy::{
-    UnfurlEntryExpiry, default_empty_entry_lifetime, every_unfurl_cache_key, provider_capability,
-    unfurl_cache_key,
+    UnfurlEntryExpiry, default_empty_entry_lifetime, provider_capability, unfurl_cache_key,
 };
 use crate::types::{UnfurlRequest, UnfurlResponse};
 use fluxer_svc::router::RouterService;
@@ -31,12 +30,6 @@ impl UnfurlRouter {
                 .build(),
         }
     }
-
-    fn invalidate_all_variants(&self, url: &str) {
-        for key in every_unfurl_cache_key(url) {
-            self.l1.invalidate(&key);
-        }
-    }
 }
 
 impl RouterService for UnfurlRouter {
@@ -50,7 +43,6 @@ impl RouterService for UnfurlRouter {
     fn route_key(req: &UnfurlRequest) -> String {
         match req {
             UnfurlRequest::Unfurl { url, .. } => url.clone(),
-            UnfurlRequest::Invalidate { url } => url.clone(),
         }
     }
 
@@ -77,7 +69,6 @@ impl RouterService for UnfurlRouter {
                     )
                 ))
             }
-            UnfurlRequest::Invalidate { .. } => None,
         }
     }
 
@@ -102,7 +93,6 @@ impl RouterService for UnfurlRouter {
                     self.l1.get(&key)
                 }
             }
-            UnfurlRequest::Invalidate { .. } => None,
         }
     }
 
@@ -129,14 +119,7 @@ impl RouterService for UnfurlRouter {
                     );
                 }
             }
-            UnfurlRequest::Invalidate { url } => {
-                self.invalidate_all_variants(url);
-            }
         }
-    }
-
-    fn l1_invalidate(&self, key: &str) {
-        self.invalidate_all_variants(key);
     }
 }
 
@@ -234,22 +217,6 @@ mod tests {
     }
 
     #[test]
-    fn invalidate_clears_every_provider_capability_variant() {
-        let router = UnfurlRouter::new(16, test_lifetime());
-        let url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-        router.l1_insert(&unfurl(url, None), &resolved_response());
-        router.l1_insert(&unfurl(url, Some("configured")), &resolved_response());
-        router.l1_insert(
-            &UnfurlRequest::Invalidate {
-                url: url.to_owned(),
-            },
-            &resolved_response(),
-        );
-        assert!(router.l1_lookup(&unfurl(url, None)).is_none());
-        assert!(router.l1_lookup(&unfurl(url, Some("configured"))).is_none());
-    }
-
-    #[test]
     fn coalesce_key_separates_cache_only_from_full_unfurls() {
         assert_ne!(
             UnfurlRouter::coalesce_key(&request(true)),
@@ -315,21 +282,6 @@ mod tests {
         assert!(router.l1_lookup(&unfurl_allowing_nsfw(url)).is_some());
     }
 
-    #[test]
-    fn invalidate_clears_both_scanning_and_unscanned_entries() {
-        let router = UnfurlRouter::new(16, test_lifetime());
-        let url = "https://example.com/both";
-        router.l1_insert(&unfurl(url, None), &resolved_response());
-        router.l1_insert(&unfurl_allowing_nsfw(url), &resolved_response());
-        router.l1_insert(
-            &UnfurlRequest::Invalidate {
-                url: url.to_owned(),
-            },
-            &resolved_response(),
-        );
-        assert!(router.l1_lookup(&unfurl(url, None)).is_none());
-        assert!(router.l1_lookup(&unfurl_allowing_nsfw(url)).is_none());
-    }
     #[tokio::test]
     async fn an_empty_upper_cache_entry_lapses_long_before_a_populated_one() {
         let router =

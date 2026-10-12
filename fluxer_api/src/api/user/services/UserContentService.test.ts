@@ -5,7 +5,7 @@ import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes'
 import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {SYSTEM_THREAD_VIEWER, syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -22,9 +22,8 @@ import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksErr
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
-import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
 const VIEWER_ID = createUserID(7n);
 
@@ -136,7 +135,6 @@ function createUserContentService({
 	};
 	const service = new UserContentService(
 		{services: {users: userRepository, gateway: {}, worker: {}, snowflake: {}}} as unknown as ApiContext,
-		{} as unknown as UserCacheService,
 		channelService as unknown as ChannelService,
 		channelRepository as unknown as ChannelRepository,
 		{} as unknown as KVBulkMessageDeletionQueueService,
@@ -227,10 +225,6 @@ describe('getRecentMentions', () => {
 		const THREAD = createChannelID(400n);
 		const viewer = {kind: 'user', userId: VIEWER_ID, bot: false, capable: false} as const;
 
-		beforeEach(() => {
-			syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-		});
-
 		const entries = [
 			{channelId: THREAD, messageId: createMessageID(15n)},
 			{channelId: THREAD, messageId: createMessageID(14n)},
@@ -256,9 +250,6 @@ describe('getRecentMentions', () => {
 		}
 
 		it('refills the page when the newest mentions sit in threads a non-viewer cannot see', async () => {
-			syncChannelThreadsConfig(JSON.stringify({enabled: false, ever_enabled: true}), (raw) =>
-				ChannelThreadsConfigSchema.parse(JSON.parse(raw!)),
-			);
 			const {service, recentMentionListCalls} = build();
 
 			const messages = await service.getRecentMentions({
@@ -278,9 +269,6 @@ describe('getRecentMentions', () => {
 		});
 
 		it('stops refilling after a bounded number of pages of hidden mentions', async () => {
-			syncChannelThreadsConfig(JSON.stringify({enabled: false, ever_enabled: true}), (raw) =>
-				ChannelThreadsConfigSchema.parse(JSON.parse(raw!)),
-			);
 			const hiddenEntries = Array.from({length: 50}, (_, index) => ({
 				channelId: THREAD,
 				messageId: createMessageID(BigInt(100 - index)),
@@ -303,22 +291,6 @@ describe('getRecentMentions', () => {
 
 			expect(messages).toEqual([]);
 			expect(recentMentionListCalls).toHaveLength(4);
-		});
-
-		it('reads one page when the experiment was never enabled', async () => {
-			const {service, recentMentionListCalls} = build();
-
-			const messages = await service.getRecentMentions({
-				viewer,
-				userId: VIEWER_ID,
-				limit: 4,
-				everyone: true,
-				roles: true,
-				guilds: true,
-			});
-
-			expect(messages.map((message) => message.id.toString())).toEqual(['13']);
-			expect(recentMentionListCalls).toHaveLength(1);
 		});
 	});
 
@@ -413,18 +385,7 @@ describe('getSavedMessages', () => {
 		const THREAD = createChannelID(400n);
 		const viewer = {kind: 'user', userId: VIEWER_ID, bot: false, capable: false} as const;
 
-		function everEnabled() {
-			syncChannelThreadsConfig(JSON.stringify({enabled: false, ever_enabled: true}), (raw) =>
-				ChannelThreadsConfigSchema.parse(JSON.parse(raw!)),
-			);
-		}
-
-		beforeEach(() => {
-			syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-		});
-
 		it('stops refilling saved messages after a bounded number of hidden pages', async () => {
-			everEnabled();
 			const {service, savedMessageListCalls} = createUserContentService({
 				entries: Array.from({length: 50}, (_, index) => ({
 					channelId: THREAD,
@@ -440,7 +401,6 @@ describe('getSavedMessages', () => {
 		});
 
 		it('drops saved thread messages for a non-viewer and refills the page', async () => {
-			everEnabled();
 			const entries = [
 				{channelId: CHANNEL_A, messageId: createMessageID(15n)},
 				{channelId: THREAD, messageId: createMessageID(14n)},
@@ -474,21 +434,6 @@ describe('getSavedMessages', () => {
 				{limit: 4, before: undefined},
 				{limit: 2, before: createMessageID(12n)},
 			]);
-		});
-
-		it('keeps the unreachable stub when the experiment was never enabled', async () => {
-			const entries = [{channelId: THREAD, messageId: createMessageID(14n)}];
-			const {service, savedMessageListCalls} = createUserContentService({
-				entries,
-				readable: [],
-				failures: new Map<string, Error>([[THREAD.toString(), new UnknownChannelError()]]),
-				channels: [{id: THREAD, type: ChannelTypes.PUBLIC_THREAD, guildId: GUILD}],
-			});
-
-			const saved = await service.getSavedMessages({viewer, userId: VIEWER_ID, limit: 4});
-
-			expect(saved.map((entry) => entry.status)).toEqual(['missing_permissions']);
-			expect(savedMessageListCalls).toHaveLength(1);
 		});
 	});
 
@@ -552,7 +497,6 @@ describe('gateway dispatches after the write', () => {
 			{
 				services: {users: userRepository, gateway: {dispatchPresence}, worker: {}, snowflake: {}},
 			} as unknown as ApiContext,
-			{} as unknown as UserCacheService,
 			channelService as unknown as ChannelService,
 			{} as unknown as ChannelRepository,
 			{} as unknown as KVBulkMessageDeletionQueueService,
@@ -685,12 +629,7 @@ describe('buildMessageResponsesForUser thread masking', () => {
 	const GUILD = createGuildID(900n);
 	const HAS_THREAD = ServerMessageFlags.HAS_THREAD;
 
-	afterEach(() => {
-		syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-	});
-
-	function build(config: Record<string, unknown>) {
-		syncChannelThreadsConfig(JSON.stringify(config), (raw) => ChannelThreadsConfigSchema.parse(JSON.parse(raw!)));
+	function build() {
 		const {service} = createUserContentService({entries: [], readable: []});
 		const threadCreated = {id: '40', channel_id: '100', type: MessageTypes.THREAD_CREATED, flags: 0};
 		const responses = [
@@ -709,9 +648,9 @@ describe('buildMessageResponsesForUser thread masking', () => {
 	const viewer = {kind: 'user', userId: VIEWER_ID, bot: false, capable: true} as const;
 
 	it('masks the parent flag and a thread created reply for a non-viewer', async () => {
-		const {service} = build({enabled: true, ever_enabled: true, enabled_guild_ids: ['900']});
+		const {service} = build();
 
-		const out = await service.buildMessageResponsesForUser(VIEWER_ID, viewer, []);
+		const out = await service.buildMessageResponsesForUser(VIEWER_ID, {...viewer, capable: false}, []);
 
 		expect(out.map((response) => [response.id, response.flags, response.referenced_message])).toEqual([
 			['41', 4, undefined],
@@ -720,21 +659,8 @@ describe('buildMessageResponsesForUser thread masking', () => {
 		]);
 	});
 
-	it('masks a killed tainted guild for everyone', async () => {
-		const {service} = build({enabled: false, ever_enabled: true});
-
-		const out = await service.buildMessageResponsesForUser(VIEWER_ID, viewer, []);
-
-		expect(out.map((response) => response.flags)).toEqual([4, 0, 0]);
-	});
-
 	it('leaves guild responses untouched for an active viewer and still masks a DM', async () => {
-		const {service, responses} = build({
-			enabled: true,
-			ever_enabled: true,
-			enabled_guild_ids: ['900'],
-			included_user_ids: [VIEWER_ID.toString()],
-		});
+		const {service, responses} = build();
 
 		const out = await service.buildMessageResponsesForUser(VIEWER_ID, viewer, []);
 
@@ -787,7 +713,6 @@ describe('bookmark ceiling', () => {
 			{
 				services: {users: userRepository, gateway: {dispatchPresence: async () => {}}, worker: {}, snowflake: {}},
 			} as unknown as ApiContext,
-			{} as unknown as UserCacheService,
 			channelService as unknown as ChannelService,
 			{} as unknown as ChannelRepository,
 			{} as unknown as KVBulkMessageDeletionQueueService,

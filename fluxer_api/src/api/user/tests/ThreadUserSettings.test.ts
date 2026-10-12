@@ -4,14 +4,8 @@ import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestU
 import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	THREADS_FEATURE,
-	THREADS_FEATURE_HEADER,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
-import {insertGuildThreadMarker} from '@app/api/experiment/ChannelThreadsGate';
+import {THREADS_FEATURE, THREADS_FEATURE_HEADER, threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting, insertGuildThreadMarker} from '@app/api/experiment/ChannelThreadsGate';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -35,7 +29,7 @@ describe('thread user settings', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -43,7 +37,7 @@ describe('thread user settings', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -51,11 +45,7 @@ describe('thread user settings', () => {
 		const account = await createTestAccount(harness);
 		const guild = await createGuild(harness, account.token, 'settings');
 		const channel = await createChannel(harness, account.token, guild.id, 'general');
-		await setChannelThreadsConfig({
-			enabled: true,
-			enabled_guild_ids: [guild.id],
-			included_user_ids: [account.userId],
-		});
+
 		return {account, guildId: guild.id, channelId: channel.id};
 	}
 
@@ -173,9 +163,6 @@ describe('thread user settings', () => {
 			const viewer = await patchSettings(s.account, s.guildId, {muted: true}, true);
 			expect(viewer.channel_overrides?.[forumId]?.muted).toBe(true);
 			expect(viewer.channel_overrides?.[s.channelId]?.collapsed).toBe(true);
-			await setChannelThreadsConfig({enabled: false});
-			const killed = await patchSettings(s.account, s.guildId, {muted: false}, true);
-			expect(Object.keys(killed.channel_overrides ?? {})).toEqual([s.channelId]);
 		});
 	});
 
@@ -209,7 +196,7 @@ describe('thread user settings', () => {
 			expect(byId.get(legacy.device_id)).not.toHaveProperty('thread_channels');
 		});
 
-		it('clears the thread capability on a header-less re-registration only once the experiment was ever enabled', async () => {
+		it('clears the thread capability on a header-less re-registration', async () => {
 			const account = await createTestAccount(harness);
 			const register = (capable: boolean) =>
 				threadsRequest<{device_id: string}>(harness, account.token, {capable})
@@ -221,9 +208,8 @@ describe('thread user settings', () => {
 
 			const {device_id} = await register(true);
 			await register(false);
-			expect(await capability(device_id)).toBe(true);
+			expect(await capability(device_id)).toBeUndefined();
 
-			await setChannelThreadsConfig({enabled: true, included_user_ids: [account.userId]});
 			await register(true);
 			expect(await capability(device_id)).toBe(true);
 			await register(false);

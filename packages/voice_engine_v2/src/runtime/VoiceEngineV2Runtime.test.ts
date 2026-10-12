@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import type {
 	VoiceEngineV2CommandResult,
 	VoiceEngineV2Implementation,
-} from '@fluxer/voice_engine_v2/src/implementations';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {
@@ -18,11 +18,9 @@ import {
 	VoiceEngineV2Runtime,
 	type VoiceEngineV2RuntimeDiagnostic,
 } from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {
-	FakeVoiceEngineV2Driver,
-	VoiceEngineV2TestImplementation,
-	waitForRuntime,
-} from '@fluxer/voice_engine_v2/src/testing';
+import {waitForRuntime} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 import {describe, expect, it} from 'vitest';
 
 class DeferredAllResolveImplementation implements VoiceEngineV2Implementation {

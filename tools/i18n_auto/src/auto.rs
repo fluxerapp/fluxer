@@ -6,9 +6,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use crate::config::{
-    DEFAULT_OPENROUTER_APP_TITLE, DEFAULT_OPENROUTER_BASE_URL, DEFAULT_OPENROUTER_FALLBACK_MODELS,
-    DEFAULT_OPENROUTER_HTTP_REFERER, DEFAULT_OPENROUTER_MODEL, DEFAULT_OPENROUTER_PROVIDER_SORT,
-    EnvOverlay, env_value, trim_trailing_slash,
+    DEFAULT_OPENROUTER_BASE_URL, DEFAULT_OPENROUTER_MODEL, EmptyFallback, EnvOverlay, env_value,
+    trim_trailing_slash,
 };
 use crate::openrouter::is_openrouter_available;
 use crate::runner::translate_main;
@@ -72,55 +71,7 @@ pub fn auto_main(args: &[String]) -> Result<u8> {
         );
     }
 
-    let mut runner_env = env_overrides;
-    runner_env.insert(
-        "FLUXER_AUTO_I18N".to_string(),
-        if should_run {
-            "1".to_string()
-        } else {
-            fluxer_auto_i18n
-        },
-    );
-    runner_env.insert("I18N_LLM_MODEL".to_string(), i18n_llm_model.clone());
-    runner_env.insert(
-        "OPENROUTER_MODEL".to_string(),
-        env_value("OPENROUTER_MODEL", &runner_env, DEFAULT_OPENROUTER_MODEL),
-    );
-    runner_env.insert("OPENROUTER_BASE_URL".to_string(), openrouter_base_url);
-    runner_env.insert("OPENROUTER_API_KEY".to_string(), openrouter_api_key);
-    runner_env.insert(
-        "OPENROUTER_FALLBACK_MODELS".to_string(),
-        env_value(
-            "OPENROUTER_FALLBACK_MODELS",
-            &runner_env,
-            DEFAULT_OPENROUTER_FALLBACK_MODELS,
-        ),
-    );
-    runner_env.insert(
-        "OPENROUTER_PROVIDER_SORT".to_string(),
-        env_value(
-            "OPENROUTER_PROVIDER_SORT",
-            &runner_env,
-            DEFAULT_OPENROUTER_PROVIDER_SORT,
-        ),
-    );
-    runner_env.insert(
-        "OPENROUTER_HTTP_REFERER".to_string(),
-        env_value(
-            "OPENROUTER_HTTP_REFERER",
-            &runner_env,
-            DEFAULT_OPENROUTER_HTTP_REFERER,
-        ),
-    );
-    runner_env.insert(
-        "OPENROUTER_APP_TITLE".to_string(),
-        env_value(
-            "OPENROUTER_APP_TITLE",
-            &runner_env,
-            DEFAULT_OPENROUTER_APP_TITLE,
-        ),
-    );
-    translate_main(args, &runner_env)
+    translate_main(args, &env_overrides)
 }
 
 pub fn load_env_from_files(keys: &[&str]) -> EnvOverlay {
@@ -178,15 +129,5 @@ pub fn strip_quotes(value: &str) -> String {
         trimmed[1..trimmed.len() - 1].to_string()
     } else {
         trimmed.to_string()
-    }
-}
-
-trait EmptyFallback {
-    fn if_empty(self, fallback: impl FnOnce() -> String) -> String;
-}
-
-impl EmptyFallback for String {
-    fn if_empty(self, fallback: impl FnOnce() -> String) -> String {
-        if self.is_empty() { fallback() } else { self }
     }
 }

@@ -9,6 +9,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {
 	CreateVoiceRegionRequest,
 	CreateVoiceRegionResponse,
@@ -32,10 +33,6 @@ import {
 	VoiceServerIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
 import type {Context} from 'hono';
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export function VoiceAdminController(app: HonoApp) {
 	app.get(
@@ -127,7 +124,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceRegionIdParam),
 		Validator('json', UpdateVoiceRegionRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				id: ctx.req.param('region_id'),
 			}),
 		}),
@@ -214,7 +211,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceRegionIdParam),
 		Validator('json', CreateVoiceServerRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				region_id: ctx.req.param('region_id'),
 			}),
 		}),
@@ -273,7 +270,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceServerIdParam),
 		Validator('json', UpdateVoiceServerRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				region_id: ctx.req.param('region_id'),
 				server_id: ctx.req.param('server_id'),
 			}),

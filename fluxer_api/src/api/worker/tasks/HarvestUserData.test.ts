@@ -11,13 +11,11 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
-import {syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import {ThreadMember} from '@app/api/models/ThreadMember';
 import {User} from '@app/api/models/User';
 import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
 import {buildStorePurchaseRow} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {buildUserDataJson, collectThreadMemberships, harvestMessages} from '@app/api/worker/tasks/HarvestUserData';
-import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const tainted = vi.hoisted(() => new Set<string>());
@@ -161,25 +159,12 @@ describe('collectThreadMemberships', () => {
 		},
 		getMember: async () => member,
 	};
-	const setEverEnabled = (everEnabled: boolean) =>
-		syncChannelThreadsConfig(JSON.stringify({ever_enabled: everEnabled}), (raw) =>
-			ChannelThreadsConfigSchema.parse(JSON.parse(raw ?? '{}')),
-		);
-
 	afterEach(() => {
 		reads = 0;
 		tainted.clear();
-		syncChannelThreadsConfig(null, () => ChannelThreadsConfigSchema.parse({}));
-	});
-
-	it('reads nothing on an instance that never enabled threads', async () => {
-		setEverEnabled(false);
-		expect(await collectThreadMemberships(threads, AUTHOR, [guildId])).toEqual([]);
-		expect(reads).toBe(0);
 	});
 
 	it('collects the joined thread memberships of every tainted guild and skips the rest', async () => {
-		setEverEnabled(true);
 		tainted.add(guildId.toString());
 		const collected = await collectThreadMemberships(threads, AUTHOR, [guildId, createGuildID(1400000000000000002n)]);
 		expect(collected).toEqual([member]);

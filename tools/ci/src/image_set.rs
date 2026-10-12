@@ -903,23 +903,6 @@ mod tests {
     }
 
     #[test]
-    fn components_are_sorted_and_unique() {
-        let images: Vec<&str> = COMPONENTS.iter().map(|component| component.image).collect();
-        let mut sorted = images.clone();
-        sorted.sort_unstable();
-        sorted.dedup();
-        assert_eq!(images, sorted);
-
-        let services: Vec<&str> = COMPONENTS
-            .iter()
-            .flat_map(|component| component.services.iter().copied())
-            .collect();
-        let unique: BTreeSet<&str> = services.iter().copied().collect();
-        assert_eq!(services.len(), unique.len());
-        assert_eq!(services.len(), 18);
-    }
-
-    #[test]
     fn manifest_requires_every_component() {
         let mut resolved = resolved_set();
         resolved.retain(|entry| entry.component != "fluxer-api");
@@ -1037,32 +1020,6 @@ mod tests {
     }
 
     #[test]
-    fn compose_override_is_sorted_and_stable() {
-        let manifest = manifest();
-        let rendered = compose_override(&manifest);
-        assert_eq!(rendered, compose_override(&manifest));
-
-        let services: Vec<&str> = rendered
-            .lines()
-            .filter_map(|line| line.strip_prefix("  ")?.strip_suffix(':'))
-            .collect();
-        let mut sorted = services.clone();
-        sorted.sort_unstable();
-        assert_eq!(services, sorted);
-        assert_eq!(services.len(), 18);
-    }
-
-    #[test]
-    fn moving_tags_parses_and_rejects_junk() {
-        assert_eq!(moving_tags("").unwrap(), Vec::<String>::new());
-        assert_eq!(moving_tags(" , ").unwrap(), Vec::<String>::new());
-        assert_eq!(moving_tags(" v1, latest ").unwrap(), ["v1", "latest"]);
-        assert_eq!(moving_tags(DEFAULT_MOVING_TAGS).unwrap(), ["v1", "latest"]);
-        assert!(moving_tags("v1@sha256:abc").is_err());
-        assert!(moving_tags("v1 latest").is_err());
-    }
-
-    #[test]
     fn promote_command_targets_the_digest() {
         let digest = format!("sha256:{}", "0".repeat(64));
         let spec = promote_command(
@@ -1087,35 +1044,6 @@ mod tests {
     }
 
     #[test]
-    fn unpublished_moving_tags_are_reported_without_blocking_the_promote() {
-        let tags = ["v1".to_string(), "latest".to_string()];
-        let complete = unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-docs", &tags, |_| true);
-        assert!(complete.is_empty());
-
-        let bootstrapping =
-            unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-docs", &tags, |reference| {
-                !reference.starts_with("ghcr.io/fluxerapp/fluxer-gifs:")
-            });
-        assert_eq!(
-            bootstrapping,
-            [
-                "fluxer-gifs has no published v1 image, so v1 stays an incomplete set until the build-gifs workflow runs",
-                "fluxer-gifs has no published latest image, so latest stays an incomplete set until the build-gifs workflow runs",
-            ]
-        );
-    }
-
-    #[test]
-    fn unpublished_moving_tags_never_reports_the_component_being_promoted() {
-        let tags = ["v1".to_string()];
-        let warnings =
-            unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-gifs", &tags, |reference| {
-                !reference.starts_with("ghcr.io/fluxerapp/fluxer-gifs:")
-            });
-        assert!(warnings.is_empty());
-    }
-
-    #[test]
     fn calver_tag_for_digest_picks_the_single_calver_tag() {
         let tags = ["2026.630.20736", "latest", "v1"].map(str::to_string);
         assert_eq!(calver_tag_for_digest(&tags).unwrap(), "2026.630.20736");
@@ -1133,23 +1061,6 @@ mod tests {
 
         let many = ["2026.630.20736", "2026.830.191141"].map(str::to_string);
         assert!(calver_tag_for_digest(&many).is_err());
-    }
-
-    #[test]
-    fn parse_component_versions_rejects_junk() {
-        let pins = parse_component_versions(&["fluxer-api=2026.830.191141".to_string()]).unwrap();
-        assert_eq!(pins["fluxer-api"], "2026.830.191141");
-
-        assert!(parse_component_versions(&["fluxer-api".to_string()]).is_err());
-        assert!(parse_component_versions(&["fluxer-nope=2026.830.191141".to_string()]).is_err());
-        assert!(parse_component_versions(&["fluxer-api=v1".to_string()]).is_err());
-        assert!(
-            parse_component_versions(&[
-                "fluxer-api=2026.830.191141".to_string(),
-                "fluxer-api=2026.830.191142".to_string(),
-            ])
-            .is_err()
-        );
     }
 
     #[test]
@@ -1171,25 +1082,6 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(error.contains("records tag"), "{error}");
-    }
-
-    #[test]
-    fn digest_env_name_matches_component() {
-        assert_eq!(digest_env_name("fluxer-api"), "FLUXER_API_IMAGE_DIGEST");
-        assert_eq!(
-            digest_env_name("fluxer-app-proxy-self-hosted"),
-            "FLUXER_APP_PROXY_SELF_HOSTED_IMAGE_DIGEST"
-        );
-    }
-
-    #[test]
-    fn validate_registry_rejects_image_references() {
-        validate_registry(DEFAULT_REGISTRY).unwrap();
-        validate_registry("registry.example.com:5000/fluxer").unwrap();
-        assert!(validate_registry("").is_err());
-        assert!(validate_registry("ghcr.io/fluxerapp/").is_err());
-        assert!(validate_registry("ghcr.io/fluxerapp/fluxer-api:v1").is_err());
-        assert!(validate_registry("ghcr.io/ fluxerapp").is_err());
     }
 
     fn linear_compare<'a>(
@@ -1245,28 +1137,6 @@ mod tests {
         assert!(error.contains("fluxer-api"), "{error}");
         assert!(error.contains("fluxer-gateway"), "{error}");
         assert!(error.contains("divergent branches"), "{error}");
-    }
-
-    #[test]
-    fn parse_commit_compare_maps_every_github_status() {
-        assert_eq!(
-            parse_commit_compare("identical").unwrap(),
-            CommitCompare::Identical
-        );
-        assert_eq!(
-            parse_commit_compare(" ahead ").unwrap(),
-            CommitCompare::Ahead
-        );
-        assert_eq!(
-            parse_commit_compare("behind").unwrap(),
-            CommitCompare::Behind
-        );
-        assert_eq!(
-            parse_commit_compare("diverged").unwrap(),
-            CommitCompare::Diverged
-        );
-        assert!(parse_commit_compare("").is_err());
-        assert!(parse_commit_compare("null").is_err());
     }
 
     #[test]

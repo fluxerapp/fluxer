@@ -1,79 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {upsertOne} from '@app/api/database/CassandraQueryExecution';
-import type {ColumnName, DbOp, PatchObject, RowValue, Table} from '@app/api/database/CassandraTypes';
-import {Db} from '@app/api/database/CassandraTypes';
-import {buildPatchFromData} from '@app/api/database/CassandraVersionedUpdate';
-
-function deepEqual(a: unknown, b: unknown): boolean {
-	if (a === b) return true;
-	if (a === null || a === undefined || b === null || b === undefined) {
-		return a === b;
-	}
-	if (a instanceof Date && b instanceof Date) {
-		return a.getTime() === b.getTime();
-	}
-	if (a instanceof Set && b instanceof Set) {
-		if (a.size !== b.size) return false;
-		for (const item of a) {
-			if (!b.has(item)) return false;
-		}
-		return true;
-	}
-	if (a instanceof Map && b instanceof Map) {
-		if (a.size !== b.size) return false;
-		for (const [key, val] of a) {
-			if (!b.has(key) || !deepEqual(val, b.get(key))) return false;
-		}
-		return true;
-	}
-	if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
-		return a.equals(b);
-	}
-	if (Array.isArray(a) && Array.isArray(b)) {
-		if (a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if (!deepEqual(a[i], b[i])) return false;
-		}
-		return true;
-	}
-	if (typeof a === 'object' && typeof b === 'object') {
-		const ao = a as Record<string, unknown>;
-		const bo = b as Record<string, unknown>;
-		const keysA = Object.keys(ao);
-		const keysB = Object.keys(bo);
-		if (keysA.length !== keysB.length) return false;
-		for (const key of keysA) {
-			if (!Object.hasOwn(bo, key)) return false;
-			if (!deepEqual(ao[key], bo[key])) return false;
-		}
-		return true;
-	}
-	return false;
-}
+import {fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {CassandraParams, ColumnName, PreparedQuery, Table} from '@app/api/database/CassandraTypes';
+import {buildPatchFromData, executeVersionedUpdate, valuesEqual} from '@app/api/database/CassandraVersionedUpdate';
 
 export function rowsEquivalent<T extends object>(a: T, b: T, ignoreFields: ReadonlyArray<keyof T>): boolean {
 	const ignore = new Set<keyof T>(ignoreFields);
 	const keys = new Set<keyof T>([...(Object.keys(a) as Array<keyof T>), ...(Object.keys(b) as Array<keyof T>)]);
 	for (const key of keys) {
 		if (ignore.has(key)) continue;
-		if (!deepEqual(a[key], b[key])) return false;
+		if (!valuesEqual(a[key], b[key])) return false;
 	}
 	return true;
-}
-
-export function buildPatchFromRow<Row extends object, PK extends keyof Row>(
-	incoming: Row,
-	current: Row | null,
-	columns: ReadonlyArray<keyof Row>,
-	pkColumns: ReadonlyArray<PK>,
-): Record<string, DbOp<unknown>> {
-	return buildPatchFromData<Row>(
-		incoming as Partial<Row>,
-		current as Partial<Row> | null,
-		columns,
-		pkColumns as ReadonlyArray<keyof Row>,
-	);
 }
 
 export function isExistingNewer(
@@ -91,36 +29,56 @@ export function isExistingNewer(
 	return e.getTime() > i.getTime();
 }
 
-export async function executeBillingVersionedUpdate<
-	Row extends {
-		version: bigint | null;
-	},
-	PK extends Exclude<ColumnName<Row>, 'version'>,
->(
-	fetchCurrent: () => Promise<Row | null>,
-	buildPatch: (current: Row | null) => {
-		pk: Record<string, unknown>;
-		patch: PatchObject;
-	},
+interface MirrorRow {
+	provider_id: string;
+	stripe_updated_at?: Date | null;
+	mirrored_at?: Date | null;
+}
+type MirrorSideRow = readonly [table: {upsertAll(row: object): PreparedQuery}, row: object | null];
+
+export async function upsertMirrorRow<Row extends MirrorRow, PK extends ColumnName<Row>>(
 	table: Table<Row, PK>,
-	opts?: {
-		initialData?: Row | null;
-	},
-): Promise<{
-	finalVersion: bigint | null;
-	previousData: Row | null;
-}> {
-	const current = opts?.initialData !== undefined ? opts.initialData : await fetchCurrent();
-	const currentVersion: bigint | null = current?.version ?? null;
-	const newVersion: bigint = (currentVersion ?? 0n) + 1n;
-	const {pk, patch} = buildPatch(current);
-	await upsertOne(
-		table.patchByPk(
-			pk as Pick<Row, PK>,
-			{...patch, version: Db.set(newVersion)} as Partial<{
-				[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
-			}>,
-		),
+	existing: Row | null,
+	primary: Row,
+	sideRows: ReadonlyArray<MirrorSideRow> = [],
+): Promise<{changed: boolean; row: Row}> {
+	if (isExistingNewer(existing, primary)) return {changed: false, row: existing!};
+	await upsertOne(table.upsertAll(primary));
+	for (const [sideTable, row] of sideRows) {
+		if (row) await upsertOne(sideTable.upsertAll(row));
+	}
+	return {changed: true, row: primary};
+}
+
+export async function upsertVersionedMirrorRow<
+	Row extends MirrorRow & {version: bigint | null},
+	PK extends ColumnName<Row>,
+>(
+	table: Table<Row, PK>,
+	columns: ReadonlyArray<keyof Row>,
+	existing: Row | null,
+	primary: Row,
+): Promise<{changed: boolean; row: Row}> {
+	if (isExistingNewer(existing, primary)) return {changed: false, row: existing!};
+	if (existing && rowsEquivalent(existing, primary, ['mirrored_at', 'version'])) return {changed: false, row: existing};
+	const result = await executeVersionedUpdate<Row, PK>(
+		() => Promise.resolve(existing),
+		(current) => ({
+			pk: {provider_id: primary.provider_id},
+			patch: buildPatchFromData(primary, current, columns, ['provider_id']),
+		}),
+		table,
+		{initialData: existing, bumpVersion: (current) => ((current ?? 0n) + 1n) as NonNullable<Row['version']>},
 	);
-	return {finalVersion: newVersion, previousData: current};
+	return {changed: true, row: {...primary, version: result.finalVersion}};
+}
+
+export async function hydrateByRefs<Row>(
+	refsQuery: string,
+	params: CassandraParams,
+	byIdsQuery: string,
+): Promise<Array<Row>> {
+	const refs = await fetchMany<{provider_id: string}>(refsQuery, params);
+	if (refs.length === 0) return [];
+	return fetchMany<Row>(byIdsQuery, {provider_ids: refs.map((row) => row.provider_id)});
 }

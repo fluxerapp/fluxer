@@ -4,7 +4,6 @@ import {type ChannelID, createChannelID, type GuildID} from '@app/api/BrandedTyp
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ThreadView} from '@app/api/channel/services/thread/ThreadMappers';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import {getThreadSearchService} from '@app/api/SearchFactory';
 import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
@@ -55,7 +54,6 @@ export async function syncThreadSearchDocument(repository: ChannelRepository, th
 	const service = await readyService();
 	if (!service) return;
 	const state = await repository.threads.getState(threadId);
-	if (state && !guildActive(state.guildId)) return;
 	const [view] = state ? await loadThreadViews(repository, [state]) : [];
 	if (!view) {
 		await service.deleteDocument(threadId.toString());
@@ -77,7 +75,7 @@ export async function deleteThreadSearchDocuments(threadIds: ReadonlyArray<Chann
 
 export async function backfillThreadSearch(repository: ChannelRepository, guildId: GuildID): Promise<number> {
 	const service = await readyService();
-	if (!service || !guildActive(guildId)) return 0;
+	if (!service) return 0;
 	const threadIds = await repository.threads.listGuildThreadIds(guildId);
 	let indexed = 0;
 	for (let offset = 0; offset < threadIds.length; offset += BACKFILL_BATCH_SIZE) {

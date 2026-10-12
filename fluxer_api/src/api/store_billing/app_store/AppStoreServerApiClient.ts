@@ -9,7 +9,9 @@ import {
 	verifyRenewalInfo,
 	verifyTransaction,
 } from '@app/api/store_billing/app_store/AppStoreJwsVerifier';
+import {hasText, normalizePem} from '@app/api/store_billing/StoreBillingCredentials';
 import type {StoreEnvironment} from '@app/api/store_billing/StoreBillingTypes';
+import {parseJsonOrNull} from '@app/api/utils/JsonBoundaryUtils';
 import {ms, seconds} from 'itty-time';
 import {type CryptoKey, importPKCS8, SignJWT} from 'jose';
 import {z} from 'zod';
@@ -145,31 +147,12 @@ interface AppStoreServerApiClientOptions {
 	timeoutMs?: number;
 }
 
-function normalizePem(value: string): string {
-	return value.replaceAll('\\n', '\n');
-}
-
-function hasText(value: string | undefined): value is string {
-	return value !== undefined && value.trim().length > 0;
-}
-
 function parseRetryAfter(value: string | null): Date | null {
 	if (!value || !/^\d+$/.test(value.trim())) {
 		return null;
 	}
 	const epochMs = Number.parseInt(value.trim(), 10);
 	return Number.isSafeInteger(epochMs) ? new Date(epochMs) : null;
-}
-
-function parseJsonOrNull(raw: string): unknown {
-	if (raw.length === 0) {
-		return null;
-	}
-	try {
-		return JSON.parse(raw);
-	} catch {
-		return null;
-	}
 }
 
 function invalidResponse(path: string, status: number): AppStoreServerApiError {

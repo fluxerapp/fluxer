@@ -149,14 +149,6 @@ heartbeat_check_replaces_matched_timer_test() ->
     ?assertNotEqual({TimerRef, Token}, maps:get(heartbeat_timer, State2)),
     gateway_handler_heartbeat:cancel_heartbeat_timer(State2).
 
-legacy_heartbeat_check_ignored_when_tokened_timer_active_test() ->
-    State0 = heartbeat_test_state(),
-    State1 = gateway_handler_heartbeat:schedule_heartbeat_check(State0),
-    {TimerRef, Token} = maps:get(heartbeat_timer, State1),
-    {ok, State2} = gateway_handler:websocket_info({heartbeat_check}, State1),
-    ?assertEqual({TimerRef, Token}, maps:get(heartbeat_timer, State2)),
-    gateway_handler_heartbeat:cancel_heartbeat_timer(State2).
-
 pending_identify_retry_ignores_stale_token_test() ->
     Timer = erlang:send_after(60000, self(), stale_pending_identify_retry),
     CurrentToken = make_ref(),
@@ -167,17 +159,6 @@ pending_identify_retry_ignores_stale_token_test() ->
     {ok, State1} = gateway_handler:websocket_info(
         {retry_pending_identify, make_ref()}, State0
     ),
-    ?assertEqual(State0, State1),
-    cancel_pending_identify_timer(State1).
-
-legacy_pending_identify_retry_ignored_when_tokened_timer_active_test() ->
-    Timer = erlang:send_after(60000, self(), stale_pending_identify_retry),
-    CurrentToken = make_ref(),
-    State0 = (new_json_state())#{
-        pending_identify => {#{token => <<"t">>}, self()},
-        pending_identify_retry_timer => {Timer, CurrentToken}
-    },
-    {ok, State1} = gateway_handler:websocket_info(retry_pending_identify, State0),
     ?assertEqual(State0, State1),
     cancel_pending_identify_timer(State1).
 

@@ -47,19 +47,6 @@
 	font-size: var(--studio-fs-xs);
 }
 
-.fullWidth {
-	width: 100%;
-}
-
-.iconOnly {
-	padding: 0;
-	width: var(--studio-row-height);
-}
-
-.compact.iconOnly {
-	width: var(--studio-row-height-compact);
-}
-
 .primary {
 	--bg: var(--studio-button-primary);
 	--bg-hover: var(--studio-button-primary-hover);
@@ -96,14 +83,7 @@
 	--fg: var(--studio-fg-on-accent);
 }
 
-.successSolid {
-	--bg: var(--studio-success);
-	--bg-hover: color-mix(in srgb, var(--studio-success) 82%, var(--text-primary) 18%);
-	--fg: var(--studio-fg-on-accent);
-}
-
-.leadingIcon,
-.trailingIcon {
+.leadingIcon {
 	display: inline-flex;
 	align-items: center;
 }

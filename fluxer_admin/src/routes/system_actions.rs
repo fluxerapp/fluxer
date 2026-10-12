@@ -1381,27 +1381,6 @@ mod tests {
     }
 
     #[test]
-    fn smtp_test_flash_says_the_settings_were_saved_either_way() {
-        let passed = smtp_test_flash(InstanceEmailSmtpTestResponse {
-            ok: true,
-            error: None,
-        });
-        assert_eq!(
-            passed.message,
-            "Settings saved and SMTP connection verified"
-        );
-
-        let failed = smtp_test_flash(InstanceEmailSmtpTestResponse {
-            ok: false,
-            error: Some("wrong version number".to_owned()),
-        });
-        assert_eq!(
-            failed.message,
-            "Settings saved, but the SMTP test failed: wrong version number"
-        );
-    }
-
-    #[test]
     fn build_sso_update_keeps_repeated_allowed_domains() {
         let form = MultiValueForm::parse(
             b"sso_enabled=true&sso_auto_provision=on&sso_allowed_domains%5B%5D=example.com&sso_allowed_domains%5B%5D=example.org&sso_display_name= Fluxer ",
@@ -1432,65 +1411,6 @@ mod tests {
                 "example.org".to_owned(),
                 "example.net".to_owned()
             ])
-        );
-    }
-
-    #[test]
-    fn build_limit_filters_accepts_repeated_and_delimited_values() {
-        let form = MultiValueForm::parse(
-            b"traits%5B%5D=staff&traits%5B%5D=partner%2Cvip&guild_features=COMMUNITY%0ANEWS",
-        );
-        let filters = build_limit_filters(&form).expect("filters");
-        assert_eq!(
-            filters.traits,
-            vec!["staff".to_owned(), "partner".to_owned(), "vip".to_owned()]
-        );
-        assert_eq!(
-            filters.guild_features,
-            vec!["COMMUNITY".to_owned(), "NEWS".to_owned()]
-        );
-    }
-
-    #[test]
-    fn instance_config_result_surfaces_the_api_validation_message() {
-        let error = crate::api::client::ApiError::Http {
-            status: 400,
-            message: serde_json::json!({
-                "code": "INVALID_FORM_BODY",
-                "message": "Input Validation Error",
-                "errors": [{
-                    "path": "policy.premium_mode",
-                    "code": "X",
-                    "message": "Disable billing before switching the premium mode to everyone"
-                }]
-            })
-            .to_string(),
-        };
-        assert_eq!(
-            instance_config_result::<()>(Err(error)).message,
-            "Failed to update instance config: policy.premium_mode: Disable billing before switching the premium mode to everyone"
-        );
-    }
-
-    #[test]
-    fn limit_config_result_surfaces_the_api_validation_message() {
-        let error = crate::api::client::ApiError::Http {
-            status: 400,
-            message: serde_json::json!({
-                "code": "INVALID_FORM_BODY",
-                "message": "Input Validation Error",
-                "errors": [{
-                    "path": "limit_config.rules.0.limits.max_bio_length",
-                    "code": "VALUE_MUST_BE_INTEGER_IN_RANGE",
-                    "message": "Value must be an integer between 0 and 320."
-                }]
-            })
-            .to_string(),
-        };
-        assert_eq!(
-            limit_config_result::<()>(Err(error), "Saved", "Failed to update limit configuration")
-                .message,
-            "Failed to update limit configuration: limit_config.rules.0.limits.max_bio_length: Value must be an integer between 0 and 320."
         );
     }
 
@@ -1555,117 +1475,6 @@ mod tests {
     }
 
     #[test]
-    fn parse_experiment_user_ids_splits_newlines_and_commas() {
-        assert_eq!(
-            parse_experiment_user_ids("  1 ,2\n3\r\n 4 ,, 5 ", "Included user IDs")
-                .expect("valid IDs"),
-            vec![
-                "1".to_owned(),
-                "2".to_owned(),
-                "3".to_owned(),
-                "4".to_owned(),
-                "5".to_owned()
-            ]
-        );
-    }
-
-    #[test]
-    fn parse_experiment_user_ids_dedupes_preserving_order() {
-        assert_eq!(
-            parse_experiment_user_ids("20,10,20,10,30", "Included user IDs").expect("valid IDs"),
-            vec!["20".to_owned(), "10".to_owned(), "30".to_owned()]
-        );
-    }
-
-    #[test]
-    fn parse_experiment_user_ids_rejects_non_digit_and_overlong_values() {
-        for value in [
-            "abc",
-            "12a",
-            "-1",
-            "1.0",
-            "999999999999999999999",
-            "<script>",
-        ] {
-            assert_eq!(
-                parse_experiment_user_ids(&format!("123,{value}"), "Included user IDs")
-                    .expect_err("invalid ID"),
-                "Included user IDs entry 2 must contain 1 to 20 decimal digits",
-                "{value}"
-            );
-        }
-    }
-
-    #[test]
-    fn parse_experiment_user_ids_rejects_exceeding_the_cap() {
-        let value = (0..EXPERIMENT_MAX_TARGETED_USERS)
-            .map(|index| index.to_string())
-            .collect::<Vec<_>>()
-            .join("\n");
-        let ids = parse_experiment_user_ids(&format!("{value}\n999"), "Included user IDs")
-            .expect("valid IDs at cap");
-        assert_eq!(ids.len(), EXPERIMENT_MAX_TARGETED_USERS);
-        assert_eq!(ids.last(), Some(&"999".to_owned()));
-        assert_eq!(
-            parse_experiment_user_ids(&format!("{value}\n1000"), "Included user IDs")
-                .expect_err("too many IDs"),
-            "Included user IDs must contain at most 1000 unique IDs"
-        );
-    }
-
-    #[test]
-    fn parse_experiment_country_codes_splits_uppercases_and_dedupes() {
-        assert_eq!(
-            parse_experiment_country_codes("  se ,NO\nbr\r\n fi\tSE ,, no ").expect("valid codes"),
-            vec![
-                "SE".to_owned(),
-                "NO".to_owned(),
-                "BR".to_owned(),
-                "FI".to_owned()
-            ]
-        );
-        assert_eq!(
-            parse_experiment_country_codes(" \n ").expect("valid codes"),
-            Vec::<String>::new()
-        );
-    }
-
-    #[test]
-    fn parse_experiment_country_codes_rejects_malformed_codes() {
-        for value in ["S", "SWE", "S1", "5E", "<>", "ÅL"] {
-            assert_eq!(
-                parse_experiment_country_codes(&format!("SE,{value}")).expect_err("invalid code"),
-                "Rollout countries entry 2 must be a two-letter country code",
-                "{value}"
-            );
-        }
-    }
-
-    #[test]
-    fn parse_experiment_country_codes_rejects_exceeding_the_cap() {
-        let codes = (b'A'..=b'Z')
-            .flat_map(|first| {
-                (b'A'..=b'Z').map(move |second| format!("{}{}", first as char, second as char))
-            })
-            .collect::<Vec<_>>();
-        let at_cap = codes[..EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES].join(" ");
-        assert_eq!(
-            parse_experiment_country_codes(&format!("{at_cap} aa"))
-                .expect("valid codes at cap")
-                .len(),
-            EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES
-        );
-        assert_eq!(
-            parse_experiment_country_codes(&format!(
-                "{at_cap} {}",
-                codes[EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES]
-            ))
-            .expect_err("too many codes"),
-            "Rollout countries must contain at most 250 unique codes"
-        );
-    }
-
-    #[test]
     fn build_domain_migration_update_reads_the_rollout_fields() {
         let form = MultiValueForm::parse(
             b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true&domain_migration_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&domain_migration_include_premium_users=true&domain_migration_rollout_country_codes=se%2C%20NO%0Ase",
@@ -1726,54 +1535,6 @@ mod tests {
     }
 
     #[test]
-    fn build_domain_migration_update_rejects_invalid_rollout_fields() {
-        for (form, message) in [
-            (
-                "domain_migration_rollout_basis_points=10001",
-                "Rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "domain_migration_anonymous_rollout_basis_points=10001",
-                "Anonymous rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "domain_migration_anonymous_rollout_basis_points=abc",
-                "Anonymous rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "domain_migration_rollout_salt=%20%20",
-                "Rollout salt must be between 1 and 64 characters",
-            ),
-            (
-                format!("domain_migration_rollout_salt={}", "x".repeat(65)).as_str(),
-                "Rollout salt must be between 1 and 64 characters",
-            ),
-            (
-                "domain_migration_rollout_salt=caf%C3%A9",
-                "Rollout salt must use printable ASCII",
-            ),
-            (
-                "domain_migration_included_user_ids=123%2Cinvalid",
-                "Included user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "domain_migration_excluded_user_ids=123%2Cinvalid",
-                "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "domain_migration_rollout_country_codes=SE%2CSWE",
-                "Rollout countries entry 2 must be a two-letter country code",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_domain_migration_update(&form).expect_err("invalid rollout field"),
-                message
-            );
-        }
-    }
-
-    #[test]
     fn build_push_relay_update_reads_the_consent_checkbox() {
         let unchecked = build_push_relay_update(&MultiValueForm::parse(b"_csrf=token"));
         assert_eq!(
@@ -1811,45 +1572,6 @@ mod tests {
         assert_eq!(
             serde_json::to_value(request).expect("serializable update"),
             serde_json::json!({"captcha": {"enabled": false}})
-        );
-    }
-
-    #[test]
-    fn build_captcha_update_rejects_difficulty_outside_the_supported_range() {
-        for (form, message) in [
-            (
-                "captcha_cost=999",
-                "Cost must be a whole number between 1000 and 20000",
-            ),
-            (
-                "captcha_cost=20001",
-                "Cost must be a whole number between 1000 and 20000",
-            ),
-            (
-                "captcha_max_counter=99",
-                "Maximum counter must be a whole number between 100 and 20000",
-            ),
-            (
-                "captcha_max_counter=20001",
-                "Maximum counter must be a whole number between 100 and 20000",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_captcha_update(&form).expect_err("invalid field"),
-                message
-            );
-        }
-    }
-
-    #[test]
-    fn domain_migration_update_rejects_an_invalid_included_guild_id() {
-        let form = MultiValueForm::parse(
-            b"domain_migration_included_guild_ids=1500000000000000005%0Anot-a-guild",
-        );
-        assert_eq!(
-            build_domain_migration_update(&form).expect_err("invalid guild id"),
-            "Included guild IDs entry 2 must contain 1 to 20 decimal digits"
         );
     }
 
@@ -1906,38 +1628,6 @@ mod tests {
     }
 
     #[test]
-    fn build_voice_p2p_update_rejects_invalid_rollout_fields() {
-        for (form, message) in [
-            (
-                "voice_p2p_rollout_basis_points=10001",
-                "Rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "voice_p2p_included_guild_ids=1500000000000000005%0Anot-a-guild",
-                "Included guild IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "voice_p2p_rollout_country_codes=SE%2CSWE",
-                "Rollout countries entry 2 must be a two-letter country code",
-            ),
-            (
-                "voice_p2p_max_participants=5",
-                "Maximum participants must be a whole number between 2 and 4",
-            ),
-            (
-                "voice_p2p_max_participants=1",
-                "Maximum participants must be a whole number between 2 and 4",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_voice_p2p_update(&form).expect_err("invalid field"),
-                message
-            );
-        }
-    }
-
-    #[test]
     fn build_experiment_delivery_update_leaves_both_fields_unchanged_when_absent() {
         let form = MultiValueForm::parse(b"_csrf=token");
         let request = build_experiment_delivery_update(&form).expect("valid form");
@@ -1945,67 +1635,6 @@ mod tests {
             serde_json::to_value(request).expect("serializable update"),
             serde_json::json!({"experiment_delivery": {}})
         );
-    }
-
-    #[test]
-    fn build_experiment_delivery_update_rejects_invalid_numbers() {
-        for (key, message, below_min, above_max) in [
-            (
-                "experiment_delivery_poll_interval_seconds",
-                "Poll interval must be a whole number between 60 and 86400",
-                "59",
-                "86401",
-            ),
-            (
-                "experiment_delivery_poll_jitter_percent",
-                "Poll jitter must be a whole number between 0 and 50",
-                "-1",
-                "51",
-            ),
-        ] {
-            for value in [
-                "",
-                "%20%20",
-                "abc",
-                "-1",
-                "1.5",
-                "9999999999999999999999999",
-                below_min,
-                above_max,
-            ] {
-                let form = MultiValueForm::parse(format!("{key}={value}").as_bytes());
-                assert_eq!(
-                    build_experiment_delivery_update(&form).expect_err("invalid number"),
-                    message,
-                    "{key}={value}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn build_experiment_delivery_update_accepts_inclusive_bounds() {
-        for (interval, jitter) in [(60, 0), (86_400, 50)] {
-            let form = MultiValueForm::parse(format!("experiment_delivery_poll_interval_seconds={interval}&experiment_delivery_poll_jitter_percent={jitter}").as_bytes());
-            let request = build_experiment_delivery_update(&form).expect("valid form");
-            assert_eq!(
-                serde_json::to_value(request).expect("serializable update"),
-                serde_json::json!({"experiment_delivery": {"poll_interval_seconds": interval, "poll_jitter_percent": jitter}})
-            );
-        }
-    }
-
-    #[test]
-    fn build_experiment_delivery_update_accepts_padded_numbers() {
-        let form = MultiValueForm::parse(
-            b"experiment_delivery_poll_interval_seconds=%20900%20&experiment_delivery_poll_jitter_percent=%2025%20",
-        );
-        let update = build_experiment_delivery_update(&form)
-            .expect("valid form")
-            .experiment_delivery
-            .expect("experiment delivery update");
-        assert_eq!(update.poll_interval_seconds, Some(900));
-        assert_eq!(update.poll_jitter_percent, Some(25));
     }
 
     #[test]

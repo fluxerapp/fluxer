@@ -387,32 +387,6 @@ mod tests {
     }
 
     #[test]
-    fn the_environment_favicon_falls_back_to_the_icon() {
-        let favicon = |favicon: Option<&str>, icon: Option<&str>| {
-            snapshot_from_environment(|name| match name {
-                "FLUXER_APP_FAVICON_URL" => favicon.map(str::to_owned),
-                "FLUXER_APP_ICON_URL" => icon.map(str::to_owned),
-                _ => None,
-            })
-            .favicon_url
-            .map(|url| url.to_string())
-        };
-
-        assert_eq!(
-            favicon(
-                Some("https://example.test/favicon.png"),
-                Some("https://example.test/icon.png")
-            ),
-            Some("https://example.test/favicon.png".to_owned())
-        );
-        assert_eq!(
-            favicon(Some("  "), Some("https://example.test/icon.png")),
-            Some("https://example.test/icon.png".to_owned())
-        );
-        assert_eq!(favicon(None, None), None);
-    }
-
-    #[test]
     fn environment_branding_images_yield_their_distinct_origins() {
         let snapshot = snapshot_from_environment(|name| match name {
             "FLUXER_APP_ICON_URL" => Some("https://example.test/logo.png".to_owned()),
@@ -426,57 +400,6 @@ mod tests {
         assert_eq!(
             sources(&snapshot.image_origins),
             ["https://example.test", "https://cdn.example.test"]
-        );
-    }
-
-    #[test]
-    fn discovery_fills_every_head_field_from_the_branding_object() {
-        let snapshot = snapshot_from_discovery(&serde_json::json!({
-            "app_public": {
-                "branding": {
-                    "product_name": "  Example Chat ",
-                    "icon_url": "https://example.test/icon.png",
-                    "favicon_url": "https://example.test/fav icon.png",
-                    "theme_color": "#7b2ce4"
-                }
-            }
-        }))
-        .unwrap();
-
-        assert_eq!(snapshot.product_name.as_deref(), Some("Example Chat"));
-        assert_eq!(
-            snapshot.icon_url.as_deref(),
-            Some("https://example.test/icon.png")
-        );
-        assert_eq!(
-            snapshot.favicon_url.as_deref(),
-            Some("https://example.test/fav%20icon.png")
-        );
-        assert_eq!(snapshot.theme_color.as_deref(), Some("#7b2ce4"));
-    }
-
-    #[test]
-    fn the_environment_fills_every_head_field() {
-        let snapshot = snapshot_from_environment(|name| match name {
-            "FLUXER_APP_PRODUCT_NAME" => Some("Example".to_owned()),
-            "FLUXER_APP_ICON_URL" => Some("https://example.test/icon.png".to_owned()),
-            "FLUXER_APP_THEME_COLOR" => Some("7B2CE4".to_owned()),
-            _ => None,
-        });
-
-        assert_eq!(snapshot.product_name.as_deref(), Some("Example"));
-        assert_eq!(
-            snapshot.icon_url.as_deref(),
-            Some("https://example.test/icon.png")
-        );
-        assert_eq!(
-            snapshot.favicon_url.as_deref(),
-            Some("https://example.test/icon.png")
-        );
-        assert_eq!(snapshot.theme_color.as_deref(), Some("#7b2ce4"));
-        assert_eq!(
-            snapshot_from_environment(|_| Some("   ".to_owned())),
-            BrandingSnapshot::default()
         );
     }
 

@@ -58,7 +58,6 @@ export const SettingsModalHeader: React.FC<SettingsModalHeaderProps> = observer(
 								textContainerClassName={styles.bannerTextContainer}
 								textClassName={clsx(styles.bannerText, flashBanner ? styles.bannerTextFlash : styles.bannerTextNormal)}
 								actionsClassName={styles.bannerActions}
-								smallActions={true}
 								dataFlx={{
 									textContainer: 'app.settings-modal-header.banner-text-container',
 									text: 'app.settings-modal-header.banner-text',

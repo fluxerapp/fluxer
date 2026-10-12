@@ -127,9 +127,11 @@ mention_request(ChannelId, Overrides) ->
     ).
 
 everyone(Request, State) ->
-    {reply, #{everyone_user_ids := Ids}, _} =
-        guild_members_mutation:resolve_mention_sources(Request, State),
-    lists:sort(Ids).
+    {reply, #{mentions := Entries}, _} =
+        guild_members_mutation:resolve_mention_sources_page(
+            Request#{limit => 100, cursor => undefined}, State
+        ),
+    lists:sort([entry_user_id(E) || E <- Entries, maps:get(everyone, E, false)]).
 
 everyone_in_a_thread_reaches_recipient_active_members_only_test() ->
     with_state(true, fun(State) ->
@@ -150,11 +152,16 @@ here_in_a_thread_needs_membership_and_a_connection_test() ->
 
 direct_mentions_in_a_thread_skip_inactive_recipients_test() ->
     with_state(true, fun(State) ->
-        {reply, #{direct_user_ids := Ids}, _} =
-            guild_members_mutation:resolve_mention_sources(
-                mention_request(?THREAD, #{user_ids => [?B, ?OUT]}), State
+        {reply, #{mentions := Entries}, _} =
+            guild_members_mutation:resolve_mention_sources_page(
+                (mention_request(?THREAD, #{user_ids => [?B, ?OUT]}))#{
+                    limit => 100, cursor => undefined
+                },
+                State
             ),
-        ?assertEqual([?B], lists:sort(Ids))
+        ?assertEqual(
+            [?B], lists:sort([entry_user_id(E) || E <- Entries, maps:get(direct, E, false)])
+        )
     end).
 
 paged_everyone_in_a_thread_lists_members_only_test() ->

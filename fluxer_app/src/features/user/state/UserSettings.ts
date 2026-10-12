@@ -17,6 +17,7 @@ import AppStorage, {flushAppStorageWrites} from '@app/features/platform/state/Pe
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import LocalPresence, {setLocalPresenceUserSettings} from '@app/features/presence/state/LocalPresence';
 import Theme from '@app/features/theme/state/Theme';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -134,10 +135,6 @@ const SYNCED_PREFERENCES_LOCAL_KEY = 'UserSettings:syncedPreferencesLocal';
 const SYNCED_PREFERENCES_WIRE_KEY = 'UserSettings:syncedPreferencesWire';
 const SYNCED_PREFERENCES_RECENT_ACK_KEY = 'UserSettings:syncedPreferencesRecentAck';
 const RECENT_SYNCED_PREFERENCES_ACK_WINDOW_MS = 60_000;
-
-function isAbortError(error: unknown): boolean {
-	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
-}
 
 function readDirtySyncedPreferenceFields(): Set<SyncedPreferencesField> {
 	try {
@@ -402,28 +399,8 @@ class UserSettingsState {
 		return this.statusResetsTo;
 	}
 
-	getTimeFormat(): number {
-		return this.timeFormat;
-	}
-
-	getLocale(): string {
-		return this.locale;
-	}
-
 	applyLocalLocale(locale: string): void {
 		this.locale = applyLocaleChange(locale);
-	}
-
-	getBotDefaultGuildsRestricted(): boolean {
-		return this.botDefaultGuildsRestricted;
-	}
-
-	getDefaultGuildsRestricted(): boolean {
-		return this.defaultGuildsRestricted;
-	}
-
-	getInlineAttachmentMedia(): boolean {
-		return this.inlineAttachmentMedia;
 	}
 
 	getMotionPreferencesInput(): MotionPreferencesInput {
@@ -452,14 +429,6 @@ class UserSettingsState {
 		return selectEffectiveGifAutoPlay(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
 
-	getRenderEmbeds(): boolean {
-		return this.renderEmbeds;
-	}
-
-	getRenderReactions(): boolean {
-		return this.renderReactions;
-	}
-
 	getAnimateEmoji(): boolean {
 		return selectEffectiveAnimateEmoji(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
@@ -475,26 +444,6 @@ class UserSettingsState {
 		return this.messageDisplayCompact;
 	}
 
-	getFriendSourceFlags(): number {
-		return this.friendSourceFlags;
-	}
-
-	getIncomingCallFlags(): number {
-		return this.incomingCallFlags;
-	}
-
-	getGroupDmAddPermissionFlags(): number {
-		return this.groupDmAddPermissionFlags;
-	}
-
-	getProfilePrivacy(): ProfilePrivacyLevel {
-		return this.profilePrivacy;
-	}
-
-	getDefaultShareVoiceActivity(): boolean {
-		return this.defaultShareVoiceActivity;
-	}
-
 	isPrivacySetupPending(): boolean {
 		return this.hydrated && this.privacySetupVersion !== null && this.privacySetupVersion < PRIVACY_SETUP_VERSION;
 	}
@@ -507,28 +456,8 @@ class UserSettingsState {
 		return this.afkTimeout;
 	}
 
-	getTrustedDomains(): ReadonlyArray<string> {
-		return this.trustedDomains;
-	}
-
 	trustAllDomains(): boolean {
 		return this.trustedDomains.includes('*');
-	}
-
-	getDefaultHideMutedChannels(): boolean {
-		return this.defaultHideMutedChannels;
-	}
-
-	getSuppressUnprivilegedSelfMentions(): boolean {
-		return this.suppressUnprivilegedSelfMentions;
-	}
-
-	getSuppressUnprivilegedSelfMentionsBypassUserIds(): ReadonlyArray<string> {
-		return this.suppressUnprivilegedSelfMentionsBypassUserIds;
-	}
-
-	getStaffDmAccessUserIds(): ReadonlyArray<string> {
-		return this.staffDmAccessUserIds;
 	}
 
 	isHydrated(): boolean {

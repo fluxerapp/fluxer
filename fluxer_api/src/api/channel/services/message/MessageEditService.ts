@@ -7,17 +7,19 @@ import type {AuthenticatedChannel} from '@app/api/channel/services/Authenticated
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageUpdated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
-import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
@@ -40,13 +42,13 @@ interface EditMessageResult {
 }
 
 interface MessageEditServiceDeps {
+	gatewayService: IGatewayService;
 	channelRepository: ChannelRepository;
 	userRepository: UserRepository;
 	validationService: MessageValidationService;
 	persistenceService: MessagePersistenceService;
 	channelAuthService: MessageChannelAuthService;
 	processingService: MessageProcessingService;
-	dispatchService: MessageDispatchService;
 	searchService: MessageSearchService;
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	mentionService: MessageMentionService;
@@ -155,13 +157,12 @@ export class MessageEditService {
 					channel,
 					requestCache,
 					persistenceService: this.deps.persistenceService,
-					dispatchService: this.deps.dispatchService,
 				});
 			});
 			await this.deps.crosspostPropagation.propagateEdit(editedMessage);
 			return {message: editedMessage, authChannel};
 		}
-		if (user && !isPersonalNotesChannel({userId, channelId})) {
+		if (user && !isPersonalNotesChannelId({userId, channelId})) {
 			assertAccountNotLimited(user);
 		}
 		const dmRecipientId = oneToOneDmRecipient(channel, userId);
@@ -211,7 +212,7 @@ export class MessageEditService {
 				requestCache.messageMentionChannels.set(updatedMessage.id.toString(), mentionResult.mentionChannels);
 			}
 		}
-		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updatedMessage});
 		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
 		if (user && ((data.content !== undefined && data.content !== message.content) || hasNewAttachments)) {
 			emitMessageUpdated({

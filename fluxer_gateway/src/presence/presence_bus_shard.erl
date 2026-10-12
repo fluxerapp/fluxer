@@ -9,10 +9,6 @@
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--ifdef(TEST).
--export([test_receiver/3]).
--endif.
-
 -type state() :: #{scope := atom(), pg_pid := pid(), shard_index := non_neg_integer()}.
 
 -spec start_link(non_neg_integer()) -> {ok, pid()} | {error, term()}.
@@ -197,41 +193,3 @@ normalize_start_link({error, Reason}) ->
     {error, Reason};
 normalize_start_link(ignore) ->
     {error, ignore}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-publish_delivers_to_scope_members_test() ->
-    Scope = presence_bus_test_scope_3,
-    start_pg_scope(Scope),
-    UserId = erlang:unique_integer([positive]),
-    Parent = self(),
-    Payload = #{<<"status">> => <<"online">>},
-    Receiver = spawn(?MODULE, test_receiver, [UserId, Payload, Parent]),
-    ?assertEqual(ok, do_subscribe(Scope, UserId, Receiver)),
-    ?assertEqual(ok, do_publish(Scope, UserId, Payload)),
-    receive
-        {presence_delivered, Payload} -> ok
-    after 1000 ->
-        ?assert(false)
-    end,
-    ?assertEqual(ok, do_unsubscribe(Scope, UserId, Receiver)).
-
-test_receiver(UserId, Payload, Parent) ->
-    receive
-        {presence, UserId, Payload} ->
-            Parent ! {presence_delivered, Payload}
-    after 5000 ->
-        Parent ! {presence_delivered, timeout}
-    end.
-
-start_pg_scope(Scope) ->
-    try pg:start(Scope) of
-        {ok, _} -> ok;
-        {error, {already_started, _}} -> ok;
-        _ -> ok
-    catch
-        error:_Reason -> ok;
-        exit:_Reason -> ok
-    end.
--endif.

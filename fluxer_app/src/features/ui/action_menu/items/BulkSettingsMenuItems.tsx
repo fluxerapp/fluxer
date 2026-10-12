@@ -11,9 +11,9 @@ import {
 	NOTIFICATION_LEVEL_NOTHING_DESCRIPTOR,
 	NOTIFICATION_LEVEL_ONLY_MENTIONS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import type {
 	ChannelOverrideUpdate,
 	UserGuildSettingsUpdate,

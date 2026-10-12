@@ -32,8 +32,8 @@
 update_counts(State) ->
     State0 = guild_members_table_repair:maybe_repair(State),
     Data = maps:get(data, State0, #{}),
-    MemberCount = guild_data_index:member_count(Data),
-    OnlineCount = guild_member_list:get_online_count(State0),
+    MemberCount = guild_data_index_members:member_count(Data),
+    OnlineCount = guild_member_list_read:get_online_count(State0),
     PublicOnlineCount = guild_public_online:compute_count(State0),
     ok = maybe_put_guild_count_cache(State0, MemberCount, PublicOnlineCount),
     State0#{
@@ -115,8 +115,8 @@ maybe_prune_invalid_member_subscriptions(Event, State) ->
 
 -spec cleanup_removed_member_subscriptions(map(), map(), guild_state()) -> guild_state().
 cleanup_removed_member_subscriptions(OldData, NewData, State) ->
-    OldMemberIds = sets:from_list(guild_data_index:member_ids(OldData)),
-    NewMemberIds = sets:from_list(guild_data_index:member_ids(NewData)),
+    OldMemberIds = sets:from_list(guild_data_index_members:member_ids(OldData)),
+    NewMemberIds = sets:from_list(guild_data_index_members:member_ids(NewData)),
     RemovedIds = sets:to_list(sets:subtract(OldMemberIds, NewMemberIds)),
     PresenceSubs = maps:get(presence_subscriptions, State, #{}),
     NewPresenceSubs = unsubscribe_removed_members(RemovedIds, PresenceSubs),
@@ -126,7 +126,7 @@ cleanup_removed_member_subscriptions(OldData, NewData, State) ->
 apply_everyone_perm_bit(Bit, State) ->
     GuildId = maps:get(id, State),
     Data = maps:get(data, State, #{}),
-    Roles = guild_data_index:role_list(Data),
+    Roles = guild_data_index_roles:role_list(Data),
     {Updated, Changed} = update_everyone_role(Roles, GuildId, Bit),
     case Changed of
         false ->
@@ -210,14 +210,14 @@ session_viewable_channels(SessionData, SessionUserId, State) ->
             ViewableChannels;
         _ ->
             guild_sessions:build_viewable_channel_map(
-                guild_visibility:get_user_viewable_channels(SessionUserId, State)
+                guild_visibility_channels:get_user_viewable_channels(SessionUserId, State)
             )
     end.
 
 -spec member_viewable_channel_map(user_id(), guild_state()) -> map().
 member_viewable_channel_map(MemberId, State) ->
     guild_sessions:build_viewable_channel_map(
-        guild_visibility:get_user_viewable_channels(MemberId, State)
+        guild_visibility_channels:get_user_viewable_channels(MemberId, State)
     ).
 
 %% One pass reads a fixed state, and get_user_viewable_channels/2 reads nothing from a
@@ -256,8 +256,10 @@ cached_member_viewable_channel_map(MemberId, RawRoles, State, Cache, Memo) ->
 -spec memo_key(user_id(), sets:set(user_id()), guild_state()) -> {ok, term()} | bypass.
 memo_key(MemberId, Exceptions, State) ->
     case sets:is_element(MemberId, Exceptions) of
-        true -> bypass;
-        false -> member_roles_key(guild_permissions:find_member_by_user_id(MemberId, State))
+        true ->
+            bypass;
+        false ->
+            member_roles_key(guild_permissions_check:find_member_by_user_id(MemberId, State))
     end.
 
 -spec member_roles_key(map() | undefined) -> {ok, term()} | bypass.
@@ -296,7 +298,7 @@ overwrite_target_ids(Data) ->
     maps:fold(
         fun(_ChannelId, Channel, Acc) -> channel_target_ids(Channel, Acc) end,
         Cached,
-        guild_data_index:channel_index(Data)
+        guild_data_index_channels:channel_index(Data)
     ).
 
 -spec cached_target_ids(term(), [user_id()]) -> [user_id()].
@@ -484,18 +486,18 @@ update_matching_everyone_role(Role, Bit, Acc, ChangedAcc) ->
 -spec update_everyone_role_permissions(map(), integer(), integer(), [map()], boolean()) ->
     {[map()], boolean()}.
 update_everyone_role_permissions(Role, Current, Bit, Acc, ChangedAcc) ->
-    case permission_bits:has(Current, Bit) of
+    case bitset:has(Current, Bit) of
         true ->
             {[Role | Acc], ChangedAcc};
         false ->
-            New = permission_bits:add(Current, Bit),
+            New = bitset:add(Current, Bit),
             NewRole = Role#{<<"permissions">> => New},
             {[NewRole | Acc], true}
     end.
 
 -spec role_permissions_int(map()) -> integer().
 role_permissions_int(Role) ->
-    permission_bits:parse(maps:get(<<"permissions">>, Role, undefined)).
+    bitset:parse(maps:get(<<"permissions">>, Role, undefined)).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -673,14 +675,6 @@ prune_keeps_exception_members_a_session_can_still_see_test() ->
     ),
     ?assertEqual(Presence, maps:get(presence_subscriptions, Result)).
 
-memo_reuses_one_entry_per_roles_term_test() ->
-    State = memo_prune_state(),
-    {First, Memo1} = memoised_member_viewable_channel_map(20, State, new_viewable_memo(State)),
-    {Second, Memo2} = memoised_member_viewable_channel_map(21, State, Memo1),
-    ?assertEqual(member_viewable_channel_map(21, State), Second),
-    ?assertEqual(First, Second),
-    ?assertEqual([1, 1], [map_size(maps:get(cache, M)) || M <- [Memo1, Memo2]]).
-
 memo_never_answers_owner_virtual_or_overwrite_targets_from_the_cache_test() ->
     State = memo_prune_state(),
     {_, Memo} = memoised_member_viewable_channel_map(30, State, new_viewable_memo(State)),
@@ -707,8 +701,8 @@ permission_cache_skips_nick_only_member_update_test() ->
     EventData = permission_cache_member(UserId, [10], <<"new">>),
     NewState = permission_cache_apply(EventData, OldState),
     ?assertNotEqual(
-        guild_data_index:get_member(UserId, maps:get(data, OldState)),
-        guild_data_index:get_member(UserId, maps:get(data, NewState))
+        guild_data_index_members:get_member(UserId, maps:get(data, OldState)),
+        guild_data_index_members:get_member(UserId, maps:get(data, NewState))
     ),
     ?assertEqual(
         {error, not_found},
@@ -725,7 +719,7 @@ permission_cache_rebuilds_on_member_role_change_test() ->
     {ok, Snapshot} = permission_cache_refresh(
         guild_member_update, EventData, OldState, NewState
     ),
-    #{<<"roles">> := Roles} = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    #{<<"roles">> := Roles} = guild_permissions_check:find_member_by_user_id(UserId, Snapshot),
     ?assertEqual([10, 11], Roles).
 
 permission_cache_rebuilds_on_member_timeout_change_test() ->
@@ -742,7 +736,7 @@ permission_cache_rebuilds_on_member_timeout_change_test() ->
         guild_member_update, EventData, OldState, NewState
     ),
     #{<<"communication_disabled_until">> := MemberUntil} =
-        guild_permissions:find_member_by_user_id(UserId, Snapshot),
+        guild_permissions_check:find_member_by_user_id(UserId, Snapshot),
     ?assertEqual(Until, MemberUntil).
 
 permission_cache_rebuilds_for_other_mutating_events_test() ->

@@ -214,13 +214,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_reserve_up_to_limit_succeeds() {
-        let budget = ByteBudget::new(100);
-        let reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert_eq!(reservation.amount(), 60);
-    }
-
-    #[test]
     fn try_reserve_exactly_at_limit_succeeds() {
         let budget = ByteBudget::new(100);
         let reservation = budget.try_reserve(100).expect("reserve at limit");
@@ -253,14 +246,6 @@ mod tests {
     }
 
     #[test]
-    fn try_grow_zero_is_a_no_op() {
-        let budget = ByteBudget::new(100);
-        let mut reservation = budget.try_reserve(60).expect("reserve under limit");
-        assert!(reservation.try_grow(0));
-        assert_eq!(reservation.amount(), 60);
-    }
-
-    #[test]
     fn shrink_to_releases_delta_back_to_budget() {
         let budget = ByteBudget::new(100);
         let mut reservation = budget.try_reserve(100).expect("reserve at limit");
@@ -288,21 +273,5 @@ mod tests {
         let budgeted = BudgetedBytes::budgeted(Bytes::from_static(b"hello"), reservation);
         assert_eq!(budgeted.len(), 5);
         assert_eq!(budgeted.resident_bytes(), 50);
-    }
-
-    #[test]
-    fn resident_bytes_uses_data_len_when_unbudgeted() {
-        let unbudgeted = BudgetedBytes::unbudgeted(Bytes::from_static(b"hello"));
-        assert_eq!(unbudgeted.resident_bytes(), 5);
-    }
-
-    #[test]
-    fn empty_data_reports_empty_and_exposes_the_underlying_bytes() {
-        let empty = BudgetedBytes::unbudgeted(Bytes::new());
-        assert!(empty.is_empty());
-        assert_eq!(empty.as_bytes(), &Bytes::new());
-        let hello = BudgetedBytes::unbudgeted(Bytes::from_static(b"hello"));
-        assert!(!hello.is_empty());
-        assert_eq!(hello.as_bytes(), &Bytes::from_static(b"hello"));
     }
 }

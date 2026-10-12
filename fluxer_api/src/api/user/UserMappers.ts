@@ -2,6 +2,7 @@
 
 import {createGuildID, type UserID} from '@app/api/BrandedTypes';
 import {stripAvatarForUser, stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {MuteConfiguration} from '@app/api/models/MuteConfiguration';
@@ -240,8 +241,8 @@ export function mapUserToOAuthResponse(
 		email: includeEmail ? (user.email ?? null) : null,
 		flags: mapUserFlagsToPublicBitfield(user),
 		global_name: user.globalName ?? null,
-		bot: user.isBot || false,
-		system: user.isSystem || false,
+		bot: user.isBot,
+		system: user.isSystem,
 		avatar_color: user.avatarColor,
 	};
 }
@@ -462,4 +463,11 @@ export function mapWebAuthnCredentialToResponse(
 		last_used_at: credential.lastUsedAt?.toISOString() ?? null,
 		rp_id: credential.rpId ?? legacyRpId,
 	};
+}
+
+export async function dispatchUserUpdate(
+	gateway: Pick<IGatewayService, 'dispatchPresence'>,
+	user: User,
+): Promise<void> {
+	await gateway.dispatchPresence({userId: user.id, event: 'USER_UPDATE', data: mapUserToPrivateResponse(user)});
 }

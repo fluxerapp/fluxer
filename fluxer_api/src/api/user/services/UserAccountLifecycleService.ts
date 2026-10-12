@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {
+	type PartialUserChangePropagationDeps,
+	propagateUserUpdate,
+} from '@app/api/user/services/PartialUserChangePropagation';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
-import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UserOwnsGuildsError} from '@fluxer/errors/src/domains/guild/UserOwnsGuildsError';
@@ -22,7 +24,7 @@ interface UserAccountLifecycleServiceDeps {
 	userAccountRepository: UserRepository;
 	guildRepository: GuildRepository;
 	emailService: IEmailService;
-	updatePropagator: UserAccountUpdatePropagator;
+	userUpdateDeps: PartialUserChangePropagationDeps;
 	kvDeletionQueue: KVAccountDeletionQueueService;
 }
 
@@ -38,12 +40,9 @@ export class UserAccountLifecycleService {
 			userId,
 			(flags) => flags | UserFlags.DISABLED,
 		);
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		if (updatedUser) {
-			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
-			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
-			}
+			await propagateUserUpdate(this.deps.userUpdateDeps, user, updatedUser);
 		}
 	}
 
@@ -70,10 +69,9 @@ export class UserAccountLifecycleService {
 			currentPendingDeletionAt: user.pendingDeletionAt,
 			nextPendingDeletionAt: pendingDeletionAt,
 			deletionReasonCode: DeletionReasons.USER_REQUESTED,
-			userRepository: this.deps.userAccountRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		if (user.email) {
 			await this.deps.emailService.sendSelfDeletionScheduledEmail(
 				user.email,
@@ -83,10 +81,7 @@ export class UserAccountLifecycleService {
 			);
 		}
 		if (updatedUser) {
-			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
-			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
-			}
+			await propagateUserUpdate(this.deps.userUpdateDeps, user, updatedUser);
 		}
 	}
 }

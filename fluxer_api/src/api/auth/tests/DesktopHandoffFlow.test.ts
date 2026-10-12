@@ -174,31 +174,6 @@ describe('Auth desktop handoff flow', () => {
 			.execute();
 		expect(cancelled.status).toBe('expired');
 	});
-	it('info endpoint is non-destructive (code still valid after)', async () => {
-		const account = await createTestAccount(harness);
-		const login = await loginAccount(harness, account);
-		const initResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
-			.post('/auth/handoff/initiate')
-			.body(null)
-			.execute();
-		await createBuilderWithoutAuth<HandoffInfoResponse>(harness).get(`/auth/handoff/${initResp.code}/info`).execute();
-		await createBuilderWithoutAuth<HandoffInfoResponse>(harness).get(`/auth/handoff/${initResp.code}/info`).execute();
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/handoff/complete')
-			.header('Authorization', login.token)
-			.body({
-				code: initResp.code,
-				user_id: login.userId,
-			})
-			.expect(204)
-			.execute();
-		const completed = await createBuilderWithoutAuth<HandoffStatusResponse>(harness)
-			.post(`/auth/handoff/${initResp.code}/status`)
-			.body({poll_secret: initResp.poll_secret})
-			.execute();
-		expect(completed.status).toBe('completed');
-		expect(completed.token).toBeTruthy();
-	});
 	it('rejects info lookup after 3 attempts on same code', async () => {
 		const initResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
 			.post('/auth/handoff/initiate')

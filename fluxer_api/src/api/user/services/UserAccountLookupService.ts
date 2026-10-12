@@ -5,7 +5,7 @@ import type {ConnectionRepository} from '@app/api/connection/ConnectionRepositor
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
@@ -35,12 +35,10 @@ interface ProfileFieldPrivacyContext {
 
 interface UserAccountLookupServiceDeps {
 	userAccountRepository: UserRepository;
-	userChannelRepository: UserRepository;
-	userRelationshipRepository: UserRepository;
-	userSettingsRepository: UserRepository;
+
 	guildRepository: GuildRepository;
 	guildService: GuildService;
-	discriminatorService: IDiscriminatorService;
+	discriminatorService: DiscriminatorService;
 	connectionRepository: ConnectionRepository;
 }
 
@@ -49,10 +47,6 @@ export class UserAccountLookupService {
 
 	async findUnique(userId: UserID): Promise<User | null> {
 		return await this.deps.userAccountRepository.findUnique(userId);
-	}
-
-	async findUniqueAssert(userId: UserID): Promise<User> {
-		return await this.deps.userAccountRepository.findUniqueAssert(userId);
 	}
 
 	async getUserProfile(params: {
@@ -154,7 +148,7 @@ export class UserAccountLookupService {
 	private async shouldRestrictProfile(viewerId: UserID, targetId: UserID, targetUser: User): Promise<boolean> {
 		if (viewerId === targetId) return false;
 		if (targetUser.isBot) return false;
-		const targetSettings = await this.deps.userSettingsRepository.findSettings(targetId);
+		const targetSettings = await this.deps.userAccountRepository.findSettings(targetId);
 		const level = targetSettings?.profilePrivacy ?? ProfilePrivacyLevels.ALL_GUILDS;
 		if (level === ProfilePrivacyLevels.ALL_GUILDS) {
 			if (await this.areFriends(viewerId, targetId)) return false;
@@ -181,7 +175,7 @@ export class UserAccountLookupService {
 		if (targetUser.isBot) {
 			return;
 		}
-		const friendship = await this.deps.userRelationshipRepository.getRelationship(
+		const friendship = await this.deps.userAccountRepository.getRelationship(
 			userId,
 			targetId,
 			RelationshipTypes.FRIEND,
@@ -189,7 +183,7 @@ export class UserAccountLookupService {
 		if (friendship) {
 			return;
 		}
-		const incomingRequest = await this.deps.userRelationshipRepository.getRelationship(
+		const incomingRequest = await this.deps.userAccountRepository.getRelationship(
 			userId,
 			targetId,
 			RelationshipTypes.INCOMING_REQUEST,
@@ -197,7 +191,7 @@ export class UserAccountLookupService {
 		if (incomingRequest) {
 			return;
 		}
-		const outgoingRequest = await this.deps.userRelationshipRepository.getRelationship(
+		const outgoingRequest = await this.deps.userAccountRepository.getRelationship(
 			userId,
 			targetId,
 			RelationshipTypes.OUTGOING_REQUEST,
@@ -221,7 +215,7 @@ export class UserAccountLookupService {
 	}
 
 	private async hasSharedGroupDm(userId: UserID, targetId: UserID): Promise<boolean> {
-		const privateChannels = await this.deps.userChannelRepository.listPrivateChannels(userId);
+		const privateChannels = await this.deps.userAccountRepository.listPrivateChannels(userId);
 		return privateChannels.some(
 			(channel) => channel.type === ChannelTypes.GROUP_DM && channel.recipientIds.has(targetId),
 		);
@@ -229,8 +223,8 @@ export class UserAccountLookupService {
 
 	private async getMutualFriends(userId: UserID, targetId: UserID): Promise<Array<User>> {
 		const [userRelationships, targetRelationships] = await Promise.all([
-			this.deps.userRelationshipRepository.listRelationships(userId),
-			this.deps.userRelationshipRepository.listRelationships(targetId),
+			this.deps.userAccountRepository.listRelationships(userId),
+			this.deps.userAccountRepository.listRelationships(targetId),
 		]);
 		const userFriendIds = new Set(
 			userRelationships
@@ -332,7 +326,7 @@ export class UserAccountLookupService {
 	}
 
 	private async areFriends(userId1: UserID, userId2: UserID): Promise<boolean> {
-		const friendship = await this.deps.userRelationshipRepository.getRelationship(
+		const friendship = await this.deps.userAccountRepository.getRelationship(
 			userId1,
 			userId2,
 			RelationshipTypes.FRIEND,

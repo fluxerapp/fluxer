@@ -11,8 +11,6 @@
 -spec execute_method(binary(), map()) -> term().
 execute_method(<<"call.get">>, #{<<"channel_id">> := ChannelIdBin}) ->
     handle_call_get(ChannelIdBin);
-execute_method(<<"call.get_pending_joins">>, #{<<"channel_id">> := ChannelIdBin}) ->
-    handle_call_get_pending_joins(ChannelIdBin);
 execute_method(<<"call.create">>, Params) ->
     handle_call_create(Params);
 execute_method(<<"call.update_region">>, #{
@@ -32,19 +30,6 @@ execute_method(Method, Params) ->
     execute_session_method(Method, Params).
 
 -spec execute_session_method(binary(), map()) -> term().
-execute_session_method(<<"call.join">>, #{
-    <<"channel_id">> := ChannelIdBin,
-    <<"user_id">> := UserIdBin,
-    <<"session_id">> := SessionIdBin,
-    <<"voice_state">> := VoiceState
-}) ->
-    handle_call_join(ChannelIdBin, UserIdBin, SessionIdBin, VoiceState);
-execute_session_method(<<"call.leave">>, #{
-    <<"channel_id">> := ChannelIdBin, <<"session_id">> := SessionId
-}) ->
-    handle_call_leave(ChannelIdBin, SessionId);
-execute_session_method(<<"call.delete">>, #{<<"channel_id">> := ChannelIdBin}) ->
-    handle_call_delete(ChannelIdBin);
 execute_session_method(<<"call.confirm_connection">>, #{
     <<"channel_id">> := ChannelIdBin, <<"connection_id">> := ConnectionId
 }) ->
@@ -76,33 +61,6 @@ get_call_state(Pid) ->
             null;
         _ ->
             gateway_rpc_error:raise(<<"call_state_error">>)
-    end.
-
--spec handle_call_get_pending_joins(binary()) -> term().
-handle_call_get_pending_joins(ChannelIdBin) ->
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin),
-    case gateway_rpc_call_lookup:lookup_call(ChannelId) of
-        {ok, Pid} ->
-            get_pending_connections(Pid);
-        not_found ->
-            #{<<"pending_joins">> => []};
-        {error, _Reason} ->
-            gateway_rpc_error:raise(<<"call_lookup_error">>)
-    end.
-
--spec get_pending_connections(pid()) -> map().
-get_pending_connections(Pid) ->
-    case
-        gateway_rpc_call_lookup:safe_gen_server_call(
-            Pid, {get_pending_connections}, ?CALL_LOOKUP_TIMEOUT
-        )
-    of
-        {ok, #{pending_joins := PendingJoins}} ->
-            #{<<"pending_joins">> => PendingJoins};
-        {error, not_found} ->
-            #{<<"pending_joins">> => []};
-        _ ->
-            gateway_rpc_error:raise(<<"call_pending_joins_error">>)
     end.
 
 -spec handle_call_create(map()) -> term().
@@ -203,62 +161,6 @@ stop_ringing(Pid, Recipients) ->
     of
         {ok, ok} -> true;
         _ -> gateway_rpc_error:raise(<<"stop_ringing_error">>)
-    end.
-
--spec handle_call_join(binary(), binary(), binary(), map()) -> term().
-handle_call_join(ChannelIdBin, UserIdBin, SessionIdBin, VoiceState) ->
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin),
-    UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
-    SessionId = SessionIdBin,
-    case session_manager:lookup(SessionId) of
-        {ok, SessionPid} ->
-            join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid);
-        {error, not_found} ->
-            gateway_rpc_error:raise(<<"session_not_found">>)
-    end.
-
--spec join_call(integer(), integer(), map(), binary(), pid()) -> true.
-join_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) ->
-    case gateway_rpc_call_lookup:lookup_call(ChannelId) of
-        {ok, CallPid} ->
-            join_call_pid(CallPid, UserId, VoiceState, SessionId, SessionPid);
-        not_found ->
-            gateway_rpc_error:raise(<<"call_not_found">>);
-        {error, _Reason} ->
-            gateway_rpc_error:raise(<<"call_lookup_error">>)
-    end.
-
--spec join_call_pid(pid(), integer(), map(), binary(), pid()) -> true.
-join_call_pid(CallPid, UserId, VoiceState, SessionId, SessionPid) ->
-    gen_server:cast(CallPid, {join_async, UserId, VoiceState, SessionId, SessionPid}),
-    true.
-
--spec handle_call_leave(binary(), binary()) -> term().
-handle_call_leave(ChannelIdBin, SessionId) ->
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin),
-    gateway_rpc_call_lookup:with_call(ChannelId, fun(Pid) -> leave_call(Pid, SessionId) end).
-
--spec leave_call(pid(), binary()) -> true.
-leave_call(Pid, SessionId) ->
-    case
-        gateway_rpc_call_lookup:safe_gen_server_call(
-            Pid, {leave, SessionId}, ?CALL_LOOKUP_TIMEOUT
-        )
-    of
-        {ok, ok} -> true;
-        _ -> gateway_rpc_error:raise(<<"leave_call_error">>)
-    end.
-
--spec handle_call_delete(binary()) -> term().
-handle_call_delete(ChannelIdBin) ->
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin),
-    case gateway_rpc_call_lookup:terminate_call_any(ChannelId) of
-        ok ->
-            true;
-        {error, not_found} ->
-            gateway_rpc_error:raise(<<"call_not_found">>);
-        _ ->
-            gateway_rpc_error:raise(<<"delete_call_error">>)
     end.
 
 -spec handle_call_confirm_connection(binary(), binary()) -> term().

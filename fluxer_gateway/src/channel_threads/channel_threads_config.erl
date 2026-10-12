@@ -323,7 +323,7 @@ default_config() ->
 -spec fetch_config_from_api() -> store_result().
 fetch_config_from_api() ->
     RpcRequest = #{<<"type">> => <<"get_channel_threads_config">>},
-    case api_rpc_client:call(RpcRequest) of
+    case rpc_client:call(RpcRequest) of
         {ok, #{<<"config">> := Config}} when is_map(Config) ->
             store_valid_config(Config, api);
         {ok, _Other} ->

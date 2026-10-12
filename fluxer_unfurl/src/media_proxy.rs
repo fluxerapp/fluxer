@@ -34,7 +34,7 @@ pub struct MediaMetadata {
     pub nsfw: bool,
 }
 
-pub fn embed_media_flags(meta: &MediaMetadata) -> u32 {
+fn embed_media_flags(meta: &MediaMetadata) -> u32 {
     let mut flags = 0;
     if meta.nsfw {
         flags |= 1 << 4;
@@ -43,6 +43,22 @@ pub fn embed_media_flags(meta: &MediaMetadata) -> u32 {
         flags |= 1 << 5;
     }
     flags
+}
+
+impl MediaMetadata {
+    pub fn to_embed_media(&self, url: &str) -> crate::types::EmbedMedia {
+        crate::types::EmbedMedia {
+            url: Some(url.to_owned()),
+            content_type: Some(self.content_type.clone()),
+            content_hash: Some(self.content_hash.clone()),
+            width: self.width,
+            height: self.height,
+            duration: self.duration.map(|duration| duration as u32),
+            placeholder: self.placeholder.clone(),
+            flags: embed_media_flags(self),
+            ..Default::default()
+        }
+    }
 }
 
 impl MediaProxyClient {
@@ -109,8 +125,9 @@ impl MediaProxyClient {
     }
 
     pub fn is_own_url(&self, input_url: &str) -> bool {
-        input_url == self.public_endpoint
-            || input_url.starts_with(&format!("{}/", self.public_endpoint))
+        Url::parse(input_url).is_ok_and(|url| {
+            fluxer_common::external_media_path::is_own_media_url(&self.public_endpoint, &url)
+        })
     }
 
     pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
@@ -131,19 +148,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn endpoint_trailing_slash_stripped() {
-        let client = reqwest::Client::new();
-        let mp = MediaProxyClient::new_with_public_endpoint(
-            "http://localhost:8000/",
-            "secret",
-            None,
-            client,
-        );
-        assert_eq!(mp.endpoint, "http://localhost:8000");
-        assert_eq!(mp.public_endpoint, "http://localhost:8000");
-    }
-
-    #[test]
     fn nsfw_mode_strings() {
         assert_eq!(
             MediaProxyClient::nsfw_mode_str(crate::types::NsfwMode::Block),
@@ -157,20 +161,6 @@ mod tests {
             MediaProxyClient::nsfw_mode_str(crate::types::NsfwMode::Flag),
             "flag"
         );
-    }
-
-    #[test]
-    fn own_urls_are_recognised_by_their_public_endpoint() {
-        let mp = MediaProxyClient::new_with_public_endpoint(
-            "http://media-proxy:8080",
-            "secret",
-            Some("https://chat.example.test/media/"),
-            reqwest::Client::new(),
-        );
-        assert!(mp.is_own_url("https://chat.example.test/media"));
-        assert!(mp.is_own_url("https://chat.example.test/media/attachments/1/2/cat.gif"));
-        assert!(!mp.is_own_url("https://chat.example.test/mediafiles/1.gif"));
-        assert!(!mp.is_own_url("https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp"));
     }
 
     #[test]

@@ -4,7 +4,7 @@ import {randomBytes} from 'node:crypto';
 import {Config} from '@app/api/Config';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
 import {DONATION_MAGIC_LINK_EXPIRY_MS} from '@fluxer/constants/src/DonationConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -18,7 +18,7 @@ export class DonationMagicLinkService {
 	constructor(
 		private donationRepository: DonationRepository,
 		private emailService: IEmailService,
-		private emailDnsValidationService: IEmailDnsValidationService,
+		private emailDnsValidationService: EmailDnsValidationService,
 	) {}
 
 	async sendMagicLink(email: string, locale: string | null = null): Promise<void> {

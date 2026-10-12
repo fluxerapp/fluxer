@@ -12,10 +12,6 @@ import {Validator} from '@app/api/Validator';
 import {ResolveGifUrlsBodySchema, ResolveGifUrlsResponse} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import type {Context} from 'hono';
 
-async function getCountry(ctx: Context<HonoEnv>): Promise<string> {
-	return resolveGifRequestCountry(ctx.req.raw);
-}
-
 function getLocale(ctx: Context<HonoEnv>): string {
 	return (ctx.get('requestLocale') || 'en-US').replace('-', '_');
 }
@@ -43,7 +39,7 @@ export function FavoriteGifController(app: HonoApp) {
 			const gifService = ctx.get('gifService');
 			const unfurlerService = getUnfurlerService();
 			const locale = getLocale(ctx);
-			const country = await getCountry(ctx);
+			const country = await resolveGifRequestCountry(ctx.req.raw);
 			const entries = await Promise.all(
 				urls.map((url) => resolveFavoriteGifEntry({url, locale, country, gifService, mediaService, unfurlerService})),
 			);

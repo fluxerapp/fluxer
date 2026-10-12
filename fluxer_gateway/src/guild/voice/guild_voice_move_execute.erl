@@ -116,7 +116,7 @@ broadcast_disconnects(ConnectionsToMove, NewState) ->
     voice_state_map(), integer(), integer(), integer(), voice_state_map(), guild_state()
 ) -> voice_reply().
 handle_channel_move(Conns, ChannelIdValue, UserId, ModeratorId, VoiceStates, State) ->
-    Channel = guild_voice_member:find_channel_by_id(ChannelIdValue, State),
+    Channel = guild_permissions_check:find_channel_by_id(ChannelIdValue, State),
     case Channel of
         undefined ->
             {reply, gateway_errors:error(voice_channel_not_found), State};
@@ -158,8 +158,8 @@ check_perms_and_execute(Conns, ChannelId, UserId, ModId, VoiceStates, State) ->
     ViewPerm = constants:view_channel_permission(),
     ConnectPerm = constants:connect_permission(),
     ModPerms = guild_permissions:get_member_permissions(ModId, ChannelId, State),
-    ModHasConnect = permission_bits:has(ModPerms, ConnectPerm),
-    ModHasView = permission_bits:has(ModPerms, ViewPerm),
+    ModHasConnect = bitset:has(ModPerms, ConnectPerm),
+    ModHasView = bitset:has(ModPerms, ViewPerm),
     case
         {
             ModHasConnect andalso ModHasView,
@@ -216,7 +216,7 @@ extract_session_data(ConnectionsToMove) ->
 
 -spec maybe_add_virtual_access(integer(), integer(), guild_state()) -> guild_state().
 maybe_add_virtual_access(UserId, ChannelId, State) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     case Member of
         undefined -> State;
         _ -> maybe_grant_virtual_access(UserId, ChannelId, State)
@@ -227,8 +227,8 @@ maybe_grant_virtual_access(UserId, ChannelId, State) ->
     Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
     ViewPerm = constants:view_channel_permission(),
     ConnectPerm = constants:connect_permission(),
-    HasView = permission_bits:has(Permissions, ViewPerm),
-    HasConnect = permission_bits:has(Permissions, ConnectPerm),
+    HasView = bitset:has(Permissions, ViewPerm),
+    HasConnect = bitset:has(Permissions, ConnectPerm),
     case HasView andalso HasConnect of
         true ->
             State;
@@ -257,7 +257,7 @@ member_user_id(Member) ->
     User = map_utils:ensure_map(
         maps:get(<<"user">>, map_utils:ensure_map(Member), #{})
     ),
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         maps:get(<<"id">>, User, undefined)
     ).
 
@@ -285,7 +285,7 @@ request_and_broadcast(GuildId, ChannelId, SessionInfo, GuildPid, UserId, Member,
     Latitude = maps:get(latitude, SessionInfo, undefined),
     Longitude = maps:get(longitude, SessionInfo, undefined),
     case
-        guild_voice_connection:request_voice_token(
+        guild_voice_connection_token:request_voice_token(
             GuildId,
             ChannelId,
             UserId,

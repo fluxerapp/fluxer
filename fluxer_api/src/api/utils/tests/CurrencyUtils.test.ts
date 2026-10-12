@@ -9,25 +9,8 @@ import {
 import {describe, expect, it} from 'vitest';
 
 describe('getCurrencyPreferences first choice', () => {
-	describe('returns USD for non-EEA countries', () => {
-		it('returns USD for United States', () => {
-			expect(getCurrencyPreferences('US')[0]).toBe('USD');
-		});
-		it('returns USD for Canada', () => {
-			expect(getCurrencyPreferences('CA')[0]).toBe('USD');
-		});
-		it('returns USD for United Kingdom', () => {
-			expect(getCurrencyPreferences('GB')[0]).toBe('USD');
-		});
-		it('returns USD for Japan', () => {
-			expect(getCurrencyPreferences('JP')[0]).toBe('USD');
-		});
-		it('returns USD for Australia', () => {
-			expect(getCurrencyPreferences('AU')[0]).toBe('USD');
-		});
-		it('returns USD for Switzerland', () => {
-			expect(getCurrencyPreferences('CH')[0]).toBe('USD');
-		});
+	it.each(['US', 'CA', 'GB', 'JP', 'AU', 'CH'])('returns USD for non-EEA country %s', (country) => {
+		expect(getCurrencyPreferences(country)[0]).toBe('USD');
 	});
 	describe('handles case insensitivity', () => {
 		it('returns EUR for lowercase country code', () => {

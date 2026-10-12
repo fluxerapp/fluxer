@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {VoiceSignalSendResult} from '@app/features/gateway/transport/GatewaySocket';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {
@@ -230,7 +230,7 @@ export class VoiceMeshEngine extends RTCEngine {
 			subscribeVoiceMeshSignals(this.handleSignal),
 			voiceEngineV2AppVoiceStateAdapter.subscribe(this.syncRoster),
 			reaction(
-				() => GatewayConnection.isConnected,
+				() => GatewaySessions.foregroundConnection.isConnected,
 				(connected) => {
 					if (connected) this.handleGatewayReconnected();
 				},

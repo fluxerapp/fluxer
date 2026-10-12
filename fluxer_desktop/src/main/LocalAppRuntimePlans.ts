@@ -28,7 +28,6 @@ export interface LocalAppRuntimePlan {
 	readonly document: unknown;
 	readonly endpoints: LocalAppRuntimeEndpoints;
 	readonly selfHosted: boolean;
-	readonly desktopModulesEnabled: boolean | null;
 }
 
 interface LocalAppRuntimeRoute {
@@ -95,7 +94,6 @@ export function localAppRuntimePlanFromDiscovery(document: unknown): LocalAppRun
 		document,
 		endpoints: runtimeEndpointsFromDiscovery(discovery),
 		selfHosted: discovery.features.self_hosted,
-		desktopModulesEnabled: discovery.features.desktop_modules_enabled ?? null,
 	};
 }
 

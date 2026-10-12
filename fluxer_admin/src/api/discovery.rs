@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::float_to_u64;
+
 use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -142,10 +144,6 @@ fn listed_guild(
         listed_at: None,
         category: None,
     })
-}
-
-fn float_to_u64(value: f64, field: &str) -> ApiResult<u64> {
-    crate::api::generated::number_to_u64(value, field).map_err(ApiError::Parse)
 }
 
 fn float_to_i32(value: f64, field: &str) -> ApiResult<i32> {

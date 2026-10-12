@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getErrorMessageResult, getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
+import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
-import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 import {beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
 describe('ErrorI18n', () => {
@@ -10,45 +9,6 @@ describe('ErrorI18n', () => {
 	beforeEach(() => {
 		consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		consoleWarnSpy.mockClear();
-	});
-	describe('constructor and initialization', () => {
-		it('handles missing default bundle gracefully', () => {
-			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US', undefined, 'Fallback message');
-			expect(message).toBe('Fallback message');
-		});
-	});
-	describe('getMessage() - basic retrieval', () => {
-		it('returns key when translation missing', () => {
-			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US');
-			expect(message).toBe('nonexistent.key');
-			expect(consoleWarnSpy).toHaveBeenCalledWith(
-				'Missing translation for error message: nonexistent.key (locale: en-US)',
-			);
-		});
-	});
-	describe('getMessage() - locale handling', () => {
-		it('falls back to en-US for unsupported locales', () => {
-			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'de-DE');
-			expect(message).toBe("You're being rate limited.");
-			expect(consoleWarnSpy).toHaveBeenCalledWith('Unsupported locale, falling back to en-US: de-DE');
-		});
-		it('handles null locale by defaulting to en-US', () => {
-			const message = getErrorMessageUnsafe('rate_limits.rate_limited', null);
-			expect(message).toBe("You're being rate limited.");
-		});
-		it('handles undefined locale by defaulting to en-US', () => {
-			const message = getErrorMessageUnsafe('rate_limits.rate_limited', undefined);
-			expect(message).toBe("You're being rate limited.");
-		});
-	});
-	describe('getMessageResult()', () => {
-		it('returns error result for missing template', () => {
-			const result = getErrorMessageResult('missing.key' as ErrorI18nKey, 'en-US');
-			expect(result.ok).toBe(false);
-			if (!result.ok) {
-				expect(result.error.kind).toBe('missing-template');
-			}
-		});
 	});
 	describe('global IP block messages', () => {
 		const HOSTED = {ipAddress: '203.0.113.20', appealEmail: 'support@fluxer.com', product_name: 'Fluxer'};

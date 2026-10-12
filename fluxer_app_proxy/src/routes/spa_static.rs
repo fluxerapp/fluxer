@@ -346,45 +346,6 @@ mod tests {
     }
 
     #[test]
-    fn a_self_hosted_manifest_takes_the_instance_branding() {
-        let manifest = branded_manifest(&BrandingSnapshot {
-            product_name: Some("Example Chat".into()),
-            icon_url: Some("https://example.test/icon.png".into()),
-            favicon_url: Some("https://example.test/favicon.png".into()),
-            theme_color: Some("#7b2ce4".into()),
-            ..BrandingSnapshot::default()
-        });
-
-        assert_eq!(manifest["name"], "Example Chat");
-        assert_eq!(manifest["short_name"], "Example Chat");
-        assert_eq!(manifest["theme_color"], "#7b2ce4");
-        assert_eq!(
-            manifest["icons"],
-            serde_json::json!([{
-                "src": "https://example.test/icon.png",
-                "sizes": "any",
-                "purpose": "any"
-            }])
-        );
-        assert!(manifest.get("description").is_none());
-        assert_eq!(manifest["background_color"], "#2b2d31");
-        assert_eq!(manifest["start_url"], "/app");
-        assert_installable_shape(&manifest);
-    }
-
-    #[test]
-    fn an_unbranded_self_hosted_manifest_only_loses_its_description() {
-        let manifest = branded_manifest(&BrandingSnapshot::default());
-
-        let mut expected: serde_json::Value =
-            serde_json::from_str(&GENERATED_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", ""))
-                .unwrap();
-        expected.as_object_mut().unwrap().remove("description");
-        assert_eq!(manifest, expected);
-        assert_installable_shape(&manifest);
-    }
-
-    #[test]
     fn a_branded_product_name_stays_a_json_string() {
         let product_name = "A \"quoted\" \\ name</script>\n\u{2028}";
         let manifest = branded_manifest(&BrandingSnapshot {
@@ -484,51 +445,6 @@ mod tests {
         assert_eq!(manifest["name"], "Example");
         assert_eq!(manifest["icons"][0]["src"], "https://example.test/icon.png");
         assert_installable_shape(&manifest);
-
-        std::fs::remove_dir_all(root).unwrap();
-    }
-
-    fn location_of(response: &Response) -> &str {
-        assert_eq!(response.status(), StatusCode::FOUND);
-        response
-            .headers()
-            .get(header::LOCATION)
-            .expect("the favicon redirect has no location")
-            .to_str()
-            .unwrap()
-    }
-
-    #[tokio::test]
-    async fn the_favicon_ico_redirects_to_the_bundled_icon_on_the_official_instance() {
-        let root = static_dir_with_generated_files();
-        let mut state = state_serving(&root, false);
-
-        let response = fetch(state.clone(), "/favicon.ico").await;
-        assert_eq!(location_of(&response), "/web/favicon.ico");
-
-        std::sync::Arc::make_mut(&mut state.config).static_cdn_endpoint = Some(
-            HttpEndpoint::parse("TEST_STATIC_CDN_ENDPOINT", "https://fluxerstatic.com").unwrap(),
-        );
-        let response = fetch(state, "/favicon.ico").await;
-        assert_eq!(
-            location_of(&response),
-            "https://fluxerstatic.com/web/favicon.ico"
-        );
-
-        std::fs::remove_dir_all(root).unwrap();
-    }
-
-    #[tokio::test]
-    async fn the_favicon_ico_redirects_to_the_instance_favicon_when_self_hosted() {
-        let root = static_dir_with_generated_files();
-        let mut state = state_serving(&root, true);
-
-        let response = fetch(state.clone(), "/favicon.ico").await;
-        assert_eq!(location_of(&response), "https://example.test/favicon.png");
-
-        state.branding = crate::branding_images::InstanceBranding::new(BrandingSnapshot::default());
-        let response = fetch(state, "/favicon.ico").await;
-        assert_eq!(location_of(&response), "/web/favicon.ico");
 
         std::fs::remove_dir_all(root).unwrap();
     }

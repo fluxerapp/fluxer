@@ -36,7 +36,6 @@ class ThemeStudioState {
 	librarySearch = '';
 	expandedGroups: Set<string> = new Set(readStoredExpandedGroups() ?? []);
 	hasInitializedExpansion: boolean = readStoredExpandedGroups() !== null;
-	isPoppedOut = false;
 	popupRef: Window | null = null;
 
 	constructor() {
@@ -90,12 +89,10 @@ class ThemeStudioState {
 	}
 
 	markPoppedOut(popupRef: Window | null): void {
-		this.isPoppedOut = true;
 		this.popupRef = popupRef;
 	}
 
 	clearPoppedOut(): void {
-		this.isPoppedOut = false;
 		this.popupRef = null;
 	}
 }

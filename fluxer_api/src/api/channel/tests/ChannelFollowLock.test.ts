@@ -2,12 +2,13 @@
 
 import {createChannelID} from '@app/api/BrandedTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {describe, expect, it} from 'vitest';
 
 describe('withChannelFollowLock', () => {
 	it('keeps a long conversion lock alive past its ttl', async () => {
-		const cache = new InMemoryProvider();
+		const cache = new KVCacheProvider({client: new MockKVProvider()});
 		const channelId = createChannelID(1n);
 		const holder = withChannelFollowLock(
 			cache,

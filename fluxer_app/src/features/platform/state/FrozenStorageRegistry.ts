@@ -169,7 +169,6 @@ export const FROZEN_STORAGE_REGISTRY: ReadonlyArray<FrozenStorageEntry> = Object
 				module: 'fluxer_app/src/features/premium/utils/PremiumCheckoutReturnIntent.ts',
 				marker: 'PremiumCheckoutReturnIntent',
 			},
-			{module: 'fluxer_app/src/features/notification/utils/EntranceSoundScopes.ts', marker: 'userEntranceSound'},
 			{module: 'fluxer_app/src/features/theme/state/ThemeLibrary.ts', marker: 'enabledThemeIds'},
 			{module: 'fluxer_desktop/src/common/DesktopConfig.ts', marker: 'closeToTrayV2'},
 		],

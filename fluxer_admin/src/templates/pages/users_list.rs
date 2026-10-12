@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
 use crate::{
     api::types::AdminUser,
     config::AdminConfig,
@@ -422,26 +424,12 @@ fn render_users_table(
 
 fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> Markup {
     let next_page = params.page.checked_add(1).filter(|_| has_more);
-    html! {
-        div class="mt-4 flex items-center justify-between" {
-            @if params.page > 0 {
-                a href=(users_url(base, params, params.page - 1))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    "< Previous"
-                }
-            } @else {
-                span {}
-            }
-            @if let Some(next_page) = next_page {
-                a href=(users_url(base, params, next_page))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    "Next >"
-                }
-            } @else {
-                span {}
-            }
-        }
-    }
+    pager_with_missing(
+        (params.page > 0).then(|| users_url(base, params, params.page - 1)),
+        None,
+        next_page.map(|page| users_url(base, params, page)),
+        true,
+    )
 }
 
 fn users_url(base: &str, params: &UserListParams, page: u32) -> String {

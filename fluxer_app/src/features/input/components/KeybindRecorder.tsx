@@ -7,13 +7,14 @@ import {
 	beginShortcutCapture,
 	globalKeyEventToCombo,
 	isModifierKeyCode,
+	modifierStateToCombo,
 	shortcutCaptureKeyToCombo,
 	shortcutCaptureMouseToCombo,
 } from '@app/features/input/components/KeybindRecorderCapture';
 import GlobalShortcuts, {getGlobalShortcutsApi} from '@app/features/input/state/GlobalShortcuts';
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
 import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUtils';
-import {isKeybindModifierKey} from '@app/features/input/utils/KeybindComboUtils';
+import {combosLooseEqual, isKeybindModifierKey} from '@app/features/input/utils/KeybindComboUtils';
 import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -56,23 +57,6 @@ interface KeybindRecorderProps {
 	'data-flx'?: string;
 }
 
-const combosEqual = (a: KeyCombo | null | undefined, b: KeyCombo | null | undefined): boolean => {
-	if (!a && !b) return true;
-	if (!a || !b) return false;
-	return (
-		a.key === b.key &&
-		a.code === b.code &&
-		!!a.ctrlOrMeta === !!b.ctrlOrMeta &&
-		!!a.ctrl === !!b.ctrl &&
-		!!a.alt === !!b.alt &&
-		!!a.shift === !!b.shift &&
-		!!a.meta === !!b.meta &&
-		!!a.modifierOnly === !!b.modifierOnly &&
-		!!a.bothSides === !!b.bothSides &&
-		(a.mouseButton ?? null) === (b.mouseButton ?? null) &&
-		(a.gamepadButton ?? null) === (b.gamepadButton ?? null)
-	);
-};
 const MODIFIER_BOTH_SIDES_PAIRS: ReadonlyArray<readonly [string, string]> = [
 	['ShiftLeft', 'ShiftRight'],
 	['ControlLeft', 'ControlRight'],
@@ -87,37 +71,16 @@ const normalizeKeyForCombo = (key: string): string => {
 	if (key === 'Break') return 'Pause';
 	return key;
 };
-const isMacPlatform = (): boolean => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-const modifierStateToCombo = (
-	event: KeyboardEvent | MouseEvent,
-): Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'> => {
-	const mac = isMacPlatform();
-	const primaryModifierDown = mac ? event.metaKey : event.ctrlKey;
-	return {
-		ctrlOrMeta: primaryModifierDown || undefined,
-		ctrl: (mac ? event.ctrlKey : false) || undefined,
-		alt: event.altKey || undefined,
-		shift: event.shiftKey || undefined,
-		meta: (mac ? false : event.metaKey) || undefined,
-	};
-};
+
 const reconstructModifiersFromPhysicallyHeldKeys = (
 	heldCodes: ReadonlySet<string>,
-): Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'> => {
-	const mac = isMacPlatform();
-	const ctrl = heldCodes.has('ControlLeft') || heldCodes.has('ControlRight');
-	const alt = heldCodes.has('AltLeft') || heldCodes.has('AltRight');
-	const shift = heldCodes.has('ShiftLeft') || heldCodes.has('ShiftRight');
-	const meta = heldCodes.has('MetaLeft') || heldCodes.has('MetaRight');
-	const primaryModifierDown = mac ? meta : ctrl;
-	return {
-		ctrlOrMeta: primaryModifierDown || undefined,
-		ctrl: (mac ? ctrl : false) || undefined,
-		alt: alt || undefined,
-		shift: shift || undefined,
-		meta: (mac ? false : meta) || undefined,
-	};
-};
+): Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'> =>
+	modifierStateToCombo({
+		ctrlKey: heldCodes.has('ControlLeft') || heldCodes.has('ControlRight'),
+		altKey: heldCodes.has('AltLeft') || heldCodes.has('AltRight'),
+		shiftKey: heldCodes.has('ShiftLeft') || heldCodes.has('ShiftRight'),
+		metaKey: heldCodes.has('MetaLeft') || heldCodes.has('MetaRight'),
+	});
 const mergeModifiers = (
 	a: Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'>,
 	b: Pick<KeyCombo, 'ctrlOrMeta' | 'ctrl' | 'alt' | 'shift' | 'meta'>,
@@ -175,7 +138,7 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 		currentCombo?.mouseButton !== undefined ||
 		currentCombo?.gamepadButton !== undefined
 	);
-	const currentIsModified = defaultValue ? !combosEqual(currentCombo, defaultValue) : false;
+	const currentIsModified = defaultValue ? !combosLooseEqual(currentCombo, defaultValue) : false;
 	useEffect(() => {
 		KeybindManager.suspend();
 		return () => {

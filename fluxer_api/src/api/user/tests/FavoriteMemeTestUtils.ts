@@ -21,14 +21,6 @@ export async function listFavoriteMemes(harness: ApiTestHarness, token: string):
 	return createBuilder<Array<FavoriteMemeResponse>>(harness, token).get('/users/@me/memes').execute();
 }
 
-export async function getFavoriteMeme(
-	harness: ApiTestHarness,
-	token: string,
-	memeId: string,
-): Promise<FavoriteMemeResponse> {
-	return createBuilder<FavoriteMemeResponse>(harness, token).get(`/users/@me/memes/${memeId}`).execute();
-}
-
 export async function createFavoriteMemeFromMessage(
 	harness: ApiTestHarness,
 	token: string,

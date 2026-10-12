@@ -48,9 +48,6 @@
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
 /desktop-shared-assets/

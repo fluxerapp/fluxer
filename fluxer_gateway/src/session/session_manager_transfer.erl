@@ -5,12 +5,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    aggregate_counts/2,
-    aggregate_handoff_to_topology/2,
-    find_shard_by_ref/2,
-    find_shard_by_pid/2
-]).
+-export([aggregate_counts/2, aggregate_handoff_to_topology/2]).
 
 -export_type([handoff_result/0, shard/0, state/0]).
 
@@ -89,16 +84,6 @@ safe_shard_call(Pid, Request) ->
         error:_Reason -> unavailable;
         exit:_Reason -> unavailable
     end.
-
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    shard_utils:find_shard_by_ref(Ref, Shards).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

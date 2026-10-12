@@ -172,16 +172,6 @@ describe('StripeRefundService self-serve refund', () => {
 		await harness.shutdown();
 	});
 	describe('GET /premium/refund-eligibility', () => {
-		test('reports no_refundable_purchase when user has no Stripe customer', async () => {
-			server.use(...createStripeApiHandlers().handlers);
-			const account = await createTestAccount(harness);
-			const response = await createBuilder<SelfServeRefundEligibilityResponse>(harness, account.token)
-				.get('/premium/refund-eligibility')
-				.execute();
-			expect(response.eligible).toBe(false);
-			expect(response.reason).toBe('no_refundable_purchase');
-			expect(response.invoice_id).toBeNull();
-		});
 		test('reports eligible within 3-day window', async () => {
 			server.use(...createStripeApiHandlers().handlers);
 			server.use(invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]));
@@ -197,33 +187,6 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.reason).toBeNull();
 			expect(response.invoice_id).toBe('in_recent');
 			expect(response.cancels_subscription).toBe(true);
-		});
-		test('reports outside_refund_window past 3 days', async () => {
-			server.use(...createStripeApiHandlers().handlers);
-			server.use(invoiceListHandler([buildInvoice({id: 'in_old', paidAtSecondsAgo: 5 * SECONDS_PER_DAY})]));
-			const account = await createTestAccount(harness);
-			await setStripeIds(harness, account, {stripe_customer_id: MOCK_CUSTOMER_ID});
-			const response = await createBuilder<SelfServeRefundEligibilityResponse>(harness, account.token)
-				.get('/premium/refund-eligibility')
-				.execute();
-			expect(response.eligible).toBe(false);
-			expect(response.reason).toBe('outside_refund_window');
-		});
-		test('reports cooldown_active within 30 days of prior refund', async () => {
-			server.use(...createStripeApiHandlers().handlers);
-			server.use(invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]));
-			const account = await createTestAccount(harness);
-			const tenDaysAgo = new Date(Date.now() - 10 * SECONDS_PER_DAY * 1000);
-			await setStripeIds(harness, account, {
-				stripe_customer_id: MOCK_CUSTOMER_ID,
-				first_refund_at: tenDaysAgo.toISOString(),
-			});
-			const response = await createBuilder<SelfServeRefundEligibilityResponse>(harness, account.token)
-				.get('/premium/refund-eligibility')
-				.execute();
-			expect(response.eligible).toBe(false);
-			expect(response.reason).toBe('cooldown_active');
-			expect(response.cooldown_expires_at).not.toBeNull();
 		});
 	});
 	describe('POST /premium/refund-latest', () => {

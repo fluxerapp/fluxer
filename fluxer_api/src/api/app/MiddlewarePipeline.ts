@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '@app/api/ILogger';
 import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
 import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
 import {ClientFeaturesMiddleware} from '@app/api/middleware/ClientFeaturesMiddleware';
@@ -22,9 +21,10 @@ import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 interface MiddlewarePipelineOptions {
-	logger: ILogger;
+	logger: LoggerInterface;
 	nodeEnv: string;
 	corsOrigins: Array<string>;
 	trustClientIpHeader: boolean;

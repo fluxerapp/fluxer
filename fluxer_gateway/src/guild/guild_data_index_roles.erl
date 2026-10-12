@@ -20,7 +20,7 @@
 role_list(Data) when is_map(Data) ->
     [
         normalize_role(Role)
-     || Role <- guild_data_index:ensure_list(
+     || Role <- map_utils:ensure_list(
             maps:get(<<"roles">>, Data, [])
         ),
         is_map(Role)
@@ -41,7 +41,7 @@ role_index(_) ->
 put_roles(Roles, Data) when is_map(Data) ->
     RoleList = [
         normalize_role(Role)
-     || Role <- guild_data_index:ensure_list(Roles),
+     || Role <- map_utils:ensure_list(Roles),
         is_map(Role)
     ],
     Data#{
@@ -68,7 +68,7 @@ build_role_perms_cache(Roles) ->
 -spec cache_role_permissions(role(), map()) -> map().
 cache_role_permissions(Role, Acc) ->
     RoleId = snowflake_id:parse_optional(maps:get(<<"id">>, Role, undefined)),
-    Perms = permission_bits:parse_optional(maps:get(<<"permissions">>, Role, undefined)),
+    Perms = bitset:parse_optional(maps:get(<<"permissions">>, Role, undefined)),
     cache_role_permissions(RoleId, Perms, Acc).
 
 -spec cache_role_permissions(term(), term(), map()) -> map().

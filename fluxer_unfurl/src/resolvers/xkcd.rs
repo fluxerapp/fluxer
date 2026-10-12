@@ -4,8 +4,7 @@ use super::{ResolveContext, Resolver, ResolverResult};
 use crate::charset;
 use crate::html_parser;
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
-use crate::text_limits;
+use crate::media_proxy::{MediaMetadata, MediaProxyClient};
 use crate::types::{EmbedFooter, EmbedMedia, MessageEmbed};
 use scraper::{Html, Selector};
 use std::future::Future;
@@ -93,7 +92,7 @@ async fn resolve_media_url(
     media_url: &str,
     description: Option<String>,
 ) -> anyhow::Result<Option<EmbedMedia>> {
-    let Some(resolved_url) = resolve_relative_url(&ctx.url, media_url) else {
+    let Some(resolved_url) = resolve_http_url(&ctx.url, media_url) else {
         return Ok(None);
     };
     let nsfw_str = MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
@@ -110,15 +109,6 @@ async fn resolve_media_url(
     )))
 }
 
-fn resolve_relative_url(base_url: &Url, media_url: &str) -> Option<String> {
-    let url = base_url.join(media_url).ok()?;
-    if matches!(url.scheme(), "http" | "https") {
-        Some(url.to_string())
-    } else {
-        None
-    }
-}
-
 fn build_embed_media_payload(
     url: &str,
     metadata: &MediaMetadata,
@@ -127,28 +117,11 @@ fn build_embed_media_payload(
     description: Option<String>,
 ) -> EmbedMedia {
     EmbedMedia {
-        url: Some(url.to_owned()),
         width: width.or(metadata.width),
         height: height.or(metadata.height),
         description,
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
-        content_hash: Some(metadata.content_hash.clone()),
-        content_type: Some(metadata.content_type.clone()),
-        duration: metadata.duration.map(|duration| duration as u32),
-        ..Default::default()
+        ..metadata.to_embed_media(url)
     }
-}
-
-fn parse_text(value: &str, max_len: usize) -> String {
-    text_limits::truncate(decode_html_entities(value).trim(), max_len)
-}
-
-fn decode_html_entities(input: &str) -> String {
-    scraper::Html::parse_fragment(input)
-        .root_element()
-        .text()
-        .collect()
 }
 
 fn extract_comic_alt(doc: &Html) -> Option<String> {
@@ -159,13 +132,6 @@ fn extract_comic_alt(doc: &Html) -> Option<String> {
         .map(|s| s.to_owned())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use super::default_helpers::parse_text;
 
-    #[test]
-    fn resolve_relative_url_rejects_non_http() {
-        let base = Url::parse("https://xkcd.com/1/").unwrap();
-        assert!(resolve_relative_url(&base, "ftp://evil.com/img.png").is_none());
-    }
-}
+use super::default_helpers::resolve_http_url;

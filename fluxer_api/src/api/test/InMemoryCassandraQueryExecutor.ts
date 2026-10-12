@@ -55,7 +55,8 @@ function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	if (!columns) return cloneRow(row);
 	const projected: Row = {};
 	for (const column of columns) {
-		projected[column] = cloneValue(row[column]);
+		// Cassandra returns null for selected columns that have never been written.
+		projected[column] = cloneValue(row[column] ?? null);
 	}
 	return projected;
 }
@@ -95,9 +96,16 @@ function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
 
 export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorForTesting {
 	private readonly tables = new Map<string, Map<string, Row>>();
+	readonly executed: Array<KvQueryMeta> = [];
+	readonly batchAtomicity: Array<boolean> = [];
+	countStatements(statement: string): number {
+		return this.executed.filter((meta) => `${meta.action}:${meta.table.name}` === statement).length;
+	}
 
 	reset(): void {
 		this.tables.clear();
+		this.executed.length = 0;
+		this.batchAtomicity.length = 0;
 	}
 
 	private table(meta: KvQueryMeta): Map<string, Row> {
@@ -119,6 +127,8 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	async executeQuery<T = Row>(query: PreparedQuery): Promise<Array<T>> {
 		const meta = this.meta(query);
+		const recordedMeta = query.kvMeta ?? getKvMeta(query.cql);
+		if (recordedMeta) this.executed.push(recordedMeta);
 		switch (meta.action) {
 			case 'select':
 				return this.select(meta, query.params) as Array<T>;
@@ -152,8 +162,10 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	async executeBatch(
 		queries: Array<{query: string; params: object; meta?: KvQueryMeta}>,
-		_atomic?: boolean,
+		atomic?: boolean,
 	): Promise<void> {
+		this.batchAtomicity.push(atomic ?? true);
+
 		for (const query of queries) {
 			if (isConditionalQuery({cql: query.query, params: query.params as CassandraParams, kvMeta: query.meta})) {
 				throw new Error('Conditional writes must use executeConditional to preserve their result');

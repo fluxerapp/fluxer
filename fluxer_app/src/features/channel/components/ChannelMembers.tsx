@@ -459,114 +459,54 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		for (let rowIndex = firstRow; rowIndex <= lastRow; rowIndex += 1) {
 			const rowTop = rowOffsets != null ? rowOffsets[rowIndex]! : rowIndex * scaledMemberItemHeight;
 			const rowStyle = {transform: `translateY(${rowTop}px)`};
-			if (layouts.length === 0) {
-				const item = memberListState.items.get(rowIndex);
-				if (!item) {
-					virtualRows.push(
-						<div
-							key={`member-skeleton-${rowIndex}`}
-							className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.skeleton"
-						>
-							<MemberListSkeletonRow
-								index={rowIndex}
-								variant={MemberListSkeletonVariant.GUILD}
-								data-flx="channel.channel-members.lazy-member-list.member-list-skeleton-row"
-							/>
-						</div>,
-					);
+
+			if (layouts.length > 0) {
+				const layout = getGroupLayoutForRow(layouts, rowIndex);
+				if (!layout) {
 					continue;
 				}
-				const member = MemberSidebar.materializeItemMember(guild.id, item);
-				if (!member) {
-					continue;
-				}
-				const user = member.user;
-				if (renderedMemberIds.has(user.id)) {
-					continue;
-				}
-				renderedMemberIds.add(user.id);
-				const displayName = member.nick
-					? NicknameUtils.formatNicknameForStreamerMode(member.nick)
-					: NicknameUtils.getNickname(user, guild.id);
-				const roleColor = member.getColorString?.() ?? undefined;
-				virtualRows.push(
-					<div
-						key={`member-${user.id}`}
-						className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-						style={rowStyle}
-						data-flx="channel.channel-members.lazy-member-list.virtual-row.member"
-					>
-						<MemberListItem
-							user={user}
-							channelId={channel.id}
-							guildId={guild.id}
-							guildMember={member}
-							isOwner={guild.isOwner(user.id)}
-							roleColor={roleColor}
-							displayName={displayName}
-							disableBackdrop={true}
-							avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item"
+				if (rowIndex === layout.headerRowIndex) {
+					const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
+					const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
+					const groupName = getGroupName(group.id);
+					const groupRowContent = (
+						<MemberListGroupHeaderContent
+							name={groupName}
+							count={group.count}
+							data-flx="channel.channel-members.lazy-member-list.member-list-group-header-content"
 						/>
-					</div>,
-				);
-				continue;
-			}
-			const layout = getGroupLayoutForRow(layouts, rowIndex);
-			if (!layout) {
-				continue;
-			}
-			if (rowIndex === layout.headerRowIndex) {
-				const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
-				const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
-				const groupName = getGroupName(group.id);
-				const groupRowContent = (
-					<MemberListGroupHeaderContent
-						name={groupName}
-						count={group.count}
-						data-flx="channel.channel-members.lazy-member-list.member-list-group-header-content"
-					/>
-				);
-				if (role) {
+					);
+
 					virtualRows.push(
+						// biome-ignore lint/a11y/noStaticElementInteractions: Role headings have button semantics and handlers; other headings have neither.
 						<div
 							key={`group-${group.id}`}
 							ref={registerGroupHeading}
 							data-member-group-id={group.id}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
 							style={rowStyle}
-							role="button"
-							tabIndex={0}
-							onContextMenu={(event) => openRoleContextMenu(event, role.id)}
-							onKeyDown={(event) => {
-								if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
-								event.preventDefault();
-								event.stopPropagation();
-								openRoleContextMenuForElement(event.currentTarget, role.id);
-							}}
-							data-member-list-focus-item="true"
+							role={role ? 'button' : undefined}
+							tabIndex={role ? 0 : undefined}
+							onContextMenu={role ? (event) => openRoleContextMenu(event, role.id) : undefined}
+							onKeyDown={
+								role
+									? (event) => {
+											if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
+											event.preventDefault();
+											event.stopPropagation();
+											openRoleContextMenuForElement(event.currentTarget, role.id);
+										}
+									: undefined
+							}
+							data-member-list-focus-item={role ? 'true' : undefined}
 							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
 						>
 							{groupRowContent}
 						</div>,
 					);
-				} else {
-					virtualRows.push(
-						<div
-							key={`group-${group.id}`}
-							ref={registerGroupHeading}
-							data-member-group-id={group.id}
-							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
-						>
-							{groupRowContent}
-						</div>,
-					);
+
+					continue;
 				}
-				continue;
 			}
 			const item = memberListState.items.get(rowIndex);
 			if (!item) {

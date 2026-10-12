@@ -11,31 +11,22 @@ import {Sounds} from '@app/features/user/components/modals/tabs/notifications_ta
 import {TextToSpeech} from '@app/features/user/components/modals/tabs/notifications_tab/TextToSpeech';
 import {useSoundSettings} from '@app/features/user/components/modals/tabs/notifications_tab/useSoundSettings';
 import inlineStyles from '@app/features/user/components/modals/tabs/TabInline.module.css';
+import {
+	MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR as INLINE_MENTION_PREFERENCE_DESCRIPTOR,
+	TEXT_TO_SPEECH_NOTIFICATIONS_DESCRIPTOR as INLINE_TEXT_TO_SPEECH_NOTIFICATIONS_DESCRIPTOR,
+	MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR,
+	TEXT_TO_SPEECH_NOTIFICATIONS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR = msg({
-	message: 'Mention preference',
-	comment: 'Notifications settings: section heading for the default reply-mention behavior.',
-});
-const TEXT_TO_SPEECH_NOTIFICATIONS_DESCRIPTOR = msg({
-	message: 'Text-to-speech notifications',
-	comment: 'Notifications settings: section heading for text-to-speech notification behavior.',
-});
 const CONTROL_SPEECH_COMMANDS_AND_NARRATION_FOR_INCOMING_CONTENT_DESCRIPTOR = msg({
 	message: 'Control speech commands and narration for incoming content.',
 	comment: 'Description text in the inline.',
 });
-const INLINE_MENTION_PREFERENCE_DESCRIPTOR = msg({
-	message: 'Mention preference',
-	comment: 'Short label in the inline. Keep it concise.',
-});
-const INLINE_TEXT_TO_SPEECH_NOTIFICATIONS_DESCRIPTOR = msg({
-	message: 'Text-to-speech notifications',
-	comment: 'Short label in the inline. Keep it concise.',
-});
+
 const NotificationsSections = observer(({inline}: {inline: boolean}) => {
 	const {i18n} = useLingui();
 	const browserNotificationsEnabled = Notification.browserNotificationsEnabled;

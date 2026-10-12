@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
-import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
-import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
+import {showCloseDMConfirmation} from '@app/features/channel/components/alerts/CloseDMConfirmation';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
@@ -26,8 +23,12 @@ import {
 	UNPIN_DM_DESCRIPTOR,
 	UNPIN_GROUP_DM_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {
+	CHANNEL_RECORD_DESCRIPTOR,
+	RecordDebugModal,
+	USER_RECORD_DESCRIPTOR,
+} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -41,7 +42,6 @@ import {
 	COPY_USER_ID_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
 	DEBUG_USER_DESCRIPTOR,
-	DM_CLOSED_DESCRIPTOR,
 	EDIT_GROUP_DESCRIPTOR,
 	INVITES_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
@@ -59,8 +59,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import Favorites from '@app/features/messaging/state/Favorites';
 import {BLOCK_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -97,7 +96,6 @@ import {
 	VoiceCallIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import {
-	ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR,
 	CHANNEL_ID_COPIED_DESCRIPTOR,
 	FAILED_TO_PIN_DM_DESCRIPTOR,
 	FAILED_TO_PIN_GROUP_DM_DESCRIPTOR,
@@ -160,32 +158,6 @@ const getDefaultInviteChannelId = (guildId: string): string | null => {
 	return InviteUtils.getDefaultCommunityInviteChannelId(guildId) ?? null;
 };
 
-interface DMMenuHandlers {
-	handleMarkAsRead: () => void;
-	handleToggleFavorite: () => void;
-	handleViewProfile: () => void;
-	handleStartVoiceCall: () => Promise<void>;
-	handleAddNote: () => void;
-	handleChangeFriendNickname: () => void;
-	handleInviteToCommunity: (guildId: string, channelId: string, guildName: string) => Promise<void>;
-	handleSendFriendRequest: () => void;
-	handleAcceptFriendRequest: () => void;
-	handleRemoveFriend: () => void;
-	handleBlockUser: () => void;
-	handleUnblockUser: () => void;
-	handleCloseDM: () => void;
-	handleLeaveGroup: () => void;
-	handleDeleteMyMessagesInChannel: () => void;
-	handlePinDM: () => Promise<void>;
-	handleUnpinDM: () => Promise<void>;
-	handleEditGroup: () => void;
-	handleShowInvites: () => void;
-	handleCopyChannelId: () => Promise<void>;
-	handleCopyUserId: () => Promise<void>;
-	handleDebugUser: () => void;
-	handleDebugChannel: () => void;
-}
-
 export interface DMMenuDataOptions {
 	onClose: () => void;
 	onOpenMuteSheet?: () => void;
@@ -194,18 +166,8 @@ export interface DMMenuDataOptions {
 
 export interface DMMenuData {
 	groups: Array<MenuGroupType>;
-	handlers: DMMenuHandlers;
-	invitableCommunities: Array<InviteCandidate>;
-	isGroupDM: boolean;
-	isOwner: boolean;
 	isMuted: boolean;
 	mutedText: string | null;
-	isFavorited: boolean;
-	relationshipType: number | undefined;
-	isRecipientBot: boolean | undefined;
-	isRecipientSystem: boolean;
-	restrictRecipientActions: boolean;
-	developerMode: boolean;
 }
 
 export function useDMMenuData(
@@ -395,42 +357,12 @@ export function useDMMenuData(
 		[recipient, i18n, onClose],
 	);
 	const handleCloseDM = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<ConfirmModal
-					title={i18n._(CLOSE_DM_DESCRIPTOR)}
-					description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {
-						recipientUsername: recipient ? NicknameUtils.getNickname(recipient, null) : '',
-					})}
-					primaryText={i18n._(CLOSE_DM_DESCRIPTOR)}
-					primaryVariant="danger"
-					onPrimary={async () => {
-						try {
-							await ChannelCommands.remove(channel.id);
-							const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
-							if (selectedChannel === channel.id) {
-								RouterUtils.transitionTo(Routes.ME);
-							}
-							ToastCommands.createToast({
-								type: 'success',
-								children: i18n._(DM_CLOSED_DESCRIPTOR),
-							});
-						} catch (error) {
-							logger.error('Failed to close DM:', error);
-							window.setTimeout(() => {
-								ModalCommands.push(
-									modal(() => (
-										<DMCloseFailedModal data-flx="ui.action-menu.items.dm-menu-data.handle-close-dm.dm-close-failed-modal" />
-									)),
-								);
-							}, 0);
-						}
-					}}
-					data-flx="ui.action-menu.items.dm-menu-data.handle-close-dm.confirm-modal"
-				/>
-			)),
-		);
+		showCloseDMConfirmation({
+			i18n,
+			channelId: channel.id,
+			displayName: recipient ? NicknameUtils.getNickname(recipient, null) : '',
+			beforeOpen: onClose,
+		});
 	}, [channel.id, i18n, recipient, onClose]);
 	const handleLeaveGroup = useCallback(() => {
 		ModalCommands.runAfterBottomSheetClose(onClose, () => leaveGroup(channel.id));
@@ -508,9 +440,10 @@ export function useDMMenuData(
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
 			modal(() => (
-				<UserDebugModal
+				<RecordDebugModal
+					label={i18n._(USER_RECORD_DESCRIPTOR)}
 					title={i18n._(USER_DEBUG_DESCRIPTOR)}
-					user={recipient}
+					record={recipient}
 					data-flx="ui.action-menu.items.dm-menu-data.handle-debug-user.user-debug-modal"
 				/>
 			)),
@@ -520,66 +453,15 @@ export function useDMMenuData(
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
 			modal(() => (
-				<ChannelDebugModal
+				<RecordDebugModal
+					label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 					title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-					channel={channel}
+					record={channel}
 					data-flx="ui.action-menu.items.dm-menu-data.handle-debug-channel.channel-debug-modal"
 				/>
 			)),
 		);
 	}, [channel, onClose]);
-	const handlers: DMMenuHandlers = useMemo(
-		() => ({
-			handleMarkAsRead,
-			handleToggleFavorite,
-			handleViewProfile,
-			handleStartVoiceCall,
-			handleAddNote,
-			handleChangeFriendNickname,
-			handleInviteToCommunity,
-			handleSendFriendRequest,
-			handleAcceptFriendRequest,
-			handleRemoveFriend,
-			handleBlockUser,
-			handleUnblockUser,
-			handleCloseDM,
-			handleLeaveGroup,
-			handleDeleteMyMessagesInChannel,
-			handlePinDM,
-			handleUnpinDM,
-			handleEditGroup,
-			handleShowInvites,
-			handleCopyChannelId,
-			handleCopyUserId,
-			handleDebugUser,
-			handleDebugChannel,
-		}),
-		[
-			handleMarkAsRead,
-			handleToggleFavorite,
-			handleViewProfile,
-			handleStartVoiceCall,
-			handleAddNote,
-			handleChangeFriendNickname,
-			handleInviteToCommunity,
-			handleSendFriendRequest,
-			handleAcceptFriendRequest,
-			handleRemoveFriend,
-			handleBlockUser,
-			handleUnblockUser,
-			handleCloseDM,
-			handleLeaveGroup,
-			handleDeleteMyMessagesInChannel,
-			handlePinDM,
-			handleUnpinDM,
-			handleEditGroup,
-			handleShowInvites,
-			handleCopyChannelId,
-			handleCopyUserId,
-			handleDebugUser,
-			handleDebugChannel,
-		],
-	);
 	const groups = useMemo(() => {
 		const menuGroups: Array<MenuGroupType> = [];
 		if (showMarkAsReadItem) {
@@ -858,17 +740,8 @@ export function useDMMenuData(
 	]);
 	return {
 		groups,
-		handlers,
-		invitableCommunities,
-		isGroupDM,
-		isOwner,
+
 		isMuted,
 		mutedText: mutedText ?? null,
-		isFavorited,
-		relationshipType,
-		isRecipientBot,
-		isRecipientSystem,
-		restrictRecipientActions,
-		developerMode,
 	};
 }

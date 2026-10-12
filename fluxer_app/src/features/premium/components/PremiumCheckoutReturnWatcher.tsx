@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Accounts from '@app/features/auth/state/Accounts';
-import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {
 	consumeCompletedPremiumCheckoutReturnIntent,
 	getCurrentPremiumActive,
 	getPendingPremiumCheckoutReturnIntent,
 } from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
 import WindowState from '@app/features/window/state/Window';
 import {observer} from 'mobx-react-lite';
@@ -57,20 +52,7 @@ const ActivePremiumCheckoutReturnWatcher = observer(function ActivePremiumChecko
 	useEffect(() => {
 		if (!showPremiumFeatures) return;
 		if (!isPremium || !consumeCompletedPremiumCheckoutReturnIntent()) return;
-		if (PlutoniumPageRollout.enabled) {
-			PlutoniumPageCommands.openPlutoniumPage();
-			return;
-		}
-		ModalCommands.popAll();
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal initialTab="plutonium" data-flx="premium.checkout-return-watcher.user-settings-modal" />
-				),
-				'user-settings',
-			),
-		);
-		ComponentBus.dispatchOrBuffer('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'});
+		PlutoniumPageCommands.openPlutoniumPage();
 	}, [isPremium, currentUserId, showPremiumFeatures]);
 	return null;
 });

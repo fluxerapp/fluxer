@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable} from 'mobx';
 
@@ -17,7 +16,6 @@ class MessageEditMobile {
 		}
 		const currentMessageId = this.editingMessageIds[channelId];
 		if (currentMessageId) {
-			TextareaSelection.clearEditingSelection(channelId, currentMessageId);
 		}
 		this.editingMessageIds[channelId] = messageId;
 	}
@@ -28,7 +26,6 @@ class MessageEditMobile {
 		}
 		const messageId = this.editingMessageIds[channelId];
 		if (messageId) {
-			TextareaSelection.clearEditingSelection(channelId, messageId);
 		}
 		delete this.editingMessageIds[channelId];
 	}

@@ -12,6 +12,7 @@ import {
 	DOMAIN_DESCRIPTOR,
 	VERIFY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {downloadTextFile} from '@app/features/platform/utils/DownloadFile';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -226,15 +227,7 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 	}, [dnsValue, i18n, notifyAndReset]);
 	const downloadTokenFile = useCallback(() => {
 		if (!verificationData?.token) return;
-		const blob = new Blob([verificationData.token], {type: 'text/plain'});
-		const blobUrl = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = blobUrl;
-		link.download = 'fluxer-verification';
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(blobUrl);
+		downloadTextFile(verificationData.token, 'fluxer-verification');
 	}, [verificationData?.token]);
 	const hostCopyLabel = hostCopied ? i18n._(COPIED_DESCRIPTOR) : i18n._(COPY_HOST_DESCRIPTOR);
 	const valueCopyLabel = valueCopied ? i18n._(COPIED_DESCRIPTOR) : i18n._(COPY_VALUE_DESCRIPTOR);

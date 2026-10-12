@@ -2,7 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import Guilds from '@app/features/guild/state/Guilds';
 import {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -999,7 +999,7 @@ class MemberSidebar {
 	): boolean {
 		const normalizedRanges = normalizeMemberListRanges(ranges);
 		const storageKey = this.resolveStorageKey(guildId, channelId);
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		const guildSubscriptions = this.listSubscribedChannelIds[guildId];
 		const currentSubscribedChannelId = guildSubscriptions == null ? undefined : guildSubscriptions[storageKey];
 		const shouldSendUpdate =
@@ -1093,7 +1093,7 @@ class MemberSidebar {
 			return;
 		}
 		if (updateGateway) {
-			const socket = GatewayConnection.socket;
+			const socket = GatewaySessions.foregroundConnection.socket;
 			if (socket != null && socket.isConnected() === true) {
 				socket.updateGuildSubscriptions({
 					subscriptions: {

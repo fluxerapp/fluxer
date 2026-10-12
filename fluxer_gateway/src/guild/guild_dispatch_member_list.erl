@@ -62,7 +62,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
         undefined ->
             UpdatedState;
         _ ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
                 UserId, OldState, UpdatedState
             ),
             NewState
@@ -70,7 +70,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
 
 -spec broadcast_all_updates(guild_state()) -> guild_state().
 broadcast_all_updates(UpdatedState) ->
-    {ok, NewState} = guild_member_list:broadcast_all_member_list_updates(UpdatedState),
+    {ok, NewState} = guild_member_list_write:broadcast_all_member_list_updates(UpdatedState),
     NewState.
 
 -spec broadcast_channel_update(event_data(), guild_state()) -> guild_state().
@@ -95,7 +95,7 @@ broadcast_channel_update_for_id(ChannelId, UpdatedState) ->
         true ->
             sync_channel_list_without_rebuild(ChannelId, UpdatedState);
         false ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates_for_channel(
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates_for_channel(
                 ChannelId, UpdatedState
             ),
             NewState

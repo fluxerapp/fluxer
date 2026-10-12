@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
+import {sendVerificationEmail} from '@app/api/auth/AuthEmail';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
@@ -10,12 +11,12 @@ import {
 	getPrimaryInstanceHost,
 	usernameFromInstanceLocalPart,
 } from '@app/api/auth/InstanceAddress';
-import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {APIConfig} from '@app/api/config/APIConfig';
-import type {UserRow} from '@app/api/database/types/UserTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {isBlockedEmailDomain} from '@app/api/infrastructure/activity/SharedLists';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {withAccountIdentitySetupLock} from '@app/api/instance/AccountIdentitySetupLock';
 import {
@@ -41,6 +42,7 @@ import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import * as AgeUtils from '@app/api/utils/AgeUtils';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
@@ -55,10 +57,10 @@ import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/Registrat
 import {RegistrationUrlInvalidError} from '@fluxer/errors/src/domains/auth/RegistrationUrlInvalidError';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
-import {parseAcceptLanguage} from '@pkgs/locale/src/resolution/AcceptLanguageNegotiation';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
 
@@ -84,10 +86,10 @@ interface RegisterParams {
 }
 
 export interface RegistrationDependencies {
-	inviteService: InviteService | null;
+	inviteService: InviteService;
 	instanceConfigRepository: InstanceConfigRepository;
 	singleCommunityService: SingleCommunityService;
-	discriminatorService: IDiscriminatorService;
+	discriminatorService: DiscriminatorService;
 	kvActivityTracker: KVActivityTracker;
 }
 
@@ -232,9 +234,10 @@ async function registerAccount(
 	const userId = createUserID(await snowflake.generate());
 	const acceptLanguage = request.headers.get('accept-language');
 	const userLocale = parseAcceptLanguage(acceptLanguage);
-	const passwordHash = data.password ? await AuthPassword.hashPassword(ctx, data.password) : null;
+	const passwordHash = data.password ? await hashPassword(data.password) : null;
 	const flags = config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
 	const userRow: UserRow = {
+		...EMPTY_USER_ROW,
 		user_id: userId,
 		username,
 		discriminator,
@@ -246,51 +249,17 @@ async function registerAccount(
 		email_bounced: false,
 		password_hash: passwordHash,
 		password_last_changed_at: passwordHash ? now : null,
-		totp_secret: null,
 		authenticator_types: new Set(),
-		avatar_hash: null,
-		avatar_color: null,
-		banner_hash: null,
-		banner_color: null,
-		bio: null,
-		pronouns: null,
-		accent_color: null,
-		timezone: null,
 		timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
 		date_of_birth: dateOfBirth,
 		locale: userLocale,
 		flags,
-		premium_type: null,
-		premium_since: null,
-		premium_until: null,
-		premium_gift_extension_ends_at: null,
-		premium_will_cancel: null,
-		premium_billing_cycle: null,
-		premium_lifetime_sequence: null,
-		premium_grace_ends_at: null,
-		stripe_subscription_id: null,
-		stripe_customer_id: null,
-		has_ever_purchased: null,
 		terms_agreed_at: requiresTermsConsent ? now : null,
 		privacy_agreed_at: requiresPrivacyConsent ? now : null,
 		last_active_at: now,
 		last_active_ip: clientIp,
-		temp_banned_until: null,
-		pending_deletion_at: null,
-		pending_bulk_message_deletion_at: null,
-		pending_bulk_message_deletion_channel_count: null,
-		pending_bulk_message_deletion_message_count: null,
-		deletion_reason_code: null,
-		deletion_public_reason: null,
-		deletion_audit_log_reason: null,
 		acls: grantBootstrapAdmin ? new Set([AdminACLs.WILDCARD]) : null,
 		traits: registrationAccess.pendingApproval ? new Set([REGISTRATION_PENDING_APPROVAL_TRAIT]) : null,
-		first_refund_at: null,
-		gift_inventory_server_seq: null,
-		gift_inventory_client_seq: null,
-		premium_onboarding_dismissed_at: null,
-		mention_flags: null,
-		last_voice_activity_sharing_change_at: null,
 		version: 1,
 	};
 	const registrationUrlUse = await claimRegistrationUrlUse(
@@ -360,7 +329,7 @@ async function registerAccount(
 		null,
 		user.id.toString(),
 	);
-	if (rawEmail && emailEnabled) await maybeSendVerificationEmail(ctx, {user, email: rawEmail});
+	if (rawEmail && emailEnabled) await sendVerificationEmail(ctx, {user, email: rawEmail});
 	await users.createAuthorizedIp(userId, clientIp);
 	if (registrationAccess.pendingApproval) {
 		return {
@@ -487,20 +456,8 @@ async function resolveRegistrationAccess(
 	};
 }
 
-async function maybeSendVerificationEmail(ctx: ApiContext, params: {user: User; email: string}): Promise<void> {
-	const {users, email: emailService} = ctx.services;
-	const {user, email} = params;
-	const token = createEmailVerificationToken(await AuthUtility.generateSecureToken(ctx));
-	await users.createEmailVerificationToken({
-		token_: token,
-		user_id: user.id,
-		email,
-	});
-	await emailService.sendEmailVerification(email, user.username, token, user.locale);
-}
-
 async function maybeAutoJoinInvite(
-	inviteService: InviteService | null,
+	inviteService: InviteService,
 	params: {
 		userId: UserID;
 		inviteCode: string | null | undefined;
@@ -510,7 +467,6 @@ async function maybeAutoJoinInvite(
 	const {userId, inviteCode, requestCache} = params;
 	const normalizedInviteCode = inviteCode?.trim();
 	if (!normalizedInviteCode) return;
-	if (!inviteService) return;
 	try {
 		await inviteService.acceptInvite({
 			userId,
@@ -558,7 +514,7 @@ async function enforceRegistrationRateLimits(
 	}
 }
 
-async function allocateDiscriminator(discriminatorService: IDiscriminatorService, username: string): Promise<number> {
+async function allocateDiscriminator(discriminatorService: DiscriminatorService, username: string): Promise<number> {
 	const result = await discriminatorService.generateDiscriminator({username});
 	if (!result.available || result.discriminator === -1) {
 		throw InputValidationError.fromCode('username', ValidationErrorCodes.TOO_MANY_USERS_WITH_THIS_USERNAME);

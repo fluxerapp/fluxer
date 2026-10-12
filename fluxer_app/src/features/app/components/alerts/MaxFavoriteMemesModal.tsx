@@ -40,7 +40,7 @@ export const MaxFavoriteMemesModal = observer(() => {
 	const {i18n} = useLingui();
 	const currentUser = Users.currentUser;
 	const showPremium = shouldShowPremiumFeatures();
-	const premiumLimit = Limits.getPremiumValue('max_favorite_memes', MAX_FAVORITE_MEMES_PREMIUM);
+	const premiumLimit = Limits.getStockValue('max_favorite_memes', MAX_FAVORITE_MEMES_PREMIUM);
 	const maxFavoriteMemes = currentUser?.maxFavoriteMemes ?? premiumLimit;
 	const canUpgradeFavoriteMemes = maxFavoriteMemes < premiumLimit;
 	if (!showPremium) {

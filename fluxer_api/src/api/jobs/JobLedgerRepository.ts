@@ -56,9 +56,6 @@ const NEWEST_FIRST = {col: 'created_at', direction: 'DESC'} as const;
 const FETCH_JOB_BY_ID_QUERY = JobsById.select({
 	where: JobsById.where.eq('job_id'),
 });
-const FETCH_CANCEL_REQUESTED_QUERY = JobsById.select({
-	where: JobsById.where.eq('job_id'),
-});
 const ACTIVE_JOBS_QUERY = JobsActive.select();
 const ACTIVE_JOB_IDS_QUERY = JobsActive.select({columns: ['job_id']});
 const JOBS_AFTER_IN_TIE_QUERY = JobsByDayBucket.select({
@@ -198,47 +195,33 @@ export class JobLedgerRepository {
 		);
 	}
 
-	async markSucceeded(jobId: bigint, result: Record<string, unknown> | null): Promise<void> {
-		const completedAt = new Date();
-		const status: JobStatus = 'succeeded';
+	private async markTerminal(
+		jobId: bigint,
+		status: Extract<JobStatus, 'succeeded' | 'cancelled' | 'deadletter'>,
+		extra: Parameters<typeof JobsById.patchByPkWithTtl>[1] = {},
+	): Promise<void> {
 		await upsertOne(
 			JobsById.patchByPkWithTtl(
 				{job_id: jobId},
-				{
-					status: Db.set(status),
-					completed_at: Db.set(completedAt),
-					result: result === null ? Db.clear() : Db.set(JSON.stringify(result)),
-				},
+				{...extra, status: Db.set(status), completed_at: Db.set(new Date())},
 				JOB_LEDGER_TTL_SECONDS,
 			),
 		);
 		await deleteOneOrMany(JobsActive.deleteByPk({job_id: jobId}));
+	}
+
+	async markSucceeded(jobId: bigint, result: Record<string, unknown> | null): Promise<void> {
+		return this.markTerminal(jobId, 'succeeded', {
+			result: result === null ? Db.clear() : Db.set(JSON.stringify(result)),
+		});
 	}
 
 	async markCancelled(jobId: bigint): Promise<void> {
-		const completedAt = new Date();
-		const status: JobStatus = 'cancelled';
-		await upsertOne(
-			JobsById.patchByPkWithTtl(
-				{job_id: jobId},
-				{status: Db.set(status), completed_at: Db.set(completedAt)},
-				JOB_LEDGER_TTL_SECONDS,
-			),
-		);
-		await deleteOneOrMany(JobsActive.deleteByPk({job_id: jobId}));
+		return this.markTerminal(jobId, 'cancelled');
 	}
 
 	async markDeadletter(jobId: bigint, errorMessage: string): Promise<void> {
-		const completedAt = new Date();
-		const status: JobStatus = 'deadletter';
-		await upsertOne(
-			JobsById.patchByPkWithTtl(
-				{job_id: jobId},
-				{status: Db.set(status), completed_at: Db.set(completedAt), error_message: Db.set(errorMessage)},
-				JOB_LEDGER_TTL_SECONDS,
-			),
-		);
-		await deleteOneOrMany(JobsActive.deleteByPk({job_id: jobId}));
+		return this.markTerminal(jobId, 'deadletter', {error_message: Db.set(errorMessage)});
 	}
 
 	async reportProgress(jobId: bigint, current: number, total: number | null, message: string | null): Promise<void> {
@@ -272,7 +255,7 @@ export class JobLedgerRepository {
 	async isCancelRequested(jobId: bigint): Promise<boolean> {
 		const row = await fetchOne<{
 			cancel_requested: boolean | null;
-		}>(FETCH_CANCEL_REQUESTED_QUERY.bind({job_id: jobId}));
+		}>(FETCH_JOB_BY_ID_QUERY.bind({job_id: jobId}));
 		return row?.cancel_requested === true;
 	}
 

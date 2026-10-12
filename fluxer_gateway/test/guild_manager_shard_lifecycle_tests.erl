@@ -54,27 +54,6 @@ normalize_transferred_guild_state_keeps_only_transferable_fields_test() ->
     ?assertNot(maps:is_key(thread_resend_pending, Normalized)),
     ?assertNot(maps:is_key(voice_server_pid, Normalized)).
 
-register_and_monitor_race_kills_duplicate_test_() ->
-    {timeout, 15, fun() ->
-        process_registry:init(),
-        GuildId = 66666,
-        GuildKey = process_registry:build_process_key(guild, GuildId),
-        WinnerPid = spawn(fun mock_guild_loop/0),
-        ets:insert(process_registry_table, {GuildKey, WinnerPid}),
-        LoserPid = spawn(fun mock_guild_loop/0),
-        try
-            Result = process_registry:register_and_monitor(GuildKey, LoserPid, #{}),
-            ?assertMatch({ok, WinnerPid, _, _}, Result),
-            timer:sleep(200),
-            ?assertEqual(false, process_liveness:is_alive(LoserPid)),
-            ?assert(process_liveness:is_alive(WinnerPid))
-        after
-            process_registry:registry_unregister(GuildKey),
-            WinnerPid ! stop,
-            LoserPid ! stop
-        end
-    end}.
-
 shard_terminate_drains_pending_requests_test() ->
     ReplyRef1 = make_ref(),
     ReplyRef2 = make_ref(),

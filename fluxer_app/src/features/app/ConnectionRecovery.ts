@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import Accounts from '@app/features/auth/state/Accounts';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import SessionManager from '@app/features/platform/state/AuthSession';
 
 class StalledConnectionAccountSwitchUnavailableError extends Error {
@@ -32,5 +32,5 @@ export function retryStalledConnection(): void {
 	if (accountKey === null) {
 		return;
 	}
-	GatewayConnection.recoverForegroundSession(accountKey);
+	GatewaySessions.recoverForegroundSession(accountKey);
 }

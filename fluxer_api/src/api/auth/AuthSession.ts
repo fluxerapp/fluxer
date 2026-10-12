@@ -2,7 +2,7 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import {mapAuthSessionsToResponse} from '@app/api/auth/AuthModel';
-import {revokeAllAuthSessions, revokeAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import {revokeAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import type {UserID} from '@app/api/BrandedTypes';
 import {
@@ -54,8 +54,6 @@ interface ReplaceCurrentAuthSessionParams {
 
 interface ReplaceCurrentAuthSessionResult {
 	token: string;
-	authSession: AuthSession;
-	oldAuthSessionIdHash: string;
 	newAuthSessionIdHash: string;
 }
 
@@ -171,10 +169,6 @@ export async function logoutAuthSessions(
 	);
 }
 
-export async function terminateAllUserSessions(ctx: ApiContext, userId: UserID): Promise<number> {
-	return await revokeAllAuthSessions(ctx.services, userId);
-}
-
 export async function replaceCurrentAuthSession(
 	ctx: ApiContext,
 	{user, currentAuthSession, request}: ReplaceCurrentAuthSessionParams,
@@ -196,8 +190,6 @@ export async function replaceCurrentAuthSession(
 	});
 	return {
 		token: newToken,
-		authSession: newAuthSession,
-		oldAuthSessionIdHash,
 		newAuthSessionIdHash,
 	};
 }

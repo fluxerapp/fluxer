@@ -84,6 +84,19 @@ function loadWindowsShortcuts(initialFiles) {
 		Buffer,
 		process: {platform: 'win32', execPath: CURRENT_EXE, env: {APPDATA, USERPROFILE}},
 		require: (specifier) => {
+			if (specifier === '@electron/main/NativeAddon') {
+				const addonModule = {exports: {}};
+				const addonSource = esbuild.transformSync(readFileSync(new URL('./NativeAddon.ts', import.meta.url), 'utf8'), {
+					loader: 'ts',
+					format: 'cjs',
+					target: 'node20',
+				}).code;
+				vm.runInContext('(function (module, exports) {' + addonSource + '\n})', context)(
+					addonModule,
+					addonModule.exports,
+				);
+				return addonModule.exports;
+			}
 			if (specifier === 'node:fs') {
 				return {default: fakeFs, ...fakeFs};
 			}

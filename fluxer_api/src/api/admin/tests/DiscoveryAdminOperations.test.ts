@@ -82,19 +82,6 @@ describe('Discovery Admin Operations', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	describe('approve', () => {
-		test('should add DISCOVERABLE feature to guild on approval', async () => {
-			const {owner, guild} = await createGuildWithApplication(harness, 'Feature Add Guild');
-			const admin = await createAdminWithACLs(harness, ['discovery:review']);
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'approved'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const guildData = await getGuild(harness, owner.token, guild.id);
-			expect(guildData.features).toContain(GuildFeatures.DISCOVERABLE);
-		});
-	});
 	describe('remove', () => {
 		test('should remove an approved guild from discovery', async () => {
 			const {owner, guild} = await createGuildWithApplication(harness, 'Remove Test Guild');
@@ -104,6 +91,7 @@ describe('Discovery Admin Operations', () => {
 				.body({status: 'approved'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
+			expect((await getGuild(harness, owner.token, guild.id)).features).toContain(GuildFeatures.DISCOVERABLE);
 			const result = await createBuilder<DiscoveryApplicationResponse>(harness, `${admin.token}`)
 				.delete(`/admin/discovery/listings/${guild.id}`)
 				.body({reason: 'Violated community guidelines'})
@@ -148,15 +136,6 @@ describe('Discovery Admin Operations', () => {
 			await createBuilder(harness, `${admin.token}`)
 				.patch(`/admin/discovery/applications/${guild.id}`)
 				.body({status: 'approved'})
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('should require DISCOVERY_REVIEW ACL to reject', async () => {
-			const {guild} = await createGuildWithApplication(harness, 'ACL Reject Guild');
-			const admin = await createAdminWithACLs(harness, ['user:lookup']);
-			await createBuilder(harness, `${admin.token}`)
-				.patch(`/admin/discovery/applications/${guild.id}`)
-				.body({status: 'rejected', reason: 'Not allowed'})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});

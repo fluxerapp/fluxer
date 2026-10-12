@@ -7,7 +7,8 @@ import {CategoryCreateModal} from '@app/features/channel/components/modals/Categ
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
 import Channels from '@app/features/channel/state/Channels';
 import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {GuildDebugModal} from '@app/features/devtools/components/debug/GuildDebugModal';
+import {COMMUNITY_RECORD_DESCRIPTOR, RecordDebugModal} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
@@ -98,40 +99,10 @@ interface UseGuildMenuDataOptions {
 	preserveInitialMarkAsReadVisibility?: boolean;
 }
 
-interface GuildMenuHandlers {
-	handleMarkAsRead: () => void;
-	handleInviteMembers: () => void;
-	handleCommunitySettings: () => void;
-	handleCreateChannel: () => void;
-	handleCreateCategory: () => void;
-	handleNotificationSettings: () => void;
-	handlePrivacySettings: () => void;
-	handleEditCommunityProfile: () => void;
-	handleLeaveCommunity: () => void;
-	handleDeleteMyMessagesInCommunity: () => void;
-	handleCopyGuildId: () => void;
-	handleDebugGuild: () => void;
-	handleResetMatureContentAgreeState: () => void;
-	handleToggleHideMutedChannels: (checked: boolean) => void;
-}
-
-interface GuildMenuPermissions {
-	canManageGuild: boolean;
-	canManageChannels: boolean;
-	canInvite: boolean;
-	canAccessGuildSettings: boolean;
-	isOwner: boolean;
-	hasGuildUnread: boolean;
-	developerMode: boolean;
-}
-
 export interface GuildMenuData {
 	groups: Array<MenuGroupType>;
-	handlers: GuildMenuHandlers;
-	permissions: GuildMenuPermissions;
 	isMuted: boolean;
 	mutedText: string | null;
-	hideMutedChannels: boolean;
 }
 
 export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions): GuildMenuData {
@@ -291,9 +262,10 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
 					modal(() => (
-						<GuildDebugModal
+						<RecordDebugModal
+							label={i18n._(COMMUNITY_RECORD_DESCRIPTOR)}
 							title={i18n._(COMMUNITY_DEBUG_DESCRIPTOR)}
-							guild={guild}
+							record={guild}
 							data-flx="ui.action-menu.items.guild-menu-data.handle-debug-guild.guild-debug-modal"
 						/>
 					)),
@@ -311,18 +283,6 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 			},
 		}),
 		[channels, deleteMyMessagesInGuild, guild, i18n.locale, leaveGuild, onClose],
-	);
-	const permissions: GuildMenuPermissions = useMemo(
-		() => ({
-			canManageGuild,
-			canManageChannels,
-			canInvite,
-			canAccessGuildSettings,
-			isOwner,
-			hasGuildUnread,
-			developerMode,
-		}),
-		[canManageGuild, canManageChannels, canInvite, canAccessGuildSettings, isOwner, hasGuildUnread, developerMode],
 	);
 	const availableSettingsTabs = useMemo(() => {
 		const allTabs = getGuildSettingsTabs(i18n);
@@ -517,10 +477,8 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 	]);
 	return {
 		groups,
-		handlers,
-		permissions,
+
 		isMuted,
 		mutedText: mutedText ?? null,
-		hideMutedChannels,
 	};
 }

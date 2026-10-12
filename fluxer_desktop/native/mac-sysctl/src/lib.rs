@@ -152,17 +152,3 @@ pub async fn sysctl_by_name_string(name: String) -> Result<Option<String>> {
     }
     spawn_sysctl(move || read_string_blocking(name)).await
 }
-
-#[cfg(all(test, target_os = "macos"))]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn missing_sysctl_maps_to_null() {
-        assert!(
-            ctl_for_name("fluxer.definitely_missing_sysctl")
-                .unwrap()
-                .is_none()
-        );
-    }
-}

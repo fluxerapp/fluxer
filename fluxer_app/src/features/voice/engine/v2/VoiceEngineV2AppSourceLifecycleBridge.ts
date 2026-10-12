@@ -4,16 +4,19 @@ import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {createVoiceEngineV2AppDiagnosticsAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import type {NativeScreenCaptureLifecycleMessage} from '@app/types/electron.d';
-import {
-	type DiagnosticsPort,
-	type SourceFault,
-	type SourceLifecycleClock,
-	type SourceLifecycleEvent,
-	SourceLifecycleRegistry,
-	type SourceLifecycleState,
-	type VoiceEngineV2Event,
-	type VoiceEngineV2SourceLifecycleTransitionedEvent,
-} from '@fluxer/voice_engine_v2';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
+import type {DiagnosticsPort} from '@fluxer/voice_engine_v2/src/ports';
+import type {
+	VoiceEngineV2Event,
+	VoiceEngineV2SourceLifecycleTransitionedEvent,
+} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {SourceLifecycleRegistry} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleRegistry';
+import type {
+	SourceFault,
+	SourceLifecycleClock,
+	SourceLifecycleEvent,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 const VALID_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleMessage['kind']> = new Set([
 	'error',
@@ -306,8 +309,4 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 			typeof message.message === 'string' && message.message.length > 0 ? message.message : 'native capture diagnostic';
 		void this.diagnostics.log('info', 'nativeCaptureDiagnostic', diagnosticMessage, detail).catch(() => undefined);
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

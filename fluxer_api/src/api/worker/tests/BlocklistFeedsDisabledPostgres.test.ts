@@ -1,71 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
-import {createServer} from 'node:net';
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import {Config} from '@app/api/Config';
 import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import type {BannedFileShaRow} from '@app/api/database/types/AdminArchiveTypes';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
 import {
 	clearWorkerDependencies,
 	getWorkerDependencies,
 	setWorkerDependenciesForTest,
 } from '@app/api/worker/WorkerContext';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import type {IPostgresClient} from '@pkgs/postgres/src/Client';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const KV_TABLE = 'kv_blocklist_feeds_disabled';
-const CONTAINER = `fluxer-feeds-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
 const FEED_SHA = 'a1'.repeat(32);
 const ADMIN_BAZAAR_SHA = 'b2'.repeat(32);
 const ADMIN_MANUAL_SHA = 'c3'.repeat(32);
 const ADMIN_USER_ID = 1_234_567_890_123n;
-
-async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
-}
-
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 4242n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 function fileShaRow(sha256Hex: string, category: string, addedBy: bigint | null): BannedFileShaRow {
 	return {
@@ -85,47 +44,11 @@ describe.skipIf(!dockerAvailable)('blocklist feeds turned off against postgres',
 	let executor: PostgresKvQueryExecutor;
 	let previousFeedsEnabled: boolean;
 
+	let postgresContainer: string;
 	beforeAll(async () => {
-		const port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await sleep(500);
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 4,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		raw = getDefaultPostgresClient();
-		await ensurePostgresKvSchema(raw);
+		const started = await startPostgresKv({namePrefix: 'fluxer-feeds', kvTable: KV_TABLE, maxConnections: 4});
+		postgresContainer = started.container;
+		raw = started.client;
 		executor = new PostgresKvQueryExecutor(raw);
 	}, 900_000);
 
@@ -148,8 +71,7 @@ describe.skipIf(!dockerAvailable)('blocklist feeds turned off against postgres',
 	afterAll(async () => {
 		clearWorkerDependencies();
 		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+		await stopPostgresKv(postgresContainer);
 	});
 
 	it('keeps file-SHA rows with added_by set and removes feed rows stored with a JSON null added_by', async () => {
@@ -164,7 +86,7 @@ WHERE table_name = 'banned_file_shas' AND row_data->>'sha256_hex' = $1`,
 		);
 		expect(feedRow.rows).toEqual([{added_by_type: 'null'}]);
 
-		await syncFileShaBlocklists({}, createHelpers());
+		await syncFileShaBlocklists({}, createTestWorkerHelpers({jobId: 4242n}));
 
 		const remaining = await raw.query<{sha: string}>(
 			`SELECT row_data->>'sha256_hex' AS sha FROM ${KV_TABLE} WHERE table_name = 'banned_file_shas' ORDER BY 1`,
@@ -179,7 +101,7 @@ WHERE table_name = 'banned_file_shas' AND row_data->>'sha256_hex' = $1`,
 		await adminRepository.banFileSha(fileShaRow(FEED_SHA, ContentBlocklistCategory.MALWARE_BAZAAR, ADMIN_USER_ID));
 		const staleRead = vi.spyOn(adminRepository, 'loadAllBannedFileShas').mockResolvedValueOnce(staleRows);
 
-		await syncFileShaBlocklists({}, createHelpers());
+		await syncFileShaBlocklists({}, createTestWorkerHelpers({jobId: 4242n}));
 
 		staleRead.mockRestore();
 		expect((await adminRepository.loadAllBannedFileShas()).map((row) => row.sha256_hex)).toContain(FEED_SHA);

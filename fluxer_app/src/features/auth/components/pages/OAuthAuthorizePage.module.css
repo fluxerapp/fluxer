@@ -9,14 +9,6 @@
 	margin: 0 auto;
 }
 
-.loadingContainer {
-	display: flex;
-	min-height: 100%;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
 .errorContainer {
 	display: flex;
 	min-height: 100%;

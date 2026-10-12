@@ -351,10 +351,6 @@ export class BatchBuilder {
 			await executeBatch(this.queries.slice(i, i + chunkSize), atomic);
 		}
 	}
-
-	getQueries(): Array<BatchQuery> {
-		return this.queries;
-	}
 }
 
 const MAX_BATCH_STATEMENTS = 60;

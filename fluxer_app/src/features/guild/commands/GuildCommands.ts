@@ -33,7 +33,6 @@ export interface GuildAuditLogFetchParams {
 	actionType?: AuditLogActionType;
 	limit?: number;
 	beforeLogId?: string;
-	afterLogId?: string;
 }
 
 interface GuildAuditLogFetchResponse {
@@ -144,7 +143,6 @@ function auditLogQuery(params: GuildAuditLogFetchParams): Record<string, string 
 	const query: Record<string, string | number> = {};
 	if (params.limit !== undefined) query.limit = params.limit;
 	if (params.beforeLogId !== undefined) query.before = params.beforeLogId;
-	if (params.afterLogId !== undefined) query.after = params.afterLogId;
 	if (params.userId) query.user_id = params.userId;
 	if (params.actionType !== undefined) query.action_type = params.actionType;
 	return query;

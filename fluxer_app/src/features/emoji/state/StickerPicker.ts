@@ -66,7 +66,8 @@ class StickerPicker {
 		});
 	}
 
-	trackStickerUsage(stickerKey: string): void {
+	trackStickerUsage(sticker: StickerKeyInput): void {
+		const stickerKey = this.getStickerKey(sticker);
 		const now = Date.now();
 		this.stickerUsage[stickerKey] = bumpUsageEntry(this.stickerUsage[stickerKey], now);
 		if (Object.keys(this.stickerUsage).length > MAX_TRACKED_USAGE_KEYS) {
@@ -74,7 +75,8 @@ class StickerPicker {
 		}
 	}
 
-	toggleFavorite(stickerKey: string): void {
+	toggleFavorite(sticker: StickerKeyInput): void {
+		const stickerKey = this.getStickerKey(sticker);
 		if (this.favoriteStickers.includes(stickerKey)) {
 			const index = this.favoriteStickers.indexOf(stickerKey);
 			if (index > -1) {

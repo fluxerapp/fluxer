@@ -49,14 +49,12 @@ export function GuildMemberController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const {limit, after} = ctx.req.valid('query');
-			const requestCache = ctx.get('requestCache');
 			return ctx.json(
 				await ctx.get('guildService').members.getMembers({
 					userId,
 					guildId,
 					limit,
 					after: after != null ? createUserID(after) : undefined,
-					requestCache,
 				}),
 			);
 		},

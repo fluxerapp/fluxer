@@ -20,7 +20,6 @@ were changed:
 | IBM Plex Sans Arabic | Fluxer Sans Arabic |
 | IBM Plex Sans Devanagari | Fluxer Sans Devanagari |
 | IBM Plex Sans Hebrew | Fluxer Sans Hebrew |
-| IBM Plex Sans Thai | Fluxer Sans Thai |
 | IBM Plex Sans Thai Looped | Fluxer Sans Thai Looped |
 | IBM Plex Sans JP | Fluxer Sans JP |
 | IBM Plex Sans KR | Fluxer Sans KR |

@@ -95,7 +95,10 @@ inputs(ChannelId, State) ->
 
 -spec inputs(channel_id(), guild_state(), #{term() => [term()]}) -> inputs().
 inputs(ChannelId, State, AccessByChannel) ->
-    {guild_permissions:view_inputs(ChannelId, State), maps:get(ChannelId, AccessByChannel, [])}.
+    {
+        guild_permissions_check:view_inputs(ChannelId, State),
+        maps:get(ChannelId, AccessByChannel, [])
+    }.
 
 -spec virtual_access_by_channel(guild_state()) -> #{term() => [term()]}.
 virtual_access_by_channel(State) ->

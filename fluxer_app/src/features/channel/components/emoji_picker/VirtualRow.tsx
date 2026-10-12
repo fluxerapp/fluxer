@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
-import {
-	CATEGORY_HEADER_HEIGHT,
-	EMOJI_ROW_HEIGHT,
-} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
+import {EMOJI_ROW_HEIGHT} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiRenderer} from '@app/features/channel/components/emoji_picker/EmojiRenderer';
+import {PickerCategoryHeaderRow} from '@app/features/channel/components/pickers/shared/PickerCategoryHeaderRow';
 import type {Channel} from '@app/features/channel/models/Channel';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
+
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
-import Guilds from '@app/features/guild/state/Guilds';
+
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {CaretDownIcon, ClockIcon, StarIcon} from '@phosphor-icons/react';
+
 import {observer} from 'mobx-react-lite';
 import React from 'react';
 
@@ -53,95 +50,15 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 		shouldScrollOnSelection = false,
 		emojiRefs,
 	}) => {
-		if (row.type === 'header') {
-			const isCollapsed = EmojiPicker.isCategoryCollapsed(row.category);
-			const handleToggleCategory = () => {
-				EmojiPickerCommands.toggleCategory(row.category);
-			};
-			let leadingIcon: React.ReactNode = null;
-			if (row.category === 'favorites') {
-				leadingIcon = (
-					<StarIcon
-						weight="fill"
-						className={styles.headerIcon}
-						data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.header-icon"
-					/>
-				);
-			} else if (row.category === 'frequently-used') {
-				leadingIcon = (
-					<ClockIcon
-						weight="fill"
-						className={styles.headerIcon}
-						data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.header-icon--2"
-					/>
-				);
-			} else if (row.guildId) {
-				leadingIcon = (
-					<div
-						className={styles.headerIcon}
-						data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.header-icon--3"
-					>
-						<GuildIcon
-							id={row.guildId}
-							name={row.name}
-							icon={Guilds.getGuild(row.guildId)?.icon ?? null}
-							sizePx={16}
-							data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.guild-icon"
-						/>
-					</div>
-				);
-			}
+		if (row.type === 'header')
 			return (
-				<button
-					type="button"
-					onClick={handleToggleCategory}
-					style={{
-						height: remFromPx(CATEGORY_HEADER_HEIGHT),
-						display: 'flex',
-						alignItems: 'center',
-						paddingLeft: '0.75rem',
-						paddingRight: '0.75rem',
-						marginBottom: '0.5rem',
-						position: 'sticky',
-						top: 0,
-						zIndex: 1,
-						cursor: 'pointer',
-						border: 'none',
-						width: '100%',
-						textAlign: 'left',
-						gap: '0.5rem',
-						minWidth: 0,
-					}}
-					data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.category-title.toggle-category.button"
-				>
-					{leadingIcon}
-					<div
-						style={{display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0}}
-						data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.div"
-					>
-						<span
-							className={styles.categoryTitle}
-							style={{
-								minWidth: 0,
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
-								whiteSpace: 'nowrap',
-								flex: '0 1 auto',
-							}}
-							data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.category-title"
-						>
-							{row.name}
-						</span>
-						<CaretDownIcon
-							weight="bold"
-							className={styles.caretIcon}
-							style={{transform: `rotate(${isCollapsed ? -90 : 0}deg)`, marginLeft: '0.5rem'}}
-							data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.caret-icon"
-						/>
-					</div>
-				</button>
+				<PickerCategoryHeaderRow
+					row={row}
+					isCollapsed={EmojiPicker.isCategoryCollapsed(row.category)}
+					onToggle={() => EmojiPicker.toggleCategory(row.category)}
+					data-flx="channel.emoji-picker.virtual-row.picker-category-header-row"
+				/>
 			);
-		}
 		const hasFixedTrack = cellTrackWidth != null && cellTrackWidth > 0;
 		return (
 			<div

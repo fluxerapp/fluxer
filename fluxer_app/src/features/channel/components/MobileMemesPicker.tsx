@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import memeStyles from '@app/features/channel/components/MemesPicker.module.css';
-import {
-	filterMemesByContentType,
-	formatDuration,
-	getFileExtension,
-} from '@app/features/channel/components/pickers/memes/MediaFormat';
+import {buildDeleteMemeConfirmation} from '@app/features/channel/components/pickers/memes/DeleteMemeConfirmation';
+import {formatDuration, getFileExtension} from '@app/features/channel/components/pickers/memes/MediaFormat';
+import {type ContentType, MemesPickerHeader} from '@app/features/channel/components/pickers/memes/MemesPickerHeader';
+import {useFilteredMemes} from '@app/features/channel/components/pickers/memes/useFilteredMemes';
 import {PickerEmptyState} from '@app/features/channel/components/shared/PickerEmptyState';
-import {PickerSearchInput} from '@app/features/channel/components/shared/PickerSearchInput';
-import * as FavoriteMemeCommands from '@app/features/expressions/commands/FavoriteMemeCommands';
+
 import {EditFavoriteMemeModal} from '@app/features/expressions/components/modals/EditFavoriteMemeModal';
 import {
 	ExpressionPickerHeaderPortal,
@@ -22,7 +19,7 @@ import {
 } from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
-import {AUDIO_DESCRIPTOR, GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
@@ -36,30 +33,14 @@ import {MenuBottomSheet, type MenuItemType} from '@app/features/ui/menu_bottom_s
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GifIcon, ImageIcon, MusicNoteIcon, SmileySadIcon, VideoCameraIcon} from '@phosphor-icons/react';
+import {MusicNoteIcon, SmileySadIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence} from 'framer-motion';
-import {matchSorter} from 'match-sorter';
+
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-const ALL_DESCRIPTOR = msg({
-	message: 'All',
-	comment: 'Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.',
-});
-const IMAGES_DESCRIPTOR = msg({
-	message: 'Images',
-	comment: 'Tab label in the mobile memes picker. Filters to saved images.',
-});
-const VIDEOS_DESCRIPTOR = msg({
-	message: 'Videos',
-	comment: 'Tab label in the mobile memes picker. Filters to saved videos.',
-});
-const SEARCH_SAVED_MEDIA_DESCRIPTOR = msg({
-	message: 'Search saved media',
-	comment: 'Placeholder text in the mobile memes picker search input.',
-});
 const NO_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'No saved media',
 	comment: 'Empty state title in the mobile memes picker when the user has saved nothing yet.',
@@ -85,30 +66,12 @@ const DELETE_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'Delete saved media',
 	comment: 'Accessible label and tooltip for the delete button on a saved media tile in the mobile memes picker.',
 });
-const ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR = msg({
-	message: 'Delete "{memeName}"? Can\'t be undone.',
-	comment:
-		'Error message in the channel and chat mobile memes picker. Preserve {memeName}; it is inserted by code. Keep the tone plain and specific.',
-});
-const DELETE_DESCRIPTOR = msg({
-	message: 'Delete',
-	comment:
-		'Button or menu action label in the channel and chat mobile memes picker. Keep it concise. Keep the tone plain and specific.',
-});
 const EDIT_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'Edit saved media',
 	comment: 'Button or menu action label in the channel and chat mobile memes picker. Keep it concise.',
 });
 
 const GRID_ITEM_PRELOAD_ROOT_MARGIN = '800px 0px';
-
-type ContentType = 'all' | 'image' | 'video' | 'audio' | 'gif';
-
-interface FilterOption {
-	type: ContentType;
-	label: string;
-	icon?: React.ReactNode;
-}
 
 const GifIndicator = observer(() => (
 	<div className={memeStyles.gifBadge} aria-hidden="true" data-flx="channel.mobile-memes-picker.gif-indicator.div">
@@ -134,36 +97,6 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 	const {i18n} = useLingui();
 	const headerPortalContext = useExpressionPickerHeaderPortal();
 	const hasPortal = Boolean(headerPortalContext?.headerPortalElement);
-	const FILTER_OPTIONS: Array<FilterOption> = [
-		{type: 'all', label: i18n._(ALL_DESCRIPTOR)},
-		{
-			type: 'image',
-			label: i18n._(IMAGES_DESCRIPTOR),
-			icon: <ImageIcon className={memeStyles.filterPillIcon} data-flx="channel.mobile-memes-picker.image-icon" />,
-		},
-		{
-			type: 'video',
-			label: i18n._(VIDEOS_DESCRIPTOR),
-			icon: (
-				<VideoCameraIcon
-					className={memeStyles.filterPillIcon}
-					data-flx="channel.mobile-memes-picker.video-camera-icon"
-				/>
-			),
-		},
-		{
-			type: 'audio',
-			label: i18n._(AUDIO_DESCRIPTOR),
-			icon: (
-				<MusicNoteIcon className={memeStyles.filterPillIcon} data-flx="channel.mobile-memes-picker.music-note-icon" />
-			),
-		},
-		{
-			type: 'gif',
-			label: i18n._(GIFS_DESCRIPTOR),
-			icon: <GifIcon className={memeStyles.filterPillIcon} data-flx="channel.mobile-memes-picker.gif-icon" />,
-		},
-	];
 	const [state, setState] = useState<MemesPickerState>(initialState);
 	const favoriteMemes = FavoriteMemes.memes;
 	const fetched = FavoriteMemes.fetched;
@@ -182,48 +115,20 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 	useEffect(() => {
 		scrollerRef.current?.scrollTo({to: 0, animate: false});
 	}, []);
-	const filteredMemes = useMemo(() => {
-		let memes = filterMemesByContentType(favoriteMemes, state.selectedFilter);
-		if (state.searchTerm) {
-			memes = matchSorter(memes, state.searchTerm, {
-				keys: ['name', 'altText', 'filename', 'tags'],
-				threshold: matchSorter.rankings.CONTAINS,
-			});
-		}
-		return memes;
-	}, [favoriteMemes, state.selectedFilter, state.searchTerm]);
+	const filteredMemes = useFilteredMemes(favoriteMemes, state.selectedFilter, state.searchTerm);
 	const renderHeader = () => {
 		const headerContent = (
-			<div
+			<MemesPickerHeader
 				className={hasPortal ? memeStyles.mobileHeaderContainer : memeStyles.mobileHeaderContainerStandalone}
-				data-flx="channel.mobile-memes-picker.render-header.div"
-			>
-				<PickerSearchInput
-					value={state.searchTerm}
-					onChange={(value) => setState({...state, searchTerm: value})}
-					placeholder={i18n._(SEARCH_SAVED_MEDIA_DESCRIPTOR)}
-					inputRef={searchInputRef}
-					data-flx="channel.mobile-memes-picker.render-header.picker-search-input.set-state"
-				/>
-				<div className={memeStyles.filterList} data-flx="channel.mobile-memes-picker.render-header.div--2">
-					{FILTER_OPTIONS.map((option) => {
-						const isActive = state.selectedFilter === option.type;
-						return (
-							<button
-								key={option.type}
-								type="button"
-								onClick={() => setState({...state, selectedFilter: option.type})}
-								aria-pressed={isActive}
-								className={clsx(memeStyles.filterPill, isActive && memeStyles.filterPillActive)}
-								data-flx="channel.mobile-memes-picker.render-header.button.set-state"
-							>
-								{option.icon}
-								{option.label}
-							</button>
-						);
-					})}
-				</div>
-			</div>
+				showBackButton={false}
+				searchTerm={state.searchTerm}
+				onSearchTermChange={(value) => setState({...state, searchTerm: value})}
+				onClearSearch={() => setState({...state, searchTerm: ''})}
+				selectedFilter={state.selectedFilter}
+				onFilterChange={(filter) => setState({...state, selectedFilter: filter})}
+				inputRef={searchInputRef}
+				data-flx="channel.mobile-memes-picker.memes-picker-header"
+			/>
 		);
 		if (hasPortal) {
 			return (
@@ -246,7 +151,6 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 			return {
 				id: meme.id,
 				title: meme.name,
-				memeRecord: meme,
 				onClick: (event?: React.MouseEvent) => {
 					const shiftKey = event?.shiftKey ?? false;
 					ComponentBus.dispatch('FAVORITE_MEME_SELECT', {meme, autoSend: !shiftKey});
@@ -341,7 +245,6 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 interface GridItemProps {
 	id: string;
 	title: string;
-	memeRecord: FavoriteMeme;
 	onClick: (event?: React.MouseEvent) => void;
 	onLongPress: () => void;
 	url: string;
@@ -587,18 +490,7 @@ const MemeActionBottomSheet: React.FC<MemeActionBottomSheetProps> = observer(({i
 		if (!meme) return;
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<ConfirmModal
-					title={i18n._(DELETE_SAVED_MEDIA_DESCRIPTOR)}
-					description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR, {memeName: meme.name})}
-					primaryText={i18n._(DELETE_DESCRIPTOR)}
-					primaryVariant="danger"
-					onPrimary={() => {
-						FavoriteMemeCommands.deleteFavoriteMeme(i18n, meme.id);
-					}}
-					data-flx="channel.mobile-memes-picker.handle-delete.confirm-modal"
-				/>
-			)),
+			modal(() => buildDeleteMemeConfirmation(i18n, meme)),
 		);
 	}, [meme, onClose, i18n]);
 	const actionGroups = useMemo(() => {

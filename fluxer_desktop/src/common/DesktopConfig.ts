@@ -1,3 +1,4 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
@@ -99,10 +100,6 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 		middleClickAutoscroll: false,
 		activeMiddleClickAutoscroll: false,
 	};
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
 }
 
 function sanitizePersistedDesktopWindowBehaviorSettings(

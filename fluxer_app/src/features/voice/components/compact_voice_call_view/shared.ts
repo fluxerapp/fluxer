@@ -2,30 +2,12 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
-import {
-	COMPACT_HEIGHT_MIN as COMPACT_HEIGHT_MIN_BOUND,
-	getCompactHeightMax as getCompactHeightMaxFromBounds,
-} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
-import {getCompactVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
 import {msg} from '@lingui/core/macro';
 import type React from 'react';
-
-export const DISCONNECTED_DESCRIPTOR = msg({
-	message: 'Disconnected',
-	comment: 'Overlay status text in the compact / floating voice call tile when not connected.',
-});
 export const VOICE_CALL_DESCRIPTOR = msg({
 	message: 'Voice call. {statusText}.',
 	comment:
 		'Aria label for the compact / floating voice call tile. {statusText} is one of the connection status strings.',
-});
-export const EXIT_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Exit fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the compact voice call tile (currently in fullscreen).',
-});
-export const ENTER_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Enter fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the compact voice call tile (not in fullscreen).',
 });
 export const RESIZE_CALL_VIEW_DESCRIPTOR = msg({
 	message: 'Resize call view',
@@ -50,7 +32,6 @@ export interface CompactVoiceCallViewProps {
 	showAvatarFallback?: boolean;
 	audioOnly?: boolean;
 	onFullscreenRequest?: () => void;
-	fullscreenRequestNonce?: number;
 	fillHeight?: boolean;
 	reserveHeaderChrome?: boolean;
 	heightToggle?: CompactVoiceCallHeightToggle;
@@ -90,7 +71,6 @@ export interface CompactVoiceCallContainerStyle extends React.CSSProperties {
 }
 
 export const COMPACT_HEIGHT_DRAG_THRESHOLD_SQ = 9;
-export const COMPACT_HEIGHT_MIN = COMPACT_HEIGHT_MIN_BOUND;
 export const COMPACT_HEIGHT_STEP = 16;
 export const VOICE_HUD_IDLE_TIMEOUT_MS = 2500;
 const COMPACT_METRICS_CHANGE_EPSILON = 0.5;
@@ -112,12 +92,4 @@ export function hasCompactCallMetricsChanged(
 		Math.abs(previousMetrics.contentHeight - nextMetrics.contentHeight) >= COMPACT_METRICS_CHANGE_EPSILON ||
 		Math.abs(previousMetrics.controlBarHeight - nextMetrics.controlBarHeight) >= COMPACT_METRICS_CHANGE_EPSILON
 	);
-}
-
-export function getCompactHeightKey(channelId: string, callMessageId: string | null) {
-	return getCompactVoiceCallExpansionKey(channelId, callMessageId);
-}
-
-export function getCompactHeightMax(compactHeightMin: number): number {
-	return getCompactHeightMaxFromBounds(compactHeightMin);
 }

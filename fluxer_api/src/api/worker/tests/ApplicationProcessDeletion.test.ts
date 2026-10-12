@@ -11,26 +11,14 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import applicationProcessDeletion from '@app/api/worker/tasks/ApplicationProcessDeletion';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 7200000000000000000n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 describe('applicationProcessDeletion task', () => {
 	let harness: ApiTestHarness;
@@ -104,7 +92,10 @@ describe('applicationProcessDeletion task', () => {
 			throw new Error('Seeded message response missing message id');
 		}
 
-		await applicationProcessDeletion({applicationId: createResult.application.id}, createHelpers());
+		await applicationProcessDeletion(
+			{applicationId: createResult.application.id},
+			createTestWorkerHelpers({jobId: 7200000000000000000n}),
+		);
 
 		expect(
 			await getApplicationRepository().getApplication(createApplicationID(BigInt(createResult.application.id))),

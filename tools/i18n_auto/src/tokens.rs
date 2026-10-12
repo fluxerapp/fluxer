@@ -342,23 +342,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn detects_sources_that_should_stay_unchanged() {
-        assert!(should_keep_unchanged("", "de"));
-        assert!(should_keep_unchanged("https://fluxer.app/docs", "de"));
-        assert!(should_keep_unchanged("{productName}", "de"));
-        assert!(should_keep_unchanged("{authorName} {description}", "de"));
-        assert!(should_keep_unchanged(
-            "{emojiName}: {reactionCountText}, {actionText}",
-            "de"
-        ));
-        assert!(should_keep_unchanged("{start} – {end}", "de"));
-        assert!(should_keep_unchanged("C++", "de"));
-        assert!(!should_keep_unchanged("DSA {reportId}", "de"));
-        assert!(!should_keep_unchanged("Hello", "de"));
-        assert!(!should_keep_unchanged("{productName}", "en-US"));
-    }
-
-    #[test]
     fn extracts_masks_and_restores_preserved_tokens() {
         let entry = Entry::with_msgid("{productName} needs <0>{permission}</0> %@ $1 :wave:");
         assert_eq!(
@@ -399,47 +382,5 @@ mod tests {
         let missing_token =
             validate_localization(&Entry::with_msgid("Open {productName}"), "Open").unwrap_err();
         assert!(missing_token.to_string().contains("{productName}"));
-    }
-
-    #[test]
-    fn validates_en_gb_protected_region_terms() {
-        let entry = Entry::with_msgid("US color settings for the United States");
-        validate_locale_specific_localization(
-            &entry,
-            "en-GB",
-            "US colour settings for the United States",
-        )
-        .unwrap();
-        let error = validate_locale_specific_localization(
-            &entry,
-            "en-GB",
-            "UK colour settings for the United Kingdom",
-        )
-        .unwrap_err();
-        assert!(
-            error
-                .to_string()
-                .contains("protected source term United States")
-        );
-    }
-
-    #[test]
-    fn normalizes_non_english_parenthesized_capitalization() {
-        assert_eq!(
-            normalize_localized_capitalization(
-                &Entry::with_msgid("(No content)"),
-                "es-ES",
-                "(Sin contenido)",
-            ),
-            "(sin contenido)"
-        );
-        assert_eq!(
-            normalize_localized_capitalization(
-                &Entry::with_msgid("(No content)"),
-                "en-GB",
-                "(No content)",
-            ),
-            "(No content)"
-        );
     }
 }

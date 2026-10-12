@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Prea multe fișiere. Sunt permise maximum {maxFiles, plural, one {# fișier} few {# fișiere} other {# de fișiere}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "S-a detectat o adresă URL `attachment://` nerezolvată. Aceasta ar fi trebuit rezolvată înainte de procesarea încorporărilor.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Atașamentul încărcat {filename} nu a fost găsit.",
-	"auth_and_oauth.application_not_owned": "Nu deții această aplicație.",
 	"auth_and_oauth.bot_already_in_guild": "Acest bot este deja în comunitate.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Utilizatorii bot nu pot crea sesiuni de autentificare.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Utilizatorii bot nu pot utiliza endpoint-uri de autentificare.",

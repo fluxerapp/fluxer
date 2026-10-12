@@ -5,7 +5,11 @@ import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {dispatchChannelDelete} from '@app/api/channel/services/group_dm/GroupDmHelpers';
+import {
+	dispatchChannelDelete,
+	dispatchDmChannelDelete,
+	requireGroupDmMember,
+} from '@app/api/channel/services/group_dm/GroupDmHelpers';
 import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -69,14 +73,7 @@ export class GroupDmOperationsService {
 		recipientId: UserID;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
-		if (!channel) throw new UnknownChannelError();
-		if (channel.type !== ChannelTypes.GROUP_DM) {
-			throw new InvalidChannelTypeError();
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
+		const channel = await requireGroupDmMember(this.channelRepository, channelId, userId);
 		await this.assertInviterNotLimited(userId);
 		const friendship = await this.userRepository.getRelationship(userId, recipientId, RelationshipTypes.FRIEND);
 		if (!friendship) {
@@ -109,14 +106,7 @@ export class GroupDmOperationsService {
 		botUserId: UserID;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
-		if (!channel) throw new UnknownChannelError();
-		if (channel.type !== ChannelTypes.GROUP_DM) {
-			throw new InvalidChannelTypeError();
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
+		await requireGroupDmMember(this.channelRepository, channelId, userId);
 		await this.assertInviterNotLimited(userId);
 		const {channel: updatedChannel} = await this.addRecipientViaInviteWithResult({
 			channelId,
@@ -321,16 +311,12 @@ export class GroupDmOperationsService {
 				message: systemMessage,
 			});
 		}
-		const channelResponse = await mapChannelToResponse({
+		await dispatchDmChannelDelete({
 			channel,
-			currentUserId: null,
-			userCacheService: this.userCacheService,
-			requestCache,
-		});
-		await this.gatewayService.dispatchPresence({
 			userId: recipientId,
-			event: 'CHANNEL_DELETE',
-			data: channelResponse,
+			requestCache,
+			gatewayService: this.gatewayService,
+			userCacheService: this.userCacheService,
 		});
 		await Promise.all(
 			[...Array.from(updatedRecipientIds), recipientId].map(async (recId) => {

@@ -26,16 +26,6 @@ vi.mock('ioredis', () => {
 			return keys.map((key) => store.get(key) ?? null);
 		}
 
-		async mset(...args: Array<string>): Promise<string> {
-			const keys: Array<string> = [];
-			for (let index = 0; index + 1 < args.length; index += 2) {
-				keys.push(args[index]);
-				store.set(args[index], args[index + 1]);
-			}
-			await trackRoundTrip('mset', keys);
-			return 'OK';
-		}
-
 		async del(...keys: Array<string>): Promise<number> {
 			await trackRoundTrip('del', keys);
 			return keys.length;
@@ -81,10 +71,10 @@ describe('KVClient multi key fan out', () => {
 		expect(crossSlotCommands()).toEqual([]);
 	});
 
-	it('bounds concurrent round trips for a cluster write', async () => {
+	it('bounds concurrent round trips for a cluster delete', async () => {
 		const client = new KVClient({url: 'redis://127.0.0.1:6379', mode: 'cluster'});
 
-		await client.mset(...createKeys(1000).flatMap((key) => [key, 'value']));
+		await expect(client.del(...createKeys(1000))).resolves.toBe(1000);
 
 		expect(tracker.peakInFlight).toBeLessThanOrEqual(MAX_CONCURRENT_ROUND_TRIPS);
 		expect(crossSlotCommands()).toEqual([]);
@@ -103,7 +93,8 @@ describe('KVClient multi key fan out', () => {
 
 	it('keeps values ordered when a cluster read is split by slot', async () => {
 		const client = new KVClient({url: 'redis://127.0.0.1:6379', mode: 'cluster'});
-		await client.mset('fanout:a', 'one', 'fanout:b', 'two');
+		store.set('fanout:a', 'one');
+		store.set('fanout:b', 'two');
 
 		const values = await client.mget('fanout:a', 'fanout:missing', 'fanout:b');
 

@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
-import {
-	isSvgFile,
-	readBlobAsBase64NoPrefix,
-	readImageFileAsUploadDataUrl,
-} from '@app/features/expressions/utils/ImageUploadFileUtils';
+import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
+import {readBlobAsBase64NoPrefix} from '@app/features/platform/utils/BlobDataUrl';
 import {EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 
 const EMOJI_MAX_SIZE_FALLBACK = EMOJI_MAX_SIZE;

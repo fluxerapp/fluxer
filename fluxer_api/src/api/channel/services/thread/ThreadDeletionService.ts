@@ -89,7 +89,7 @@ export class ThreadDeletionService {
 			]);
 		}
 		if (params.recordGuildAudit) {
-			await this.ctx.recordAudit({
+			await this.ctx.guildAuditLogService.record({
 				guildId,
 				userId: params.actorId,
 				action: AuditLogActionType.THREAD_DELETE,

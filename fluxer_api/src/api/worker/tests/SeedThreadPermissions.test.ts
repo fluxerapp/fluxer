@@ -3,13 +3,10 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID, createRoleID} from '@app/api/BrandedTypes';
 import {acceptInvite, createChannelInvite} from '@app/api/channel/tests/ChannelTestUtils';
-import {ALL_THREADS_ACTIVE, threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
-import {fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	pinChannelThreadsConfigForTesting,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {addMemberRole, createGuild, createRole} from '@app/api/guild/tests/GuildTestUtils';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {
@@ -20,36 +17,15 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {GuildThreadState} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DEFAULT_THREAD_PERMISSIONS, ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
-import {
-	type ChannelThreadsConfig,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-
-function setConfig(patch: Partial<ChannelThreadsConfig> | null): void {
-	pinChannelThreadsConfigForTesting(ChannelThreadsConfigSchema.parse(patch ?? {}));
-	clearChannelThreadsTaintCacheForTesting();
-}
-
-function helpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 describe('seedThreadPermissions', () => {
 	let harness: ApiTestHarness;
@@ -61,7 +37,7 @@ describe('seedThreadPermissions', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		setConfig(null);
+		clearChannelThreadsTaintCacheForTesting();
 		dispatchGuild = vi.fn(async () => {});
 		setWorkerDependenciesForTest({
 			channelRepository: getChannelRepository(),
@@ -73,7 +49,7 @@ describe('seedThreadPermissions', () => {
 	});
 
 	afterEach(() => {
-		setConfig(null);
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
@@ -85,6 +61,14 @@ describe('seedThreadPermissions', () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Seed');
 		const guildId = createGuildID(BigInt(guild.id));
+		await upsertOne(
+			GuildThreadState.upsertAll({
+				guild_id: guildId,
+				first_active_at: new Date(),
+				perms_seeded_at: null,
+				search_backfilled_at: null,
+			}),
+		);
 		const channel = await createBuilder<ChannelResponse>(harness, owner.token)
 			.post(`/guilds/${guild.id}/channels`)
 			.body({
@@ -105,17 +89,9 @@ describe('seedThreadPermissions', () => {
 			]),
 		});
 
-		await seedThreadPermissions({guildId: guild.id}, helpers());
-		expect(dispatchGuild).not.toHaveBeenCalled();
-		expect(
-			await fetchOne<GuildThreadStateRow>(
-				GuildThreadState.selectCql({where: GuildThreadState.where.eq('guild_id'), limit: 1}),
-				{guild_id: guildId},
-			),
-		).toBeNull();
-
-		setConfig({enabled: true, ever_enabled: true, enabled_guild_ids: [guild.id]});
-		await seedThreadPermissions({guildId: guild.id}, helpers());
+		const legacyEveryone = (await getGuildRepository().getRole(createRoleID(BigInt(guild.id)), guildId))!;
+		await getGuildRepository().upsertRole({...legacyEveryone.toRow(), permissions: DEFAULT_PERMISSIONS});
+		await seedThreadPermissions({guildId: guild.id}, createTestWorkerHelpers());
 		const everyone = await getGuildRepository().getRole(createRoleID(BigInt(guild.id)), guildId);
 		expect(everyone?.permissions).toBe(DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS);
 		const seeded = (await channelRepository.channelData.findUnique(
@@ -134,7 +110,7 @@ describe('seedThreadPermissions', () => {
 		expect(marker?.perms_seeded_at).toBeInstanceOf(Date);
 
 		await getGuildRepository().upsertRole({...everyone!.toRow(), permissions: DEFAULT_PERMISSIONS});
-		await seedThreadPermissions({guildId: guild.id}, helpers());
+		await seedThreadPermissions({guildId: guild.id}, createTestWorkerHelpers());
 		expect(dispatchGuild).toHaveBeenCalledTimes(2);
 		expect((await getGuildRepository().getRole(createRoleID(BigInt(guild.id)), guildId))?.permissions).toBe(
 			DEFAULT_PERMISSIONS,
@@ -146,6 +122,14 @@ describe('seedThreadPermissions', () => {
 		const staff = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Staffed');
+		await upsertOne(
+			GuildThreadState.upsertAll({
+				guild_id: createGuildID(BigInt(guild.id)),
+				first_active_at: new Date(),
+				perms_seeded_at: null,
+				search_backfilled_at: null,
+			}),
+		);
 		const role = await createRole(harness, owner.token, guild.id, {name: 'Staff', permissions: '0'});
 		const channel = await createBuilder<ChannelResponse>(harness, owner.token)
 			.post(`/guilds/${guild.id}/channels`)
@@ -163,8 +147,7 @@ describe('seedThreadPermissions', () => {
 		await acceptInvite(harness, member.token, invite.code);
 		await addMemberRole(harness, owner.token, guild.id, staff.userId, role.id);
 
-		setConfig({...ALL_THREADS_ACTIVE, ever_enabled: true, enabled_guild_ids: [guild.id]});
-		await seedThreadPermissions({guildId: guild.id}, helpers());
+		await seedThreadPermissions({guildId: guild.id}, createTestWorkerHelpers());
 
 		const seeded = (await getChannelRepository().channelData.findUnique(
 			createChannelID(BigInt(channel.id)),
@@ -185,32 +168,5 @@ describe('seedThreadPermissions', () => {
 			.body({name: 'sneaky', type: ChannelTypes.PUBLIC_THREAD})
 			.expect(403, APIErrorCodes.MISSING_PERMISSIONS)
 			.execute();
-	});
-
-	it('reloads a lagging config before deciding the guild is inactive, and retries while it stays behind', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Lagging');
-		const guildId = createGuildID(BigInt(guild.id));
-		const storedVersion = 5;
-		await getInstanceConfigRepository().setConfig(
-			'channel_threads_config',
-			JSON.stringify(ChannelThreadsConfigSchema.parse({enabled: false, config_version: storedVersion})),
-		);
-		pinChannelThreadsConfigForTesting(null);
-
-		await expect(
-			seedThreadPermissions({guildId: guild.id, configVersion: storedVersion + 1}, helpers()),
-		).rejects.toThrow();
-		pinChannelThreadsConfigForTesting(null);
-
-		await seedThreadPermissions({guildId: guild.id, configVersion: storedVersion}, helpers());
-		const marker = await fetchOne<GuildThreadStateRow>(
-			GuildThreadState.selectCql({where: GuildThreadState.where.eq('guild_id'), limit: 1}),
-			{guild_id: guildId},
-		);
-		expect(marker?.perms_seeded_at).toBeInstanceOf(Date);
-		expect((await getGuildRepository().getRole(createRoleID(BigInt(guild.id)), guildId))?.permissions).toBe(
-			DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS,
-		);
 	});
 });

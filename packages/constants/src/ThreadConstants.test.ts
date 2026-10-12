@@ -11,7 +11,6 @@ import {
 import * as ThreadConstants from '@fluxer/constants/src/ThreadConstants';
 import {
 	ChannelFlags,
-	isThreadAutoArchiveDuration,
 	isValidThreadMemberSettingsFlags,
 	publicThreadTypeFor,
 	resolveTextThreadType,
@@ -93,15 +92,6 @@ describe('thread constants', () => {
 		for (const value of numericValues(ThreadConstants)) {
 			expect(value).toBeGreaterThanOrEqual(0);
 			expect(value).toBeLessThan(2 ** 31);
-		}
-	});
-
-	it('accepts only the supported auto archive durations', () => {
-		for (const duration of [60, 1440, 4320, 10080]) {
-			expect(isThreadAutoArchiveDuration(duration)).toBe(true);
-		}
-		for (const duration of [0, 59, 61, 10081]) {
-			expect(isThreadAutoArchiveDuration(duration)).toBe(false);
 		}
 	});
 

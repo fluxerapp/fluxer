@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Забагато файлів. Дозволено максимум {maxFiles} {maxFiles, plural, one {файл} few {файли} many {файлів} other {файла}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Виявлено нерозв'язану URL-адресу `attachment://`. Її потрібно було розв'язати до обробки ембедів.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Завантажене вкладення {filename} не знайдено.",
-	"auth_and_oauth.application_not_owned": "Ти не власник цього застосунку.",
 	"auth_and_oauth.bot_already_in_guild": "Цей бот уже є в спільноті.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Боти не можуть створювати сеанси авторизації.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Боти не можуть використовувати кінцеві точки авторизації.",

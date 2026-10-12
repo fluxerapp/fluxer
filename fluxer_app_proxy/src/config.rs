@@ -148,10 +148,6 @@ impl HttpEndpoint {
         Ok(Self { url, csp_origin })
     }
 
-    pub fn as_url(&self) -> &Url {
-        &self.url
-    }
-
     pub fn as_str(&self) -> &str {
         self.url.as_str().trim_end_matches('/')
     }
@@ -362,35 +358,11 @@ pub struct AppProxyConfig {
     pub branding: crate::branding_images::BrandingSnapshot,
     pub discovery_upstream_url: String,
     pub discovery_refresh_interval_ms: u64,
-    pub release_channel: ReleaseChannel,
     pub build_version: String,
     pub csp: CspConfig,
     pub same_origin_hosts: Vec<String>,
     pub manifest_scope_extensions: Vec<String>,
     pub self_hosted: bool,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ReleaseChannel {
-    Stable,
-    Canary,
-}
-
-impl ReleaseChannel {
-    fn from_env_value(value: &str) -> Self {
-        if value.eq_ignore_ascii_case("canary") {
-            Self::Canary
-        } else {
-            Self::Stable
-        }
-    }
-
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Stable => "stable",
-            Self::Canary => "canary",
-        }
-    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -448,9 +420,6 @@ fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
 
 impl AppProxyConfig {
     pub fn from_env() -> Self {
-        let release_channel =
-            ReleaseChannel::from_env_value(&cfg::read_env("RELEASE_CHANNEL", "stable"));
-
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
             cfg::env_value("FLUXER_S3_PUBLIC_ENDPOINT"),
@@ -495,7 +464,6 @@ impl AppProxyConfig {
                 &cfg::read_env("DISCOVERY_REFRESH_INTERVAL_MS", "60000"),
                 60_000u64,
             ),
-            release_channel,
             build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),

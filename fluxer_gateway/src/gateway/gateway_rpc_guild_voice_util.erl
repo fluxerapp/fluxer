@@ -4,13 +4,7 @@
 
 -typing([eqwalizer]).
 
--export([
-    handle_move_member_result/4,
-    normalize_voice_rpc_error/1,
-    parse_voice_update/1,
-    process_voice_update/1
-]).
--export_type([voice_update_payload/0]).
+-export([handle_move_member_result/4, normalize_voice_rpc_error/1]).
 
 -define(GUILD_CALL_TIMEOUT, 4000).
 
@@ -46,7 +40,7 @@ handle_move_member_result(_, _, _, _) ->
 -spec send_voice_server_updates_for_move(integer(), integer(), [map()], pid()) -> ok.
 send_voice_server_updates_for_move(GuildId, ChannelId, VoiceSessionData, Pid) ->
     spawn(fun() ->
-        guild_voice:send_voice_server_updates_for_move(
+        guild_voice_move:send_voice_server_updates_for_move(
             GuildId, ChannelId, VoiceSessionData, Pid
         )
     end),
@@ -54,82 +48,12 @@ send_voice_server_updates_for_move(GuildId, ChannelId, VoiceSessionData, Pid) ->
 
 -spec cleanup_virtual_access_on_disconnect(integer(), pid()) -> ok.
 cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) ->
-    spawn(fun() -> guild_voice:cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) end),
+    spawn(fun() -> do_cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) end),
     ok.
 
 -spec voice_session_data([term()]) -> [map()].
 voice_session_data(SessionData) ->
     [Entry || Entry <- SessionData, is_map(Entry)].
-
--type voice_update_payload() :: #{binary() => term()}.
-
--spec parse_voice_update(voice_update_payload()) ->
-    {integer(), integer(), boolean(), boolean(), term()}.
-parse_voice_update(
-    #{
-        <<"guild_id">> := GuildIdBin,
-        <<"user_id">> := UserIdBin,
-        <<"mute">> := Mute,
-        <<"deaf">> := Deaf
-    } = Update
-) when is_boolean(Mute), is_boolean(Deaf) ->
-    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GuildIdBin),
-    UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
-    {GuildId, UserId, Mute, Deaf, maps:get(<<"connection_id">>, Update, null)}.
-
--spec process_voice_update(term()) -> map().
-process_voice_update({GuildId, UserId, Mute, Deaf, ConnectionId}) when
-    is_integer(GuildId), is_integer(UserId), is_boolean(Mute), is_boolean(Deaf)
-->
-    case gateway_rpc_guild_infra:ensure_guild_pid(GuildId) of
-        {ok, GuildPid} ->
-            process_voice_update_for_guild(GuildId, UserId, Mute, Deaf, ConnectionId, GuildPid);
-        _ ->
-            voice_update_result(GuildId, UserId, false, <<"guild_not_found">>)
-    end;
-process_voice_update(_) ->
-    #{<<"success">> => false, <<"error">> => <<"voice_update_error">>}.
-
--spec process_voice_update_for_guild(
-    integer(), integer(), boolean(), boolean(), term(), pid()
-) -> map().
-process_voice_update_for_guild(GuildId, UserId, Mute, Deaf, ConnectionId, GuildPid) ->
-    VoicePid = gateway_rpc_guild_infra:resolve_voice_pid(GuildId, GuildPid),
-    Request = #{
-        user_id => UserId,
-        mute => Mute,
-        deaf => Deaf,
-        connection_id => ConnectionId
-    },
-    Result = gateway_rpc_guild_infra:safe_gen_server_call(
-        VoicePid,
-        {update_member_voice, Request},
-        ?GUILD_CALL_TIMEOUT
-    ),
-    normalize_voice_update_result(GuildId, UserId, Result).
-
--spec normalize_voice_update_result(integer(), integer(), term()) -> map().
-normalize_voice_update_result(GuildId, UserId, {ok, #{success := true}}) ->
-    voice_update_result(GuildId, UserId, true, undefined);
-normalize_voice_update_result(GuildId, UserId, {ok, #{error := Error}}) ->
-    voice_update_result(GuildId, UserId, false, Error);
-normalize_voice_update_result(GuildId, UserId, _Result) ->
-    voice_update_result(GuildId, UserId, false, <<"voice_update_error">>).
-
--spec voice_update_result(integer(), integer(), boolean(), term()) -> map().
-voice_update_result(GuildId, UserId, true, _Error) ->
-    #{
-        <<"guild_id">> => integer_to_binary(GuildId),
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"success">> => true
-    };
-voice_update_result(GuildId, UserId, false, Error) ->
-    #{
-        <<"guild_id">> => integer_to_binary(GuildId),
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"success">> => false,
-        <<"error">> => Error
-    }.
 
 -spec normalize_voice_rpc_error(term()) -> binary().
 normalize_voice_rpc_error(voice_user_not_in_voice) -> <<"user_not_in_voice">>;
@@ -152,3 +76,18 @@ normalize_binary(<<"voice_permission_denied">>) -> <<"target_missing_connect">>;
 normalize_binary(<<"voice_connection_not_found">>) -> <<"connection_not_found">>;
 normalize_binary(<<"voice_missing_connection_id">>) -> <<"connection_not_found">>;
 normalize_binary(Error) -> Error.
+
+do_cleanup_virtual_access_on_disconnect(UserId, GuildPid) ->
+    GuildId = resolve_guild_id_from_pid(GuildPid),
+    TargetPid = guild_voice_server:resolve(GuildId, GuildPid),
+    gen_server:cast(TargetPid, {cleanup_virtual_access_for_user, UserId}).
+
+resolve_guild_id_from_pid(GuildPid) ->
+    try guild_voice_server_state:guild_id_call(GuildPid, 5000) of
+        GuildId when is_integer(GuildId) ->
+            GuildId;
+        _ ->
+            undefined
+    catch
+        _:_ -> undefined
+    end.

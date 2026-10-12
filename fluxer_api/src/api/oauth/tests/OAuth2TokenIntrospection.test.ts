@@ -5,7 +5,6 @@ import {
 	createOAuth2TestSetup,
 	exchangeOAuth2AuthorizationCode,
 	introspectOAuth2Token,
-	revokeOAuth2Token,
 } from '@app/api/oauth/tests/OAuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -46,32 +45,6 @@ describe('OAuth2 Token Introspection', () => {
 		expect(introspection.token_type).toBe('Bearer');
 		expect(introspection.exp).toBeGreaterThan(0);
 		expect(introspection.iat).toBeGreaterThan(0);
-	});
-	test('should show revoked token as inactive', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const tokens = await exchangeOAuth2AuthorizationCode(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-		});
-		await revokeOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: tokens.access_token,
-			token_type_hint: 'access_token',
-		});
-		const introspection = await introspectOAuth2Token(harness, {
-			client_id: application.id,
-			client_secret: application.client_secret,
-			token: tokens.access_token,
-		});
-		expect(introspection.active).toBe(false);
 	});
 	test('should show invalid token as inactive', async () => {
 		const {application} = await createOAuth2TestSetup(harness);

@@ -15,7 +15,6 @@ import {
 } from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
 import {UserIndexRepository} from '@app/api/user/repositories/account/crud/UserIndexRepository';
 import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
-import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	LEGACY_DEAD_USER_FLAGS_MASK,
@@ -42,14 +41,12 @@ export class UserAccountRepository {
 	private emailOwnershipRepo: UserEmailOwnershipRepository;
 	private indexRepo: UserIndexRepository;
 	private searchRepo: UserSearchRepository;
-	private lookupRepo: UserLookupRepository;
 
 	constructor(kv: IKVProvider) {
 		this.dataRepo = new UserDataRepository();
 		this.emailOwnershipRepo = new UserEmailOwnershipRepository((userId: UserID) => this.findUnique(userId), kv);
 		this.indexRepo = new UserIndexRepository();
 		this.searchRepo = new UserSearchRepository();
-		this.lookupRepo = new UserLookupRepository((userId: UserID) => this.findUnique(userId), this.emailOwnershipRepo);
 	}
 
 	async create(data: UserRow): Promise<User> {
@@ -265,17 +262,6 @@ export class UserAccountRepository {
 		finalVersion: number | null;
 	}> {
 		return this.dataRepo.updateSubscriptionStatus(userId, updates);
-	}
-
-	async listUserIdsByLastActiveIp(
-		lastActiveIp: string,
-		limit: number,
-		offset: number,
-	): Promise<{
-		userIds: Array<UserID>;
-		total: number;
-	}> {
-		return this.lookupRepo.listUserIdsByLastActiveIp(lastActiveIp, limit, offset);
 	}
 
 	private applyPremiumFlagsMigration(data: UserRow, oldData: UserRow | null | undefined): void {

@@ -70,8 +70,6 @@ workloads:
     image:
       name: fluxer-app-proxy-self-hosted
     replicas: 1
-    env:
-      RELEASE_CHANNEL: stable
     resources:
       requests:
         cpu: 50m

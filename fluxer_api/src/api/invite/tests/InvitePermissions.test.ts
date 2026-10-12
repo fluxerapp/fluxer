@@ -8,7 +8,7 @@ import {
 	getChannel,
 	updateRole,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {deleteInvite} from '@app/api/invite/tests/InviteTestUtils';
+import {deleteInvite} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -104,5 +104,16 @@ describe('Invite Permissions', () => {
 		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
 		await deleteInvite(harness, owner.token, invite.code);
 		await createBuilder(harness, owner.token).get(`/invites/${invite.code}`).expect(HTTP_STATUS.NOT_FOUND).execute();
+	});
+	test('non-member cannot create invite', async () => {
+		const owner = await createTestAccount(harness);
+		const nonMember = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Test Guild');
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		await createBuilder(harness, nonMember.token)
+			.post(`/channels/${systemChannel.id}/invites`)
+			.body({})
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.execute();
 	});
 });

@@ -17,18 +17,12 @@ allowBuilds:
   '@parcel/watcher': true
   argon2: true
   core-js: true
-  cpu-features: true
   electron: true
   electron-winstaller: true
   esbuild: true
-  msgpackr-extract: true
   msw: true
-  node-mac-permissions: true
   protobufjs: true
-  puppeteer: true
   sharp: true
-  ssh2: true
-  uiohook-napi: true
 
 blockExoticSubdeps: true
 
@@ -91,7 +85,6 @@ catalog:
   '@types/react-dom': 19.3.0
   '@types/send': 1.2.1
   '@types/validator': 13.15.10
-  '@vitest/coverage-v8': 5.0.1
   '@vvo/tzdb': 6.198.0
   '@webgpu/types': 0.1.72
   altcha-lib: 2.5.0
@@ -133,7 +126,6 @@ catalog:
   mobx: 7.0.3
   mobx-persist-store: 1.1.8
   mobx-react-lite: 5.0.3
-  motion: 13.4.0
   msw: 2.15.0
   nodemailer: 10.0.10
   onnxruntime-web: 1.30.0

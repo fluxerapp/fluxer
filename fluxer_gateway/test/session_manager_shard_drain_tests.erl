@@ -45,9 +45,9 @@ build_session_data_carries_thread_channels_capability_test() ->
     ?assertEqual(false, maps:get(thread_channels_capable, Unflagged)).
 
 session_rpc_sends_thread_channels_capable_only_when_flagged_test() ->
-    meck:new(api_rpc_client, [passthrough, no_link]),
+    meck:new(rpc_client, [passthrough, no_link]),
     Self = self(),
-    meck:expect(api_rpc_client, call_with_retry, fun(Request, _Config) ->
+    meck:expect(rpc_client, call_with_retry, fun(Request, _Config) ->
         Self ! {session_rpc_request, Request},
         {ok, #{}}
     end),
@@ -62,7 +62,7 @@ session_rpc_sends_thread_channels_capable_only_when_flagged_test() ->
         ),
         ?assertNot(maps:is_key(<<"thread_channels_capable">>, receive_session_rpc_request()))
     after
-        meck:unload(api_rpc_client)
+        meck:unload(rpc_client)
     end.
 
 receive_session_rpc_request() ->

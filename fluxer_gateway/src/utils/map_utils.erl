@@ -12,10 +12,6 @@
 
 -export_type([key/0, default/0]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -type key() :: atom() | binary() | term().
 -type default() :: term().
 

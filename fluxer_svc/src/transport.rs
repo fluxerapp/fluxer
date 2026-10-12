@@ -31,7 +31,6 @@ pub trait Transport: Clone + Send + Sync + 'static {
     ) -> anyhow::Result<Self::Subscriber>;
     async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()>;
     async fn wait_for_reconnect(&self);
-    fn is_connected(&self) -> bool;
 }
 
 #[async_trait]
@@ -161,28 +160,12 @@ impl NatsTransport {
         <Self as Transport>::request(self, subject, payload, timeout).await
     }
 
-    pub async fn subscribe(&self, subject: &str) -> anyhow::Result<Subscriber> {
-        <Self as Transport>::subscribe(self, subject).await
-    }
-
     pub async fn subscribe_queue(
         &self,
         subject: &str,
         queue_group: &str,
     ) -> anyhow::Result<Subscriber> {
         <Self as Transport>::subscribe_queue(self, subject, queue_group).await
-    }
-
-    pub async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()> {
-        <Self as Transport>::publish(self, subject, payload).await
-    }
-
-    pub async fn wait_for_reconnect(&self) {
-        <Self as Transport>::wait_for_reconnect(self).await;
-    }
-
-    pub fn is_connected(&self) -> bool {
-        <Self as Transport>::is_connected(self)
     }
 }
 
@@ -252,13 +235,6 @@ impl Transport for NatsTransport {
     async fn wait_for_reconnect(&self) {
         self.reconnect_notify.notified().await;
     }
-
-    fn is_connected(&self) -> bool {
-        matches!(
-            self.client.connection_state(),
-            async_nats::connection::State::Connected
-        )
-    }
 }
 
 #[async_trait]
@@ -288,40 +264,6 @@ impl TransportMessage for NatsMessage {
 impl NatsMessage {
     pub async fn reply(&self, transport: &NatsTransport, payload: &[u8]) -> anyhow::Result<()> {
         reply_message(self, transport, payload).await
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn slow_consumer_logs_initial_event_then_throttles() {
-        let last_log_ms = AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS);
-
-        assert!(should_log_slow_consumer(10, &last_log_ms));
-        assert!(!should_log_slow_consumer(1_009, &last_log_ms));
-        assert!(should_log_slow_consumer(1_010, &last_log_ms));
-    }
-
-    #[test]
-    fn slow_consumer_throttle_allows_one_racing_logger() {
-        let last_log_ms = Arc::new(AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS));
-        let logged = Arc::new(AtomicU64::new(0));
-
-        std::thread::scope(|scope| {
-            for _ in 0..8 {
-                let last_log_ms = last_log_ms.clone();
-                let logged = logged.clone();
-                scope.spawn(move || {
-                    if should_log_slow_consumer(42, &last_log_ms) {
-                        logged.fetch_add(1, Ordering::Relaxed);
-                    }
-                });
-            }
-        });
-
-        assert_eq!(logged.load(Ordering::Relaxed), 1);
     }
 }
 
@@ -394,14 +336,14 @@ mod in_memory {
             let mut subscribers = self.bus.subscribers.lock().await;
 
             for (pattern, senders) in subscribers.plain.iter_mut() {
-                if !matches_subject(pattern, subject) {
+                if pattern != subject {
                     continue;
                 }
                 senders.retain(|sender| sender.send(message.clone()).is_ok());
             }
 
             for (key, queue) in subscribers.queue.iter_mut() {
-                if !matches_subject(&key.subject, subject) {
+                if key.subject != subject {
                     continue;
                 }
                 send_one_queue_subscriber(queue, message.clone());
@@ -476,10 +418,6 @@ mod in_memory {
         async fn wait_for_reconnect(&self) {
             std::future::pending::<()>().await;
         }
-
-        fn is_connected(&self) -> bool {
-            true
-        }
     }
 
     #[async_trait]
@@ -517,15 +455,6 @@ mod in_memory {
                 queue.next = queue.next.saturating_sub(1);
             }
         }
-    }
-
-    fn matches_subject(pattern: &str, subject: &str) -> bool {
-        if pattern == subject {
-            return true;
-        }
-        pattern
-            .strip_suffix(".>")
-            .is_some_and(|prefix| subject.starts_with(&format!("{prefix}.")))
     }
 }
 

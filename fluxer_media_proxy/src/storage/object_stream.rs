@@ -20,21 +20,14 @@ impl Store {
         key: &str,
         range_header: Option<&str>,
     ) -> Result<StreamObject, StorageError> {
-        self.stream_object_inner(ObjectStreamPlan {
+        let plan = ObjectStreamPlan {
             bucket,
             key,
             range: match range_header {
                 Some(header) => StreamRange::Header(header),
                 None => StreamRange::Full,
             },
-        })
-        .await
-    }
-
-    async fn stream_object_inner(
-        &self,
-        plan: ObjectStreamPlan<'_>,
-    ) -> Result<StreamObject, StorageError> {
+        };
         let result = match self.cfg.storage.backend {
             StorageBackend::Local => self.stream_local(plan).await,
             StorageBackend::S3 => self.stream_s3(plan).await,

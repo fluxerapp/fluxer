@@ -4,7 +4,7 @@ import {
 	THEME_VARIABLE_NAMES,
 	THEME_VARIABLES,
 	type ThemeVariableDefinition,
-} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeConstants';
+} from '@app/features/theme/variables/ThemeVariableManifest';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 

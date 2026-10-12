@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Твърде много файлове. Разрешени са максимум {maxFiles} {maxFiles, plural, one {файл} other {файла}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Открит е неразрешен `attachment://` URL. Това трябваше да бъде разрешено преди обработката на вградените елементи.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Каченият прикачен файл {filename} не е намерен.",
-	"auth_and_oauth.application_not_owned": "Не притежаваш това приложение.",
 	"auth_and_oauth.bot_already_in_guild": "Този бот вече е част от общността.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Бот потребителите не могат да създават сесии за удостоверяване.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Бот потребителите не могат да използват ендпойнти за удостоверяване.",

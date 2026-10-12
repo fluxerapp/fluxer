@@ -48,7 +48,6 @@ export const Routes = {
 	careers: () => marketingUrl('careers'),
 	partners: () => marketingUrl('partners'),
 	bugs: () => marketingUrl('help/report-bug'),
-	plutonium: () => marketingUrl('plutonium'),
 	help: (): string | null => hostedMarketingUrl('help'),
 	helpArticle: (slug: string): string | null => hostedMarketingUrl(`help/${slug}`),
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,

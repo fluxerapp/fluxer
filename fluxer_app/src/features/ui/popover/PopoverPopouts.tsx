@@ -192,14 +192,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			state,
 			style,
 			beginManualPositioning,
-		} = useAntiShiftFloating(positionReference, true, {
+		} = useAntiShiftFloating(positionReference, {
 			placement: position,
 			offsetMainAxis,
 			offsetCrossAxis,
 			shouldAutoUpdate: frozenTargetRect ? false : shouldAutoUpdate,
 			shouldObserveFloatingResize: !frozenTargetRect || !constrainHeight,
 			constrainHeight,
-			enableSmartBoundary: true,
 		});
 		const resizePositionController = useMemo(
 			() => ({begin: beginManualPositioning, placement: state.placement}),

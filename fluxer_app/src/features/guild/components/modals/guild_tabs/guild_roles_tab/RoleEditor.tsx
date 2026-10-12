@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PermissionRoleCategory} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {LayoutToggleButtons} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/LayoutToggleButtons';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab.module.css';
 import type {RoleUpdate} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/shared';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
-import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import type * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
-import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {GridFourIcon, ListIcon, MagnifyingGlassIcon, RowsIcon, TrashIcon} from '@phosphor-icons/react';
+import {MagnifyingGlassIcon, TrashIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
@@ -53,38 +52,6 @@ const MEMBERS_WITH_THE_PERMISSION_CAN_ALWAYS_MENTION_ROLES_DESCRIPTOR = msg({
 const SEARCH_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'Search permissions',
 	comment: 'Placeholder in the search input above the permission list in the role editor.',
-});
-const DENSE_LAYOUT_DESCRIPTOR = msg({
-	message: 'Dense layout',
-	comment: 'Status text or tooltip indicating the role editor permission list is currently in dense (compact) layout.',
-});
-const COMFY_LAYOUT_DESCRIPTOR = msg({
-	message: 'Comfy layout',
-	comment: 'Status text or tooltip indicating the role editor permission list is currently in comfy (spacious) layout.',
-});
-const SWITCH_TO_DENSE_LAYOUT_DESCRIPTOR = msg({
-	message: 'Switch to dense layout',
-	comment: 'Tooltip on the layout toggle button in the role editor that switches the permission list to dense layout.',
-});
-const SWITCH_TO_COMFY_LAYOUT_DESCRIPTOR = msg({
-	message: 'Switch to comfy layout',
-	comment: 'Tooltip on the layout toggle button in the role editor that switches the permission list to comfy layout.',
-});
-const SINGLE_COLUMN_DESCRIPTOR = msg({
-	message: 'Single column',
-	comment: 'Status text or tooltip indicating the role editor permission list is currently in single-column layout.',
-});
-const TWO_COLUMNS_DESCRIPTOR = msg({
-	message: 'Two columns',
-	comment: 'Status text or tooltip indicating the role editor permission list is currently in two-column layout.',
-});
-const SWITCH_TO_SINGLE_COLUMN_DESCRIPTOR = msg({
-	message: 'Switch to single column',
-	comment: 'Tooltip on the column toggle button in the role editor that switches the permission list to one column.',
-});
-const SWITCH_TO_TWO_COLUMNS_DESCRIPTOR = msg({
-	message: 'Switch to two columns',
-	comment: 'Tooltip on the column toggle button in the role editor that switches the permission list to two columns.',
 });
 
 interface RoleEditorProps {
@@ -264,62 +231,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 										className={styles.permSearchInput}
 										data-flx="guild.guild-tabs.guild-roles-tab.perm-search-input.set-permission-search-query.text"
 									/>
-									<div className={styles.layoutButtons} data-flx="guild.guild-tabs.guild-roles-tab.layout-buttons">
-										<Tooltip
-											text={
-												PermissionLayout.isComfy ? i18n._(DENSE_LAYOUT_DESCRIPTOR) : i18n._(COMFY_LAYOUT_DESCRIPTOR)
-											}
-											data-flx="guild.guild-tabs.guild-roles-tab.tooltip"
-										>
-											<button
-												type="button"
-												className={styles.layoutButton}
-												onClick={() => PermissionLayout.toggleLayoutMode()}
-												aria-label={
-													PermissionLayout.isComfy
-														? i18n._(SWITCH_TO_DENSE_LAYOUT_DESCRIPTOR)
-														: i18n._(SWITCH_TO_COMFY_LAYOUT_DESCRIPTOR)
-												}
-												data-flx="guild.guild-tabs.guild-roles-tab.layout-button.toggle-layout-mode"
-											>
-												{PermissionLayout.isComfy ? (
-													<RowsIcon
-														size={remFromPx(20)}
-														weight="bold"
-														data-flx="guild.guild-tabs.guild-roles-tab.rows-icon"
-													/>
-												) : (
-													<ListIcon
-														size={remFromPx(20)}
-														weight="bold"
-														data-flx="guild.guild-tabs.guild-roles-tab.list-icon"
-													/>
-												)}
-											</button>
-										</Tooltip>
-										<Tooltip
-											text={PermissionLayout.isGrid ? i18n._(SINGLE_COLUMN_DESCRIPTOR) : i18n._(TWO_COLUMNS_DESCRIPTOR)}
-											data-flx="guild.guild-tabs.guild-roles-tab.tooltip--2"
-										>
-											<button
-												type="button"
-												className={styles.layoutButton}
-												onClick={() => PermissionLayout.toggleGridMode()}
-												aria-label={
-													PermissionLayout.isGrid
-														? i18n._(SWITCH_TO_SINGLE_COLUMN_DESCRIPTOR)
-														: i18n._(SWITCH_TO_TWO_COLUMNS_DESCRIPTOR)
-												}
-												data-flx="guild.guild-tabs.guild-roles-tab.layout-button.toggle-grid-mode"
-											>
-												<GridFourIcon
-													size={remFromPx(20)}
-													weight={PermissionLayout.isGrid ? 'fill' : 'bold'}
-													data-flx="guild.guild-tabs.guild-roles-tab.grid-four-icon"
-												/>
-											</button>
-										</Tooltip>
-									</div>
+									<LayoutToggleButtons data-flx="guild.guild-tabs.guild-roles-tab.role-editor.layout-toggle-buttons" />
 								</div>
 								<div className={styles.permCategories} data-flx="guild.guild-tabs.guild-roles-tab.perm-categories">
 									{filteredPermissionSpecs.map((spec, index) => (

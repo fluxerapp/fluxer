@@ -4,6 +4,7 @@ import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {HostedOnlyRoute} from '@app/api/middleware/BillingRouteAvailability';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getGooglePlayPushVerifier} from '@app/api/middleware/ServiceSingletons';
@@ -21,10 +22,9 @@ import {
 import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {isStripeSubscriptionActive} from '@app/api/store_billing/StoreEntitlementWriter';
-import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {StoreBillingUnavailableError} from '@fluxer/errors/src/domains/payment/StoreBillingUnavailableError';
 import {StoreNotificationUnauthorizedError} from '@fluxer/errors/src/domains/payment/StoreNotificationUnauthorizedError';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
@@ -36,19 +36,7 @@ import {
 	StorePurchaseIdParam,
 	StorePurchaseListResponse,
 } from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
-import {createMiddleware} from 'hono/factory';
 import {z} from 'zod';
-
-function routeAvailableWhen(isAvailable: () => boolean) {
-	return createMiddleware<HonoEnv>(async (ctx, next) => {
-		if (Config.instance.selfHosted && !isAvailable()) {
-			return AppNotFoundHandler(ctx);
-		}
-		return next();
-	});
-}
-
-export const HostedOnlyRoute = routeAvailableWhen(() => false);
 
 const AppStoreNotificationBody = z.object({signedPayload: z.string().min(1)});
 

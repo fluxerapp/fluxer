@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {LongPressable} from '@app/features/app/components/LongPressable';
 import {usePressable} from '@app/features/app/hooks/usePressable';
 import styles from '@app/features/guild/components/modals/guild_tabs/MemberListStyles.module.css';
 import {MORE_OPTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -27,29 +26,14 @@ interface UserListItemProps {
 	avatarUrl?: string;
 	displayName?: string;
 	tag?: string;
-	nameColor?: string;
 	isMobile: boolean;
 	isMenuActive?: boolean;
-	trailingContent?: React.ReactNode;
 	onContextMenu: (event: React.MouseEvent<HTMLElement>, fromButton?: boolean) => void;
 	onActivate?: () => void;
-	onLongPress?: () => void;
 }
 
 export const UserListItem: React.FC<UserListItemProps> = observer(
-	({
-		user,
-		avatarUrl,
-		displayName,
-		tag,
-		nameColor,
-		isMobile,
-		isMenuActive = false,
-		trailingContent,
-		onContextMenu,
-		onActivate,
-		onLongPress,
-	}) => {
+	({user, avatarUrl, displayName, tag, isMobile, isMenuActive = false, onContextMenu, onActivate}) => {
 		const {i18n} = useLingui();
 		const {isPressed, pressableProps} = usePressable({disabled: !isMobile});
 		const handleActivate = useCallback(() => {
@@ -66,9 +50,7 @@ export const UserListItem: React.FC<UserListItemProps> = observer(
 			},
 			[isMobile, onContextMenu],
 		);
-		const handleLongPress = useCallback(() => {
-			onLongPress?.();
-		}, [onLongPress]);
+
 		const resolvedDisplayName = displayName || NicknameUtils.getDisplayName(user);
 		const sharedContent = (
 			<>
@@ -84,14 +66,9 @@ export const UserListItem: React.FC<UserListItemProps> = observer(
 					</div>
 					<div className={styles.memberInfo} data-flx="guild.guild-tabs.user-list-item.member-info">
 						<div className={styles.nameRow} data-flx="guild.guild-tabs.user-list-item.name-row">
-							<span
-								className={styles.displayName}
-								style={nameColor ? {color: nameColor} : undefined}
-								data-flx="guild.guild-tabs.user-list-item.display-name"
-							>
+							<span className={styles.displayName} data-flx="guild.guild-tabs.user-list-item.display-name">
 								{resolvedDisplayName}
 							</span>
-							{trailingContent}
 						</div>
 						{tag && (
 							<span className={styles.tag} data-flx="guild.guild-tabs.user-list-item.tag">
@@ -143,18 +120,7 @@ export const UserListItem: React.FC<UserListItemProps> = observer(
 					{sharedContent}
 				</button>
 			);
-			if (onLongPress) {
-				return (
-					<LongPressable
-						onLongPress={handleLongPress}
-						delay={500}
-						pressedClassName={styles.memberItemPressed}
-						data-flx="guild.guild-tabs.user-list-item.long-pressable"
-					>
-						{content}
-					</LongPressable>
-				);
-			}
+
 			return content;
 		}
 		return (

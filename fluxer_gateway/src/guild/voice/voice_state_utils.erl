@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(voice_state_utils).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -include_lib("fluxer_gateway/include/voice_state.hrl").
@@ -21,13 +25,8 @@
     drop_voice_states/2,
     broadcast_disconnects/2,
     voice_flags_from_context/1,
-    parse_stream_key/1,
-    normalize_session_id/1
+    parse_stream_key/1
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     voice_state/0,
@@ -241,23 +240,17 @@ build_stream_key_result({guild, GuildId}, ChannelId, ConnId) ->
         connection_id => ConnId
     }}.
 
--spec positive_integer(term()) -> integer() | undefined.
-positive_integer(Value) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(Value).
-
 -spec snowflake_field(term(), binary()) -> integer() | undefined.
-snowflake_field(Map, Key) when is_map(Map) -> positive_integer(maps:get(Key, Map, undefined));
-snowflake_field(_, _) -> undefined.
+snowflake_field(Map, Key) when is_map(Map) ->
+    snowflake_id:parse_maybe(maps:get(Key, Map, undefined));
+snowflake_field(_, _) ->
+    undefined.
 
 -spec require_positive_snowflake(term()) -> integer().
 require_positive_snowflake(Value) ->
-    Id = positive_integer(Value),
+    Id = snowflake_id:parse_maybe(Value),
     true = is_integer(Id),
     Id.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
 
 -ifdef(TEST).
 

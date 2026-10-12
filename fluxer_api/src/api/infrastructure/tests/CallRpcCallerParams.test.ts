@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID} from '@app/api/BrandedTypes';
+import type {GatewayRpcTransport} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayService} from '@app/api/infrastructure/GatewayService';
-import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
 import {afterEach, describe, expect, it} from 'vitest';
 
 const CHANNEL_ID = createChannelID(12n);
@@ -14,7 +14,7 @@ interface RecordedCall {
 }
 
 function recordingService(recorded: Array<RecordedCall>): GatewayService {
-	const transport: IGatewayRpcTransport = {
+	const transport: GatewayRpcTransport = {
 		async call(method: string, params: Record<string, unknown>): Promise<unknown> {
 			recorded.push({method, params});
 			return null;

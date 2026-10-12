@@ -16,11 +16,10 @@ interface AutocompleteOptionProps {
 	onMouseLeave?: () => void;
 	children: React.ReactNode;
 	listboxId: string;
-	metaIcon?: React.ReactNode;
 }
 
 export const AutocompleteOption: React.FC<AutocompleteOptionProps> = observer(
-	({index, isSelected, isHovered, onSelect, onMouseEnter, onMouseLeave, children, listboxId, metaIcon}) => {
+	({index, isSelected, isHovered, onSelect, onMouseEnter, onMouseLeave, children, listboxId}) => {
 		const handleKeyDown = useCallback(
 			(e: React.KeyboardEvent) => {
 				if (isKeyboardActivationKey(e.key)) {
@@ -49,20 +48,13 @@ export const AutocompleteOption: React.FC<AutocompleteOptionProps> = observer(
 				data-flx="channel.message-search-bar.autocomplete-option.option.select"
 			>
 				{children}
-				{metaIcon == null ? (
+				{
 					<PlusIcon
 						weight="bold"
 						className={`${styles.optionMetaIcon} ${showIcon ? '' : styles.optionMetaIconInactive}`}
 						data-flx="channel.message-search-bar.autocomplete-option.option-meta-icon"
 					/>
-				) : (
-					<span
-						className={styles.optionMetaIcon}
-						data-flx="channel.message-search-bar.autocomplete-option.option-meta-slot"
-					>
-						{metaIcon}
-					</span>
-				)}
+				}
 			</div>
 		);
 	},

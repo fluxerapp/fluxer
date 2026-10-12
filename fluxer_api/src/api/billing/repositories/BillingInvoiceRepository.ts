@@ -2,12 +2,7 @@
 
 import {mapStripeInvoiceToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
 import type {BillingPaymentRepository} from '@app/api/billing/repositories/BillingPaymentRepository';
-import {
-	buildPatchFromRow,
-	executeBillingVersionedUpdate,
-	isExistingNewer,
-	rowsEquivalent,
-} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {upsertVersionedMirrorRow} from '@app/api/billing/repositories/BillingRepoHelpers';
 import {
 	fetchMany,
 	fetchOne,
@@ -17,7 +12,7 @@ import {
 } from '@app/api/database/CassandraQueryExecution';
 import type {BillingInvoiceRow} from '@app/api/database/types/BillingTypes';
 import {BILLING_INVOICE_COLUMNS} from '@app/api/database/types/BillingTypes';
-import {BillingInvoices, BillingInvoicesByCustomer, BillingInvoicesBySubscription} from '@app/api/Tables';
+import {BillingInvoices, BillingInvoicesByCustomer} from '@app/api/Tables';
 import type Stripe from 'stripe';
 
 const FETCH_BY_ID = BillingInvoices.selectCql({
@@ -71,34 +66,11 @@ export class BillingInvoiceRepository {
 	}> {
 		const mapped = mapStripeInvoiceToRow(inv, hints);
 		const existing = await this.findById(mapped.primary.provider_id);
-		if (isExistingNewer(existing, mapped.primary)) {
-			for (const p of mapped.payments) {
-				await this.paymentsRepo.upsertFromStripeMapped(p);
-			}
-			return {changed: false, row: existing!};
+		const result = await upsertVersionedMirrorRow(BillingInvoices, BILLING_INVOICE_COLUMNS, existing, mapped.primary);
+		if (result.changed) {
+			await upsertOne(BillingInvoicesByCustomer.upsertAll(mapped.byCustomer));
 		}
-		if (existing && rowsEquivalent(existing, mapped.primary, ['mirrored_at', 'version'])) {
-			for (const p of mapped.payments) {
-				await this.paymentsRepo.upsertFromStripeMapped(p);
-			}
-			return {changed: false, row: existing};
-		}
-		const result = await executeBillingVersionedUpdate<BillingInvoiceRow, 'provider_id'>(
-			async () => existing,
-			(current) => ({
-				pk: {provider_id: mapped.primary.provider_id},
-				patch: buildPatchFromRow(mapped.primary, current, BILLING_INVOICE_COLUMNS, ['provider_id']),
-			}),
-			BillingInvoices,
-			{initialData: existing},
-		);
-		await upsertOne(BillingInvoicesByCustomer.upsertAll(mapped.byCustomer));
-		if (mapped.bySubscription) {
-			await upsertOne(BillingInvoicesBySubscription.upsertAll(mapped.bySubscription));
-		}
-		for (const p of mapped.payments) {
-			await this.paymentsRepo.upsertFromStripeMapped(p);
-		}
-		return {changed: true, row: {...mapped.primary, version: result.finalVersion}};
+		for (const p of mapped.payments) await this.paymentsRepo.upsertFromStripeMapped(p);
+		return result;
 	}
 }

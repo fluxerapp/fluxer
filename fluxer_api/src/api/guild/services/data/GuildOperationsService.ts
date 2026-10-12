@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createRoleID,
+	type GuildID,
+	guildIdToRoleId,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	type ChannelFollowerRemovalCopyMode,
@@ -12,7 +20,7 @@ import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
 import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
-import {guildActive, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -26,7 +34,6 @@ import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons';
 import {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
@@ -38,6 +45,7 @@ import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRole
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
+import {serializeGuildForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -67,7 +75,6 @@ import {
 } from '@fluxer/constants/src/ThreadPermissionUtils';
 import {DEFAULT_GUILD_FOLDER_ICON} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {BotsCannotCreateGuildsError} from '@fluxer/errors/src/domains/guild/BotsCannotCreateGuildsError';
@@ -199,20 +206,8 @@ export class GuildOperationsService {
 		private readonly discoveryRepository: GuildDiscoveryRepository,
 	) {}
 
-	async getGuild({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildResponse> {
-		try {
-			const guild = await this.gatewayService.getGuildData({guildId, userId});
-			if (!guild) throw new UnknownGuildError();
-			return guild;
-		} catch (error) {
-			if (this.isGuildAccessError(error)) {
-				if (await this.guildExists(guildId)) {
-					throw new AccessDeniedError();
-				}
-				throw new UnknownGuildError();
-			}
-			throw error;
-		}
+	async getGuild(params: {userId: UserID; guildId: GuildID}): Promise<GuildResponse> {
+		return this.helpers.getGuildData(params);
 	}
 
 	async getUserGuilds(
@@ -423,9 +418,7 @@ export class GuildOperationsService {
 		);
 		batch.addPrepared(GuildMembersByUserId.insert({user_id: user.id, guild_id: guildId}));
 		await batch.execute();
-		if (guildActive(guildId)) {
-			await this.channelRepository.threads.ensureGuildMarker(guildId, {permsSeededAt: new Date()});
-		}
+		await this.channelRepository.threads.ensureGuildMarker(guildId, {permsSeededAt: new Date()});
 		const guild = new Guild(guildData);
 		await this.gatewayService.startGuild(guildId);
 		await this.gatewayService.joinGuild({userId: user.id, guildId});
@@ -463,7 +456,6 @@ export class GuildOperationsService {
 			userId: UserID;
 			guildId: GuildID;
 			data: GuildUpdateRequest;
-			requestCache: RequestCache;
 		},
 		auditLogReason?: string | null,
 	): Promise<{
@@ -476,7 +468,7 @@ export class GuildOperationsService {
 		await checkPermission(Permissions.MANAGE_GUILD);
 		const currentGuild = await this.guildRepository.findUnique(guildId);
 		if (!currentGuild) throw new UnknownGuildError();
-		const previousSnapshot = this.helpers.serializeGuildForAudit(currentGuild);
+		const previousSnapshot = serializeGuildForAudit(currentGuild);
 		const previousFeatures = new Set(currentGuild.features);
 		contentModerationService.scanText(data.name ?? null, {
 			userId,
@@ -658,7 +650,7 @@ export class GuildOperationsService {
 		}
 		const auditLogChanges = this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, GUILD_SETTINGS_AUDIT_KEYS);
 		if (auditLogChanges.length > 0) {
-			await this.helpers.recordAuditLog({
+			await this.helpers.guildAuditLogService.record({
 				guildId,
 				userId,
 				action: AuditLogActionType.GUILD_UPDATE,
@@ -932,7 +924,7 @@ export class GuildOperationsService {
 				guild_id: guildId,
 				role_id: guildIdToRoleId(guildId),
 				name: '@everyone',
-				permissions: guildActive(guildId) ? DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS : DEFAULT_PERMISSIONS,
+				permissions: DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS,
 				position: 0,
 				hoist_position: null,
 				color: 0,
@@ -1008,7 +1000,7 @@ export class GuildOperationsService {
 				'[GuildOperationsService] Template import skipped unsupported channel types',
 			);
 		}
-		const threadsActive = guildActive(guildId);
+		const threadsActive = true;
 		const permissionMask = threadsActive ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
 		const templateEveryonePermissions =
 			this.parseTemplatePermissionBitfield(
@@ -1249,14 +1241,5 @@ export class GuildOperationsService {
 		if (integerValue < min) return min;
 		if (integerValue > max) return max;
 		return integerValue;
-	}
-
-	private isGuildAccessError(error: unknown): boolean {
-		return error instanceof UnknownGuildError;
-	}
-
-	private async guildExists(guildId: GuildID): Promise<boolean> {
-		const guild = await this.guildRepository.findUnique(guildId);
-		return guild !== null;
 	}
 }

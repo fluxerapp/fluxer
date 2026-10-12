@@ -3,9 +3,9 @@
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	CODES_DESCRIPTOR,
-	GIFTS_DESCRIPTOR,
 	PREMIUM_PRODUCT_NAME_KEYWORD,
-} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {GIFTS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
 const SUBSCRIPTION_DESCRIPTOR = msg({

@@ -5,6 +5,7 @@ import {clearAllAttachmentMocks, setAttachmentMock} from '@app/features/devtools
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	type MediaMenuDataProps,
 	mediaMenuItemIds,
@@ -13,7 +14,6 @@ import {
 import {ReverseImageSearchMenuItems} from '@app/features/ui/action_menu/items/ReverseImageSearchMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MS_PER_DAY, MS_PER_HOUR} from '@fluxer/date_utils/src/DateConstants';
@@ -192,7 +192,6 @@ export const MediaContextMenu: React.FC<MediaContextMenuProps> = observer(
 			<ReverseImageSearchMenuItems
 				imageUrl={originalSrc}
 				onClose={onClose}
-				wrapInGroup
 				data-flx="ui.action-menu.media-context-menu.reverse-image-search-menu-items"
 			/>
 		) : null;

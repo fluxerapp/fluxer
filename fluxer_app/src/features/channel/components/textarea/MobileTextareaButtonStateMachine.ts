@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
+import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 type MobileTextareaVisibleButton = 'send' | 'voice';
@@ -27,9 +27,7 @@ export interface MobileTextareaButtonModel {
 	voiceButton: {
 		disabled: boolean;
 	};
-	hasTypedText: boolean;
 	hasTextContent: boolean;
-	hasSubmissionContent: boolean;
 }
 
 type MobileTextareaButtonEvent = {
@@ -64,9 +62,7 @@ function selectMobileTextareaButtonModel(signals: MobileTextareaButtonSignals): 
 		visibleButton,
 		sendButton: {disabled: sendDisabled},
 		voiceButton: {disabled: voiceDisabled},
-		hasTypedText: typedText,
 		hasTextContent,
-		hasSubmissionContent,
 	};
 }
 

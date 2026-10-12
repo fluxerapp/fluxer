@@ -3,13 +3,13 @@
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import gifStyles from '@app/features/channel/components/GifPicker.module.css';
 import {useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
-import {filterMemesByContentType} from '@app/features/channel/components/pickers/memes/MediaFormat';
 import {MemesGrid} from '@app/features/channel/components/pickers/memes/MemesGrid';
 import type {MemesPickerProps} from '@app/features/channel/components/pickers/memes/MemesPicker';
 import {type ContentType, MemesPickerHeader} from '@app/features/channel/components/pickers/memes/MemesPickerHeader';
+import {useFilteredMemes} from '@app/features/channel/components/pickers/memes/useFilteredMemes';
 import {useScrollerViewport} from '@app/features/channel/components/pickers/shared/useScrollerViewport';
 import {PickerEmptyState} from '@app/features/channel/components/shared/PickerEmptyState';
-import MemesPicker from '@app/features/emoji/state/MemesPicker';
+
 import {ExpressionPickerHeaderPortal} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
@@ -18,9 +18,9 @@ import {useWindowFocusVideoControl} from '@app/features/voice/hooks/useWindowFoc
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {SmileySadIcon} from '@phosphor-icons/react';
-import {matchSorter} from 'match-sorter';
+
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 const NO_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'No saved media',
@@ -64,22 +64,7 @@ export const MemesPickerView = observer(({onClose}: MemesPickerProps = {}) => {
 	useEffect(() => {
 		jumpToStartEdge();
 	}, [state.selectedFilter, state.searchTerm, jumpToStartEdge]);
-	const filteredMemes = useMemo(() => {
-		let memes = filterMemesByContentType(favoriteMemes, state.selectedFilter);
-		if (state.searchTerm) {
-			const sortedByMatch = matchSorter(memes, state.searchTerm, {
-				keys: ['name', 'altText', 'filename', 'tags'],
-				threshold: matchSorter.rankings.CONTAINS,
-			});
-			const searchIndex = new Map(sortedByMatch.map((meme, index) => [meme.id, index]));
-			memes = [...sortedByMatch].sort((a, b) => {
-				const frecencyDiff = MemesPicker.getFrecencyScoreForMeme(b) - MemesPicker.getFrecencyScoreForMeme(a);
-				if (frecencyDiff !== 0) return frecencyDiff;
-				return (searchIndex.get(a.id) ?? 0) - (searchIndex.get(b.id) ?? 0);
-			});
-		}
-		return memes;
-	}, [favoriteMemes, state.selectedFilter, state.searchTerm]);
+	const filteredMemes = useFilteredMemes(favoriteMemes, state.selectedFilter, state.searchTerm);
 	const header = (
 		<MemesPickerHeader
 			searchTerm={state.searchTerm}

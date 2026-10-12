@@ -15,8 +15,6 @@ crate-type = ["cdylib", "rlib"]
 napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
 napi-derive = "3.6.7"
 fluxer_rt_thread = {path = "../rt-thread"}
-fluxer_audio_apm = {path = "../audio-apm"}
-fluxer_screen_frame_bus = {path = "../screen-frame-bus"}
 
 [target.'cfg(target_os = "linux")'.dependencies]
 pipewire = "0.10.1"

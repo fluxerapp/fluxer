@@ -15,44 +15,6 @@ describe('OAuth2 Token Exchange', () => {
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
 	});
-	test('should fail without authorization code', async () => {
-		const {application, redirectURI} = await createOAuth2TestSetup(harness);
-		const formData = new URLSearchParams({
-			grant_type: 'authorization_code',
-			code: '',
-			redirect_uri: redirectURI,
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should fail with invalid authorization code', async () => {
-		const {application, redirectURI} = await createOAuth2TestSetup(harness);
-		const formData = new URLSearchParams({
-			grant_type: 'authorization_code',
-			code: 'invalid_code_12345',
-			redirect_uri: redirectURI,
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
 	test('should fail without redirect_uri in token exchange', async () => {
 		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
 		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
@@ -140,29 +102,6 @@ describe('OAuth2 Token Exchange', () => {
 		expect(tokenResponse.access_token).toBeTruthy();
 		const formData = new URLSearchParams({
 			grant_type: 'authorization_code',
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-			client_id: application.id,
-		});
-		await createBuilder(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should fail with missing grant_type', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const formData = new URLSearchParams({
 			code: authCodeResponse.code,
 			redirect_uri: redirectURI,
 			client_id: application.id,

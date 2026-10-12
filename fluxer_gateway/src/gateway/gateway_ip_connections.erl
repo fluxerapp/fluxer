@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(gateway_ip_connections).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([acquire/1, release/1, note_disconnect/1]).
@@ -9,10 +13,6 @@
 -define(OWNER_TABLE, gateway_ip_connection_owners).
 -define(MAX_CONNECTIONS_PER_IP, 256).
 -define(OWNER_SWEEP_INTERVAL_MS, 60000).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec acquire(term()) -> ok | {error, too_many_connections}.
 acquire(PeerIP) when is_binary(PeerIP), PeerIP =/= <<"unknown">> ->

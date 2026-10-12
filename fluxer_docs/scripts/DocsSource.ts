@@ -103,3 +103,17 @@ export function slugifyHeading(heading: string): string {
 		.trim()
 		.replace(/\s+/gu, '-');
 }
+
+export function stripVersion(routePath: string): string {
+	if (routePath.startsWith('/v1/')) {
+		return routePath.slice(3);
+	}
+	return routePath;
+}
+
+export function pageSlug(relativePath: string): string {
+	return relativePath
+		.replace(/\.(mdx|md)$/u, '')
+		.replace(/\/index$/u, '')
+		.replace(/^index$/u, '');
+}

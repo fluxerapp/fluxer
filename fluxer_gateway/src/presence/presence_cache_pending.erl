@@ -7,7 +7,6 @@
     sanitize_pending_operations/1,
     pending_operations/1,
     ensure_pending_state/1,
-    count_pending_operations/1,
     queue_pending_operation/3,
     clear_pending_operation/2,
     set_pending_operations/2,
@@ -51,10 +50,6 @@ ensure_pending_state(State) ->
         pending_seq_counter => Counter,
         pending_retry_timer => pending_retry_timer(State)
     }.
-
--spec count_pending_operations(state()) -> non_neg_integer().
-count_pending_operations(State) ->
-    maps:size(pending_operations(State)).
 
 -spec queue_pending_operation(integer(), pending_operation(), state()) -> state().
 queue_pending_operation(UserId, Operation, State) ->

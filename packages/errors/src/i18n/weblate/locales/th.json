@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "ไฟล์มากเกินไป อนุญาตสูงสุด {maxFiles, plural, other {# ไฟล์}}",
 	"attachments_and_uploads.unresolved_attachment_url": "ตรวจพบ URL `attachment://` ที่ยังไม่ได้แปลงค่า ควรแปลงค่าก่อนประมวลผลเอมเบด",
 	"attachments_and_uploads.uploaded_attachment_not_found": "ไม่พบไฟล์แนบที่อัปโหลด {filename}",
-	"auth_and_oauth.application_not_owned": "คุณไม่ได้เป็นเจ้าของแอปพลิเคชันนี้",
 	"auth_and_oauth.bot_already_in_guild": "บอทนี้อยู่ในคอมมูนิตี้แล้ว",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "ผู้ใช้บอทไม่สามารถสร้างเซสชันยืนยันตัวตนได้",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "ผู้ใช้บอทไม่สามารถใช้ปลายทางยืนยันตัวตนได้",

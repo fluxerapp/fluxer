@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::ptr;
+mod audio_contract;
+#[cfg(any(target_os = "windows", test))]
+mod process_tree;
+#[cfg(any(target_os = "windows", test))]
+mod session_mixer;
+mod windows_version;
+
 use std::sync::Arc;
 
-use fluxer_desktop_native::win_process_loopback::audio_contract;
-use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSinkHandleRef};
 use napi::{
-    Env, JsValue,
-    bindgen_prelude::{
-        Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown, ValueType,
-    },
+    Env,
+    bindgen_prelude::{Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown},
     sys,
     threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue},
 };
@@ -18,35 +20,6 @@ use napi_derive::napi;
 pub mod pcm_pool;
 
 use crate::pcm_pool::{PCM_SLOT_SAMPLES_MAX, PooledPcmFrame};
-
-fn retain_screen_audio_sink_handle(
-    value: Unknown<'_>,
-) -> Result<Arc<NativeScreenFrameSinkHandleRef>> {
-    if value.get_type()? != ValueType::External {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink expects a native external sink handle",
-        ));
-    }
-    let raw_value = value.value();
-    let mut data: *mut std::ffi::c_void = ptr::null_mut();
-    let status = unsafe { sys::napi_get_value_external(raw_value.env, raw_value.value, &mut data) };
-    if status != sys::Status::napi_ok || data.is_null() {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
-        ));
-    }
-    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
-        .and_then(NativeScreenFrameSinkHandle::retain_ref)
-        .ok_or_else(|| {
-            Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-            )
-        })?;
-    Ok(Arc::new(handle))
-}
 
 pub struct ErrorMessage(pub String);
 
@@ -311,53 +284,11 @@ struct Callbacks {
     on_error: ErrorTsfn,
     on_closed: VoidTsfn,
     on_started: Option<VoidTsfn>,
-    screen_audio_sink: std::sync::RwLock<Option<Arc<NativeScreenFrameSinkHandleRef>>>,
 }
 
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 impl Callbacks {
-    fn set_screen_audio_sink(&self, sink: Arc<NativeScreenFrameSinkHandleRef>) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = Some(sink);
-        }
-    }
-
-    fn clear_screen_audio_sink(&self) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = None;
-        }
-    }
-
-    fn try_emit_frame_to_sink(&self, frame: &FramePayload) -> bool {
-        let Ok(guard) = self.screen_audio_sink.read() else {
-            return false;
-        };
-        let Some(sink) = guard.as_ref() else {
-            return false;
-        };
-        let samples: &[f32] = match &frame.samples {
-            FrameSamples::Pooled(slot) => slot.data_slice(),
-            FrameSamples::Owned(owned) => owned.as_slice(),
-        };
-        let channels = u32::from(audio_contract::TARGET_CHANNELS);
-        if channels == 0 || samples.is_empty() || !samples.len().is_multiple_of(channels as usize) {
-            return true;
-        }
-        let frames = samples.len() as u32 / channels;
-        sink.enqueue_screen_audio_f32(
-            samples,
-            frames,
-            channels,
-            audio_contract::TARGET_SAMPLE_RATE,
-            frame.timestamp_us,
-        );
-        true
-    }
-
     fn emit_frame(&self, frame: FramePayload) {
-        if self.try_emit_frame_to_sink(&frame) {
-            return;
-        }
         let _ = self
             .on_frame
             .call(frame, ThreadsafeFunctionCallMode::NonBlocking);
@@ -454,29 +385,10 @@ impl ProcessLoopback {
             on_error: build_error_tsfn(&env, on_error)?,
             on_closed: build_void_tsfn(&env, on_closed)?,
             on_started: on_started.map(|cb| build_void_tsfn(&env, cb)).transpose()?,
-            screen_audio_sink: std::sync::RwLock::new(None),
         };
         Ok(Self {
             inner: platform::Inner::new(pid, options, callbacks)?,
         })
-    }
-
-    #[napi(js_name = "setScreenAudioSink")]
-    pub fn set_screen_audio_sink(&self, sink_handle: Unknown<'_>) -> Result<()> {
-        let sink = retain_screen_audio_sink_handle(sink_handle)?;
-        if !sink.supports_screen_audio() {
-            return Err(Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink handle does not support screen audio",
-            ));
-        }
-        self.inner.set_screen_audio_sink(sink);
-        Ok(())
-    }
-
-    #[napi(js_name = "clearScreenAudioSink")]
-    pub fn clear_screen_audio_sink(&self) {
-        self.inner.clear_screen_audio_sink();
     }
 
     #[napi]
@@ -652,8 +564,7 @@ fn classify_windows_capabilities(
 pub fn get_backend_info() -> WinProcessLoopbackBackendInfo {
     let detected = platform::detected_build();
     let runtime_probe = platform::process_loopback_probe();
-    let min_build =
-        fluxer_desktop_native::win_process_loopback::windows_version::PROCESS_LOOPBACK_MIN_BUILD;
+    let min_build = crate::windows_version::PROCESS_LOOPBACK_MIN_BUILD;
     let (
         supported,
         process_supported,
@@ -975,9 +886,7 @@ mod platform {
         ProcessLoopbackRuntimeProbe,
     };
     use crate::pcm_pool::{PCM_SLOT_SAMPLES_MAX, PcmFramePool, PcmPoolError, PooledPcmFrame};
-    use fluxer_desktop_native::win_process_loopback::{
-        audio_contract, process_tree, session_mixer,
-    };
+    use crate::{audio_contract, process_tree, session_mixer};
     use fluxer_rt_thread::{PriorityProfile, RealtimePriorityGuard};
     use napi::bindgen_prelude::{Error, Result, Status};
     use std::{
@@ -992,7 +901,7 @@ mod platform {
         time::{Duration, Instant},
     };
     use windows::Win32::Foundation::{
-        CloseHandle, GetLastError, HANDLE, HWND, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
+        CloseHandle, HANDLE, HWND, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
     };
     use windows::Win32::Media::Audio::{
         AUDCLNT_BUFFERFLAGS_SILENT, AUDCLNT_BUFFERFLAGS_TIMESTAMP_ERROR, AUDCLNT_SHAREMODE_SHARED,
@@ -1168,17 +1077,6 @@ mod platform {
                 stop_signal: Arc::new(AtomicBool::new(false)),
                 disposed: AtomicBool::new(false),
             })
-        }
-
-        pub(crate) fn set_screen_audio_sink(
-            &self,
-            sink: std::sync::Arc<super::NativeScreenFrameSinkHandleRef>,
-        ) {
-            self.callbacks.set_screen_audio_sink(sink);
-        }
-
-        pub(crate) fn clear_screen_audio_sink(&self) {
-            self.callbacks.clear_screen_audio_sink();
         }
 
         pub(crate) fn start(&self) -> Result<()> {
@@ -1499,7 +1397,7 @@ mod platform {
 
         let client = match activate_loopback_client(pid, include_tree, capture_scope, stop_event) {
             Ok(client) => client,
-            Err(err) if stop_signal.load(Ordering::SeqCst) => return Ok(()),
+            Err(_) if stop_signal.load(Ordering::SeqCst) => return Ok(()),
             Err(err) => return Err(err.reason.to_string()),
         };
 
@@ -2411,11 +2309,6 @@ mod platform {
             .unwrap_or(false)
     }
 
-    #[allow(dead_code)]
-    fn _touch_lasterror() -> u32 {
-        unsafe { GetLastError().0 }
-    }
-
     #[cfg(test)]
     mod blob_propvariant_tests {
         use super::*;
@@ -2469,14 +2362,6 @@ mod platform {
                 "win-process-loopback only supports Windows",
             ))
         }
-
-        pub(crate) fn set_screen_audio_sink(
-            &self,
-            _sink: std::sync::Arc<super::NativeScreenFrameSinkHandleRef>,
-        ) {
-        }
-
-        pub(crate) fn clear_screen_audio_sink(&self) {}
 
         pub(crate) fn start(&self) -> Result<()> {
             Err(Error::new(

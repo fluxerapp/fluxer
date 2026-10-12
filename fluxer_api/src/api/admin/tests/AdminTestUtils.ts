@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 
 interface AdminApiKey {
 	keyId: string;
@@ -58,4 +59,9 @@ export async function listAdminApiKeys(
 
 export async function revokeAdminApiKey(harness: ApiTestHarness, token: string, keyId: string): Promise<void> {
 	await createBuilder<void>(harness, `${token}`).delete(`/admin/api-keys/${keyId}`).body(null).expect(200).execute();
+}
+
+export async function createAdminWithAcls(harness: ApiTestHarness, acls: Array<string>): Promise<TestAccount> {
+	const account = await createTestAccount(harness);
+	return await setUserACLs(harness, account, [AdminACLs.AUTHENTICATE, ...acls]);
 }

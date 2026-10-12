@@ -105,15 +105,6 @@ const ThemeStudioInner: React.FC<ThemeStudioProps> = observer(
 					case 'themeLibrary':
 						void ThemeLibrary.reload();
 						return;
-					case 'studio:opened-popout':
-						ThemeStudioState.markPoppedOut(ThemeStudioState.popupRef);
-						return;
-					case 'studio:closed-popout':
-						ThemeStudioState.clearPoppedOut();
-						return;
-					case 'studio:close-popout':
-						window.close();
-						return;
 					case 'studio:focus-popout':
 						window.focus();
 						return;

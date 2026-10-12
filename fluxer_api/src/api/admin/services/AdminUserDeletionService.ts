@@ -5,9 +5,8 @@ import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
-import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import {type ReporterResolutionNotifier, wasReporterNotified} from '@app/api/admin/services/ReporterResolutionNotifier';
-import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {createReportID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
@@ -21,6 +20,10 @@ import {getReportSearchService} from '@app/api/SearchFactory';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {isEnforcementDeletionReason} from '@app/api/user/ProfileVisibility';
+import {
+	type PartialUserChangePropagationDeps,
+	propagateUserUpdate,
+} from '@app/api/user/services/PartialUserChangePropagation';
 import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -40,7 +43,7 @@ interface AdminUserDeletionServiceDeps {
 	auditService: AdminAuditService;
 	banManagementService: AdminBanManagementService;
 	reportService: ReportService;
-	updatePropagator: AdminUserUpdatePropagator;
+	userUpdateDeps: PartialUserChangePropagationDeps;
 	kvDeletionQueue: KVAccountDeletionQueueService;
 	stripe: Stripe | null;
 	billingRepository: BillingRepository;
@@ -139,7 +142,7 @@ export class AdminUserDeletionService {
 		auditLogReason: string | null,
 	): Promise<User> {
 		const {users: userRepository} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
+		const {auditService, userUpdateDeps} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -172,10 +175,9 @@ export class AdminUserDeletionService {
 			currentPendingDeletionAt: user.pendingDeletionAt,
 			nextPendingDeletionAt: pendingDeletionAt,
 			deletionReasonCode: data.reason_code,
-			userRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		await this.deps.oauth2Tokens.deleteAllAccessTokensForUser(userId);
 		await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(userId);
 		const {stripe, billingRepository} = this.deps;
@@ -280,7 +282,7 @@ export class AdminUserDeletionService {
 			await this.resolvePendingReportsAgainstUser({user, adminUserId, reasonCode: data.reason_code});
 		}
 		await emitAdminAction(adminUserId, userId, 'schedule_deletion', {reasonCode: data.reason_code, ips: knownIps});
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
 		return updatedUser;
 	}
 
@@ -309,7 +311,7 @@ export class AdminUserDeletionService {
 		acls: ReadonlySet<string>,
 	) {
 		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
+		const {auditService, userUpdateDeps} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -331,13 +333,8 @@ export class AdminUserDeletionService {
 			deletion_public_reason: null,
 			deletion_audit_log_reason: null,
 		});
-		await clearPendingDeletion({
-			userId,
-			pendingDeletionAt: user.pendingDeletionAt,
-			userRepository,
-			deletionQueue: this.deps.kvDeletionQueue,
-		});
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		await clearPendingDeletion({userId, deletionQueue: this.deps.kvDeletionQueue});
+		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
 		const email = user.email;
 		const notificationSent =
 			data.notify_user && email

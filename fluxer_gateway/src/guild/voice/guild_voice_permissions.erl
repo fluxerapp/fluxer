@@ -96,8 +96,8 @@ has_resolved_view_and_connect_perms(UserId, ChannelIdValue, State) ->
     Permissions = resolve_permissions(UserId, ChannelIdValue, State),
     ViewPerm = constants:view_channel_permission(),
     ConnectPerm = constants:connect_permission(),
-    HasView = permission_bits:has(Permissions, ViewPerm),
-    HasConnect = permission_bits:has(Permissions, ConnectPerm),
+    HasView = bitset:has(Permissions, ViewPerm),
+    HasConnect = bitset:has(Permissions, ConnectPerm),
     HasView andalso HasConnect.
 
 -spec channel_has_capacity(integer(), channel(), channel_voice_stats(), boolean()) ->
@@ -253,7 +253,7 @@ pending_connection_matches(UserId, ChannelIdValue, PendingData, Now) ->
 
 -spec is_member_timed_out(integer(), guild_state()) -> boolean().
 is_member_timed_out(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->

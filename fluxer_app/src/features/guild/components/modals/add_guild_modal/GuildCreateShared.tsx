@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {AVATAR_RECOMMENDED_SIZE_LABEL, STATIC_IMAGE_FORMATS} from '@app/features/app/config/I18nDisplayConstants';
@@ -10,16 +11,15 @@ import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimA
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
-import {getAcceptStringFiltered} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
-import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
 import styles from '@app/features/guild/components/modals/AddGuildModal.module.css';
 import {
 	ANIMATED_ICONS_ARE_NOT_SUPPORTED_WHEN_CREATING_A_DESCRIPTOR,
 	COMMUNITY_NAME_DESCRIPTOR,
 	ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
+import * as StringUtils from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	getGuildIconDisplayInitials,
 	getGuildInitialsFitStyle,
@@ -32,14 +32,14 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import Users from '@app/features/user/state/Users';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as StringUtils from '@app/lib/strings';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -80,17 +80,20 @@ export function useGuildCreateIconField({
 	const initialsLength = initials ? getInitialsLength(initials) : null;
 	const showIconUploadErrorModal = useCallback(
 		(message: string) => {
-			showGuildErrorModal({
-				title: i18n._(messages.imageCouldNotBeUsed),
-				message,
-				dataFlx: `${dataFlx}.icon-upload-error-modal`,
+			showGenericErrorModal({
+				...{
+					title: i18n._(messages.imageCouldNotBeUsed),
+					message,
+					dataFlx: `${dataFlx}.icon-upload-error-modal`,
+				},
+				defer: true,
 			});
 		},
 		[dataFlx, i18n, messages],
 	);
 	const handleIconUpload = useCallback(async () => {
 		try {
-			const [file] = await openFilePicker({accept: getAcceptStringFiltered('guild_icon', false)});
+			const [file] = await openFilePicker({accept: getAcceptString('guild_icon', {animatedAllowed: false})});
 			if (!file) return;
 			if (file.size > GlobalLimits.getAvatarMaxSize()) {
 				showIconUploadErrorModal(
@@ -106,24 +109,23 @@ export function useGuildCreateIconField({
 				showIconUploadErrorModal(i18n._(ANIMATED_ICONS_ARE_NOT_SUPPORTED_WHEN_CREATING_A_DESCRIPTOR));
 				return;
 			}
-			const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
+			const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
 			ModalCommands.push(
 				modal(() => (
 					<AssetCropModal
 						assetType={AssetType.GUILD_ICON}
 						imageUrl={base64}
 						onCropComplete={(croppedBlob) => {
-							const reader = new FileReader();
-							reader.onload = () => {
-								const croppedBase64 = reader.result as string;
-								form.setValue('icon', croppedBase64);
-								setPreviewIconUrl(croppedBase64);
-								if (clearIconErrors) form.clearErrors('icon');
-							};
-							reader.onerror = () => {
-								showIconUploadErrorModal(i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR));
-							};
-							reader.readAsDataURL(croppedBlob);
+							void readBlobAsDataUrl(croppedBlob).then(
+								(croppedBase64) => {
+									form.setValue('icon', croppedBase64);
+									setPreviewIconUrl(croppedBase64);
+									if (clearIconErrors) form.clearErrors('icon');
+								},
+								() => {
+									showIconUploadErrorModal(i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR));
+								},
+							);
 						}}
 						onSkip={() => {
 							form.setValue('icon', base64);

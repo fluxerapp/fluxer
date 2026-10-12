@@ -19,10 +19,8 @@ import {
 } from '@app/api/channel/services/message/CrosspostPropagation';
 import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
+	adminMessageResponseAccess,
 	createMessageResponseDataService,
-	type MessageResponseAccessContext,
-	messageResponseAccessForChannel,
-	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -214,7 +212,7 @@ export class AdminMessageService {
 		const messageResponses = await createMessageResponseDataService().buildMessages({
 			userId: createUserID(0n),
 			messages: result.messages,
-			access: await this.getMessageResponseAccessForAdmin(channelId),
+			access: await adminMessageResponseAccess(this.deps.channelRepository, channelId),
 		});
 		const adminMessages = messageResponses.map((message) =>
 			this.mapMessageResponseToAdminMessage(message, channelNsfwContext),
@@ -226,12 +224,6 @@ export class AdminMessageService {
 		};
 	}
 
-	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
-		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
-		return {...access, includeHidden: true};
-	}
-
 	private async listMessageResponsesForAdmin(params: {
 		channelId: ChannelID;
 		limit: number;
@@ -239,7 +231,7 @@ export class AdminMessageService {
 		after?: MessageID;
 		around?: MessageID;
 	}): Promise<Array<MessageResponse>> {
-		const access = await this.getMessageResponseAccessForAdmin(params.channelId);
+		const access = await adminMessageResponseAccess(this.deps.channelRepository, params.channelId);
 		return createMessageResponseDataService().listMessages({
 			userId: createUserID(0n),
 			channelId: params.channelId,

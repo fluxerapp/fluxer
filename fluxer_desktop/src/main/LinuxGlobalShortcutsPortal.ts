@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GlobalShortcutsPortalConsent} from '@electron/common/DesktopConfig';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {
 	GLOBAL_SHORTCUT_ACTIONS,
 	GLOBAL_SHORTCUT_HOLD_ACTIONS,
@@ -93,10 +94,6 @@ function classifyOpenFailure(error: unknown): OpenFailure {
 	if (message.startsWith('identity:')) return {kind: 'identity', message};
 	if (message === 'error:timeout') return {kind: 'timeout', message};
 	return {kind: 'failed', message};
-}
-
-function errorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 function isKnownAction(id: string): id is GlobalShortcutAction {

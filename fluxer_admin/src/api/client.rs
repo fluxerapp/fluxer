@@ -136,152 +136,30 @@ impl AdminApiClient {
         Self::parse_response(response).await
     }
 
-    pub async fn post<T: DeserializeOwned>(
+    pub async fn send<T, B>(
         &self,
+        method: Method,
         path: &str,
-        body: Option<&serde_json::Value>,
-    ) -> ApiResult<T> {
-        self.post_with_reason(path, body, None).await
-    }
-
-    pub async fn post_typed<T, B>(&self, path: &str, body: &B) -> ApiResult<T>
-    where
-        T: DeserializeOwned,
-        B: Serialize + ?Sized,
-    {
-        self.post_typed_with_reason(path, body, None).await
-    }
-
-    pub async fn post_typed_with_reason<T, B>(
-        &self,
-        path: &str,
-        body: &B,
+        body: Option<&B>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T>
     where
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let response = self
-            .send_json(Method::POST, path, Some(body), audit_log_reason)
-            .await?;
+        let response = self.send_json(method, path, body, audit_log_reason).await?;
         Self::parse_response(response).await
     }
 
-    pub async fn post_with_reason<T: DeserializeOwned>(
+    pub async fn send_void<B: Serialize + ?Sized>(
         &self,
+        method: Method,
         path: &str,
-        body: Option<&serde_json::Value>,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T> {
-        let response = self
-            .send_json(Method::POST, path, body, audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
-    }
-
-    pub async fn post_void(&self, path: &str, body: Option<&serde_json::Value>) -> ApiResult<()> {
-        self.post_void_with_reason(path, body, None).await
-    }
-
-    pub async fn post_void_with_reason(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
+        body: Option<&B>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let response = self
-            .send_json(Method::POST, path, body, audit_log_reason)
-            .await?;
+        let response = self.send_json(method, path, body, audit_log_reason).await?;
         Self::parse_void_response(response).await
-    }
-
-    pub async fn patch<T: DeserializeOwned>(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
-    ) -> ApiResult<T> {
-        self.patch_with_reason(path, body, None).await
-    }
-
-    pub async fn patch_with_reason<T: DeserializeOwned>(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T> {
-        let response = self
-            .send_json(Method::PATCH, path, body, audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
-    }
-
-    pub async fn patch_typed_with_reason<T, B>(
-        &self,
-        path: &str,
-        body: &B,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T>
-    where
-        T: DeserializeOwned,
-        B: Serialize + ?Sized,
-    {
-        let response = self
-            .send_json(Method::PATCH, path, Some(body), audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
-    }
-
-    pub async fn put_with_reason<T: DeserializeOwned>(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T> {
-        let response = self
-            .send_json(Method::PUT, path, body, audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
-    }
-
-    pub async fn put_typed_with_reason<T, B>(
-        &self,
-        path: &str,
-        body: &B,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T>
-    where
-        T: DeserializeOwned,
-        B: Serialize + ?Sized,
-    {
-        let response = self
-            .send_json(Method::PUT, path, Some(body), audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
-    }
-
-    pub async fn delete_void_with_reason(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<()> {
-        let response = self
-            .send_json(Method::DELETE, path, body, audit_log_reason)
-            .await?;
-        Self::parse_void_response(response).await
-    }
-
-    pub async fn delete_with_reason<T: DeserializeOwned>(
-        &self,
-        path: &str,
-        body: Option<&serde_json::Value>,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<T> {
-        let response = self
-            .send_json(Method::DELETE, path, body, audit_log_reason)
-            .await?;
-        Self::parse_response(response).await
     }
 
     async fn parse_void_response(response: reqwest::Response) -> ApiResult<()> {

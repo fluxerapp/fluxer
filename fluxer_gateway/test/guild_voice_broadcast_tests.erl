@@ -96,7 +96,7 @@ confirm_join(ConnId, GuildState) ->
         pending_voice_connections => #{ConnId => pending_join(ConnId)}
     },
     {reply, #{success := true}, _} =
-        guild_voice_connection:confirm_voice_connection_from_livekit(
+        guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
             #{connection_id => ConnId}, VoiceServerState
         ),
     pump_relay_to_guild(GuildState).

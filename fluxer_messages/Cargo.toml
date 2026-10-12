@@ -23,13 +23,6 @@ tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "signal"]
 tracing = "0.1.44"
 url = "2.5.8"
 
-[dev-dependencies]
-criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
-
-[[bench]]
-name = "message_response"
-harness = false
-
 [features]
 default = []
 scylla = ["dep:scylla", "fluxer-svc/scylla"]

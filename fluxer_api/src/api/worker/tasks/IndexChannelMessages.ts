@@ -5,7 +5,6 @@ import {createChannelID} from '@app/api/BrandedTypes';
 import {isMessageSearchIndexable} from '@app/api/channel/services/message/MessageSearchService';
 import {Logger} from '@app/api/Logger';
 import {getMessageSearchService} from '@app/api/SearchFactory';
-import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
@@ -18,19 +17,10 @@ const PayloadSchema = z.object({
 });
 const BULK_BATCH_SIZE = 5000;
 const COMPLETION_KEY_TTL_SECONDS = seconds('1 day');
-function getMessageIndexServices(): Array<IMessageSearchService> {
-	const services: Array<IMessageSearchService> = [];
-	const defaultService = getMessageSearchService();
-	if (defaultService) {
-		services.push(defaultService);
-	}
-	return services;
-}
-
 const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 	const validated = PayloadSchema.parse(payload);
-	const searchServices = getMessageIndexServices();
-	if (searchServices.length === 0) {
+	const searchService = getMessageSearchService();
+	if (!searchService) {
 		throw new Error('Search service is not available in this worker process');
 	}
 	const channelId = createChannelID(BigInt(validated.channelId));
@@ -56,7 +46,7 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 				}
 			}
 			const indexable = messages.filter(isMessageSearchIndexable);
-			await Promise.all(searchServices.map((s) => s.bulkIndexMessages(indexable, authorBotCache)));
+			await searchService.bulkIndexMessages(indexable, authorBotCache);
 			totalIndexed += messages.length;
 			cursor = messages[messages.length - 1]!.id;
 			Logger.debug(
@@ -73,7 +63,7 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 			const completed = await kvClient.scard(validated.completionKey);
 			if (completed >= validated.channelCount) {
 				try {
-					await Promise.all(searchServices.map((s) => s.refreshIndex()));
+					await searchService.refreshIndex();
 				} catch (error) {
 					Logger.warn({error}, 'Search refresh after bulk indexing failed');
 				}

@@ -15,7 +15,6 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildRole} from '@app/api/models/GuildRole';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {hiddenGuildMember, isHiddenPartial} from '@app/api/user/ProfileVisibility';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -169,7 +168,7 @@ export async function mapGuildMemberToResponse(
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponse'>,
 	requestCache: RequestCache,
 ): Promise<GuildMemberResponse> {
-	const userPartial = await getCachedUserPartialResponse({userId: member.userId, userCacheService, requestCache});
+	const userPartial = await userCacheService.getUserPartialResponse(member.userId, requestCache);
 	return mapMemberWithUser(member, userPartial);
 }
 
@@ -190,7 +189,7 @@ export async function mapGuildEmojisWithUsersToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildEmojiWithUserResponse>> {
 	const userIds = [...new Set(emojis.map((emoji) => emoji.creatorId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return emojis
 		.filter((emoji) => userPartials.has(emoji.creatorId))
 		.map((emoji) => mapEmojiWithUser(emoji, userPartials.get(emoji.creatorId)!));
@@ -214,7 +213,7 @@ export async function mapGuildStickersWithUsersToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildStickerWithUserResponse>> {
 	const userIds = [...new Set(stickers.map((sticker) => sticker.creatorId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return stickers
 		.filter((sticker) => userPartials.has(sticker.creatorId))
 		.map((sticker) => mapStickerWithUser(sticker, userPartials.get(sticker.creatorId)!));
@@ -236,7 +235,7 @@ export async function mapGuildBansToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildBanResponse>> {
 	const userIds = [...new Set(bans.map((ban) => ban.userId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return bans
 		.filter((ban) => userPartials.has(ban.userId))
 		.map((ban) => mapBanWithUser(ban, userPartials.get(ban.userId)!));

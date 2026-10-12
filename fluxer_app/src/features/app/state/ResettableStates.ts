@@ -15,19 +15,11 @@ class ResettableStateRegistry {
 	private readonly logger = new Logger('ResettableStates');
 	private readonly resets = new Map<object, () => void>();
 
-	register(store: object, reset: () => void): () => void {
+	register(store: object, reset: () => void): void {
 		if (this.resets.has(store)) {
 			throw new ResettableStateAlreadyRegisteredError();
 		}
 		this.resets.set(store, reset);
-		let registered = true;
-		return () => {
-			if (!registered) {
-				return;
-			}
-			registered = false;
-			this.resets.delete(store);
-		};
 	}
 
 	resetAll(): void {

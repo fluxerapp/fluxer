@@ -2,31 +2,20 @@
 
 import {createUserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
-import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import {createGiftCodeRow, generateUniqueGiftCode, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
+import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {syncStripeCustomerEmail} from '@app/api/stripe/StripeCustomer';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {bumpGiftInventory} from '@app/api/user/GiftInventory';
 import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
-import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 
 const STALE_PENDING_THRESHOLD_MS = 10 * 60 * 1000;
-
-async function generateUniqueGiftCode(findGiftCode: (code: string) => Promise<unknown>): Promise<string> {
-	let code: string;
-	let exists = true;
-	while (exists) {
-		code = RandomUtils.randomString(32);
-		const existing = await findGiftCode(code);
-		exists = !!existing;
-	}
-	return code!;
-}
 
 async function reconcileCompletedGiftWithoutCode(payment: Payment, purchaser: User, stripe: Stripe): Promise<void> {
 	const {userRepository, gatewayService} = getWorkerDependencies();
@@ -80,40 +69,12 @@ async function reconcileCompletedGiftWithoutCode(payment: Payment, purchaser: Us
 		);
 		return;
 	}
-	const code = await generateUniqueGiftCode((c) => userRepository.findGiftCode(c));
-	const duration = mapGiftDurationMonthsToFields(productInfo.durationMonths);
-	await userRepository.createGiftCode({
-		code,
-		duration_months: null,
-		duration_type: duration.durationType,
-		duration_quantity: duration.durationQuantity,
-		created_at: payment.createdAt,
-		created_by_user_id: purchaser.id,
-		redeemed_at: null,
-		redeemed_by_user_id: null,
-		stripe_payment_intent_id: paymentIntentId,
-		visionary_sequence_number: null,
-		checkout_session_id: payment.checkoutSessionId,
-		version: 1,
-	});
-	await userRepository.linkGiftCodeToCheckoutSession(code, payment.checkoutSessionId);
+	const code = await createGiftCodeForPayment(payment, purchaser, paymentIntentId, productInfo);
 	await userRepository.updatePayment({
 		checkout_session_id: payment.checkoutSessionId,
 		gift_code: code,
 	});
-	const currentUser = await userRepository.findUnique(purchaser.id);
-	if (currentUser) {
-		const updatedUser = await userRepository.patchUpsert(
-			purchaser.id,
-			{gift_inventory_server_seq: (currentUser.giftInventoryServerSeq ?? 0) + 1},
-			currentUser.toRow(),
-		);
-		await gatewayService.dispatchPresence({
-			userId: updatedUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
-	}
+	await bumpGiftInventory(userRepository, gatewayService, purchaser.id);
 	Logger.info(
 		{checkoutSessionId: payment.checkoutSessionId, code, userId: purchaser.id.toString()},
 		'Gift code created during payment reconciliation',
@@ -168,24 +129,7 @@ async function reconcileStuckGiftPayment(payment: Payment, purchaser: User, stri
 			);
 			return;
 		}
-		const code = await generateUniqueGiftCode((c) => userRepository.findGiftCode(c));
-		const duration = mapGiftDurationMonthsToFields(productInfo.durationMonths);
-		await userRepository.createGiftCode({
-			code,
-			duration_months: null,
-			duration_type: duration.durationType,
-			duration_quantity: duration.durationQuantity,
-			created_at: payment.createdAt,
-			created_by_user_id: purchaser.id,
-			redeemed_at: null,
-			redeemed_by_user_id: null,
-			stripe_payment_intent_id: paymentIntentId,
-			visionary_sequence_number: null,
-			checkout_session_id: payment.checkoutSessionId,
-			version: 1,
-		});
-		giftCode = code;
-		await userRepository.linkGiftCodeToCheckoutSession(code, payment.checkoutSessionId);
+		giftCode = await createGiftCodeForPayment(payment, purchaser, paymentIntentId, productInfo);
 	}
 	await userRepository.updatePayment({
 		checkout_session_id: payment.checkoutSessionId,
@@ -201,23 +145,9 @@ async function reconcileStuckGiftPayment(payment: Payment, purchaser: User, stri
 		await userRepository.patchUpsert(purchaser.id, {stripe_customer_id: customerId}, purchaser.toRow());
 	}
 	if (giftCode) {
-		const currentUser = await userRepository.findUnique(purchaser.id);
-		if (currentUser) {
-			const updatedUser = await userRepository.patchUpsert(
-				purchaser.id,
-				{
-					has_ever_purchased: true,
-					gift_inventory_server_seq: (currentUser.giftInventoryServerSeq ?? 0) + 1,
-				},
-				currentUser.toRow(),
-			);
-			const {gatewayService} = getWorkerDependencies();
-			await gatewayService.dispatchPresence({
-				userId: updatedUser.id,
-				event: 'USER_UPDATE',
-				data: mapUserToPrivateResponse(updatedUser),
-			});
-		}
+		await bumpGiftInventory(userRepository, getWorkerDependencies().gatewayService, purchaser.id, {
+			has_ever_purchased: true,
+		});
 	}
 	Logger.info(
 		{checkoutSessionId: payment.checkoutSessionId, giftCode, userId: purchaser.id.toString()},
@@ -370,3 +300,27 @@ const reconcileUserPayments: WorkerTaskHandler = async (payload, helpers) => {
 };
 
 export default reconcileUserPayments;
+
+async function createGiftCodeForPayment(
+	payment: Payment,
+	purchaser: User,
+	paymentIntentId: string | null,
+	productInfo: ProductInfo,
+): Promise<string> {
+	const {userRepository} = getWorkerDependencies();
+	const code = await generateUniqueGiftCode((c) => userRepository.findGiftCode(c));
+	const duration = mapGiftDurationMonthsToFields(productInfo.durationMonths);
+	await userRepository.createGiftCode(
+		createGiftCodeRow({
+			code: code,
+			durationType: duration.durationType,
+			durationQuantity: duration.durationQuantity,
+			createdAt: payment.createdAt,
+			createdByUserId: purchaser.id,
+			paymentIntentId: paymentIntentId,
+			checkoutSessionId: payment.checkoutSessionId,
+		}),
+	);
+	await userRepository.linkGiftCodeToCheckoutSession(code, payment.checkoutSessionId);
+	return code;
+}

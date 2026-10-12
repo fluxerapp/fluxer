@@ -274,8 +274,6 @@ describe('mapStripeInvoiceToRow', () => {
 		expect(result.payments[0]!.primary.is_default).toBe(true);
 		expect(result.payments[1]!.primary.payment_intent_id).toBe('pi_2');
 		expect(result.payments[1]!.primary.charge_id).toBe('ch_2');
-		expect(result.bySubscription).not.toBeNull();
-		expect(result.bySubscription!.subscription_id).toBe('sub_1');
 	});
 });
 

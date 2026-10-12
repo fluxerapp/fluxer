@@ -249,7 +249,7 @@ build_voice_state_from_pending(PendingData, ConnectionId, State) ->
 resolve_pending_guild_id(PendingData, State) ->
     case pending_get_snowflake(PendingData, guild_id) of
         undefined ->
-            guild_voice_connection_normalize:normalize_positive_snowflake(
+            snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             );
         GuildId ->
@@ -363,7 +363,9 @@ force_disconnect_with_retry(GId, CId, UId, ConnId, 0) ->
     ok;
 force_disconnect_with_retry(GId, CId, UId, ConnId, Retries) ->
     Result = shard_utils:safe_apply(
-        fun() -> guild_voice_disconnect:force_disconnect_participant(GId, CId, UId, ConnId) end,
+        fun() ->
+            guild_voice_disconnect_user:force_disconnect_participant(GId, CId, UId, ConnId)
+        end,
         {error, crashed}
     ),
     case Result of
@@ -436,7 +438,7 @@ pending_get_value(PendingData, Key) ->
 
 -spec pending_get_snowflake(map(), atom()) -> integer() | undefined.
 pending_get_snowflake(PendingData, Key) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         pending_get_value(PendingData, Key)
     ).
 

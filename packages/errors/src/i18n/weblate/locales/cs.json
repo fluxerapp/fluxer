@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Příliš mnoho souborů. Lze nahrát nejvýše {maxFiles, plural, one {# soubor} few {# soubory} many {# souboru} other {# souborů}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Nalezena nevyřešená adresa URL `attachment://`. Odkaz měl být vyřešen před zpracováním vloženého obsahu.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Nahraná příloha {filename} nebyla nalezena.",
-	"auth_and_oauth.application_not_owned": "Nevlastníte tuto aplikaci.",
 	"auth_and_oauth.bot_already_in_guild": "Tento bot je již v komunitě.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Boti nemohou vytvářet ověřovací relace.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Boti nemohou používat ověřovací koncové body.",

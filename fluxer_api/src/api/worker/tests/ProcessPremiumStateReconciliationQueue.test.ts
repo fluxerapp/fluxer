@@ -5,13 +5,12 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import type Stripe from 'stripe';
 import {afterEach, describe, expect, test} from 'vitest';
 
@@ -155,17 +154,6 @@ function createCapturingDeps(
 	return {userRepository, patches, storeApplications, extras};
 }
 
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
-
 function createQueueService(): PremiumStateReconciliationQueueService {
 	return new PremiumStateReconciliationQueueService(new MockKVProvider());
 }
@@ -196,7 +184,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			userRepository,
 		});
 
-		void processPremiumStateReconciliationQueue({}, createHelpers());
+		void processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 		await reconcileStarted;
 
 		expect(await queueService.getQueueSize()).toBe(1);
@@ -218,7 +206,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			userRepository,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(await queueService.getQueueSize()).toBe(0);
 		expect(await queueService.getReadyUserIds(Date.now() + ONE_HOUR_MS, 10)).toEqual([]);
@@ -281,9 +269,9 @@ describe('processPremiumStateReconciliationQueue', () => {
 			userRepository,
 		});
 
-		const firstRun = processPremiumStateReconciliationQueue({}, createHelpers());
+		const firstRun = processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 		await firstClaimEntered;
-		const secondRun = processPremiumStateReconciliationQueue({}, createHelpers());
+		const secondRun = processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 		await reconcileStarted;
 		releaseFirstClaim();
 		releaseReconcile();
@@ -309,7 +297,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		const patch = patches[0];
@@ -335,7 +323,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		expect(patches[0].premium_until).toEqual(new Date(Math.floor(paidThroughMs / 1000) * 1000));
@@ -359,7 +347,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		expect(patches[0].premium_type).toBeNull();
@@ -386,7 +374,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(0);
 		expect(await queueService.getQueueSize()).toBe(0);
@@ -427,7 +415,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(0);
 	});
@@ -451,7 +439,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		expect(patches[0].premium_grace_ends_at).toBeNull();
@@ -478,7 +466,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		expect(patches[0].premium_type).toBeNull();
@@ -506,7 +494,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches.every((patch) => patch.premium_type === undefined)).toBe(true);
 		expect(patches.every((patch) => patch.premium_until === undefined)).toBe(true);
@@ -536,7 +524,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toEqual([]);
 		expect(storeApplications).toEqual([USER_ID]);
@@ -561,7 +549,7 @@ describe('processPremiumStateReconciliationQueue', () => {
 			...extras,
 		});
 
-		await processPremiumStateReconciliationQueue({}, createHelpers());
+		await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
 
 		expect(patches).toHaveLength(1);
 		expect(patches[0].premium_flags).toBe(0);

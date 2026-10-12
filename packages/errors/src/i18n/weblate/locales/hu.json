@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Túl sok fájl. Legfeljebb {maxFiles, plural, one {# fájl} other {# fájl}} engedélyezett.",
 	"attachments_and_uploads.unresolved_attachment_url": "Feloldatlan `attachment://` URL található. Ezt a beágyazott tartalom feldolgozása előtt fel kellett volna oldani.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "A feltöltött \"{filename}\" melléklet nem található.",
-	"auth_and_oauth.application_not_owned": "Ez az alkalmazás nem a tiéd.",
 	"auth_and_oauth.bot_already_in_guild": "Ez a bot már tagja a közösségnek.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "A botfelhasználók nem hozhatnak létre hitelesítési munkameneteket.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "A botfelhasználók nem használhatják a hitelesítési végpontokat.",

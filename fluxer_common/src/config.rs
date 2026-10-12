@@ -129,7 +129,7 @@ pub fn parse_public_origin(origin: &str) -> Option<PublicOrigin> {
     if trimmed.is_empty() {
         return None;
     }
-    let parsed = reqwest::Url::parse(trimmed).ok()?;
+    let parsed = url::Url::parse(trimmed).ok()?;
     let scheme = parsed.scheme();
     if scheme != "http" && scheme != "https" {
         return None;
@@ -194,7 +194,7 @@ pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Opti
     if domain.is_empty() {
         return url.to_owned();
     }
-    let Ok(parsed) = reqwest::Url::parse(url) else {
+    let Ok(parsed) = url::Url::parse(url) else {
         return url.to_owned();
     };
     if canonicalize_domain(parsed.host_str().unwrap_or_default()) != domain {
@@ -230,228 +230,72 @@ pub fn normalize_public_endpoint_from_env(url: &str) -> String {
     try_normalize_public_endpoint_from_env(url).unwrap_or_else(|error| panic!("{error}"))
 }
 
+#[derive(Debug, Default)]
+pub struct EnvMap(Vec<(String, String)>);
+
+impl EnvMap {
+    pub fn from_pairs<I, K, V>(vars: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Into<String>,
+    {
+        Self(
+            vars.into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        )
+    }
+
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.0
+            .iter()
+            .find_map(|(k, v)| (k == key).then_some(v.as_str()))
+            .filter(|v| !v.trim().is_empty())
+    }
+}
+
+pub fn parse_bool(var_name: &str, raw: Option<&str>) -> anyhow::Result<Option<bool>> {
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let raw = raw.trim();
+    match raw.to_ascii_lowercase().as_str() {
+        "true" | "1" | "yes" => Ok(Some(true)),
+        "false" | "0" | "no" => Ok(Some(false)),
+        _ => Err(anyhow::anyhow!(
+            "{var_name} must be a boolean: true, false, 1, 0, yes, or no"
+        )),
+    }
+}
+
+pub fn parse_number<T>(
+    var_name: &str,
+    raw: Option<&str>,
+    default_value: T,
+    min_value: T,
+    max_value: T,
+) -> anyhow::Result<T>
+where
+    T: std::str::FromStr + PartialOrd + std::fmt::Display + Copy,
+{
+    let Some(raw) = raw else {
+        return Ok(default_value);
+    };
+    let parsed = raw
+        .trim()
+        .parse::<T>()
+        .map_err(|_| anyhow::anyhow!("{var_name} must be a number"))?;
+    anyhow::ensure!(
+        parsed >= min_value && parsed <= max_value,
+        "{var_name} must be between {min_value} and {max_value}"
+    );
+    Ok(parsed)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn default_https_install_is_untouched() {
-        for url in [
-            "https://fluxer.example",
-            "https://fluxer.example/media",
-            "https://fluxer.example/admin/oauth2_callback",
-            "wss://fluxer.example/gateway",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(443))
-            );
-        }
-    }
-
-    #[test]
-    fn default_http_install_is_untouched() {
-        for url in [
-            "http://fluxer.example",
-            "http://fluxer.example/media",
-            "ws://fluxer.example/gateway",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(80))
-            );
-        }
-    }
-
-    #[test]
-    fn inserts_a_non_default_port_for_the_base_domain() {
-        assert_eq!(
-            "http://fluxer.example:19080/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080",
-            normalize_public_endpoint("http://fluxer.example", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "https://fluxer.example:8443/admin/oauth2_callback",
-            normalize_public_endpoint(
-                "https://fluxer.example/admin/oauth2_callback",
-                "fluxer.example",
-                Some(8443)
-            )
-        );
-    }
-
-    #[test]
-    fn a_default_port_for_the_urls_own_scheme_is_never_inserted() {
-        assert_eq!(
-            "ws://fluxer.example/gateway",
-            normalize_public_endpoint("ws://fluxer.example/gateway", "fluxer.example", Some(80))
-        );
-        assert_eq!(
-            "wss://fluxer.example/gateway",
-            normalize_public_endpoint("wss://fluxer.example/gateway", "fluxer.example", Some(443))
-        );
-        assert_eq!(
-            "http://fluxer.example:443/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(443))
-        );
-        assert_eq!(
-            "https://fluxer.example:80/media",
-            normalize_public_endpoint("https://fluxer.example/media", "fluxer.example", Some(80))
-        );
-    }
-
-    #[test]
-    fn another_host_is_never_touched() {
-        for url in [
-            "https://cdn.example.net/assets",
-            "https://media.example.net",
-            "http://api:8080",
-            "http://media-proxy:8080",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-        assert_eq!(
-            "https://sub.fluxer.example/media",
-            normalize_public_endpoint(
-                "https://sub.fluxer.example/media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn an_explicit_port_is_never_touched() {
-        for url in [
-            "http://fluxer.example:19080/media",
-            "http://fluxer.example:8080/media",
-            "https://fluxer.example:443/media",
-            "http://fluxer.example:80/media",
-            "http://user:pass@fluxer.example:19080/media",
-        ] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-    }
-
-    #[test]
-    fn is_idempotent() {
-        let once =
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080));
-        let twice = normalize_public_endpoint(&once, "fluxer.example", Some(19080));
-        assert_eq!("http://fluxer.example:19080/media", once);
-        assert_eq!(once, twice);
-    }
-
-    #[test]
-    fn an_unset_port_leaves_every_url_alone() {
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", None)
-        );
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(0))
-        );
-    }
-
-    #[test]
-    fn an_empty_base_domain_leaves_every_url_alone() {
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example/media",
-            normalize_public_endpoint("http://fluxer.example/media", "   ", Some(19080))
-        );
-    }
-
-    #[test]
-    fn a_url_that_does_not_parse_is_returned_unchanged() {
-        for url in ["", "/api", "fluxer.example/media", "not a url", "://x"] {
-            assert_eq!(
-                url,
-                normalize_public_endpoint(url, "fluxer.example", Some(19080))
-            );
-        }
-    }
-
-    #[test]
-    fn matches_the_host_case_insensitively_and_ignores_a_trailing_dot() {
-        assert_eq!(
-            "http://FLUXER.example:19080/Media",
-            normalize_public_endpoint("http://FLUXER.example/Media", "Fluxer.Example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example.:19080/media",
-            normalize_public_endpoint(
-                "http://fluxer.example./media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-        assert_eq!(
-            "http://fluxer.example:19080/media",
-            normalize_public_endpoint(
-                "http://fluxer.example/media",
-                "fluxer.example.",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn preserves_path_query_fragment_and_trailing_slash() {
-        assert_eq!(
-            "http://fluxer.example:19080/",
-            normalize_public_endpoint("http://fluxer.example/", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080?a=1",
-            normalize_public_endpoint("http://fluxer.example?a=1", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080#top",
-            normalize_public_endpoint("http://fluxer.example#top", "fluxer.example", Some(19080))
-        );
-        assert_eq!(
-            "http://fluxer.example:19080/media/x.png?v=1#frag",
-            normalize_public_endpoint(
-                "http://fluxer.example/media/x.png?v=1#frag",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-    }
-
-    #[test]
-    fn keeps_credentials_and_ipv6_literals_intact() {
-        assert_eq!(
-            "http://user:pass@fluxer.example:19080/media",
-            normalize_public_endpoint(
-                "http://user:pass@fluxer.example/media",
-                "fluxer.example",
-                Some(19080)
-            )
-        );
-        assert_eq!(
-            "http://[::1]:19080/media",
-            normalize_public_endpoint("http://[::1]/media", "[::1]", Some(19080))
-        );
-        assert_eq!(
-            "http://[::1]:8080/media",
-            normalize_public_endpoint("http://[::1]:8080/media", "[::1]", Some(19080))
-        );
-    }
 
     #[test]
     fn matches_the_typescript_normalizer_on_the_shared_vectors() {

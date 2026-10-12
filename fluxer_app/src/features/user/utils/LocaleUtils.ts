@@ -197,14 +197,14 @@ let localeChangeSequence = 0;
 let localLocaleOverride: string | null = null;
 
 export function getCurrentLocale(): string {
-	return UserSettings.getLocale() || DEFAULT_LOCALE;
+	return UserSettings.locale || DEFAULT_LOCALE;
 }
 
 export function getCurrentOrDetectedLocale(): string {
 	if (localLocaleOverride) {
 		return localLocaleOverride;
 	}
-	const currentLocale = UserSettings.getLocale();
+	const currentLocale = UserSettings.locale;
 	if (UserSettings.isHydrated() || currentLocale !== DEFAULT_LOCALE) {
 		return currentLocale || DEFAULT_LOCALE;
 	}

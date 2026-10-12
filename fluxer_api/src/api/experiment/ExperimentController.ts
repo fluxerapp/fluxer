@@ -10,7 +10,6 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
-import {resolveChannelThreadsAssignment} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -35,7 +34,7 @@ export function ExperimentController(app: HonoApp) {
 			const [delivery, domainMigrationConfig, channelThreadsConfig, voiceP2pConfig, geoip] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getDomainMigrationConfig(),
-				instanceConfigRepository.getCompiledChannelThreadsConfig(),
+				instanceConfigRepository.getChannelThreadsConfig(),
 				instanceConfigRepository.getVoiceP2pConfig(),
 				lookupGeoip(ctx.req.raw),
 			]);
@@ -54,10 +53,7 @@ export function ExperimentController(app: HonoApp) {
 					voice_p2p: resolveVoiceP2pAssignment(voiceP2pConfig, userId, targeting),
 				},
 			};
-			const channelThreads = resolveChannelThreadsAssignment(channelThreadsConfig, userId);
-			if (channelThreads !== undefined) {
-				body.assignments.channel_threads = channelThreads;
-			}
+			body.assignments.channel_threads = {active: true, config_version: channelThreadsConfig.config_version};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
 			ctx.header(HttpHeaders.ETAG, etag);
 			ctx.header(HttpHeaders.CACHE_CONTROL, 'private, no-cache');

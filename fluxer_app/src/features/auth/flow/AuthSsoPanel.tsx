@@ -144,3 +144,7 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 		</div>
 	);
 });
+
+export function isSsoLoginEnforced(ssoConfig: InstanceSsoConfig | null): boolean {
+	return isInstanceSsoAvailable(ssoConfig) && ssoConfig?.enforced === true;
+}

@@ -39,14 +39,6 @@ export class ReadStateEntry {
 	private storedMentionCount = 0;
 	inFlightAckMessageId: string | null = null;
 	serverVersion: string | null = null;
-	snapshot?: {
-		unread: boolean;
-		mentionCount: number;
-		guildUnread: boolean | null;
-		guildMentionCount: number | null;
-		takenAt: number;
-	};
-
 	constructor(channelId: string) {
 		this.channelId = channelId;
 	}

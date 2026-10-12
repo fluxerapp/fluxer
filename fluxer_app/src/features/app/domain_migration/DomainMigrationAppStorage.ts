@@ -5,7 +5,7 @@ import {
 	isExportableLocalStorageKey,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey, deriveAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {LEGACY_APP_STORAGE_KEY_MAP} from '@app/features/platform/state/LegacyAppStorageKeyMap';

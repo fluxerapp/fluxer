@@ -2,9 +2,9 @@
 
 import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from '@app/api/infrastructure/IUnfurlerService';
-import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {requestSvcJson} from '@app/api/infrastructure/SvcErrorReply';
 import {Logger} from '@app/api/Logger';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -12,9 +12,6 @@ import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {RequestError, TimeoutError} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
 const NATS_UNFURL_SUBJECT = 'svc.unfurl';
 const NATS_UNFURL_TIMEOUT_MS = 12000;
@@ -35,10 +32,7 @@ interface NatsUnfurlInnerResult {
 	cache_ttl_seconds: number | null;
 }
 
-type NatsUnfurlResponse =
-	| {Resolved: NatsUnfurlInnerResult}
-	| {Invalidated: {invalidated: boolean}}
-	| {Failed: {message: string}};
+type NatsUnfurlResponse = {Resolved: NatsUnfurlInnerResult} | {Failed: {message: string}};
 
 function isNatsUnfurlResponse(value: unknown): value is NatsUnfurlResponse {
 	if (!isJsonRecord(value)) return false;
@@ -49,10 +43,6 @@ function isNatsUnfurlResponse(value: unknown): value is NatsUnfurlResponse {
 			Array.isArray(resolved.embeds) &&
 			(resolved.cache_ttl_seconds === null || typeof resolved.cache_ttl_seconds === 'number')
 		);
-	}
-	if ('Invalidated' in value) {
-		const invalidated = value.Invalidated;
-		return isJsonRecord(invalidated) && typeof invalidated.invalidated === 'boolean';
 	}
 	if ('Failed' in value) {
 		const failed = value.Failed;
@@ -101,20 +91,12 @@ export class NatsUnfurlerService extends IUnfurlerService {
 				youtube_api_key: this.resolveYoutubeApiKey ? await this.resolveYoutubeApiKey() : null,
 				klipy_api_key: this.resolveKlipyApiKey ? await this.resolveKlipyApiKey() : null,
 			};
-			if (this.connectionManager.isClosed()) {
-				await this.connectionManager.connect();
-			}
-			const connection = this.connectionManager.getConnection();
-			const payload = textEncoder.encode(JSON.stringify(request));
-			const responseMsg = await connection.request(NATS_UNFURL_SUBJECT, payload, {
-				timeout: options.cacheOnly === true ? NATS_UNFURL_CACHE_ONLY_TIMEOUT_MS : NATS_UNFURL_TIMEOUT_MS,
+			const response = await requestSvcJson(this.connectionManager, NATS_UNFURL_SUBJECT, request, {
+				timeoutMs: options.cacheOnly === true ? NATS_UNFURL_CACHE_ONLY_TIMEOUT_MS : NATS_UNFURL_TIMEOUT_MS,
+				guard: isNatsUnfurlResponse,
+				service: 'nats-unfurl',
+				invalidPayloadError: () => new BadGatewayError({message: '[nats-unfurl] invalid response payload'}),
 			});
-			const responseText = textDecoder.decode(responseMsg.data);
-			const response = parseJsonWithGuard(responseText, isNatsUnfurlResponse);
-			if (!response) {
-				throwForSvcErrorReply('nats-unfurl', parseJsonRecord(responseText));
-				throw new BadGatewayError({message: '[nats-unfurl] invalid response payload'});
-			}
 			if ('Resolved' in response) {
 				return {
 					embeds: response.Resolved.embeds ?? [],

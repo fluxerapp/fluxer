@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import modalI18n from '@app/app/I18n';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
@@ -12,7 +13,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -24,9 +25,6 @@ import {
 } from '@app/features/messaging/commands/MessageFetchStateMachine';
 import {resolveMessagePageState} from '@app/features/messaging/commands/MessagePageStateMachine';
 import {MessageCrosspostLimitModal} from '@app/features/messaging/components/alerts/MessageCrosspostLimitModal';
-import {MessageDeleteFailedModal} from '@app/features/messaging/components/alerts/MessageDeleteFailedModal';
-import {MessageDeleteTooQuickModal} from '@app/features/messaging/components/alerts/MessageDeleteTooQuickModal';
-import {MessageEditFailedModal} from '@app/features/messaging/components/alerts/MessageEditFailedModal';
 import {MessageEditTooQuickModal} from '@app/features/messaging/components/alerts/MessageEditTooQuickModal';
 import {PublishedMessageEditLimitModal} from '@app/features/messaging/components/alerts/PublishedMessageEditLimitModal';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
@@ -86,6 +84,36 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+
+const MessageEditFailedModal_YOUR_MESSAGE_DIDN_T_UPDATE_DESCRIPTOR = msg({
+	message: "Your message didn't update",
+	comment: 'Label in the message edit failed modal.',
+});
+
+const MessageEditFailedModal_TRY_EDITING_YOUR_MESSAGE_AGAIN_DESCRIPTOR = msg({
+	message: 'Try editing your message again.',
+	comment: 'Description text in the message edit failed modal.',
+});
+
+const MessageDeleteFailedModal_THAT_MESSAGE_DIDN_T_DELETE_DESCRIPTOR = msg({
+	message: "That message couldn't be deleted",
+	comment: 'Label in the message delete failed modal. Keep the tone plain and specific.',
+});
+
+const MessageDeleteFailedModal_TRY_DELETING_THAT_MESSAGE_AGAIN_DESCRIPTOR = msg({
+	message: 'Try deleting that message again.',
+	comment: 'Description text in the message delete failed modal. Keep the tone plain and specific.',
+});
+
+const MessageDeleteTooQuickModal_YOU_RE_DELETING_MESSAGES_TOO_QUICKLY_DESCRIPTOR = msg({
+	message: "You're deleting messages too quickly",
+	comment: 'Label in the message delete too quick modal. Keep the tone plain and specific.',
+});
+
+const MessageDeleteTooQuickModal_WAIT_A_MOMENT_BEFORE_DELETING_MORE_MESSAGES_DESCRIPTOR = msg({
+	message: 'Wait a moment before deleting more messages.',
+	comment: 'Description text in the message delete too quick modal. Keep the tone plain and specific.',
+});
 
 const ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR = msg({
 	message: "Delete this message? Can't be undone.",
@@ -481,17 +509,17 @@ export async function fetchMessages(
 			return handleForcedMessageLoadFailure(channelId, jump);
 		}
 		Messages.handleLoadMessages({channelId, jump});
-		const connectedAtRequest = GatewayConnection.isConnected;
-		const epochAtRequest = GatewayConnection.connectionEpoch;
+		const connectedAtRequest = GatewaySessions.foregroundConnection.isConnected;
+		const epochAtRequest = GatewaySessions.foregroundConnection.connectionEpoch;
 		try {
 			const timeStart = Date.now();
 			logger.debug(`Fetching messages for channel ${channelId}`);
 			const messages = await requestChannelMessages(channelId, before, after, limit, jump);
 			const cached = resolveMessageFetchWindowCached({
 				connectedAtRequest,
-				connectedAtResponse: GatewayConnection.isConnected,
+				connectedAtResponse: GatewaySessions.foregroundConnection.isConnected,
 				epochAtRequest,
-				epochAtResponse: GatewayConnection.connectionEpoch,
+				epochAtResponse: GatewaySessions.foregroundConnection.connectionEpoch,
 			});
 			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, jump);
 			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
@@ -661,11 +689,11 @@ function showDeleteFailureModal(error: unknown, messageId: string): void {
 		const {status} = error;
 		const errorCode = failureCode(error);
 		if (status === 429) {
-			ModalCommands.push(
-				modal(() => (
-					<MessageDeleteTooQuickModal data-flx="messaging.message-commands.show-delete-failure-modal.message-delete-too-quick-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(MessageDeleteTooQuickModal_YOU_RE_DELETING_MESSAGES_TOO_QUICKLY_DESCRIPTOR),
+				message: () => modalI18n._(MessageDeleteTooQuickModal_WAIT_A_MOMENT_BEFORE_DELETING_MORE_MESSAGES_DESCRIPTOR),
+				dataFlx: 'messaging.message-delete-too-quick-modal.confirm-modal',
+			});
 		} else if (status === 403 && errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {
 			ModalCommands.push(
 				modal(() => (
@@ -675,19 +703,19 @@ function showDeleteFailureModal(error: unknown, messageId: string): void {
 		} else if (status === 404) {
 			logger.debug(`Message ${messageId} was already deleted (404 response)`);
 		} else {
-			ModalCommands.push(
-				modal(() => (
-					<MessageDeleteFailedModal data-flx="messaging.message-commands.show-delete-failure-modal.message-delete-failed-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(MessageDeleteFailedModal_THAT_MESSAGE_DIDN_T_DELETE_DESCRIPTOR),
+				message: () => modalI18n._(MessageDeleteFailedModal_TRY_DELETING_THAT_MESSAGE_AGAIN_DESCRIPTOR),
+				dataFlx: 'messaging.message-delete-failed-modal.generic-error-modal',
+			});
 		}
 		return;
 	}
-	ModalCommands.push(
-		modal(() => (
-			<MessageDeleteFailedModal data-flx="messaging.message-commands.show-delete-failure-modal.message-delete-failed-modal--2" />
-		)),
-	);
+	showGenericErrorModal({
+		title: () => modalI18n._(MessageDeleteFailedModal_THAT_MESSAGE_DIDN_T_DELETE_DESCRIPTOR),
+		message: () => modalI18n._(MessageDeleteFailedModal_TRY_DELETING_THAT_MESSAGE_AGAIN_DESCRIPTOR),
+		dataFlx: 'messaging.message-delete-failed-modal.generic-error-modal',
+	});
 }
 
 function showPublishedEditLimitModal(error: unknown): boolean {
@@ -746,9 +774,11 @@ function showEditFailureModal(error: unknown): void {
 		showDmActionErrorModal(error);
 		return;
 	}
-	ModalCommands.push(
-		modal(() => <MessageEditFailedModal data-flx="messaging.message-commands.message-edit-failed-modal" />),
-	);
+	showGenericErrorModal({
+		title: () => modalI18n._(MessageEditFailedModal_YOUR_MESSAGE_DIDN_T_UPDATE_DESCRIPTOR),
+		message: () => modalI18n._(MessageEditFailedModal_TRY_EDITING_YOUR_MESSAGE_AGAIN_DESCRIPTOR),
+		dataFlx: 'messaging.message-edit-failed-modal.generic-error-modal',
+	});
 }
 
 export async function edit(
@@ -823,22 +853,14 @@ interface ShowDeleteConfirmationOptions {
 	message: MessageModel;
 	onDelete?: () => void;
 	showShiftBypassConfirmationTip?: boolean;
-	suppressSafetyTeamReportToggle?: boolean;
 }
 
 export function showDeleteConfirmation(
 	i18n: I18n,
-	{
-		message,
-		onDelete,
-		showShiftBypassConfirmationTip = false,
-		suppressSafetyTeamReportToggle = false,
-	}: ShowDeleteConfirmationOptions,
+	{message, onDelete, showShiftBypassConfirmationTip = false}: ShowDeleteConfirmationOptions,
 ): void {
 	const showSafetyTeamReportToggle =
-		!suppressSafetyTeamReportToggle &&
-		canReportMessage(message) &&
-		Permission.can(Permissions.MANAGE_MESSAGES, {channelId: message.channelId});
+		canReportMessage(message) && Permission.can(Permissions.MANAGE_MESSAGES, {channelId: message.channelId});
 	if (showSafetyTeamReportToggle) {
 		RuntimeConfig.revalidateDiscovery().catch((error: unknown) => {
 			logger.warn('Failed to refresh discovery for the delete confirmation:', error);

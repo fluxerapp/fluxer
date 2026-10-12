@@ -3,7 +3,7 @@
 import type {
 	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2VideoCodec,
-} from '@fluxer/voice_engine_v2/src/protocol';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const ZERO_COPY_NATIVE_INPUTS = new Set(['dmabuf', 'd3d11Texture', 'd3d11-texture', 'cvPixelBuffer', 'sharedTexture']);
 
@@ -56,17 +56,6 @@ export function hasVoiceEngineV2ZeroCopyNativeInput(
 	return (
 		capabilities?.zeroCopy === true && capabilities.nativeInputs.some((input) => ZERO_COPY_NATIVE_INPUTS.has(input))
 	);
-}
-
-export function hasVoiceEngineV2NativeNvencEncoder(
-	capabilities: VoiceEngineV2HardwareEncoderCapabilities | null | undefined,
-	codec: VoiceEngineV2VideoCodec | string,
-): boolean {
-	if (!capabilities?.available || capabilities.backend !== 'nvenc') return false;
-	if (!hasVoiceEngineV2ZeroCopyNativeInput(capabilities)) return false;
-	if (codec !== 'h264' && codec !== 'h265') return false;
-	const codecs = new Set(capabilities.codecs.map((entry) => entry.toLowerCase()));
-	return codecs.has(codec) || (codec === 'h265' && codecs.has('hevc'));
 }
 
 export function hasVoiceEngineV2NativeHardwareEncoder(

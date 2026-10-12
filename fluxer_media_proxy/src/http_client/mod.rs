@@ -139,11 +139,13 @@ pub fn build(
         .build())
 }
 
+#[cfg(test)]
 pub fn build_default(metrics: Arc<HTTPClientMetrics>) -> HttpClient {
     build(HTTPClientOptions::default(), metrics)
         .expect("default HTTP client configuration is valid")
 }
 
+#[cfg(test)]
 pub fn build_raw_default() -> reqwest::Client {
     build_raw(HTTPClientOptions::default()).expect("default HTTP client configuration is valid")
 }

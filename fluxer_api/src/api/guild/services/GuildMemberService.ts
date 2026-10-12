@@ -5,7 +5,6 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
-import {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
 import {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
 import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
 import {GuildMemberRoleService} from '@app/api/guild/services/member/GuildMemberRoleService';
@@ -27,7 +26,48 @@ import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/Gu
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 export class GuildMemberService {
-	private readonly authService: GuildMemberAuthService;
+	private async applyRoleChange(params: {
+		actorId: UserID;
+		targetId: UserID;
+		guildId: GuildID;
+		roleId: RoleID;
+		requestCache: RequestCache;
+		auditLogReason?: string | null;
+		mutate: () => Promise<void>;
+	}): Promise<void> {
+		const {actorId: userId, targetId, guildId, roleId, requestCache, auditLogReason, mutate} = params;
+		const targetMember = await this.guildRepository.getMember(guildId, targetId);
+		if (!targetMember) throw new UnknownGuildMemberError();
+		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
+		await mutate();
+		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
+		if (updatedMember) {
+			await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
+			await this.refreshMemberSearchIndex(updatedMember);
+			await this.guildAuditLogService.record({
+				guildId,
+				userId,
+				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
+				targetId: targetId,
+				auditLogReason: auditLogReason ?? null,
+				metadata: role ? {role_name: role.name} : undefined,
+				changes: this.guildAuditLogService.computeChanges(
+					previousSnapshot,
+					this.auditService.serializeMemberForAudit(updatedMember),
+				),
+			});
+		}
+	}
+
+	private async refreshMemberSearchIndex(member: GuildMember): Promise<void> {
+		const user = await this.userRepository.findUnique(member.userId);
+		if (!user) return;
+		const guild = await this.guildRepository.findUnique(member.guildId);
+		const options = this.getMemberSearchIndexOptions(guild);
+		if (options) void this.searchIndexService.updateMember(member, user, options);
+	}
+
 	private readonly validationService: GuildMemberValidationService;
 	private readonly auditService: GuildMemberAuditService;
 	private readonly eventService: GuildMemberEventService;
@@ -48,9 +88,8 @@ export class GuildMemberService {
 		limitConfigService: LimitConfigService,
 	) {
 		this.userRepository = userRepository;
-		this.authService = new GuildMemberAuthService(gatewayService, userRepository);
-		this.validationService = new GuildMemberValidationService(guildRepository, userRepository);
-		this.auditService = new GuildMemberAuditService(guildAuditLogService);
+		this.validationService = new GuildMemberValidationService(guildRepository);
+		this.auditService = new GuildMemberAuditService();
 		this.eventService = new GuildMemberEventService(gatewayService, userCacheService);
 		this.searchIndexService = new GuildMemberSearchIndexService();
 		this.operationsService = new GuildMemberOperationsService(
@@ -61,7 +100,6 @@ export class GuildMemberService {
 			entityAssetService,
 			userRepository,
 			rateLimitService,
-			this.authService,
 			this.validationService,
 			this.guildAuditLogService,
 			limitConfigService,
@@ -70,7 +108,7 @@ export class GuildMemberService {
 		this.roleService = new GuildMemberRoleService(
 			guildRepository,
 			gatewayService,
-			this.authService,
+			userRepository,
 			this.validationService,
 		);
 	}
@@ -88,7 +126,6 @@ export class GuildMemberService {
 		guildId: GuildID;
 		limit?: number;
 		after?: UserID;
-		requestCache: RequestCache;
 	}): Promise<Array<GuildMemberResponse>> {
 		return this.operationsService.getMembers(params);
 	}
@@ -127,15 +164,8 @@ export class GuildMemberService {
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!updatedMember) throw new UnknownGuildMemberError();
 		await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
-		const targetUser = await this.userRepository.findUnique(targetId);
-		if (targetUser) {
-			const guild = await this.guildRepository.findUnique(guildId);
-			const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
-			if (searchIndexOptions) {
-				void this.searchIndexService.updateMember(updatedMember, targetUser, searchIndexOptions);
-			}
-		}
-		await this.auditService.recordAuditLog({
+		await this.refreshMemberSearchIndex(updatedMember);
+		await this.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.MEMBER_UPDATE,
@@ -161,36 +191,12 @@ export class GuildMemberService {
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {userId, targetId, guildId, roleId, requestCache} = params;
-		const targetMember = await this.guildRepository.getMember(guildId, targetId);
-		if (!targetMember) throw new UnknownGuildMemberError();
-		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
-		const role = await this.guildRepository.getRole(roleId, guildId);
-		await this.roleService.addMemberRole(params);
-		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
-		if (updatedMember) {
-			await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
-			const roleTargetUser = await this.userRepository.findUnique(targetId);
-			if (roleTargetUser) {
-				const guild = await this.guildRepository.findUnique(guildId);
-				const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
-				if (searchIndexOptions) {
-					void this.searchIndexService.updateMember(updatedMember, roleTargetUser, searchIndexOptions);
-				}
-			}
-			await this.auditService.recordAuditLog({
-				guildId,
-				userId,
-				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
-				targetId: targetId,
-				auditLogReason: auditLogReason ?? null,
-				metadata: role ? {role_name: role.name} : undefined,
-				changes: this.guildAuditLogService.computeChanges(
-					previousSnapshot,
-					this.auditService.serializeMemberForAudit(updatedMember),
-				),
-			});
-		}
+		await this.applyRoleChange({
+			...params,
+			actorId: params.userId,
+			auditLogReason: auditLogReason,
+			mutate: () => this.roleService.addMemberRole(params),
+		});
 	}
 
 	async systemAddMemberRole(params: {
@@ -200,36 +206,12 @@ export class GuildMemberService {
 		initiatorId: UserID;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		const {targetId, guildId, roleId, initiatorId, requestCache} = params;
-		const targetMember = await this.guildRepository.getMember(guildId, targetId);
-		if (!targetMember) throw new UnknownGuildMemberError();
-		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
-		const role = await this.guildRepository.getRole(roleId, guildId);
-		await this.roleService.systemAddMemberRole({targetId, guildId, roleId});
-		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
-		if (updatedMember) {
-			await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
-			const roleTargetUser = await this.userRepository.findUnique(targetId);
-			if (roleTargetUser) {
-				const guild = await this.guildRepository.findUnique(guildId);
-				const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
-				if (searchIndexOptions) {
-					void this.searchIndexService.updateMember(updatedMember, roleTargetUser, searchIndexOptions);
-				}
-			}
-			await this.auditService.recordAuditLog({
-				guildId,
-				userId: initiatorId,
-				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
-				targetId: targetId,
-				auditLogReason: null,
-				metadata: role ? {role_name: role.name} : undefined,
-				changes: this.guildAuditLogService.computeChanges(
-					previousSnapshot,
-					this.auditService.serializeMemberForAudit(updatedMember),
-				),
-			});
-		}
+		await this.applyRoleChange({
+			...params,
+			actorId: params.initiatorId,
+			auditLogReason: null,
+			mutate: () => this.roleService.systemAddMemberRole(params),
+		});
 	}
 
 	async removeMemberRole(
@@ -242,36 +224,12 @@ export class GuildMemberService {
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {userId, targetId, guildId, roleId, requestCache} = params;
-		const targetMember = await this.guildRepository.getMember(guildId, targetId);
-		if (!targetMember) throw new UnknownGuildMemberError();
-		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
-		const role = await this.guildRepository.getRole(roleId, guildId);
-		await this.roleService.removeMemberRole(params);
-		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
-		if (updatedMember) {
-			await this.eventService.dispatchGuildMemberUpdate({guildId, member: updatedMember, requestCache});
-			const roleTargetUser = await this.userRepository.findUnique(targetId);
-			if (roleTargetUser) {
-				const guild = await this.guildRepository.findUnique(guildId);
-				const searchIndexOptions = this.getMemberSearchIndexOptions(guild);
-				if (searchIndexOptions) {
-					void this.searchIndexService.updateMember(updatedMember, roleTargetUser, searchIndexOptions);
-				}
-			}
-			await this.auditService.recordAuditLog({
-				guildId,
-				userId,
-				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
-				targetId: targetId,
-				auditLogReason: auditLogReason ?? null,
-				metadata: role ? {role_name: role.name} : undefined,
-				changes: this.guildAuditLogService.computeChanges(
-					previousSnapshot,
-					this.auditService.serializeMemberForAudit(updatedMember),
-				),
-			});
-		}
+		await this.applyRoleChange({
+			...params,
+			actorId: params.userId,
+			auditLogReason: auditLogReason,
+			mutate: () => this.roleService.removeMemberRole(params),
+		});
 	}
 
 	async removeMember(
@@ -292,10 +250,11 @@ export class GuildMemberService {
 			void this.searchIndexService.deleteMember(guildId, targetId, searchIndexOptions);
 		}
 		await this.eventService.dispatchGuildMemberRemove({guildId, userId: targetId});
-		await this.auditService.recordAuditLog({
+		await this.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.MEMBER_KICK,
+			changes: null,
 			targetId: targetId,
 			auditLogReason: auditLogReason ?? null,
 		});

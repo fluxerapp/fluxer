@@ -89,7 +89,6 @@ function plan(apiEndpoint, webAppEndpoint) {
 		instanceKey: apiEndpoint,
 		document: {},
 		selfHosted: false,
-		desktopModulesEnabled: null,
 		endpoints: {
 			apiEndpoint,
 			apiPublicEndpoint: apiEndpoint,

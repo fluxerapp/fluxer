@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {createServer} from 'node:net';
 import {Config, getConfig} from '@app/api/Config';
 import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import type {PreparedQuery} from '@app/api/database/CassandraTypes';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import {
 	INSTANCE_CONFIG_REFRESH_CHANNEL,
 	INSTANCE_CONFIG_WRITE_ATTEMPTS,
@@ -18,21 +15,16 @@ import {
 import {getLegalUrls, setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {getInstanceProductName, setCachedProductName} from '@app/api/instance/ProductName';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {
 	DEFAULT_CHANNEL_THREADS_CONFIG,
 	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {DEFAULT_EXPERIMENT_DELIVERY_CONFIG} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import type {IPostgresClient} from '@pkgs/postgres/src/Client';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
@@ -46,20 +38,6 @@ const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
 const POSTGRES_KV_TABLE = 'kv_instance_config_races';
-const POSTGRES_CONTAINER = `fluxer-instance-config-races-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
-
-class CountingInMemoryCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
-	instanceConfigSelects = 0;
-
-	override async executeQuery<T = Record<string, unknown>>(query: PreparedQuery): Promise<Array<T>> {
-		if (query.kvMeta?.action === 'select' && query.kvMeta.table.name === 'instance_configuration') {
-			this.instanceConfigSelects++;
-		}
-		return super.executeQuery<T>(query);
-	}
-}
-
 describe('InstanceConfigRepository', () => {
 	const repositories: Array<InstanceConfigRepository> = [];
 
@@ -77,13 +55,13 @@ describe('InstanceConfigRepository', () => {
 	}
 
 	it('serves repeated config reads from the hydrated in-memory cache', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
 
 		await repository.setRegistrationConfig({mode: 'closed'});
-		executor.instanceConfigSelects = 0;
+		executor.executed.length = 0;
 
 		expect(await repository.getRegistrationConfig()).toEqual({
 			mode: 'closed',
@@ -93,12 +71,12 @@ describe('InstanceConfigRepository', () => {
 			mode: 'closed',
 			admin_registration_urls_enabled: true,
 		} satisfies InstanceRegistrationConfig);
-		expect(executor.instanceConfigSelects).toBe(0);
+		expect(executor.countStatements('select:instance_configuration')).toBe(0);
 		expect(kvProvider.getSubscription().subscribedChannels).toContain(INSTANCE_CONFIG_REFRESH_CHANNEL);
 	});
 
 	it('refreshes a hydrated cache after another repository publishes a config update', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const reader = createRepository(kvProvider);
@@ -120,7 +98,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('reuses the memoized effective bluesky config until the integrations blob changes', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -137,7 +115,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('recomputes the effective bluesky config after another repository publishes an integrations update', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const reader = createRepository(kvProvider);
@@ -154,14 +132,14 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('turns the captcha on at the default difficulty when no row is stored', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await expect(repository.getCaptchaConfig()).resolves.toEqual({enabled: true, cost: 5000, max_counter: 1000});
 	});
 
 	it('ignores a legacy altcha captcha row that turned the experiment off', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await repository.setConfig(
@@ -173,7 +151,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('merges a partial captcha update onto the stored config', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await repository.updateCaptchaConfig({cost: 2000});
@@ -183,7 +161,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('drops a legacy captcha integration, secrets included, on the next integrations write', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await repository.setConfig(
@@ -204,7 +182,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('keeps the stored setup state when a branding field is invalid', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -247,7 +225,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('stores uploaded branding assets as references and resolves them against the current media endpoint', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 		const media = Config.endpoints.media;
 		const foreign = 'https://cdn.example.com/favicon.ico';
@@ -270,7 +248,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('normalises legacy branding URLs from an old domain only when the object is ours', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 		await repository.setConfig(
 			APP_PUBLIC_CONFIG_KEY,
@@ -296,7 +274,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('round-trips the community guidelines URL and clears a blank one', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 		const originalSelfHosted = getConfig().instance.selfHosted;
 		getConfig().instance.selfHosted = true;
@@ -328,7 +306,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('loads the stored guidelines URL into the legal URL cache on initialize', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const kvProvider = new MockKVProvider();
 		const originalSelfHosted = getConfig().instance.selfHosted;
 		getConfig().instance.selfHosted = true;
@@ -348,7 +326,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('keeps the product name cache in step with the stored branding', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const kvProvider = new MockKVProvider();
 		try {
 			await createRepository(kvProvider).setConfig(
@@ -366,7 +344,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('reads a stored legal config written before the guidelines URL existed', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 		await repository.setConfig(
 			APP_PUBLIC_CONFIG_KEY,
@@ -380,7 +358,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('keeps valid stored instance policy flags when one field is invalid', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -397,7 +375,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('keeps valid stored integration settings when one field is invalid', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -412,7 +390,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('drops invalid stored SSO allowed domains and keeps the valid ones', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -423,7 +401,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('falls back to the default SSO flags when a stored flag is not a boolean', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -439,7 +417,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('clears an invalid allowed domain list only while SSO is disabled', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -451,7 +429,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('keeps an all-invalid stored allowed domain list non-empty so SSO still rejects every domain', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -464,7 +442,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('serves the everyone channel threads config at version zero when the key is absent', async () => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await expect(repository.getChannelThreadsConfig()).resolves.toEqual(everyoneChannelThreadsConfig(0));
@@ -486,7 +464,7 @@ describe('InstanceConfigRepository', () => {
 		{name: 'a row with an invalid version', stored: '{"enabled":false,"config_version":-1}', version: 0},
 		{name: 'unparseable text', stored: 'not-json', version: 0},
 	])('serves the everyone channel threads config for $name and keeps the stored version', async ({stored, version}) => {
-		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		const repository = createRepository(new MockKVProvider());
 
 		await repository.setConfig(CHANNEL_THREADS_CONFIG_KEY, stored);
@@ -495,7 +473,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('returns the default domain migration config when the key is absent', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -509,7 +487,7 @@ describe('InstanceConfigRepository', () => {
 		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
 		{name: 'a non-boolean enabled flag', stored: '{"enabled":"yes"}'},
 	])('falls back to the default domain migration config for $name', async ({stored}) => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -520,7 +498,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('publishes a refresh so another repository observes the domain migration config', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const reader = createRepository(kvProvider);
@@ -540,7 +518,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('returns the default experiment delivery config when the key is absent', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -555,7 +533,7 @@ describe('InstanceConfigRepository', () => {
 		{name: 'an out-of-range jitter', stored: '{"poll_jitter_percent":99}'},
 		{name: 'a non-numeric poll interval', stored: '{"poll_interval_seconds":"often"}'},
 	])('falls back to the default experiment delivery config for $name', async ({stored}) => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -566,7 +544,7 @@ describe('InstanceConfigRepository', () => {
 	});
 
 	it('uses the registration URL id as the admin-visible registration code', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
+		const executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		const kvProvider = new MockKVProvider();
 		const repository = createRepository(kvProvider);
@@ -586,25 +564,6 @@ describe('InstanceConfigRepository', () => {
 		});
 	});
 });
-
-async function sleep(ms: number): Promise<void> {
-	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			server.close(() => resolve(address.port));
-		});
-	});
-}
 
 function describeConcurrentInstanceConfigWrites(prepareBase: () => Promise<CassandraQueryExecutorForTesting>): void {
 	const pods: Array<InstanceConfigRepository> = [];
@@ -994,53 +953,20 @@ describe('InstanceConfigRepository concurrent writes', () => {
 	describe.skipIf(!dockerAvailable)('on postgres', () => {
 		let client: IPostgresClient;
 
+		let postgresContainer: string;
 		beforeAll(async () => {
-			const port = await freePort();
-			startDockerContainer([
-				'run',
-				'-d',
-				'--name',
-				POSTGRES_CONTAINER,
-				'-e',
-				'POSTGRES_USER=fluxer',
-				'-e',
-				'POSTGRES_PASSWORD=fluxer',
-				'-e',
-				'POSTGRES_DB=fluxer',
-				'-p',
-				`127.0.0.1:${port}:5432`,
-				'postgres:16-alpine',
-				'-c',
-				'fsync=off',
-			]);
-			let ready = false;
-			for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-				await sleep(500);
-				const probe = spawnSync('docker', ['exec', POSTGRES_CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-					stdio: 'ignore',
-				});
-				if (probe.status !== 0) continue;
-				try {
-					await initPostgres({
-						url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-						maxConnections: 4,
-						kvTable: POSTGRES_KV_TABLE,
-					});
-					await getDefaultPostgresClient().query('SELECT 1');
-					ready = true;
-				} catch {
-					await shutdownPostgres().catch(() => {});
-				}
-			}
-			if (!ready) throw new Error('postgres never came up');
-			client = getDefaultPostgresClient();
-			await ensurePostgresKvSchema(client);
+			const started = await startPostgresKv({
+				namePrefix: 'fluxer-instance-config-races',
+				kvTable: POSTGRES_KV_TABLE,
+				maxConnections: 4,
+			});
+			postgresContainer = started.container;
+			client = started.client;
 		}, 900_000);
 
 		afterAll(async () => {
 			setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
-			await shutdownPostgres().catch(() => {});
-			spawnSync('docker', ['rm', '-f', POSTGRES_CONTAINER], {stdio: 'ignore'});
+			await stopPostgresKv(postgresContainer);
 		});
 
 		describeConcurrentInstanceConfigWrites(async () => {

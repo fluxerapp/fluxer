@@ -68,7 +68,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {
 	type ChannelThreadsConfig,
-	type CompiledChannelThreadsConfig,
 	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
@@ -1692,16 +1691,7 @@ export class InstanceConfigRepository {
 	}
 
 	async getChannelThreadsConfig(): Promise<ChannelThreadsConfig> {
-		return (await this.getCompiledChannelThreadsConfig()).config;
-	}
-
-	async getCompiledChannelThreadsConfig(): Promise<CompiledChannelThreadsConfig> {
 		const raw = await this.getConfig(CHANNEL_THREADS_CONFIG_KEY);
-		return syncChannelThreadsConfig(raw, parseStoredChannelThreadsConfig);
-	}
-
-	async refreshChannelThreadsConfig(): Promise<CompiledChannelThreadsConfig> {
-		const raw = await this.fetchConfigFromDatabase(CHANNEL_THREADS_CONFIG_KEY);
 		return syncChannelThreadsConfig(raw, parseStoredChannelThreadsConfig);
 	}
 

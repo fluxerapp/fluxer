@@ -186,19 +186,3 @@ export function comboMatchesQuery(i18n: I18n, combo: KeyCombo, normalized: strin
 	if (combo.key?.toLowerCase().includes(normalized)) return true;
 	return false;
 }
-
-export function combosLooseEqual(a: KeyCombo, b: KeyCombo): boolean {
-	if (!a || !b) return false;
-	if ((a.key ?? '') !== (b.key ?? '')) return false;
-	if ((a.code ?? '') !== (b.code ?? '')) return false;
-	if (!!a.ctrlOrMeta !== !!b.ctrlOrMeta) return false;
-	if (!!a.ctrl !== !!b.ctrl) return false;
-	if (!!a.alt !== !!b.alt) return false;
-	if (!!a.shift !== !!b.shift) return false;
-	if (!!a.meta !== !!b.meta) return false;
-	if (!!a.modifierOnly !== !!b.modifierOnly) return false;
-	if (!!a.bothSides !== !!b.bothSides) return false;
-	if ((a.mouseButton ?? null) !== (b.mouseButton ?? null)) return false;
-	if ((a.gamepadButton ?? null) !== (b.gamepadButton ?? null)) return false;
-	return true;
-}

@@ -4,7 +4,6 @@ import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepo
 import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createUserID} from '@app/api/BrandedTypes';
 import {
 	attachmentStorageChannelId,
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
@@ -13,7 +12,6 @@ import {
 import {
 	type MessageResponseAccessContext,
 	MessageResponseDataService,
-	messageResponseAccessForChannel,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Attachment} from '@app/api/models/Attachment';
@@ -113,8 +111,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		channelId: ChannelID;
 		messageId: MessageID;
 		access: MessageResponseAccessContext;
-		nonce?: string;
-		tts?: boolean;
 	}): Promise<MessageResponse | null> {
 		const message = await getChannelRepository().messages.getMessage(params.channelId, params.messageId);
 		if (!message || this.filterByAccess([message], params.access).length === 0) {
@@ -124,8 +120,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			userId: params.userId,
 			message,
 			access: params.access,
-			nonce: params.nonce,
-			tts: params.tts,
 		});
 	}
 
@@ -143,22 +137,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			tts: params.tts,
 			includeReactions: params.includeReactions ?? true,
 			depth: 0,
-		});
-	}
-
-	override async buildMessageForChannel(params: {
-		channel: {guildId: GuildID | null};
-		message: Message;
-		userId?: UserID;
-		nonce?: string;
-		tts?: boolean;
-	}): Promise<MessageResponse> {
-		return this.buildMessage({
-			userId: params.userId ?? params.message.authorId ?? createUserID(0n),
-			message: params.message,
-			access: messageResponseAccessForChannel(params.channel),
-			nonce: params.nonce,
-			tts: params.tts,
 		});
 	}
 
@@ -200,13 +178,12 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		userId: UserID;
 		messages: Array<Message>;
 		channelById: ReadonlyMap<string, {guildId: GuildID | null}>;
-		includeReactions?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		return Promise.all(
 			params.messages.map((message) =>
 				this.mapMessage(message, {
 					currentUserId: params.userId,
-					includeReactions: params.includeReactions ?? true,
+					includeReactions: true,
 					depth: 0,
 				}),
 			),
@@ -219,7 +196,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		const [before, current, after] = await Promise.all([
 			getChannelRepository().messages.listMessages(channelId, around, beforeLimit),
 			getChannelRepository().messages.getMessage(channelId, around),
-			getChannelRepository().messages.listMessages(channelId, undefined, afterLimit, around, {immediateAfter: true}),
+			getChannelRepository().messages.listMessages(channelId, undefined, afterLimit, around),
 		]);
 		return [...before, ...(current ? [current] : []), ...after];
 	}

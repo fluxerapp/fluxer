@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {escapeRegex} from '@app/features/messaging/utils/RegexUtils';
 import type {ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 export function extractThemeVariableOverrides(css: string): Record<string, string> {
 	const overrides: Record<string, string> = {};
@@ -27,7 +24,7 @@ function removeEmptyRootBlocks(css: string): string {
 }
 
 export function updateCssForVariable(css: string, variableName: string, newValue: string | null): string {
-	const variableNamePattern = escapeRegExp(variableName);
+	const variableNamePattern = escapeRegex(variableName);
 	const propertyPattern = new RegExp(`(--${variableNamePattern.replace(/^--/, '')}\\s*:[^;]*;)`);
 	if (newValue === null) {
 		return removeEmptyRootBlocks(css.replace(propertyPattern, ''));
@@ -165,19 +162,6 @@ function cssColorStringToNumber(color: string): number | null {
 export function cssColorStringToHex(color: string): string | null {
 	const parsed = cssColorStringToNumber(color);
 	return parsed !== null ? numberToHex(parsed) : null;
-}
-
-export function downloadTextFile(text: string, fileName: string, mimeType: string): void {
-	const blob = new Blob([text], {type: mimeType});
-	const url = URL.createObjectURL(blob);
-	const anchor = document.createElement('a');
-	anchor.href = url;
-	anchor.download = fileName;
-	anchor.rel = 'noopener';
-	document.body.appendChild(anchor);
-	anchor.click();
-	anchor.remove();
-	URL.revokeObjectURL(url);
 }
 
 export function readFileText(file: File): Promise<string> {

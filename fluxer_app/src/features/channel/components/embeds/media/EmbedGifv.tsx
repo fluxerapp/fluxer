@@ -354,6 +354,197 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 		);
 	},
 );
+type GifEmbedShellProps = Pick<
+	GifvEmbedProps,
+	'embedURL' | 'alt' | 'naturalWidth' | 'naturalHeight' | 'message' | 'attachmentId' | 'contentHash' | 'onDelete'
+> & {
+	type: 'gif' | 'gifv';
+	proxyURL: string;
+	isPreview?: boolean;
+	snapshotIndex?: number;
+	dimensions: {width: number; height: number};
+	aspectRatioStyle: React.CSSProperties | undefined;
+	visibilityRef: React.RefCallback<HTMLDivElement>;
+	setContainerRef: React.RefCallback<HTMLDivElement>;
+	shouldBlur: boolean;
+	gateReason: ReturnType<typeof useMatureMedia>['gateReason'];
+	canReveal: boolean;
+	revealSensitiveMedia: () => void;
+	thumbHashURL?: string;
+	effectiveDefaultName: string;
+	canFavorite: boolean;
+	isFavorited: boolean;
+	toggleFavorite: ReturnType<typeof useMediaFavorite>['toggleFavorite'];
+	previewProps: Omit<ImagePreviewHandlerProps, 'children'>;
+	showDownloadButton?: boolean;
+	onDownloadClick: (event: React.MouseEvent) => void;
+	children: React.ReactNode;
+};
+const GifEmbedShell = observer(
+	({
+		type,
+		proxyURL,
+		embedURL,
+		alt,
+		naturalWidth,
+		naturalHeight,
+		message,
+		attachmentId,
+		contentHash,
+		onDelete,
+		isPreview,
+		snapshotIndex,
+		dimensions,
+		aspectRatioStyle,
+		visibilityRef,
+		setContainerRef,
+		shouldBlur,
+		gateReason,
+		canReveal,
+		revealSensitiveMedia,
+		thumbHashURL,
+		effectiveDefaultName,
+		canFavorite,
+		isFavorited,
+		toggleFavorite,
+		previewProps,
+		showDownloadButton,
+		onDownloadClick,
+		children,
+	}: GifEmbedShellProps) => {
+		const messageViewContext = useMaybeMessageViewContext();
+		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+		const handleContextMenu = useCallback(
+			(e: React.MouseEvent) => {
+				if (!message) return;
+				if (isPreview && snapshotIndex === undefined) return;
+				e.preventDefault();
+				e.stopPropagation();
+				ContextMenuCommands.openFromEvent(e, ({onClose}) => (
+					<MediaContextMenu
+						message={message}
+						sourceChannel={messageViewContext?.channel}
+						originalSrc={embedURL}
+						proxyURL={proxyURL}
+						type={type}
+						contentHash={contentHash}
+						attachmentId={attachmentId}
+						defaultName={effectiveDefaultName}
+						defaultAltText={alt ?? undefined}
+						naturalWidth={naturalWidth}
+						naturalHeight={naturalHeight}
+						snapshotIndex={snapshotIndex}
+						onClose={onClose}
+						onDelete={onDelete || (() => {})}
+						data-flx="channel.embeds.media.embed-gifv.handle-context-menu.media-context-menu.gif"
+					/>
+				));
+			},
+			[
+				message,
+				messageViewContext?.channel,
+				embedURL,
+				proxyURL,
+				contentHash,
+				attachmentId,
+				effectiveDefaultName,
+				alt,
+				naturalWidth,
+				naturalHeight,
+				onDelete,
+				isPreview,
+				snapshotIndex,
+			],
+		);
+		if (shouldBlur) {
+			const blurContainerStyle: React.CSSProperties = {
+				maxWidth: '100%',
+				width: remFromPx(dimensions.width),
+				...aspectRatioStyle,
+			};
+			return (
+				<div
+					ref={visibilityRef}
+					className={styles.blurContainer}
+					data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-container"
+				>
+					<div
+						className={styles.blurContent}
+						style={blurContainerStyle}
+						data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-content"
+					>
+						<div
+							className={styles.blurInnerContainer}
+							data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-inner-container"
+						>
+							{thumbHashURL && (
+								<img
+									src={thumbHashURL}
+									className={styles.thumbHashPlaceholder}
+									alt=""
+									aria-hidden={true}
+									style={{filter: 'blur(40px)'}}
+									data-flx="channel.embeds.media.embed-gifv.embed-gif.thumb-hash-placeholder"
+								/>
+							)}
+						</div>
+						<MatureMediaBlurOverlay
+							reason={gateReason}
+							canReveal={canReveal}
+							onReveal={revealSensitiveMedia}
+							data-flx="channel.embeds.media.embed-gifv.embed-gif.mature-media-blur-overlay"
+						/>
+					</div>
+				</div>
+			);
+		}
+		const {
+			showFavoriteButton,
+			showDownloadButton: canDownload,
+			showDeleteButton,
+		} = getMediaButtonVisibility(canFavorite, isPreview ? undefined : message, attachmentId, {
+			disableDelete: !!isPreview || snapshotIndex !== undefined,
+		});
+		const showGifIndicator = Accessibility.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
+		const containerStyle: React.CSSProperties = {
+			maxWidth: '100%',
+			width: remFromPx(dimensions.width),
+			...aspectRatioStyle,
+		};
+		return (
+			<MediaContainer
+				ref={setContainerRef}
+				className={clsx(embedStyles.embedGifvContainer, styles.mediaContainer)}
+				style={containerStyle}
+				showFavoriteButton={showFavoriteButton}
+				isFavorited={isFavorited}
+				onFavoriteClick={toggleFavorite}
+				showDownloadButton={showDownloadButton ?? canDownload}
+				onDownloadClick={onDownloadClick}
+				showDeleteButton={showDeleteButton}
+				onDeleteClick={handleDeleteClick}
+				onContextMenu={handleContextMenu}
+				renderedWidth={dimensions.width}
+				renderedHeight={dimensions.height}
+				forceShowFavoriteButton={true}
+				data-flx="channel.embeds.media.embed-gifv.embed-gif.media-container.context-menu"
+			>
+				{showGifIndicator && <GifIndicator data-flx="channel.embeds.media.embed-gifv.embed-gif.gif-indicator" />}
+				<ImagePreviewHandler
+					{...previewProps}
+					data-flx="channel.embeds.media.embed-gifv.gif-embed-shell.image-preview-handler"
+				>
+					{children}
+				</ImagePreviewHandler>
+				<AltTextBadge
+					altText={alt}
+					onPopoutToggle={messageViewContext?.onPopoutToggle}
+					data-flx="channel.embeds.media.embed-gifv.embed-gif.alt-text-badge"
+				/>
+			</MediaContainer>
+		);
+	},
+);
 export const EmbedGifv: FC<
 	GifvEmbedProps & {
 		videoProxyURL: string;
@@ -467,7 +658,7 @@ export const EmbedGifv: FC<
 			providerName,
 			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
 		});
-		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+
 		const handleDownloadClick = useCallback(
 			(e: React.MouseEvent) => {
 				e.stopPropagation();
@@ -475,48 +666,7 @@ export const EmbedGifv: FC<
 			},
 			[videoProxyURL],
 		);
-		const handleContextMenu = useCallback(
-			(e: React.MouseEvent) => {
-				if (!message) return;
-				if (isPreview && snapshotIndex === undefined) return;
-				e.preventDefault();
-				e.stopPropagation();
-				ContextMenuCommands.openFromEvent(e, ({onClose}) => (
-					<MediaContextMenu
-						message={message}
-						sourceChannel={messageViewContext?.channel}
-						originalSrc={embedURL}
-						proxyURL={videoProxyURL}
-						type="gifv"
-						contentHash={contentHash}
-						attachmentId={attachmentId}
-						defaultName={effectiveDefaultName}
-						defaultAltText={alt ?? undefined}
-						naturalWidth={naturalWidth}
-						naturalHeight={naturalHeight}
-						snapshotIndex={snapshotIndex}
-						onClose={onClose}
-						onDelete={onDelete || (() => {})}
-						data-flx="channel.embeds.media.embed-gifv.handle-context-menu.media-context-menu.gifv"
-					/>
-				));
-			},
-			[
-				message,
-				messageViewContext?.channel,
-				embedURL,
-				videoProxyURL,
-				contentHash,
-				attachmentId,
-				effectiveDefaultName,
-				alt,
-				naturalWidth,
-				naturalHeight,
-				onDelete,
-				isPreview,
-				snapshotIndex,
-			],
-		);
+
 		const shouldPlay =
 			shouldAnimate &&
 			animationPolicyAllowed &&
@@ -534,150 +684,104 @@ export const EmbedGifv: FC<
 			video.autoplay = false;
 			safePause(video);
 		}, [shouldPlay]);
-		if (shouldBlur) {
-			const blurContainerStyle: React.CSSProperties = {
-				maxWidth: '100%',
-				width: remFromPx(dimensions.width),
-				...aspectRatioStyle,
-			};
-			return (
-				<div
-					ref={visibilityRef}
-					className={styles.blurContainer}
-					data-flx="channel.embeds.media.embed-gifv.blur-container"
-				>
-					<div
-						className={styles.blurContent}
-						style={blurContainerStyle}
-						data-flx="channel.embeds.media.embed-gifv.blur-content"
-					>
-						<div className={styles.blurInnerContainer} data-flx="channel.embeds.media.embed-gifv.blur-inner-container">
-							{thumbHashURL && (
-								<img
-									src={thumbHashURL}
-									className={styles.thumbHashPlaceholder}
-									alt=""
-									aria-hidden={true}
-									style={{filter: 'blur(40px)'}}
-									data-flx="channel.embeds.media.embed-gifv.thumb-hash-placeholder"
-								/>
-							)}
-						</div>
-						<MatureMediaBlurOverlay
-							reason={gateReason}
-							canReveal={canReveal}
-							onReveal={revealSensitiveMedia}
-							data-flx="channel.embeds.media.embed-gifv.mature-media-blur-overlay"
-						/>
-					</div>
-				</div>
-			);
-		}
-		const {showFavoriteButton, showDeleteButton} = getMediaButtonVisibility(
-			canFavorite,
-			isPreview ? undefined : message,
-			attachmentId,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
-		);
-		const showGifIndicator = Accessibility.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
-		const containerStyle: React.CSSProperties = {
-			maxWidth: '100%',
-			width: remFromPx(dimensions.width),
-			...aspectRatioStyle,
-		};
+
 		return (
-			<MediaContainer
-				ref={setContainerRef}
-				className={clsx(embedStyles.embedGifvContainer, styles.mediaContainer)}
-				style={containerStyle}
-				showFavoriteButton={showFavoriteButton}
+			<GifEmbedShell
+				type="gifv"
+				proxyURL={videoProxyURL}
+				embedURL={embedURL}
+				alt={alt}
+				naturalWidth={naturalWidth}
+				naturalHeight={naturalHeight}
+				message={message}
+				attachmentId={attachmentId}
+				contentHash={contentHash}
+				onDelete={onDelete}
+				isPreview={isPreview}
+				snapshotIndex={snapshotIndex}
+				dimensions={dimensions}
+				aspectRatioStyle={aspectRatioStyle}
+				visibilityRef={visibilityRef}
+				setContainerRef={setContainerRef}
+				shouldBlur={shouldBlur}
+				gateReason={gateReason}
+				canReveal={canReveal}
+				revealSensitiveMedia={revealSensitiveMedia}
+				thumbHashURL={thumbHashURL}
+				effectiveDefaultName={effectiveDefaultName}
+				canFavorite={canFavorite}
 				isFavorited={isFavorited}
-				onFavoriteClick={toggleFavorite}
-				showDownloadButton={false}
+				toggleFavorite={toggleFavorite}
+				previewProps={{
+					src: videoProxyURL,
+					originalSrc: embedURL,
+					naturalWidth: naturalWidth,
+					naturalHeight: naturalHeight,
+					type: 'gifv',
+					handlePress: openImagePreview,
+				}}
 				onDownloadClick={handleDownloadClick}
-				showDeleteButton={showDeleteButton}
-				onDeleteClick={handleDeleteClick}
-				onContextMenu={handleContextMenu}
-				renderedWidth={dimensions.width}
-				renderedHeight={dimensions.height}
-				forceShowFavoriteButton={true}
-				data-flx="channel.embeds.media.embed-gifv.media-container.context-menu"
+				showDownloadButton={false}
+				data-flx="channel.embeds.media.embed-gifv.gif-embed-shell"
 			>
-				{showGifIndicator && <GifIndicator data-flx="channel.embeds.media.embed-gifv.gif-indicator" />}
-				<ImagePreviewHandler
-					src={videoProxyURL}
-					originalSrc={embedURL}
-					naturalWidth={naturalWidth}
-					naturalHeight={naturalHeight}
-					type="gifv"
-					handlePress={openImagePreview}
-					data-flx="channel.embeds.media.embed-gifv.image-preview-handler.gifv"
+				<div
+					className={styles.videoWrapper}
+					style={aspectRatioStyle}
+					data-flx="channel.embeds.media.embed-gifv.video-wrapper"
 				>
-					<div
-						className={styles.videoWrapper}
-						style={aspectRatioStyle}
-						data-flx="channel.embeds.media.embed-gifv.video-wrapper"
-					>
-						{canPlayInline ? (
-							<video
-								ref={videoRef}
-								className={styles.videoElement}
-								src={shouldLoadMedia ? videoProxyURL : undefined}
-								poster={shouldLoadMedia ? posterURL : thumbHashURL}
-								preload={videoConfig?.preload ?? 'none'}
-								loop={videoConfig?.loop ?? true}
-								muted={videoConfig?.muted ?? true}
-								playsInline={videoConfig?.playsInline ?? true}
-								controls={videoConfig?.controls ?? false}
-								width={dimensions.width}
-								height={dimensions.height}
-								tabIndex={-1}
-								aria-label={i18n._(ANIMATED_GIF_VIDEO_DESCRIPTOR)}
-								onError={handleVideoError}
-								data-embed-media="gifv"
-								data-flx="channel.embeds.media.embed-gifv.video-element"
-							/>
-						) : (
-							<img
-								className={styles.videoElement}
-								src={shouldLoadMedia ? posterURL : thumbHashURL}
-								alt=""
-								width={dimensions.width}
-								height={dimensions.height}
-								loading="eager"
-								tabIndex={-1}
-								data-embed-media="gifv-still"
-								data-flx="channel.embeds.media.embed-gifv.still-element"
-							/>
-						)}
-						{thumbHashCurtain.shouldMount && thumbHashURL && (
-							<img
-								src={thumbHashURL}
-								className={clsx(
-									styles.placeholder,
-									thumbHashCurtain.curtainLifted ? styles.placeholderHidden : styles.placeholderVisible,
-									thumbHashCurtain.fastFade && styles.placeholderFastFade,
-								)}
-								alt=""
-								aria-hidden="true"
-								data-flx="channel.embeds.media.embed-gifv.image-placeholder"
-							/>
-						)}
-					</div>
-				</ImagePreviewHandler>
-				<AltTextBadge
-					altText={alt}
-					onPopoutToggle={messageViewContext?.onPopoutToggle}
-					data-flx="channel.embeds.media.embed-gifv.alt-text-badge"
-				/>
-			</MediaContainer>
+					{canPlayInline ? (
+						<video
+							ref={videoRef}
+							className={styles.videoElement}
+							src={shouldLoadMedia ? videoProxyURL : undefined}
+							poster={shouldLoadMedia ? posterURL : thumbHashURL}
+							preload={videoConfig?.preload ?? 'none'}
+							loop={videoConfig?.loop ?? true}
+							muted={videoConfig?.muted ?? true}
+							playsInline={videoConfig?.playsInline ?? true}
+							controls={videoConfig?.controls ?? false}
+							width={dimensions.width}
+							height={dimensions.height}
+							tabIndex={-1}
+							aria-label={i18n._(ANIMATED_GIF_VIDEO_DESCRIPTOR)}
+							onError={handleVideoError}
+							data-embed-media="gifv"
+							data-flx="channel.embeds.media.embed-gifv.video-element"
+						/>
+					) : (
+						<img
+							className={styles.videoElement}
+							src={shouldLoadMedia ? posterURL : thumbHashURL}
+							alt=""
+							width={dimensions.width}
+							height={dimensions.height}
+							loading="eager"
+							tabIndex={-1}
+							data-embed-media="gifv-still"
+							data-flx="channel.embeds.media.embed-gifv.still-element"
+						/>
+					)}
+					{thumbHashCurtain.shouldMount && thumbHashURL && (
+						<img
+							src={thumbHashURL}
+							className={clsx(
+								styles.placeholder,
+								thumbHashCurtain.curtainLifted ? styles.placeholderHidden : styles.placeholderVisible,
+								thumbHashCurtain.fastFade && styles.placeholderFastFade,
+							)}
+							alt=""
+							aria-hidden="true"
+							data-flx="channel.embeds.media.embed-gifv.image-placeholder"
+						/>
+					)}
+				</div>
+			</GifEmbedShell>
 		);
 	},
 );
 export const EmbedGif: FC<
 	GifvEmbedProps & {
 		proxyURL: string;
-		includeButton?: boolean;
 		isPreview?: boolean;
 		snapshotIndex?: number;
 		layoutConstraints?: {maxWidth: number; maxHeight: number};
@@ -810,7 +914,7 @@ export const EmbedGif: FC<
 			allowAnimated: gifAutoPlay,
 			enabled: !shouldBlur,
 		});
-		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+
 		const handleDownloadClickGif = useCallback(
 			(e: React.MouseEvent) => {
 				e.stopPropagation();
@@ -818,179 +922,88 @@ export const EmbedGif: FC<
 			},
 			[baseProxyURL],
 		);
-		const handleContextMenu = useCallback(
-			(e: React.MouseEvent) => {
-				if (!message) return;
-				if (isPreview && snapshotIndex === undefined) return;
-				e.preventDefault();
-				e.stopPropagation();
-				ContextMenuCommands.openFromEvent(e, ({onClose}) => (
-					<MediaContextMenu
-						message={message}
-						sourceChannel={messageViewContext?.channel}
-						originalSrc={embedURL}
-						proxyURL={proxyURL}
-						type="gif"
-						contentHash={contentHash}
-						attachmentId={attachmentId}
-						defaultName={effectiveDefaultName}
-						defaultAltText={alt ?? undefined}
-						naturalWidth={naturalWidth}
-						naturalHeight={naturalHeight}
-						snapshotIndex={snapshotIndex}
-						onClose={onClose}
-						onDelete={onDelete || (() => {})}
-						data-flx="channel.embeds.media.embed-gifv.handle-context-menu.media-context-menu.gif"
-					/>
-				));
-			},
-			[
-				message,
-				messageViewContext?.channel,
-				embedURL,
-				proxyURL,
-				contentHash,
-				attachmentId,
-				effectiveDefaultName,
-				alt,
-				naturalWidth,
-				naturalHeight,
-				onDelete,
-				isPreview,
-				snapshotIndex,
-			],
-		);
-		if (shouldBlur) {
-			const blurContainerStyle: React.CSSProperties = {
-				maxWidth: '100%',
-				width: remFromPx(dimensions.width),
-				...aspectRatioStyle,
-			};
-			return (
-				<div
-					ref={visibilityRef}
-					className={styles.blurContainer}
-					data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-container"
-				>
-					<div
-						className={styles.blurContent}
-						style={blurContainerStyle}
-						data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-content"
-					>
-						<div
-							className={styles.blurInnerContainer}
-							data-flx="channel.embeds.media.embed-gifv.embed-gif.blur-inner-container"
-						>
-							{thumbHashURL && (
-								<img
-									src={thumbHashURL}
-									className={styles.thumbHashPlaceholder}
-									alt=""
-									aria-hidden={true}
-									style={{filter: 'blur(40px)'}}
-									data-flx="channel.embeds.media.embed-gifv.embed-gif.thumb-hash-placeholder"
-								/>
-							)}
-						</div>
-						<MatureMediaBlurOverlay
-							reason={gateReason}
-							canReveal={canReveal}
-							onReveal={revealSensitiveMedia}
-							data-flx="channel.embeds.media.embed-gifv.embed-gif.mature-media-blur-overlay"
-						/>
-					</div>
-				</div>
-			);
-		}
-		const {showFavoriteButton, showDownloadButton, showDeleteButton} = getMediaButtonVisibility(
-			canFavorite,
-			isPreview ? undefined : message,
-			attachmentId,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
-		);
-		const showGifIndicator = Accessibility.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
-		const containerStyle: React.CSSProperties = {
-			maxWidth: '100%',
-			width: remFromPx(dimensions.width),
-			...aspectRatioStyle,
-		};
+
 		return (
-			<MediaContainer
-				ref={setContainerRef}
-				className={clsx(embedStyles.embedGifvContainer, styles.mediaContainer)}
-				style={containerStyle}
-				showFavoriteButton={showFavoriteButton}
+			<GifEmbedShell
+				type="gif"
+				proxyURL={proxyURL}
+				embedURL={embedURL}
+				alt={alt}
+				naturalWidth={naturalWidth}
+				naturalHeight={naturalHeight}
+				message={message}
+				attachmentId={attachmentId}
+				contentHash={contentHash}
+				onDelete={onDelete}
+				isPreview={isPreview}
+				snapshotIndex={snapshotIndex}
+				dimensions={dimensions}
+				aspectRatioStyle={aspectRatioStyle}
+				visibilityRef={visibilityRef}
+				setContainerRef={setContainerRef}
+				shouldBlur={shouldBlur}
+				gateReason={gateReason}
+				canReveal={canReveal}
+				revealSensitiveMedia={revealSensitiveMedia}
+				thumbHashURL={thumbHashURL}
+				effectiveDefaultName={effectiveDefaultName}
+				canFavorite={canFavorite}
 				isFavorited={isFavorited}
-				onFavoriteClick={toggleFavorite}
-				showDownloadButton={showDownloadButton}
+				toggleFavorite={toggleFavorite}
+				previewProps={{
+					src: optimizedAnimatedURL,
+					originalSrc: embedURL,
+					naturalWidth: naturalWidth,
+					naturalHeight: naturalHeight,
+					type: 'gif',
+					handlePress: openImagePreview,
+					channelId: channelId,
+					messageId: messageId,
+					attachmentId: attachmentId,
+					embedIndex: embedIndex,
+					contentHash: contentHash,
+					message: message,
+					sourceChannel: messageViewContext?.channel,
+					onViewerWarmEnter: scheduleViewerWarm,
+					onViewerWarmLeave: cancelViewerWarm,
+				}}
 				onDownloadClick={handleDownloadClickGif}
-				showDeleteButton={showDeleteButton}
-				onDeleteClick={handleDeleteClick}
-				onContextMenu={handleContextMenu}
-				renderedWidth={dimensions.width}
-				renderedHeight={dimensions.height}
-				forceShowFavoriteButton={true}
-				data-flx="channel.embeds.media.embed-gifv.embed-gif.media-container.context-menu"
+				data-flx="channel.embeds.media.embed-gifv.gif-embed-shell--2"
 			>
-				{showGifIndicator && <GifIndicator data-flx="channel.embeds.media.embed-gifv.embed-gif.gif-indicator" />}
-				<ImagePreviewHandler
-					src={optimizedAnimatedURL}
-					originalSrc={embedURL}
-					naturalWidth={naturalWidth}
-					naturalHeight={naturalHeight}
-					type="gif"
-					handlePress={openImagePreview}
-					channelId={channelId}
-					messageId={messageId}
-					attachmentId={attachmentId}
-					embedIndex={embedIndex}
-					contentHash={contentHash}
-					message={message}
-					sourceChannel={messageViewContext?.channel}
-					onViewerWarmEnter={scheduleViewerWarm}
-					onViewerWarmLeave={cancelViewerWarm}
-					data-flx="channel.embeds.media.embed-gifv.embed-gif.image-preview-handler.gif"
+				<div
+					className={styles.videoWrapper}
+					style={aspectRatioStyle}
+					data-flx="channel.embeds.media.embed-gifv.embed-gif.video-wrapper"
 				>
-					<div
-						className={styles.videoWrapper}
-						style={aspectRatioStyle}
-						data-flx="channel.embeds.media.embed-gifv.embed-gif.video-wrapper"
-					>
+					<img
+						ref={mediaRef}
+						alt={i18n._(ANIMATED_GIF_DESCRIPTOR)}
+						src={shouldLoadMedia ? activeSource : undefined}
+						className={styles.videoElement}
+						data-embed-media="gif"
+						loading="eager"
+						tabIndex={-1}
+						width={dimensions.width}
+						height={dimensions.height}
+						onLoad={handleImageLoad}
+						onError={handleImageError}
+						data-flx="channel.embeds.media.embed-gifv.embed-gif.video-element"
+					/>
+					{placeholderMounted && thumbHashURL && (
 						<img
-							ref={mediaRef}
-							alt={i18n._(ANIMATED_GIF_DESCRIPTOR)}
-							src={shouldLoadMedia ? activeSource : undefined}
-							className={styles.videoElement}
-							data-embed-media="gif"
-							loading="eager"
-							tabIndex={-1}
-							width={dimensions.width}
-							height={dimensions.height}
-							onLoad={handleImageLoad}
-							onError={handleImageError}
-							data-flx="channel.embeds.media.embed-gifv.embed-gif.video-element"
+							src={thumbHashURL}
+							className={clsx(
+								styles.placeholder,
+								placeholderHidden ? styles.placeholderHidden : styles.placeholderVisible,
+								placeholderFastFade && styles.placeholderFastFade,
+							)}
+							alt=""
+							aria-hidden="true"
+							data-flx="channel.embeds.media.embed-gifv.embed-gif.image-placeholder"
 						/>
-						{placeholderMounted && thumbHashURL && (
-							<img
-								src={thumbHashURL}
-								className={clsx(
-									styles.placeholder,
-									placeholderHidden ? styles.placeholderHidden : styles.placeholderVisible,
-									placeholderFastFade && styles.placeholderFastFade,
-								)}
-								alt=""
-								aria-hidden="true"
-								data-flx="channel.embeds.media.embed-gifv.embed-gif.image-placeholder"
-							/>
-						)}
-					</div>
-				</ImagePreviewHandler>
-				<AltTextBadge
-					altText={alt}
-					onPopoutToggle={messageViewContext?.onPopoutToggle}
-					data-flx="channel.embeds.media.embed-gifv.embed-gif.alt-text-badge"
-				/>
-			</MediaContainer>
+					)}
+				</div>
+			</GifEmbedShell>
 		);
 	},
 );

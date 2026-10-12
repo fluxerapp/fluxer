@@ -27,6 +27,7 @@ import {
 	VOICE_NOISE_SUPPRESSION_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
+import {CUSTOM_DESCRIPTOR_2 as CUSTOM_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -39,11 +40,7 @@ const DIRECT_INPUT_OPTION_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Sends raw mic audio with no processing.',
 	comment: 'Description for the studio / direct-input option in the voice processing settings radio group.',
 });
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Voice input processing profile where the user configures processing manually.',
-	context: 'voice-processing-profile',
-});
+
 const TUNE_THE_PROCESSING_YOURSELF_DESCRIPTOR = msg({
 	message: 'Tune the processing yourself.',
 	comment: 'Description for the custom option in the voice processing settings radio group.',

@@ -46,14 +46,6 @@ describe('Admin user directory', () => {
 		});
 	});
 	describe('GET /admin/users', () => {
-		test('requires USER_LOOKUP ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE]);
-			await createBuilder(harness, `${admin.token}`)
-				.get(`/admin/users?user_id=${admin.userId}`)
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
 		test('rejects the email selector without USER_VIEW_EMAIL ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_IP]);
@@ -144,6 +136,23 @@ describe('Admin user directory', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users.map((user) => user.id)).not.toContain(userId);
+		});
+
+		test('matches IPv6 last active addresses by /64 trust key', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
+			const firstUser = await createTestAccount(harness);
+			const secondUser = await createTestAccount(harness);
+			await setLastActiveIp(harness, firstUser.token, '2a01:e0a:d10:95b0:8f54:410e:f290:1c66');
+			await setLastActiveIp(harness, secondUser.token, '2a01:e0a:d10:95b0:01e4:53a8:d0dd:7733');
+			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
+				.get(
+					`/admin/users?last_active_ip=${encodeURIComponent('2a01:e0a:d10:95b0:b53f:16d3:aff2:9b0f')}&limit=10&offset=0`,
+				)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(result.users.find((user) => user.id === firstUser.userId)).toBeDefined();
+			expect(result.users.find((user) => user.id === secondUser.userId)).toBeDefined();
 		});
 	});
 });

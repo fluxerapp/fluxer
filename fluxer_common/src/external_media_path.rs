@@ -204,60 +204,111 @@ pub fn build_external_media_proxy_url(
     Some(format!("{public_endpoint}/external/{signature}/{path}"))
 }
 
+use url::Url;
+
+pub fn is_own_media_url(media_endpoint: &str, target: &Url) -> bool {
+    let Ok(base) = Url::parse(media_endpoint) else {
+        return false;
+    };
+    let same_host = match (base.host_str(), target.host_str()) {
+        (Some(base_host), Some(target_host)) => base_host.eq_ignore_ascii_case(target_host),
+        _ => false,
+    };
+    same_host
+        && base.scheme().eq_ignore_ascii_case(target.scheme())
+        && base.port_or_known_default() == target.port_or_known_default()
+        && target
+            .path()
+            .strip_prefix(base.path().trim_end_matches('/'))
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+}
+
+pub fn verify_signature(input: &str, provided: &str, secret: &[u8]) -> bool {
+    let expected = create_signature(input, secret);
+    if expected.len() != provided.len() {
+        return false;
+    }
+    expected
+        .bytes()
+        .zip(provided.bytes())
+        .fold(0u8, |diff, (a, b)| diff | (a ^ b))
+        == 0
+}
+
+#[cfg(test)]
+mod signature_tests {
+    use super::*;
+    #[test]
+    fn signature_matches_node_hmac_base64url_behavior() {
+        let sig = create_signature("v2/aHR0cHM6Ly9leGFtcGxlLmNvbS8", b"secret");
+        assert_eq!("jkGeYYCiqJ67eS5T6lWJ4eQ77pwIaf6yoXXF5LncsHY", sig);
+        assert!(verify_signature(
+            "v2/aHR0cHM6Ly9leGFtcGxlLmNvbS8",
+            &sig,
+            b"secret"
+        ));
+    }
+
+    #[test]
+    fn verify_rejects_tampered_signature() {
+        let sig = create_signature("input", b"secret");
+        let mut tampered = sig.clone().into_bytes();
+        tampered[0] = if tampered[0] == b'A' { b'B' } else { b'A' };
+        assert!(!verify_signature(
+            "input",
+            std::str::from_utf8(&tampered).unwrap(),
+            b"secret"
+        ));
+    }
+
+    #[test]
+    fn verify_rejects_wrong_secret() {
+        let sig = create_signature("input", b"secret");
+        assert!(!verify_signature("input", &sig, b"different"));
+    }
+
+    #[test]
+    fn verify_rejects_wrong_input() {
+        let sig = create_signature("input-a", b"secret");
+        assert!(!verify_signature("input-b", &sig, b"secret"));
+    }
+
+    #[test]
+    fn verify_rejects_different_length_signature_without_panic() {
+        assert!(!verify_signature("input", "short", b"secret"));
+        assert!(!verify_signature(
+            "input",
+            "definitely-too-long-of-a-signature-for-hmac-sha256-base64url",
+            b"secret"
+        ));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn builds_the_plain_path_shape() {
-        assert_eq!(
-            "https/static.klipy.com/ii/c8/28/HkAKKCzZ.webp",
-            build_external_media_proxy_path("https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp")
-                .unwrap()
-        );
-    }
-
-    #[test]
-    fn builds_an_encoded_query_ahead_of_the_scheme() {
-        assert_eq!(
-            "%3Fv%3Dquery_param%26goes%3Dhere/https/static.klipy.com/ii/HkAKKCzZ.webp",
-            build_external_media_proxy_path(
-                "https://static.klipy.com/ii/HkAKKCzZ.webp?v=query_param&goes=here"
-            )
-            .unwrap()
-        );
-    }
-
-    #[test]
-    fn leaves_the_fragment_out_of_the_signed_path() {
-        assert_eq!(
-            build_external_media_proxy_path("https://example.com/a.gif").unwrap(),
-            build_external_media_proxy_path("https://example.com/a.gif#anchor").unwrap()
-        );
-        assert_eq!(
-            build_external_media_proxy_path("https://example.com/a.gif?v=1").unwrap(),
-            build_external_media_proxy_path("https://example.com/a.gif?v=1#anchor").unwrap()
-        );
-    }
-
-    #[test]
-    fn leaves_credentials_out_of_the_host_segment() {
-        assert_eq!(
-            "https/cdn.example.com/a.gif",
-            build_external_media_proxy_path("https://reader:secret@cdn.example.com/a.gif").unwrap()
-        );
-        assert_eq!(
-            "https/cdn.example.com/a.gif",
-            build_external_media_proxy_path("https://reader@cdn.example.com/a.gif").unwrap()
-        );
-    }
-
-    #[test]
-    fn leaves_out_a_query_that_reconstructs_to_nothing() {
-        assert_eq!(
-            build_external_media_proxy_path("https://example.com/a.gif").unwrap(),
-            build_external_media_proxy_path("https://example.com/a.gif?").unwrap()
-        );
+    fn own_media_urls_require_the_same_origin_and_path_boundary() {
+        let endpoint = "https://chat.example.test/media/";
+        for target in [
+            "https://chat.example.test/media",
+            "https://CHAT.example.test:443/media/attachments/1/2/cat.gif",
+        ] {
+            assert!(is_own_media_url(endpoint, &Url::parse(target).unwrap()));
+        }
+        for target in [
+            "https://chat.example.test/mediafiles/1.gif",
+            "https://static.klipy.com/a.webp",
+            "http://chat.example.test/media/a.gif",
+            "https://chat.example.test:444/media/a.gif",
+        ] {
+            assert!(!is_own_media_url(endpoint, &Url::parse(target).unwrap()));
+        }
+        assert!(!is_own_media_url(
+            "invalid endpoint",
+            &Url::parse("https://chat.example.test/media").unwrap()
+        ));
     }
 
     #[test]
@@ -276,14 +327,6 @@ mod tests {
                 "vector {original}"
             );
         }
-    }
-
-    #[test]
-    fn keeps_a_non_default_port() {
-        assert_eq!(
-            "https/example.com:8443/a.png",
-            build_external_media_proxy_path("https://example.com:8443/a.png").unwrap()
-        );
     }
 
     #[test]

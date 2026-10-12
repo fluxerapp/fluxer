@@ -67,7 +67,7 @@ jobs:
           --step install_dependencies
 
       - name: Compile translated catalogs
-        run: pnpm i18n:weblate-compile
+        run: pnpm i18n:compile
 
       - name: Format generated catalogs
         run: pnpm biome format --write package.json packages/i18n/package.json packages/i18n/scripts/SyncStaticI18nCatalogs.ts packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n

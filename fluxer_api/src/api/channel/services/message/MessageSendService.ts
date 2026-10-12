@@ -19,13 +19,17 @@ import type {AuthenticatedChannel} from '@app/api/channel/services/Authenticated
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageCreated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
 import {
+	dispatchMessageCreateBroadcast,
+	dispatchMessageCreateToUser,
+	dispatchMessageUpdateBroadcast,
+} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {
 	createMessageSnapshotsForForward,
+	ensureTextChannel,
 	type ForwardMediaSelection,
 	isOperationDisabled,
-	isPersonalNotesChannel,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {assertMessageWithinHistoryCutoff} from '@app/api/channel/services/message/MessageHistoryCutoff';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
@@ -36,6 +40,7 @@ import type {MessageSearchService} from '@app/api/channel/services/message/Messa
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import type {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
 import {enqueueThreadSearchSync} from '@app/api/channel/threads/ThreadJobs';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
@@ -58,6 +63,7 @@ import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isContentHidden, isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
+import {checkGuildVerificationWithResponse} from '@app/api/utils/GuildVerificationUtils';
 import {
 	ChannelTypes,
 	MessageReferenceTypes,
@@ -96,7 +102,6 @@ interface MessageSendServiceDeps {
 	persistenceService: MessagePersistenceService;
 	channelAuthService: MessageChannelAuthService;
 	processingService: MessageProcessingService;
-	dispatchService: MessageDispatchService;
 	operationsHelpers: MessageOperationsHelpers;
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	attachmentUploadTraceRepository: AttachmentUploadTraceRepository;
@@ -179,11 +184,6 @@ export class MessageSendService {
 				this.logPostCreateFailure({messageId, step: work[index]!.step, error: result.reason});
 			}
 		}
-	}
-
-	private getSearchIndexOptions(channel: Channel) {
-		const includeDefault = channel.indexedAt != null;
-		return includeDefault ? {includeDefault} : null;
 	}
 
 	private attachmentsToProcess(attachments?: Array<AttachmentRequestData>): Array<AttachmentToProcess> | undefined {
@@ -269,7 +269,7 @@ export class MessageSendService {
 					data.tts = false;
 				}
 			}
-			await this.deps.channelAuthService.checkGuildVerification({user, guild, member});
+			checkGuildVerificationWithResponse({user, guild, member});
 		} else if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
 			await this.deps.channelAuthService.validateDMSendPermissions({channel, userId: user.id});
 		}
@@ -333,40 +333,11 @@ export class MessageSendService {
 			userId: createUserID(0n),
 			skipMembershipCheck: true,
 		});
-		this.ensureWebhookMessageRequestIsValid(data, guild?.features ?? null);
+		this.ensureMessageRequestIsValid({user: null, data, guildFeatures: guild?.features ?? null});
 		this.deps.embedAttachmentResolver.validateAttachmentReferences({
 			embeds: data.embeds,
 			attachments: data.attachments,
 		});
-	}
-
-	private ensureWebhookMessageRequestIsValid(data: MessageRequest, guildFeatures: Iterable<string> | null): boolean {
-		const isForwardMessage = data.message_reference?.type === MessageReferenceTypes.FORWARD;
-		if (isForwardMessage) {
-			if (!data.message_reference?.channel_id || !data.message_reference?.message_id) {
-				throw InputValidationError.fromCode(
-					'message_reference',
-					ValidationErrorCodes.FORWARD_REFERENCE_REQUIRES_CHANNEL_AND_MESSAGE,
-				);
-			}
-			if (
-				data.content ||
-				(data.embeds && data.embeds.length > 0) ||
-				(data.attachments && data.attachments.length > 0) ||
-				(data.sticker_ids && data.sticker_ids.length > 0)
-			) {
-				throw InputValidationError.fromCode(
-					'message_reference',
-					ValidationErrorCodes.FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT,
-				);
-			}
-		} else {
-			this.deps.validationService.validateMessageContent(data, null, {
-				guildFeatures,
-				messageAuthorType: 'webhook',
-			});
-		}
-		return isForwardMessage;
 	}
 
 	private assertNotThreadStarterReference(
@@ -432,7 +403,7 @@ export class MessageSendService {
 		data,
 		guildFeatures,
 	}: {
-		user: User;
+		user: User | null;
 		data: MessageRequest;
 		guildFeatures: Iterable<string> | null;
 	}): boolean {
@@ -456,7 +427,11 @@ export class MessageSendService {
 				);
 			}
 		} else {
-			this.deps.validationService.validateMessageContent(data, user, {guildFeatures});
+			this.deps.validationService.validateMessageContent(
+				data,
+				user,
+				user ? {guildFeatures} : {guildFeatures, messageAuthorType: 'webhook'},
+			);
 		}
 		return isForwardMessage;
 	}
@@ -667,7 +642,7 @@ export class MessageSendService {
 		if (!user.isBot && user.id !== SYSTEM_USER_ID && !(user.flags & UserFlags.HAS_SESSION_STARTED)) {
 			throw InputValidationError.fromCode('content', ValidationErrorCodes.MUST_START_SESSION_BEFORE_SENDING);
 		}
-		if (isPersonalNotesChannel({userId: user.id, channelId})) {
+		if (isPersonalNotesChannelId({userId: user.id, channelId})) {
 			const message = await this.sendPersonalNoteMessage({authChannel, user, viewer, channelId, data, requestCache});
 			return {message, authChannel};
 		}
@@ -688,7 +663,7 @@ export class MessageSendService {
 			!forumStarter && guild && channel.rateLimitPerUser && channel.rateLimitPerUser > 0 && !user.isBot;
 		const slowmodeBypass = needsSlowmodeCheck ? await hasPermission(Permissions.BYPASS_SLOWMODE) : false;
 		const slowmodeKey = needsSlowmodeCheck && !slowmodeBypass ? `slowmode:${channelId}:${user.id}` : null;
-		this.deps.validationService.ensureTextChannel(channel);
+		ensureTextChannel(channel);
 		this.assertThreadSendAllowed(authChannel);
 		const isForwardMessage = this.ensureMessageRequestIsValid({user, data, guildFeatures: guild?.features ?? null});
 		this.deps.embedAttachmentResolver.validateAttachmentReferences({
@@ -820,7 +795,6 @@ export class MessageSendService {
 				identifier: slowmodeKey,
 				maxAttempts: 1,
 				windowMs: channel.rateLimitPerUser! * 1000,
-				algorithm: 'leaky_bucket',
 			});
 			if (!slowmodeResult.allowed) {
 				throw new SlowmodeRateLimitError({
@@ -916,20 +890,20 @@ export class MessageSendService {
 			{
 				step: 'dispatch',
 				promise: suppressDelivery
-					? this.deps.dispatchService.dispatchMessageCreateToUser({
+					? dispatchMessageCreateToUser({
+							gatewayService: this.deps.gatewayService,
 							channel,
 							message,
 							userId: user.id,
-							requestCache,
 							currentUserId: user.id,
 							nonce: data.nonce,
 							tts: data.tts,
 							mentionHere: mentionData?.mentionHere ?? false,
 						})
-					: this.deps.dispatchService.dispatchMessageCreate({
+					: dispatchMessageCreateBroadcast({
+							gatewayService: this.deps.gatewayService,
 							channel,
 							message,
-							requestCache,
 							currentUserId: user.id,
 							nonce: data.nonce,
 							tts: data.tts,
@@ -953,9 +927,8 @@ export class MessageSendService {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
 		});
 		if (authChannel.thread) enqueueThreadSearchSync(channel.id, {activity: true});
-		const searchIndexOptions = this.getSearchIndexOptions(channel);
-		if (searchIndexOptions && !suppressDmRecipientDelivery) {
-			void this.deps.searchService.indexMessage(message, user.isBot, searchIndexOptions);
+		if (channel.indexedAt != null && !suppressDmRecipientDelivery) {
+			void this.deps.searchService.indexMessage(message, user.isBot);
 		}
 		return {message, authChannel};
 	}
@@ -987,7 +960,11 @@ export class MessageSendService {
 			userId: createUserID(0n),
 			skipMembershipCheck: true,
 		});
-		const isForwardMessage = this.ensureWebhookMessageRequestIsValid(data, guild?.features ?? null);
+		const isForwardMessage = this.ensureMessageRequestIsValid({
+			user: null,
+			data,
+			guildFeatures: guild?.features ?? null,
+		});
 		this.deps.embedAttachmentResolver.validateAttachmentReferences({
 			embeds: data.embeds,
 			attachments: data.attachments,
@@ -1116,10 +1093,10 @@ export class MessageSendService {
 			authorId: webhookActorId,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
-		await this.deps.dispatchService.dispatchMessageCreate({
+		await dispatchMessageCreateBroadcast({
+			gatewayService: this.deps.gatewayService,
 			channel,
 			message,
-			requestCache,
 			nonce: data.nonce,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
@@ -1128,9 +1105,8 @@ export class MessageSendService {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
 		});
 		if (thread) enqueueThreadSearchSync(thread.id, {activity: true});
-		const searchIndexOptions = this.getSearchIndexOptions(channel);
-		if (searchIndexOptions) {
-			void this.deps.searchService.indexMessage(message, false, searchIndexOptions);
+		if (channel.indexedAt != null) {
+			void this.deps.searchService.indexMessage(message, false);
 		}
 		return message;
 	}
@@ -1140,7 +1116,6 @@ export class MessageSendService {
 		thread,
 		messageId,
 		data,
-		requestCache,
 	}: {
 		webhook: Webhook;
 		thread?: Channel | null;
@@ -1201,14 +1176,13 @@ export class MessageSendService {
 				);
 			},
 		);
-		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updatedMessage});
 		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
 		void enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction after edit');
 		});
-		const searchIndexOptions = this.getSearchIndexOptions(channel);
-		if (searchIndexOptions) {
-			void this.deps.searchService.updateMessageIndex(updatedMessage, searchIndexOptions);
+		if (channel.indexedAt != null) {
+			void this.deps.searchService.updateMessageIndex(updatedMessage);
 		}
 		return updatedMessage;
 	}
@@ -1219,7 +1193,6 @@ export class MessageSendService {
 		viewer,
 		channelId,
 		data,
-		requestCache,
 	}: {
 		authChannel: AuthenticatedChannel;
 		user: User;
@@ -1287,10 +1260,10 @@ export class MessageSendService {
 			guildId: null,
 			channel,
 		});
-		await this.deps.dispatchService.dispatchMessageCreate({
+		await dispatchMessageCreateBroadcast({
+			gatewayService: this.deps.gatewayService,
 			channel,
 			message,
-			requestCache,
 			currentUserId: user.id,
 			nonce: data.nonce,
 			tts: data.tts,
@@ -1301,9 +1274,8 @@ export class MessageSendService {
 		if (data.nonce) {
 			await this.deps.validationService.cacheMessageNonce({userId: user.id, nonce: data.nonce, channelId, messageId});
 		}
-		const searchIndexOptions = this.getSearchIndexOptions(channel);
-		if (searchIndexOptions) {
-			void this.deps.searchService.indexMessage(message, user.isBot, searchIndexOptions);
+		if (channel.indexedAt != null) {
+			void this.deps.searchService.indexMessage(message, user.isBot);
 		}
 		return message;
 	}

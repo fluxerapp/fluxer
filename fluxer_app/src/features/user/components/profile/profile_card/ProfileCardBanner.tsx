@@ -27,7 +27,6 @@ interface ProfileCardBannerProps {
 	onAvatarClick?: () => void;
 	onAvatarContextMenu?: (event: React.MouseEvent) => void;
 	onBannerContextMenu?: (event: React.MouseEvent) => void;
-	headerHeight?: number;
 }
 
 export const ProfileCardBanner: React.FC<ProfileCardBannerProps> = observer(
@@ -43,13 +42,15 @@ export const ProfileCardBanner: React.FC<ProfileCardBannerProps> = observer(
 		onAvatarClick,
 		onAvatarContextMenu,
 		onBannerContextMenu,
-		headerHeight = PROFILE_POPOUT_GEOMETRY.headerHeightPx,
 	}) => {
 		const bannerHeight = PROFILE_POPOUT_GEOMETRY.bannerHeightPx;
 		const reactId = useId();
 		const safeId = reactId.replace(/[^a-zA-Z0-9_-]/g, '');
 		const maskId = `uid_${safeId}`;
-		const headerStyle = useMemo<React.CSSProperties>(() => ({height: remFromPx(headerHeight)}), [headerHeight]);
+		const headerStyle = useMemo<React.CSSProperties>(
+			() => ({height: remFromPx(PROFILE_POPOUT_GEOMETRY.headerHeightPx)}),
+			[],
+		);
 		const bannerWrapperStyle = useMemo<React.CSSProperties>(
 			() => ({minHeight: remFromPx(bannerHeight)}),
 			[bannerHeight],

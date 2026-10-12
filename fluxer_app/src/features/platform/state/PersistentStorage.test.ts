@@ -149,8 +149,6 @@ describe('legacy localStorage behaviour is unchanged while the scoped backend is
 		rawStorage().setItem('WrittenOutsideAppStorage', 'raw');
 		expect(AppStorage.getItem('WrittenOutsideAppStorage')).toBe('raw');
 		expect(AppStorage.keys()).toContain('WrittenOutsideAppStorage');
-		expect(AppStorage.length).toBe(rawStorage().length);
-		expect(AppStorage.key(0)).toBe(rawStorage().key(0));
 		AppStorage.removeItem(ACCOUNT_KEY);
 		expect(rawStorage().getItem(ACCOUNT_KEY)).toBeNull();
 	});

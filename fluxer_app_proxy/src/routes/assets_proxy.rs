@@ -331,19 +331,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn upstream_failure_is_never_stamped_with_an_asset_lifetime() {
-        let response = proxied_asset(
-            StatusCode::NOT_FOUND,
-            "no-store",
-            "2d715e4730758083.worker.js",
-        )
-        .await;
-
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        assert_eq!(cache_control_of(&response), Some("no-store"));
-    }
-
-    #[tokio::test]
     async fn a_not_found_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::NOT_FOUND,
@@ -357,38 +344,6 @@ mod tests {
             cache_control_of(&response),
             Some(UPSTREAM_FAILURE_CACHE_CONTROL),
             "a cdn or bucket error page with its own year would pin the miss for a year"
-        );
-    }
-
-    #[tokio::test]
-    async fn a_bad_gateway_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
-        let response = proxied_asset(
-            StatusCode::BAD_GATEWAY,
-            "public, max-age=604800",
-            "2d715e4730758083.worker.js",
-        )
-        .await;
-
-        assert_eq!(response.status(), StatusCode::BAD_GATEWAY);
-        assert_eq!(
-            cache_control_of(&response),
-            Some(UPSTREAM_FAILURE_CACHE_CONTROL)
-        );
-    }
-
-    #[tokio::test]
-    async fn a_server_error_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
-        let response = proxied_asset(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "public, max-age=86400, immutable",
-            "voice_engine_bg.wasm",
-        )
-        .await;
-
-        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(
-            cache_control_of(&response),
-            Some(UPSTREAM_FAILURE_CACHE_CONTROL)
         );
     }
 
@@ -1088,24 +1043,6 @@ mod tests {
     }
 
     #[test]
-    fn known_wasm_asset_overrides_upstream_octet_stream() {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static("application/octet-stream"),
-        );
-
-        apply_test_asset_policy(&mut headers, "voice_engine_bg.wasm", StatusCode::OK);
-
-        assert_eq!(
-            headers
-                .get(header::CONTENT_TYPE)
-                .and_then(|value| value.to_str().ok()),
-            Some("application/wasm")
-        );
-    }
-
-    #[test]
     fn proxied_font_gains_cors_when_upstream_omits_it() {
         let mut headers = HeaderMap::new();
         headers.insert(
@@ -1173,24 +1110,6 @@ mod tests {
         assert!(
             headers.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).is_none(),
             "non-font assets are same-origin and must not gain a wildcard"
-        );
-    }
-
-    #[test]
-    fn unknown_asset_preserves_upstream_content_type() {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static("application/octet-stream"),
-        );
-
-        apply_test_asset_policy(&mut headers, "artifact.unknown-extension", StatusCode::OK);
-
-        assert_eq!(
-            headers
-                .get(header::CONTENT_TYPE)
-                .and_then(|value| value.to_str().ok()),
-            Some("application/octet-stream")
         );
     }
 

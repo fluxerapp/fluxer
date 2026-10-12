@@ -5,7 +5,6 @@ import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
-import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
 import type {LiveKitService} from '@app/api/infrastructure/LiveKitService';
 import type {PinnedRoomServer, VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
@@ -383,15 +382,6 @@ export class VoiceService {
 		return servers;
 	}
 
-	async listParticipantsOnServer(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		regionId: string;
-		serverId: string;
-	}): Promise<ListParticipantsResult> {
-		return await this.liveKitService.listParticipants(params);
-	}
-
 	async updateParticipant(params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
@@ -510,74 +500,5 @@ export class VoiceService {
 			canVideo,
 			deaf,
 		});
-	}
-
-	async disconnectChannel(params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
-		success: boolean;
-		disconnectedCount: number;
-	}> {
-		const {guildId, channelId} = params;
-		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
-		if (!pinnedServer) {
-			return {
-				success: false,
-				disconnectedCount: 0,
-			};
-		}
-		try {
-			const result = await this.liveKitService.listParticipants({
-				guildId,
-				channelId,
-				regionId: pinnedServer.regionId,
-				serverId: pinnedServer.serverId,
-			});
-			if (result.status === 'error') {
-				return {
-					success: false,
-					disconnectedCount: 0,
-				};
-			}
-			let disconnectedCount = 0;
-			for (const participant of result.participants) {
-				try {
-					const identityMatch = participant.identity.match(/^user_(\d+)_(.+)$/);
-					if (identityMatch) {
-						const [, userIdStr, connectionId] = identityMatch;
-						const userId = BigInt(userIdStr) as UserID;
-						await this.liveKitService.disconnectParticipant({
-							userId,
-							guildId,
-							channelId,
-							connectionId,
-							regionId: pinnedServer.regionId,
-							serverId: pinnedServer.serverId,
-						});
-						disconnectedCount++;
-					}
-				} catch (error) {
-					Logger.error(
-						{
-							identity: participant.identity,
-							guildId,
-							channelId,
-							regionId: pinnedServer.regionId,
-							serverId: pinnedServer.serverId,
-							error,
-						},
-						'Failed to disconnect participant',
-					);
-				}
-			}
-			return {
-				success: true,
-				disconnectedCount,
-			};
-		} catch (error) {
-			Logger.error({guildId, channelId, error}, 'Error disconnecting channel participants');
-			return {
-				success: false,
-				disconnectedCount: 0,
-			};
-		}
 	}
 }

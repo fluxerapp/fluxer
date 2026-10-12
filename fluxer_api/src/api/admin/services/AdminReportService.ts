@@ -18,10 +18,8 @@ import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import {
+	adminMessageResponseAccess,
 	createMessageResponseDataService,
-	type MessageResponseAccessContext,
-	messageResponseAccessForChannel,
-	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
@@ -516,7 +514,7 @@ export class AdminReportService {
 				const channelId = message.channelId ?? report.reportedChannelId;
 				if (!channelId) return null;
 				try {
-					const access = await this.getMessageResponseAccessForAdmin(channelId);
+					const access = await adminMessageResponseAccess(this.deps.channelRepository, channelId);
 					return await createMessageResponseDataService().getMessage({
 						userId: createUserID(0n),
 						channelId,
@@ -538,12 +536,6 @@ export class AdminReportService {
 			}),
 		);
 		return responses.filter((message): message is MessageResponse => message !== null);
-	}
-
-	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
-		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
-		return {...access, includeHidden: true};
 	}
 
 	private async getMutualDmChannelId(report: IARSubmission): Promise<string | null> {

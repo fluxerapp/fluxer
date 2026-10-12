@@ -25,6 +25,7 @@ import {
 } from '@app/features/user/components/modals/tabs/components/SelectableSettingsList';
 import {getUserAvatarURL} from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {CLEAR_SELECTION_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
 import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
@@ -42,10 +43,7 @@ const FAILED_TO_LOAD_AUTHORIZED_APPLICATIONS_DESCRIPTOR = msg({
 	message: 'Failed to load authorized applications',
 	comment: 'Error message in the authorized apps tab. Keep the tone plain and specific.',
 });
-const CLEAR_SELECTION_DESCRIPTOR = msg({
-	message: 'Clear selection',
-	comment: 'Button or menu action label in the authorized apps tab. Keep it concise.',
-});
+
 const VIEW_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'View permissions',
 	comment: 'Tooltip and accessibility label for opening an authorized app permissions modal.',

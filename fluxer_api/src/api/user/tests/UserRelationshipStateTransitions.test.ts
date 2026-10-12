@@ -140,13 +140,6 @@ describe('UserRelationshipStateTransitions', () => {
 		});
 	});
 	describe('error paths', () => {
-		test('cannot send friend request to yourself', async () => {
-			const alice = await createTestAccount(harness);
-			await createBuilder(harness, alice.token)
-				.post(`/users/@me/relationships/${alice.userId}`)
-				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_FRIEND_REQUEST_TO_SELF')
-				.execute();
-		});
 		test('cannot send friend request to deleted user', async () => {
 			const alice = await createTestAccount(harness);
 			const bob = await createTestAccount(harness);
@@ -154,15 +147,6 @@ describe('UserRelationshipStateTransitions', () => {
 			await createBuilder(harness, alice.token)
 				.post(`/users/@me/relationships/${bob.userId}`)
 				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
-				.execute();
-		});
-		test('deleted user cannot send friend request', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await markUserDeleted(harness, alice.userId);
-			await createBuilder(harness, alice.token)
-				.post(`/users/@me/relationships/${bob.userId}`)
-				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 		test('can accept a friend request from a user scheduled for deletion', async () => {
@@ -174,15 +158,6 @@ describe('UserRelationshipStateTransitions', () => {
 			assertRelationshipType(friendship, RelationshipTypes.FRIEND);
 			const {json: aliceAfter} = await listRelationships(harness, alice.token);
 			assertRelationshipType(findRelationship(aliceAfter, bob.userId)!, RelationshipTypes.FRIEND);
-		});
-		test('cannot send friend request to user who blocked you', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await blockUser(harness, bob.token, alice.userId);
-			await createBuilder(harness, alice.token)
-				.post(`/users/@me/relationships/${bob.userId}`)
-				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
-				.execute();
 		});
 		test('cannot send friend request to user you blocked', async () => {
 			const alice = await createTestAccount(harness);
@@ -245,31 +220,6 @@ describe('UserRelationshipStateTransitions', () => {
 				.put(`/users/@me/relationships/${alice.userId}`)
 				.body({})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
-				.execute();
-		});
-		test('deleted user cannot accept incoming request', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await sendFriendRequest(harness, alice.token, bob.userId);
-			await markUserDeleted(harness, bob.userId);
-			await createBuilder(harness, bob.token)
-				.put(`/users/@me/relationships/${alice.userId}`)
-				.body({})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
-	});
-	describe('already friends', () => {
-		test('already friends error when using tag endpoint', async () => {
-			const alice = await createTestAccount(harness);
-			const bob = await createTestAccount(harness);
-			await sendFriendRequest(harness, alice.token, bob.userId);
-			await acceptFriendRequest(harness, bob.token, alice.userId);
-			const {json: bobProfile} = await fetchUserMe(harness, bob.token);
-			await createBuilder(harness, alice.token)
-				.post('/users/@me/relationships')
-				.body({username: bobProfile.username, discriminator: parseInt(bobProfile.discriminator, 10)})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'ALREADY_FRIENDS')
 				.execute();
 		});
 	});

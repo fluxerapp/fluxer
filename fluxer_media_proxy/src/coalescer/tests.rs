@@ -10,7 +10,7 @@ fn coalescer() -> Arc<ByteCoalescer> {
         ByteBudget::new(1 << 20),
         8,
         64,
-        Arc::new(CoalescerMetrics::new()),
+        Arc::new(CoalescerMetrics::default()),
     ))
 }
 

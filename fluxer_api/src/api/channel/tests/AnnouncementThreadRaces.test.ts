@@ -9,13 +9,9 @@ import {MessageRepository} from '@app/api/channel/repositories/MessageRepository
 import {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {ChannelOperationsService} from '@app/api/channel/services/channel_data/ChannelOperationsService';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
@@ -42,7 +38,7 @@ describe('announcement thread races', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -50,12 +46,11 @@ describe('announcement thread races', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'news races');
 		const text = await createChannel(harness, owner.token, guild.id, 'general');

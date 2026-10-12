@@ -35,6 +35,7 @@ import type {GatewayCustomStatusPayload} from '@app/features/user/state/CustomSt
 import type {GatewayErrorCode} from '@fluxer/constants/src/GatewayConstants';
 import {GatewayCloseCodes, GatewayOpcodes} from '@fluxer/constants/src/GatewayConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import EventEmitter from 'eventemitter3';
 
 const GATEWAY_TIMEOUTS = {
@@ -151,10 +152,6 @@ export interface GatewayErrorData {
 	message: string;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function parseGatewayPayload(json: string): GatewayPayload {
 	const parsed: unknown = JSON.parse(json);
 	if (!isRecord(parsed) || typeof parsed.op !== 'number' || !Number.isFinite(parsed.op)) {
@@ -244,7 +241,6 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	private deferredEmitIdleId: number | null = null;
 	private criticalWorkScheduled = false;
 	private dispatchGeneration = 0;
-	private emittingDispatchReceipt: GatewayDispatchReceipt | null = null;
 	private consecutiveDispatchFailures = 0;
 	private readonly completedDispatchReceipts = new WeakSet<GatewayDispatchReceipt>();
 	private payloadDecompressor: GatewayCompression | null = null;
@@ -268,17 +264,8 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			(this.emit as (event: K, ...args: GatewaySocketEventArgs<K>) => boolean)(event, ...args);
 		});
 	}
-
 	private emitDispatchDeferred(delivery: GatewayDispatchDelivery): void {
-		this.enqueueDeferredEmit(delivery.retainedByteSize, delivery.type, () => {
-			const previousReceipt = this.emittingDispatchReceipt;
-			this.emittingDispatchReceipt = delivery.receipt;
-			try {
-				this.emit('dispatch', delivery);
-			} finally {
-				this.emittingDispatchReceipt = previousReceipt;
-			}
-		});
+		this.enqueueDeferredEmit(delivery.retainedByteSize, delivery.type, () => this.emit('dispatch', delivery));
 	}
 
 	private enqueueDeferredEmit(byteSize: number, dispatchType: string | null, run: () => void): void {
@@ -761,7 +748,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				try {
 					const compression: CompressionType = this.options.compression ?? 'zstd-stream';
 					if (compression !== 'none') {
-						this.payloadDecompressor = new GatewayCompression(compression, true);
+						this.payloadDecompressor = new GatewayCompression(compression);
 						void this.payloadDecompressor.warmup();
 					} else {
 						this.payloadDecompressor = null;
@@ -1002,14 +989,6 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 			retainedByteSize,
 			receipt: {sequence: payload.s ?? this.lastSequenceNumber, generation: this.dispatchGeneration},
 		});
-	}
-
-	currentDispatchReceipt(): GatewayDispatchReceipt {
-		const receipt = this.emittingDispatchReceipt;
-		if (receipt == null) {
-			throw new Error('Gateway dispatch receipt is unavailable outside a dispatch listener');
-		}
-		return receipt;
 	}
 
 	isDispatchActive(receipt: GatewayDispatchReceipt): boolean {

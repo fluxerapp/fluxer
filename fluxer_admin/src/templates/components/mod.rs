@@ -26,3 +26,5 @@ pub mod tooltip;
 pub mod user_display;
 pub mod user_profile_badges;
 pub mod voice;
+
+pub mod pagination;

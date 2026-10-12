@@ -11,7 +11,7 @@ import {GuildRoleController} from '@app/api/guild/controllers/GuildRoleControlle
 import {GuildStickerController} from '@app/api/guild/controllers/GuildStickerController';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 
-export function registerGuildControllers(app: HonoApp) {
+export function GuildController(app: HonoApp) {
 	GuildBaseController(app);
 	GuildMemberController(app);
 	GuildMemberSearchController(app);

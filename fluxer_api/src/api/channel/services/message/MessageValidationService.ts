@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {
 	assertAttachmentFileSizesWithinLimit,
@@ -10,17 +10,14 @@ import {contentModerationService} from '@app/api/infrastructure/ContentModeratio
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
-import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import {hasVisibleContent} from '@app/api/utils/StringUtils';
 import {
 	isMessageTypeDeletable,
 	MessageFlags,
 	MessageTypes,
 	Permissions,
 	SENDABLE_MESSAGE_FLAGS,
-	TEXT_BASED_CHANNEL_TYPES,
 } from '@fluxer/constants/src/ChannelConstants';
 import {
 	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
@@ -30,14 +27,12 @@ import {
 	MAX_MESSAGE_LENGTH_PREMIUM,
 	MAX_VOICE_MESSAGE_DURATION,
 } from '@fluxer/constants/src/LimitConstants';
-import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
-import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export class MessageValidationService {
@@ -45,12 +40,6 @@ export class MessageValidationService {
 		private cacheService: ICacheService,
 		private limitConfigService: LimitConfigService,
 	) {}
-
-	ensureTextChannel(channel: Channel): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type)) {
-			throw new CannotSendMessageToNonTextChannelError();
-		}
-	}
 
 	validateMessageContent(
 		data: MessageRequest | MessageUpdateRequest,
@@ -195,28 +184,6 @@ export class MessageValidationService {
 			attachments.map(({size}) => size),
 			maxFileSize,
 		);
-	}
-
-	async findExistingMessage({
-		userId,
-		nonce,
-		expectedChannelId,
-	}: {
-		userId: UserID;
-		nonce?: string;
-		expectedChannelId: ChannelID;
-	}): Promise<Message | null> {
-		if (!nonce) return null;
-		const existingNonce = await this.cacheService.get<{
-			channel_id: string;
-			message_id: string;
-		}>(`message-nonce:${userId}:${nonce}`);
-		if (!existingNonce) return null;
-		const cachedChannelId = createChannelID(BigInt(existingNonce.channel_id));
-		if (cachedChannelId !== expectedChannelId) {
-			throw new UnknownMessageError();
-		}
-		return null;
 	}
 
 	async cacheMessageNonce({

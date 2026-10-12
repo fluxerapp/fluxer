@@ -4,7 +4,6 @@ import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {threadSearchIndexEnqueueCappedTotal} from '@app/api/channel/threads/ThreadMetrics';
 import {
-	guildActive,
 	THREAD_FEATURE_CHANNEL_TYPES,
 	THREAD_PARENT_CHANNEL_TYPES,
 	type ThreadViewer,
@@ -156,7 +155,7 @@ export class GuildSearchService {
 				return channel && !channel.isThread() && !channel.isThreadOnly() && channelNeedsReindexing(channel.indexedAt);
 			})
 			.map((id) => id.toString());
-		if (channelsToIndex.length > SEARCH_INDEX_ENQUEUE_MAX && guildActive(guildId)) {
+		if (channelsToIndex.length > SEARCH_INDEX_ENQUEUE_MAX) {
 			channelsToIndex = channelsToIndex.slice(0, SEARCH_INDEX_ENQUEUE_MAX);
 			threadSearchIndexEnqueueCappedTotal.inc();
 		}

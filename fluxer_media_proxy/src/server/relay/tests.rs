@@ -5,7 +5,6 @@ use super::body::{
 };
 use crate::{
     config::Config,
-    secret::SecretBytes,
     server::{
         routes::relay::{relay_cors, relay_error, relay_put},
         state::AppState,
@@ -815,3 +814,5 @@ async fn relay_put_omits_the_etag_when_the_store_returns_none() {
         .unwrap();
     assert_eq!(body.as_ref(), stored.as_slice());
 }
+
+use fluxer_common::secret::SecretBytes;

@@ -70,6 +70,11 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import {hasValidRoomForVoiceCallContext} from '@app/features/voice/utils/VoiceCallContext';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {
+	DISCONNECTED_DESCRIPTOR,
+	ENTER_FULLSCREEN_DESCRIPTOR,
+	EXIT_FULLSCREEN_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -96,18 +101,7 @@ const RECONNECTING_DESCRIPTOR = msg({
 	comment:
 		'Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.',
 });
-const DISCONNECTED_DESCRIPTOR = msg({
-	message: 'Disconnected',
-	comment: 'Overlay status in the voice call view when not connected.',
-});
-const EXIT_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Exit fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).',
-});
-const ENTER_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Enter fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).',
-});
+
 const BACK_TO_VOICE_CHANNEL_DESCRIPTOR = msg({
 	message: 'Back to voice channel',
 	comment: 'Tooltip / aria label on the back button that returns from the call view to the voice channel view.',

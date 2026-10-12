@@ -12,11 +12,11 @@ import type {DeveloperOptionsState} from '@app/features/devtools/state/Developer
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import {useLingui} from '@lingui/react/macro';
@@ -27,7 +27,6 @@ import type React from 'react';
 interface DeveloperOptionCheckboxProps<K extends keyof DeveloperOptionsState> {
 	optionKey: K;
 	checked?: boolean;
-	checkedValue?: DeveloperOptionsState[K];
 	uncheckedValue?: DeveloperOptionsState[K];
 	onAfterChange?: (checked: boolean) => void;
 	children: React.ReactNode;
@@ -36,7 +35,6 @@ interface DeveloperOptionCheckboxProps<K extends keyof DeveloperOptionsState> {
 const DeveloperOptionCheckboxInner = <K extends keyof DeveloperOptionsState>({
 	optionKey,
 	checked,
-	checkedValue = true as DeveloperOptionsState[K],
 	uncheckedValue = false as DeveloperOptionsState[K],
 	onAfterChange,
 	children,
@@ -46,7 +44,7 @@ const DeveloperOptionCheckboxInner = <K extends keyof DeveloperOptionsState>({
 		<CheckboxItem
 			checked={currentChecked}
 			onCheckedChange={(nextChecked) => {
-				updateOption(optionKey, nextChecked ? checkedValue : uncheckedValue);
+				updateOption(optionKey, nextChecked ? (true as DeveloperOptionsState[K]) : uncheckedValue);
 				onAfterChange?.(nextChecked);
 			}}
 			data-flx="channel.channel-header-components.developer-tools-context-menu.developer-option-checkbox-inner.checkbox-item"

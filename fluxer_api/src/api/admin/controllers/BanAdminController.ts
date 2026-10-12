@@ -3,7 +3,7 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
-import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {requireAdminACL, requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
@@ -14,7 +14,6 @@ import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {
 	AdminBlocklistAvatarHashUpdateRequest,
 	AdminBlocklistBulkDeleteRequest,
@@ -188,10 +187,7 @@ const BLOCKLIST_ACLS_BY_VERB: Record<BlocklistVerb, Array<string>> = {
 };
 
 function requireBlocklistACL(adminAcls: Set<string>, listType: AdminBlocklistListType, verb: BlocklistVerb): void {
-	const requiredAcl = BLOCKLIST_TYPE_ACLS[listType][verb];
-	if (!adminAcls.has(requiredAcl) && !adminAcls.has(AdminACLs.WILDCARD)) {
-		throw new MissingACLError(requiredAcl);
-	}
+	requireGrantedAdminACLs(adminAcls, [BLOCKLIST_TYPE_ACLS[listType][verb]]);
 }
 
 function unsupportedForBlocklist(): never {

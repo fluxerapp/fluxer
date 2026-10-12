@@ -19,20 +19,8 @@ type BillingPaymentIntentStatus =
 	| 'requires_capture'
 	| 'canceled'
 	| 'succeeded';
-type BillingDisputeStatus =
-	| 'warning_needs_response'
-	| 'warning_under_review'
-	| 'warning_closed'
-	| 'needs_response'
-	| 'under_review'
-	| 'won'
-	| 'lost';
-type BillingCheckoutSessionStatus = 'open' | 'complete' | 'expired';
-export type BillingActionIntentStatus = 'pending' | 'sub_canceled' | 'refund_created' | 'complete' | 'failed';
 type BillingPaymentStatus = 'open' | 'paid' | 'canceled' | 'abandoned';
 type BillingChargeStatus = 'succeeded' | 'pending' | 'failed';
-export type BillingActionType = 'cancel_and_refund' | 'cancel_immediate' | 'refund_only';
-
 export interface BillingCustomerRow {
 	provider_id: string;
 	user_id: bigint | null;
@@ -84,40 +72,6 @@ export const BILLING_CUSTOMER_BY_USER_ID_COLUMNS = [
 	'provider_id',
 	'livemode',
 ] as const satisfies ReadonlyArray<keyof BillingCustomerByUserIdRow>;
-
-export interface BillingProductRow {
-	provider_id: string;
-	name: string | null;
-	description: string | null;
-	active: boolean | null;
-	livemode: boolean | null;
-	metadata: Map<string, string> | null;
-	statement_descriptor: string | null;
-	unit_label: string | null;
-	tax_code: string | null;
-	images: Array<string> | null;
-	stripe_created_at: Date | null;
-	stripe_updated_at: Date | null;
-	mirrored_at: Date | null;
-	version: bigint | null;
-}
-
-export const BILLING_PRODUCT_COLUMNS = [
-	'provider_id',
-	'name',
-	'description',
-	'active',
-	'livemode',
-	'metadata',
-	'statement_descriptor',
-	'unit_label',
-	'tax_code',
-	'images',
-	'stripe_created_at',
-	'stripe_updated_at',
-	'mirrored_at',
-	'version',
-] as const satisfies ReadonlyArray<keyof BillingProductRow>;
 
 export interface BillingPriceRow {
 	provider_id: string;
@@ -441,22 +395,6 @@ export const BILLING_INVOICE_BY_CUSTOMER_COLUMNS = [
 	'currency',
 ] as const satisfies ReadonlyArray<keyof BillingInvoiceByCustomerRow>;
 
-export interface BillingInvoiceBySubscriptionRow {
-	subscription_id: string;
-	stripe_created_at: Date;
-	provider_id: string;
-	status: BillingInvoiceStatus | null;
-	total: bigint | null;
-}
-
-export const BILLING_INVOICE_BY_SUBSCRIPTION_COLUMNS = [
-	'subscription_id',
-	'stripe_created_at',
-	'provider_id',
-	'status',
-	'total',
-] as const satisfies ReadonlyArray<keyof BillingInvoiceBySubscriptionRow>;
-
 export interface BillingPaymentIntentRow {
 	provider_id: string;
 	customer_id: string | null;
@@ -514,22 +452,6 @@ export const BILLING_PAYMENT_INTENT_COLUMNS = [
 	'stripe_updated_at',
 	'mirrored_at',
 ] as const satisfies ReadonlyArray<keyof BillingPaymentIntentRow>;
-
-export interface BillingPaymentIntentByCustomerRow {
-	customer_id: string;
-	stripe_created_at: Date;
-	provider_id: string;
-	status: BillingPaymentIntentStatus | null;
-	amount: bigint | null;
-}
-
-export const BILLING_PAYMENT_INTENT_BY_CUSTOMER_COLUMNS = [
-	'customer_id',
-	'stripe_created_at',
-	'provider_id',
-	'status',
-	'amount',
-] as const satisfies ReadonlyArray<keyof BillingPaymentIntentByCustomerRow>;
 
 export interface BillingChargeRow {
 	provider_id: string;
@@ -602,24 +524,6 @@ export const BILLING_CHARGE_COLUMNS = [
 	'stripe_updated_at',
 	'mirrored_at',
 ] as const satisfies ReadonlyArray<keyof BillingChargeRow>;
-
-export interface BillingChargeByCustomerRow {
-	customer_id: string;
-	stripe_created_at: Date;
-	provider_id: string;
-	status: BillingChargeStatus | null;
-	amount: bigint | null;
-	currency: string | null;
-}
-
-export const BILLING_CHARGE_BY_CUSTOMER_COLUMNS = [
-	'customer_id',
-	'stripe_created_at',
-	'provider_id',
-	'status',
-	'amount',
-	'currency',
-] as const satisfies ReadonlyArray<keyof BillingChargeByCustomerRow>;
 
 export interface BillingPaymentRow {
 	provider_id: string;
@@ -766,165 +670,3 @@ export const BILLING_REFUND_BY_INVOICE_COLUMNS = [
 	'status',
 	'amount',
 ] as const satisfies ReadonlyArray<keyof BillingRefundByInvoiceRow>;
-
-export interface BillingCheckoutSessionRow {
-	provider_id: string;
-	customer_id: string | null;
-	user_id: bigint | null;
-	mode: string | null;
-	status: BillingCheckoutSessionStatus | null;
-	payment_status: string | null;
-	subscription_id: string | null;
-	payment_intent_id: string | null;
-	setup_intent_id: string | null;
-	invoice_id: string | null;
-	success_url: string | null;
-	cancel_url: string | null;
-	customer_email: string | null;
-	amount_subtotal: bigint | null;
-	amount_total: bigint | null;
-	currency: string | null;
-	expires_at: Date | null;
-	completed_at: Date | null;
-	livemode: boolean | null;
-	client_reference_id: string | null;
-	metadata: Map<string, string> | null;
-	stripe_created_at: Date | null;
-	stripe_updated_at: Date | null;
-	mirrored_at: Date | null;
-}
-
-export const BILLING_CHECKOUT_SESSION_COLUMNS = [
-	'provider_id',
-	'customer_id',
-	'user_id',
-	'mode',
-	'status',
-	'payment_status',
-	'subscription_id',
-	'payment_intent_id',
-	'setup_intent_id',
-	'invoice_id',
-	'success_url',
-	'cancel_url',
-	'customer_email',
-	'amount_subtotal',
-	'amount_total',
-	'currency',
-	'expires_at',
-	'completed_at',
-	'livemode',
-	'client_reference_id',
-	'metadata',
-	'stripe_created_at',
-	'stripe_updated_at',
-	'mirrored_at',
-] as const satisfies ReadonlyArray<keyof BillingCheckoutSessionRow>;
-
-export interface BillingCheckoutSessionByCustomerRow {
-	customer_id: string;
-	stripe_created_at: Date;
-	provider_id: string;
-	status: BillingCheckoutSessionStatus | null;
-	mode: string | null;
-}
-
-export const BILLING_CHECKOUT_SESSION_BY_CUSTOMER_COLUMNS = [
-	'customer_id',
-	'stripe_created_at',
-	'provider_id',
-	'status',
-	'mode',
-] as const satisfies ReadonlyArray<keyof BillingCheckoutSessionByCustomerRow>;
-
-export interface BillingDisputeRow {
-	provider_id: string;
-	charge_id: string | null;
-	payment_intent_id: string | null;
-	customer_id: string | null;
-	user_id: bigint | null;
-	status: BillingDisputeStatus | null;
-	reason: string | null;
-	amount: bigint | null;
-	currency: string | null;
-	is_charge_refundable: boolean | null;
-	evidence_due_by: Date | null;
-	evidence_submission_count: number | null;
-	livemode: boolean | null;
-	metadata: Map<string, string> | null;
-	stripe_created_at: Date | null;
-	stripe_updated_at: Date | null;
-	mirrored_at: Date | null;
-}
-
-export const BILLING_DISPUTE_COLUMNS = [
-	'provider_id',
-	'charge_id',
-	'payment_intent_id',
-	'customer_id',
-	'user_id',
-	'status',
-	'reason',
-	'amount',
-	'currency',
-	'is_charge_refundable',
-	'evidence_due_by',
-	'evidence_submission_count',
-	'livemode',
-	'metadata',
-	'stripe_created_at',
-	'stripe_updated_at',
-	'mirrored_at',
-] as const satisfies ReadonlyArray<keyof BillingDisputeRow>;
-
-export interface BillingDisputeByChargeRow {
-	charge_id: string;
-	provider_id: string;
-	status: BillingDisputeStatus | null;
-	amount: bigint | null;
-}
-
-export const BILLING_DISPUTE_BY_CHARGE_COLUMNS = [
-	'charge_id',
-	'provider_id',
-	'status',
-	'amount',
-] as const satisfies ReadonlyArray<keyof BillingDisputeByChargeRow>;
-
-export interface BillingActionIntentRow {
-	intent_id: bigint;
-	user_id: bigint | null;
-	actor_admin_id: bigint | null;
-	action_type: BillingActionType | null;
-	subscription_id: string | null;
-	invoice_id: string | null;
-	payment_intent_id: string | null;
-	refund_amount: bigint | null;
-	refund_reason: string | null;
-	status: BillingActionIntentStatus | null;
-	error_message: string | null;
-	started_at: Date | null;
-	sub_canceled_at: Date | null;
-	refund_created_at: Date | null;
-	completed_at: Date | null;
-	refund_id: string | null;
-}
-
-export const BILLING_ACTION_INTENT_COLUMNS = [
-	'intent_id',
-	'user_id',
-	'actor_admin_id',
-	'action_type',
-	'subscription_id',
-	'invoice_id',
-	'payment_intent_id',
-	'refund_amount',
-	'refund_reason',
-	'status',
-	'error_message',
-	'started_at',
-	'sub_canceled_at',
-	'refund_created_at',
-	'completed_at',
-	'refund_id',
-] as const satisfies ReadonlyArray<keyof BillingActionIntentRow>;

@@ -5,20 +5,11 @@ import Guilds from '@app/features/guild/state/Guilds';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileTypeSelector.module.css';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {msg} from '@lingui/core/macro';
+import {GLOBAL_PROFILE_DESCRIPTOR, PROFILE_TYPE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
-
-const GLOBAL_PROFILE_DESCRIPTOR = msg({
-	message: 'Global profile',
-	comment: 'Short label in the profile type selector. Keep it concise.',
-});
-const PROFILE_TYPE_DESCRIPTOR = msg({
-	message: 'Profile type',
-	comment: 'Short label in the profile type selector. Keep it concise.',
-});
 
 interface ProfileTypeSelectorProps {
 	selectedGuildId: string | null;

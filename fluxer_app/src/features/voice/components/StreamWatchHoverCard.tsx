@@ -7,6 +7,10 @@ import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/StreamWatchHoverCard.module.css';
+import {
+	ADD_STREAM_DESCRIPTOR,
+	WATCHING_STREAM_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MonitorPlayIcon, PlusIcon} from '@phosphor-icons/react';
@@ -14,10 +18,6 @@ import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback} from 'react';
 
-const WATCHING_STREAM_DESCRIPTOR = msg({
-	message: 'Watching stream',
-	comment: 'Status label on the screen-share hover card when the local user is already watching the stream.',
-});
 const STREAM_PREVIEW_DESCRIPTOR = msg({
 	message: 'Stream preview',
 	comment: 'Aria label for the small thumbnail preview on the screen-share hover card.',
@@ -26,10 +26,7 @@ const NO_PREVIEW_YET_DESCRIPTOR = msg({
 	message: 'No preview yet',
 	comment: 'Placeholder text on the screen-share hover card when no thumbnail has been received yet.',
 });
-const ADD_STREAM_DESCRIPTOR = msg({
-	message: 'Add stream',
-	comment: 'Action button on the screen-share hover card. Starts a new local screen share.',
-});
+
 const DOUBLE_CLICK_A_STREAMING_USER_IN_THE_PARTICIPANT_DESCRIPTOR = msg({
 	message: 'Double-click someone to watch their stream.',
 	comment: 'Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.',

@@ -8,7 +8,6 @@ import {
 	type GuildID,
 	type UserID,
 } from '@app/api/BrandedTypes';
-import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import type {ReadStateMarker} from '@app/api/read_state/ReadStateRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
@@ -21,7 +20,7 @@ const MENTION_SETTINGS_FETCH_CONCURRENCY = 16;
 const THREAD_READ_STATE_FLAGS = ReadStateFlags.IS_GUILD_CHANNEL | ReadStateFlags.IS_THREAD;
 
 function threadReadStateMarker(guildId: GuildID): ReadStateMarker | null {
-	return guildActive(guildId) ? {flags: THREAD_READ_STATE_FLAGS, guildId} : null;
+	return {flags: THREAD_READ_STATE_FLAGS, guildId};
 }
 const MentionChunkEntrySchema = z.object({
 	userId: z.string(),

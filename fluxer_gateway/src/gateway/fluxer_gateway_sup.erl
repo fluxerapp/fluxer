@@ -1,15 +1,15 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(fluxer_gateway_sup).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 -behaviour(supervisor).
 -export([
     start_link/0, init/1, cluster_children/0, role_enabled/1, role_enabled/2, current_role/0
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec start_link() -> {ok, pid()} | {error, term()}.
 start_link() ->
@@ -36,7 +36,6 @@ common_children() ->
         child_spec(guild_ets_owner, guild_ets_owner),
         child_spec(gateway_nats_rpc, gateway_nats_rpc),
         child_spec(gateway_nats_pool, gateway_nats_pool),
-        child_spec(gateway_event_pause, gateway_event_pause),
         child_spec(gateway_concurrency, gateway_concurrency),
         child_spec(gateway_rollout_config, gateway_rollout_config),
         child_spec(channel_threads_flip, channel_threads_flip),

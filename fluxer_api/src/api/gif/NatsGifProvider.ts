@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import type {GifProviderMeta, IGifProvider} from '@app/api/gif/IGifProvider';
 import {Logger} from '@app/api/Logger';
 import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord, parseJsonUnknown} from '@app/api/utils/JsonBoundaryUtils';
@@ -137,7 +136,13 @@ function readResolved(value: unknown): GifResponse | null {
 	return parsed.data;
 }
 
-class NatsGifProvider implements IGifProvider {
+export interface GifProviderMeta {
+	readonly name: string;
+	readonly displayName: string;
+	readonly attributionRequired: boolean;
+}
+
+export class NatsGifProvider {
 	readonly meta = GIF_PROVIDER_META;
 
 	constructor(
@@ -154,6 +159,11 @@ class NatsGifProvider implements IGifProvider {
 			1,
 			MAX_REQUEST_TIMEOUT_MS,
 		);
+	}
+
+	async requireAvailable(): Promise<NatsGifProvider> {
+		if (!(await this.isAvailable())) throw new FeatureTemporarilyDisabledError();
+		return this;
 	}
 
 	async isAvailable(): Promise<boolean> {

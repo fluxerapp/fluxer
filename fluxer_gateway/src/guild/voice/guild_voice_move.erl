@@ -1,14 +1,14 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_voice_move).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([move_member/2]).
 -export([send_voice_server_updates_for_move/4]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     guild_state/0,

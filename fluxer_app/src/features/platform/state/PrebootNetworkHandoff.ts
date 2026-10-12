@@ -2,6 +2,7 @@
 
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {PREBOOT_NETWORK_HINT_STORAGE_KEY, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
+import {waitForAbortablePromise} from '@app/features/platform/utils/AbortablePromise';
 
 export const PREBOOT_NETWORK_HINT_VERSION = 1;
 const PREBOOT_HANDOFF_MAX_AGE_MS = 60_000;
@@ -71,31 +72,12 @@ function discardGateway(handoff: PrebootNetworkHandoff): void {
 	} catch {}
 }
 
-function abortable<T>(promise: Promise<T>, signal: AbortSignal | null | undefined): Promise<T> {
-	if (signal == null) return promise;
-	if (signal.aborted) return Promise.reject(signal.reason);
-	return new Promise<T>((resolve, reject) => {
-		const onAbort = (): void => reject(signal.reason);
-		signal.addEventListener('abort', onAbort, {once: true});
-		promise.then(
-			(value) => {
-				signal.removeEventListener('abort', onAbort);
-				resolve(value);
-			},
-			(error: unknown) => {
-				signal.removeEventListener('abort', onAbort);
-				reject(error);
-			},
-		);
-	});
-}
-
 export function takePrebootDiscoveryResponse(url: string, signal?: AbortSignal | null): Promise<Response> | null {
 	const handoff = readHandoff();
 	const discovery = handoff?.discovery;
 	if (handoff == null || discovery == null || discovery.url !== url) return null;
 	handoff.discovery = null;
-	return abortable(discovery.response, signal);
+	return signal == null ? discovery.response : waitForAbortablePromise(discovery.response, signal);
 }
 
 export function takePrebootGatewaySocket(url: string): PrebootGatewaySocket | null {

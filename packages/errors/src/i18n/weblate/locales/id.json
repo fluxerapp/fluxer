@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Terlalu banyak file. Maksimal {maxFiles} {maxFiles, plural, other {file}} diizinkan.",
 	"attachments_and_uploads.unresolved_attachment_url": "Terdeteksi URL `attachment://` yang belum diselesaikan. Ini seharusnya sudah diselesaikan sebelum pemrosesan sematan.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Lampiran {filename} yang diunggah tidak ditemukan.",
-	"auth_and_oauth.application_not_owned": "Kamu tidak memiliki aplikasi ini.",
 	"auth_and_oauth.bot_already_in_guild": "Bot ini sudah ada di komunitas.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Pengguna bot tidak bisa membuat sesi autentikasi.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Pengguna bot tidak bisa menggunakan endpoint autentikasi.",

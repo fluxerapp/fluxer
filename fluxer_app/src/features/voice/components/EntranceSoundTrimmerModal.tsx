@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {
+	CANCEL_DESCRIPTOR,
+	PAUSE_DESCRIPTOR as PAUSE_SELECTION_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -9,6 +13,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {AudioWaveform, computePeaks} from '@app/features/voice/components/AudioWaveform';
 import styles from '@app/features/voice/components/EntranceSoundTrimmerModal.module.css';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {encodeAudioBufferSliceToWav} from '@app/features/voice/utils/AudioWavEncode';
 import {
 	ENTRANCE_SOUND_MAX_BYTES,
@@ -30,10 +35,7 @@ const TRIMMER_HELP_DESCRIPTOR = msg({
 	message: 'Drag the handles to choose up to 5.2 seconds of audio. The selected region is what gets uploaded.',
 	comment: 'Help text in the entrance sound trimmer modal explaining how the selection works.',
 });
-const CANCEL_DESCRIPTOR = msg({
-	message: 'Cancel',
-	comment: 'Cancel button label in the entrance sound trimmer modal.',
-});
+
 const USE_SELECTION_DESCRIPTOR = msg({
 	message: 'Use selection',
 	comment: 'Primary action button in the trimmer modal: accept the current selection and upload it.',
@@ -42,10 +44,7 @@ const PLAY_SELECTION_DESCRIPTOR = msg({
 	message: 'Play selection',
 	comment: 'Button label in the trimmer modal. Plays the currently selected portion.',
 });
-const PAUSE_SELECTION_DESCRIPTOR = msg({
-	message: 'Pause',
-	comment: 'Button label in the trimmer modal that pauses preview playback.',
-});
+
 const SELECTION_TOO_SHORT_DESCRIPTOR = msg({
 	message: 'Selection must be at least {seconds, plural, one {# second} other {# seconds}}.',
 	comment: 'Error displayed when the trimmed entrance sound selection is below the minimum duration.',
@@ -99,11 +98,7 @@ const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps> = obse
 		let decodeContext: AudioContext | null = null;
 		(async () => {
 			try {
-				const Ctor =
-					typeof window === 'undefined'
-						? null
-						: window.AudioContext ||
-							(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+				const Ctor = resolveAudioContextConstructor();
 				if (!Ctor) {
 					setDecodeError(i18n._(COULD_NOT_DECODE_DESCRIPTOR));
 					return;

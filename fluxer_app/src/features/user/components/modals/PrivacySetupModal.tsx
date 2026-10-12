@@ -13,6 +13,10 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/PrivacySetupModal.module.css';
 import {PRIVACY_SETUP_VERSION} from '@app/features/user/constants/PrivacySetupConstants';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	PRIVACY_SETUP_STATE_FRIENDS_DESCRIPTOR as PRIVACY_SETUP_FRIENDS_DESCRIPTOR,
+	PRIVACY_SETUP_STATE_FRIENDS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -53,11 +57,7 @@ const PRIVACY_SETUP_STATE_OPEN_DESCRIPTOR = msg({
 	message: 'Can message you',
 	comment: 'Shown next to a community in the privacy setup modal. Its members can send the user direct messages.',
 });
-const PRIVACY_SETUP_STATE_FRIENDS_DESCRIPTOR = msg({
-	message: 'Friends only',
-	comment:
-		'Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.',
-});
+
 const PRIVACY_SETUP_OPEN_DESCRIPTOR = msg({
 	message: 'Anyone in my communities',
 	comment: 'Privacy setup option. People who share a community with the user can send them direct messages.',
@@ -66,10 +66,7 @@ const PRIVACY_SETUP_OPEN_DESC_DESCRIPTOR = msg({
 	message: 'People who share a community with you can message you directly.',
 	comment: 'Description under the "Anyone in my communities" privacy setup option.',
 });
-const PRIVACY_SETUP_FRIENDS_DESCRIPTOR = msg({
-	message: 'Friends only',
-	comment: 'Privacy setup option. Only friends can send the user direct messages.',
-});
+
 const PRIVACY_SETUP_FRIENDS_DESC_DESCRIPTOR = msg({
 	message: 'People need to be your friend before they can message you. They can still send you a friend request.',
 	comment: 'Description under the "Friends only" privacy setup option.',
@@ -123,7 +120,7 @@ function isRestricted(restricted: ReadonlySet<string>, guild: Guild): boolean {
 
 export const PrivacySetupModal = observer(() => {
 	const {i18n} = useLingui();
-	const currentDefaultRestricted = UserSettings.getDefaultGuildsRestricted();
+	const currentDefaultRestricted = UserSettings.defaultGuildsRestricted;
 	const currentRestrictedGuilds = UserSettings.restrictedGuilds;
 	const currentChoice: CommunityDirectMessages = currentDefaultRestricted ? 'friends' : 'open';
 	const [choice, setChoice] = useState<CommunityDirectMessages>(currentChoice);

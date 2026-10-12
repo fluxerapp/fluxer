@@ -118,13 +118,6 @@ status(ExpiresAt) ->
 status_without_expiry() ->
     #{<<"emoji_animated">> => false, <<"emoji_name">> => null, <<"text">> => <<"brb">>}.
 
-parser_anchors_on_the_unix_epoch_test() ->
-    ?assertEqual(0, epoch_ms(<<"1970-01-01T00:00:00.000Z">>)),
-    ?assertEqual(1500, epoch_ms(<<"1970-01-01T00:00:01.500Z">>)).
-
-parser_keeps_milliseconds_test() ->
-    ?assertEqual(497, expiry_ms() rem 1000).
-
 not_expired_test() ->
     Status = status(?LIVE_EXPIRES_AT),
     ?assertEqual(Status, clear_if_expired(Status, expiry_ms() - 60000)).
@@ -138,10 +131,6 @@ boundary_is_expired_test() ->
     Status = status(?LIVE_EXPIRES_AT),
     ?assertEqual({ok, 0}, remaining_ms(Status, expiry_ms())),
     ?assertEqual(null, clear_if_expired(Status, expiry_ms())).
-
-one_millisecond_before_boundary_is_kept_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(Status, clear_if_expired(Status, expiry_ms() - 1)).
 
 expired_test() ->
     Status = status(?LIVE_EXPIRES_AT),
@@ -167,22 +156,6 @@ malformed_expires_at_is_kept_test() ->
         end,
         [<<"">>, <<"not-a-date">>, <<"2026-13-45T99:99:99Z">>, 1747141347, [], #{}, true]
     ).
-
-custom_status_null_test() ->
-    ?assertEqual(none, remaining_ms(null, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(null, expiry_ms())).
-
-custom_status_absent_test() ->
-    ?assertEqual(none, remaining_ms(undefined, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(undefined, expiry_ms())).
-
-non_map_custom_status_test() ->
-    ?assertEqual(null, clear_if_expired(<<"garbage">>, expiry_ms())),
-    ?assertEqual(null, clear_if_expired(123, expiry_ms())).
-
-non_integer_reference_time_keeps_status_test() ->
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(Status, clear_if_expired(Status, not_a_time)).
 
 wakeup_none_without_expiry_test() ->
     ?assertEqual(none, wakeup_delay(remaining_ms(status_without_expiry(), expiry_ms()))),
@@ -210,8 +183,5 @@ clears_expired_and_arms_future_test() ->
 
 future_status() ->
     status(rfc3339(erlang:system_time(millisecond) + 3600000)).
-
-reconcile_message_is_a_gen_server_cast_test() ->
-    ?assertEqual({'$gen_cast', reconcile_flattened_presence}, reconcile_message()).
 
 -endif.

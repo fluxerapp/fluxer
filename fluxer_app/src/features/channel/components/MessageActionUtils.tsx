@@ -295,13 +295,6 @@ export function getMessagePermissions(message: Message, sourceChannel?: Channel 
 export function useMessagePermissions(message: Message, sourceChannel?: Channel | null): MessagePermissions | null {
 	const context = useMaybeMessageViewContext();
 	const channel = sourceChannel ?? context?.channel;
-	if (context?.previewPermissions) {
-		return {
-			channel: channel ?? context.channel,
-			canCreateThread: false,
-			...context.previewPermissions,
-		};
-	}
 	if (channel) {
 		return getMessagePermissionsForChannel(message, channel);
 	}

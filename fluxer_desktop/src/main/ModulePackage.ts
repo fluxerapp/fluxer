@@ -235,7 +235,7 @@ function assertSafeModuleRelativePath(relative: string): void {
 	}
 }
 
-function isPathInsideRoot(root: string, candidate: string): boolean {
+export function isPathInsideRoot(root: string, candidate: string): boolean {
 	const relative = path.relative(root, candidate);
 	return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
 }

@@ -16,7 +16,7 @@ import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGif
 import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -106,12 +106,7 @@ export class StripeDisputeWebhookHandler {
 				deletion_audit_log_reason: null,
 				first_refund_at: user.firstRefundAt || new Date(),
 			});
-			await clearPendingDeletion({
-				userId: payment.userId,
-				pendingDeletionAt: user.pendingDeletionAt,
-				userRepository: this.userRepository,
-				deletionQueue: this.kvDeletionQueue,
-			});
+			await clearPendingDeletion({userId: payment.userId, deletionQueue: this.kvDeletionQueue});
 			await this.userCacheService.setUserPartialResponseFromUser(updatedUser);
 			if (updatedUser.email) {
 				await this.emailService.sendAccountDeletionCancelledEmail(
@@ -268,7 +263,7 @@ export class StripeDisputeWebhookHandler {
 		for (const claimKey of claimedKeys) {
 			await getBillingRepository().webhookEvents.markProcessed(claimKey);
 		}
-		await this.dispatchUser(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 		Logger.debug(
 			{userId: user.id, chargeId: charge.id, paymentIntentId, countedRefundIds},
 			isFirstRefund
@@ -340,14 +335,6 @@ export class StripeDisputeWebhookHandler {
 			paymentIntentId: giftCode.stripePaymentIntentId,
 			customerId: null,
 			fraudType: null,
-		});
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
 		});
 	}
 }

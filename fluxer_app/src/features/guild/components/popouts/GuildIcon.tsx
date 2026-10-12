@@ -3,6 +3,7 @@
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/guild/components/popouts/GuildIcon.module.css';
+import * as StringUtils from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	getGuildIconDisplayInitials,
 	getGuildInitialsFitStyle,
@@ -12,7 +13,6 @@ import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/use
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as StringUtils from '@app/lib/strings';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';

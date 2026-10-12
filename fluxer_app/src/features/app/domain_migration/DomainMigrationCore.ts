@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import type {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 
@@ -600,10 +601,6 @@ export interface DomainMigrationPayload {
 	theme_library?: DomainMigrationThemeLibrary;
 	media_devices?: Array<DomainMigrationMediaDevice>;
 	notification_permission: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {

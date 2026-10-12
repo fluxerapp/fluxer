@@ -147,6 +147,7 @@ import {
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {UNKNOWN_USER_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {VOICE_VOLUME_MAX_SLIDER_VOLUME} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {DEFAULT_ACCENT_COLOR} from '@fluxer/constants/src/AppConstants';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -169,10 +170,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 
-const UNKNOWN_USER_DESCRIPTOR = msg({
-	message: 'Unknown user',
-	comment: 'Fallback label for a voice participant tile when no user or participant name is available.',
-});
 const COLLAPSE_DEVICES_DESCRIPTOR = msg({
 	message: 'Collapse devices',
 	comment: 'Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.',
@@ -787,7 +784,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 			VoiceCallLayoutCommands.setPinnedParticipant(identity, asPinnableVoiceTrackSource(trackRef.source));
 			onClick?.(identity);
 		}
-		VoiceCallLayoutCommands.markUserOverride();
 	}, [identity, isInsideTilePopout, onClick, pinnedParticipantSource, trackRef.source]);
 	const handleTileKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {

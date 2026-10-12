@@ -25,8 +25,8 @@ vi.mock('@app/features/platform/state/AuthSession', () => ({
 	},
 }));
 
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
-	default: {isReady: false, isConnected: false, connectionEpoch: 1},
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
+	default: {foregroundConnection: {isReady: false, isConnected: false, connectionEpoch: 1}},
 }));
 
 vi.mock('@app/features/navigation/state/SelectedChannel', () => ({
@@ -51,7 +51,6 @@ const {default: Drafts} = await import('@app/features/messaging/state/MessagingD
 const {default: MessageEditMobile} = await import('@app/features/messaging/state/MessageEditMobile');
 const {default: MessageFocus} = await import('@app/features/messaging/state/MessageFocus');
 const {default: MessageReply} = await import('@app/features/messaging/state/MessageReply');
-const {default: TextareaSelection} = await import('@app/features/messaging/state/TextareaSelection');
 const {CloudUpload} = await import('@app/features/messaging/upload/CloudUpload');
 const {default: KeyboardMode} = await import('@app/features/ui/state/KeyboardMode');
 
@@ -137,7 +136,6 @@ describe('composer state across an account transition', () => {
 		ChannelSearch.setActiveSearch(CHANNEL_ID, 'query typed by account A', []);
 		ChannelSticker.pendingStickers.set(CHANNEL_ID, {id: '1'} as never);
 		MessageReply.replyingMessageIds[CHANNEL_ID] = {messageId: MESSAGE_ID, mentioning: true, snapshot: {} as never};
-		TextareaSelection.setChannelSelection(CHANNEL_ID, {anchor: 1, focus: 1} as never);
 		await CloudUpload.addFiles(CHANNEL_ID, [new File(['attachment'], 'from-account-a.txt', {type: 'text/plain'})]);
 		expect(CloudUpload.getTextareaAttachments(CHANNEL_ID)).toHaveLength(1);
 		KeyboardMode.enterKeyboardMode(false);
@@ -153,7 +151,6 @@ describe('composer state across an account transition', () => {
 		expect(ChannelSearch.getContext(CHANNEL_ID).isSearchActive).toBe(false);
 		expect(ChannelSticker.getPendingSticker(CHANNEL_ID)).toBeNull();
 		expect(MessageReply.getReplyingMessage(CHANNEL_ID)).toBeNull();
-		expect(TextareaSelection.getChannelSelection(CHANNEL_ID)).toBeNull();
 		expect(CloudUpload.getTextareaAttachments(CHANNEL_ID)).toHaveLength(0);
 		expect(MessageFocus.focusedMessageId).toBeNull();
 		expect(MessageFocus.focusedChannelId).toBeNull();

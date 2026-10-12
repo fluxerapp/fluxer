@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -95,7 +95,7 @@ class MemberPresenceSubscription {
 	}
 
 	clearAll(): void {
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		const guildIds = Array.from(this.subscriptions.keys());
 		const previousActive = this.activeGuildId;
 		if (socket) {
@@ -195,7 +195,7 @@ class MemberPresenceSubscription {
 	}
 
 	private syncToGatewayImmediate(guildId: string): void {
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		if (!socket) {
 			return;
 		}

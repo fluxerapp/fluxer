@@ -14,32 +14,12 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
 napi-derive = "3.6.7"
-fluxer_encoder_ring = {path = "../encoder-ring"}
-parking_lot = "0.12"
-
-[target.'cfg(target_os = "macos")'.dependencies.fluxer_screen_frame_bus]
-path = "../screen-frame-bus"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2.189"
 objc2 = "0.6"
-objc2-foundation = {version = "0.3", features = ["NSString", "NSArray", "NSDictionary", "NSError", "NSValue", "NSBundle", "NSProcessInfo"]}
-objc2-screen-capture-kit = {version = "0.3", features = ["SCStream", "SCShareableContent", "objc2-core-graphics", "objc2-core-media", "objc2-core-foundation", "block2", "dispatch2", "libc"]}
-objc2-core-media = {version = "0.3", features = ["CMSampleBuffer", "CMBlockBuffer", "CMFormatDescription", "CMTime", "objc2-core-audio-types"]}
-objc2-core-audio-types = {version = "0.3", features = ["CoreAudioBaseTypes", "objc2"]}
-objc2-core-video = {version = "0.3", features = ["CVPixelBuffer", "CVPixelBufferIOSurface", "CVImageBuffer", "CVBuffer", "CVPixelFormatDescription", "CVReturn", "CVBase", "objc2-io-surface"]}
-objc2-io-surface = {version = "0.3", features = ["IOSurfaceRef", "objc2-core-foundation"]}
-objc2-core-foundation = {version = "0.3", features = ["CFArray", "CFDictionary", "CFNumber", "CFString", "CFBase"]}
-objc2-core-graphics = {version = "0.3.2", default-features = false, features = ["std", "CGWindow"]}
+objc2-foundation = {version = "0.3", features = ["NSError"]}
+objc2-screen-capture-kit = {version = "0.3", features = ["SCShareableContent", "block2"]}
 block2 = "0.6"
-dispatch2 = "0.3"
 
 [build-dependencies]
 napi-build = "2.4.3"
-
-[dev-dependencies]
-criterion = {version = "0.8", default-features = false, features = ["cargo_bench_support"]}
-
-[[bench]]
-name = "audio_pool"
-harness = false

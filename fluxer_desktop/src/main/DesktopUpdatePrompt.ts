@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	checkDesktopUpdateNow,
@@ -34,10 +35,6 @@ async function ask(options: MessageBoxOptions): Promise<number> {
 	const usable = parent != null && !parent.isDestroyed() && parent.isVisible() ? parent : null;
 	const result = usable == null ? await dialog.showMessageBox(options) : await dialog.showMessageBox(usable, options);
 	return result.response;
-}
-
-function describeError(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 async function runUpdateCheck(): Promise<void> {

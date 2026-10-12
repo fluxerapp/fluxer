@@ -3,7 +3,20 @@
 const {existsSync} = require('node:fs');
 const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
-const {nativeFileName} = require('./pure.cjs');
+function nativeFileName(platform = process.platform, arch = process.arch) {
+	switch (platform) {
+		case 'darwin':
+			if (arch === 'x64' || arch === 'arm64') return `app-store.darwin-${arch}.node`;
+			break;
+		case 'win32':
+			if (arch === 'x64' || arch === 'arm64') return `app-store.win32-${arch}-msvc.node`;
+			break;
+		case 'linux':
+			if (arch === 'x64' || arch === 'arm64') return `app-store.linux-${arch}-gnu.node`;
+			break;
+	}
+	throw new Error(`Unsupported app-store target: ${platform}/${arch}`);
+}
 const MODULE_NAME = '@fluxer/app-store';
 const SKIP_NATIVE_PROBE_ENV = 'FLUXER_APP_STORE_SKIP_NATIVE_PROBE';
 
@@ -45,7 +58,4 @@ try {
 module.exports = {
 	AppStore: binding ? binding.AppStore : null,
 	loadError,
-	_private: {
-		nativeFileName,
-	},
 };

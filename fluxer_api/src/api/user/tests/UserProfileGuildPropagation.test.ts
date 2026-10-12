@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {createTestGuild, getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {updateAvatar} from '@app/api/user/tests/UserTestUtils';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
@@ -59,5 +62,26 @@ describe('User Profile Guild Propagation', () => {
 		await updateAvatar(harness, account.token, null);
 
 		expect(memberUpdatesFor(dispatchGuild, guild.id)).toHaveLength(0);
+	});
+
+	it('still updates guild members after the committed profile cannot publish its private update', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createTestGuild(harness, account.token);
+		const dispatchGuild = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
+		vi.spyOn(NoopGatewayService.prototype, 'dispatchPresence').mockImplementation(async ({event}) => {
+			if (event === 'USER_UPDATE') throw new Error('gateway publish failed');
+		});
+
+		await createBuilder(harness, account.token)
+			.patch('/users/@me')
+			.body({avatar: getPngDataUrl()})
+			.expect(500)
+			.execute();
+
+		const stored = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
+		expect(stored?.avatarHash).toBeTruthy();
+		const updates = memberUpdatesFor(dispatchGuild, guild.id);
+		expect(updates).toHaveLength(1);
+		expect(updates[0]!.data.user.avatar).toBe(stored?.avatarHash);
 	});
 });

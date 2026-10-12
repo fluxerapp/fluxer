@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
-import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createUserID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createChannelID,
+	createUserID,
+	createWebhookID,
+	createWebhookToken,
+	type GuildID,
+	type MessageID,
+	type UserID,
+	type WebhookID,
+	type WebhookToken,
+} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ThreadService} from '@app/api/channel/services/thread/ThreadService';
-import {webhookThreadIdRefusedTotal} from '@app/api/channel/threads/ThreadMetrics';
 import {assertCrosspostContentRules} from '@app/api/channel/utils/CrosspostContentRules';
 import {
 	type ContentWarningChannelLike,
 	channelToContentWarningView,
 	guildResponseToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
-import {
-	everEnabled,
-	guildActive,
-	isTainted,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
@@ -185,7 +188,8 @@ export class WebhookService {
 	) {}
 
 	async getWebhook(params: WebhookUserParams): Promise<Webhook> {
-		return this.getAuthenticatedWebhook(params);
+		const {webhook} = await this.getAuthenticatedWebhook(params);
+		return webhook;
 	}
 
 	async getWebhookByToken(params: WebhookTokenParams): Promise<Webhook> {
@@ -296,12 +300,7 @@ export class WebhookService {
 		auditLogReason?: string | null,
 	): Promise<Webhook> {
 		const {userId, viewer, webhookId, data} = params;
-		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
-		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
-			userId,
-			guildId: webhook.guildId ? webhook.guildId : createGuildID(0n),
-		});
-		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		const {webhook, guildData} = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		const isFollower = webhook.type === WebhookTypes.CHANNEL_FOLLOWER;
 		if (isFollower && data.avatar !== undefined) {
 			throw InputValidationError.fromCode('avatar', ValidationErrorCodes.INVALID_FORMAT);
@@ -407,9 +406,7 @@ export class WebhookService {
 	}
 
 	async deleteWebhook({userId, viewer, webhookId}: WebhookUserParams, auditLogReason?: string | null): Promise<void> {
-		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
-		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
-		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		const {webhook} = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		await this.repository.delete(webhookId);
 		await this.dispatchWebhooksUpdate({
 			guildId: webhook.guildId,
@@ -510,7 +507,7 @@ export class WebhookService {
 
 	private resolveForumPost(channel: Channel, data: WebhookExecuteMessageData): WebhookForumPost | null {
 		if (data.thread_name === undefined && data.applied_tags === undefined) return null;
-		if (!guildActive(channel.guildId!)) return null;
+
 		if (!channel.isThreadOnly()) throw new WebhookThreadNameRequiresForumError();
 		const parsed = WebhookForumPostFields.safeParse({thread_name: data.thread_name, applied_tags: data.applied_tags});
 		if (!parsed.success) throw inputValidationErrorFromZodIssues(parsed.error.issues);
@@ -622,10 +619,17 @@ export class WebhookService {
 		}
 	}
 
-	private async getAuthenticatedWebhook({userId, viewer, webhookId}: WebhookUserParams): Promise<Webhook> {
+	private async getAuthenticatedWebhook({
+		userId,
+		viewer,
+		webhookId,
+	}: WebhookUserParams): Promise<{webhook: Webhook; guildData: GuildResponse}> {
 		const webhook = await this.repository.findUnique(webhookId);
 		if (!webhook) throw new UnknownWebhookError();
-		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
+		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
+			userId,
+			guildId: webhook.guildId!,
+		});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
 		if (webhook.guildId && (await this.withoutHiddenForumWebhooks(webhook.guildId, viewer, [webhook])).length === 0) {
 			throw new UnknownWebhookError();
@@ -637,7 +641,7 @@ export class WebhookService {
 				channelId: webhook.channelId,
 			});
 		}
-		return webhook;
+		return {webhook, guildData};
 	}
 
 	async assertWebhookCapacity({
@@ -761,15 +765,7 @@ export class WebhookService {
 	private async getTokenAuthenticatedWebhook({webhookId, token}: WebhookTokenParams): Promise<Webhook> {
 		const webhook = await this.repository.findByToken(webhookId, token);
 		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
-		if (await this.isDormantForumWebhook(webhook)) throw new UnknownWebhookError();
 		return webhook;
-	}
-
-	private async isDormantForumWebhook(webhook: Webhook): Promise<boolean> {
-		if (!everEnabled() || !webhook.guildId || !webhook.channelId || guildActive(webhook.guildId)) return false;
-		if (!(await isTainted(webhook.guildId))) return false;
-		const channel = await this.channelRepository.channelData.findUnique(webhook.channelId);
-		return channel?.isThreadOnly() ?? false;
 	}
 
 	private async withoutHiddenForumWebhooks(
@@ -777,7 +773,7 @@ export class WebhookService {
 		viewer: ThreadViewer,
 		webhooks: Array<Webhook>,
 	): Promise<Array<Webhook>> {
-		if (!everEnabled() || viewerActive(viewer, guildId) || !(await isTainted(guildId))) return webhooks;
+		if (viewerActive(viewer, guildId) || !(await isTainted(guildId))) return webhooks;
 		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
 		if (channelIds.length === 0) return webhooks;
 		const forumIds = new Set(
@@ -795,12 +791,8 @@ export class WebhookService {
 	}
 
 	private async resolveWebhookThread(webhook: Webhook, threadId: string | undefined): Promise<Channel | null> {
-		if (threadId === undefined || !everEnabled() || !webhook.guildId || !webhook.channelId) return null;
-		if (!guildActive(webhook.guildId)) {
-			if (!(await isTainted(webhook.guildId))) return null;
-			webhookThreadIdRefusedTotal.inc();
-			throw new UnknownChannelError();
-		}
+		if (threadId === undefined || !webhook.guildId || !webhook.channelId) return null;
+
 		if (!/^\d{1,20}$/.test(threadId)) throw new UnknownChannelError();
 		const thread = await this.channelRepository.channelData.findUnique(createChannelID(BigInt(threadId)));
 		if (!thread?.isThread() || thread.parentId !== webhook.channelId || thread.guildId !== webhook.guildId) {
@@ -818,7 +810,6 @@ export class WebhookService {
 		if (!webhook.channelId) throw new UnknownChannelError();
 		const channel = await this.channelRepository.channelData.findUnique(webhook.channelId);
 		if (!channel) throw new UnknownChannelError();
-		if (channel.isThreadOnly() && webhook.guildId && !guildActive(webhook.guildId)) throw new UnknownWebhookError();
 		this.assertWebhookTargetChannel(channel);
 		return {webhook, channel};
 	}
@@ -826,7 +817,7 @@ export class WebhookService {
 	private assertWebhookTargetChannel(channel: Channel): asserts channel is Channel & {guildId: GuildID} {
 		if (!channel.guildId) throw new UnknownChannelError();
 		if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) return;
-		if (channel.isThreadOnly() && guildActive(channel.guildId)) return;
+		if (channel.isThreadOnly()) return;
 		throw new UnknownChannelError();
 	}
 

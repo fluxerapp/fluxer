@@ -161,7 +161,7 @@ is_gated_channel_type(Type) ->
 
 -spec channel_type(integer(), guild_state()) -> integer() | undefined.
 channel_type(ChannelId, State) ->
-    case maps:get(ChannelId, guild_data_index:channel_index(data(State)), undefined) of
+    case maps:get(ChannelId, guild_data_index_channels:channel_index(data(State)), undefined) of
         #{<<"type">> := Type} when is_integer(Type) -> Type;
         _ -> undefined
     end.
@@ -232,12 +232,14 @@ category_visible(Session, CategoryId, State) ->
 plain_category_visible(#{user_id := UserId}, CategoryId, PlainChildren, State) when
     is_integer(UserId)
 ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     Member =/= undefined andalso
-        (guild_permissions:can_view_channel_by_permissions(UserId, CategoryId, Member, State) orelse
+        (guild_permissions_check:can_view_channel_by_permissions(
+            UserId, CategoryId, Member, State
+        ) orelse
             lists:any(
                 fun(ChildId) ->
-                    guild_permissions:can_view_channel(UserId, ChildId, Member, State)
+                    guild_permissions_check:can_view_channel(UserId, ChildId, Member, State)
                 end,
                 PlainChildren
             ));
@@ -391,14 +393,14 @@ store_access_memo(_UserId, _Ok, Memo) ->
 
 -spec resolve_thread_access(integer(), map(), binary() | undefined, guild_state()) -> boolean().
 resolve_thread_access(UserId, Thread, MessageId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->
             Perms = guild_thread_permissions:resolve(UserId, Thread, Member, State),
-            permission_bits:has(Perms, constants:view_channel_permission()) andalso
+            bitset:has(Perms, constants:view_channel_permission()) andalso
                 (MessageId =:= undefined orelse
-                    guild_permissions:can_access_message_by_permissions(
+                    guild_permissions_check:can_access_message_by_permissions(
                         Perms, MessageId, State
                     ))
     end.
@@ -554,7 +556,7 @@ mask_overwrite(Overwrite) ->
 mask_bits(Value) when is_integer(Value) ->
     Value band bnot ?THREAD_PERMISSION_BITS;
 mask_bits(Value) when is_binary(Value) ->
-    case permission_bits:parse_optional(Value) of
+    case bitset:parse_optional(Value) of
         Bits when is_integer(Bits) -> integer_to_binary(Bits band bnot ?THREAD_PERMISSION_BITS);
         _ -> Value
     end;
@@ -586,7 +588,7 @@ recipient_active(ChannelId, State) ->
 
 -spec is_bot_member(integer(), guild_state()) -> boolean().
 is_bot_member(UserId, State) ->
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         #{<<"user">> := #{<<"bot">> := true}} -> true;
         _ -> false
     end.
@@ -713,8 +715,8 @@ thread_sessions_skip_permission_resolve_for_viewable_public_parent_test() ->
     meck:expect(guild_thread_permissions, resolve, fun(_UserId, _Thread, _Member, _State) ->
         0
     end),
-    meck:new(guild_permissions, [passthrough, no_link]),
-    meck:expect(guild_permissions, find_member_by_user_id, fun(_UserId, _State) -> #{} end),
+    meck:new(guild_permissions_check, [passthrough, no_link]),
+    meck:expect(guild_permissions_check, find_member_by_user_id, fun(_UserId, _State) -> #{} end),
     try
         Open = thread_sessions(typing_start, #{}, 20, Public, undefined, State),
         ?assertEqual([<<"a">>, <<"b">>], lists:sort([Sid || {Sid, _} <- Open])),
@@ -724,7 +726,7 @@ thread_sessions_skip_permission_resolve_for_viewable_public_parent_test() ->
         ?assertEqual([], thread_sessions(typing_start, #{}, 20, Private, undefined, State)),
         ?assertEqual(2, meck:num_calls(guild_thread_permissions, resolve, '_'))
     after
-        meck:unload(guild_permissions),
+        meck:unload(guild_permissions_check),
         meck:unload(guild_thread_permissions)
     end.
 

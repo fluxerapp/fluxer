@@ -36,10 +36,6 @@ enum Command {
     PostStart,
     Gateway(GatewayArgs),
     Build,
-    Knip,
-    Lint,
-    Test,
-    Typecheck,
     Proxy(ProxyArgs),
     Dev(DevArgs),
     RustServices(RustServicesArgs),
@@ -220,10 +216,7 @@ enum TunnelCommand {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    if !matches!(
-        cli.command,
-        Command::Build | Command::Knip | Command::Lint | Command::Test | Command::Typecheck
-    ) {
+    if !matches!(cli.command, Command::Build) {
         apply_default_env()?;
     }
 
@@ -239,10 +232,6 @@ async fn main() -> Result<()> {
             std::process::exit(fluxer_dev::gateway::run_gateway_cluster().await?)
         }
         Command::Build => std::process::exit(fluxer_dev::tasks::run_build()?),
-        Command::Knip => std::process::exit(fluxer_dev::tasks::run_knip()?),
-        Command::Lint => std::process::exit(fluxer_dev::tasks::run_lint()?),
-        Command::Test => std::process::exit(fluxer_dev::tasks::run_test()?),
-        Command::Typecheck => std::process::exit(fluxer_dev::tasks::run_typecheck()?),
         Command::Proxy(args) => fluxer_dev::proxy::run_proxy(&args.host, args.port).await?,
         Command::Dev(args) => {
             if args.cloudflare_tunnel {

@@ -12,9 +12,7 @@ export type ThemeStudioBroadcastInput =
 	| {type: 'customThemeCss'; value: string | null}
 	| {type: 'themeLibrary'; revision: number}
 	| {type: 'themePreference'; snapshot: ThemePreferenceSnapshot}
-	| {type: 'studio:opened-popout'}
 	| {type: 'studio:closed-popout'}
-	| {type: 'studio:close-popout'}
 	| {type: 'studio:focus-popout'};
 export type ThemeStudioBroadcastMessage = ThemeStudioBroadcastInput & {origin: string};
 

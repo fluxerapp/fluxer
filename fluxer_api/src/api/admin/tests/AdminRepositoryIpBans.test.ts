@@ -25,7 +25,7 @@ describe('AdminRepository IP ban canonicalization', () => {
 	});
 
 	async function storedIps(): Promise<Array<string>> {
-		return Array.from(await repository.loadAllBannedIps()).sort();
+		return (await repository.loadAllBannedIpEntries()).map((entry) => entry.ip).sort();
 	}
 
 	async function insertLegacyBannedIp(ip: string): Promise<void> {

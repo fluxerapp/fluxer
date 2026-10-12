@@ -32,6 +32,7 @@ import {
 	shouldRenotifyPushNotification,
 	shouldSilenceNonMobilePushNotification,
 } from '@app/features/platform/service_worker/WorkerPushPayload';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 type SwLogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -185,10 +186,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 	}
 	event.waitUntil(log('debug', 'message: unknown', {type}));
 });
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
 
 const updateAppBadge = async (count: number | null): Promise<void> => {
 	if (typeof navigator.setAppBadge !== 'function' && typeof navigator.clearAppBadge !== 'function') {

@@ -7,11 +7,11 @@ import Keybind from '@app/features/input/state/InputKeybind';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {CreateThreadIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -65,8 +65,6 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 
 interface TextareaPlusMenuProps {
 	onUploadFile: () => void;
-	onSchedule?: () => void;
-	canSchedule?: boolean;
 	canAttachFiles: boolean;
 	canSendMessages: boolean;
 	textareaValue?: string;

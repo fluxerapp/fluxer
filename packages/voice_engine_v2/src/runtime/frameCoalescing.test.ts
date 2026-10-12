@@ -7,7 +7,8 @@ import {
 	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
 } from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 import {describe, expect, it} from 'vitest';
 
 function makeRuntime(options?: {eventLogCap?: number}): VoiceEngineV2Runtime {

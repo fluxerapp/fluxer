@@ -31,14 +31,6 @@ export const SUBMIT_REPORT_DESCRIPTOR = msg({
 	message: 'Send report',
 	comment: 'Report flow: footer button on the summary screen that sends the report to the safety team.',
 });
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Report flow: footer button that returns to the previous question.',
-});
-export const DONE_DESCRIPTOR = msg({
-	message: 'Done',
-	comment: 'Report flow: footer button on the last screen. Closes the report window.',
-});
 export const THANK_YOU_TITLE_DESCRIPTOR = msg({
 	message: 'Report sent',
 	comment: 'Report flow: title of the final screen after a report was sent to the safety team.',

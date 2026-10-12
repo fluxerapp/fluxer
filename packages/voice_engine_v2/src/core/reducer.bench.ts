@@ -10,7 +10,6 @@ import {
 import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2InboundVideoFrame,
-	VoiceEngineV2InboundVideoFrameStats,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Participant,
 	VoiceEngineV2ScreenOptions,
@@ -57,20 +56,6 @@ const frameEvent: VoiceEngineV2Event = {
 	}) satisfies VoiceEngineV2InboundVideoFrame,
 };
 
-const frameStatsEvent: VoiceEngineV2Event = {
-	type: 'inboundVideo.frameStats',
-	stats: Object.freeze({
-		participantSid: 'sid-remote',
-		participantIdentity: 'identity-remote',
-		trackSid: 'track-video-1',
-		width: 1280,
-		height: 720,
-		frameCount: 900,
-		lastFrameTimestampUs: 30_000_000,
-		lastFrameByteLength: 320_000,
-	}) satisfies VoiceEngineV2InboundVideoFrameStats,
-};
-
 const microphoneEvent: VoiceEngineV2Event = {
 	type: 'microphone.publishRequested',
 	options: Object.freeze({deviceId: 'mic-alt', echoCancellation: true}) satisfies VoiceEngineV2MicrophoneOptions,
@@ -103,10 +88,6 @@ const statsEvent: VoiceEngineV2Event = {type: 'stats.collected', operationId: 9_
 test('voice engine v2 reducer hot paths', async ({bench}) => {
 	await bench('inboundVideo.frameReceived', () => {
 		transitionVoiceEngineV2(connectedSnapshot, frameEvent);
-	}).run();
-
-	await bench('inboundVideo.frameStats', () => {
-		transitionVoiceEngineV2(connectedSnapshot, frameStatsEvent);
 	}).run();
 
 	await bench('microphone.publishRequested', () => {

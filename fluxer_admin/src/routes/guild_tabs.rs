@@ -78,8 +78,12 @@ pub async fn render(
                 .map(|response| response.emojis)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild emojis"))
                 .unwrap_or_default();
-            Some(tabs::emojis::emojis_tab(
-                config, &guild, &emojis, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &emojis,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Emoji,
             ))
         }
         "stickers" => {
@@ -92,8 +96,12 @@ pub async fn render(
                 .map(|response| response.stickers)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild stickers"))
                 .unwrap_or_default();
-            Some(tabs::stickers::stickers_tab(
-                config, &guild, &stickers, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &stickers,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Sticker,
             ))
         }
         "threads" => {
@@ -181,7 +189,14 @@ pub async fn render(
                 .await
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild applications"))
                 .unwrap_or_default();
-            Some(tabs::applications::applications_tab(config, &guild, &apps))
+            Some(
+                crate::templates::pages::user_detail_tabs::applications::applications_tab(
+                    config,
+                    &apps,
+                    "No applications installed",
+                    "This guild does not have any installed applications.",
+                ),
+            )
         }
         "archives" => {
             if !acl::has_any_permission(

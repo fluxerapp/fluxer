@@ -17,6 +17,7 @@ import {ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES} from '@fluxer/constants/src/Chan
 import {TEXT_THREAD_PARENT_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ChannelUpdateGatedRequest,
@@ -38,10 +39,6 @@ import {
 import type {Context} from 'hono';
 
 const THREAD_PARENT_DEFAULT_KEYS = ['default_auto_archive_duration', 'default_thread_rate_limit_per_user'];
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export function ChannelController(app: HonoApp) {
 	app.get(
@@ -141,7 +138,7 @@ export function ChannelController(app: HonoApp) {
 				if (channelType === undefined) {
 					throw new UnknownChannelError();
 				}
-				const body = isPlainObject(raw) ? raw : {};
+				const body = isRecord(raw) ? raw : {};
 				const requestedType = body.type;
 				if (
 					requestedType === undefined ||
@@ -162,7 +159,7 @@ export function ChannelController(app: HonoApp) {
 				if (THREAD_ONLY_CHANNEL_TYPES.has(channelType)) return true;
 				return (
 					TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channelType) &&
-					isPlainObject(body) &&
+					isRecord(body) &&
 					THREAD_PARENT_DEFAULT_KEYS.some((key) => body[key] !== undefined)
 				);
 			},

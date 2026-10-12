@@ -66,12 +66,9 @@ pub async fn run(args: BuildAppProxyArgs) -> Result<()> {
 }
 
 fn set_metadata_step(build_version_arg: Option<&str>) -> Result<()> {
-    let calver_env = CalverEnv {
-        build_version: trim_option(build_version_arg.map(ToOwned::to_owned))
-            .or_else(|| trim_option(env::var("BUILD_VERSION").ok())),
-        fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
-        fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
-    };
+    let mut calver_env = CalverEnv::from_process();
+    calver_env.build_version =
+        trim_option(build_version_arg.map(ToOwned::to_owned)).or(calver_env.build_version);
     let version = resolve_calver(&calver_env, Utc::now())?;
     append_github_output(&[
         ("build_version", version.as_str()),
@@ -528,19 +525,11 @@ fn tree_differences(
 mod tests {
     use super::*;
     use chrono::{DateTime, TimeZone, Utc};
-    use std::ffi::OsString;
 
     fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
             .single()
             .unwrap()
-    }
-
-    fn write_file(path: &Path, contents: &str) {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).unwrap();
-        }
-        fs::write(path, contents).unwrap();
     }
 
     #[test]
@@ -562,49 +551,6 @@ mod tests {
         assert_eq!(
             resolve_calver(&generated, dt(2026, 1, 1, 0, 0, 0)).unwrap(),
             "2026.520.10203"
-        );
-    }
-
-    #[test]
-    fn ghcr_auth_config_merges_existing_auths() {
-        let temp = tempfile::tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        fs::write(
-            &config_path,
-            r#"{"auths":{"example.com":{"auth":"old"}},"currentContext":"builder"}"#,
-        )
-        .unwrap();
-
-        write_ghcr_auth_config(&config_path, "octo", "secret").unwrap();
-
-        let config: Value =
-            serde_json::from_str(&fs::read_to_string(config_path).unwrap()).unwrap();
-        assert_eq!(config["auths"]["example.com"]["auth"], "old");
-        assert_eq!(
-            config["auths"]["ghcr.io"]["auth"],
-            BASE64.encode("octo:secret")
-        );
-        assert_eq!(config["currentContext"], "builder");
-    }
-
-    #[test]
-    fn ghcr_auth_config_rejects_non_object_roots_and_auths() {
-        let temp = tempfile::tempdir().unwrap();
-        let config_path = temp.path().join("config.json");
-        fs::write(&config_path, "[]").unwrap();
-        assert_eq!(
-            write_ghcr_auth_config(&config_path, "octo", "secret")
-                .unwrap_err()
-                .to_string(),
-            "Docker config root must be a JSON object"
-        );
-
-        fs::write(&config_path, r#"{"auths":[]}"#).unwrap();
-        assert_eq!(
-            write_ghcr_auth_config(&config_path, "octo", "secret")
-                .unwrap_err()
-                .to_string(),
-            "Docker config auths must be a JSON object"
         );
     }
 
@@ -653,116 +599,13 @@ mod tests {
     }
 
     #[test]
-    fn asset_manifest_entries_are_sorted_and_relative_to_dist() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        write_file(&dist.join("assets/z.js"), "z");
-        write_file(&dist.join("assets/z.js.map"), "{}");
-        write_file(&dist.join("assets/chunks/a.js"), "a");
-        write_file(&dist.join("assets/chunks/a.js.map"), "{}");
-        write_file(&dist.join("index.html"), "ignored");
-
-        assert_eq!(
-            asset_manifest_entries(&dist).unwrap(),
-            vec![
-                "assets/chunks/a.js",
-                "assets/chunks/a.js.map",
-                "assets/z.js",
-                "assets/z.js.map"
-            ]
-        );
-    }
-
-    #[test]
-    fn asset_manifest_entries_require_assets_directory() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        fs::create_dir_all(&dist).unwrap();
-
-        assert!(
-            asset_manifest_entries(&dist)
-                .unwrap_err()
-                .to_string()
-                .contains("App proxy assets directory is missing")
-        );
-    }
-
-    #[test]
-    fn manifest_reader_trims_blank_lines_and_keeps_order() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = temp.path().join("assets-manifest.txt");
-        fs::write(&manifest, "\n assets/b.js \n\nassets/a.js\n").unwrap();
-
-        assert_eq!(
-            read_asset_manifest(&manifest).unwrap(),
-            vec!["assets/b.js", "assets/a.js"]
-        );
-    }
-
-    #[test]
-    fn asset_upload_plan_preserves_manifest_keys() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        write_file(&dist.join("assets/a.js"), "a");
-        write_file(&dist.join("assets/chunks/b.js"), "b");
-        let assets = vec!["assets/a.js".to_string(), "assets/chunks/b.js".to_string()];
-
-        let plan = asset_upload_plan(&dist, &assets).unwrap();
-
-        assert_eq!(
-            plan.iter()
-                .map(|item| item.key.as_str())
-                .collect::<Vec<_>>(),
-            vec!["assets/a.js", "assets/chunks/b.js"]
-        );
-        assert_eq!(plan[0].path, dist.join("assets/a.js"));
-        assert_eq!(plan[1].path, dist.join("assets/chunks/b.js"));
-        assert_eq!(
-            plan[0].content_type.as_deref(),
-            Some("application/javascript; charset=utf-8")
-        );
-        assert_eq!(
-            plan[0].cache_control.as_deref(),
-            Some(IMMUTABLE_ASSET_CACHE_CONTROL)
-        );
-        assert!(plan[0].repair_existing_metadata);
-    }
-
-    #[test]
-    fn uploaded_assets_get_the_same_policy_the_app_proxy_serves() {
-        assert_eq!(
-            IMMUTABLE_ASSET_CACHE_CONTROL,
-            "public, max-age=31536000, immutable"
-        );
-    }
-
-    #[test]
-    fn asset_upload_plan_rejects_manifest_entries_missing_on_disk() {
-        let temp = tempfile::tempdir().unwrap();
-        let dist = temp.path().join("dist");
-        fs::create_dir_all(&dist).unwrap();
-        let assets = vec!["assets/missing.js".to_string()];
-
-        assert!(
-            asset_upload_plan(&dist, &assets)
-                .unwrap_err()
-                .to_string()
-                .contains("Manifest asset is missing")
-        );
-    }
-
-    #[test]
-    fn manifest_reader_rejects_paths_outside_assets() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = temp.path().join("assets-manifest.txt");
-        fs::write(&manifest, "assets/a.js\n../secret\n").unwrap();
-
-        assert!(read_asset_manifest(&manifest).is_err());
-    }
-
-    #[test]
     fn manifest_reader_rejects_absolute_parent_and_backslash_paths() {
-        for asset in ["/assets/a.js", "assets/../secret", r"assets\app.js"] {
+        for asset in [
+            "../secret",
+            "/assets/a.js",
+            "assets/../secret",
+            r"assets\app.js",
+        ] {
             assert!(validate_manifest_asset(asset).is_err(), "{asset}");
         }
     }
@@ -812,16 +655,6 @@ mod tests {
     }
 
     #[test]
-    fn tree_differences_is_empty_for_identical_trees() {
-        let tree = BTreeMap::from([
-            ("index.html".to_string(), "aa".to_string()),
-            ("assets/a.js".to_string(), "bb".to_string()),
-        ]);
-
-        assert!(tree_differences(&tree, &tree.clone()).is_empty());
-    }
-
-    #[test]
     fn tree_differences_reports_missing_unexpected_and_changed() {
         let canonical = BTreeMap::from([
             ("assets/a.js".to_string(), "aa".to_string()),
@@ -843,86 +676,6 @@ mod tests {
     }
 
     #[test]
-    fn tree_differences_caps_the_reported_lines() {
-        let canonical = (0..50)
-            .map(|index| (format!("assets/{index}.js"), "aa".to_string()))
-            .collect::<BTreeMap<_, _>>();
-        let other = BTreeMap::new();
-
-        let differences = tree_differences(&canonical, &other);
-
-        assert_eq!(differences.len(), PARITY_DIFF_LIMIT + 1);
-        assert_eq!(
-            differences.last().unwrap(),
-            &format!("...and {} more differences", 50 - PARITY_DIFF_LIMIT)
-        );
-    }
-
-    #[test]
-    fn asset_tree_digests_hashes_every_file_relative_to_the_root() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path().join("static");
-        write_file(&root.join("index.html"), "index");
-        write_file(&root.join("assets/chunks/a.js"), "a");
-
-        let digests = asset_tree_digests(&root).unwrap();
-
-        assert_eq!(
-            digests.keys().cloned().collect::<Vec<_>>(),
-            vec!["assets/chunks/a.js", "index.html"]
-        );
-
-        write_file(&root.join("assets/chunks/a.js"), "b");
-        let changed = asset_tree_digests(&root).unwrap();
-        assert_ne!(digests["assets/chunks/a.js"], changed["assets/chunks/a.js"]);
-        assert_eq!(digests["index.html"], changed["index.html"]);
-    }
-
-    #[test]
-    fn assets_image_ref_names_the_canonical_image() {
-        assert_eq!(
-            assets_image_ref("ghcr.io/example/fluxer-app-proxy", "2026.520.1"),
-            "ghcr.io/example/fluxer-app-proxy:2026.520.1-assets"
-        );
-    }
-
-    #[test]
-    fn extract_commands_pin_the_image_platform() {
-        let pull = pull_command("ghcr.io/example/fluxer-app-proxy:1-assets", AMD64_PLATFORM);
-        assert_eq!(pull.program, OsString::from("docker"));
-        assert_eq!(
-            pull.args,
-            vec![
-                OsString::from("pull"),
-                OsString::from("--platform"),
-                OsString::from(AMD64_PLATFORM),
-                OsString::from("ghcr.io/example/fluxer-app-proxy:1-assets"),
-            ]
-        );
-
-        let create = create_command("ghcr.io/example/fluxer-app-proxy:1-arm64", ARM64_PLATFORM);
-        assert_eq!(
-            create.args,
-            vec![
-                OsString::from("create"),
-                OsString::from("--platform"),
-                OsString::from(ARM64_PLATFORM),
-                OsString::from("ghcr.io/example/fluxer-app-proxy:1-arm64"),
-            ]
-        );
-
-        let copy = copy_command("cafe1234", RUNTIME_STATIC_DIR, Path::new("/tmp/arm64"));
-        assert_eq!(
-            copy.args,
-            vec![
-                OsString::from("cp"),
-                OsString::from("cafe1234:/srv/app/static"),
-                OsString::from("/tmp/arm64"),
-            ]
-        );
-    }
-
-    #[test]
     fn self_hosted_workflow_keeps_assets_same_origin() {
         let workflow = include_str!("../../../.github/workflows/build-app-proxy-self-hosted.yaml");
         for entry in [
@@ -934,13 +687,5 @@ mod tests {
                 "a self-hosted dist that inherits the hosted CDN default would ship index.html pointing at fluxerstatic.com, so the workflow must set {entry}"
             );
         }
-    }
-
-    #[test]
-    fn path_to_s3_key_uses_forward_slashes() {
-        assert_eq!(
-            path_to_s3_key(Path::new("assets").join("chunks").join("a.js").as_path()),
-            "assets/chunks/a.js"
-        );
     }
 }

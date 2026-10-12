@@ -6,8 +6,8 @@ import type {
 	KeyedStoredAccount,
 	StoredAccount,
 	StoredAccountList,
-} from '@app/features/auth/state/AccountStorage';
-import {BrowserAccountStorageUnavailableError, planAccountRekey} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
+import {BrowserAccountStorageUnavailableError, planAccountRekey} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {AppStorageKey, LEGACY_APP_STORAGE_MIGRATION_MARKER_KEY} from '@app/features/platform/state/AppStorageKeys';
 import {

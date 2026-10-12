@@ -84,7 +84,7 @@ interface LiveKitPublishPermissions {
 	canVideo: boolean;
 }
 
-export const VOICE_TOKEN_TTL_SECONDS = 60 * 10;
+const VOICE_TOKEN_TTL_SECONDS = 60 * 10;
 
 export const SERVER_MUTE_ATTRIBUTE = 'server_mute';
 

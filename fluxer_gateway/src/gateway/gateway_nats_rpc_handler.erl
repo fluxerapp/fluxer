@@ -10,9 +10,7 @@
     do_connect/1,
     do_subscribe/1,
     schedule_reconnect/1,
-    max_handlers/0,
-    parse_nats_url/1,
-    build_connect_opts/1
+    max_handlers/0
 ]).
 
 -define(DEFAULT_MAX_HANDLERS, 512).
@@ -128,7 +126,7 @@ is_rpc_subject(_) -> false.
 do_connect(State) ->
     NatsUrl = fluxer_gateway_env:get(nats_core_url),
     AuthToken = fluxer_gateway_env:get(nats_auth_token),
-    case parse_nats_url(NatsUrl) of
+    case gateway_nats_pool_conn:parse_nats_url(NatsUrl) of
         {ok, Host, Port} ->
             spawn_connect(Host, Port, AuthToken, State);
         {error, Reason} ->
@@ -138,7 +136,7 @@ do_connect(State) ->
 
 -spec spawn_connect(string(), inet:port_number(), term(), map()) -> map().
 spawn_connect(Host, Port, AuthToken, State) ->
-    Opts = build_connect_opts(AuthToken),
+    Opts = gateway_nats_pool_conn:build_connect_opts(AuthToken),
     Parent = self(),
     Token = make_ref(),
     ConnPid = spawn(fun() -> connect_and_notify(Host, Port, Opts, Parent) end),
@@ -224,14 +222,6 @@ max_handlers() ->
         Value when is_integer(Value), Value > 0 -> Value;
         _ -> ?DEFAULT_MAX_HANDLERS
     end.
-
--spec parse_nats_url(term()) -> {ok, string(), inet:port_number()} | {error, term()}.
-parse_nats_url(Url) ->
-    gateway_nats_pool_conn:parse_nats_url(Url).
-
--spec build_connect_opts(term()) -> map().
-build_connect_opts(AuthToken) ->
-    gateway_nats_pool_conn:build_connect_opts(AuthToken).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

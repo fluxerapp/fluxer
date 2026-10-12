@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
-import {createInviteCode, vanityCodeToInviteCode} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createInviteCode,
+	type GuildID,
+	type InviteCode,
+	type UserID,
+	vanityCodeToInviteCode,
+} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
@@ -69,17 +75,6 @@ interface DeleteInviteParams {
 	inviteCode: InviteCode;
 }
 
-interface GetChannelInvitesSortedParams {
-	userId: UserID;
-	viewer: ThreadViewer;
-	channelId: ChannelID;
-}
-
-interface GetGuildInvitesSortedParams {
-	userId: UserID;
-	guildId: GuildID;
-}
-
 interface SerializedInviteForAudit {
 	[key: string]: string | number | boolean | null;
 	code: string;
@@ -127,7 +122,9 @@ export class InviteService {
 			if (channel.ownerId !== userId) {
 				throw new MissingPermissionsError();
 			}
-			return await this.inviteRepository.listChannelInvites(channelId);
+			return (await this.inviteRepository.listChannelInvites(channelId)).sort(
+				(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+			);
 		}
 		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
 			userId,
@@ -135,7 +132,9 @@ export class InviteService {
 		});
 		await checkPermission(Permissions.MANAGE_CHANNELS);
 		const invites = await this.inviteRepository.listChannelInvites(channelId);
-		return invites.filter((invite) => invite.code !== guildData.vanity_url_code);
+		return invites
+			.filter((invite) => invite.code !== guildData.vanity_url_code)
+			.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 
 	async getGuildInvites({userId, guildId}: GetGuildInvitesParams): Promise<Array<Invite>> {
@@ -145,7 +144,9 @@ export class InviteService {
 		});
 		await checkPermission(Permissions.MANAGE_GUILD);
 		const invites = await this.inviteRepository.listGuildInvites(guildId);
-		return invites.filter((invite) => invite.code !== guildData.vanity_url_code);
+		return invites
+			.filter((invite) => invite.code !== guildData.vanity_url_code)
+			.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 
 	async createInvite(
@@ -458,16 +459,6 @@ export class InviteService {
 			action: 'delete',
 			auditLogReason,
 		});
-	}
-
-	async getChannelInvitesSorted({userId, viewer, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {
-		const invites = await this.getChannelInvites({userId, viewer, channelId});
-		return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-	}
-
-	async getGuildInvitesSorted({userId, guildId}: GetGuildInvitesSortedParams): Promise<Array<Invite>> {
-		const invites = await this.getGuildInvites({userId, guildId});
-		return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 
 	async dispatchInviteCreate(

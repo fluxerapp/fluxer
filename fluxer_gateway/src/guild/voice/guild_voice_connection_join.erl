@@ -22,7 +22,7 @@
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 handle_new_connection(Context, Member, Channel, VoiceStates, State) ->
     ChannelIdValue = maps:get(channel_id, Context),
-    GuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
+    GuildId = snowflake_id:parse_maybe(
         maps:get(id, State, undefined)
     ),
     ViewerKeyResult = guild_voice_connection_util:resolve_viewer_stream_keys(
@@ -296,7 +296,9 @@ e2ee_capable(Context, State) ->
 
 -spec normalize_context_session_id(context()) -> binary() | undefined.
 normalize_context_session_id(Context) ->
-    guild_voice_connection_util:normalize_session_id(maps:get(session_id, Context, undefined)).
+    guild_voice_connection_normalize:normalize_session_id(
+        maps:get(session_id, Context, undefined)
+    ).
 
 -spec create_and_decorate_voice_state(map()) -> voice_state().
 create_and_decorate_voice_state(Build) ->

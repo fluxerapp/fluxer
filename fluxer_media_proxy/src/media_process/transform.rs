@@ -278,7 +278,7 @@ pub fn transform_image(
         let mut image = decoded.image;
         validate_vips_image(media_limits, &image)?;
         if decoded.hdr_tone_mapped {
-            metrics.record_hdr_tone_map();
+            metrics.hdr_tone_map_count.inc();
         }
         image = resize_loaded_image(media_limits, image, options)?;
         let page_height = if animated { page_height(&image)? } else { None };

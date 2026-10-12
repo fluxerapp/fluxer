@@ -4,7 +4,6 @@ import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
-import {channelThreadsEnabled, everEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	jetStreamActivityPublisher,
 	shutdownActivityEvents,
@@ -111,7 +110,7 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 	cron.upsert('drainActivitySpool', 'drainActivitySpool', {}, '*/5 * * * * *', {ledger: false});
 	cron.upsert('archiveInactiveThreads', 'archiveInactiveThreads', {}, '0 * * * * *', {
 		ledger: false,
-		enabled: () => everEnabled() || channelThreadsEnabled(),
+		enabled: () => true,
 	});
 	Logger.info(
 		{

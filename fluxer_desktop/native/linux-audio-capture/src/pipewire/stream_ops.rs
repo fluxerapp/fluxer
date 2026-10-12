@@ -4,10 +4,9 @@
 
 use std::mem;
 use std::ops::Range;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 
-use fluxer_screen_frame_bus::NativeScreenFrameSinkHandleRef;
 use pipewire as pw;
 use pw::keys;
 use pw::properties::{PropertiesBox, properties};
@@ -17,10 +16,6 @@ use spa::param::format_utils;
 use spa::pod::Pod;
 use spa::sys as spa_sys;
 
-use fluxer_audio_apm::{
-    APM_MAX_FRAME_SAMPLES, ApmConfig, ApmError, AudioProcessor, StubAudioProcessor,
-    expected_frame_samples,
-};
 use fluxer_rt_thread::MonotonicClock;
 
 use crate::audio_contract::{self, DIRECT_CAPTURE_CHANNELS, DIRECT_CAPTURE_SAMPLE_RATE};
@@ -28,154 +23,11 @@ use crate::direct_buffer::DirectAudioBuffer;
 
 use super::common::{LinkKey, MAX_FRAME_SAMPLES, OwnedLink};
 
-pub(crate) type ScreenAudioSinkSlot = Arc<RwLock<Option<Arc<NativeScreenFrameSinkHandleRef>>>>;
-
-pub const DIRECT_CAPTURE_APM_FRAME_SAMPLES: usize =
-    (DIRECT_CAPTURE_SAMPLE_RATE as usize) / 100 * (DIRECT_CAPTURE_CHANNELS as usize);
-
-const _: () = assert!(DIRECT_CAPTURE_APM_FRAME_SAMPLES <= APM_MAX_FRAME_SAMPLES * 2);
-const _: () = assert!(MAX_FRAME_SAMPLES >= DIRECT_CAPTURE_APM_FRAME_SAMPLES);
-
-pub struct DirectCaptureApm {
-    processor: Box<dyn AudioProcessor + Send>,
-    accum_f32: Box<[f32; DIRECT_CAPTURE_APM_FRAME_SAMPLES]>,
-    accum_len: usize,
-    scratch_i16: Box<[i16; DIRECT_CAPTURE_APM_FRAME_SAMPLES]>,
-    expected_sample_rate_hz: u32,
-    expected_channels: u16,
-    processed_samples: u64,
-    apm_frames_processed: u64,
-}
-
-impl DirectCaptureApm {
-    pub fn new(sample_rate_hz: u32, channels: u16) -> Result<Self, ApmError> {
-        assert!(sample_rate_hz >= 8_000);
-        assert!(channels >= 1);
-        let processor = StubAudioProcessor::new(ApmConfig::default(), sample_rate_hz, channels)?;
-        let expected = expected_frame_samples(sample_rate_hz, channels);
-        assert!(expected > 0);
-        assert!(expected <= DIRECT_CAPTURE_APM_FRAME_SAMPLES);
-        Ok(Self {
-            processor: Box::new(processor),
-            accum_f32: Box::new([0.0; DIRECT_CAPTURE_APM_FRAME_SAMPLES]),
-            accum_len: 0,
-            scratch_i16: Box::new([0i16; DIRECT_CAPTURE_APM_FRAME_SAMPLES]),
-            expected_sample_rate_hz: sample_rate_hz,
-            expected_channels: channels,
-            processed_samples: 0,
-            apm_frames_processed: 0,
-        })
-    }
-
-    pub fn reconfigure(&mut self, sample_rate_hz: u32, channels: u16) -> Result<(), ApmError> {
-        assert!(sample_rate_hz >= 8_000);
-        assert!(channels >= 1);
-        if self.expected_sample_rate_hz == sample_rate_hz && self.expected_channels == channels {
-            return Ok(());
-        }
-        let processor = StubAudioProcessor::new(ApmConfig::default(), sample_rate_hz, channels)?;
-        let expected = expected_frame_samples(sample_rate_hz, channels);
-        if expected == 0 || expected > DIRECT_CAPTURE_APM_FRAME_SAMPLES {
-            return Err(ApmError::ChannelsOutOfRange { channels });
-        }
-        self.processor = Box::new(processor);
-        self.expected_sample_rate_hz = sample_rate_hz;
-        self.expected_channels = channels;
-        self.accum_len = 0;
-        Ok(())
-    }
-
-    pub fn process_in_place(&mut self, samples: &mut [f32]) -> Result<usize, ApmError> {
-        assert!(!samples.is_empty());
-        assert!(self.expected_channels >= 1);
-        let apm_frame_len =
-            expected_frame_samples(self.expected_sample_rate_hz, self.expected_channels);
-        assert!(apm_frame_len > 0);
-        assert!(apm_frame_len <= self.scratch_i16.len());
-        let mut processed_complete: usize = 0;
-        let mut idx: usize = 0;
-        let total = samples.len();
-        while idx < total {
-            let want = apm_frame_len - self.accum_len;
-            let take = want.min(total - idx);
-            for offset in 0..take {
-                self.accum_f32[self.accum_len + offset] = samples[idx + offset];
-            }
-            self.accum_len += take;
-            idx += take;
-            if self.accum_len == apm_frame_len {
-                self.run_apm_one_frame(apm_frame_len)?;
-                if idx >= apm_frame_len {
-                    let dst_lo = idx - apm_frame_len;
-                    for offset in 0..apm_frame_len {
-                        samples[dst_lo + offset] = self.accum_f32[offset];
-                    }
-                    processed_complete += apm_frame_len;
-                } else {
-                    processed_complete += take;
-                }
-                self.accum_len = 0;
-                self.apm_frames_processed = self.apm_frames_processed.saturating_add(1);
-            }
-        }
-        self.processed_samples = self.processed_samples.saturating_add(total as u64);
-        Ok(processed_complete)
-    }
-
-    fn run_apm_one_frame(&mut self, apm_frame_len: usize) -> Result<(), ApmError> {
-        assert!(apm_frame_len <= self.scratch_i16.len());
-        assert!(apm_frame_len <= self.accum_f32.len());
-        for offset in 0..apm_frame_len {
-            self.scratch_i16[offset] = f32_sample_to_i16(self.accum_f32[offset]);
-        }
-        let result = self.processor.process_capture_frame(
-            &mut self.scratch_i16[..apm_frame_len],
-            self.expected_sample_rate_hz,
-            self.expected_channels,
-        );
-        result?;
-        for offset in 0..apm_frame_len {
-            self.accum_f32[offset] = i16_sample_to_f32(self.scratch_i16[offset]);
-        }
-        Ok(())
-    }
-
-    pub fn apm_frames_processed(&self) -> u64 {
-        self.apm_frames_processed
-    }
-
-    pub fn processed_samples(&self) -> u64 {
-        self.processed_samples
-    }
-
-    pub fn pending_accumulator_len(&self) -> usize {
-        self.accum_len
-    }
-}
-
-pub(crate) fn f32_sample_to_i16(value: f32) -> i16 {
-    let scaled = value * (i16::MAX as f32);
-    if scaled >= (i16::MAX as f32) {
-        return i16::MAX;
-    }
-    if scaled <= (i16::MIN as f32) {
-        return i16::MIN;
-    }
-    scaled as i16
-}
-
-pub(crate) fn i16_sample_to_f32(value: i16) -> f32 {
-    (value as f32) / (i16::MAX as f32)
-}
-
 pub(crate) struct DirectUserData {
     pub(crate) samples: Arc<Mutex<DirectAudioBuffer>>,
     pub(crate) format: spa::param::audio::AudioInfoRaw,
-    pub(crate) apm: Mutex<DirectCaptureApm>,
     pub(crate) scratch: Mutex<Box<[f32; MAX_FRAME_SAMPLES]>>,
-    pub(crate) last_push_ns: Arc<AtomicU64>,
     pub(crate) clock: Arc<dyn MonotonicClock>,
-    pub(crate) screen_audio_sink: ScreenAudioSinkSlot,
 }
 
 pub(crate) struct DirectStreamRuntime {
@@ -189,9 +41,7 @@ pub(crate) struct DirectStreamRuntime {
     pub(crate) running: Arc<AtomicBool>,
     pub(crate) sink_node_name: String,
     pub(crate) stream_node_name: String,
-    pub(crate) last_push_ns: Arc<AtomicU64>,
     pub(crate) clock: Arc<dyn MonotonicClock>,
-    pub(crate) screen_audio_sink: ScreenAudioSinkSlot,
 }
 
 pub(crate) fn direct_chunk_payload_range(
@@ -268,10 +118,6 @@ fn handle_param_changed(user_data: &mut DirectUserData, id: u32, param: Option<&
     if let Ok(mut guard) = user_data.samples.lock() {
         guard.set_format(rate, channels);
     }
-    if let Ok(mut apm_guard) = user_data.apm.lock() {
-        let channels_u16 = channels.min(u16::MAX as u32) as u16;
-        let _ = apm_guard.reconfigure(rate, channels_u16.max(1));
-    }
 }
 
 fn decode_f32_into_scratch(raw_payload: &[u8], byte_offset: usize, scratch: &mut [f32]) -> usize {
@@ -313,26 +159,7 @@ pub(crate) fn process_audio_chunk(user_data: &mut DirectUserData, payload: &[u8]
         if aligned == 0 {
             break;
         }
-        if let Ok(mut apm_guard) = user_data.apm.lock() {
-            let _ = apm_guard.process_in_place(&mut scratch_guard[..aligned]);
-        }
-        if now_ns > 0 {
-            user_data.last_push_ns.store(now_ns, Ordering::Release);
-        }
-        if let Ok(guard) = user_data.screen_audio_sink.read()
-            && let Some(sink) = guard.as_ref()
-        {
-            let frames = aligned as u32 / channels;
-            if frames > 0 {
-                sink.enqueue_screen_audio_f32(
-                    &scratch_guard[..aligned],
-                    frames,
-                    channels,
-                    user_data.format.rate(),
-                    (now_ns / 1_000) as i64,
-                );
-            }
-        } else if let Ok(mut samples_guard) = user_data.samples.lock() {
+        if let Ok(mut samples_guard) = user_data.samples.lock() {
             let now_us = (now_ns / 1_000) as i64;
             samples_guard.push(&scratch_guard[..aligned], now_us);
         }
@@ -363,9 +190,7 @@ pub(crate) struct BuildDirectStreamArgs<'a> {
     pub(crate) samples: Arc<Mutex<DirectAudioBuffer>>,
     pub(crate) target_sink_name: &'a str,
     pub(crate) stream_node_name: &'a str,
-    pub(crate) last_push_ns: Arc<AtomicU64>,
     pub(crate) clock: Arc<dyn MonotonicClock>,
-    pub(crate) screen_audio_sink: ScreenAudioSinkSlot,
 }
 
 pub(crate) fn build_direct_stream(
@@ -378,16 +203,11 @@ pub(crate) fn build_direct_stream(
     pw::Error,
 > {
     let props = build_direct_stream_props(args.target_sink_name, args.stream_node_name);
-    let apm = DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-        .map_err(|_| pw::Error::CreationFailed)?;
     let data = DirectUserData {
         samples: args.samples,
         format: spa::param::audio::AudioInfoRaw::new(),
-        apm: Mutex::new(apm),
         scratch: Mutex::new(Box::new([0.0_f32; MAX_FRAME_SAMPLES])),
-        last_push_ns: args.last_push_ns,
         clock: args.clock,
-        screen_audio_sink: args.screen_audio_sink,
     };
     let stream = pw::stream::StreamRc::new(args.core.clone(), "fluxer-direct-capture", props)?;
     let listener = stream
@@ -427,22 +247,14 @@ pub(crate) fn build_direct_stream(
 }
 
 #[cfg(test)]
-pub(crate) fn build_test_user_data(
-    last_push_ns: Arc<AtomicU64>,
-    clock: Arc<dyn MonotonicClock>,
-) -> DirectUserData {
-    let apm = DirectCaptureApm::new(DIRECT_CAPTURE_SAMPLE_RATE, DIRECT_CAPTURE_CHANNELS as u16)
-        .expect("apm");
+pub(crate) fn build_test_user_data(clock: Arc<dyn MonotonicClock>) -> DirectUserData {
     let mut format = spa::param::audio::AudioInfoRaw::new();
     format.set_rate(DIRECT_CAPTURE_SAMPLE_RATE);
     format.set_channels(DIRECT_CAPTURE_CHANNELS);
     DirectUserData {
         samples: Arc::new(Mutex::new(DirectAudioBuffer::default_format())),
         format,
-        apm: Mutex::new(apm),
         scratch: Mutex::new(Box::new([0.0_f32; MAX_FRAME_SAMPLES])),
-        last_push_ns,
         clock,
-        screen_audio_sink: Arc::new(RwLock::new(None)),
     }
 }

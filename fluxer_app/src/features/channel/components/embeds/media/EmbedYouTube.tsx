@@ -41,8 +41,6 @@ const VIDEO_DESCRIPTOR = msg({
 });
 const YOUTUBE_CONFIG = {
 	DEFAULT_WIDTH: 400,
-	ANIMATION_DURATION: 0.3,
-	BUTTON_DELAY: 0.1,
 } as const;
 const youtubeCalculator = createCalculator({
 	maxWidth: EMBED_MAX_WIDTH,

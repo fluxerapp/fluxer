@@ -18,9 +18,9 @@ import {
 	type ActivitySpoolEntry,
 	drainActivitySpool,
 } from '@app/api/infrastructure/activity/ActivitySpool';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {JetStreamApiError} from '@nats-io/jetstream';
 import {TimeoutError} from '@nats-io/transport-node';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, describe, expect, it} from 'vitest';
 
 interface PublishCall {

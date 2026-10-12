@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
@@ -16,13 +18,14 @@ impl AdminApiClient {
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
         let _: serde_json::Value = self
-            .delete_with_reason(
+            .send(
+                Method::DELETE,
                 &format!(
                     "/admin/channels/{}/messages/{}",
                     urlencoding::encode(channel_id),
                     urlencoding::encode(message_id)
                 ),
-                None,
+                None::<&serde_json::Value>,
                 audit_log_reason,
             )
             .await?;

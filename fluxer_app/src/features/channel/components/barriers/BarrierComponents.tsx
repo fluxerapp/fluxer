@@ -137,7 +137,7 @@ const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
 		</div>
 	);
 });
-export const UnclaimedAccountBarrier = observer(({onAction}: BarrierProps) => {
+export const UnclaimedAccountBarrier = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<BarrierBase
@@ -153,7 +153,6 @@ export const UnclaimedAccountBarrier = observer(({onAction}: BarrierProps) => {
 				<Button
 					small={true}
 					onClick={() => {
-						onAction?.();
 						openClaimAccountModal({force: true});
 					}}
 					data-flx="channel.barriers.barrier-components.unclaimed-account-barrier.button.action"
@@ -165,7 +164,7 @@ export const UnclaimedAccountBarrier = observer(({onAction}: BarrierProps) => {
 		/>
 	);
 });
-export const UnverifiedEmailBarrier = observer(({onAction}: BarrierProps) => {
+export const UnverifiedEmailBarrier = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<BarrierBase
@@ -181,7 +180,6 @@ export const UnverifiedEmailBarrier = observer(({onAction}: BarrierProps) => {
 				<Button
 					small={true}
 					onClick={() => {
-						onAction?.();
 						const bounced = Users.currentUser?.emailBounced === true;
 						ModalCommands.push(
 							modal(
@@ -407,7 +405,7 @@ export const BlockedUserBarrier = observer(({userId, username, onAction}: Blocke
 		/>
 	);
 });
-export const UnclaimedDMBarrier = observer(({onAction}: BarrierProps) => {
+export const UnclaimedDMBarrier = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<BarrierBase
@@ -423,7 +421,6 @@ export const UnclaimedDMBarrier = observer(({onAction}: BarrierProps) => {
 				<Button
 					small={true}
 					onClick={() => {
-						onAction?.();
 						openClaimAccountModal({force: true});
 					}}
 					data-flx="channel.barriers.barrier-components.unclaimed-dm-barrier.button.action"

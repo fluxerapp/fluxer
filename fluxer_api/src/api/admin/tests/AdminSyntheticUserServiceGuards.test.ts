@@ -64,7 +64,6 @@ function createGuildMemberOperationsService(): GuildMemberOperationsService {
 		unusable as never,
 		unusable as never,
 		unusable as never,
-		unusable as never,
 	);
 }
 

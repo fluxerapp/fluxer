@@ -169,15 +169,6 @@ pub(crate) fn is_routable_media_class(class: &str) -> bool {
     )
 }
 
-#[cfg(test)]
-pub(crate) fn build_virtual_sink_props() -> PropertiesBox {
-    build_virtual_sink_props_for(
-        SINK_NODE_NAME,
-        SINK_NODE_DESCRIPTION,
-        VirtualSinkKind::LegacyVirtualSource,
-    )
-}
-
 pub(crate) fn build_virtual_sink_props_for(
     node_name: &str,
     description: &str,

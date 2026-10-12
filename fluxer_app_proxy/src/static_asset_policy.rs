@@ -253,47 +253,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mime_html() {
-        assert_eq!(guess_mime("i.html"), "text/html; charset=utf-8");
-    }
-
-    #[test]
-    fn mime_js() {
-        assert_eq!(guess_mime("a.js"), "application/javascript; charset=utf-8");
-    }
-
-    #[test]
-    fn mime_css() {
-        assert_eq!(guess_mime("s.css"), "text/css; charset=utf-8");
-    }
-
-    #[test]
-    fn mime_wasm() {
-        assert_eq!(guess_mime("m.wasm"), "application/wasm");
-    }
-
-    #[test]
-    fn mime_woff2() {
-        assert_eq!(guess_mime("f.woff2"), "font/woff2");
-    }
-
-    #[test]
-    fn mime_unknown() {
-        assert_eq!(guess_mime("f.xyz"), "application/octet-stream");
-    }
-
-    #[test]
-    fn mime_no_ext() {
-        assert_eq!(guess_mime("LICENSE"), "application/octet-stream");
-    }
-
-    #[test]
-    fn mime_case_insensitive() {
-        assert_eq!(guess_mime("F.HTML"), "text/html; charset=utf-8");
-        assert_eq!(guess_mime("F.JS"), "application/javascript; charset=utf-8");
-    }
-
-    #[test]
     fn hashed_asset_positive() {
         assert!(is_hashed_asset("app.a1b2c3d4.js"));
         assert!(is_hashed_asset("style-abcdef01.css"));

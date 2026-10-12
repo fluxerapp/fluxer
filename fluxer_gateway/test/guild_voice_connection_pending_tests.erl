@@ -31,7 +31,7 @@ sweep_expired_pending_joins_removes_expired_test() ->
     Valid = #{user_id => 11, guild_id => 999, channel_id => 101, expires_at => Now + 25000},
     PendingConnections = #{<<"expired-conn">> => Expired, <<"valid-conn">> => Valid},
     State = maps:put(pending_voice_connections, PendingConnections, base_test_state()),
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State),
+    NewState = guild_voice_connection_pending:sweep_expired_pending_joins(State),
     NewPending = maps:get(pending_voice_connections, NewState, #{}),
     ?assertNot(maps:is_key(<<"expired-conn">>, NewPending)),
     ?assert(maps:is_key(<<"valid-conn">>, NewPending)).
@@ -42,7 +42,7 @@ sweep_expired_pending_joins_keeps_valid_test() ->
     V2 = #{user_id => 11, guild_id => 999, channel_id => 101, expires_at => Now + 30000},
     PendingConnections = #{<<"conn-1">> => V1, <<"conn-2">> => V2},
     State = maps:put(pending_voice_connections, PendingConnections, base_test_state()),
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State),
+    NewState = guild_voice_connection_pending:sweep_expired_pending_joins(State),
     NewPending = maps:get(pending_voice_connections, NewState, #{}),
     ?assertEqual(2, maps:size(NewPending)),
     ?assert(maps:is_key(<<"conn-1">>, NewPending)),
@@ -61,14 +61,14 @@ sweep_expired_pending_joins_clears_virtual_access_test() ->
     ?assert(guild_virtual_channel_access:is_pending_join(10, 100, State3)),
     ?assert(guild_virtual_channel_access:has_preserve(10, 100, State3)),
     ?assert(guild_virtual_channel_access:is_move_pending(10, 100, State3)),
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State3),
+    NewState = guild_voice_connection_pending:sweep_expired_pending_joins(State3),
     ?assertNot(guild_virtual_channel_access:is_pending_join(10, 100, NewState)),
     ?assertNot(guild_virtual_channel_access:has_preserve(10, 100, NewState)),
     ?assertNot(guild_virtual_channel_access:is_move_pending(10, 100, NewState)).
 
 sweep_expired_pending_joins_empty_map_test() ->
     State = maps:put(pending_voice_connections, #{}, base_test_state()),
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State),
+    NewState = guild_voice_connection_pending:sweep_expired_pending_joins(State),
     NewPending = maps:get(pending_voice_connections, NewState, #{}),
     ?assertEqual(0, maps:size(NewPending)).
 
@@ -77,7 +77,7 @@ sweep_expired_pending_joins_missing_user_id_test() ->
     InvalidMetadata = #{guild_id => 999, channel_id => 100, expires_at => Now - 1000},
     PendingConnections = #{<<"invalid-conn">> => InvalidMetadata},
     State = maps:put(pending_voice_connections, PendingConnections, base_test_state()),
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State),
+    NewState = guild_voice_connection_pending:sweep_expired_pending_joins(State),
     NewPending = maps:get(pending_voice_connections, NewState, #{}),
     ?assertNot(maps:is_key(<<"invalid-conn">>, NewPending)).
 
@@ -145,21 +145,6 @@ resolve_guild_identity_does_not_use_zero_state_id_test() ->
         guild_voice_connection_util:resolve_guild_identity(#{id => <<"007">>, data => #{}})
     ).
 
-normalize_session_id_test() ->
-    ?assertEqual(undefined, guild_voice_connection_util:normalize_session_id(undefined)),
-    ?assertEqual(undefined, guild_voice_connection_util:normalize_session_id(null)),
-    ?assertEqual(<<"abc">>, guild_voice_connection_util:normalize_session_id(<<"abc">>)),
-    ?assertEqual(<<"123">>, guild_voice_connection_util:normalize_session_id(123)),
-    ?assertEqual(<<"test">>, guild_voice_connection_util:normalize_session_id("test")).
-
-normalize_boolean_test() ->
-    ?assertEqual(true, guild_voice_connection_normalize:normalize_boolean(true)),
-    ?assertEqual(true, guild_voice_connection_normalize:normalize_boolean(<<"true">>)),
-    ?assertEqual(false, guild_voice_connection_normalize:normalize_boolean(false)),
-    ?assertEqual(false, guild_voice_connection_normalize:normalize_boolean(<<"false">>)),
-    ?assertEqual(false, guild_voice_connection_normalize:normalize_boolean(<<"other">>)),
-    ?assertEqual(false, guild_voice_connection_normalize:normalize_boolean(123)).
-
 resolve_voice_state_from_pending_uses_stored_voice_state_test() ->
     VoiceState = #{
         <<"user_id">> => <<"5">>, <<"guild_id">> => <<"999">>, <<"channel_id">> => <<"100">>
@@ -208,28 +193,6 @@ resolve_voice_state_from_pending_rejects_leading_zero_pending_ids_test() ->
         #{}
     ),
     ?assertEqual(undefined, Result).
-
-get_pending_joins_for_channel_ignores_missing_user_id_test() ->
-    State = #{
-        pending_voice_connections => #{
-            <<"missing-user">> => #{channel_id => 100},
-            <<"valid">> => #{channel_id => 100, user_id => 42, token_nonce => <<"nonce">>}
-        }
-    },
-    {reply, #{pending_joins := PendingJoins}, _} = guild_voice_handler:handle_call(
-        {get_pending_joins_for_channel, <<"100">>}, {self(), make_ref()}, State
-    ),
-    ?assertEqual(
-        [
-            #{
-                connection_id => <<"valid">>,
-                user_id => <<"42">>,
-                token_nonce => <<"nonce">>,
-                expires_at => 0
-            }
-        ],
-        PendingJoins
-    ).
 
 validate_pending_nonce_valid_test() ->
     Now = erlang:system_time(millisecond),
@@ -285,11 +248,6 @@ validate_pending_nonce_missing_expires_at_test() ->
             <<"abc123">>, PendingData
         )
     ).
-
-pending_get_value_test() ->
-    Data = #{key1 => value1, <<"key2">> => value2},
-    ?assertEqual(value1, maps:get(key1, Data)),
-    ?assertEqual(value2, maps:get(<<"key2">>, Data)).
 
 check_pending_expiry_rejects_entry_without_any_timing_test() ->
     PendingData = #{

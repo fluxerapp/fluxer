@@ -331,7 +331,7 @@ export_keeps_channel_fields_that_only_the_index_holds_test() ->
     Slim = maps:get(data, guild_handoff:export_handoff_state(State)),
     ?assertMatch({rebuilt, _}, bounded_rebuild(Slim)),
     {rebuilt, Rebuilt} = bounded_rebuild(Slim),
-    [Channel] = guild_data_index:channel_list(Rebuilt),
+    [Channel] = guild_data_index_channels:channel_list(Rebuilt),
     ?assertEqual(900, maps:get(<<"last_message_id">>, Channel)).
 
 bounded_rebuild(Data) ->

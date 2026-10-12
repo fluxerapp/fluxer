@@ -2,7 +2,6 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedFooter, EmbedMedia, MessageEmbed};
 use serde::{Deserialize, Deserializer};
@@ -757,16 +756,10 @@ async fn build_image_media(
     let nsfw = crate::media_proxy::MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
     let meta = ctx.media_proxy.get_metadata(url, nsfw).await.ok()?;
     Some(EmbedMedia {
-        url: Some(url.to_owned()),
         proxy_url: ctx.media_proxy.external_proxy_url(url),
-        content_type: Some(meta.content_type.clone()),
-        content_hash: Some(meta.content_hash.clone()),
         width: width.or(meta.width),
         height: height.or(meta.height),
-        placeholder: meta.placeholder.clone(),
-        duration: meta.duration.map(|duration| duration as u32),
-        flags: embed_media_flags(&meta),
-        ..Default::default()
+        ..meta.to_embed_media(url)
     })
 }
 
@@ -798,15 +791,9 @@ async fn build_video_pair_from_parts(
     let thumbnail = match thumbnail_url {
         Some(thumb_url) => match ctx.media_proxy.get_metadata(thumb_url, nsfw).await {
             Ok(meta) => Some(EmbedMedia {
-                url: Some(thumb_url.to_owned()),
                 proxy_url: ctx.media_proxy.external_proxy_url(thumb_url),
-                content_type: Some(meta.content_type.clone()),
-                content_hash: Some(meta.content_hash.clone()),
-                width: meta.width,
-                height: meta.height,
-                placeholder: meta.placeholder.clone(),
-                flags: embed_media_flags(&meta),
-                ..Default::default()
+                duration: None,
+                ..meta.to_embed_media(thumb_url)
             }),
             Err(_) => None,
         },
@@ -820,16 +807,11 @@ async fn build_video_pair_from_parts(
         return (thumbnail, None);
     };
     let video_media = EmbedMedia {
-        url: Some(video_url.to_owned()),
         proxy_url: ctx.media_proxy.external_proxy_url(video_url),
-        content_type: Some(meta.content_type.clone()),
-        content_hash: Some(meta.content_hash.clone()),
         width: width.or(meta.width),
         height: height.or(meta.height),
-        placeholder: meta.placeholder.clone(),
         duration: duration.or(meta.duration).map(|duration| duration as u32),
-        flags: embed_media_flags(&meta),
-        ..Default::default()
+        ..meta.to_embed_media(video_url)
     };
     (thumbnail, Some(video_media))
 }

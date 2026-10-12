@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	computeReconnectBackoffMs,
+	MAX_TRACKED_SOURCES,
+	SourceLifecycleRegistry,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleRegistry';
+import {
 	createInitialActiveState,
 	MAX_RECONNECT_ATTEMPTS,
-	MAX_TRACKED_SOURCES,
-	RECONNECT_BACKOFF_CAP_MS,
-	RECONNECT_BACKOFF_STEP_MS,
 	type SourceLifecycleClock,
 	type SourceLifecycleEvent,
-	SourceLifecycleRegistry,
 	type SourceLifecycleState,
 	transitionSourceLifecycle,
-} from '@fluxer/voice_engine_v2/src/source_isolation/index';
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 import {describe, expect, it} from 'vitest';
 
 function makeClock(startNs: bigint = 1_000n, stepNs: bigint = 1_000n): SourceLifecycleClock {
@@ -151,22 +150,6 @@ describe('transitionSourceLifecycle', () => {
 			current = next.state;
 		}
 		expect(triggers).toEqual(['triggerReconnect', 'triggerReconnect', 'triggerReconnect']);
-	});
-
-	it('Backoff schedule respects cap', () => {
-		expect(computeReconnectBackoffMs(1)).toBe(RECONNECT_BACKOFF_STEP_MS);
-		expect(computeReconnectBackoffMs(2)).toBe(2 * RECONNECT_BACKOFF_STEP_MS);
-		expect(computeReconnectBackoffMs(MAX_RECONNECT_ATTEMPTS)).toBeLessThanOrEqual(RECONNECT_BACKOFF_CAP_MS);
-	});
-
-	it('Backoff schedule is exponential matching the Rust sibling', () => {
-		const sequence = [1, 2, 3, 4, 5, 6, 7, 8].map((attempt) => computeReconnectBackoffMs(attempt));
-		expect(sequence).toEqual([100, 200, 400, 800, 1600, 3200, 5000, 5000]);
-	});
-
-	it('Backoff caps at RECONNECT_BACKOFF_CAP_MS once the raw doubling crosses it', () => {
-		expect(computeReconnectBackoffMs(7)).toBe(RECONNECT_BACKOFF_CAP_MS);
-		expect(computeReconnectBackoffMs(8)).toBe(RECONNECT_BACKOFF_CAP_MS);
 	});
 
 	it('Active + reconnectAttempted is a no-op', () => {

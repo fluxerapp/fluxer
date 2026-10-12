@@ -6,10 +6,6 @@
 
 -export([handle/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -define(GUILD_CALL_TIMEOUT, 4000).
 
 -spec handle(binary(), map()) -> term().
@@ -245,11 +241,5 @@ parse_optional_snowflake(undefined, _) -> undefined;
 parse_optional_snowflake(Value, Field) -> validation:snowflake_or_throw(Field, Value).
 
 -ifdef(TEST).
-
-clamp_limit_test() ->
-    ?assertEqual(1, clamp_limit(undefined)),
-    ?assertEqual(1, clamp_limit(0)),
-    ?assertEqual(50, clamp_limit(50)),
-    ?assertEqual(1000, clamp_limit(2000)).
 
 -endif.

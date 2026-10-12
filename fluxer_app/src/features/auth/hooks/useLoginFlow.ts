@@ -15,7 +15,7 @@ import {
 } from '@app/features/auth/passkey_migration/PasskeyLegacyCeremony';
 import {readPasskeyLoginRoute, writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
 import {isPasskeyMigrationOrigin, rpIdMatchesPage} from '@app/features/auth/passkey_migration/PasskeyMigrationOrigin';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import Accounts, {AccountReplacementRecoveryFailedError} from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';

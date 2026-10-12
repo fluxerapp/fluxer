@@ -7,7 +7,6 @@ export const AuthCardVariant = Object.freeze({
 	DEFAULT: 'default',
 	STANDARD: 'standard',
 	COMPACT: 'compact',
-	WIDE: 'wide',
 } as const);
 
 export type AuthCardVariant = (typeof AuthCardVariant)[keyof typeof AuthCardVariant];

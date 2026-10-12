@@ -24,13 +24,12 @@ import {
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {
@@ -52,6 +51,7 @@ import {ReportAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminS
 import type {ReportFlowSurface, ReportFlowTargetType} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import type {WebhookCreateResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import type {z} from 'zod';
 
@@ -128,7 +128,7 @@ async function countReports(): Promise<number> {
 }
 
 async function setJoinedAt(guildId: string, userId: string, joinedAt: Date): Promise<void> {
-	const repository = new GuildMemberRepository();
+	const repository = new GuildRepository();
 	const member = await repository.getMember(createGuildID(BigInt(guildId)), createUserID(BigInt(userId)));
 	if (!member) {
 		throw new Error(`Member ${userId} of guild ${guildId} was not stored`);

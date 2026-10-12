@@ -20,8 +20,6 @@ vi.mock('@app/features/app/config/Config', () => ({
 const {
 	ENCODE_PROBE_VIDEO_CONFIG,
 	H264_ENCODE_PROBE_CONTENT_TYPES,
-	H264_PROBE_PROFILE_LEVEL_IDS,
-	WEBRTC_ENCODE_PROBE_CONTENT_TYPES,
 	probeWebRtcEncodeEfficiency,
 	reconcileHardwareEncodeReport,
 	reportFromGpuInfo,
@@ -64,18 +62,6 @@ afterEach(() => {
 });
 
 describe('WebRTC hardware encode probe', () => {
-	it('asks H.264 about the profiles a hardware encoder advertises, not only constrained baseline', () => {
-		expect(H264_PROBE_PROFILE_LEVEL_IDS).toEqual(['640028', '640c28', '4d0028', '420028', '42e028']);
-		expect(H264_ENCODE_PROBE_CONTENT_TYPES.map((contentType) => h264ProfileLevelId(contentType).slice(0, 4))).toEqual([
-			'6400',
-			'640c',
-			'4d00',
-			'4200',
-			'42e0',
-		]);
-		expect(WEBRTC_ENCODE_PROBE_CONTENT_TYPES.h264).toBe(H264_ENCODE_PROBE_CONTENT_TYPES);
-	});
-
 	it('keeps every probed H.264 level high enough for the resolution the probe asks about', () => {
 		const macroblocks =
 			Math.ceil(ENCODE_PROBE_VIDEO_CONFIG.width / 16) * Math.ceil(ENCODE_PROBE_VIDEO_CONFIG.height / 16);
@@ -84,11 +70,6 @@ describe('WebRTC hardware encode probe', () => {
 		for (const contentType of H264_ENCODE_PROBE_CONTENT_TYPES) {
 			expect(Number.parseInt(h264ProfileLevelId(contentType).slice(4), 16)).toBeGreaterThanOrEqual(0x28);
 		}
-	});
-
-	it('leaves AV1 and H.265 without a level that could contradict the probed resolution', () => {
-		expect(WEBRTC_ENCODE_PROBE_CONTENT_TYPES.av1).toEqual(['video/AV1']);
-		expect(WEBRTC_ENCODE_PROBE_CONTENT_TYPES.h265).toEqual(['video/H265']);
 	});
 
 	it('reads H.264 as hardware on a Chromium that only accelerates the unconstrained profiles', async () => {

@@ -4,7 +4,7 @@ import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {type ThreadDispatchEvent, threadUpdateEvent} from '@app/api/channel/services/thread/ThreadDispatch';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadState} from '@app/api/models/ThreadState';
@@ -24,7 +24,7 @@ export async function loadConvertibleParentThreads(
 	parent: Channel,
 	nextType: number,
 ): Promise<ParentThreads> {
-	if (!everEnabled() || !(await isTainted(guildId, {fresh: true}))) return [];
+	if (!(await isTainted(guildId, {fresh: true}))) return [];
 	const threads = await channelRepository.threads.listParentThreads(parent.id);
 	if (
 		nextType === ChannelTypes.GUILD_ANNOUNCEMENT &&

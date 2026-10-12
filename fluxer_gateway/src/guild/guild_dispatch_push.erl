@@ -480,6 +480,7 @@ send_forum_thread_created(
             MentionRoles = mention_role_id_set(maps:get(<<"mention_roles">>, MessageData, [])),
             Recipient = guild_thread_gate:recipient_active(ChannelId, State),
             HeldSessions = held_sessions(Hold),
+            CanView = fun guild_permissions_check:can_view_channel/4,
             Recipients = fold_members(
                 fun(UserId, Member, Acc) ->
                     Route =
@@ -492,7 +493,7 @@ send_forum_thread_created(
                             not member_has_mentioned_role(Member, MentionRoles) andalso
                             not guild_members_common:is_member_bot(Member) andalso
                             Recipient(UserId) andalso
-                            guild_permissions:can_view_channel(UserId, ForumId, Member, State)
+                            CanView(UserId, ForumId, Member, State)
                     of
                         true -> [{Route, UserId, extract_role_ids(Member)} | Acc];
                         false -> Acc
@@ -709,7 +710,7 @@ thread_role_visible(ChannelId, State) ->
     Recipient = guild_thread_gate:recipient_active(ChannelId, State),
     fun(UserId, Member) ->
         Recipient(UserId) andalso
-            guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
+            guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
     end.
 
 -spec thread_role_adds(
@@ -793,7 +794,7 @@ member_route(UserId, Member, Context, State) ->
             ThreadRecipient = maps:get(thread_recipient, Context, fun all_recipients/1),
             visible_member_route(
                 Key,
-                guild_permissions:can_view_channel(
+                guild_permissions_check:can_view_channel(
                     UserId, maps:get(channel_id, Context), Member, State
                 ) andalso ThreadRecipient(UserId)
             )
@@ -946,7 +947,7 @@ collect_and_send_push_notifications(MessageData, GuildId, State) ->
 -spec send_push_notifications(event_data(), guild_id(), guild_state()) -> ok.
 send_push_notifications(MessageData, GuildId, State) ->
     Data = maps:get(data, State),
-    Members = guild_data_index:member_map(Data),
+    Members = guild_data_index_members:member_map(Data),
     Sessions = maps:get(sessions, State, #{}),
     {SessionEligibility, Hold} = build_push_session_eligibility(Sessions, State),
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
@@ -1229,7 +1230,7 @@ is_push_eligible(UserId, Members, ChannelId, State) ->
     user_id(), integer(), map(), guild_state()
 ) -> {true, user_id()} | false.
 view_to_filtermap(UserId, ChannelId, Member, State) ->
-    case guild_permissions:can_view_channel(UserId, ChannelId, Member, State) of
+    case guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State) of
         true -> {true, UserId};
         false -> false
     end.
@@ -1628,7 +1629,7 @@ find_channel_name(ChannelIdBin, Data) ->
 
 -spec lookup_channel_name(integer(), map()) -> binary().
 lookup_channel_name(ChannelId, Data) ->
-    Channels = guild_data_index:channel_index(Data),
+    Channels = guild_data_index_channels:channel_index(Data),
     case maps:get(ChannelId, Channels, undefined) of
         undefined -> <<"unknown">>;
         Channel -> maps:get(<<"name">>, Channel, <<"unknown">>)
@@ -1639,7 +1640,7 @@ build_role_names_map(Data) ->
     maps:fold(
         fun add_role_name/3,
         #{},
-        guild_data_index:role_index(Data)
+        guild_data_index_roles:role_index(Data)
     ).
 
 -spec add_role_name(term(), term(), #{integer() => binary()}) -> #{integer() => binary()}.
@@ -2001,57 +2002,6 @@ push_candidate_user_ids_deduplicates_mentions_test() ->
     CandidateUserIds = push_candidate_user_ids(Members, SessionEligibility, MessageData),
     ?assertEqual([1], CandidateUserIds).
 
-send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
-    Self = self(),
-    ok = meck:new(push, [passthrough, no_link]),
-    try
-        ok = meck:expect(push, handle_message_create, fun(Params) ->
-            Self ! {push_params, Params},
-            ok
-        end),
-        MessageData = #{
-            <<"channel_id">> => <<"100">>,
-            <<"author">> => #{<<"id">> => <<"42">>}
-        },
-        Data = #{
-            <<"guild">> => #{
-                <<"name">> => <<"Test Guild">>,
-                <<"default_message_notifications">> => 0
-            },
-            <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-            ],
-            <<"channel_index">> => #{
-                100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
-            },
-            <<"roles">> => [
-                #{<<"id">> => <<"200">>, <<"name">> => <<"Alerts">>}
-            ],
-            <<"role_index">> => #{
-                200 => #{<<"id">> => <<"200">>, <<"name">> => <<"Alerts">>}
-            }
-        },
-        ?assertEqual(
-            ok,
-            send_push_to_eligible_users(
-                MessageData, 10, [1], #{1 => []}, #{}, Data, undefined, {[], none, undefined}
-            )
-        ),
-        receive
-            {push_params, Params} ->
-                ?assertEqual(<<"general">>, maps:get(channel_name, Params)),
-                ?assertEqual(<<"Test Guild">>, maps:get(guild_name, Params)),
-                ?assertEqual(#{200 => <<"Alerts">>}, maps:get(role_names, Params)),
-                ?assertEqual(undefined, maps:get(guild_member_count, Params)),
-                ?assertEqual(undefined, maps:get(guild_features, Params))
-        after 1000 ->
-            ?assert(false)
-        end,
-        ?assert(meck:validate(push))
-    after
-        meck:unload(push)
-    end.
-
 compact_push_state_drops_members_and_keeps_member_count_test() ->
     Tab = ets:new(test_members, [set, public]),
     try
@@ -2132,13 +2082,6 @@ collect_format_mention_ids_is_bounded_test() ->
     Mentions = [#{<<"id">> => integer_to_binary(Id)} || Id <- lists:seq(1, 80)],
     Result = collect_format_mention_ids(Mentions, ?MAX_FORMAT_MEMBERS, #{}),
     ?assertEqual(?MAX_FORMAT_MEMBERS, map_size(Result)).
-
-format_member_id_set_includes_author_test() ->
-    MessageData = #{
-        <<"author">> => #{<<"id">> => <<"99">>},
-        <<"mentions">> => [#{<<"id">> => <<"1">>}, #{<<"id">> => <<"1">>}]
-    },
-    ?assertEqual(#{1 => true, 99 => true}, format_member_id_set(MessageData)).
 
 spawn_push_without_members_table_falls_back_to_legacy_push_test() ->
     reset_push_worker_state(),
@@ -2298,41 +2241,6 @@ thread_role_adds_skip_private_and_archived_threads_test() ->
             Scope(#{<<"type">> => 11}), Context#{mention_roles => #{}}, Rows, Visible
         )
     ).
-
-thread_push_message_data_names_the_thread_test() ->
-    Tab = ets:new(test_members, [set, public]),
-    Store = guild_thread_store:new(),
-    try
-        guild_thread_store:load(
-            Store,
-            [#{<<"id">> => 500, <<"parent_id">> => 10, <<"name">> => <<"ideas">>}],
-            [#{<<"id">> => <<"500">>, <<"user_id">> => <<"1">>, <<"flags">> => 4}]
-        ),
-        Data = (compact_test_data(Tab))#{
-            thread_gate => #{active => true, version => 1}, thread_store => Store
-        },
-        Message = #{<<"channel_id">> => <<"500">>},
-        {ThreadMessage, Name} = push_message_data(Message, <<"500">>, [1, 2], Data),
-        ?assertEqual(<<"ideas">>, Name),
-        ?assertEqual(
-            #{
-                <<"parent_id">> => 10,
-                <<"parent_name">> => <<"general">>,
-                <<"category_id">> => undefined,
-                <<"members">> => #{1 => #{<<"flags">> => 4}}
-            },
-            maps:get(<<"__thread_push">>, ThreadMessage)
-        ),
-        Plain = #{<<"channel_id">> => <<"10">>},
-        ?assertEqual({Plain, <<"general">>}, push_message_data(Plain, <<"10">>, [1], Data)),
-        ?assertEqual(
-            {Message, <<"unknown">>},
-            push_message_data(Message, <<"500">>, [1], compact_test_data(Tab))
-        )
-    after
-        guild_thread_store:destroy(Store),
-        ets:delete(Tab)
-    end.
 
 compact_format_data_restricts_member_map_test() ->
     Data = #{

@@ -352,7 +352,7 @@ decorate_added(Member, PresenceCtx, State) ->
     Stripped = maps:without([<<"muted">>, <<"mute_config">>], Member),
     case snowflake_id:parse_maybe(maps:get(<<"user_id">>, Member, undefined)) of
         UserId when is_integer(UserId) ->
-            GuildMember = guild_data_members:find_member_by_user_id(UserId, State),
+            GuildMember = guild_permissions_check:find_member_by_user_id(UserId, State),
             Stripped#{
                 <<"member">> => null_if_undefined(GuildMember),
                 <<"presence">> => presence(UserId, PresenceCtx)
@@ -433,7 +433,7 @@ is_bot(Session) ->
 
 -spec can_view(map(), map(), guild_state()) -> boolean().
 can_view(#{user_id := UserId}, Thread, State) when is_integer(UserId) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     Member =/= undefined andalso guild_thread_view:can_view(UserId, Thread, Member, State);
 can_view(_Session, _Thread, _State) ->
     false.

@@ -89,7 +89,6 @@ export function AccountSwitcherLoginStep({
 			forceCredentials={purpose.type === AccountSwitcherAuthPurposeType.RELOGIN}
 			initialIdentifier={getReloginIdentifier(purpose)}
 			runtimeTarget={runtimeTarget}
-			showInstanceSelector={null}
 			onBackActionChange={onBackActionChange}
 			startWithAddAccount={purpose.type === AccountSwitcherAuthPurposeType.ADD}
 			registerLink={registerAction}

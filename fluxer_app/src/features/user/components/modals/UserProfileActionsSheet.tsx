@@ -4,10 +4,9 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
-import Guilds from '@app/features/guild/state/Guilds';
 import {
-	resolveGuildModerationCapabilities,
 	resolveGuildScopedModerationActionKeys,
+	useGuildMemberModerationCapabilities,
 } from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {
 	CHANGE_NICKNAME_DESCRIPTOR,
@@ -31,9 +30,6 @@ import {
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import {openReportMessageModal, openReportUserProfileModal} from '@app/features/moderation/utils/ReportActionUtils';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
-import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as RelationshipActionUtils from '@app/features/relationship/utils/RelationshipActionUtils';
 import {
@@ -47,7 +43,10 @@ import {MenuBottomSheet, type MenuGroupType} from '@app/features/ui/menu_bottom_
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
 import styles from '@app/features/user/components/modals/UserProfileActionsSheet.module.css';
 import type {User} from '@app/features/user/models/User';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {
+	VIEW_COMMUNITY_PROFILE_DESCRIPTOR,
+	VIEW_GLOBAL_PROFILE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -66,14 +65,6 @@ import {
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
-const VIEW_COMMUNITY_PROFILE_DESCRIPTOR = msg({
-	message: 'View community profile',
-	comment: 'Button or menu action label in the user profile actions sheet. Keep it concise.',
-});
-const VIEW_GLOBAL_PROFILE_DESCRIPTOR = msg({
-	message: 'View global profile',
-	comment: 'Button or menu action label in the user profile actions sheet. Keep it concise.',
-});
 const KICK_DESCRIPTOR = msg({
 	message: 'Kick',
 	comment:
@@ -110,33 +101,20 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 	}) => {
 		const {i18n} = useLingui();
 		const relationshipType = Relationships.getRelationship(user.id)?.type;
-		const guild = guildId ? Guilds.getGuild(guildId) : null;
+
 		const member = guildMember ?? (guildId ? GuildMembers.getMember(guildId, user.id) : null);
 		const currentUserId = Authentication.currentUserId;
-		const canKickMembers = guildId ? Permission.can(Permissions.KICK_MEMBERS, {guildId}) : false;
-		const canBanMembers = guildId ? Permission.can(Permissions.BAN_MEMBERS, {guildId}) : false;
-		const canModerateMembers = guildId ? Permission.can(Permissions.MODERATE_MEMBERS, {guildId}) : false;
-		const hasChangeNicknamePermission = guildId ? Permission.can(Permissions.CHANGE_NICKNAME, {guildId}) : false;
-		const hasManageNicknamesPermission = guildId ? Permission.can(Permissions.MANAGE_NICKNAMES, {guildId}) : false;
-		const isOwner = guild?.ownerId === currentUserId;
-		const {canManageTarget} = useRoleHierarchy(guild);
-		const guildSnapshot = guild?.toJSON();
-		const targetHasAdministratorPermission =
-			guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-		const {canKick, canBan, canTimeout} = resolveGuildModerationCapabilities({
+
+		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+			guildId,
+			user,
 			isCurrentUser,
-			canManageTarget: canManageTarget(user.id),
-			canKickMembers,
-			canBanMembers,
-			canModerateMembers,
-			targetHasAdministratorPermission,
-		});
+			member,
+		);
+		const isOwner = guild?.ownerId === currentUserId;
 		const canTransfer = !isCurrentUser && !user.bot && isOwner && member;
 		const memberIsTimedOut = member?.isTimedOut() ?? false;
-		const canManageNicknames =
-			member &&
-			((isCurrentUser && hasChangeNicknamePermission && !memberIsTimedOut) ||
-				(hasManageNicknamesPermission && canManageTarget(user.id)));
+
 		const handleCopyFluxerTag = () => {
 			TextCopyCommands.copy(i18n, user.tag, true);
 			onClose();

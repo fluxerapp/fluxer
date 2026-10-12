@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
+import type {StoredAccount} from '@app/features/auth/state/AccountStorageContract';
 import {BOOTSTRAP_APP_PUBLIC} from '@app/features/platform/state/__fixtures__/RuntimeBootstrapFixture';
 
 const FIXTURE_CURRENT_API_ENDPOINT = 'https://fluxer.app/api';

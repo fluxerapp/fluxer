@@ -6,11 +6,9 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([
-    start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0
-]).
+-export([start_link/0, subscribe/1, unsubscribe/1, publish/2, diagnostic_info/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
--export([select_shard/2, find_shard_by_ref/2, find_shard_by_pid/2]).
+-export([select_shard/2]).
 
 -type shard() :: #{pid := pid(), ref := reference()}.
 -type state() :: #{
@@ -44,7 +42,7 @@ diagnostic_info() ->
 init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 10),
-    {ShardCount, _Source} = shard_utils:determine_shard_count(presence_bus_shards),
+    {ShardCount, _Source} = clustered_ets_cache:determine_shard_count([presence_bus_shards]),
     Shards = start_shards(ShardCount, #{}),
     {ok, #{shards => Shards, shard_count => ShardCount}, hibernate}.
 
@@ -92,9 +90,11 @@ handle_cast(_Msg, State) ->
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) when is_reference(Ref) ->
-    {noreply, maybe_restart_shard(find_shard_by_ref(Ref, maps:get(shards, State)), State)};
+    {noreply,
+        maybe_restart_shard(shard_utils:find_shard_by_ref(Ref, maps:get(shards, State)), State)};
 handle_info({'EXIT', Pid, _Reason}, State) when is_pid(Pid) ->
-    {noreply, maybe_restart_shard(find_shard_by_pid(Pid, maps:get(shards, State)), State)};
+    {noreply,
+        maybe_restart_shard(shard_utils:find_shard_by_pid(Pid, maps:get(shards, State)), State)};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -218,16 +218,6 @@ restart_shard_index(Index, State) ->
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().
 select_shard(Key, Count) when Count > 0 ->
     rendezvous_router:select(Key, Count).
-
--spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_ref(Ref, Shards) ->
-    shard_utils:find_shard_by_ref(Ref, Shards).
-
--spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
-    {ok, non_neg_integer()} | not_found.
-find_shard_by_pid(Pid, Shards) ->
-    shard_utils:find_shard_by_pid(Pid, Shards).
 
 -spec safe_gen_server_call(pid() | atom(), term(), timeout()) -> term().
 safe_gen_server_call(Server, Request, Timeout) ->

@@ -174,10 +174,6 @@ You're already friends with this user
 
 This action is only available in announcement channels
 
-### `APPLICATION_NOT_OWNED`
-
-You don't own this application
-
 ### `BAD_GATEWAY`
 
 Bad gateway

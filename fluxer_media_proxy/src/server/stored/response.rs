@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{
-    http_headers, range, server::download_stream::DownloadStreamPolicy, storage::StreamObject,
-};
+use crate::{range, server::download_stream::DownloadStreamPolicy, storage::StreamObject};
 use axum::{
     body::Body,
-    http::{HeaderValue, Method, StatusCode, header},
+    http::{HeaderValue, Method, StatusCode},
     response::Response,
 };
 
@@ -16,22 +14,20 @@ pub(in crate::server) fn passthrough_head_response(
     disposition: Option<HeaderValue>,
 ) -> Response {
     let body_len = byte_range.map(|r| r.end - r.start + 1).unwrap_or(total_len);
-    let mut response = Response::new(Body::empty());
-    *response.status_mut() = if byte_range.is_some() {
+    let status = if byte_range.is_some() {
         StatusCode::PARTIAL_CONTENT
     } else {
         StatusCode::OK
     };
-    http_headers::add_media_headers(response.headers_mut(), total_len, content_type, byte_range);
-    response
-        .headers_mut()
-        .insert(header::CONTENT_LENGTH, HeaderValue::from(body_len));
-    if let Some(value) = disposition {
-        response
-            .headers_mut()
-            .insert(header::CONTENT_DISPOSITION, value);
-    }
-    response
+    media_body_response(
+        Body::empty(),
+        status,
+        total_len,
+        content_type,
+        byte_range,
+        Some(body_len as u64),
+        disposition,
+    )
 }
 
 pub(super) struct StreamingMediaResponse<'a> {
@@ -77,28 +73,25 @@ pub(super) fn streaming_media_response(response: StreamingMediaResponse<'_>) -> 
     } else {
         content_type
     };
-    let mut response = if method == Method::HEAD {
-        Response::new(Body::empty())
+    let body = if method == Method::HEAD {
+        Body::empty()
     } else {
-        Response::new(stream_policy.guard(object.body, body_len))
+        stream_policy.guard(object.body, body_len)
     };
-    *response.status_mut() = status;
-    http_headers::add_media_headers(
-        response.headers_mut(),
+    media_body_response(
+        body,
+        status,
         total_len,
         response_content_type,
         effective_byte_range,
-    );
-    response
-        .headers_mut()
-        .insert(header::CONTENT_LENGTH, HeaderValue::from(body_len));
-    if let Some(value) = disposition {
-        response
-            .headers_mut()
-            .insert(header::CONTENT_DISPOSITION, value);
-    }
-    response
+        Some(body_len as u64),
+        disposition,
+    )
 }
+
+use crate::server::response::media_body_response;
+#[cfg(test)]
+use axum::http::header;
 
 #[cfg(test)]
 mod tests {

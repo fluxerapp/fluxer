@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
+import {fuzzySearch} from '@app/features/search/utils/SearchTextMatching';
 import type {MessageSearchParams} from '@app/features/search/utils/SearchUtils';
 import Users from '@app/features/user/state/Users';
 import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
@@ -465,22 +466,6 @@ function getSearchDateWords(now: DateTime = DateTime.local()): Array<string> {
 	return [...RELATIVE_DATE_WORDS, ...years, ...MONTH_NAMES, ...WEEKDAY_NAMES];
 }
 
-function isSubsequence(needle: string, haystack: string): boolean {
-	const haystackLength = haystack.length;
-	const needleLength = needle.length;
-	if (needleLength > haystackLength) return false;
-	if (needleLength === haystackLength) return needle === haystack;
-	let haystackIndex = 0;
-	outer: for (let needleIndex = 0; needleIndex < needleLength; needleIndex += 1) {
-		const code = needle.charCodeAt(needleIndex);
-		while (haystackIndex < haystackLength) {
-			if (haystack.charCodeAt(haystackIndex++) === code) continue outer;
-		}
-		return false;
-	}
-	return true;
-}
-
 export function matchSearchDateWords(term: string, limit: number, now: DateTime = DateTime.local()): Array<string> {
 	const needle = term.toLocaleLowerCase();
 	const exact: Array<string> = [];
@@ -492,7 +477,7 @@ export function matchSearchDateWords(term: string, limit: number, now: DateTime 
 			exact.push(word);
 		} else if (candidate.startsWith(needle)) {
 			prefixed.push(word);
-		} else if (isSubsequence(needle, candidate)) {
+		} else if (fuzzySearch(needle, candidate)) {
 			scattered.push(word);
 		}
 	}

@@ -10,7 +10,6 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
-import Permission from '@app/features/permissions/state/Permission';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
@@ -18,47 +17,23 @@ import styles from '@app/features/threads/components/ThreadCreatePane.module.css
 import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import {canCreateThreadIn} from '@app/features/threads/utils/ThreadActionRules';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
-import {sendThreadStarter} from '@app/features/threads/utils/ThreadStarterSend';
+import {
+	resolveStarterArgs,
+	sendThreadStarter,
+	useThreadCreateCooldownSeconds,
+} from '@app/features/threads/utils/ThreadStarterSend';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import Users from '@app/features/user/state/Users';
 import * as FormUtils from '@app/lib/forms';
-import {ChannelTypes, MessagePreviewContext, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {publicThreadTypeFor, THREAD_NAME_MAX_LENGTH} from '@fluxer/constants/src/ThreadConstants';
-import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {ChatsIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
-
-function useCooldownSeconds(until: number): number {
-	const [now, setNow] = useState(() => Date.now());
-	useEffect(() => {
-		if (until <= Date.now()) return;
-		const timer = window.setInterval(() => setNow(Date.now()), 1000);
-		return () => window.clearInterval(timer);
-	}, [until]);
-	return Math.max(0, Math.ceil((until - now) / 1000));
-}
-
-function resolveStarterArgs(
-	stickersOrTts?: Array<MessageStickerItem> | boolean,
-	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
-	maybeFavoriteMemeId?: string,
-): {stickers: Array<MessageStickerItem>; favoriteMemeId?: string} {
-	if (typeof stickersOrTts === 'boolean') {
-		return {
-			stickers: Array.isArray(favoriteMemeIdOrStickers) ? favoriteMemeIdOrStickers : [],
-			favoriteMemeId: maybeFavoriteMemeId,
-		};
-	}
-	return {
-		stickers: stickersOrTts ?? [],
-		favoriteMemeId: typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined,
-	};
-}
 
 interface ThreadCreatePaneProps {
 	parent: Channel;
@@ -97,8 +72,8 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 	const canPrivate =
 		messageId == null && parent.type === ChannelTypes.GUILD_TEXT && canCreateThreadIn(parent, 'private');
 	const canPublic = canCreateThreadIn(parent, messageId ? 'from_message' : 'public');
-	const bypassesSlowmode = Permission.can(Permissions.BYPASS_SLOWMODE, parent);
-	const cooldownSeconds = useCooldownSeconds(bypassesSlowmode ? 0 : ThreadPanel.getCreateCooldownUntil(parent.id));
+
+	const cooldownSeconds = useThreadCreateCooldownSeconds(parent);
 	const privateSelected = canPrivate && (isPrivate || !canPublic);
 	const disabled = cooldownSeconds > 0 || (!canPublic && !canPrivate);
 	const handleSubmit: SendMessageFunction = useCallback(

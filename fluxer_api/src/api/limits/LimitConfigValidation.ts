@@ -1,10 +1,6 @@
 import type {StoredLimitConfig} from '@app/api/constants/LimitConfig';
-import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {isJsonRecord, isStringArray} from '@app/api/utils/JsonBoundaryUtils';
 import type {LimitRule} from '@fluxer/limits/src/LimitTypes';
-
-function isStringArray(value: unknown): value is Array<string> {
-	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-}
 
 function isLimitRuleSnapshot(value: unknown): value is LimitRule {
 	if (!isJsonRecord(value) || typeof value.id !== 'string' || !isJsonRecord(value.limits)) return false;

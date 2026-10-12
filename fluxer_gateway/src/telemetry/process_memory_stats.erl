@@ -177,7 +177,7 @@ guild_stats_from_state(State, Memory) ->
     Guild = maps:get(<<"guild">>, Data, #{}),
     GuildName = maps:get(<<"name">>, Guild, <<"Unknown">>),
     GuildIcon = maps:get(<<"icon">>, Guild, null),
-    MemberCount = guild_data_index:member_count(Data),
+    MemberCount = guild_data_index_members:member_count(Data),
     SessionCount = map_size(maps:get(sessions, State, #{})),
     PresenceCount = map_size(maps:get(presences, State, #{})),
     #{
@@ -193,37 +193,3 @@ guild_stats_from_state(State, Memory) ->
         session_count => SessionCount,
         presence_count => PresenceCount
     }.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-limit_candidates_for_state_fetch_keeps_bounded_memory_order_test() ->
-    Candidates = [
-        #{pid => self(), memory => 5},
-        #{pid => self(), memory => 40},
-        #{pid => self(), memory => 20}
-    ],
-    Sorted = sort_candidates(Candidates),
-    Limited = limit_candidates_for_state_fetch(Sorted, 2),
-    ?assertEqual([40, 20, 5], [maps:get(memory, C) || C <- Limited]).
-
-state_fetch_limit_overfetches_but_stays_bounded_test() ->
-    ?assertEqual(2, state_fetch_limit(1)),
-    ?assertEqual(100, state_fetch_limit(50)),
-    ?assertEqual(150, state_fetch_limit(500)),
-    ?assertEqual(40, state_fetch_limit(not_a_limit)).
-
-bounded_process_scan_test() ->
-    ?assert(length(process_scan_pids()) =< ?MAX_PROCESS_SCAN).
-
-bounded_ets_rows_respects_limit_test() ->
-    Table = ets:new(?MODULE, [set]),
-    try
-        true = ets:insert(Table, [{1, self()}, {2, self()}, {3, self()}]),
-        Rows = bounded_ets_rows(Table, 2),
-        ?assertEqual(2, length(Rows))
-    after
-        ets:delete(Table)
-    end.
-
--endif.

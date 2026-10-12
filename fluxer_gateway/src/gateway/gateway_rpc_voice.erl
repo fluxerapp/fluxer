@@ -4,11 +4,7 @@
 -typing([eqwalizer]).
 
 -export([execute_method/2]).
--export([
-    normalize_pending_joins/1,
-    normalize_voice_states/1,
-    validate_voice_channel_read_params/1
-]).
+-export([normalize_voice_states/1, validate_voice_channel_read_params/1]).
 
 -spec execute_method(binary(), map()) -> term().
 execute_method(<<"voice.confirm_connection">>, P) ->
@@ -17,8 +13,6 @@ execute_method(<<"voice.disconnect_user_if_in_channel">>, P) ->
     handle_disconnect_if_in_channel(P);
 execute_method(<<"voice.get_voice_states_for_channel">>, P) ->
     handle_get_voice_states(P);
-execute_method(<<"voice.get_pending_joins_for_channel">>, P) ->
-    handle_get_pending_joins(P);
 execute_method(Method, _Params) ->
     gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
@@ -83,28 +77,6 @@ handle_get_voice_states(Params) ->
             );
         error ->
             #{<<"voice_states">> => []}
-    end.
-
--spec handle_get_pending_joins(map()) -> map() | term().
-handle_get_pending_joins(Params) ->
-    case validate_voice_channel_read_params(Params) of
-        {ok, ChannelIdBin, undefined} ->
-            normalize_pending_joins_response(
-                gateway_rpc_call:execute_method(
-                    <<"call.get_pending_joins">>,
-                    #{<<"channel_id">> => ChannelIdBin}
-                )
-            );
-        {ok, ChannelIdBin, GuildId} ->
-            gateway_rpc_guild:execute_method(
-                <<"guild.get_pending_joins_for_channel">>,
-                #{
-                    <<"guild_id">> => integer_to_binary(GuildId),
-                    <<"channel_id">> => ChannelIdBin
-                }
-            );
-        error ->
-            #{<<"pending_joins">> => []}
     end.
 
 -spec parse_optional_guild_id(map()) -> integer() | undefined.
@@ -234,41 +206,6 @@ maybe_put_normalized_id(Map, Key, Value) ->
         Normalized -> Map#{Key => Normalized}
     end.
 
--spec normalize_pending_joins_response(term()) -> map().
-normalize_pending_joins_response(Response) when is_map(Response) ->
-    PendingJoins = get_map_value(Response, [<<"pending_joins">>, pending_joins]),
-    #{<<"pending_joins">> => normalize_pending_joins(PendingJoins)};
-normalize_pending_joins_response(_) ->
-    #{<<"pending_joins">> => []}.
-
--spec normalize_pending_joins(term()) -> [map()].
-normalize_pending_joins(PendingJoins) ->
-    normalize_entries(PendingJoins, fun normalize_pending_join_entry/2).
-
--spec normalize_pending_join_entry(term(), [map()]) -> [map()].
-normalize_pending_join_entry(PendingJoin, Acc) when is_map(PendingJoin) ->
-    {ConnectionId, UserId} = connection_user_ids(PendingJoin),
-    TokenNonce = normalize_token_nonce(
-        get_map_value(PendingJoin, [<<"token_nonce">>, token_nonce])
-    ),
-    ExpiresAt = normalize_expiry(get_map_value(PendingJoin, [<<"expires_at">>, expires_at])),
-    case {ConnectionId, UserId} of
-        {undefined, _} ->
-            Acc;
-        {_, undefined} ->
-            Acc;
-        _ ->
-            NormalizedPendingJoin = #{
-                <<"connection_id">> => ConnectionId,
-                <<"user_id">> => UserId,
-                <<"token_nonce">> => TokenNonce,
-                <<"expires_at">> => ExpiresAt
-            },
-            [NormalizedPendingJoin | Acc]
-    end;
-normalize_pending_join_entry(_, Acc) ->
-    Acc.
-
 -spec connection_user_ids(map()) -> {binary() | undefined, binary() | undefined}.
 connection_user_ids(Map) ->
     ConnectionId = normalize_id(get_map_value(Map, [<<"connection_id">>, connection_id])),
@@ -280,16 +217,6 @@ normalize_id(undefined) -> undefined;
 normalize_id(Value) when is_binary(Value) -> Value;
 normalize_id(Value) when is_integer(Value) -> integer_to_binary(Value);
 normalize_id(_) -> undefined.
-
--spec normalize_token_nonce(term()) -> binary().
-normalize_token_nonce(undefined) -> <<>>;
-normalize_token_nonce(Value) when is_binary(Value) -> Value;
-normalize_token_nonce(Value) when is_integer(Value) -> integer_to_binary(Value);
-normalize_token_nonce(_) -> <<>>.
-
--spec normalize_expiry(term()) -> integer().
-normalize_expiry(Value) when is_integer(Value) -> Value;
-normalize_expiry(_) -> 0.
 
 -spec get_map_value(map(), [term()]) -> term().
 get_map_value(_Map, []) ->

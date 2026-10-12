@@ -3,14 +3,13 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
-import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {requireAdminACL, requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {AdminRateLimitConfigs} from '@app/api/rate_limit_configs/AdminRateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {
 	BanGuildMemberBody,
@@ -77,17 +76,6 @@ function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
 		return required;
 	}
 	return Object.keys(body).length === 0 ? [] : [AdminACLs.WILDCARD];
-}
-
-function requireAllAdminACLs(granted: ReadonlySet<string>, required: ReadonlyArray<string>): void {
-	if (granted.has(AdminACLs.WILDCARD)) {
-		return;
-	}
-	for (const acl of required) {
-		if (!granted.has(acl)) {
-			throw new MissingACLError(acl);
-		}
-	}
 }
 
 export function GuildAdminController(app: HonoApp) {
@@ -179,7 +167,7 @@ export function GuildAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			const guildIdRaw = ctx.req.valid('param').guild_id;
 			const body = ctx.req.valid('json');
-			requireAllAdminACLs(ctx.get('adminUserAcls'), selectGuildUpdateACLs(body));
+			requireGrantedAdminACLs(ctx.get('adminUserAcls'), selectGuildUpdateACLs(body));
 			const {updateService, vanityService, lookupService} = adminService.guildServiceAggregate;
 			if (body.fields !== undefined) {
 				await updateService.clearGuildFields({guild_id: guildIdRaw, fields: body.fields}, adminUserId, auditLogReason);

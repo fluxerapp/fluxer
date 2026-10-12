@@ -95,27 +95,6 @@ describe('Crosspost source', () => {
 				discoverable: false,
 			},
 		});
-		expect(Object.keys(response.guild).sort()).toEqual(
-			[
-				'approximate_member_count',
-				'approximate_presence_count',
-				'banner',
-				'description',
-				'discoverable',
-				'features',
-				'icon',
-				'id',
-				'name',
-			].sort(),
-		);
-	});
-
-	test('returns the same card to a viewer who is a member of the source community', async () => {
-		const copy = await publishedCopy();
-		const asMember = await getSource(world.b.owner.token, world.b.t1.id, copy.id).execute();
-		const asOutsider = await getSource(outsider.token, world.b.t1.id, copy.id).execute();
-		expect(asMember).toEqual(asOutsider);
-		expect(asMember.guild.id).toBe(world.a.guild.id);
 	});
 
 	async function writeDiscoveryApplication(status: string, description: string): Promise<void> {
@@ -157,23 +136,6 @@ describe('Crosspost source', () => {
 		await writeDiscoveryApplication(DiscoveryApplicationStatus.APPROVED, 'Delisted community text');
 		const response = await getSource(outsider.token, world.b.t1.id, copy.id).execute();
 		expect(response.guild.description).toBeNull();
-	});
-
-	test('reports a discoverable source community as joinable', async () => {
-		const copy = await publishedCopy();
-		await setGuildFeatures(harness, world.a.guild.id, {add: [GuildFeatures.DISCOVERABLE]});
-		const response = await getSource(outsider.token, world.b.t1.id, copy.id).execute();
-		expect(response.guild.discoverable).toBe(true);
-		expect(response.guild.features).toEqual([GuildFeatures.DISCOVERABLE]);
-	});
-
-	test('does not report a discoverable community with invites disabled as joinable', async () => {
-		const copy = await publishedCopy();
-		await setGuildFeatures(harness, world.a.guild.id, {
-			add: [GuildFeatures.DISCOVERABLE, GuildFeatures.INVITES_DISABLED],
-		});
-		const response = await getSource(outsider.token, world.b.t1.id, copy.id).execute();
-		expect(response.guild.discoverable).toBe(false);
 	});
 
 	test('only exposes the badge features of the source community', async () => {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const numberFormatCache = new Map<string, Intl.NumberFormat>();
-const dateTimeFormatCache = new Map<string, Intl.DateTimeFormat>();
 const collatorCache = new Map<string, Intl.Collator>();
 const listFormatCache = new Map<string, Intl.ListFormat>();
 
@@ -18,16 +17,6 @@ export function getCachedNumberFormat(locale?: string, options?: Intl.NumberForm
 	if (!formatter) {
 		formatter = new Intl.NumberFormat(locale, options);
 		numberFormatCache.set(key, formatter);
-	}
-	return formatter;
-}
-
-export function getCachedDateTimeFormat(locale?: string, options?: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-	const key = getCacheKey(locale, options);
-	let formatter = dateTimeFormatCache.get(key);
-	if (!formatter) {
-		formatter = new Intl.DateTimeFormat(locale, options);
-		dateTimeFormatCache.set(key, formatter);
 	}
 	return formatter;
 }

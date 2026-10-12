@@ -2,7 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
 import {AuthSessionAccountCatalog} from '@app/features/platform/state/auth_session/AuthSessionAccountCatalog';
@@ -10,10 +10,7 @@ import {
 	AuthSessionAccountPersistence,
 	type PersistableSessionAccount,
 } from '@app/features/platform/state/auth_session/AuthSessionAccountPersistence';
-import {
-	AuthSessionCheckpointManager,
-	AuthSessionRuntimeUnavailableError,
-} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
+import {AuthSessionCheckpointManager} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
 import {AuthSessionCleanup} from '@app/features/platform/state/auth_session/AuthSessionCleanup';
 import {
 	type AuthSessionDependencies,
@@ -25,6 +22,7 @@ import {
 	type AuthSessionSwitchOptions,
 	type AuthSessionTokenValidation,
 	type AuthSessionValidatedSwitchOptions,
+	requireRuntimeSnapshot,
 } from '@app/features/platform/state/auth_session/AuthSessionLifecycle';
 import {AuthSessionRestorer} from '@app/features/platform/state/auth_session/AuthSessionRestorer';
 import {AuthSessionRuntimeCommitter} from '@app/features/platform/state/auth_session/AuthSessionRuntimeCommitter';
@@ -72,13 +70,6 @@ const AUTH_SESSION_TOKEN_VALIDATION_TIMEOUT_MS = 10_000;
 
 export interface AuthSessionConnectionCloseResult {
 	readonly invalidatedCurrentSession: boolean;
-}
-
-function requireRuntimeSnapshot(snapshot: RuntimeConfigSnapshot | null, operation: string): RuntimeConfigSnapshot {
-	if (snapshot == null) {
-		throw new AuthSessionRuntimeUnavailableError(operation);
-	}
-	return snapshot;
 }
 
 export class AuthSessionManager {

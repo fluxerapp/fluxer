@@ -61,13 +61,13 @@ function getVideoDecoderApi(): VideoDecoderLike | null {
 	return null;
 }
 
-function hasRtcReceiverCapability(mimeType: string): boolean {
+export function getRtcReceiverCodecSupport(codec: VideoCodec): boolean | null {
 	const receiver = (globalThis as Record<string, unknown>).RTCRtpReceiver as
 		| {getCapabilities?: (kind: 'video') => RTCRtpCapabilities | null}
 		| undefined;
 	const caps = receiver?.getCapabilities?.('video');
-	if (!caps) return false;
-	const lower = mimeType.toLowerCase();
+	if (!caps) return null;
+	const lower = `video/${codec}`.toLowerCase();
 	return caps.codecs.some((c) => {
 		const candidate = c.mimeType.toLowerCase();
 		return candidate === lower || (lower === 'video/av1' && candidate === 'video/av1x');
@@ -79,7 +79,7 @@ function isBaselineWebRtcDecodeCodec(codec: VideoCodec): boolean {
 }
 
 async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
-	if (!hasRtcReceiverCapability(`video/${probe.codec}`)) {
+	if (getRtcReceiverCodecSupport(probe.codec) !== true) {
 		return true;
 	}
 	if (isBaselineWebRtcDecodeCodec(probe.codec)) {

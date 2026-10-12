@@ -46,10 +46,6 @@ const AGREED_KEYS = Object.freeze([
 const ACCOUNT_STORAGE_KEY_SEPARATOR = '::';
 
 describe('the instance key derivation agrees between the main process and the renderer', () => {
-	test('the two implementations are not the same module', () => {
-		assert.notEqual(localAppRuntimeInstanceKey, runtimeInstanceKey);
-	});
-
 	for (const [apiEndpoint, expected] of AGREED_KEYS) {
 		test(`${JSON.stringify(apiEndpoint)} keys as ${JSON.stringify(expected)} on both sides`, () => {
 			const main = localAppRuntimeInstanceKey(apiEndpoint);

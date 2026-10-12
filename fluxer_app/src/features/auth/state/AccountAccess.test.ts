@@ -19,11 +19,13 @@ import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 vi.mock('@lingui/core/macro', () => ({msg: (descriptor: MessageDescriptor) => descriptor}));
 
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
 	default: {
-		startSession: () => undefined,
-		logout: () => undefined,
-		sendInvisiblePresenceForCurrentSession: () => undefined,
+		foregroundConnection: {
+			startSession: () => undefined,
+			logout: () => undefined,
+			sendInvisiblePresenceForCurrentSession: () => undefined,
+		},
 	},
 }));
 
@@ -45,7 +47,7 @@ const {AccountAccess, AccountAccessDecision, AccountAccessPhase} = await import(
 const {default: accountStorage} = await import('@app/features/auth/state/AccountStorage');
 const {default: RuntimeConfig} = await import('@app/features/app/state/RuntimeConfig');
 const {default: SessionManager} = await import('@app/features/platform/state/AuthSession');
-const {default: AppStorage} = await import('@app/features/platform/state/PersistentStorage');
+const {resetAppStorage} = await import('@app/features/platform/state/PersistentStorage');
 
 const ACCOUNT = {userId: '300', token: 'token-c'};
 const ACCOUNT_KEY = `${HARNESS_API_ENDPOINT}::${ACCOUNT.userId}`;
@@ -69,7 +71,7 @@ beforeEach(async () => {
 		),
 	);
 	await SessionManager.reset();
-	AppStorage.clear();
+	await resetAppStorage([]);
 	await accountStorage.deleteAccount(ACCOUNT_KEY);
 	await SessionManager.initialize();
 	scriptedReplies.push(userMeReply(ACCOUNT.userId));

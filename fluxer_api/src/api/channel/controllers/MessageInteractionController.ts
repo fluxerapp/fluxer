@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
-import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {THREAD_FEATURE_CHANNEL_TYPES, viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
@@ -285,7 +285,7 @@ export function MessageInteractionController(app: HonoApp) {
 			const messageId = createMessageID(message_id);
 			const sessionId = ctx.req.valid('query').session_id;
 			const requestCache = ctx.get('requestCache');
-			if (user.isUnclaimedAccount() && !isPersonalNotesChannel({userId: user.id, channelId})) {
+			if (user.isUnclaimedAccount() && !isPersonalNotesChannelId({userId: user.id, channelId})) {
 				throw new UnclaimedAccountCannotAddReactionsError();
 			}
 			if (!user.isBot && user.id !== SYSTEM_USER_ID && !(user.flags & UserFlags.HAS_SESSION_STARTED)) {

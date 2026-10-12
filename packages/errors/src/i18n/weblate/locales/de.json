@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Zu viele Dateien. Maximal {maxFiles, plural, one {# Datei} other {# Dateien}} erlaubt.",
 	"attachments_and_uploads.unresolved_attachment_url": "Unaufgelöste `attachment://`-URL erkannt. Sie sollte vor der Einbettungsverarbeitung aufgelöst werden.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Der hochgeladene Anhang {filename} wurde nicht gefunden.",
-	"auth_and_oauth.application_not_owned": "Du bist nicht der Eigentümer dieser Anwendung.",
 	"auth_and_oauth.bot_already_in_guild": "Dieser Bot ist bereits in der Community.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Bot-Benutzer können keine Authentifizierungssitzungen erstellen.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Bot-Benutzer können keine Authentifizierungs-Endpunkte verwenden.",

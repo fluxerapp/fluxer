@@ -7,7 +7,6 @@ import {
 	type ThreadView,
 } from '@app/api/channel/services/thread/ThreadMappers';
 import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
-import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {ThreadState} from '@app/api/models/ThreadState';
@@ -98,7 +97,7 @@ export async function dispatchThreadEvents(
 	guildId: GuildID,
 	events: Array<ThreadDispatchEvent>,
 ): Promise<void> {
-	if (events.length === 0 || !guildActive(guildId)) return;
+	if (events.length === 0) return;
 	if (events.length === 1) {
 		await gatewayService.dispatchGuild({guildId, event: events[0]!.event, data: events[0]!.data});
 		return;

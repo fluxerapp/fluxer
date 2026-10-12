@@ -10,6 +10,7 @@ import ForumReadState from '@app/features/forum/state/ForumReadState';
 import {getDefaultReaction, getForumTags} from '@app/features/forum/utils/ForumChannelUtils';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
+import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {buildFitInsideMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
@@ -251,7 +252,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 									aria-hidden
 									data-flx="forum.forum-post-card.chat-circle-icon--2"
 								/>
-								{i18n._(D.POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
+								{i18n._(D_POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
 							</span>
 							{unread && (
 								<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">

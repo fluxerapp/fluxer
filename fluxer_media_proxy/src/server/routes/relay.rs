@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    external_path, http_client, http_headers,
+    http_client, http_headers,
     server::{
         relay::body::{
             RelayBodyProgress, RelayBodyStream, RelayBodyStreamRequest, buffer_relay_body,
@@ -56,7 +56,7 @@ pub(in crate::server) async fn relay_put(
     if !app.cfg.mode.serves_upload_relay() {
         return text(StatusCode::NOT_FOUND, "Not Found");
     }
-    let key = external_path::percent_decode_string(&key, false);
+    let key = fluxer_common::external_media_path::percent_decode_string(&key, false);
     let token_raw = match token::token_from_query(params.get("t").map(String::as_str)) {
         Ok(token_raw) => token_raw,
         Err(err) => return relay_error(err),
@@ -154,7 +154,7 @@ pub(in crate::server) async fn relay_put(
                     return relay_error(RelayError::ClientUploadFailed);
                 }
                 Err(SpoolError::BudgetExhausted) => {
-                    app.metrics.relay().record_retryable_failure();
+                    app.metrics.relay().relay_upstream_failures_retryable.inc();
                     return relay_error(RelayError::UpstreamRetryable);
                 }
                 Err(SpoolError::Io(_)) => {
@@ -190,7 +190,7 @@ pub(in crate::server) async fn relay_put(
         _ => None,
     };
     if let Some(body) = retry_body {
-        app.metrics.relay().record_retry();
+        app.metrics.relay().relay_upstream_retries.inc();
         outcome = app
             .store
             .relay_put_object(&app.cfg.storage.bucket_uploads, &key, relay_options(body))
@@ -199,7 +199,7 @@ pub(in crate::server) async fn relay_put(
     match outcome {
         Ok(etag) => match relay_success_etag(etag, streamed.as_ref(), body_length) {
             Ok(etag) => {
-                app.metrics.relay().record_success();
+                app.metrics.relay().relay_upstream_success.inc();
                 relay_success_response(etag)
             }
             Err(err) => relay_error(err),
@@ -212,7 +212,7 @@ pub(in crate::server) async fn relay_put(
                 return relay_error(*client_err);
             }
             warn!(error = %err, "upload relay upstream S3 PUT failed");
-            app.metrics.relay().record_hard_failure();
+            app.metrics.relay().relay_upstream_failures_hard.inc();
             relay_error(RelayError::UpstreamS3Error)
         }
     }

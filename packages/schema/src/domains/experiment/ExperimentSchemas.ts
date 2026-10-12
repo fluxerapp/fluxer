@@ -5,10 +5,7 @@ import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
-import {
-	INERT_PLUTONIUM_PAGE_ASSIGNMENT,
-	PlutoniumPageAssignmentResponse,
-} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
+import {PlutoniumPageAssignmentResponse} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
 import {INERT_VOICE_P2P_ASSIGNMENT, VoiceP2pAssignmentResponse} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {z} from 'zod';
 
@@ -71,16 +68,6 @@ export function readDomainMigrationAssignment(
 	response: ExperimentAssignmentsResponse,
 ): DomainMigrationAssignmentResponse {
 	return response.assignments.domain_migration ?? INERT_DOMAIN_MIGRATION_ASSIGNMENT;
-}
-
-export function readChannelThreadsAssignment(
-	response: ExperimentAssignmentsResponse,
-): ChannelThreadsAssignmentResponse | null {
-	return response.assignments.channel_threads ?? null;
-}
-
-export function readPlutoniumPageAssignment(response: ExperimentAssignmentsResponse): PlutoniumPageAssignmentResponse {
-	return response.assignments.plutonium_page ?? INERT_PLUTONIUM_PAGE_ASSIGNMENT;
 }
 
 export function readVoiceP2pAssignment(response: ExperimentAssignmentsResponse): VoiceP2pAssignmentResponse {

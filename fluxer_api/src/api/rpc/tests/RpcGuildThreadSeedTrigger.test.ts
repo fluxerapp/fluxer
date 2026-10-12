@@ -2,10 +2,9 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
-import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
-import {fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
-import {getCompiledChannelThreadsConfig, insertGuildThreadMarker} from '@app/api/experiment/ChannelThreadsGate';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
@@ -28,12 +27,12 @@ describe('RpcService guild load thread permission seeding', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
@@ -47,26 +46,21 @@ describe('RpcService guild load thread permission seeding', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 	const loadGuild = (guildId: string) => loadCollection(guildId, 'guild');
-	const setEnabled = (enabled: boolean) => setChannelThreadsConfig({enabled, guild_basis_points: 10000});
-
-	test('marks and seeds a bucketed guild on its first active load, and leaves control guilds alone', async () => {
+	test('marks and seeds a guild on its first load and skips later seeded loads', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Bucketed');
 		const guildId = createGuildID(BigInt(guild.id));
+		await deleteOneOrMany(GuildThreadState.deleteByPk({guild_id: guildId}));
+		clearChannelThreadsTaintCacheForTesting();
 		const addJob = vi.spyOn(getWorkerService(), 'addJob');
 
-		await loadGuild(guild.id);
-		expect(await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId})).toBeNull();
-		expect(addJob).not.toHaveBeenCalled();
-
-		await setEnabled(true);
 		await loadGuild(guild.id);
 		const marker = await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId});
 		expect(marker?.first_active_at).toBeInstanceOf(Date);
 		expect(marker?.perms_seeded_at).toBeNull();
 		expect(addJob).toHaveBeenCalledWith(
 			'seedThreadPermissions',
-			{guildId: guild.id, configVersion: getCompiledChannelThreadsConfig().config.config_version},
+			{guildId: guild.id},
 			{jobKey: `seed-thread-permissions-${guild.id}`},
 		);
 
@@ -76,13 +70,10 @@ describe('RpcService guild load thread permission seeding', () => {
 		await loadGuild(guild.id);
 		expect(addJob).not.toHaveBeenCalled();
 	});
-
-	test('channels loads keep references to dormant channels in retired guilds and repair real dangling ones', async () => {
-		await setEnabled(true);
+	test('channel loads preserve existing references and clear dangling references', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Retired');
 		const guildId = createGuildID(BigInt(guild.id));
-		await insertGuildThreadMarker(guildId, null);
 		const channelRepository = getChannelRepository();
 		const source = (await channelRepository.channelData.findUnique(createChannelID(BigInt(guild.system_channel_id!))))!;
 		const forumId = createChannelID(BigInt(source.id) + 1n);
@@ -100,7 +91,6 @@ describe('RpcService guild load thread permission seeding', () => {
 			{system_channel_id: forumId, rules_channel_id: missingId},
 			stored.toRow(),
 		);
-		await setEnabled(false);
 		await loadCollection(guild.id, 'channels');
 		const repaired = (await guildRepository.findUnique(guildId))!;
 		expect(repaired.systemChannelId).toBe(forumId);

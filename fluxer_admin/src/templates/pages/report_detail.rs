@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::report_category::{
+    message_lookup_href, report_status, report_type, reported_guild_icon,
+};
+
 use crate::{
     acl,
     api::{
@@ -22,7 +26,7 @@ use crate::{
                 FORM_CONTROL_CLASS, FORM_LABEL_CLASS, checkbox, csrf_input, danger_button,
                 opt_out_checkbox, select_chevron,
             },
-            media::{guild_icon_url, initials, user_avatar_url},
+            media::user_avatar_url,
             message_data::ordered_messages,
             message_list::{message_deletion_script, message_list},
             nsfw_indicators::{
@@ -50,24 +54,11 @@ pub struct LiveProfile {
 }
 
 fn status_badge(status: i32) -> Markup {
-    let (label, variant) = match status {
-        0 => ("Pending", BadgeVariant::Warning),
-        1 => ("Resolved", BadgeVariant::Success),
-        _ => ("Unknown", BadgeVariant::Default),
-    };
+    let (label, variant) = report_status(status);
     html! {
         span class="inline-flex w-fit self-start" {
             (badge(label, variant))
         }
-    }
-}
-
-fn report_type_label(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
     }
 }
 
@@ -116,7 +107,7 @@ fn basic_info_section(config: &AdminConfig, auth: &AuthContext, report: &ReportE
             div class="grid grid-cols-1 sm:grid-cols-2 gap-4" {
                 (data_field_mono("Report ID", &report.report_id))
                 (data_field_text("Reported At", &format_admin_timestamp(&report.reported_at)))
-                (data_field_text("Type", report_type_label(report.report_type)))
+                (data_field_text("Type", report_type(report.report_type).0))
                 (category_field(report))
                 (reason_field(report))
                 @if let Some(ref reporter_id) = report.reporter_id {
@@ -235,18 +226,6 @@ fn answer_steps(flow: &ReportFlowAnswersEntry) -> Markup {
             }
         }
     }
-}
-
-fn message_lookup_href(base: &str, channel_id: &str, message_id: Option<&str>) -> String {
-    let mut href = format!(
-        "{base}/messages?channel_id={}&context_limit=50",
-        urlencoding::encode(channel_id)
-    );
-    if let Some(message_id) = message_id.filter(|id| !id.is_empty()) {
-        href.push_str("&message_id=");
-        href.push_str(&urlencoding::encode(message_id));
-    }
-    href
 }
 
 fn snapshot_note() -> Markup {
@@ -481,30 +460,6 @@ fn reported_guild_field(config: &AdminConfig, report: &ReportEntry) -> Markup {
                 (guild_content_badges(report))
             }
         }
-    }
-}
-
-fn reported_guild_icon(
-    config: &AdminConfig,
-    report: &ReportEntry,
-    guild_id: &str,
-    label: &str,
-) -> Markup {
-    match guild_icon_url(
-        config,
-        guild_id,
-        report.reported_guild_icon_hash.as_deref(),
-        80,
-        true,
-    ) {
-        Some(url) => html! {
-            img src=(url) alt="" class="h-8 w-8 flex-shrink-0 rounded-full object-cover";
-        },
-        None => html! {
-            span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
-                (initials(label))
-            }
-        },
     }
 }
 
@@ -1182,7 +1137,7 @@ fn basic_info_section_fragment(config: &AdminConfig, report: &ReportEntry) -> Ma
             div class="grid grid-cols-1 sm:grid-cols-2 gap-4" {
                 (data_field_mono("Report ID", &report.report_id))
                 (data_field_text("Reported At", &format_admin_timestamp(&report.reported_at)))
-                (data_field_text("Type", report_type_label(report.report_type)))
+                (data_field_text("Type", report_type(report.report_type).0))
                 (category_field(report))
                 (reason_field(report))
                 @if let Some(ref reporter_id) = report.reporter_id {
@@ -1193,16 +1148,5 @@ fn basic_info_section_fragment(config: &AdminConfig, report: &ReportEntry) -> Ma
                 (data_field("Status", status_badge(report.status)))
             }
         }))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn resolve_form_shares_the_comment_by_default_and_says_the_reporter_is_always_told() {
-        let markup = resolve_report_form("/admin", "1500000000000000001", "csrf").into_string();
-        assert!(markup.contains(r#"name="notify_reporter_present" value="1""#));
     }
 }

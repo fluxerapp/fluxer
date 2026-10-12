@@ -108,7 +108,7 @@ export class UserAuthRequestService {
 	): Promise<WebAuthnChallengeResponse> {
 		requireEmailVerified(user, 'mfa');
 		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin);
-		return this.toWebAuthnChallengeResponse(options);
+		return {...options};
 	}
 
 	async registerWebAuthnCredential({user, data}: UserAuthWebAuthnRegisterRequest): Promise<void> {
@@ -146,17 +146,7 @@ export class UserAuthRequestService {
 
 	async getSudoWebAuthnOptions(user: User, origin: string | undefined): Promise<WebAuthnChallengeResponse> {
 		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin);
-		return this.toWebAuthnChallengeResponse(options);
-	}
-
-	private toWebAuthnChallengeResponse(options: {challenge: string}): WebAuthnChallengeResponse {
-		const response: Record<string, unknown> & {
-			challenge: string;
-		} = {
-			...options,
-			challenge: options.challenge,
-		};
-		return response;
+		return {...options};
 	}
 
 	private toBackupCodesResponse(

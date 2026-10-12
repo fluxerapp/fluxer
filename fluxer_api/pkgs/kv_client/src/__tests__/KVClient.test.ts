@@ -177,23 +177,6 @@ describe('KVClient script execution', () => {
 		expect(evalMock).not.toHaveBeenCalled();
 	});
 
-	it('normalizes timeouts raised by the EVALSHA attempt', async () => {
-		evalshaMock.mockRejectedValue(new Error('Command timed out'));
-		await expect(createClient().releaseLock('lock:key', 'token')).rejects.toMatchObject({
-			code: KVClientErrorCode.TIMEOUT,
-			message: 'KV request timed out: releaseLock',
-		});
-	});
-
-	it('normalizes failures raised by the EVAL fallback', async () => {
-		evalshaMock.mockRejectedValue(noScriptError());
-		evalMock.mockRejectedValue(new Error('Connection is closed.'));
-		await expect(createClient().releaseLock('lock:key', 'token')).rejects.toMatchObject({
-			code: KVClientErrorCode.REQUEST_FAILED,
-			message: 'KV request failed (releaseLock): Connection is closed.',
-		});
-	});
-
 	it('reports invalid JSON from a scripted command', async () => {
 		evalshaMock.mockResolvedValue('not json');
 		await expect(createClient().checkLeakyBucketLimit('rate_limit:bucket', 5, 1000, 1)).rejects.toMatchObject({

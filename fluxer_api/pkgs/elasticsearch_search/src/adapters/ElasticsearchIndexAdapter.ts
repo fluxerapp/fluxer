@@ -237,6 +237,10 @@ export class ElasticsearchIndexAdapter<
 		this.assertBulkSucceeded(response, 'delete');
 	}
 
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		await this.deleteByQuery({term: {[field]: value}});
+	}
+
 	async deleteByQuery(query: Record<string, unknown>): Promise<void> {
 		this.assertInitialised();
 		const response = await this.client.deleteByQuery({

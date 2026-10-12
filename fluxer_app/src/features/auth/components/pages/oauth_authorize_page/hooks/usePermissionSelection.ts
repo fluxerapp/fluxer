@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {useOptOutSelection} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useOptOutSelection';
+
 import {logger} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
 import {
 	type BotPermissionOption,
@@ -10,7 +12,7 @@ import {
 import {normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
 import {THREAD_AWARE_ALL_PERMISSIONS} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {useLingui} from '@lingui/react/macro';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useMemo} from 'react';
 
 export interface PermissionSelection {
 	options: ReadonlyArray<BotPermissionOption>;
@@ -53,28 +55,7 @@ export function usePermissionSelection(rawPermissions: string | null, threadsAct
 			})
 			.map((opt) => opt.id);
 	}, [rawPermissions, requestedBitfield, options]);
-	const [overrides, setOverrides] = useState<ReadonlyMap<string, boolean>>(() => new Map());
-	const selected = useMemo(() => {
-		const next = new Set<string>();
-		for (const id of requestedKeys) {
-			if (overrides.get(id) === false) continue;
-			next.add(id);
-		}
-		return next;
-	}, [requestedKeys, overrides]);
-	const toggle = useCallback((permissionId: string) => {
-		setOverrides((prev) => {
-			const next = new Map(prev);
-			const currentlyOff = prev.get(permissionId) === false;
-			if (currentlyOff) next.delete(permissionId);
-			else next.set(permissionId, false);
-			return next;
-		});
-	}, []);
-	const adjusted = useMemo(
-		() => requestedKeys.length > 0 && selected.size < requestedKeys.length,
-		[requestedKeys, selected],
-	);
+	const {selected, toggle, adjusted} = useOptOutSelection(requestedKeys);
 	const requestsAdmin = useMemo(() => requestedKeys.includes('ADMINISTRATOR'), [requestedKeys]);
 	const toBitfield = useCallback(() => formatBotPermissionsQuery(Array.from(selected)), [selected]);
 	return {options, requestedKeys, selected, toggle, adjusted, requestsAdmin, requestedBitfield, toBitfield};

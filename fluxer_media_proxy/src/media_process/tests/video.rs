@@ -4,13 +4,12 @@ use super::super::{
     MediaError, VideoThumbnailOptions, extract_video_thumbnail,
     extract_video_thumbnail_with_options,
 };
-use super::fixtures::{decode_rgba, metadata_value, png_zlib_level, test_media_limits};
+use super::fixtures::{decode_rgba, metadata_value, test_media_limits};
 use crate::{
     image_quality::ResolvedImageQuality,
     output_format::OutputFormat,
     test_fixtures::{
-        ffmpeg_gen_media, ffmpeg_gen_mp4, ffmpeg_gen_rotated_mp4, ffmpeg_mirror_mp4,
-        fixture_h264_mp4, png_dimensions,
+        ffmpeg_gen_media, ffmpeg_gen_mp4, ffmpeg_gen_rotated_mp4, ffmpeg_mirror_mp4, png_dimensions,
     },
 };
 
@@ -34,14 +33,6 @@ fn color_tagged_video(primaries: &str, transfer: &str, matrix: &str) -> Option<V
             "matroska",
         ],
     )
-}
-
-#[test]
-fn a_png_video_thumbnail_uses_default_zlib_compression() {
-    let thumb =
-        extract_video_thumbnail(&fixture_h264_mp4(), OutputFormat::PNG, &test_media_limits())
-            .expect("h264 video should thumbnail");
-    assert_eq!(Some(2), png_zlib_level(&thumb.bytes));
 }
 
 #[test]

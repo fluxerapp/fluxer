@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {LIMIT_KEYS, type LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {DEFAULT_FREE_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {DEFAULT_RESTRICTED_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {computeDefaultsHash} from '@fluxer/limits/src/LimitHashing';
 import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
 
@@ -35,7 +35,7 @@ export function computeOverrides(
 export function computeWireFormat(config: LimitConfigSnapshot): LimitConfigWireFormat {
 	const defaultsHash = computeDefaultsHash();
 	const rules = config.rules.map((rule) => {
-		const overrides = computeOverrides(rule.limits, DEFAULT_FREE_LIMITS);
+		const overrides = computeOverrides(rule.limits, DEFAULT_RESTRICTED_LIMITS);
 		for (const key of WIRE_COMPATIBILITY_LIMIT_KEYS) {
 			const value = rule.limits[key];
 			if (value !== undefined) {
@@ -59,7 +59,7 @@ export function computeWireFormat(config: LimitConfigSnapshot): LimitConfigWireF
 export function expandWireFormat(wireFormat: LimitConfigWireFormat): LimitConfigSnapshot {
 	const rules = wireFormat.rules.map((rule) => {
 		const limits: Partial<Record<LimitKey, number>> = {
-			...DEFAULT_FREE_LIMITS,
+			...DEFAULT_RESTRICTED_LIMITS,
 			...rule.overrides,
 		};
 		return {

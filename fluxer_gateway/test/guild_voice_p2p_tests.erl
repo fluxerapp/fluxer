@@ -230,7 +230,7 @@ livekit_restore_into_a_mesh_is_refused_test() ->
             }
         },
         {reply, Reply, State3} =
-            guild_voice_connection:confirm_voice_connection_from_livekit(
+            guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
                 #{connection_id => <<"stale">>}, State2
             ),
         ?assertEqual({error, permission_denied, voice_p2p_consent_required}, Reply),
@@ -254,7 +254,7 @@ livekit_activation_into_a_mesh_is_refused_test() ->
             State1
         ),
         {reply, Reply, State3} =
-            guild_voice_connection:confirm_voice_connection_from_livekit(
+            guild_voice_connection_confirm:confirm_voice_connection_from_livekit(
                 #{connection_id => <<"late">>, token_nonce => <<"nonce">>}, State2
             ),
         ?assertEqual({error, permission_denied, voice_p2p_consent_required}, Reply),
@@ -290,7 +290,7 @@ moderator_move_into_a_mesh_is_refused_test() ->
     with_stubs(grant, fun(State0) ->
         {Mesh, State1} = join_mesh([10, 11], State0),
         State2 = with_sfu_voice_state(<<"moved">>, 12, ?OTHER_CHANNEL_ID, State1),
-        {reply, Reply, State3} = guild_voice:move_member(
+        {reply, Reply, State3} = guild_voice_move:move_member(
             move_request(12, ?CHANNEL_ID), State2
         ),
         ?assertEqual({error, permission_denied, voice_p2p_consent_required}, Reply),
@@ -301,7 +301,7 @@ moderator_move_into_a_mesh_is_refused_test() ->
 moderator_move_into_an_empty_pinned_channel_moves_on_sfu_test() ->
     with_stubs(grant, fun(State0) ->
         State1 = with_sfu_voice_state(<<"moved">>, 12, ?OTHER_CHANNEL_ID, State0),
-        {reply, Reply, _State2} = guild_voice:move_member(
+        {reply, Reply, _State2} = guild_voice_move:move_member(
             move_request(12, ?PINNED_CHANNEL_ID), State1
         ),
         ?assertMatch(#{success := true, needs_token := true}, Reply)
@@ -311,7 +311,7 @@ moderator_move_out_of_a_mesh_gets_an_sfu_grant_test() ->
     with_stubs(grant, fun(State0) ->
         {[ConnectionA, ConnectionB], State1} = join_mesh([10, 11], State0),
         {reply, #{success := true, needs_token := true, session_data := SessionData}, State2} =
-            guild_voice:move_member(move_request(11, ?OTHER_CHANNEL_ID), State1),
+            guild_voice_move:move_member(move_request(11, ?OTHER_CHANNEL_ID), State1),
         ?assertEqual([ConnectionA], maps:keys(maps:get(voice_states, State2))),
         ?assertEqual(true, p2p_flag(ConnectionA, State2)),
         GuildPid = maps:get(guild_pid, State2),

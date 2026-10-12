@@ -1,25 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import modalI18n from '@app/app/I18n';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildInvitesTab.module.css';
-import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {InvitesLoadFailedModal} from '@app/features/invite/components/alerts/InvitesLoadFailedModal';
+import {
+	TRY_AGAIN_DESCRIPTOR,
+	TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {DisableInvitesButton} from '@app/features/invite/components/DisableInvitesButton';
 import {InviteDateToggle} from '@app/features/invite/components/InviteDateToggle';
 import {InviteListHeader, InviteListItem} from '@app/features/invite/components/InviteListItem';
 import {useInviteRevoke} from '@app/features/invite/hooks/useInviteRevoke';
 import Invites from '@app/features/invite/state/Invites';
 import Permission from '@app/features/permissions/state/Permission';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {UserPlusIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
+
+const InvitesLoadFailedModal_FAILED_TO_LOAD_INVITES_DESCRIPTOR = msg({
+	message: "Couldn't load invites",
+	comment: 'Error modal title shown when fetching invites fails.',
+});
 
 const GuildInvitesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const {i18n} = useLingui();
@@ -31,11 +39,11 @@ const GuildInvitesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		try {
 			await GuildCommands.fetchGuildInvites(guildId);
 		} catch (_error) {
-			ModalCommands.push(
-				modal(() => (
-					<InvitesLoadFailedModal data-flx="guild.guild-tabs.guild-invites-tab.fetch-invites.invites-load-failed-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(InvitesLoadFailedModal_FAILED_TO_LOAD_INVITES_DESCRIPTOR),
+				message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'invite.invites-load-failed-modal.generic-error-modal',
+			});
 		}
 	}, [guildId]);
 	const canManageGuild = Permission.can(Permissions.MANAGE_GUILD, {

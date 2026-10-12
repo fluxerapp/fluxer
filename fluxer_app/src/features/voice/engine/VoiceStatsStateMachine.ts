@@ -2,7 +2,6 @@
 
 import {
 	createVoiceLatencySnapshot,
-	type LatencyDataPoint,
 	observeVoiceLatencyGap,
 	recordVoiceLatencySample,
 	resetVoiceLatencySnapshot,
@@ -11,11 +10,12 @@ import {
 	type VoiceLatencySnapshot,
 } from '@app/features/voice/engine/VoiceLatencyTracker';
 import type {
+	VoiceEngineV2LatencyDataPoint as LatencyDataPoint,
 	VoiceEngineV2PerTrackStats as PerTrackStats,
 	VoiceEngineV2TransportInfo as TransportInfo,
 	VoiceEngineV2VoiceStats as VoiceStats,
 	VoiceEngineV2StatsSample as VoiceStatsSample,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 const MAX_LATENCY_HISTORY = 60;

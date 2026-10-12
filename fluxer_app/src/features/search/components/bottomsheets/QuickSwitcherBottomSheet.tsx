@@ -16,7 +16,6 @@ import {
 	getQuickSwitcherResultAccessibilityMetadata,
 	getQuickSwitcherTabs,
 	getResultKey,
-	getViewContext,
 	handleContextMenu,
 	type QuickSwitcherSection,
 	renderIcon,
@@ -166,9 +165,7 @@ const ResultRow = observer(
 		};
 		const iconRendered = renderIcon(executableResult, isHighlight, styles.optionIcon, styles.optionIconHighlight);
 		const iconContent: React.ReactElement = iconRendered.content;
-		const key = getViewContext(executableResult)
-			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
-			: `${executableResult.type}-${executableResult.id}`;
+		const key = `${executableResult.type}-${executableResult.id}`;
 		return (
 			<FocusRing offset={-2} enabled={false} data-flx="search.quick-switcher-bottom-sheet.result-row.focus-ring">
 				<button
@@ -259,7 +256,6 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 	} = useListNavigation({
 		itemCount: results.length,
 		initialIndex: selectedIndex >= 0 ? selectedIndex : 0,
-		loop: true,
 	});
 	if (rowRefs.current.length !== results.length) {
 		rowRefs.current = Array(results.length).fill(null);

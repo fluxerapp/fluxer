@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {createMfaTicketResponse, type LoginMfaResult} from '@app/api/auth/AuthLogin';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {RecoveryKitRepository} from '@app/api/auth/services/RecoveryKitRepository';
 import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
@@ -15,7 +16,8 @@ import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons
 import type {User} from '@app/api/models/User';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
-import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '@app/api/utils/PasswordUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
@@ -40,7 +42,7 @@ class PwnedPasswordCache {
 	private readonly maxSize: number;
 	private readonly ttlMs: number;
 
-	constructor(maxSize = PWNED_PASSWORD_CACHE_MAX_PREFIXES, ttlMs = ms('1 hour')) {
+	constructor(maxSize: number, ttlMs: number) {
 		this.maxSize = maxSize;
 		this.ttlMs = ttlMs;
 	}
@@ -100,11 +102,6 @@ interface CommitPasswordResetParams {
 	webauthnIsSecondFactor: boolean;
 }
 
-interface VerifyPasswordParams {
-	password: string;
-	passwordHash: string;
-}
-
 type ResetPasswordResult =
 	| {
 			user_id: string;
@@ -116,17 +113,6 @@ const pwnedPasswordCache = new PwnedPasswordCache(PWNED_PASSWORD_CACHE_MAX_PREFI
 
 export function resetPwnedPasswordCacheForTesting(): void {
 	pwnedPasswordCache.clear();
-}
-
-export async function hashPassword(_ctx: ApiContext, password: string): Promise<string> {
-	return hashPasswordUtil(password);
-}
-
-export async function verifyPassword(
-	_ctx: ApiContext,
-	{password, passwordHash}: VerifyPasswordParams,
-): Promise<boolean> {
-	return verifyPasswordUtil({password, passwordHash});
 }
 
 export async function isPasswordPwned(_ctx: ApiContext, password: string): Promise<boolean> {
@@ -223,7 +209,7 @@ export async function forgotPassword(ctx: ApiContext, {data, request}: ForgotPas
 		return;
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	const token = createPasswordResetToken(await AuthUtility.generateSecureToken(ctx));
+	const token = createPasswordResetToken(await RandomUtils.randomString(64));
 	await users.createPasswordResetToken({
 		token_: token,
 		user_id: user.id,
@@ -314,7 +300,7 @@ export async function commitPasswordReset(
 	if (updates.authenticator_types) {
 		await ctx.services.botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	}
-	await AuthSession.terminateAllUserSessions(ctx, user.id);
+	await revokeAllAuthSessions(ctx.services, user.id);
 	return updatedUser;
 }
 
@@ -324,7 +310,7 @@ export async function applyPasswordReset(
 ): Promise<ResetPasswordResult> {
 	const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, user);
 	const hasMfa = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) || webauthnIsSecondFactor;
-	const passwordHash = await hashPassword(ctx, password);
+	const passwordHash = await hashPassword(password);
 	const updatedUser = await commitPasswordReset(ctx, {user, passwordHash, webauthnIsSecondFactor});
 	await afterPasswordSet?.();
 	if (hasMfa) {

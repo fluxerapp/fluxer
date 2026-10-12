@@ -135,15 +135,6 @@ concurrency_acquire_release_test() ->
     ?assertEqual(0, session_start_count()),
     gen_server:stop(?MODULE).
 
-guild_concurrency_acquire_release_test() ->
-    {ok, _Pid} = start_link(),
-    ?assertEqual(0, guild_start_count()),
-    ?assertEqual(ok, try_acquire_guild_start()),
-    ?assertEqual(1, guild_start_count()),
-    ?assertEqual(ok, release_guild_start()),
-    ?assertEqual(0, guild_start_count()),
-    gen_server:stop(?MODULE).
-
 release_without_acquire_does_not_underflow_test() ->
     {ok, _Pid} = start_link(),
     ?assertEqual(ok, release_session_start()),

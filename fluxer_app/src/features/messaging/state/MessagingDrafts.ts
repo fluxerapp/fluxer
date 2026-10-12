@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
@@ -86,7 +85,6 @@ class Drafts {
 		}
 		delete this.drafts[channelId];
 		delete this.draftSegments[channelId];
-		TextareaSelection.clearChannelSelection(channelId);
 	}
 
 	deleteChannelDraft(channelId: string): void {

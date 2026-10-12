@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
-import {commitUnderTranslation, isTranslationDomCrash} from '@app/features/i18n/testing/TranslationCommitHarness';
+import {commitUnderTranslation} from '@app/features/i18n/testing/TranslationCommitHarness';
 import {
 	findTranslationUnsafeTextNodes,
 	TRANSLATION_MARKER,
@@ -52,31 +52,6 @@ beforeAll(() => {
 afterEach(() => {
 	i18n.activate('en');
 	document.body.replaceChildren();
-});
-
-describe('lingui <Trans> without a translation-safe defaultComponent', () => {
-	for (const pipelineName of TRANSLATOR_PIPELINE_NAMES) {
-		it(`throws the production DOM error on a simple message under ${pipelineName}`, () => {
-			const result = commitUnderTranslation({
-				before: withBadge('simple', false, false),
-				after: withBadge('simple', true, false),
-				pipeline: TranslatorPipelines[pipelineName],
-			});
-			expect(result.unsafeTextNodesBeforeTranslation).toBeGreaterThan(0);
-			expect(result.htmlBeforeTranslation).toContain('Monthly $5<i>x</i>');
-			expect(isTranslationDomCrash(result.error)).toBe(true);
-		});
-
-		it(`throws the production DOM error on a rich message under ${pipelineName}`, () => {
-			const result = commitUnderTranslation({
-				before: withBadge('rich', false, false),
-				after: withBadge('rich', true, false),
-				pipeline: TranslatorPipelines[pipelineName],
-			});
-			expect(result.unsafeTextNodesBeforeTranslation).toBeGreaterThan(0);
-			expect(isTranslationDomCrash(result.error)).toBe(true);
-		});
-	}
 });
 
 describe('lingui <Trans> under AppI18nProvider', () => {
@@ -171,15 +146,6 @@ describe('translation-safe wrapping internals', () => {
 			pipeline: TranslatorPipelines.chromeLegacyFont,
 		});
 		expect(result.unsafeTextNodesBeforeTranslation).toBe(0);
-	});
-
-	it('leaves nested rich message text unwrapped when it is not recursed into', () => {
-		const result = commitUnderTranslation({
-			before: provided(message('nested'), false),
-			after: provided(message('nested'), false),
-			pipeline: TranslatorPipelines.chromeLegacyFont,
-		});
-		expect(result.unsafeTextNodesBeforeTranslation).toBeGreaterThan(0);
 	});
 
 	it('remounts on a locale change so no stale translated segment survives', () => {

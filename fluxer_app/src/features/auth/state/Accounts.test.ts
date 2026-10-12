@@ -53,23 +53,25 @@ const mocks = vi.hoisted(() => ({
 	isInstalledPwa: false,
 }));
 
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
 	default: {
-		get foregroundAccountKey() {
-			return mocks.foregroundAccountKey;
-		},
-		get isReady() {
-			return mocks.isForegroundReady;
-		},
 		waitForForegroundReady: mocks.waitForForegroundReady,
-		beginForegroundPromotion: mocks.beginForegroundPromotion,
-		completeForegroundPromotion: mocks.completeForegroundPromotion,
-		rollbackForegroundPromotion: mocks.rollbackForegroundPromotion,
-		reuseReadyForegroundSession: mocks.reuseReadyForegroundSession,
+		beginPromote: mocks.beginForegroundPromotion,
+		completePromote: mocks.completeForegroundPromotion,
+		rollbackPromote: mocks.rollbackForegroundPromotion,
 		recoverForegroundSession: mocks.recoverForegroundSession,
 		retireForAccountTransition: mocks.retireForAccountTransition,
-		logout: mocks.gatewayLogout,
-		sendInvisiblePresenceForCurrentSession: mocks.sendInvisiblePresence,
+		foregroundConnection: {
+			get foregroundAccountKey() {
+				return mocks.foregroundAccountKey;
+			},
+			get isReady() {
+				return mocks.isForegroundReady;
+			},
+			reuseReadySession: mocks.reuseReadyForegroundSession,
+			logout: mocks.gatewayLogout,
+			sendInvisiblePresenceForCurrentSession: mocks.sendInvisiblePresence,
+		},
 	},
 }));
 
@@ -173,7 +175,7 @@ const {ForegroundGatewayConnectionRecoverableError, ForegroundGatewayRecoveryCau
 const {default: accountStorage} = await import('@app/features/auth/state/AccountStorage');
 const {default: SessionManager, SessionExpiredError} = await import('@app/features/platform/state/AuthSession');
 const {AccountScopedWork} = await import('@app/features/platform/state/AccountScopedWork');
-const {default: AppStorage} = await import('@app/features/platform/state/PersistentStorage');
+const {default: AppStorage, resetAppStorage} = await import('@app/features/platform/state/PersistentStorage');
 const {AuthSessionStorageKey} = await import('@app/features/platform/state/auth_session/AuthSessionStorage');
 
 mocks.readCurrentAccountKey = () => SessionManager.currentAccountKey;
@@ -248,7 +250,7 @@ beforeEach(async () => {
 	AccountAccess.forgetAccount(accountKeyOf(ACCOUNT_A.userId));
 	AccountAccess.forgetAccount(accountKeyOf(ACCOUNT_B.userId));
 	AccountAccess.forgetAccount(accountKeyOf(ACCOUNT_C.userId));
-	AppStorage.clear();
+	await resetAppStorage([]);
 	await accountStorage.deleteAccount(ACCOUNT_A.userId);
 	await accountStorage.deleteAccount(ACCOUNT_B.userId);
 	await accountStorage.deleteAccount(ACCOUNT_C.userId);

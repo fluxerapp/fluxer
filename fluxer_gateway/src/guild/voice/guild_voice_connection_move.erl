@@ -207,7 +207,7 @@ move_build_fields(Build) ->
         channel_id => ChannelIdValue,
         channel_id_bin => integer_to_binary(ChannelIdValue),
         user_id_bin => integer_to_binary(UserId),
-        session_id => guild_voice_connection_util:normalize_session_id(
+        session_id => guild_voice_connection_normalize:normalize_session_id(
             maps:get(session_id, Build)
         ),
         flags => guild_voice_connection_util:voice_flags_for_permissions(

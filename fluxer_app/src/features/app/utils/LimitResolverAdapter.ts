@@ -37,14 +37,6 @@ class LimitResolverClass {
 		return RuntimeConfig.getSnapshotOrNull()?.limits ?? null;
 	}
 
-	resolvePremium(key: LimitKey, fallback: number): number {
-		return this.resolveStock(key, fallback);
-	}
-
-	resolveFree(key: LimitKey, fallback: number): number {
-		return this.resolveRestricted(key, fallback);
-	}
-
 	resolveStock(key: LimitKey, fallback: number): number {
 		return this.resolve({
 			key,

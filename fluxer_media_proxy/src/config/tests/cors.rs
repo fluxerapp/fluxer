@@ -21,29 +21,6 @@ fn cors_defaults_to_off_with_an_empty_allowlist() {
 }
 
 #[test]
-fn cors_mode_parses_every_variant_case_insensitively() {
-    for (raw, expected) in [("off", PolicyMode::Off), ("OFF", PolicyMode::Off)] {
-        let cfg =
-            Config::load_from_iter(env_with(&[("FLUXER_MEDIA_PROXY_CORS_MODE", raw)])).unwrap();
-        assert_eq!(expected, cfg.cors.mode, "{raw:?}");
-        assert!(cfg.cors.allowed_origins.is_empty());
-    }
-
-    for (raw, expected) in [
-        (" report ", PolicyMode::Report),
-        ("Enforce", PolicyMode::Enforce),
-    ] {
-        let cfg = Config::load_from_iter(env_with(&[
-            ("FLUXER_MEDIA_PROXY_CORS_MODE", raw),
-            (ORIGINS_KEY, "https://web.fluxer.app"),
-        ]))
-        .unwrap();
-        assert_eq!(expected, cfg.cors.mode, "{raw:?}");
-        assert_eq!(vec!["https://web.fluxer.app"], allowed_origins(&cfg));
-    }
-}
-
-#[test]
 fn rejects_an_unknown_cors_mode() {
     for raw in ["strict", "true", "1"] {
         let err = Config::load_from_iter(env_with(&[

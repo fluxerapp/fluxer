@@ -14,8 +14,8 @@ vi.mock('@app/features/platform/transport/RestTransport', () => ({http: {get: vi
 
 vi.mock('@app/features/app/state/GeoIP', () => ({default: {latitude: null, longitude: null}}));
 
-vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({
-	default: {isReady: false, isConnected: false, connectionEpoch: 1},
+vi.mock('@app/features/gateway/transport/GatewaySessionPool', () => ({
+	default: {foregroundConnection: {isReady: false, isConnected: false, connectionEpoch: 1}},
 }));
 
 vi.mock('@app/features/navigation/state/SelectedChannel', () => ({

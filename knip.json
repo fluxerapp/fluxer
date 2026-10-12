@@ -15,16 +15,9 @@
 	],
 	"ignoreIssues": {
 		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
-		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
-		"fluxer_app/src/features/notification/utils/EntranceSoundScopes.ts": ["exports"],
 		"fluxer_app/src/features/platform/state/PersistentStorage.ts": ["exports"],
 		"fluxer_app/src/features/voice/utils/CodecCapabilityDetector.ts": ["exports"],
-		"fluxer_app/src/index.tsx": ["unlisted"],
-		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
-		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
-		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
-		"packages/schema/src/domains/guild/GuildAuditLogSchemas.ts": ["exports"],
-		"pnpm-workspace.yaml": ["catalog"]
+		"fluxer_app/src/index.tsx": ["unlisted"]
 	},
 	"workspaces": {
 		".": {
@@ -61,7 +54,6 @@
 				"src/preload/index.ts",
 				"src/preload/LegacyHarvestPreload.ts",
 				"src/main/**/*.test.{ts,mjs}",
-				"scripts/release-check.mjs",
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs"
 			],

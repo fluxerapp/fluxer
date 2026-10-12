@@ -11,7 +11,6 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2ImplementationKind,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2NativeAudioTapOptions,
@@ -31,7 +30,6 @@ import type {
 export interface VoiceEngineV2CommandSuccess {
 	ok: true;
 	stats?: VoiceEngineV2Stats;
-	hardwareEncoderCapabilities?: VoiceEngineV2HardwareEncoderCapabilities;
 	permissionResult?: VoiceEngineV2PermissionResult;
 	deviceInventory?: VoiceEngineV2DeviceInventory;
 }
@@ -73,7 +71,6 @@ export interface VoiceEngineV2Driver {
 	setRemoteTrackSubscription(options: VoiceEngineV2RemoteTrackSubscriptionOptions): Promise<void>;
 	publishData(options: VoiceEngineV2DataOptions): Promise<void>;
 	collectStats(): Promise<VoiceEngineV2Stats>;
-	getHardwareEncoderCapabilities?(): Promise<VoiceEngineV2HardwareEncoderCapabilities>;
 	checkPermission?(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult>;
 	requestPermission?(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult>;
 	enumerateDevices?(): Promise<VoiceEngineV2DeviceInventory>;
@@ -96,12 +93,12 @@ export interface VoiceEngineV2Driver {
 	subscribe?(listener: VoiceEngineV2ExternalEventListener): () => void;
 }
 
-type VoiceEngineV2CommandOfType<Type extends VoiceEngineV2Command['type']> = Extract<
+export type VoiceEngineV2CommandOfType<Type extends VoiceEngineV2Command['type']> = Extract<
 	VoiceEngineV2Command,
 	{type: Type}
 >;
 
-type VoiceEngineV2SessionCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2SessionCommand = VoiceEngineV2CommandOfType<
 	| 'implementation.prewarm'
 	| 'gateway.voiceState.write'
 	| 'gateway.voiceState.clear'
@@ -110,7 +107,7 @@ type VoiceEngineV2SessionCommand = VoiceEngineV2CommandOfType<
 	| 'lifecycle.teardown'
 >;
 
-type VoiceEngineV2LocalMediaCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2LocalMediaCommand = VoiceEngineV2CommandOfType<
 	| 'microphone.publish'
 	| 'microphone.unpublish'
 	| 'microphone.setEnabled'
@@ -124,19 +121,19 @@ type VoiceEngineV2LocalMediaCommand = VoiceEngineV2CommandOfType<
 	| 'screenAudio.unpublish'
 >;
 
-type VoiceEngineV2RoutingCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2RoutingCommand = VoiceEngineV2CommandOfType<
 	'outputDevice.set' | 'participantVolume.set' | 'remoteTrackSubscription.set' | 'data.publish'
 >;
 
-type VoiceEngineV2QueryCommand = VoiceEngineV2CommandOfType<
-	'stats.collect' | 'capabilities.queryHardwareEncoder' | 'permissions.check' | 'permissions.request'
+export type VoiceEngineV2QueryCommand = VoiceEngineV2CommandOfType<
+	'stats.collect' | 'permissions.check' | 'permissions.request'
 >;
 
-type VoiceEngineV2DevicesCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2DevicesCommand = VoiceEngineV2CommandOfType<
 	'devices.enumerate' | 'devices.selectAudioInput' | 'devices.selectAudioOutput' | 'devices.selectCamera'
 >;
 
-type VoiceEngineV2NativeCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2NativeCommand = VoiceEngineV2CommandOfType<
 	| 'nativeCapture.start'
 	| 'nativeCapture.update'
 	| 'nativeCapture.stop'
@@ -146,7 +143,7 @@ type VoiceEngineV2NativeCommand = VoiceEngineV2CommandOfType<
 	| 'nativeFrameSink.detach'
 >;
 
-type VoiceEngineV2UtilityCommand = VoiceEngineV2CommandOfType<
+export type VoiceEngineV2UtilityCommand = VoiceEngineV2CommandOfType<
 	'e2ee.setEnabled' | 'timer.schedule' | 'timer.cancel' | 'diagnostics.log' | 'operation.cancel'
 >;
 
@@ -194,7 +191,6 @@ export abstract class VoiceEngineV2ImplementationBase implements VoiceEngineV2Im
 			case 'data.publish':
 				return this.executeRouting(command);
 			case 'stats.collect':
-			case 'capabilities.queryHardwareEncoder':
 			case 'permissions.check':
 			case 'permissions.request':
 				return this.executeQuery(command);
@@ -302,14 +298,7 @@ export abstract class VoiceEngineV2ImplementationBase implements VoiceEngineV2Im
 		switch (command.type) {
 			case 'stats.collect':
 				return {ok: true, stats: await this.driver.collectStats()};
-			case 'capabilities.queryHardwareEncoder': {
-				const getHardwareEncoderCapabilities = this.driver.getHardwareEncoderCapabilities;
-				if (!getHardwareEncoderCapabilities) throw unsupportedDriverMethod('capabilities');
-				return {
-					ok: true,
-					hardwareEncoderCapabilities: await getHardwareEncoderCapabilities.call(this.driver),
-				};
-			}
+
 			case 'permissions.check':
 				return {
 					ok: true,

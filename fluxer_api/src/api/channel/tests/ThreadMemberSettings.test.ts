@@ -5,12 +5,8 @@ import {createChannelID, createUserID} from '@app/api/BrandedTypes';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -32,7 +28,7 @@ describe('thread member settings', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -40,12 +36,11 @@ describe('thread member settings', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
 	async function setup() {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -69,21 +64,6 @@ describe('thread member settings', () => {
 			.expect(status, code)
 			.execute();
 	}
-
-	it('is an unregistered path outside the experiment', async () => {
-		const s = await setup();
-		await threadsRequest(harness, s.owner.token, {capable: false})
-			.patch(`/channels/${s.thread.id}/thread-members/@me/settings`)
-			.body({flags: ThreadMemberFlags.ALL_MESSAGES})
-			.expect(404)
-			.execute();
-		await setChannelThreadsConfig({enabled: false});
-		await threadsRequest(harness, s.owner.token)
-			.patch(`/channels/${s.thread.id}/thread-members/@me/settings`)
-			.body({flags: ThreadMemberFlags.ALL_MESSAGES})
-			.expect(404)
-			.execute();
-	});
 
 	it('updates flags and mute, keeps HAS_INTERACTED and tells only the member', async () => {
 		const s = await setup();

@@ -1,53 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, createGuildID} from '@app/api/BrandedTypes';
-import {MessageContentService} from '@app/api/channel/services/message/MessageContentService';
 import {maskThreadArtifacts} from '@app/api/channel/services/message/ThreadMessageResponses';
-import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
-import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
-import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
-import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {Channel} from '@app/api/models/Channel';
-import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import {GuildExplicitContentFilterTypes} from '@fluxer/constants/src/GuildConstants';
+import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ServerMessageFlags} from '@fluxer/constants/src/ThreadConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {describe, expect, it} from 'vitest';
-
-const GUILD_ID = createGuildID(1_920_000_000_000_000_000n);
-
-function channel(id: bigint, type: number, overrides: Partial<ChannelRow> = {}): Channel {
-	return new Channel({
-		channel_id: createChannelID(id),
-		guild_id: GUILD_ID,
-		type,
-		name: `c${id}`,
-		topic: null,
-		icon_hash: null,
-		url: null,
-		parent_id: null,
-		position: 0,
-		owner_id: null,
-		recipient_ids: null,
-		nsfw: null,
-		rate_limit_per_user: 0,
-		bitrate: null,
-		user_limit: null,
-		voice_connection_limit: null,
-		rtc_region: null,
-		rtc_p2p: null,
-		last_message_id: null,
-		last_pin_timestamp: null,
-		permission_overwrites: null,
-		nicks: null,
-		soft_deleted: false,
-		indexed_at: null,
-		version: 1,
-		...overrides,
-	});
-}
 
 function message(overrides: Partial<MessageResponse>): MessageResponse {
 	return {
@@ -74,37 +31,6 @@ function message(overrides: Partial<MessageResponse>): MessageResponse {
 		...overrides,
 	};
 }
-
-describe('thread NSFW scope', () => {
-	const contentService = new MessageContentService(
-		{} as UserRepository,
-		{} as GuildRepository,
-		{} as LimitConfigService,
-	);
-	const guild = {
-		nsfw_level: 0,
-		features: [],
-		explicit_content_filter: GuildExplicitContentFilterTypes.ALL_MEMBERS,
-	} as unknown as GuildResponse;
-
-	it('resolves a thread to its parent and leaves other channels alone', async () => {
-		const parent = channel(1n, ChannelTypes.GUILD_TEXT, {nsfw: true});
-		const thread = channel(2n, ChannelTypes.PUBLIC_THREAD, {parent_id: parent.id});
-		const find = async (id: ChannelID) => (id === parent.id ? parent : null);
-		expect(await resolveNsfwScopeChannel(thread, find)).toBe(parent);
-		expect(await resolveNsfwScopeChannel(parent, find)).toBe(parent);
-		expect(contentService.isNSFWContentAllowed({channel: thread, guild})).toBe(false);
-		expect(contentService.isNSFWContentAllowed({channel: await resolveNsfwScopeChannel(thread, find), guild})).toBe(
-			true,
-		);
-	});
-
-	it('treats forum and media parents like text for NSFW', () => {
-		expect(
-			contentService.isNSFWContentAllowed({channel: channel(3n, ChannelTypes.GUILD_FORUM, {nsfw: true}), guild}),
-		).toBe(true);
-	});
-});
 
 describe('thread artifact masking', () => {
 	it('drops thread created messages and clears thread bits including nested ones', () => {

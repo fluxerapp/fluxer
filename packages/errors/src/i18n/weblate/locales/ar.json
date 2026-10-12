@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "عدد كبير جدًا من الملفات. الحد الأقصى المسموح به هو {maxFiles, plural, zero {# ملف} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "تم اكتشاف عنوان URL بصيغة `attachment://` لم يتم حله. كان ينبغي حله قبل معالجة التضمين.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "لم يتم العثور على المرفق المرفوع {filename}.",
-	"auth_and_oauth.application_not_owned": "أنت لا تملك هذا التطبيق.",
 	"auth_and_oauth.bot_already_in_guild": "هذا البوت موجود بالفعل في المجتمع.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "لا يمكن لمستخدمي البوت إنشاء جلسات مصادقة.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "لا يمكن لمستخدمي البوت استخدام نقاط نهاية المصادقة.",

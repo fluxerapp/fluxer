@@ -74,12 +74,12 @@ init_member_list(State) ->
     Data = maps:get(data, State, #{}),
     case guild_id(State) of
         GuildId when is_integer(GuildId), GuildId > 0 ->
-            NifRef = guild_member_list_store:new(GuildId),
+            NifRef = guild_member_list_engine:new(),
             Roles = map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
-            MemberMap = guild_data_index:member_map(Data),
+            MemberMap = guild_data_index_members:member_map(Data),
             MemberTuples = guild_member_list_store:prepare_member_tuples(MemberMap, State),
             HoistedRoleIds = guild_member_list_store:prepare_hoisted_role_ids(Roles, GuildId),
-            ok = guild_member_list_store:bulk_load(NifRef, MemberTuples, HoistedRoleIds),
+            ok = guild_member_list_engine:bulk_load(NifRef, MemberTuples, HoistedRoleIds),
             State#{member_list_engine => NifRef};
         _ ->
             State
@@ -91,10 +91,10 @@ init_counts(State) ->
     MemberCount =
         case maps:get(member_count, State, undefined) of
             N when is_integer(N), N >= 0 -> N;
-            _ -> guild_data_index:member_count(Data)
+            _ -> guild_data_index_members:member_count(Data)
         end,
     State1 = State#{member_count => MemberCount},
-    OnlineCount = guild_member_list:get_online_count(State1),
+    OnlineCount = guild_member_list_read:get_online_count(State1),
     State2 = State1#{online_count => OnlineCount},
     PublicOnlineCount = guild_public_online:compute_count(State2),
     State2#{public_online_count => PublicOnlineCount}.

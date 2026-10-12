@@ -2,11 +2,11 @@
 
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
 import styles from '@app/features/channel/components/AutocompleteMention.module.css';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
 import {
 	type AutocompleteMentionMemberOption,
 	type AutocompleteMentionRoleOption,
 	type AutocompleteMentionUserOption,
-	type AutocompleteOption,
 	type AutocompleteSpecialMentionOption,
 	isMentionMember,
 	isMentionRole,
@@ -18,7 +18,7 @@ import {useParams} from '@app/features/platform/components/router/RouterReact';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -69,16 +69,7 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 	onMouseLeave,
 	rowRefs,
 	getOptionId,
-}: {
-	onSelect: (option: AutocompleteOption) => void;
-	keyboardFocusIndex: number;
-	hoverIndex: number;
-	options: Array<AutocompleteOption>;
-	onMouseEnter: (index: number) => void;
-	onMouseLeave: () => void;
-	rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
-	getOptionId?: (index: number) => string;
-}) {
+}: AutocompleteListProps) {
 	const {i18n} = useLingui();
 	const routeParams = useParams() as {guildId?: string};
 	const guildId = routeParams.guildId;

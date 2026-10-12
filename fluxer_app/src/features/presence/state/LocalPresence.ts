@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorageContract';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';

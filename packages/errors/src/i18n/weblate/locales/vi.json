@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Quá nhiều tệp. Chỉ cho phép tối đa {maxFiles} {maxFiles, plural, other {tệp}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Phát hiện URL `attachment://` chưa được phân giải. URL này lẽ ra phải được phân giải trước khi xử lý embed.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Không tìm thấy tệp đính kèm đã tải lên {filename}.",
-	"auth_and_oauth.application_not_owned": "Bạn không phải chủ sở hữu của ứng dụng này.",
 	"auth_and_oauth.bot_already_in_guild": "Bot này đã có trong cộng đồng.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Người dùng bot không thể tạo phiên xác thực.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Người dùng bot không thể sử dụng điểm cuối xác thực.",

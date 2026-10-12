@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
-import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canOwnerRunBots} from '@app/api/user/UserHelpers';
 import {hashPassword, verifyPassword} from '@app/api/utils/PasswordUtils';
+import {randomBase64Url} from '@app/api/utils/SecretHash';
 
 export class BotAuthService {
 	constructor(
@@ -40,7 +40,7 @@ export class BotAuthService {
 		}
 		const {applicationId, secret} = parsed;
 		const application = await this.applicationRepository.getApplication(applicationId);
-		if (!application?.hasBotUser() || !application.botTokenHash) {
+		if (!application || application.botUserId === null || !application.botTokenHash) {
 			return null;
 		}
 		const [isValid, owner] = await Promise.all([
@@ -48,7 +48,7 @@ export class BotAuthService {
 			this.users.findUnique(application.ownerUserId),
 		]);
 		if (!isValid || (owner && !canOwnerRunBots(owner))) return null;
-		return application.getBotUserId();
+		return application.botUserId;
 	}
 
 	async generateBotToken(applicationId: ApplicationID): Promise<{
@@ -56,7 +56,7 @@ export class BotAuthService {
 		hash: string;
 		preview: string;
 	}> {
-		const secret = generateOAuthTokenSecret();
+		const secret = randomBase64Url(32);
 		const hash = await hashPassword(secret);
 		const preview = secret.slice(0, 8);
 		const token = `${applicationId.toString()}.${secret}`;

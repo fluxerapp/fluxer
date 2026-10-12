@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import type {PopoutResizePositionSession} from '@app/features/ui/popover/PopoutResizePositionContext';
 import {appZoomCssPx, appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {getAdaptivePadding} from '@app/features/ui/utils/Positioning';
@@ -20,7 +21,6 @@ import {
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 
 const logger = new Logger('useAntiShiftFloating');
-const DEFAULT_MIDDLEWARE: Array<Middleware> = [];
 const TITLEBAR_SELECTOR = '[data-native-titlebar]';
 const ANTI_SHIFT_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,
@@ -59,15 +59,9 @@ interface UseAntiShiftFloatingOptions {
 	placement: Placement;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
-	middleware?: Array<Middleware>;
 	shouldAutoUpdate?: boolean;
 	shouldObserveFloatingResize?: boolean;
-	enableSmartBoundary?: boolean;
 	constrainHeight?: boolean;
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max);
 }
 
 function normalizePadding(padding: Padding): {top: number; right: number; bottom: number; left: number} {
@@ -263,19 +257,13 @@ export function getBoundaryPadding(ownerDocument: Document, basePadding: number)
 	};
 }
 
-export function useAntiShiftFloating(
-	target: ReferenceElement | null,
-	enabled: boolean,
-	options: UseAntiShiftFloatingOptions,
-) {
+export function useAntiShiftFloating(target: ReferenceElement | null, options: UseAntiShiftFloatingOptions) {
 	const {
 		placement,
 		offsetMainAxis = 8,
 		offsetCrossAxis = 0,
-		middleware: extraMiddleware = DEFAULT_MIDDLEWARE,
 		shouldAutoUpdate = true,
 		shouldObserveFloatingResize = true,
-		enableSmartBoundary = false,
 		constrainHeight = false,
 	} = options;
 	const floatingRef = useRef<HTMLElement>(null);
@@ -300,7 +288,7 @@ export function useAntiShiftFloating(
 	const manualAbsolutePositionRef = useRef<{x: number; y: number} | null>(null);
 	const requestPositionUpdateRef = useRef<() => void>(() => {});
 	const updatePositionNow = useCallback(async () => {
-		if (!enabled || target == null || floatingRef.current == null) return;
+		if (target == null || floatingRef.current == null) return;
 		if (manualSessionIdRef.current != null || isCalculatingRef.current) {
 			pendingUpdateRef.current = true;
 			return;
@@ -314,14 +302,13 @@ export function useAntiShiftFloating(
 			const ownerDocument = floating.ownerDocument;
 			const ownerWindow = ownerDocument.defaultView;
 			if (ownerWindow == null) return;
-			const adaptivePadding = enableSmartBoundary ? getAdaptivePadding(ownerWindow) : 8;
+			const adaptivePadding = getAdaptivePadding(ownerWindow);
 			const shiftPadding = Math.max(6, adaptivePadding);
 			const boundaryPadding = getBoundaryPadding(ownerDocument, shiftPadding);
 			const middleware: Array<Middleware> = [
 				offset({mainAxis: offsetMainAxis, crossAxis: offsetCrossAxis}),
 				flip({padding: boundaryPadding}),
 				shift({padding: boundaryPadding, crossAxis: true}),
-				...extraMiddleware,
 			];
 			if (constrainHeight) {
 				middleware.push(
@@ -421,16 +408,7 @@ export function useAntiShiftFloating(
 				requestPositionUpdateRef.current();
 			}
 		}
-	}, [
-		enabled,
-		target,
-		placement,
-		offsetMainAxis,
-		offsetCrossAxis,
-		extraMiddleware,
-		enableSmartBoundary,
-		constrainHeight,
-	]);
+	}, [target, placement, offsetMainAxis, offsetCrossAxis, constrainHeight]);
 	const updatePosition = useCallback(() => {
 		pendingUpdateRef.current = true;
 		if (manualSessionIdRef.current != null || rafIdRef.current != null) return;
@@ -486,7 +464,7 @@ export function useAntiShiftFloating(
 		};
 	}, []);
 	useLayoutEffect(() => {
-		if (!enabled || target == null || floatingElement == null) {
+		if (target == null || floatingElement == null) {
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
@@ -524,15 +502,7 @@ export function useAntiShiftFloating(
 			}
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 		};
-	}, [
-		enabled,
-		target,
-		floatingElement,
-		shouldAutoUpdate,
-		shouldObserveFloatingResize,
-		updatePosition,
-		updatePositionNow,
-	]);
+	}, [target, floatingElement, shouldAutoUpdate, shouldObserveFloatingResize, updatePosition, updatePositionNow]);
 	return {
 		ref: floatingRef,
 		setFloating,

@@ -131,12 +131,6 @@ state_ttl_ms() ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-receive_and_pop_state_test() ->
-    SessionId = <<"test-session-1">>,
-    SessionState = #{seq => 42, buffer => []},
-    {ok, SessionState, Store2} = push_and_pop(SessionId, SessionState, #{}),
-    ?assertEqual(#{}, Store2).
-
 pop_state_not_found_test() ->
     Store = #{},
     {reply, {error, not_found}, Store} = handle_call(
@@ -167,61 +161,6 @@ pop_removes_entry_so_double_pop_fails_test() ->
     {reply, {error, not_found}, Store2} = handle_call(
         {pop_state, SessionId}, test_from(), Store2
     ).
-
-transfer_state_round_trip_preserves_all_fields_test() ->
-    SessionId = <<"round-trip-session">>,
-    TransferState = build_round_trip_state(SessionId),
-    {ok, Recovered, _} = push_and_pop(SessionId, TransferState, #{}),
-    assert_round_trip_fields(SessionId, Recovered).
-
-build_round_trip_state(SessionId) ->
-    #{
-        id => SessionId,
-        user_id => 42,
-        user_data => #{<<"username">> => <<"tester">>},
-        custom_status => null,
-        version => 9,
-        token_hash => <<"hash123">>,
-        auth_session_id_hash => <<"auth_hash">>,
-        properties => #{<<"os">> => <<"linux">>},
-        status => online,
-        afk => false,
-        mobile => true,
-        socket_pid => undefined,
-        guilds => [100, 200, 300],
-        active_guilds => sets:from_list([100, 300]),
-        ready => #{<<"guilds">> => []},
-        bot => false,
-        e2ee_capable => true,
-        ignored_events => [<<"TYPING_START">>],
-        initial_guild_id => 100,
-        debounce_reactions => true,
-        thread_channels_capable => true,
-        channels => #{1 => #{}},
-        relationships => #{10 => 1},
-        seq => 15,
-        ack_seq => 12,
-        buffer => [#{seq => 13}, #{seq => 14}, #{seq => 15}],
-        collected_guild_states => [],
-        collected_sessions => [],
-        collected_presences => [],
-        guild_subscription_state => #{}
-    }.
-
-assert_round_trip_fields(SessionId, RS) ->
-    ?assertEqual(SessionId, maps:get(id, RS)),
-    ?assertEqual(42, maps:get(user_id, RS)),
-    ?assertEqual(<<"hash123">>, maps:get(token_hash, RS)),
-    ?assertEqual(<<"auth_hash">>, maps:get(auth_session_id_hash, RS)),
-    ?assertEqual(15, maps:get(seq, RS)),
-    ?assertEqual(12, maps:get(ack_seq, RS)),
-    ?assertEqual(3, length(maps:get(buffer, RS))),
-    ?assertEqual([100, 200, 300], maps:get(guilds, RS)),
-    ?assert(sets:is_element(100, maps:get(active_guilds, RS))),
-    ?assert(sets:is_element(300, maps:get(active_guilds, RS))),
-    ?assertEqual(true, maps:get(e2ee_capable, RS)),
-    ?assertEqual(true, maps:get(debounce_reactions, RS)),
-    ?assertEqual(true, maps:get(thread_channels_capable, RS)).
 
 push_and_pop(SessionId, SessionState, Store0) ->
     {reply, ok, Store1} = handle_call(

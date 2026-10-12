@@ -14,7 +14,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import {ChannelTypes, MessageReferenceTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	ServerMessageFlags,
@@ -213,11 +213,7 @@ export class ThreadMessageResponses {
 		const author =
 			source?.author ??
 			(channel.ownerId
-				? await getCachedUserPartialResponse({
-						userId: channel.ownerId,
-						userCacheService: this.userCacheService,
-						requestCache: params.requestCache,
-					})
+				? await this.userCacheService.getUserPartialResponse(channel.ownerId, params.requestCache)
 				: null);
 		if (!author) return null;
 		const [referenced] = source ? await this.attachThreads([source], params.userId) : [null];

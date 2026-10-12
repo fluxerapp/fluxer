@@ -149,7 +149,7 @@ normalize_message_type(_Type) ->
 -spec owner_fallback_key(map()) -> term().
 owner_fallback_key(Params) ->
     case snowflake_id:parse_maybe(maps:get(author_id, Params, undefined)) of
-        undefined -> push_normalize:optional_guild_id(maps:get(guild_id, Params, undefined));
+        undefined -> snowflake_id:parse_maybe(maps:get(guild_id, Params, undefined));
         AuthorId -> AuthorId
     end.
 

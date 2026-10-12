@@ -4,11 +4,13 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
 import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
 import {macPermissionNameDescriptor} from '@app/features/permissions/system/components/useMacPermissionControl';
+import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -28,6 +30,11 @@ import {SystemShortcutsPushToTalkAlert} from '@app/features/user/components/moda
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
 import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
+import {
+	ENTRANCE_SOUND_DESCRIPTOR,
+	MIC_TEST_DESCRIPTOR,
+	RELEASE_DELAY_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {supportsVoiceOutputDeviceSelection} from '@app/features/voice/engine/VoiceSharedAudioContext';
@@ -72,10 +79,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo} from 'react';
 
-const RELEASE_DELAY_DESCRIPTOR = msg({
-	message: 'Release delay',
-	comment: 'Short label for push-to-talk release delay.',
-});
 const RELEASE_DELAY_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Keep transmitting briefly after release.',
 	comment: 'Description for push-to-talk release delay.',
@@ -177,26 +180,12 @@ const INPUT_AND_OUTPUT_DESCRIPTOR = msg({
 	message: 'Input and output',
 	comment: 'Subsection title in the voice tab. Keep it concise.',
 });
-const VOLUME_DESCRIPTOR = msg({
-	message: 'Volume',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const MIC_TEST_DESCRIPTOR = msg({
-	message: 'Mic test',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const ENTRANCE_SOUND_DESCRIPTOR = msg({
-	message: 'Entrance sound',
-	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
 
 interface VoiceTabProps {
 	voiceSettings: typeof VoiceSettings;
-	hasPremium: boolean;
-	autoRequestPermission?: boolean;
 }
 
-export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = false}) => {
+export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings}) => {
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
 		(value: number) => formatRoundedPercentage(i18n.locale, value),
@@ -212,17 +201,10 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		vadThreshold,
 		vadAutoSensitivity,
 	} = voiceSettings;
-	const {
-		devices,
-		deviceState,
-		status: permissionStatus,
-		requestPermission,
-	} = useMediaPermission('audio', {
-		autoRequest: autoRequestPermission,
-	});
+	const {devices, deviceState, status: permissionStatus, requestPermission} = useMediaPermission('audio');
 	const isNativeDesktop = NativePermission.isDesktop;
 	const isNativeMac = NativePermission.isMacOS;
-	const inputMonitoringGranted = NativePermission.isInputMonitoringGranted;
+	const inputMonitoringGranted = MacPermissions.statuses['input-monitoring'] === 'granted';
 	const inputDevices = useMemo(() => devices.filter((d) => d.kind === 'audioinput'), [devices]);
 	const outputDevices = useMemo(() => devices.filter((d) => d.kind === 'audiooutput'), [devices]);
 	const transmitMode = Keybind.transmitMode;

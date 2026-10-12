@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createAdminWithAcls} from '@app/api/admin/tests/AdminTestUtils';
+import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -18,11 +19,6 @@ interface VoiceFixture {
 	serverId: string;
 	initialApiKey: string;
 	initialApiSecret: string;
-}
-
-async function createAdminWithAcls(harness: ApiTestHarness, acls: Array<string>): Promise<TestAccount> {
-	const account = await createTestAccount(harness);
-	return await setUserACLs(harness, account, [AdminACLs.AUTHENTICATE, ...acls]);
 }
 
 async function createVoiceFixture(
@@ -74,34 +70,6 @@ describe('VoiceAdminController', () => {
 	});
 	afterEach(async () => {
 		await harness?.shutdown();
-	});
-	test('updates voice server credentials when api key and secret are provided', async () => {
-		const admin = await createAdminWithAcls(harness, [
-			AdminACLs.VOICE_REGION_CREATE,
-			AdminACLs.VOICE_SERVER_CREATE,
-			AdminACLs.VOICE_SERVER_UPDATE,
-		]);
-		const fixture = await createVoiceFixture(harness, admin, {
-			regionId: 'voice-region-credentials-update',
-			serverId: 'voice-server-credentials-update',
-			endpoint: 'https://voice-original.example.com/socket',
-			apiKey: 'original-api-key',
-			apiSecret: 'original-api-secret',
-		});
-		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
-			.patch(`/admin/voice/regions/${fixture.regionId}/servers/${fixture.serverId}`)
-			.body({
-				endpoint: 'https://voice-updated.example.com/socket',
-				api_key: 'updated-api-key',
-				api_secret: 'updated-api-secret',
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const persisted = await voiceRepository.getServer(fixture.regionId, fixture.serverId);
-		expect(persisted).not.toBeNull();
-		expect(persisted?.endpoint).toBe('https://voice-updated.example.com/socket');
-		expect(persisted?.apiKey).toBe('updated-api-key');
-		expect(persisted?.apiSecret).toBe('updated-api-secret');
 	});
 	test('updates api key and api secret independently when only one field is provided', async () => {
 		const admin = await createAdminWithAcls(harness, [

@@ -3,19 +3,27 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
+import {EmojiPickerCategoryList} from '@app/features/channel/components/emoji_picker/EmojiPickerCategoryList';
 import gifStyles from '@app/features/channel/components/GifPicker.module.css';
 import {PremiumUpsellBanner} from '@app/features/channel/components/PremiumUpsellBanner';
-import premiumStyles from '@app/features/channel/components/PremiumUpsellBanner.module.css';
+import {
+	buildRowOffsets,
+	PICKER_CATEGORY_HEADER_GAP,
+	PICKER_CATEGORY_HEADER_HEIGHT,
+} from '@app/features/channel/components/pickers/shared/PickerRowLayout';
+import {EMPTY_PICKER_MAP} from '@app/features/channel/components/pickers/shared/PickerRows';
 import {useScrollerViewport} from '@app/features/channel/components/pickers/shared/useScrollerViewport';
+import {
+	usePickerListMetrics,
+	useVirtualPickerGrid,
+} from '@app/features/channel/components/pickers/shared/useVirtualPickerGrid';
 import {PickerEmptyState} from '@app/features/channel/components/shared/PickerEmptyState';
 import {useStickerCategories} from '@app/features/channel/components/sticker_picker/hooks/useStickerCategories';
-import {useVirtualRows} from '@app/features/channel/components/sticker_picker/hooks/useVirtualRows';
-import {StickerPickerCategoryList} from '@app/features/channel/components/sticker_picker/StickerPickerCategoryList';
+import {getPickerRowItems, useVirtualRows} from '@app/features/channel/components/sticker_picker/hooks/useVirtualRows';
+import {renderStickerPickerPreviewItem} from '@app/features/channel/components/sticker_picker/PickerPreviewItem';
 import {
-	buildStickerRowOffsets,
 	getFixedStickerRowHeight,
 	getStickerGridColumns,
-	getStickerRowWindow,
 	STICKER_GRID_TRACK_WIDTH,
 	STICKER_SECTION_GAP,
 	type StickerRowKind,
@@ -24,9 +32,9 @@ import {StickerPickerInspector} from '@app/features/channel/components/sticker_p
 import {StickerPickerSearchBar} from '@app/features/channel/components/sticker_picker/StickerPickerSearchBar';
 import {VirtualRowWrapper} from '@app/features/channel/components/sticker_picker/VirtualRow';
 import Channels from '@app/features/channel/state/Channels';
-import * as StickerPickerCommands from '@app/features/emoji/commands/StickerPickerCommands';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
+import StickerPicker from '@app/features/emoji/state/StickerPicker';
 import {ExpressionPickerHeaderPortal} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import {
@@ -39,7 +47,7 @@ import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsell
 import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {SmileySadIcon, StickerIcon} from '@phosphor-icons/react';
@@ -70,17 +78,14 @@ export const StickersPicker = observer(
 		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const {i18n} = useLingui();
 		const [searchTerm, setSearchTerm] = useState('');
-		const [hoveredSticker, setHoveredSticker] = useState<GuildSticker | null>(null);
-		const [selectedRow, setSelectedRow] = useState(-1);
-		const [selectedColumn, setSelectedColumn] = useState(-1);
-		const [shouldScrollOnSelection, setShouldScrollOnSelection] = useState(false);
+
 		const scrollerRef = useRef<ScrollerHandle>(null);
 		const {viewportSize, scrollTop, handleScroll, handleResize} = useScrollerViewport(scrollerRef);
 		const searchInputRef = useRef<HTMLInputElement>(null);
 		const stickerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 		const channel = channelId ? (Channels.getChannel(channelId) ?? null) : null;
 		const rowListRef = useRef<HTMLDivElement>(null);
-		const [listMetrics, setListMetrics] = useState({origin: 0, viewportHeight: 0});
+		const listMetrics = usePickerListMetrics(scrollerRef, rowListRef);
 		const [stickerDataVersion, setStickerDataVersion] = useState(0);
 		const permissionVersion = useSyncExternalStore(Permission.subscribe.bind(Permission), () => Permission.version);
 		const {shouldAnimate: shouldAnimateStickerPreview} = useStickerAnimation();
@@ -90,24 +95,7 @@ export const StickersPicker = observer(
 		);
 		const getStickerGuildId = useCallback((sticker: GuildSticker) => sticker.guildId, []);
 		const renderStickerPreviewItem = useCallback(
-			(sticker: GuildSticker) => (
-				<div
-					className={premiumStyles.previewItem}
-					key={`${sticker.guildId ?? 'guild'}-${sticker.id}`}
-					data-flx="channel.stickers-picker.render-sticker-preview-item.div"
-				>
-					<img
-						src={AvatarUtils.getStickerURL({
-							id: sticker.id,
-							animated: shouldAnimateStickerPreview,
-							isAnimatable: sticker.animated,
-							size: 320,
-						})}
-						alt={sticker.name}
-						data-flx="channel.stickers-picker.render-sticker-preview-item.img"
-					/>
-				</div>
-			),
+			(sticker: GuildSticker) => renderStickerPickerPreviewItem(sticker, shouldAnimateStickerPreview),
 			[shouldAnimateStickerPreview],
 		);
 		useEffect(() => {
@@ -186,140 +174,65 @@ export const StickersPicker = observer(
 		);
 		const showPremiumUpsell =
 			shouldShowPremiumFeatures() && shouldShowStickerPremiumUpsell(channel) && !isSearching && lockedStickerCount > 0;
-		const sections = useMemo(() => {
-			const result: Array<number> = [];
-			for (const row of pickerRows) {
-				if (row.type === 'sticker-row') {
-					result.push(row.stickers.length);
-				}
-			}
-			return result;
-		}, [pickerRows]);
-		const {stickerRowIndexes, stickerRowStarts, categoryRowIndexes} = useMemo(() => {
-			const indexes = new Array<number>(pickerRows.length);
-			const starts: Array<number> = [];
-			const categories = new Map<string, number>();
-			let stickerRowIndex = 0;
-			for (let rowIndex = 0; rowIndex < pickerRows.length; rowIndex += 1) {
-				const row = pickerRows[rowIndex];
-				indexes[rowIndex] = stickerRowIndex;
-				if (row.type === 'sticker-row') {
-					starts.push(rowIndex);
-					stickerRowIndex += 1;
-				} else {
-					categories.set(row.category, rowIndex);
-				}
-			}
-			return {stickerRowIndexes: indexes, stickerRowStarts: starts, categoryRowIndexes: categories};
-		}, [pickerRows]);
+
 		const remScale = getAppRemScale();
 		const stickerRowHeight = useMemo(() => getFixedStickerRowHeight(remScale), [remScale, zoomLevel]);
 		const rowOffsets = useMemo(() => {
 			const rowKinds = pickerRows.map((row): StickerRowKind => row.type);
-			return buildStickerRowOffsets(rowKinds, {remScale, stickerRowHeight, sectionGap: STICKER_SECTION_GAP});
+			return buildRowOffsets(rowKinds, {
+				headerHeightPx: (PICKER_CATEGORY_HEADER_HEIGHT + PICKER_CATEGORY_HEADER_GAP) * remScale,
+				rowHeightPx: stickerRowHeight,
+				sectionGap: STICKER_SECTION_GAP,
+			});
 		}, [pickerRows, remScale, stickerRowHeight, zoomLevel]);
-		const contentHeight = rowOffsets[rowOffsets.length - 1]!;
-		useLayoutEffect(() => {
-			const rowListNode = rowListRef.current;
-			const scrollerNode = scrollerRef.current?.getViewportElement();
-			if (!rowListNode || !scrollerNode) {
-				return;
-			}
-			const origin = Math.round(
-				rowListNode.getBoundingClientRect().top - scrollerNode.getBoundingClientRect().top + scrollerNode.scrollTop,
-			);
-			const viewportHeight = scrollerNode.clientHeight;
-			setListMetrics((current) =>
-				current.origin === origin && current.viewportHeight === viewportHeight ? current : {origin, viewportHeight},
-			);
+		const {
+			sections,
+			rowIndexes: stickerRowIndexes,
+			rowWindow,
+			contentHeight,
+			selectedRow,
+			selectedColumn,
+			hovered: hoveredSticker,
+			shouldScrollOnSelection,
+			setSelectedRow,
+			setSelectedColumn,
+			setHovered: setHoveredSticker,
+			setShouldScrollOnSelection,
+			handleSelectionChange,
+			handleHover,
+			handleCategoryClick,
+			selectAt,
+		} = useVirtualPickerGrid({
+			rows: pickerRows,
+			getItems: getPickerRowItems,
+			rowOffsets,
+			scrollerRef,
+			scrollTop,
+			rowHeightPx: stickerRowHeight,
+			listMetrics,
+			leadRows: 2,
+			zoomLevel,
+			renderedCount: renderedStickers.length,
 		});
-		const rowWindow = useMemo(
-			() => getStickerRowWindow(rowOffsets, scrollTop - listMetrics.origin, listMetrics.viewportHeight),
-			[rowOffsets, scrollTop, listMetrics],
-		);
-		const handleCategoryClick = (category: string) => {
-			const rowIndex = categoryRowIndexes.get(category);
-			if (rowIndex == null) {
-				return;
-			}
-			scrollerRef.current?.scrollTo({to: listMetrics.origin + rowOffsets[rowIndex]!});
-		};
+
 		const handleStickerSelect = useCallback(
 			(sticker: GuildSticker, shiftKey?: boolean) => {
 				const availability = checkStickerAvailability(i18n, sticker, channel);
 				if (!availability.canUse) {
 					return;
 				}
-				StickerPickerCommands.trackStickerUsage(sticker);
+				StickerPicker.trackStickerUsage(sticker);
 				handleSelect(sticker, shiftKey);
 			},
 			[channel, handleSelect, i18n],
 		);
-		const handleSelectionChange = useCallback(
-			(row: number, column: number, shouldScroll = false) => {
-				if (row < 0 || column < 0) {
-					return;
-				}
-				setSelectedRow(row);
-				setSelectedColumn(column);
-				setShouldScrollOnSelection(shouldScroll);
-				let currentRow = 0;
-				for (const pickerRow of pickerRows) {
-					if (pickerRow.type === 'sticker-row') {
-						if (currentRow === row && column < pickerRow.stickers.length) {
-							const sticker = pickerRow.stickers[column];
-							setHoveredSticker(sticker);
-							break;
-						}
-						currentRow++;
-					}
-				}
-			},
-			[pickerRows],
-		);
-		const handleHover = useCallback(
-			(sticker: GuildSticker | null, row?: number, column?: number) => {
-				setHoveredSticker(sticker);
-				if (sticker && row !== undefined && column !== undefined) {
-					handleSelectionChange(row, column, false);
-				}
-			},
-			[handleSelectionChange],
-		);
-		useEffect(() => {
-			if (renderedStickers.length > 0 && selectedRow === 0 && selectedColumn === 0 && !hoveredSticker) {
-				handleSelectionChange(0, 0, false);
-			}
-		}, [renderedStickers, selectedRow, selectedColumn, hoveredSticker, handleSelectionChange]);
-		useEffect(() => {
-			if (!shouldScrollOnSelection || selectedRow < 0) {
-				return;
-			}
-			const rowIndex = stickerRowStarts[selectedRow];
-			if (rowIndex == null) {
-				return;
-			}
-			const start = listMetrics.origin + rowOffsets[rowIndex]!;
-			scrollerRef.current?.revealRange({start, end: start + stickerRowHeight});
-		}, [shouldScrollOnSelection, selectedRow, stickerRowStarts, rowOffsets, listMetrics.origin, stickerRowHeight]);
+
 		const handleSelectSticker = useCallback(
 			(row: number | null, column: number | null, event?: React.KeyboardEvent) => {
-				if (row === null || column === null) {
-					return;
-				}
-				let currentRow = 0;
-				for (const pickerRow of pickerRows) {
-					if (pickerRow.type === 'sticker-row') {
-						if (currentRow === row && column < pickerRow.stickers.length) {
-							const sticker = pickerRow.stickers[column];
-							handleStickerSelect(sticker, event?.shiftKey);
-							return;
-						}
-						currentRow++;
-					}
-				}
+				const item = selectAt(row, column);
+				if (item !== undefined) handleStickerSelect(item, event?.shiftKey);
 			},
-			[pickerRows, handleStickerSelect],
+			[selectAt, handleStickerSelect],
 		);
 		if (hasNoStickersAtAll) {
 			return (
@@ -435,8 +348,10 @@ export const StickersPicker = observer(
 						data-flx="channel.stickers-picker.sticker-picker-inspector"
 					/>
 				</div>
-				<StickerPickerCategoryList
-					stickersByGuildId={stickersByGuildId}
+				<EmojiPickerCategoryList
+					customEmojisByGuildId={stickersByGuildId}
+					unicodeEmojisByCategory={EMPTY_PICKER_MAP}
+					showFrequentlyUsedButton={false}
 					handleCategoryClick={handleCategoryClick}
 					data-flx="channel.stickers-picker.sticker-picker-category-list"
 				/>

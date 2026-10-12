@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {spawnSync} from 'node:child_process';
-import {createServer} from 'node:net';
 import {BatchBuilder, setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import type {JobActiveRow, JobByDayBucketRow, JobByIdRow, JobStatus} from '@app/api/database/types/JobLedgerTypes';
 import {
 	EXPIRED_JOB_ERROR,
@@ -15,41 +13,18 @@ import {
 import {describeListJobsPaging} from '@app/api/jobs/ListJobsPagingSuite';
 import {expireLegacyJobLedgerRows} from '@app/api/jobs/PostgresJobLedgerExpiry';
 import {JobsActive, JobsByDayBucket, JobsById} from '@app/api/Tables';
-import {startDockerContainer} from '@app/api/test/DockerTestContainer';
+import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {createSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import {
-	getDefaultPostgresClient,
-	type IPostgresClient,
-	initPostgres,
-	shutdownPostgres,
-} from '@pkgs/postgres/src/Client';
+import type {IPostgresClient} from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const KV_TABLE = 'kv_job_ledger_expiry';
-const CONTAINER = `fluxer-kvjobs-${process.pid.toString(36)}-${Date.now().toString(36)}`;
-const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
 const DAY_MS = 86_400_000;
 const ADMIN_USER_ID = 1_234_567_890_123n;
 
 async function sleep(ms: number): Promise<void> {
 	await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function freePort(): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const server = createServer();
-		server.on('error', reject);
-		server.listen(0, '127.0.0.1', () => {
-			const address = server.address();
-			if (typeof address === 'string' || address === null) {
-				reject(new Error('no port'));
-				return;
-			}
-			const port = address.port;
-			server.close(() => resolve(port));
-		});
-	});
 }
 
 let sequence = 0;
@@ -161,47 +136,11 @@ WHERE table_name IN ('jobs_by_id', 'jobs_by_day_bucket')
 		);
 	}
 
+	let postgresContainer: string;
 	beforeAll(async () => {
-		const port = await freePort();
-		startDockerContainer([
-			'run',
-			'-d',
-			'--name',
-			CONTAINER,
-			'-e',
-			'POSTGRES_USER=fluxer',
-			'-e',
-			'POSTGRES_PASSWORD=fluxer',
-			'-e',
-			'POSTGRES_DB=fluxer',
-			'-p',
-			`127.0.0.1:${port}:5432`,
-			'postgres:16-alpine',
-			'-c',
-			'fsync=off',
-		]);
-		let ready = false;
-		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
-			await sleep(500);
-			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
-				stdio: 'ignore',
-			});
-			if (probe.status !== 0) continue;
-			try {
-				await initPostgres({
-					url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
-					maxConnections: 4,
-					kvTable: KV_TABLE,
-				});
-				await getDefaultPostgresClient().query('SELECT 1');
-				ready = true;
-			} catch {
-				await shutdownPostgres().catch(() => {});
-			}
-		}
-		if (!ready) throw new Error('postgres never came up');
-		raw = getDefaultPostgresClient();
-		await ensurePostgresKvSchema(raw);
+		const started = await startPostgresKv({namePrefix: 'fluxer-kvjobs', kvTable: KV_TABLE, maxConnections: 4});
+		postgresContainer = started.container;
+		raw = started.client;
 		executor = new PostgresKvQueryExecutor(raw);
 	}, 900_000);
 
@@ -212,8 +151,7 @@ WHERE table_name IN ('jobs_by_id', 'jobs_by_day_bucket')
 
 	afterAll(async () => {
 		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
-		await shutdownPostgres().catch(() => {});
-		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+		await stopPostgresKv(postgresContainer);
 	});
 
 	it('writes every ledger row with an expiry and keeps it through the job lifecycle', async () => {

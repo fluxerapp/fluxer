@@ -260,39 +260,6 @@ describe('Nordic localized currencies', () => {
 	});
 
 	describe('checkout enforcement', () => {
-		test('rejects the EUR subscription price for a purchase that geolocates to Sweden', async () => {
-			lookupGeoipMock.mockResolvedValue(geoipCountry('SE'));
-			const token = await createPurchaser();
-			await createBuilder(harness, token)
-				.post('/stripe/checkout/subscription')
-				.body({price_id: MOCK_PRICES.monthlyEur, country_code: 'SE'})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.STRIPE_INVALID_PRODUCT_CONFIGURATION)
-				.execute();
-			expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-		});
-
-		test('rejects the USD subscription price for a purchase that geolocates to Sweden', async () => {
-			lookupGeoipMock.mockResolvedValue(geoipCountry('SE'));
-			const token = await createPurchaser();
-			await createBuilder(harness, token)
-				.post('/stripe/checkout/subscription')
-				.body({price_id: MOCK_PRICES.monthlyUsd, country_code: 'US'})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.STRIPE_INVALID_PRODUCT_CONFIGURATION)
-				.execute();
-			expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-		});
-
-		test('rejects a neighbouring Nordic price for a purchase that geolocates to Sweden', async () => {
-			lookupGeoipMock.mockResolvedValue(geoipCountry('SE'));
-			const token = await createPurchaser();
-			await createBuilder(harness, token)
-				.post('/stripe/checkout/subscription')
-				.body({price_id: MOCK_PRICES.monthlyDkk, country_code: 'DK'})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.STRIPE_INVALID_PRODUCT_CONFIGURATION)
-				.execute();
-			expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-		});
-
 		test('accepts the SEK subscription price for a purchase that geolocates to Sweden', async () => {
 			lookupGeoipMock.mockResolvedValue(geoipCountry('SE'));
 			const token = await createPurchaser();

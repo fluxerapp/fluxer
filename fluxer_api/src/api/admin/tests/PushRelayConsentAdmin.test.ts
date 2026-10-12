@@ -3,7 +3,7 @@
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
+import {NatsConfigPublisher} from '@app/api/instance/NatsConfigPublisher';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -49,7 +49,7 @@ describe('push relay supplemental notice consent', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		vi.spyOn(PushRelayConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
+		vi.spyOn(NatsConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
 	});
 
 	afterEach(() => {
@@ -236,12 +236,12 @@ describe('push relay supplemental notice consent', () => {
 
 	it('publishes the legacy delivery document with the consent', async () => {
 		const admin = await createAdmin();
-		const publish = vi.mocked(PushRelayConfigPublisher.prototype.publish);
+		const publish = vi.mocked(NatsConfigPublisher.prototype.publish);
 
 		const updated = await patchConfig(admin, {push_relay: {relay_consent_accepted: true}}).execute();
 
 		expect(publish).toHaveBeenCalledTimes(1);
-		expect(publish).toHaveBeenCalledWith({
+		expect(publish).toHaveBeenCalledWith('config.push.delivery', 'push_service_delivery_config', {
 			enabled: true,
 			config_version: 1,
 			rollout_basis_points: 10000,
@@ -256,7 +256,7 @@ describe('push relay supplemental notice consent', () => {
 
 	it('does not write or publish for an empty push relay patch', async () => {
 		const admin = await createAdmin();
-		const publish = vi.mocked(PushRelayConfigPublisher.prototype.publish);
+		const publish = vi.mocked(NatsConfigPublisher.prototype.publish);
 
 		await patchConfig(admin, {push_relay: {}}).execute();
 
@@ -266,7 +266,7 @@ describe('push relay supplemental notice consent', () => {
 
 	it('ignores the retired push_service_delivery section', async () => {
 		const admin = await createAdmin();
-		const publish = vi.mocked(PushRelayConfigPublisher.prototype.publish);
+		const publish = vi.mocked(NatsConfigPublisher.prototype.publish);
 
 		const updated = await patchConfig(admin, {push_service_delivery: {relay_consent_accepted: true}}).execute();
 

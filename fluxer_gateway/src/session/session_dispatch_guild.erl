@@ -154,7 +154,7 @@ normalize_optional_snowflake_field(Data, Key) ->
     case get_field(Data, Key) of
         undefined -> undefined;
         null -> undefined;
-        Value -> guild_voice_connection_normalize:normalize_positive_snowflake(Value)
+        Value -> snowflake_id:parse_maybe(Value)
     end.
 
 -spec normalize_binary_field(map(), binary()) -> binary() | undefined.

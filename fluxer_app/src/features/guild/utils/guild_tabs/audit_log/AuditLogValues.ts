@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuditLogPlaceholder} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
+import type {
+	AuditLogDetailRow,
+	AuditLogDomainResult,
+	AuditLogPlaceholder,
+	AuditLogSentence,
+	AuditLogTone,
+} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
+import type {MessageDescriptor} from '@lingui/core';
 
 const SYSTEM_USER_ID = '0';
 const PERMISSION_FLAGS: ReadonlyArray<bigint> = Object.values(Permissions);
@@ -186,4 +193,34 @@ export function featureDelta(
 	const hasFeature = next.includes(feature);
 	if (hadFeature === hasFeature) return null;
 	return hasFeature ? 'added' : 'removed';
+}
+
+export function row(
+	id: string,
+	tone: AuditLogTone,
+	descriptor: MessageDescriptor,
+	values: AuditLogSentence['values'] = {},
+): AuditLogDetailRow {
+	return {id, tone, sentence: {descriptor, values}};
+}
+
+export function summaryOnly(summary: AuditLogSentence): AuditLogDomainResult {
+	return {summary, rows: [], blocks: []};
+}
+
+export function channelPlaceholder(id: string): AuditLogPlaceholder {
+	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
+}
+
+export function namePlaceholder(value: string): AuditLogPlaceholder {
+	return {kind: 'name', value};
+}
+
+export function textPlaceholder(value: string): AuditLogPlaceholder {
+	return {kind: 'text', value};
+}
+
+export function readColor(value: unknown): number | null {
+	const color = readNumber(value);
+	return color !== null && Number.isInteger(color) && color >= 0 && color <= 0xffffff ? color : null;
 }

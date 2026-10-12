@@ -11,9 +11,9 @@ import {
 	tryDiscoverOidcProviderMetadata,
 } from '@app/api/auth/services/SsoUtils';
 import type {UserID} from '@app/api/BrandedTypes';
-import type {ILogger} from '@app/api/ILogger';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
 import {
@@ -38,6 +38,7 @@ import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {randomBase64Url} from '@app/api/utils/SecretHash';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
@@ -50,6 +51,7 @@ import {SsoRequiredError} from '@fluxer/errors/src/domains/auth/SsoRequiredError
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms, seconds} from 'itty-time';
@@ -114,15 +116,11 @@ const CODE_VERIFIER_BYTE_LENGTH = 32;
 const STATE_BYTE_LENGTH = 16;
 const NONCE_BYTE_LENGTH = 16;
 
-let ssoLogger: ILogger | undefined;
+let ssoLogger: LoggerInterface | undefined;
 
-function getLogger(): ILogger {
+function getLogger(): LoggerInterface {
 	ssoLogger ??= Logger.child({logger: 'SsoService'});
 	return ssoLogger;
-}
-
-function randomBase64UrlToken(byteLength: number): string {
-	return randomBytes(byteLength).toString('base64url');
 }
 
 function randomHexToken(byteLength: number): string {
@@ -264,7 +262,7 @@ export class SsoService {
 	constructor(
 		private readonly apiContext: ApiContext,
 		private readonly instanceConfigRepository: InstanceConfigRepository,
-		private readonly discriminatorService: IDiscriminatorService,
+		private readonly discriminatorService: DiscriminatorService,
 		private readonly kvActivityTracker: KVActivityTracker,
 		private readonly singleCommunityService: SingleCommunityService,
 	) {}
@@ -293,9 +291,9 @@ export class SsoService {
 		const config = await this.requireReadyConfig();
 		const isMobile = isMobileSsoRedirectUri(redirectUri, config.redirectUri);
 		const state = `${isMobile ? SSO_MOBILE_STATE_PREFIX : ''}${randomHexToken(STATE_BYTE_LENGTH)}`;
-		const codeVerifier = randomBase64UrlToken(CODE_VERIFIER_BYTE_LENGTH);
+		const codeVerifier = randomBase64Url(CODE_VERIFIER_BYTE_LENGTH);
 		const codeChallenge = buildCodeChallenge(codeVerifier);
-		const nonce = randomBase64UrlToken(NONCE_BYTE_LENGTH);
+		const nonce = randomBase64Url(NONCE_BYTE_LENGTH);
 		const statePayload: SsoStatePayload = {
 			codeVerifier,
 			nonce,
@@ -498,7 +496,8 @@ export class SsoService {
 		) {
 			throw new ContentBlockedError();
 		}
-		const userRow = {
+		const userRow: UserRow = {
+			...EMPTY_USER_ROW,
 			user_id: userId,
 			username,
 			discriminator,
@@ -508,55 +507,16 @@ export class SsoService {
 			email: usernameMode ? null : claims.email.toLowerCase(),
 			email_verified: claims.emailVerified,
 			email_bounced: false,
-			password_hash: null,
-			password_last_changed_at: null,
-			totp_secret: null,
-			authenticator_types: null,
-			avatar_hash: null,
-			avatar_color: null,
-			banner_hash: null,
-			banner_color: null,
-			bio: null,
-			pronouns: null,
-			accent_color: null,
-			timezone: null,
 			timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
-			date_of_birth: null,
-			locale: null,
 			flags: 0n,
-			premium_type: null,
-			premium_since: null,
-			premium_until: null,
-			premium_gift_extension_ends_at: null,
-			premium_will_cancel: null,
-			premium_billing_cycle: null,
-			premium_lifetime_sequence: null,
-			premium_grace_ends_at: null,
-			stripe_subscription_id: null,
-			stripe_customer_id: null,
 			has_ever_purchased: false,
 			terms_agreed_at: now,
 			privacy_agreed_at: now,
 			last_active_at: now,
-			last_active_ip: null,
-			temp_banned_until: null,
-			pending_bulk_message_deletion_at: null,
-			pending_bulk_message_deletion_channel_count: null,
-			pending_bulk_message_deletion_message_count: null,
-			pending_deletion_at: null,
-			deletion_reason_code: null,
-			deletion_public_reason: null,
-			deletion_audit_log_reason: null,
 			acls: new Set<string>(),
 			traits,
-			first_refund_at: null,
-			gift_inventory_server_seq: null,
-			gift_inventory_client_seq: null,
-			premium_onboarding_dismissed_at: null,
-			mention_flags: null,
-			last_voice_activity_sharing_change_at: null,
 			version: 1,
-		} as const;
+		};
 		await this.claimSsoIdentity(userId, claims.sub, config);
 		let createAttempted = false;
 		let userCreated = false;

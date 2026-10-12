@@ -7,7 +7,8 @@ import {
 	crosspostSyncChunkJobKey,
 	SyncCrosspostedMessagePayloadSchema,
 } from '@app/api/channel/services/message/CrosspostPropagation';
-import {chunkArray, createCrosspostDeliveryService} from '@app/api/worker/tasks/utils/CrosspostWorker';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {createCrosspostDeliveryService} from '@app/api/worker/tasks/utils/CrosspostWorker';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {CROSSPOST_FANOUT_CHUNK_SIZE, CROSSPOST_FANOUT_PAGE_SIZE} from '@fluxer/constants/src/AnnouncementConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';

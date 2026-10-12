@@ -8,6 +8,8 @@ publish = false
 [dependencies]
 anyhow = "1.0.104"
 axum = "0.8.9"
+chrono = "0.4.45"
+hex = "0.4.3"
 clap = { version = "4.6.7", features = ["derive", "env"] }
 hyper = { version = "1.11.1", features = ["http1", "server"] }
 hyper-util = { version = "0.1.20", features = ["tokio"] }

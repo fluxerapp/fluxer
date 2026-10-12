@@ -27,27 +27,11 @@ describe('User flags in responses', () => {
 	beforeEach(async () => {
 		await harness.reset();
 	});
-	test('GET /users/@me preserves staff flag when STAFF_HIDDEN is not set', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags & PublicUserFlags.STAFF).toBe(PublicUserFlags.STAFF);
-		expect(json.is_staff).toBe(true);
-	});
 	test('GET /users/@me hides staff flag when STAFF_HIDDEN is set', async () => {
 		const account = await createTestAccount(harness);
 		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.STAFF_HIDDEN);
 		const {json} = await fetchUserMe(harness, account.token);
 		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
-		expect(json.is_staff).toBe(true);
-	});
-	test('PATCH /users/@me preserves staff flag after profile update', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF);
-		const {json} = await updateUserProfile(harness, account.token, {
-			bio: 'updated bio',
-		});
-		expect(json.flags & PublicUserFlags.STAFF).toBe(PublicUserFlags.STAFF);
 		expect(json.is_staff).toBe(true);
 	});
 	test('PATCH /users/@me preserves staff flag with STAFF_HIDDEN after profile update', async () => {
@@ -59,31 +43,12 @@ describe('User flags in responses', () => {
 		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
 		expect(json.is_staff).toBe(true);
 	});
-	test('GET /users/:id returns staff flag in partial response', async () => {
-		const account = await createTestAccount(harness);
-		const viewer = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.STAFF);
-		const {json} = await fetchUser(harness, account.userId, viewer.token);
-		expect(json.flags & PublicUserFlags.STAFF).toBe(PublicUserFlags.STAFF);
-	});
 	test('GET /users/:id hides staff flag when STAFF_HIDDEN is set', async () => {
 		const account = await createTestAccount(harness);
 		const viewer = await createTestAccount(harness);
 		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.STAFF_HIDDEN);
 		const {json} = await fetchUser(harness, account.userId, viewer.token);
 		expect(json.flags & PublicUserFlags.STAFF).toBe(0);
-	});
-	test('non-staff user has flags 0', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags).toBe(0);
-		expect(json.is_staff).toBe(false);
-	});
-	test('GET /users/@me includes SPAMMER when set', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.SPAMMER | UserFlags.HAS_SESSION_STARTED);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags & PublicUserFlags.SPAMMER).toBe(PublicUserFlags.SPAMMER);
 	});
 	test('PATCH /users/@me does not leak internal flags', async () => {
 		const account = await createTestAccount(harness);

@@ -4,7 +4,7 @@ use super::{ResolveContext, Resolver, ResolverResult};
 use crate::charset;
 use crate::html_parser;
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::MediaProxyClient;
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
 use scraper::{Html, Selector};
 use std::future::Future;
@@ -134,21 +134,7 @@ async fn resolve_media_url(
             return None;
         }
     };
-    Some(build_embed_media_payload(&resolved_url, &meta))
-}
-
-fn build_embed_media_payload(url: &str, metadata: &MediaMetadata) -> EmbedMedia {
-    EmbedMedia {
-        url: Some(url.to_owned()),
-        width: metadata.width,
-        height: metadata.height,
-        placeholder: metadata.placeholder.clone(),
-        flags: embed_media_flags(metadata),
-        content_hash: Some(metadata.content_hash.clone()),
-        content_type: Some(metadata.content_type.clone()),
-        duration: metadata.duration.map(|duration| duration as u32),
-        ..Default::default()
-    }
+    Some(meta.to_embed_media(&resolved_url))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

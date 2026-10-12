@@ -14,7 +14,6 @@
     preserve_connected_channels/4,
     filter_connected_session_entries/1,
     ensure_viewable_channel_map/3,
-    channel_is_visible/4,
     ensure_new_channel_visibility/5,
     update_viewable_map_for_channel/3
 ]).
@@ -29,7 +28,7 @@
 get_user_viewable_channels(UserId, State) ->
     Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     case Member of
         undefined ->
             [];
@@ -42,7 +41,7 @@ get_user_viewable_channels(UserId, State) ->
     user_id(), guild_permissions:base_permissions(), [map()], guild_state()
 ) -> [channel_id()].
 compute_viewable_with_categories(UserId, Base, Channels, State) ->
-    Viewable = guild_permissions:viewable_channel_ids(UserId, Base, Channels, State),
+    Viewable = guild_permissions_check:viewable_channel_ids(UserId, Base, Channels, State),
     {ViewableIds, ViewableIdSet, NeededParentIds} = lists:foldl(
         fun(Channel, {Ids, IdSet, Parents}) ->
             collect_viewable_channel(Channel, Viewable, {Ids, IdSet, Parents})
@@ -63,7 +62,7 @@ compute_viewable_with_categories(UserId, Base, Channels, State) ->
 shares_viewable_channel(UserId, ChannelMap, State) ->
     Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-    case guild_permissions:find_member_by_user_id(UserId, State) of
+    case guild_permissions_check:find_member_by_user_id(UserId, State) of
         undefined ->
             false;
         Member ->
@@ -268,16 +267,11 @@ ensure_viewable_channel_map(SessionData, UserId, State) ->
             viewable_channel_map(sets:from_list(get_user_viewable_channels(UserId, State)))
     end.
 
--spec channel_is_visible(user_id(), channel_id(), map() | undefined, guild_state()) ->
-    boolean().
-channel_is_visible(UserId, ChannelId, Member, State) ->
-    guild_permissions:can_view_channel(UserId, ChannelId, Member, State).
-
 -spec ensure_new_channel_visibility(
     user_id(), channel_id(), sets:set(channel_id()), map() | undefined, guild_state()
 ) -> {guild_state(), boolean()}.
 ensure_new_channel_visibility(UserId, ChannelId, ConnectedSet, NewMember, State) ->
-    NewVisible0 = channel_is_visible(UserId, ChannelId, NewMember, State),
+    NewVisible0 = guild_permissions_check:can_view_channel(UserId, ChannelId, NewMember, State),
     case {NewVisible0, sets:is_element(ChannelId, ConnectedSet)} of
         {true, _} ->
             {State, true};
@@ -311,7 +305,7 @@ update_viewable_map_for_channel(ViewableMap, ChannelId, false) ->
 channel_viewable(UserId, Member, Channel, State) ->
     case channel_id(Channel) of
         ChannelId when is_integer(ChannelId) ->
-            guild_permissions:can_view_channel(UserId, ChannelId, Member, State);
+            guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State);
         undefined ->
             false
     end.
@@ -323,3 +317,21 @@ channel_id(Channel) ->
 -spec channel_parent_id(map()) -> channel_id() | undefined.
 channel_parent_id(Channel) ->
     snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+get_user_viewable_channels_returns_empty_for_non_member_test() ->
+    State = #{
+        data => #{
+            <<"channels">> => [#{<<"id">> => <<"100">>, <<"type">> => 0}],
+            <<"members">> => []
+        }
+    },
+    ?assertEqual([], guild_visibility_channels:get_user_viewable_channels(999, State)).
+
+viewable_channel_set_returns_empty_for_invalid_user_test() ->
+    State = #{data => #{}},
+    ?assertEqual(sets:new(), guild_visibility_channels:viewable_channel_set(0, State)).
+
+-endif.

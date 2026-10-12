@@ -6,7 +6,7 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
@@ -32,7 +32,7 @@ export class UserService {
 		channelRepository: ChannelRepository,
 		guildService: GuildService,
 		entityAssetService: EntityAssetService,
-		discriminatorService: IDiscriminatorService,
+		discriminatorService: DiscriminatorService,
 		guildRepository: GuildRepository,
 		userPermissionUtils: UserPermissionUtils,
 		kvDeletionQueue: KVAccountDeletionQueueService,
@@ -63,7 +63,6 @@ export class UserService {
 		);
 		this.contentService = new UserContentService(
 			apiContext,
-			userCacheService,
 			channelService,
 			channelRepository,
 			bulkMessageDeletionQueue,

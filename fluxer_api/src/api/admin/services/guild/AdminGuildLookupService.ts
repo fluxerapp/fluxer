@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {mapGuildsToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import {formatOwnerFields, mapGuildsToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {GuildID} from '@app/api/BrandedTypes';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -47,9 +47,7 @@ export class AdminGuildLookupService {
 			guild: {
 				id: guild.id.toString(),
 				owner_id: guild.ownerId.toString(),
-				owner_username: ownerUser?.username ?? null,
-				owner_global_name: ownerUser?.globalName ?? null,
-				owner_discriminator: ownerUser ? String(ownerUser.discriminator).padStart(4, '0') : null,
+				...formatOwnerFields(ownerUser),
 				name: guild.name,
 				vanity_url_code: guild.vanityUrlCode,
 				icon: guild.iconHash,

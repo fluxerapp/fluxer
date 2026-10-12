@@ -230,10 +230,6 @@
 	background-color: var(--settings-border-color, var(--background-modifier-accent));
 }
 
-.extraContent {
-	margin-top: 2rem;
-}
-
 .footer {
 	margin-top: 1rem;
 	padding-bottom: 1.25rem;

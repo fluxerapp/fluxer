@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use self::types as generated_types;
+use crate::api::client::{ApiError, ApiResult};
+
 use progenitor_client::{ClientHooks, ClientInfo, Error, OperationInfo};
 use reqwest::header::HeaderMap;
 
@@ -61,94 +64,35 @@ pub(crate) fn deletion_reason_code(
         .map_err(|_| format!("{field} is not a deletion reason code: {value}"))
 }
 
+pub(crate) fn user_flags(values: &[String]) -> ApiResult<Vec<generated_types::UserFlags>> {
+    values
+        .iter()
+        .map(|value| {
+            generated_types::UserFlags::try_from(value.as_str())
+                .map_err(|error| ApiError::Parse(error.to_string()))
+        })
+        .collect()
+}
+
+pub(crate) fn guild_features(values: &[String]) -> Vec<generated_types::GuildFeatureSchema> {
+    values
+        .iter()
+        .cloned()
+        .map(generated_types::GuildFeatureSchema::from)
+        .collect()
+}
+
+pub(crate) fn bool_param(value: bool) -> &'static str {
+    if value { "true" } else { "false" }
+}
+
+pub(crate) fn float_to_u64(value: f64, field: &str) -> ApiResult<u64> {
+    crate::api::generated::number_to_u64(value, field).map_err(ApiError::Parse)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{number_to_u64, types::*};
-
-    #[test]
-    fn deserialize_admin_users_me() {
-        let json = serde_json::json!({
-            "user": {
-                "id": "123456789012345678",
-                "username": "testadmin",
-                "discriminator": 1,
-                "global_name": "Test Admin",
-                "bot": false,
-                "system": false,
-                "flags": "131141",
-                "premium_flags": 0,
-                "avatar": "abc123def456",
-                "banner": null,
-                "bio": "Hello world",
-                "pronouns": null,
-                "accent_color": null,
-                "email": "admin@example.com",
-                "email_verified": true,
-                "email_bounced": false,
-                "date_of_birth": "2000-01-15",
-                "locale": "en-US",
-                "premium_type": 2,
-                "premium_since": "2024-01-01T00:00:00.000Z",
-                "premium_until": null,
-                "premium_grace_ends_at": null,
-                "premium_lifetime_sequence": null,
-                "temp_banned_until": null,
-                "pending_deletion_at": null,
-                "pending_bulk_message_deletion_at": null,
-                "deletion_reason_code": null,
-                "deletion_public_reason": null,
-                "acls": ["MANAGE_USERS", "VIEW_AUDIT_LOG"],
-                "traits": ["STAFF"],
-                "has_totp": true,
-                "authenticator_types": [0],
-                "last_active_at": "2026-05-26T12:00:00.000Z",
-                "last_active_ip": "203.0.113.1",
-                "last_active_ip_reverse": "1.113.0.203.in-addr.arpa",
-                "last_active_location": "New York, US"
-            }
-        });
-
-        let response: AdminUsersMeResponse =
-            serde_json::from_value(json).expect("failed to deserialize AdminUsersMeResponse");
-
-        assert_eq!(response.user.id.to_string(), "123456789012345678");
-        assert_eq!(response.user.username, "testadmin");
-        assert!(!response.user.bot);
-        assert!(response.user.email_verified);
-        assert_eq!(response.user.acls.len(), 2);
-        assert_eq!(response.user.global_name, Some("Test Admin".to_string()));
-        assert!(response.user.banner.is_none());
-        assert!(response.user.has_totp);
-    }
-
-    #[test]
-    fn deserialize_search_guilds_response() {
-        let json = serde_json::json!({
-            "guilds": [
-                {
-                    "id": "987654321098765432",
-                    "name": "Test Guild",
-                    "icon": "def456abc123",
-                    "banner": null,
-                    "owner_id": "123456789012345678",
-                    "owner_username": "guildowner",
-                    "owner_global_name": "Guild Owner",
-                    "owner_discriminator": "0001",
-                    "member_count": 42,
-                    "features": ["COMMUNITY", "NEWS"]
-                }
-            ],
-            "total": 1
-        });
-
-        let response: SearchGuildsResponse =
-            serde_json::from_value(json).expect("failed to deserialize SearchGuildsResponse");
-
-        assert_eq!(response.total, 1.0);
-        assert_eq!(response.guilds.len(), 1);
-        assert_eq!(response.guilds[0].name, "Test Guild");
-        assert_eq!(*response.guilds[0].member_count, 42);
-    }
+    use super::number_to_u64;
 
     #[test]
     fn reject_lossy_generated_number_count() {

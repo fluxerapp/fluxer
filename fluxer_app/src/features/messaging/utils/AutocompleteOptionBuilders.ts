@@ -16,7 +16,7 @@ import {
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {matchSorter} from 'match-sorter';

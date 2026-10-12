@@ -3,7 +3,6 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
-import type {ExactRow} from '@app/api/database/types/DatabaseRowTypes';
 import type {UserGuildSettingsRow, UserSettingsRow} from '@app/api/database/types/UserTypes';
 import {USER_GUILD_SETTINGS_COLUMNS, USER_SETTINGS_COLUMNS} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
@@ -66,7 +65,7 @@ export class UserSettingsRepository {
 		return settings ? new UserSettings(settings) : null;
 	}
 
-	async upsertGuildSettings(settings: ExactRow<UserGuildSettingsRow>): Promise<UserGuildSettings> {
+	async upsertGuildSettings(settings: UserGuildSettingsRow): Promise<UserGuildSettings> {
 		const userId = settings.user_id;
 		const guildId = settings.guild_id;
 		const result = await executeVersionedUpdate<UserGuildSettingsRow, 'user_id' | 'guild_id'>(
@@ -89,7 +88,7 @@ export class UserSettingsRepository {
 		return new UserGuildSettings({...settings, version: result.finalVersion ?? 1});
 	}
 
-	async upsertSettings(settings: ExactRow<UserSettingsRow>): Promise<UserSettings> {
+	async upsertSettings(settings: UserSettingsRow): Promise<UserSettings> {
 		const userId = settings.user_id;
 		const result = await executeVersionedUpdate<UserSettingsRow, 'user_id'>(
 			() =>

@@ -2,6 +2,8 @@
 
 import {createHash} from 'node:crypto';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {errorMessage} from '@electron/common/ErrorMessage';
+import {jitteredExponentialDelay} from '@electron/common/ExponentialBackoff';
 import type {DesktopUpdateProbe} from '@electron/main/DesktopUpdateRun';
 import {ModuleDownloadRate} from '@electron/main/ModuleDownloadRate';
 import {
@@ -170,10 +172,6 @@ class ModuleUpdaterStorageFullError extends Error {
 	}
 }
 
-function errorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
-
 function hasErrorCode(error: unknown, codes: ReadonlySet<string>): boolean {
 	let cursor: unknown = error;
 	for (let depth = 0; depth < CAUSE_CHAIN_LIMIT && cursor != null; depth += 1) {
@@ -237,8 +235,12 @@ class ModuleUpdaterBackoff {
 		if (exponential >= MODULE_UPDATER_BACKOFF_CAP_MS) {
 			this.ceiling = true;
 		}
-		const capped = Math.min(exponential, MODULE_UPDATER_BACKOFF_CAP_MS);
-		return Math.round(capped * (0.5 + this.random() * 0.5));
+		return jitteredExponentialDelay(
+			MODULE_UPDATER_BACKOFF_BASE_MS,
+			MODULE_UPDATER_BACKOFF_CAP_MS,
+			this.attempt - 1,
+			this.random,
+		);
 	}
 
 	public reset(): void {
@@ -747,13 +749,6 @@ export class ModuleUpdater {
 			return;
 		}
 		await this.store.collectGarbage({now: this.now()});
-	}
-
-	public async canLaunchWhileUnreachable(): Promise<boolean> {
-		return (
-			(await this.planner.evaluateUnreachableLaunch(this.isStartupUpdateEnforced(), this.isSecurityUpdateRequired()))
-				.kind === ModuleUnreachableLaunchDecision.LAUNCH
-		);
 	}
 
 	private async launchIfAtFloor(): Promise<ModuleUpdaterOutcome> {

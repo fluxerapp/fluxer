@@ -11,7 +11,7 @@ import type {
 	AccountRekeyOutcome,
 	AccountRekeyTarget,
 	KeyedStoredAccount,
-} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
 import {
 	CONTENT_STORAGE_KEYS,
 	expectedGoldenStorageRows,

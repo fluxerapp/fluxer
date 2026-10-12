@@ -7,7 +7,7 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 
 interface UserAccountNotesServiceDeps {
 	userAccountRepository: UserRepository;
-	userRelationshipRepository: UserRepository;
+
 	updatePropagator: UserAccountUpdatePropagator;
 }
 
@@ -18,12 +18,12 @@ export class UserAccountNotesService {
 		note: string;
 	} | null> {
 		const {userId, targetId} = params;
-		const note = await this.deps.userRelationshipRepository.getUserNote(userId, targetId);
+		const note = await this.deps.userAccountRepository.getUserNote(userId, targetId);
 		return note ? {note: note.note} : null;
 	}
 
 	async getUserNotes(userId: UserID): Promise<Record<string, string>> {
-		const notes = await this.deps.userRelationshipRepository.getUserNotes(userId);
+		const notes = await this.deps.userAccountRepository.getUserNotes(userId);
 		return Object.fromEntries(Array.from(notes.entries()).map(([k, v]) => [k.toString(), v]));
 	}
 
@@ -32,9 +32,9 @@ export class UserAccountNotesService {
 		const targetUser = await this.deps.userAccountRepository.findUnique(targetId);
 		if (!targetUser) throw new UnknownUserError();
 		if (note) {
-			await this.deps.userRelationshipRepository.upsertUserNote(userId, targetId, note);
+			await this.deps.userAccountRepository.upsertUserNote(userId, targetId, note);
 		} else {
-			await this.deps.userRelationshipRepository.clearUserNote(userId, targetId);
+			await this.deps.userAccountRepository.clearUserNote(userId, targetId);
 		}
 		await this.deps.updatePropagator.dispatchUserNoteUpdate({userId, targetId, note: note ?? ''});
 	}

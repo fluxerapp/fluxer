@@ -2,7 +2,12 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
-import {CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CLEAR_SEARCH_DESCRIPTOR,
+	MESSAGE_COUNT_DESCRIPTOR as D_MESSAGE_COUNT_DESCRIPTOR,
+	RETRY_SEARCH_DESCRIPTOR as D_RETRY_SEARCH_DESCRIPTOR,
+	SEARCH_INDEXING_DESCRIPTOR as D_THREAD_SEARCH_INDEXING_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {openCreateThread, openThread} from '@app/features/threads/commands/ThreadNavigation';
@@ -65,7 +70,7 @@ const ThreadBrowserItem = observer(({thread, onOpen}: {thread: Channel; onOpen: 
 						<LockSimpleIcon size={14} data-flx="threads.thread-browser.thread-browser-item.private-icon" />
 					)}
 					<span data-flx="threads.thread-browser.thread-browser-item.message-count">
-						{i18n._(D.MESSAGE_COUNT_DESCRIPTOR, {count: thread.messageCount})}
+						{i18n._(D_MESSAGE_COUNT_DESCRIPTOR, {count: thread.messageCount})}
 					</span>
 					<span data-flx="threads.thread-browser.thread-browser-item.last-activity">
 						{DateUtils.getRelativeDateString(lastActivity, i18n)}
@@ -128,7 +133,7 @@ const SearchResults = observer(
 					<div className={styles.notice} data-flx="threads.thread-browser.search-results.indexing">
 						<Spinner size="small" data-flx="threads.thread-browser.search-results.spinner--2" />
 						<span data-flx="threads.thread-browser.search-results.indexing-text">
-							{i18n._(D.THREAD_SEARCH_INDEXING_DESCRIPTOR)}
+							{i18n._(D_THREAD_SEARCH_INDEXING_DESCRIPTOR)}
 						</span>
 					</div>
 				)}
@@ -144,7 +149,7 @@ const SearchResults = observer(
 							onClick={retry}
 							data-flx="threads.thread-browser.search-results.button.retry"
 						>
-							{i18n._(D.RETRY_SEARCH_DESCRIPTOR)}
+							{i18n._(D_RETRY_SEARCH_DESCRIPTOR)}
 						</Button>
 					</div>
 				)}

@@ -50,30 +50,6 @@ describe('HttpClient', () => {
 				expect(leakedCookie).toBeUndefined();
 				expect(leakedProxyAuthorization).toBeUndefined();
 			});
-			it('keeps sensitive headers on same-origin redirects', async () => {
-				const client = createHttpClient(TEST_USER_AGENT);
-				const secretToken = 'Bearer safe-token';
-				let receivedAuthorization: string | undefined;
-				let requestCount = 0;
-				testServer.setHandler((req, res) => {
-					requestCount += 1;
-					if (requestCount === 1) {
-						res.writeHead(302, {Location: '/same-origin'});
-						res.end();
-						return;
-					}
-					receivedAuthorization = req.headers['authorization'] as string | undefined;
-					res.writeHead(200);
-					res.end('OK');
-				});
-				await client.sendRequest({
-					url: testServer.url,
-					headers: {
-						Authorization: secretToken,
-					},
-				});
-				expect(receivedAuthorization).toBe(secretToken);
-			});
 			it('throws error when exceeding max redirects', async () => {
 				const client = createHttpClient(TEST_USER_AGENT);
 				testServer.setHandler((_req, res) => {

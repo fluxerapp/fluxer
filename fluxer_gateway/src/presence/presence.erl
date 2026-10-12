@@ -59,7 +59,7 @@ init(PresenceData) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 20),
     State = build_initial_state(PresenceData),
-    StateWithSubs = presence_broadcast:ensure_initial_global_subscriptions(State),
+    StateWithSubs = presence_broadcast_subscriptions:ensure_initial_global_subscriptions(State),
     {ok, StateWithSubs}.
 
 -spec terminate(term(), state() | term()) -> ok.
@@ -91,7 +91,7 @@ handle_call({session_connect, Request}, {Pid, _}, State) when is_map(Request), i
     FinalState = presence_broadcast:publish_global_presence(
         maps:get(sessions, NewState), NewState
     ),
-    presence_broadcast:send_cached_presences_to_session(SessionPid, FinalState),
+    presence_broadcast_subscriptions:send_cached_presences_to_session(SessionPid, FinalState),
     {reply, Reply, FinalState};
 handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
@@ -146,7 +146,10 @@ handle_cast({sync_friends, FriendIds, FlushedIds}, State) when
 handle_cast({sync_group_dm_recipients, RecipientsByChannel}, State) when
     is_map(RecipientsByChannel)
 ->
-    {noreply, presence_broadcast:sync_group_dm_subscriptions(RecipientsByChannel, State)};
+    {noreply,
+        presence_broadcast_subscriptions:sync_group_dm_subscriptions(
+            RecipientsByChannel, State
+        )};
 handle_cast(Msg, State) ->
     handle_cast_guild(Msg, State).
 
@@ -159,7 +162,7 @@ session_connect_pid(_Request, CallerPid) ->
 -spec handle_sync_friends_cast([term()], [term()], state()) -> {noreply, state()}.
 handle_sync_friends_cast(FriendIds, FlushedIds, State) ->
     {noreply,
-        presence_broadcast:sync_friend_subscriptions(
+        presence_broadcast_subscriptions:sync_friend_subscriptions(
             user_ids(FriendIds), user_ids(FlushedIds), State
         )}.
 
@@ -309,28 +312,6 @@ thread_user_flip_is_forwarded_to_every_session_test() ->
     receive
         {thread_user_flip, 4} -> ok
     after 1000 -> ?assert(false)
-    end.
-
-reconcile_flattened_presence_uses_current_session_state_test() ->
-    State = test_state(#{}),
-    PublishedState = State#{last_published_presence => #{status => <<"offline">>}},
-    meck:new(presence_broadcast, [passthrough]),
-    meck:expect(
-        presence_broadcast,
-        publish_global_presence,
-        fun(Sessions, ReceivedState) ->
-            ?assertEqual(#{}, Sessions),
-            ?assertEqual(State, ReceivedState),
-            PublishedState
-        end
-    ),
-    try
-        ?assertEqual(
-            {noreply, PublishedState},
-            handle_cast(reconcile_flattened_presence, State)
-        )
-    after
-        meck:unload(presence_broadcast)
     end.
 
 -spec test_state(sessions()) -> state().

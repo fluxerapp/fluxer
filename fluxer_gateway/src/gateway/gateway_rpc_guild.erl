@@ -61,27 +61,17 @@ route(M, P) ->
     <<"guild.get_user_max_role_position">> => fun gateway_rpc_guild_permissions:handle/2,
     <<"guild.get_viewable_channels">> => fun gateway_rpc_guild_channels:handle/2,
     <<"guild.resolve_channel_mentions">> => fun gateway_rpc_guild_channels:handle/2,
-    <<"guild.get_vanity_url_channel">> => fun gateway_rpc_guild_channels:handle/2,
     <<"guild.get_first_viewable_text_channel">> => fun gateway_rpc_guild_channels:handle/2,
     <<"guild.get_category_channel_count">> => fun gateway_rpc_guild_channels:handle/2,
     <<"guild.get_channel_count">> => fun gateway_rpc_guild_channels:handle/2,
-    <<"guild.get_users_to_mention_by_roles">> => fun gateway_rpc_guild_mentions:handle/2,
-    <<"guild.get_users_to_mention_by_user_ids">> => fun gateway_rpc_guild_mentions:handle/2,
-    <<"guild.get_all_users_to_mention">> => fun gateway_rpc_guild_mentions:handle/2,
-    <<"guild.resolve_all_mentions">> => fun gateway_rpc_guild_mentions:handle/2,
-    <<"guild.resolve_mention_sources">> => fun gateway_rpc_guild_mentions:handle/2,
     <<"guild.resolve_mention_sources_page">> => fun gateway_rpc_guild_mentions:handle/2,
     <<"guild.update_member_voice">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.disconnect_voice_user">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.disconnect_voice_user_if_in_channel">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.disconnect_all_voice_users_in_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.confirm_voice_connection_from_livekit">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.get_voice_states_for_channel">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.get_pending_joins_for_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.move_member">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.get_voice_state">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.switch_voice_region">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.batch_voice_state_update">> => fun gateway_rpc_guild_voice:handle/2
+    <<"guild.switch_voice_region">> => fun gateway_rpc_guild_voice:handle/2
 }).
 
 -spec route_handler(binary()) -> fun((binary(), map()) -> term()).

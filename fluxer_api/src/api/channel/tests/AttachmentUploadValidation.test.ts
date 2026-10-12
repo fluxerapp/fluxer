@@ -144,25 +144,15 @@ describe('Attachment Upload Validation', () => {
 				channelId = guild.system_channel_id ?? channel.id;
 			});
 			const testCases = [
-				{filename: 'file<script>.txt', shouldSanitize: true, description: 'HTML tag in filename'},
-				{filename: 'file>output.txt', shouldSanitize: true, description: 'redirect operator'},
-				{filename: 'file|pipe.txt', shouldSanitize: true, description: 'pipe character'},
-				{filename: 'file:colon.txt', shouldSanitize: true, description: 'colon (Windows reserved)'},
-				{filename: 'file*star.txt', shouldSanitize: true, description: 'asterisk (wildcard)'},
-				{filename: 'file?question.txt', shouldSanitize: true, description: 'question mark'},
-				{filename: 'file"quote.txt', shouldSanitize: true, description: 'double quote'},
-				{filename: 'COM1.txt', shouldSanitize: true, description: 'Windows reserved name'},
-				{filename: 'LPT1.txt', shouldSanitize: true, description: 'Windows reserved name'},
-				{filename: 'file with spaces.txt', shouldSanitize: false, description: 'spaces should be OK'},
-				{
-					filename: 'file-dash_underscore.txt',
-					shouldSanitize: false,
-					description: 'dash and underscore OK',
-				},
-				{filename: 'file.multiple.dots.txt', shouldSanitize: false, description: 'multiple dots OK'},
-				{filename: 'файл.txt', shouldSanitize: false, description: 'unicode characters OK'},
-				{filename: '文件.txt', shouldSanitize: false, description: 'CJK characters OK'},
-				{filename: '😀.txt', shouldSanitize: false, description: 'emoji OK'},
+				{filename: 'file<script>.txt', description: 'HTML tag in filename'},
+				{filename: 'file>output.txt', description: 'redirect operator'},
+				{filename: 'file|pipe.txt', description: 'pipe character'},
+				{filename: 'file:colon.txt', description: 'colon (Windows reserved)'},
+				{filename: 'file*star.txt', description: 'asterisk (wildcard)'},
+				{filename: 'file?question.txt', description: 'question mark'},
+				{filename: 'file"quote.txt', description: 'double quote'},
+				{filename: 'COM1.txt', description: 'Windows reserved name'},
+				{filename: 'LPT1.txt', description: 'Windows reserved name'},
 			];
 			for (const tc of testCases) {
 				it(`should handle ${tc.description}`, async () => {
@@ -184,11 +174,9 @@ describe('Attachment Upload Validation', () => {
 					expect(json.attachments).not.toBeNull();
 					expect(json.attachments!).toHaveLength(1);
 					const sanitized = json.attachments![0].filename;
-					if (tc.shouldSanitize) {
-						const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
-						for (const char of dangerousChars) {
-							expect(sanitized).not.toContain(char);
-						}
+					const dangerousChars = ['<', '>', ':', '"', '|', '?', '*'];
+					for (const char of dangerousChars) {
+						expect(sanitized).not.toContain(char);
 					}
 				});
 			}

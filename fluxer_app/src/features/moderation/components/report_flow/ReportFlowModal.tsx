@@ -5,6 +5,8 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import {
+	BACK_DESCRIPTOR,
+	DONE_DESCRIPTOR,
 	NEXT_DESCRIPTOR,
 	REPORT_MESSAGE_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
@@ -16,10 +18,8 @@ import {type ReportFlowSubmissionTarget, submitReportFlow} from '@app/features/m
 import {
 	ALREADY_REPORTED_MESSAGE_DESCRIPTOR,
 	ALREADY_REPORTED_PROFILE_DESCRIPTOR,
-	BACK_DESCRIPTOR,
 	CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR,
 	CLAIM_TO_REPORT_DESCRIPTOR,
-	DONE_DESCRIPTOR,
 	FINISH_ACCOUNT_SETUP_DESCRIPTOR,
 	FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR,
 	FLOW_OUTDATED_DESCRIPTOR,

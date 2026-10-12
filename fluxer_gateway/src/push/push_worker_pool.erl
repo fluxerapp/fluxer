@@ -3,7 +3,7 @@
 -module(push_worker_pool).
 -typing([eqwalizer]).
 
--export([init_counter/0, maybe_spawn/1, active_count/0, utilization_pct/0]).
+-export([init_counter/0, maybe_spawn/1, active_count/0]).
 
 -define(MAX_PUSH_WORKERS, 256).
 -define(PUSH_WORKER_COUNTER, push_worker_counter).
@@ -58,10 +58,6 @@ active_count() ->
     catch
         error:badarg -> 0
     end.
-
--spec utilization_pct() -> non_neg_integer().
-utilization_pct() ->
-    (active_count() * 100) div ?MAX_PUSH_WORKERS.
 
 -spec maybe_warn_high_utilization(non_neg_integer()) -> ok.
 maybe_warn_high_utilization(Active) ->

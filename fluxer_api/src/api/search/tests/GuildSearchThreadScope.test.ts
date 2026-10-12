@@ -2,12 +2,8 @@
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, markGuildChannelsAsIndexed} from '@app/api/message/tests/MessageTestUtils';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -29,7 +25,7 @@ describe('guild search thread scope', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterEach(() => {
@@ -37,7 +33,7 @@ describe('guild search thread scope', () => {
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -64,7 +60,6 @@ describe('guild search thread scope', () => {
 	}
 
 	it('caps index enqueues per search in an active guild', async () => {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const s = await setup();
 		const indexJobs = spyIndexJobs();
 		expect(await search(s.owner, {context_guild_id: s.guildId})).toEqual({indexing: true});
@@ -72,7 +67,6 @@ describe('guild search thread scope', () => {
 	});
 
 	it('never reports indexing for threads', async () => {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const s = await setup();
 		await markGuildChannelsAsIndexed(harness, s.owner.token, s.guildId);
 		const thread = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)

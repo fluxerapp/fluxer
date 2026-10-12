@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showVoiceMemberModerationFailedModal} from '@app/features/app/components/alerts/VoiceMemberModerationFailedModal';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {RecordDebugModal, USER_RECORD_DESCRIPTOR} from '@app/features/devtools/components/debug/RecordDebugModal';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
-import Guilds from '@app/features/guild/state/Guilds';
-import {resolveGuildModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
+import {useGuildMemberModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {
 	ADD_NOTE_DESCRIPTOR,
 	CHANGE_FRIEND_NICKNAME_DESCRIPTOR,
@@ -40,9 +36,7 @@ import {
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {ChangeFriendNicknameModal} from '@app/features/relationship/components/modals/ChangeFriendNicknameModal';
@@ -97,7 +91,6 @@ import {
 import {buildVoiceParticipantStreamMenu} from '@app/features/ui/action_menu/items/VoiceParticipantStreamMenuBuilder';
 import {
 	BAN_MEMBER_DESCRIPTOR,
-	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	COLLAPSE_DEVICES_DESCRIPTOR,
 	CONNECTION_VOLUME_DESCRIPTOR,
 	COPY_DEVICE_ID_DESCRIPTOR,
@@ -136,6 +129,7 @@ import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNi
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -250,26 +244,13 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const canMuteMembers = guildId ? Permission.can(Permissions.MUTE_MEMBERS, {guildId}) : false;
 	const canDeafenMembers = guildId ? Permission.can(Permissions.DEAFEN_MEMBERS, {guildId}) : false;
 	const canMoveMembers = guildId ? Permission.can(Permissions.MOVE_MEMBERS, {guildId}) : false;
-	const canKickMembers = guildId ? Permission.can(Permissions.KICK_MEMBERS, {guildId}) : false;
-	const canBanMembers = guildId ? Permission.can(Permissions.BAN_MEMBERS, {guildId}) : false;
-	const canModerateMembers = guildId ? Permission.can(Permissions.MODERATE_MEMBERS, {guildId}) : false;
-	const guild = guildId ? Guilds.getGuild(guildId) : null;
-	const {canManageTarget} = useRoleHierarchy(guild);
-	const guildSnapshot = guild?.toJSON();
-	const targetHasAdministratorPermission =
-		guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
+
 	const {
 		canKick: canKickTarget,
 		canBan: canBanTarget,
 		canTimeout: canTimeoutTarget,
-	} = resolveGuildModerationCapabilities({
-		isCurrentUser,
-		canManageTarget: canManageTarget(user.id),
-		canKickMembers,
-		canBanMembers,
-		canModerateMembers,
-		targetHasAdministratorPermission,
-	});
+		canManageTarget,
+	} = useGuildMemberModerationCapabilities(guildId, user, isCurrentUser);
 	const focusedChannelId = SelectedChannel.currentChannelId;
 	const focusedChannel = focusedChannelId ? Channels.getChannel(focusedChannelId) : null;
 	const isFocusedChannelTextBased = focusedChannel ? TEXT_BASED_CHANNEL_TYPES.has(focusedChannel.type) : false;
@@ -278,12 +259,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		focusedChannelId &&
 		Permission.can(Permissions.SEND_MESSAGES, {guildId: focusedChannel?.guildId, channelId: focusedChannelId});
 	const openDmChannel = useCallback(async () => {
-		try {
-			await PrivateChannelCommands.openDMChannel(user.id);
-		} catch (error) {
-			logger.error('Failed to open DM channel:', error);
-			showDmActionErrorModal(error);
-		}
+		await openDMChannelOrShowError(user.id);
 	}, [user.id]);
 	const handleMessage = useCallback(async () => {
 		onClose();
@@ -293,16 +269,12 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const handleOpenBlockedDm = useCallback(() => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<ConfirmModal
-					title={i18n._(OPEN_DM_DESCRIPTOR)}
-					description={i18n._(BLOCKED_USER_DM_WARNING_DESCRIPTOR, {userName: displayName})}
-					primaryText={i18n._(OPEN_DM_DESCRIPTOR)}
-					primaryVariant="primary"
-					onPrimary={openDmChannel}
-					data-flx="ui.action-menu.items.voice-participant-menu-data.handle-open-blocked-dm.confirm-modal"
-				/>
-			)),
+			blockedDmConfirmModal(
+				i18n,
+				displayName,
+				openDmChannel,
+				'ui.action-menu.items.voice-participant-menu-data.handle-open-blocked-dm.confirm-modal',
+			),
 		);
 	}, [onClose, openDmChannel, displayName, i18n]);
 	const currentUserVoiceStateInGuild = guildId
@@ -530,11 +502,9 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					if (isFocused) {
 						VoiceCallLayoutCommands.setPinnedParticipant(null);
 						VoiceCallLayoutCommands.setLayoutMode('grid');
-						VoiceCallLayoutCommands.markUserOverride();
 					} else {
 						VoiceCallLayoutCommands.setLayoutMode('focus');
 						VoiceCallLayoutCommands.setPinnedParticipant(identity, liveKitFocusSource);
-						VoiceCallLayoutCommands.markUserOverride();
 					}
 					onClose();
 				},
@@ -645,13 +615,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				onClick: async () => {
 					ModalCommands.runAfterBottomSheetClose(onClose, () => {
 						void (async () => {
-							try {
-								const channelId = await PrivateChannelCommands.ensureDMChannel(user.id);
-								await CallUtils.requestStartCall(i18n, channelId, {kind: 'voice'});
-							} catch (error) {
-								logger.error('Failed to start voice call:', error);
-								showDmActionErrorModal(error);
-							}
+							await CallUtils.startCallWithUser(i18n, user.id, {kind: 'voice'});
 						})();
 					});
 				},
@@ -1354,9 +1318,10 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
 						modal(() => (
-							<UserDebugModal
+							<RecordDebugModal
+								label={i18n._(USER_RECORD_DESCRIPTOR)}
 								title={i18n._(USER_DEBUG_DESCRIPTOR)}
-								user={user}
+								record={user}
 								data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.user-debug-modal"
 							/>
 						)),

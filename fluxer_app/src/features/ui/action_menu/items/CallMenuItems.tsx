@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {
 	START_VIDEO_CALL_DESCRIPTOR,
 	START_VOICE_CALL_DESCRIPTOR,
@@ -58,13 +56,7 @@ export const StartVoiceCallMenuItem: React.FC<StartVoiceCallMenuItemProps> = obs
 	const handleStartVoiceCall = useCallback(
 		async (event: ContextMenuActionEvent) => {
 			onClose();
-			try {
-				const channelId = await PrivateChannelCommands.ensureDMChannel(user.id);
-				await CallUtils.requestStartCall(i18n, channelId, CallUtils.getCallStartRequestOptions(event, {kind: 'voice'}));
-			} catch (error) {
-				logger.error('Failed to start voice call:', error);
-				showDmActionErrorModal(error);
-			}
+			await CallUtils.startCallWithUser(i18n, user.id, CallUtils.getCallStartRequestOptions(event, {kind: 'voice'}));
 		},
 		[i18n, onClose, user.id],
 	);
@@ -97,13 +89,7 @@ export const StartVideoCallMenuItem: React.FC<StartVideoCallMenuItemProps> = obs
 	const handleStartVideoCall = useCallback(
 		async (event: ContextMenuActionEvent) => {
 			onClose();
-			try {
-				const channelId = await PrivateChannelCommands.ensureDMChannel(user.id);
-				await CallUtils.requestStartCall(i18n, channelId, CallUtils.getCallStartRequestOptions(event, {kind: 'video'}));
-			} catch (error) {
-				logger.error('Failed to start video call:', error);
-				showDmActionErrorModal(error);
-			}
+			await CallUtils.startCallWithUser(i18n, user.id, CallUtils.getCallStartRequestOptions(event, {kind: 'video'}));
 		},
 		[i18n, onClose, user.id],
 	);

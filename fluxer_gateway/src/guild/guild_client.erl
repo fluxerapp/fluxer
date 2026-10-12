@@ -1,6 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_client).
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -typing([eqwalizer]).
 
 -export([voice_state_update/4]).
@@ -39,10 +43,6 @@
     | {error, circuit_breaker_open}
     | {error, too_many_requests}
     | {error, atom(), atom()}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec execute_with_slot(pid(), map(), timeout()) -> voice_state_update_result().
 execute_with_slot(TargetPid, Request, Timeout) ->

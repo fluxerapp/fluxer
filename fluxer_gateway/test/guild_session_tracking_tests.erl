@@ -117,7 +117,11 @@ not_member_reconnect_releases_tracking() ->
         fun(Sessions) ->
             with_guild(base_state(Sessions), fun(Guild) ->
                 sys:replace_state(Guild, fun(S) ->
-                    S#{data => guild_data_index:remove_member(?USER_B, maps:get(data, S))}
+                    S#{
+                        data => guild_data_index_members:remove_member(
+                            ?USER_B, maps:get(data, S)
+                        )
+                    }
                 end),
                 send_connect(Guild, <<"b1">>, Sessions, 1),
                 ?assertEqual({error, not_member}, await_result(<<"b1">>, 1)),
@@ -171,7 +175,7 @@ unavailable_removal_of_fresh_pending_keeps_owner_tracked() ->
                 hold_connect_workers(Guild, 16),
                 send_connect(Guild, <<"a1">>, Sessions, 1),
                 sys:replace_state(Guild, fun(S) ->
-                    guild_sessions:remove_session(<<"a1">>, S)
+                    guild_sessions_connect:remove_session(<<"a1">>, S)
                 end),
                 State = get_state(Guild),
                 ?assertNot(maps:is_key(<<"a1">>, maps:get(sessions, State))),

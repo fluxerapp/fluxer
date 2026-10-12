@@ -2,12 +2,12 @@
 
 import {createRequire} from 'node:module';
 import {createChildLogger} from '@electron/common/Logger';
+import {VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL} from '@fluxer/voice_engine_v2/bridge';
 import {
-	normalizeVoiceEngineV2BridgeHardwareEncoderCapabilities,
-	unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities,
-	VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
-	type VoiceEngineV2BridgeHardwareEncoderCapabilities,
-} from '@fluxer/voice_engine_v2/bridge';
+	normalizeVoiceEngineV2HardwareEncoderCapabilities,
+	unavailableVoiceEngineV2HardwareEncoderCapabilities,
+} from '@fluxer/voice_engine_v2/src/policies/hardwareEncoderCapabilities';
+import type {VoiceEngineV2HardwareEncoderCapabilities} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {ipcMain} from 'electron';
 
 const logger = createChildLogger('NativeHardwareEncoder');
@@ -33,20 +33,20 @@ function loadHardwareEncoderModule(): HardwareEncoderModule | null {
 	return cachedModule;
 }
 
-function getHardwareEncoderCapabilities(): VoiceEngineV2BridgeHardwareEncoderCapabilities {
+function getHardwareEncoderCapabilities(): VoiceEngineV2HardwareEncoderCapabilities {
 	const mod = loadHardwareEncoderModule();
 	if (!mod) {
-		return unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities('load-failed', cachedModuleLoadErrorDetail);
+		return unavailableVoiceEngineV2HardwareEncoderCapabilities('load-failed', cachedModuleLoadErrorDetail);
 	}
 	if (typeof mod.getHardwareEncoderCapabilities !== 'function') {
-		return unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities('unsupported-addon-version');
+		return unavailableVoiceEngineV2HardwareEncoderCapabilities('unsupported-addon-version');
 	}
 	try {
-		return normalizeVoiceEngineV2BridgeHardwareEncoderCapabilities(mod.getHardwareEncoderCapabilities());
+		return normalizeVoiceEngineV2HardwareEncoderCapabilities(mod.getHardwareEncoderCapabilities());
 	} catch (error) {
 		logger.warn('Native hardware encoder getHardwareEncoderCapabilities() threw', error);
 		const detail = error instanceof Error ? error.message : String(error);
-		return unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities('query-failed', detail);
+		return unavailableVoiceEngineV2HardwareEncoderCapabilities('query-failed', detail);
 	}
 }
 
@@ -57,7 +57,7 @@ export function registerNativeHardwareEncoderHandlers(): void {
 	handlersRegistered = true;
 	ipcMain.handle(
 		VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
-		(): VoiceEngineV2BridgeHardwareEncoderCapabilities => getHardwareEncoderCapabilities(),
+		(): VoiceEngineV2HardwareEncoderCapabilities => getHardwareEncoderCapabilities(),
 	);
 }
 

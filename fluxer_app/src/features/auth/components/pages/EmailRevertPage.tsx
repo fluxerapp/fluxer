@@ -11,7 +11,6 @@ import {useAuthSingleUseRequest} from '@app/features/auth/flow/AuthSingleUseRequ
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
-import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {
 	BACK_TO_SIGN_IN_DESCRIPTOR,
 	CONFIRM_NEW_PASSWORD_DESCRIPTOR,
@@ -19,6 +18,7 @@ import {
 	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {msg} from '@lingui/core/macro';
@@ -62,7 +62,7 @@ const EmailRevertPageContent = observer(function EmailRevertPageContent({
 			const response = await AuthenticationCommands.revertEmailChange(
 				token,
 				values.password,
-				authRequestTargetFromSnapshot(runtimeSnapshot),
+				instanceTargetFromSnapshot(runtimeSnapshot),
 			);
 			const userData = AuthenticationCommands.authResponseUserToUserData(response.user);
 			await AuthenticationCommands.completeLogin({

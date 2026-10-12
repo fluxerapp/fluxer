@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readBlobAsDataUrl as blobToDataUrl} from '@app/features/platform/utils/BlobDataUrl';
+
 import type {ThemeLibraryAsset, ThemeLibraryLocalFileReference} from '@app/features/theme/state/ThemeLibrary';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 
@@ -172,15 +174,6 @@ function decodeReferenceValue(value: string): string {
 	} catch {
 		return unescaped;
 	}
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onerror = () => reject(reader.error ?? new Error('Failed to read theme asset blob'));
-		reader.onload = () => resolve(String(reader.result ?? ''));
-		reader.readAsDataURL(blob);
-	});
 }
 
 function getAssetReferenceMap(assets: ReadonlyArray<ThemeLibraryAsset>): Map<string, ThemeLibraryAsset> {

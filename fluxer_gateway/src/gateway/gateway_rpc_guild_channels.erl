@@ -10,7 +10,6 @@
 -spec handle(binary(), map()) -> term().
 handle(<<"guild.get_viewable_channels">>, P) -> handle_get_viewable_channels(P);
 handle(<<"guild.resolve_channel_mentions">>, P) -> handle_resolve_channel_mentions(P);
-handle(<<"guild.get_vanity_url_channel">>, P) -> handle_get_vanity_url_channel(P);
 handle(<<"guild.get_first_viewable_text_channel">>, P) -> handle_get_first_viewable(P);
 handle(<<"guild.get_category_channel_count">>, P) -> handle_get_category_count(P);
 handle(<<"guild.get_channel_count">>, P) -> handle_get_channel_count(P).
@@ -50,18 +49,6 @@ parse_channel_ids(ChannelIdBins) ->
         ChannelIds -> ChannelIds
     catch
         error:{invalid_snowflake, _} -> []
-    end.
-
--spec handle_get_vanity_url_channel(map()) -> term().
-handle_get_vanity_url_channel(#{<<"guild_id">> := GIB}) ->
-    GuildId = snowflake_or_throw(<<"guild_id">>, GIB),
-    gateway_rpc_guild_infra:with_guild(GuildId, fun get_vanity_url_channel/1).
-
--spec get_vanity_url_channel(pid()) -> map().
-get_vanity_url_channel(Pid) ->
-    case gen_server:call(Pid, {get_vanity_url_channel}, ?GUILD_CALL_TIMEOUT) of
-        #{channel_id := CId} -> format_channel_id_reply(CId, <<"vanity_url_channel_error">>);
-        _ -> gateway_rpc_error:raise(<<"vanity_url_channel_error">>)
     end.
 
 -spec handle_get_first_viewable(map()) -> term().
@@ -120,15 +107,15 @@ get_viewable_channels_cached_or_rpc(GuildId, UserId) ->
 get_viewable_channels_from_snapshot(GuildId, UserId, Snapshot) ->
     case should_bypass_viewable_cache(UserId, Snapshot) of
         true -> get_viewable_channels_via_rpc(GuildId, UserId);
-        false -> {ok, guild_visibility:get_user_viewable_channels(UserId, Snapshot)}
+        false -> {ok, guild_visibility_channels:get_user_viewable_channels(UserId, Snapshot)}
     end.
 
 -spec should_bypass_viewable_cache(integer(), map()) -> boolean().
 should_bypass_viewable_cache(UserId, Snapshot) ->
     Data = map_utils:ensure_map(maps:get(data, Snapshot, #{})),
-    Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, Snapshot),
     Channels = maps:get(<<"channels">>, Data, undefined),
-    ChannelIndex = guild_data_index:channel_index(Data),
+    ChannelIndex = guild_data_index_channels:channel_index(Data),
     HasIndexedChannels = is_map(ChannelIndex) andalso map_size(ChannelIndex) > 0,
     Member =/= undefined andalso HasIndexedChannels andalso empty_channels_list(Channels).
 
@@ -175,8 +162,8 @@ resolve_from_snapshot_or_rpc(GuildId, ChannelIds, Snapshot) ->
     {ok, [map()]} | fallback.
 resolve_from_snapshot(ChannelIds, Snapshot, GuildId) ->
     Data = map_utils:ensure_map(maps:get(data, Snapshot, #{})),
-    Roles = guild_data_index:role_index(Data),
-    ChIndex = guild_data_index:channel_index(Data),
+    Roles = guild_data_index_roles:role_index(Data),
+    ChIndex = guild_data_index_channels:channel_index(Data),
     BasePermissions = everyone_role_permissions(GuildId, Roles),
     NeedsFallback = snapshot_needs_fallback(ChannelIds, map_utils:ensure_map(ChIndex)),
     case {BasePermissions, NeedsFallback} of
@@ -258,21 +245,21 @@ map_entries(Entries) ->
 
 -spec everyone_role_permissions(integer(), [map()] | map()) -> integer() | undefined.
 everyone_role_permissions(GuildId, Roles) ->
-    case guild_permissions:find_role_by_id(GuildId, Roles) of
+    case guild_permissions_check:find_role_by_id(GuildId, Roles) of
         undefined ->
             undefined;
         Role ->
-            permission_bits:parse_optional(maps:get(<<"permissions">>, Role, undefined))
+            bitset:parse_optional(maps:get(<<"permissions">>, Role, undefined))
     end.
 
 -spec everyone_can_view(map(), integer(), integer()) -> boolean().
 everyone_can_view(Channel, GuildId, BasePerm) ->
-    case permission_bits:has(BasePerm, constants:administrator_permission()) of
+    case bitset:has(BasePerm, constants:administrator_permission()) of
         true ->
             true;
         false ->
             P = apply_everyone_overwrites(BasePerm, Channel, GuildId),
-            permission_bits:has(P, constants:view_channel_permission())
+            bitset:has(P, constants:view_channel_permission())
     end.
 
 -spec build_channel_mention(map()) -> {true, map()} | false.
@@ -338,12 +325,12 @@ apply_everyone_overwrite(Overwrite, GuildId, Acc) when is_map(Overwrite) ->
         {
             snowflake_id:parse_optional(maps:get(<<"id">>, Overwrite, undefined)),
             guild_data_normalize_schema:int(maps:get(<<"type">>, Overwrite, undefined)),
-            permission_bits:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)),
-            permission_bits:parse_optional(maps:get(<<"deny">>, Overwrite, undefined))
+            bitset:parse_optional(maps:get(<<"allow">>, Overwrite, undefined)),
+            bitset:parse_optional(maps:get(<<"deny">>, Overwrite, undefined))
         }
     of
         {GuildId, 0, Allow, Deny} when is_integer(Allow), is_integer(Deny) ->
-            permission_bits:apply_allow_deny(Acc, Allow, Deny);
+            bitset:apply_allow_deny(Acc, Allow, Deny);
         _ ->
             Acc
     end;

@@ -3,7 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MORE_OPTIONS_DESCRIPTOR, WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	ChangeStreamIcon,
 	LocalMuteIcon,
@@ -23,7 +23,7 @@ import {
 } from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import type {
 	MenuCheckboxType,
 	MenuGroupType,

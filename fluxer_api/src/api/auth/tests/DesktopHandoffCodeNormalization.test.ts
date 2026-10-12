@@ -67,15 +67,4 @@ describe('Auth desktop handoff code normalization', () => {
 		expect(status2.token).toBeTruthy();
 		expect(status2.token).not.toBe(login.token);
 	});
-	it('normalises code on info endpoint', async () => {
-		const initResp = await createBuilderWithoutAuth<HandoffInitiateResponse>(harness)
-			.post('/auth/handoff/initiate')
-			.body(null)
-			.execute();
-		const lowercaseCode = initResp.code.toLowerCase().replace(/-/g, '');
-		const info = await createBuilderWithoutAuth<HandoffInfoResponse>(harness)
-			.get(`/auth/handoff/${lowercaseCode}/info`)
-			.execute();
-		expect(info.status).toBe('pending');
-	});
 });

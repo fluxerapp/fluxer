@@ -14,7 +14,6 @@
 		"index.js",
 		"index.d.ts",
 		"loader-diagnostics.cjs",
-		"pure.cjs",
 		"app-store.darwin-x64.node",
 		"app-store.darwin-arm64.node",
 		"app-store.win32-x64-msvc.node",

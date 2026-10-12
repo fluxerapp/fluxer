@@ -3,7 +3,7 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
-import {GuildModerationRepository} from '@app/api/guild/repositories/GuildModerationRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Notes, RelationshipsByTarget} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
@@ -36,7 +36,7 @@ describe('Deleting an account with a large footprint', () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const relationships = new UserRelationshipRepository();
-		const moderation = new GuildModerationRepository();
+		const moderation = new GuildRepository();
 		for (let index = 0; index < RELATIONSHIPS_EACH_WAY; index++) {
 			const other = otherUserId(index);
 			for (const [source, target] of [

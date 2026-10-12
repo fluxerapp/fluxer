@@ -19,7 +19,7 @@ export function getEffectiveStaticLocale<TKey extends string, TValue, TVariables
 	if (!locale) {
 		return config.defaultLocale;
 	}
-	const normalizedLocale = config.normalizeLocale?.(locale) ?? locale;
+	const normalizedLocale = locale;
 	if (!hasStaticLocale(config, normalizedLocale)) {
 		config.onWarning?.(`Unsupported locale, falling back to ${config.defaultLocale}: ${locale}`);
 		return config.defaultLocale;

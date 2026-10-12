@@ -5,24 +5,12 @@ use axum::{
     http::{HeaderMap, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
+use fluxer_common::http_range::{RangeSelection, parse_range};
 use std::path::Path;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio_util::io::ReaderStream;
 
 const STREAM_CHUNK_BYTES: usize = 64 * 1024;
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct ByteRange {
-    start: u64,
-    end: u64,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum RequestedRange {
-    Whole,
-    Partial(ByteRange),
-    Unsatisfiable,
-}
 
 pub(crate) async fn stream_file(
     path: &Path,
@@ -37,13 +25,13 @@ pub(crate) async fn stream_file(
     let file_size = metadata.len();
 
     let (status, start, length) = match requested_range(request_headers, entity_tag, file_size) {
-        RequestedRange::Whole => (StatusCode::OK, 0, file_size),
-        RequestedRange::Partial(range) => (
+        RangeSelection::Full => (StatusCode::OK, 0, file_size),
+        RangeSelection::Partial(range) => (
             StatusCode::PARTIAL_CONTENT,
-            range.start,
-            range.end - range.start + 1,
+            range.start as u64,
+            (range.end - range.start + 1) as u64,
         ),
-        RequestedRange::Unsatisfiable => return Ok(range_not_satisfiable(file_size)),
+        RangeSelection::Unsatisfiable => return Ok(range_not_satisfiable(file_size)),
     };
 
     if start > 0 {
@@ -79,17 +67,20 @@ fn requested_range(
     headers: &HeaderMap,
     entity_tag: Option<&str>,
     file_size: u64,
-) -> RequestedRange {
+) -> RangeSelection {
     let Some(raw) = headers
         .get(header::RANGE)
         .and_then(|value| value.to_str().ok())
     else {
-        return RequestedRange::Whole;
+        return RangeSelection::Full;
     };
     if !if_range_matches(headers, entity_tag) {
-        return RequestedRange::Whole;
+        return RangeSelection::Full;
     }
-    parse_byte_range(raw, file_size)
+    let Ok(file_size) = usize::try_from(file_size) else {
+        return RangeSelection::Full;
+    };
+    parse_range(Some(raw), file_size)
 }
 
 fn if_range_matches(headers: &HeaderMap, entity_tag: Option<&str>) -> bool {
@@ -100,57 +91,6 @@ fn if_range_matches(headers: &HeaderMap, entity_tag: Option<&str>) -> bool {
         return true;
     };
     entity_tag.is_some_and(|tag| raw.trim() == tag)
-}
-
-fn parse_byte_range(raw: &str, file_size: u64) -> RequestedRange {
-    let Some(spec) = raw.trim_matches([' ', '\t']).strip_prefix("bytes=") else {
-        return RequestedRange::Whole;
-    };
-    if spec.contains(',') {
-        return RequestedRange::Whole;
-    }
-    let Some((start_part, end_part)) = spec.split_once('-') else {
-        return RequestedRange::Whole;
-    };
-    let start_part = start_part.trim_matches([' ', '\t']);
-    let end_part = end_part.trim_matches([' ', '\t']);
-    if start_part.is_empty() && end_part.is_empty() {
-        return RequestedRange::Whole;
-    }
-    if file_size == 0 {
-        return RequestedRange::Unsatisfiable;
-    }
-
-    if start_part.is_empty() {
-        let Ok(suffix_len) = end_part.parse::<u64>() else {
-            return RequestedRange::Whole;
-        };
-        if suffix_len == 0 {
-            return RequestedRange::Unsatisfiable;
-        }
-        return RequestedRange::Partial(ByteRange {
-            start: file_size - suffix_len.min(file_size),
-            end: file_size - 1,
-        });
-    }
-
-    let Ok(start) = start_part.parse::<u64>() else {
-        return RequestedRange::Whole;
-    };
-    let requested_end = if end_part.is_empty() {
-        file_size - 1
-    } else if let Ok(end) = end_part.parse::<u64>() {
-        end
-    } else {
-        return RequestedRange::Whole;
-    };
-    if start >= file_size || requested_end < start {
-        return RequestedRange::Unsatisfiable;
-    }
-    RequestedRange::Partial(ByteRange {
-        start,
-        end: requested_end.min(file_size - 1),
-    })
 }
 
 #[cfg(test)]
@@ -363,59 +303,5 @@ mod tests {
             .expect_err("a directory answered as 200 promises a length no body can deliver");
 
         assert_ne!(err.kind(), std::io::ErrorKind::NotFound);
-    }
-
-    #[test]
-    fn a_malformed_range_is_ignored() {
-        assert_eq!(
-            parse_byte_range("bytes=abc-def", 100),
-            RequestedRange::Whole
-        );
-        assert_eq!(parse_byte_range("bytes=", 100), RequestedRange::Whole);
-        assert_eq!(parse_byte_range("items=0-9", 100), RequestedRange::Whole);
-    }
-
-    #[test]
-    fn an_empty_file_satisfies_no_range() {
-        assert_eq!(
-            parse_byte_range("bytes=0-9", 0),
-            RequestedRange::Unsatisfiable
-        );
-        assert_eq!(
-            parse_byte_range("bytes=-5", 0),
-            RequestedRange::Unsatisfiable
-        );
-    }
-
-    #[test]
-    fn a_zero_length_suffix_is_unsatisfiable() {
-        assert_eq!(
-            parse_byte_range("bytes=-0", 100),
-            RequestedRange::Unsatisfiable
-        );
-    }
-
-    #[test]
-    fn a_suffix_longer_than_the_file_is_clamped_to_the_whole_file() {
-        assert_eq!(
-            parse_byte_range("bytes=-9999", 100),
-            RequestedRange::Partial(ByteRange { start: 0, end: 99 })
-        );
-    }
-
-    #[test]
-    fn an_end_past_the_last_byte_is_clamped() {
-        assert_eq!(
-            parse_byte_range("bytes=90-9999", 100),
-            RequestedRange::Partial(ByteRange { start: 90, end: 99 })
-        );
-    }
-
-    #[test]
-    fn an_inverted_range_is_unsatisfiable() {
-        assert_eq!(
-            parse_byte_range("bytes=10-5", 100),
-            RequestedRange::Unsatisfiable
-        );
     }
 }

@@ -26,14 +26,6 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useState} from 'react';
 
-const CUSTOMER_PORTAL_OPEN_FAILED_TITLE_DESCRIPTOR = msg({
-	message: "Couldn't open the billing portal",
-	comment: 'Title of the error modal shown when opening the billing customer portal fails.',
-});
-const CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR = msg({
-	message: 'Something went wrong while opening the billing portal. Please try again in a moment.',
-	comment: 'Body of the error modal shown when opening the billing customer portal fails.',
-});
 const PIX_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
 		'Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
@@ -225,23 +217,13 @@ export const useCheckoutActions = (
 ) => {
 	const {i18n} = useLingui();
 	const [loadingCheckout, setLoadingCheckout] = useState(false);
-	const openCustomerPortalFromCheckoutBlock = useCallback(async () => {
-		try {
-			const url = await PremiumCommands.createCustomerPortalSession();
-			await openExternalUrl(url);
-		} catch (error) {
-			logger.error('Failed to open customer portal from checkout block', error);
-			ModalCommands.push(
-				modal(() => (
-					<GenericErrorModal
-						title={i18n._(CUSTOMER_PORTAL_OPEN_FAILED_TITLE_DESCRIPTOR)}
-						message={i18n._(CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR)}
-						data-flx="app.plutonium.use-checkout-actions.open-customer-portal.generic-error-modal"
-					/>
-				)),
-			);
-		}
-	}, [i18n]);
+	const openCustomerPortalFromCheckoutBlock = useCallback(
+		() =>
+			PremiumCommands.openCustomerPortalWithErrorModal(
+				'app.plutonium.use-checkout-actions.open-customer-portal.generic-error-modal',
+			),
+		[],
+	);
 	const getAlternativePaymentMethodPrompt = useCallback(
 		(
 			currency: string | null | undefined,

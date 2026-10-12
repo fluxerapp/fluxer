@@ -10,15 +10,9 @@ import {
 	createGuild,
 	createRole,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	THREADS_FEATURE,
-	THREADS_FEATURE_HEADER,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {THREADS_FEATURE, THREADS_FEATURE_HEADER, threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {createEmoji, getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -55,11 +49,11 @@ describe('forum and media channels', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -76,7 +70,6 @@ describe('forum and media channels', () => {
 	}
 
 	async function setup(forumBody: Record<string, unknown> = {}): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		await ensureSessionStarted(harness, owner.token);
@@ -110,7 +103,7 @@ describe('forum and media channels', () => {
 	}
 
 	describe('control arm', () => {
-		it('rejects a forum create body exactly as before for callers outside the experiment', async () => {
+		it('rejects creating forums without the client capability', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'control');
 			const body = {name: 'forum', type: ChannelTypes.GUILD_FORUM, available_tags: [{name: 'a'}]};
@@ -120,45 +113,22 @@ describe('forum and media channels', () => {
 				headers: {Authorization: owner.token},
 				body,
 			});
-			const capable = await harness.requestJson({
-				path: `/guilds/${guild.id}/channels`,
-				method: 'POST',
-				headers: {Authorization: owner.token, [THREADS_FEATURE_HEADER]: THREADS_FEATURE},
-				body,
-			});
 			expect(control.status).toBe(400);
-			expect(capable.status).toBe(400);
-			expect(await capable.text()).toBe(await control.text());
 		});
 
-		it('strips the thread defaults of a text channel outside the experiment', async () => {
+		it('strips the thread defaults of a text channel for incapable callers', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'control');
-			const channel = await threadsRequest<ChannelResponse>(harness, owner.token)
+			const channel = await threadsRequest<ChannelResponse>(harness, owner.token, {capable: false})
 				.post(`/guilds/${guild.id}/channels`)
 				.body({name: 'text', type: ChannelTypes.GUILD_TEXT, default_auto_archive_duration: 60})
 				.execute();
 			expect(channel).not.toHaveProperty('default_auto_archive_duration');
-			const patched = await threadsRequest<ChannelResponse>(harness, owner.token)
+			const patched = await threadsRequest<ChannelResponse>(harness, owner.token, {capable: false})
 				.patch(`/channels/${channel.id}`)
 				.body({default_thread_rate_limit_per_user: 30})
 				.execute();
 			expect(patched).not.toHaveProperty('default_thread_rate_limit_per_user');
-		});
-
-		it('hides forums from members who are not in the experiment', async () => {
-			const s = await setup();
-			await setChannelThreadsConfig({...ALL_THREADS_ACTIVE, excluded_user_ids: [s.member.userId]});
-			await threadsRequest(harness, s.member.token).get(`/channels/${s.forumId}`).expect(404).execute();
-			const channels = await threadsRequest<Array<ChannelResponse>>(harness, s.member.token)
-				.get(`/guilds/${s.guildId}/channels`)
-				.execute();
-			expect(channels.some((channel) => channel.id === s.forumId)).toBe(false);
-			await createBuilder(harness, s.member.token)
-				.post(`/channels/${s.forumId}/tags`)
-				.body({name: 'x'})
-				.expect(404)
-				.execute();
 		});
 	});
 
@@ -205,20 +175,6 @@ describe('forum and media channels', () => {
 				.get(`/guilds/${s.guildId}/channels`)
 				.execute();
 			expect(listed.find((channel) => channel.id === s.forumId)?.available_tags).toHaveLength(2);
-		});
-
-		it('resets the layout and thread slowmode defaults on explicit null', async () => {
-			const s = await setup({default_forum_layout: null, default_thread_rate_limit_per_user: null});
-			const set = await threadsRequest<ChannelResponse>(harness, s.owner.token)
-				.patch(`/channels/${s.forumId}`)
-				.body({default_forum_layout: 2, default_thread_rate_limit_per_user: 10})
-				.execute();
-			expect(set).toMatchObject({default_forum_layout: 2, default_thread_rate_limit_per_user: 10});
-			const cleared = await threadsRequest<ChannelResponse>(harness, s.owner.token)
-				.patch(`/channels/${s.forumId}`)
-				.body({default_forum_layout: null, default_thread_rate_limit_per_user: null})
-				.execute();
-			expect(cleared).toMatchObject({default_forum_layout: 0, default_thread_rate_limit_per_user: 0});
 		});
 
 		it('validates tags and flags', async () => {
@@ -593,32 +549,6 @@ describe('forum and media channels', () => {
 			expect(data.threads['1']).toEqual({owner: null, first_message: null});
 			expect(data.threads[created.id]?.owner?.user.id).toBe(s.member.userId);
 			expect(data.threads[created.id]?.first_message?.id).toBe(created.id);
-		});
-
-		it('serves the member preview on posts only, newest first', async () => {
-			const s = await setup();
-			const created = await post(s.member.token, s.forumId);
-			expect(created.member_ids_preview).toEqual([s.member.userId]);
-			await threadsRequest(harness, s.owner.token)
-				.put(`/channels/${created.id}/thread-members/@me`)
-				.expect(204)
-				.execute();
-			const fetched = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)
-				.get(`/channels/${created.id}`)
-				.execute();
-			expect(fetched.member_ids_preview).toEqual([s.owner.userId, s.member.userId]);
-			await threadsRequest(harness, s.owner.token).patch(`/channels/${created.id}`).body({archived: true}).execute();
-			const archived = await threadsRequest<{threads: Array<ThreadChannelResponse>}>(harness, s.owner.token)
-				.get(`/channels/${s.forumId}/threads/archived/public`)
-				.execute();
-			expect(archived.threads.map((thread) => thread.member_ids_preview)).toEqual([[s.owner.userId, s.member.userId]]);
-			const text = await createChannel(harness, s.owner.token, s.guildId, 'text');
-			const textThread = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)
-				.post(`/channels/${text.id}/threads`)
-				.body({name: 'thread', type: ChannelTypes.PUBLIC_THREAD})
-				.expect(201)
-				.execute();
-			expect(textThread).not.toHaveProperty('member_ids_preview');
 		});
 
 		it('applies the forum slowmode to post creation', async () => {

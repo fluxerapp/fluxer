@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AttachmentDecayPayload} from '@app/api/attachment/AttachmentDecayService';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createAttachmentID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {forEachEmbedMedia} from '@app/api/channel/services/message/CrosspostEmbedObjects';
@@ -25,15 +25,16 @@ import type {Message} from '@app/api/models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import {S3ServiceException} from '@aws-sdk/client-s3';
-import {MessageFlags, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, SENDABLE_MESSAGE_FLAGS, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {getContentTypeFromFilename, isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 
 export const MESSAGE_NONCE_TTL = seconds('5 minutes');
@@ -85,18 +86,6 @@ function selectForwardEmbeds<T>(embeds: ReadonlyArray<T>, selection?: ForwardMed
 		selected.push(embeds[embedIndex]);
 	}
 	return selected;
-}
-
-export function isMediaFile(contentType: string): boolean {
-	return isSupportedMediaContentType(contentType);
-}
-
-export function isPersonalNotesChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
-	return userIdToChannelId(userId) === channelId;
-}
-
-export function getContentType(filename: string): string {
-	return getContentTypeFromFilename(filename);
 }
 
 export function validateAttachmentIds(
@@ -503,4 +492,9 @@ export async function decrementThreadMessageCount(
 	if (!channel) return;
 	const count = countedThreadMessages(channel, messageIds);
 	if (count > 0) await channelRepository.threads.adjustMessageCount(channel.id, -count);
+}
+
+export function ensureTextChannel(channel: Channel): void {
+	if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type))
+		throw new CannotSendMessageToNonTextChannelError();
 }

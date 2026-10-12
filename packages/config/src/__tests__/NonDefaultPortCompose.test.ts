@@ -176,25 +176,6 @@ async function loadApiConfig(env: Record<string, string>): Promise<MasterConfig>
 	return loadConfig();
 }
 
-describe('Compose environment interpolation', () => {
-	test.each([
-		[`\${VALUE}`, {VALUE: 'set'}, 'set'],
-		['$VALUE/path', {VALUE: 'set'}, 'set/path'],
-		[`\${VALUE:-fallback}`, {VALUE: ''}, 'fallback'],
-		[`\${VALUE:-\${OTHER:-fallback}}`, {OTHER: 'nested'}, 'nested'],
-		[`\${VALUE:+alternate}`, {VALUE: 'set'}, 'alternate'],
-		[`\${VALUE:+alternate}`, {}, ''],
-		[`\${VALUE:?required}`, {VALUE: 'set'}, 'set'],
-	] as const)('expands %s with %j to %s', (source, environment, expected) => {
-		expect(expand(source, environment)).toBe(expected);
-	});
-
-	test('rejects a missing required value and unbalanced interpolation', () => {
-		expect(() => expand(`\${VALUE:?required}`, {})).toThrow('VALUE is required: required');
-		expect(() => expand('${VALUE:-fallback', {})).toThrow('unbalanced interpolation');
-	});
-});
-
 describe('the shipped compose stack expanded on a non-default port', () => {
 	test('every service handed a public URL is handed the base domain and port that repair it', () => {
 		const starved = serviceNames

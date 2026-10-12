@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
-import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import {
 	COUNTRY_OPTIONS,
@@ -423,11 +424,12 @@ export const ReportPage = observer(() => {
 			}
 			dispatch({type: 'SET_ERROR', message: i18n._(FAILED_TO_SEND_VERIFICATION_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR)});
 			if (state.flowStep === 'verification') {
-				showModerationErrorModal(
-					i18n,
-					() => i18n._(FAILED_TO_RESEND_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR),
-					'moderation.report-page.resend-code-error-modal',
-				);
+				showGenericErrorModal({
+					title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
+					message: () => i18n._(FAILED_TO_RESEND_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR),
+					dataFlx: 'moderation.report-page.resend-code-error-modal',
+					defer: false,
+				});
 			}
 		} finally {
 			dispatch({type: 'SENDING_CODE', value: false});

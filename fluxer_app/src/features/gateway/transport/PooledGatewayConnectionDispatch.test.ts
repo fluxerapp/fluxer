@@ -126,7 +126,7 @@ vi.mock('@app/features/presence/state/Presence', () => ({default: {handleSession
 
 vi.mock('@app/features/search/state/QuickSwitcher', () => ({default: {recomputeIfOpen: vi.fn()}}));
 
-vi.mock('@app/features/typing/state/TypingIndicator', () => ({default: {reset: vi.fn()}}));
+vi.mock('@app/features/typing/rolling/RollingTypingStore', () => ({default: {reset: vi.fn()}}));
 
 vi.mock('@app/features/ui/state/MobileLayout', () => ({default: {isMobileLayout: () => false}}));
 

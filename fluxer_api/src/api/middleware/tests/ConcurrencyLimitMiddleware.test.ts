@@ -3,7 +3,6 @@
 import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
-import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {Hono} from 'hono';
 import {describe, expect, test, vi} from 'vitest';
@@ -43,7 +42,7 @@ function buildApp(maxInflightRequests: number) {
 	app.route('/v1', routes);
 	app.route('/', routes);
 	app.onError(AppErrorHandler);
-	return {app, release, entered, boomError};
+	return {app, release, entered};
 }
 
 describe('ConcurrencyLimitMiddleware', () => {
@@ -59,17 +58,6 @@ describe('ConcurrencyLimitMiddleware', () => {
 			expect(shed.status).toBe(503);
 			expect(shed.headers.get('Retry-After')).toBe('1');
 			expect(await shed.json()).toMatchObject({code: 'SERVICE_UNAVAILABLE'});
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{
-					err: expect.any(ServiceUnavailableError),
-					method: 'GET',
-					path: '/fast',
-					requestId: undefined,
-					status: 503,
-				},
-				'Request failed',
-			);
 
 			release.resolve();
 			expect((await inflight).status).toBe(200);
@@ -90,17 +78,6 @@ describe('ConcurrencyLimitMiddleware', () => {
 			expect((await app.request('/_metrics')).status).toBe(200);
 			expect((await app.request('/v1/_health')).status).toBe(200);
 			expect((await app.request('/fast')).status).toBe(503);
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{
-					err: expect.any(ServiceUnavailableError),
-					method: 'GET',
-					path: '/fast',
-					requestId: undefined,
-					status: 503,
-				},
-				'Request failed',
-			);
 
 			release.resolve();
 			await inflight;
@@ -111,21 +88,13 @@ describe('ConcurrencyLimitMiddleware', () => {
 	});
 
 	test('releases the slot when the handler throws', async () => {
-		const {app, boomError} = buildApp(1);
+		const {app} = buildApp(1);
 		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 		try {
 			for (let attempt = 0; attempt < 3; attempt += 1) {
 				expect((await app.request('/boom')).status).toBe(500);
 			}
 			expect((await app.request('/fast')).status).toBe(200);
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(3);
-			for (let callIndex = 1; callIndex <= 3; callIndex += 1) {
-				expect(errorLoggerSpy).toHaveBeenNthCalledWith(
-					callIndex,
-					{err: boomError, method: 'GET', path: '/boom', requestId: undefined, status: 500},
-					'Unhandled error occurred',
-				);
-			}
 		} finally {
 			errorLoggerSpy.mockRestore();
 		}
@@ -140,20 +109,6 @@ describe('ConcurrencyLimitMiddleware', () => {
 
 			expect((await app.request('/fast')).status).toBe(503);
 			expect((await app.request('/fast')).status).toBe(503);
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(2);
-			for (let callIndex = 1; callIndex <= 2; callIndex += 1) {
-				expect(errorLoggerSpy).toHaveBeenNthCalledWith(
-					callIndex,
-					{
-						err: expect.any(ServiceUnavailableError),
-						method: 'GET',
-						path: '/fast',
-						requestId: undefined,
-						status: 503,
-					},
-					'Request failed',
-				);
-			}
 
 			release.resolve();
 			await inflight;

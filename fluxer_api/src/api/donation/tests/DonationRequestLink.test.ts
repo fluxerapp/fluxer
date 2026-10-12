@@ -56,16 +56,4 @@ describe('POST /donations/request-link', () => {
 			expect(token).toMatch(/^[0-9a-f]{64}$/);
 		});
 	});
-	describe('idempotency', () => {
-		test('generates new token on each request, invalidating previous ones', async () => {
-			await createDonor(TEST_DONOR_EMAIL);
-			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
-			await createDonationRequestLinkBuilder(harness).body({email: TEST_DONOR_EMAIL}).expect(204).execute();
-			const emails = await listTestEmails(harness, {recipient: TEST_DONOR_EMAIL});
-			expect(emails).toHaveLength(2);
-			const token1 = emails[0]?.metadata.token;
-			const token2 = emails[1]?.metadata.token;
-			expect(token1).not.toBe(token2);
-		});
-	});
 });

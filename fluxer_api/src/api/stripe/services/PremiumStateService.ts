@@ -17,6 +17,7 @@ import {
 	mapPremiumStoreSubscriptionState,
 	resolveStoreAccessEnd,
 	selectActiveStoreSubscription,
+	toIso,
 } from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {isStripeSubscriptionActive} from '@app/api/store_billing/StoreEntitlementWriter';
@@ -24,20 +25,13 @@ import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
 import {getProductRegistry, type RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {getCachedStripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
-import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
-import {
-	SELF_SERVE_REFUND_COOLDOWN_DAYS,
-	SELF_SERVE_REFUND_WINDOW_DAYS,
-} from '@app/api/stripe/services/StripeRefundService';
+import {getPrimarySubscriptionItem, loadSubscriptionSchedule} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {buildRefundEligibility, refundCooldownExpiresAt} from '@app/api/stripe/services/RefundAllowance';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {checkHasActivePaidPremium} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
-import {
-	type Currency,
-	getCurrencyPreferences,
-	getGiftCurrencyPreferences,
-	normalizeCatalogCurrency,
-} from '@app/api/utils/CurrencyUtils';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {type Currency, normalizeCatalogCurrency} from '@app/api/utils/CurrencyUtils';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -53,25 +47,14 @@ import type {
 	PremiumSubscriptionProvider,
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
-	SelfServeRefundIneligibilityReason,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
 
 const INVOICE_LIMIT = 12;
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
 const RELEVANT_SUBSCRIPTION_STATUSES = new Set(['past_due', 'unpaid', 'incomplete']);
 const REFUND_BLOCKING_STATUSES = new Set(['pending', 'succeeded', 'requires_action']);
-
-interface ResolvedPriceIds {
-	monthly: string | null;
-	yearly: string | null;
-	gift_1_month: string | null;
-	gift_1_year: string | null;
-	currency: Currency;
-	gift_currency: Currency | null;
-}
 
 interface InvoiceResult {
 	rows: Array<BillingInvoiceRow>;
@@ -84,10 +67,6 @@ interface StripePriceDetails {
 	amountMinor: number | null;
 	currency: Currency | null;
 	billingCycle: RecurringBillingCycle | null;
-}
-
-function toIso(value: Date | null | undefined): string | null {
-	return value?.toISOString() ?? null;
 }
 
 function toNumber(value: bigint | number | null | undefined): number {
@@ -143,46 +122,6 @@ function sortSubscriptionsByRelevance(rows: Array<BillingSubscriptionRow>): Arra
 function normalizeCountryCode(countryCode: string | null | undefined): string | null {
 	const normalized = countryCode?.trim().toUpperCase();
 	return normalized && normalized.length === 2 ? normalized : null;
-}
-
-function stripeIdOf(
-	value:
-		| string
-		| {
-				id?: string | null;
-		  }
-		| null
-		| undefined,
-): string | null {
-	if (!value) return null;
-	if (typeof value === 'string') return value;
-	return typeof value.id === 'string' ? value.id : null;
-}
-
-function refundEligibility({
-	reason,
-	invoice,
-	cooldownExpiresAt,
-}: {
-	reason: SelfServeRefundIneligibilityReason | null;
-	invoice?: BillingInvoiceRow | null;
-	cooldownExpiresAt?: Date | null;
-}): SelfServeRefundEligibilityResponse {
-	const paidAt = invoice?.paid_at ?? invoice?.stripe_created_at ?? null;
-	const windowExpiresAt = paidAt
-		? new Date(paidAt.getTime() + SELF_SERVE_REFUND_WINDOW_DAYS * MILLISECONDS_PER_DAY)
-		: null;
-	return {
-		eligible: reason === null && invoice != null,
-		reason,
-		invoice_id: invoice?.provider_id ?? null,
-		invoice_amount_paid_cents: invoice ? nullableNumber(invoice.amount_paid) : null,
-		currency: invoice?.currency ?? null,
-		paid_at: toIso(paidAt),
-		refund_window_expires_at: toIso(windowExpiresAt),
-		cooldown_expires_at: toIso(cooldownExpiresAt),
-		cancels_subscription: invoice?.subscription_id != null,
-	};
 }
 
 function resolveSubscriptionProvider(
@@ -264,11 +203,7 @@ export class PremiumStateService {
 				? user
 				: await this.userRepository.patchUpsert(user.id, {premium_flags: nextFlags}, user.toRow());
 		if (updatedUser !== user) {
-			await this.gatewayService.dispatchPresence({
-				userId: updatedUser.id,
-				event: 'USER_UPDATE',
-				data: mapUserToPrivateResponse(updatedUser),
-			});
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 		}
 		return this.buildState(updatedUser);
 	}
@@ -457,8 +392,8 @@ export class PremiumStateService {
 			customerId,
 			mirroredSubscription,
 		);
-		const customerDefaultPaymentMethodId = stripeIdOf(customer.invoice_settings?.default_payment_method);
-		const subscriptionDefaultPaymentMethodId = stripeIdOf(subscription?.default_payment_method);
+		const customerDefaultPaymentMethodId = extractId(customer.invoice_settings?.default_payment_method);
+		const subscriptionDefaultPaymentMethodId = extractId(subscription?.default_payment_method);
 		let defaultPaymentMethodId = customerDefaultPaymentMethodId ?? subscriptionDefaultPaymentMethodId;
 		if (
 			subscription &&
@@ -576,7 +511,7 @@ export class PremiumStateService {
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
 				expand: ['items.data.price', 'schedule'],
 			});
-			const schedule = await this.loadSubscriptionSchedule(subscription.schedule);
+			const schedule = await loadSubscriptionSchedule(this.stripe, subscription.schedule);
 			if (!schedule || (schedule.status !== 'active' && schedule.status !== 'not_started')) {
 				return null;
 			}
@@ -588,15 +523,6 @@ export class PremiumStateService {
 			);
 			return null;
 		}
-	}
-
-	private async loadSubscriptionSchedule(
-		scheduleRef: Stripe.Subscription['schedule'],
-	): Promise<Stripe.SubscriptionSchedule | null> {
-		if (!scheduleRef) return null;
-		if (typeof scheduleRef === 'object') return scheduleRef;
-		if (!this.stripe) return null;
-		return this.stripe.subscriptionSchedules.retrieve(scheduleRef);
 	}
 
 	private async mapPendingSubscriptionChange(
@@ -718,7 +644,7 @@ export class PremiumStateService {
 	private async resolveStripePriceDetails(
 		priceRef: Stripe.Price | Stripe.DeletedPrice | string | null | undefined,
 	): Promise<StripePriceDetails> {
-		const priceId = stripeIdOf(priceRef);
+		const priceId = extractId(priceRef);
 		let amountMinor: number | null =
 			typeof priceRef === 'object' && priceRef && 'unit_amount' in priceRef ? (priceRef.unit_amount ?? null) : null;
 		let currency: Currency | null =
@@ -766,7 +692,7 @@ export class PremiumStateService {
 				}
 			} catch (error) {
 				Logger.warn(
-					{error, priceId: stripeIdOf(invoiceItem.price)},
+					{error, priceId: extractId(invoiceItem.price)},
 					'Failed to resolve pending subscription schedule invoice item price',
 				);
 			}
@@ -784,7 +710,7 @@ export class PremiumStateService {
 	}
 
 	private async resolvePriceIds(countryCode: string | null): Promise<PriceIdsResponse | null> {
-		const resolved = this.resolveConfiguredPriceIds(countryCode);
+		const resolved = this.productRegistry.resolveLocalizedPriceIds(countryCode);
 		if (!resolved) return null;
 		const [monthlyAmount, yearlyAmount, gift1MonthAmount, gift1YearAmount] = await Promise.all([
 			this.resolvePriceAmountMinor(resolved.monthly),
@@ -821,55 +747,6 @@ export class PremiumStateService {
 		return summary?.unitAmountMinor ?? null;
 	}
 
-	private resolveConfiguredPriceIds(countryCode: string | null): ResolvedPriceIds | null {
-		const recurringCurrencyPreferences = getCurrencyPreferences(countryCode);
-		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
-		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
-		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
-		if (!recurringPrices) return null;
-		if (!giftPrices && !Config.instance.selfHosted) return null;
-		return {
-			monthly: recurringPrices.monthly,
-			yearly: recurringPrices.yearly,
-			gift_1_month: giftPrices?.gift_1_month ?? null,
-			gift_1_year: giftPrices?.gift_1_year ?? null,
-			currency: recurringPrices.currency,
-			gift_currency: giftPrices?.gift_currency ?? null,
-		};
-	}
-
-	private resolveRecurringPriceIds(
-		preferredCurrencies: Array<Currency>,
-	): Pick<ResolvedPriceIds, 'monthly' | 'yearly' | 'currency'> | null {
-		for (const currency of preferredCurrencies) {
-			const monthly = this.productRegistry.getRecurringSubscriptionPriceId('monthly', currency);
-			const yearly = this.productRegistry.getRecurringSubscriptionPriceId('yearly', currency);
-			if (monthly && yearly) {
-				return {monthly, yearly, currency};
-			}
-		}
-		return null;
-	}
-
-	private resolveGiftPriceIds(
-		preferredCurrencies: Array<Currency>,
-	): Pick<ResolvedPriceIds, 'gift_1_month' | 'gift_1_year' | 'gift_currency'> | null {
-		for (const currency of preferredCurrencies) {
-			const gift1Month = this.productRegistry.getGiftPriceId('gift_1_month', currency);
-			const gift1Year = this.productRegistry.getGiftPriceId('gift_1_year', currency);
-			if (gift1Month && gift1Year) {
-				return {gift_1_month: gift1Month, gift_1_year: gift1Year, gift_currency: currency};
-			}
-		}
-		return null;
-	}
-
-	private cooldownExpiresAt(user: User): Date | null {
-		if (!user.firstRefundAt) return null;
-		const expiresAt = new Date(user.firstRefundAt.getTime() + SELF_SERVE_REFUND_COOLDOWN_DAYS * MILLISECONDS_PER_DAY);
-		return expiresAt.getTime() > Date.now() ? expiresAt : null;
-	}
-
 	private async invoiceHasBlockingRefund(invoice: BillingInvoiceRow): Promise<boolean> {
 		const refunds = await this.billingRepository.refunds.listByInvoice(invoice.provider_id);
 		return refunds.some(
@@ -881,28 +758,25 @@ export class PremiumStateService {
 		user: User,
 		invoices: Array<BillingInvoiceRow>,
 	): Promise<SelfServeRefundEligibilityResponse> {
-		if (Config.instance.selfHosted || !getStripeClient()) {
-			return refundEligibility({reason: 'feature_unavailable'});
-		}
-		const cooldownExpiresAt = this.cooldownExpiresAt(user);
+		if (Config.instance.selfHosted || !getStripeClient())
+			return buildRefundEligibility({reason: 'feature_unavailable'});
+		const cooldownExpiresAt = refundCooldownExpiresAt(user);
 		const paidInvoices = invoices.filter((invoice) => invoice.status === 'paid' && toNumber(invoice.amount_paid) > 0);
 		for (const invoice of paidInvoices) {
-			if (await this.invoiceHasBlockingRefund(invoice)) {
-				continue;
-			}
+			if (await this.invoiceHasBlockingRefund(invoice)) continue;
 			const paidAt = invoice.paid_at ?? invoice.stripe_created_at;
-			if (!paidAt) {
-				continue;
-			}
-			const windowExpiresAt = paidAt.getTime() + SELF_SERVE_REFUND_WINDOW_DAYS * MILLISECONDS_PER_DAY;
-			let reason: SelfServeRefundIneligibilityReason | null = null;
-			if (windowExpiresAt <= Date.now()) {
-				reason = 'outside_refund_window';
-			} else if (cooldownExpiresAt) {
-				reason = 'cooldown_active';
-			}
-			return refundEligibility({reason, invoice, cooldownExpiresAt});
+			if (!paidAt) continue;
+			return buildRefundEligibility({
+				target: {
+					invoiceId: invoice.provider_id,
+					amountPaidCents: nullableNumber(invoice.amount_paid),
+					currency: invoice.currency,
+					paidAt,
+					subscriptionId: invoice.subscription_id,
+				},
+				cooldownExpiresAt,
+			});
 		}
-		return refundEligibility({reason: 'no_refundable_purchase', cooldownExpiresAt});
+		return buildRefundEligibility({reason: 'no_refundable_purchase', cooldownExpiresAt});
 	}
 }

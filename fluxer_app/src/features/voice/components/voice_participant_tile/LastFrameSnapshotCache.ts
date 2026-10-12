@@ -66,10 +66,6 @@ class LastFrameSnapshotCache extends Store {
 	private captureIds = new Map<string, number>();
 	private nextCaptureId = 1;
 
-	get size(): number {
-		return this.snapshots.size;
-	}
-
 	getSnapshotUrl(key: string): string | null {
 		return this.snapshots.get(key) ?? null;
 	}

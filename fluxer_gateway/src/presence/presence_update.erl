@@ -175,7 +175,7 @@ flush_push_buffer(#{push_buffer := Buffer} = State) ->
 entry_buffered_at(#{buffered_at := BufferedAt}) ->
     BufferedAt;
 entry_buffered_at(#{message_id := MessageId}) ->
-    snowflake_util:extract_timestamp(MessageId).
+    snowflake_id:extract_timestamp(MessageId).
 
 -spec maybe_update_push_eligibility(state()) -> state().
 maybe_update_push_eligibility(State) ->

@@ -16,6 +16,7 @@ import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoin
 import DiscoveryChannelPreviews from '@app/features/discovery/state/DiscoveryChannelPreviews';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
+import * as StringUtils from '@app/features/guild/utils/GuildInitialsUtils';
 import {getGuildIconDisplayInitials} from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	COPY_LINK_DESCRIPTOR,
@@ -81,7 +82,6 @@ import {
 } from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {UserSettingsDeepLinkTarget} from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as StringUtils from '@app/lib/strings';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';

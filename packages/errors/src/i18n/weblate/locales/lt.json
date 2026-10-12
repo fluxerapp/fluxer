@@ -67,7 +67,6 @@
 	"attachments_and_uploads.too_many_files": "Per daug failų. Leidžiama daugiausia {maxFiles, plural, one {# failas} few {# failai} many {# failo} other {# failų}}.",
 	"attachments_and_uploads.unresolved_attachment_url": "Aptiktas neišspręstas `attachment://` URL. Jis turėjo būti išspręstas prieš apdorojant įterptuosius elementus.",
 	"attachments_and_uploads.uploaded_attachment_not_found": "Įkeltas priedas {filename} nerastas.",
-	"auth_and_oauth.application_not_owned": "Tu nesi šios programos savininkas.",
 	"auth_and_oauth.bot_already_in_guild": "Šis botas jau priklauso bendruomenei.",
 	"auth_and_oauth.bot_users_cannot_create_auth_sessions": "Botai negali kurti prisijungimo seansų.",
 	"auth_and_oauth.bot_users_cannot_use_auth_endpoints": "Botai negali naudoti prisijungimo galinių taškų.",

@@ -13,7 +13,6 @@ interface OutlineFrameProps {
 	hideTopBorder?: boolean;
 	sides?: FrameSides;
 	nagbar?: React.ReactNode;
-	topBanner?: React.ReactNode;
 	children: React.ReactNode;
 	className?: string;
 }
@@ -23,7 +22,6 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 	sidebarResizeHandle = false,
 	hideTopBorder = false,
 	sides,
-	topBanner,
 	nagbar,
 	children,
 	className,
@@ -57,7 +55,6 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 			data-flx="app.outline-frame.frame"
 		>
 			<FrameContext.Provider value={ctxSides}>
-				{topBanner}
 				{nagbar}
 				<div className={styles.contentWrapper} data-flx="app.outline-frame.content-wrapper">
 					{sidebarDivider && <div className={styles.divider} aria-hidden data-flx="app.outline-frame.divider" />}

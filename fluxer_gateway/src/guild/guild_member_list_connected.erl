@@ -124,9 +124,9 @@ session_can_view_channel_by_permissions(SessionData, ChannelId, State) ->
             is_integer(UserId), UserId > 0, is_map(ViewableChannels)
         ->
             maps:is_key(ChannelId, ViewableChannels) orelse
-                guild_permissions:can_view_channel(UserId, ChannelId, undefined, State);
+                guild_permissions_check:can_view_channel(UserId, ChannelId, undefined, State);
         {UserId, _} when is_integer(UserId), UserId > 0 ->
-            guild_permissions:can_view_channel(UserId, ChannelId, undefined, State);
+            guild_permissions_check:can_view_channel(UserId, ChannelId, undefined, State);
         _ ->
             false
     end.
@@ -144,7 +144,9 @@ session_can_view_channel_members(SessionData, ChannelId, State) ->
 session_user_can_view_channel_members(SessionData, ChannelId, State) ->
     case maps:get(user_id, SessionData, undefined) of
         UserId when is_integer(UserId), UserId > 0 ->
-            guild_permissions:can_view_channel_members(UserId, ChannelId, undefined, State);
+            guild_permissions_check:can_view_channel_members(
+                UserId, ChannelId, undefined, State
+            );
         _ ->
             false
     end.

@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
+use crate::templates::components::report_category::{
+    message_lookup_href, report_status, report_type, reported_guild_icon,
+};
+
 use crate::{
     api::types::{ReportEntry, ReportReasonEntry, SearchReportsResponse},
     config::AdminConfig,
@@ -9,7 +15,7 @@ use crate::{
             badge::{BadgeVariant, badge},
             drawer::{DrawerSide, DrawerWidth, drawer},
             form::{secondary_button_link, select_input, submit_button, text_input},
-            media::{guild_icon_url, initials, user_avatar_url},
+            media::user_avatar_url,
             page_container::page_header_with_actions,
             report_category::{reason_repeats_category, report_category, report_category_options},
             report_webhook::{
@@ -186,23 +192,6 @@ fn reason_select(reasons: &[ReportReasonEntry], selected: &str) -> Markup {
     select_input("reason", "Reason", &options, selected)
 }
 
-fn format_status(status: i32) -> (&'static str, BadgeVariant) {
-    match status {
-        0 => ("Pending", BadgeVariant::Warning),
-        1 => ("Resolved", BadgeVariant::Success),
-        _ => ("Unknown", BadgeVariant::Default),
-    }
-}
-
-fn format_report_type(report_type: i32) -> (&'static str, BadgeVariant) {
-    match report_type {
-        0 => ("Message", BadgeVariant::Info),
-        1 => ("User", BadgeVariant::Default),
-        2 => ("Guild", BadgeVariant::Warning),
-        _ => ("Unknown", BadgeVariant::Default),
-    }
-}
-
 fn reporter_label(report: &ReportEntry) -> Markup {
     if let Some(username) = &report.reporter_username {
         return tagged_user(
@@ -243,18 +232,6 @@ fn reported_user_label(report: &ReportEntry) -> String {
         "User {}",
         report.reported_user_id.as_deref().unwrap_or("unknown")
     )
-}
-
-fn message_lookup_href(base: &str, channel_id: &str, message_id: Option<&str>) -> String {
-    let mut href = format!(
-        "{base}/messages?channel_id={}&context_limit=50",
-        urlencoding::encode(channel_id)
-    );
-    if let Some(message_id) = message_id.filter(|id| !id.is_empty()) {
-        href.push_str("&message_id=");
-        href.push_str(&urlencoding::encode(message_id));
-    }
-    href
 }
 
 fn reporter_cell(config: &AdminConfig, report: &ReportEntry) -> Markup {
@@ -338,30 +315,6 @@ fn reported_guild_cell(config: &AdminConfig, report: &ReportEntry) -> Markup {
         } @else {
             span class="text-neutral-400 text-sm italic" { "\u{2014}" }
         }
-    }
-}
-
-fn reported_guild_icon(
-    config: &AdminConfig,
-    report: &ReportEntry,
-    guild_id: &str,
-    label: &str,
-) -> Markup {
-    match guild_icon_url(
-        config,
-        guild_id,
-        report.reported_guild_icon_hash.as_deref(),
-        80,
-        true,
-    ) {
-        Some(url) => html! {
-            img src=(url) alt="" class="h-8 w-8 max-w-none flex-shrink-0 rounded-full object-cover";
-        },
-        None => html! {
-            span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
-                (initials(label))
-            }
-        },
     }
 }
 
@@ -460,7 +413,7 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
                         span class="text-neutral-600 text-xs xl:hidden" data-report-reported-at-compact=(report.report_id) {
                             (format_admin_timestamp(&report.reported_at))
                         }
-                        @let (type_label, type_variant) = format_report_type(report.report_type);
+                        @let (type_label, type_variant) = report_type(report.report_type);
                         (badge(type_label, type_variant))
                         @let reason_label = report.reason.as_deref().map(|reason| report.reason_label.as_deref().unwrap_or(reason));
                         @let repeats = report.category.as_deref().zip(reason_label).is_some_and(|(category, label)| reason_repeats_category(category, label));
@@ -495,7 +448,7 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
                 td class="px-3 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal" {
                     (reported_cell(config, report))
                 }
-                @let (status_label, status_variant) = format_status(report.status);
+                @let (status_label, status_variant) = report_status(report.status);
                 td class="hidden whitespace-nowrap px-3 py-3 text-sm xl:table-cell" {
                     span data-status-pill=(report.report_id) {
                         (badge(status_label, status_variant))
@@ -567,29 +520,12 @@ fn reports_pagination(
     let next_page = page
         .checked_add(1)
         .filter(|page| u64::from(*page) < total_pages);
-    html! {
-        div class="mt-4 flex items-center justify-between" {
-            @if page > 0 {
-                a href=(reports_url(config, filters, page - 1, limit))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    (PreEscaped("&larr; Previous"))
-                }
-            } @else {
-                span {}
-            }
-            span class="text-neutral-500 text-sm" {
-                "Page " (u64::from(page) + 1) " of " (total_pages)
-            }
-            @if let Some(next_page) = next_page {
-                a href=(reports_url(config, filters, next_page, limit))
-                    class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    (PreEscaped("Next &rarr;"))
-                }
-            } @else {
-                span {}
-            }
-        }
-    }
+    pager_with_missing(
+        (page > 0).then(|| reports_url(config, filters, page - 1, limit)),
+        Some(format!("Page {} of {total_pages}", u64::from(page) + 1)),
+        next_page.map(|page| reports_url(config, filters, page, limit)),
+        true,
+    )
 }
 
 fn push_param(params: &mut Vec<(String, String)>, key: &str, value: Option<&str>) {

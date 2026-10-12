@@ -102,18 +102,6 @@ export const PREFIX_HINTS = [
 	{symbol: '*', label: COMMUNITIES_DESCRIPTOR},
 ];
 
-export function getViewContext(result: QuickSwitcherExecutableResult): string | undefined {
-	if (
-		result.type === QuickSwitcherResultTypes.TEXT_CHANNEL ||
-		result.type === QuickSwitcherResultTypes.VOICE_CHANNEL ||
-		result.type === QuickSwitcherResultTypes.USER ||
-		result.type === QuickSwitcherResultTypes.GROUP_DM
-	) {
-		return result.viewContext;
-	}
-	return undefined;
-}
-
 const QUICK_SWITCHER_ICON_SIZE = 24;
 
 export function renderIcon(
@@ -382,8 +370,7 @@ function getChannelId(result: QuickSwitcherExecutableResult): string | null {
 }
 
 export function getResultKey(result: QuickSwitcherResult): string {
-	const viewContext = getViewContext(result as QuickSwitcherExecutableResult);
-	return viewContext ? `${result.type}-${viewContext}-${result.id}` : `${result.type}-${result.id}`;
+	return `${result.type}-${result.id}`;
 }
 
 export function createSections(results: Array<QuickSwitcherResult>): Array<QuickSwitcherSection> {

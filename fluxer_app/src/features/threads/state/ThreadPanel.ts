@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Navigation from '@app/features/navigation/state/Navigation';
 import {makeAutoObservable, observable} from 'mobx';
 
 export interface ThreadCreateTarget {
@@ -23,10 +22,6 @@ class ThreadPanel {
 	startCreateCooldown(parentId: string, seconds: number): void {
 		if (seconds <= 0) return;
 		this.createCooldowns.set(parentId, Date.now() + seconds * 1000);
-	}
-
-	get openThreadId(): string | null {
-		return Navigation.threadId;
 	}
 
 	getCreateTarget(parentId: string): ThreadCreateTarget | null {

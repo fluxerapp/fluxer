@@ -2,7 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
+import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {insertComposerEmoji} from '@app/features/lexical/composer/ComposerInsertion';
 import {LexicalComposerInput} from '@app/features/lexical/composer/LexicalComposerInput';
 import composerStyles from '@app/features/lexical/composer/LexicalMessageComposer.module.css';
@@ -16,14 +16,9 @@ import type React from 'react';
 import {useCallback, useId, useImperativeHandle, useRef, useState} from 'react';
 
 export interface LexicalRichInputHandle {
-	getWire: () => string;
-	getDisplay: () => string;
-	getSegments: () => Array<MentionSegment>;
-	getSelection: () => ComposerSelectionRange | null;
 	focus: () => void;
-	clear: () => void;
+
 	insertEmoji: (emoji: FlatEmoji) => boolean;
-	wrapSelection: (prefix: string, suffix: string) => void;
 }
 
 export interface LexicalRichInputProps {
@@ -95,7 +90,7 @@ export const LexicalRichInput = ({
 	onBlur,
 	i18n,
 }: LexicalRichInputProps) => {
-	const [value, setValue] = useState(initialValue);
+	const [_value, setValue] = useState(initialValue);
 	const handleRef = useRef<ComposerHandle | null>(null);
 	const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
 	const listboxId = useId();
@@ -106,27 +101,25 @@ export const LexicalRichInput = ({
 		[channel, channelGuildId, i18n],
 	);
 
-	const {segmentManagerRef, previousValueRef, rememberSegmentsForValue, clearSegments} = useTextareaSegments();
+	const {segmentManagerRef, previousValueRef} = useTextareaSegments();
 
 	const seededRef = useRef(false);
 	if (!seededRef.current) {
 		seededRef.current = true;
 		segmentManagerRef.current.setSegments(initialSegments.map((segment) => ({...segment})));
 		previousValueRef.current = initialValue;
-		rememberSegmentsForValue(initialValue, initialSegments);
 	}
 
 	const emitChange = useCallback(
 		(display: string, segments: Array<MentionSegment>, wire: string) => {
 			segmentManagerRef.current.setSegments(segments);
 			previousValueRef.current = display;
-			rememberSegmentsForValue(display, segments);
 			setValue(display);
 			if (onChange != null) {
 				onChange(display, segments, wire);
 			}
 		},
-		[onChange, previousValueRef, rememberSegmentsForValue, segmentManagerRef],
+		[onChange, previousValueRef, segmentManagerRef],
 	);
 
 	const {
@@ -160,45 +153,16 @@ export const LexicalRichInput = ({
 	useImperativeHandle(
 		richInputRef,
 		(): LexicalRichInputHandle => ({
-			getWire: () => {
-				const handle = handleRef.current;
-				return handle == null ? segmentManagerRef.current.displayToActual(value) : handle.getWireValue();
-			},
-			getDisplay: () => {
-				const handle = handleRef.current;
-				return handle == null ? value : handle.getDisplayValue();
-			},
-			getSegments: () => {
-				const handle = handleRef.current;
-				return handle == null ? segmentManagerRef.current.getSegmentsCopy() : handle.getSegments();
-			},
-			getSelection: () => {
-				const handle = handleRef.current;
-				return handle == null ? null : handle.getSelection();
-			},
 			focus: () => {
 				const handle = handleRef.current;
 				if (handle != null) {
 					handle.focus();
 				}
 			},
-			clear: () => {
-				const handle = handleRef.current;
-				if (handle != null) {
-					handle.clear();
-				}
-				setValue('');
-				clearSegments();
-			},
+
 			insertEmoji,
-			wrapSelection: (prefix, suffix) => {
-				const handle = handleRef.current;
-				if (handle != null) {
-					handle.wrapSelection(prefix, suffix);
-				}
-			},
 		}),
-		[insertEmoji, clearSegments, segmentManagerRef, value],
+		[insertEmoji],
 	);
 
 	const handleEnter = useCallback(() => {

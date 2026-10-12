@@ -35,7 +35,6 @@ export interface UserResult {
 	subtitle?: string;
 	user: User;
 	dmChannelId: string | null;
-	viewContext?: string;
 }
 
 export interface GroupDMResult {
@@ -44,7 +43,6 @@ export interface GroupDMResult {
 	title: string;
 	subtitle?: string;
 	channel: Channel;
-	viewContext?: string;
 }
 
 export interface TextChannelResult {
@@ -54,7 +52,6 @@ export interface TextChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface VoiceChannelResult {
@@ -64,7 +61,6 @@ export interface VoiceChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface GuildResult {

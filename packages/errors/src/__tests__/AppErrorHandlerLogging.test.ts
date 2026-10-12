@@ -2,7 +2,7 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AppErrorHandler, type BaseHonoEnv} from '@fluxer/errors/src/domains/core/ErrorHandlers';
-import {ServiceUnavailableError} from '@fluxer/errors/src/HttpErrors';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {Hono} from 'hono';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 

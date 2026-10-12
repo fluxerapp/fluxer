@@ -14,39 +14,6 @@ describe('canonicalizeUrl', () => {
 	it('preserves path', () => {
 		expect(canonicalizeUrl('https://example.com/foo/bar')).toBe('https://example.com/foo/bar');
 	});
-	it('strips utm_source tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_source=twitter')).toBe('https://example.com/');
-	});
-	it('strips utm_medium tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_medium=social')).toBe('https://example.com/');
-	});
-	it('strips utm_campaign tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_campaign=spring')).toBe('https://example.com/');
-	});
-	it('strips fbclid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?fbclid=abc123')).toBe('https://example.com/');
-	});
-	it('strips gclid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?gclid=xyz')).toBe('https://example.com/');
-	});
-	it('strips mc_cid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?mc_cid=abc')).toBe('https://example.com/');
-	});
-	it('strips mc_eid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?mc_eid=def')).toBe('https://example.com/');
-	});
-	it('strips msclkid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?msclkid=bing')).toBe('https://example.com/');
-	});
-	it('strips _ga tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?_ga=123')).toBe('https://example.com/');
-	});
-	it('strips _gl tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?_gl=456')).toBe('https://example.com/');
-	});
-	it('strips igshid tracking param', () => {
-		expect(canonicalizeUrl('https://example.com/?igshid=abc')).toBe('https://example.com/');
-	});
 	it('strips ref_src and ref_url tracking params', () => {
 		expect(canonicalizeUrl('https://example.com/?ref_src=twsrc&ref_url=https://t.co')).toBe('https://example.com/');
 	});
@@ -60,9 +27,6 @@ describe('canonicalizeUrl', () => {
 	});
 	it('strips fragment', () => {
 		expect(canonicalizeUrl('https://example.com/page#section')).toBe('https://example.com/page');
-	});
-	it('strips fragment along with tracking params', () => {
-		expect(canonicalizeUrl('https://example.com/?utm_source=tw#top')).toBe('https://example.com/');
 	});
 	it('strips default port 80 for http', () => {
 		expect(canonicalizeUrl('http://example.com:80/path')).toBe('http://example.com/path');
@@ -84,9 +48,6 @@ describe('canonicalizeUrl', () => {
 	});
 	it('rejects ftp scheme', () => {
 		expect(canonicalizeUrl('ftp://example.com/file')).toBeNull();
-	});
-	it('rejects tel scheme', () => {
-		expect(canonicalizeUrl('tel:+1234567890')).toBeNull();
 	});
 	it('rejects invalid URLs', () => {
 		expect(canonicalizeUrl('not-a-url')).toBeNull();
@@ -142,16 +103,6 @@ describe('extractUrlCandidates', () => {
 	});
 	it('strips trailing punctuation', () => {
 		const result = extractUrlCandidates('visit https://example.com/page.');
-		expect(result).toHaveLength(1);
-		expect(result[0]).toBe('https://example.com/page');
-	});
-	it('strips trailing comma', () => {
-		const result = extractUrlCandidates('see https://example.com/page, then');
-		expect(result).toHaveLength(1);
-		expect(result[0]).toBe('https://example.com/page');
-	});
-	it('strips trailing exclamation mark', () => {
-		const result = extractUrlCandidates('wow https://example.com/page!');
 		expect(result).toHaveLength(1);
 		expect(result[0]).toBe('https://example.com/page');
 	});

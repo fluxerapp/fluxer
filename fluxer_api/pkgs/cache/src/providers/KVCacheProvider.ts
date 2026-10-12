@@ -11,7 +11,6 @@ import type {CacheLogger, CacheTelemetry} from '@pkgs/cache/src/CacheProviderTyp
 import {parseCachedValue, safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
 import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IKVPipeline, IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSlots';
 
 interface KVCacheProviderConfig {
 	client: IKVProvider;
@@ -135,33 +134,6 @@ export class KVCacheProvider extends ICacheService {
 		return values.map((value: string | null) => {
 			if (value == null) return null;
 			return safeJsonParse<T>(value, this.logger);
-		});
-	}
-
-	async mset<T>(
-		entries: Array<{
-			key: string;
-			value: T;
-			ttlSeconds?: number;
-		}>,
-	): Promise<void> {
-		if (entries.length === 0) return;
-		const serialized = entries.map((entry) => ({
-			key: entry.key,
-			value: serializeValue(entry.value),
-			ttlSeconds: entry.ttlSeconds,
-		}));
-		const batches = splitIntoSlotBatches(serialized, (entry) => entry.key, this.client.isClustered());
-		await runSlotBatches(batches, async (batch) => {
-			const pipeline = this.client.pipeline();
-			for (const entry of batch) {
-				if (entry.ttlSeconds) {
-					pipeline.setex(entry.key, entry.ttlSeconds, entry.value);
-				} else {
-					pipeline.set(entry.key, entry.value);
-				}
-			}
-			await this.executePipeline(pipeline);
 		});
 	}
 

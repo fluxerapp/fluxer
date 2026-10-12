@@ -202,7 +202,7 @@ impl NativeTaskExecutor {
                 .as_ref()
                 .is_err_and(|error| error.downcast_ref() == Some(&MediaError::MediaDecodeFailed))
             {
-                transform_metrics.record_decode_failure();
+                transform_metrics.decode_failures.inc();
             }
             if let Err(Err(error)) = sender.send(result) {
                 error!(error = ?error, "detached native transform failed");

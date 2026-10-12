@@ -2,8 +2,11 @@
 
 import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
 import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
-import type {MeilisearchFilter} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
-import {joinMeiliFilters} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import {
+	joinMeiliFilters,
+	type MeilisearchFilter,
+	meiliTermFilter,
+} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
 import type {MeilisearchIndexDefinition} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 
@@ -111,6 +114,10 @@ export class MeilisearchIndexAdapter<
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/documents/delete-batch`,
 			ids,
 		);
+	}
+
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		await this.deleteByFilter(meiliTermFilter(field, value));
 	}
 
 	async deleteByFilter(filter: MeilisearchFilter): Promise<void> {

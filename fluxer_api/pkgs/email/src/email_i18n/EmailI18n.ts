@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {identityLocale} from '@fluxer/i18n/src/normalization/IdentityLocale';
 import {compileMessage} from '@fluxer/i18n/src/runtime/CompileMessage';
 import {createStaticI18n} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
@@ -43,7 +42,6 @@ const emailI18n = createStaticI18n<EmailTemplateKey, EmailTemplate, Record<strin
 		defaultLocale: DEFAULT_LOCALE,
 		defaultMessages: EMAIL_I18N_MESSAGES,
 		localeMessages: EMAIL_I18N_LOCALE_MESSAGES,
-		normalizeLocale: (locale) => identityLocale(locale),
 		onWarning: (message) => {
 			if (message.startsWith('Unsupported locale, falling back to en-US:')) {
 				console.warn(

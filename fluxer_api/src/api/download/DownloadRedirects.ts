@@ -6,7 +6,7 @@ export const PKGS_BASE_URL = 'https://pkgs.fluxer.com';
 export const DOWNLOAD_PREFIX = '/dl';
 export const DESKTOP_REDIRECT_PREFIX = `${DOWNLOAD_PREFIX}/desktop`;
 
-export const DESKTOP_COORDINATE_DOCUMENTS = new Map<string, string>([['latest', 'latest.json']]);
+const DESKTOP_COORDINATE_DOCUMENTS = new Map<string, string>([['latest', 'latest.json']]);
 
 const DESKTOP_PATH_PREFIX = 'desktop/';
 const PLATFORM_ARCH_PATH = /^(desktop\/(?:stable|canary)\/(?:win32|darwin|linux))-(x64|arm64)(\/.+)$/u;
@@ -61,7 +61,7 @@ export function resolveDownloadObjectPath(requestPath: string): string | null {
 	return objectPath.startsWith(DESKTOP_PATH_PREFIX) ? objectPath : null;
 }
 
-export function downloadRedirectCacheControl(objectPath: string): string {
+function downloadRedirectCacheControl(objectPath: string): string {
 	const segments = objectPath.split('/');
 	if (segments[SCOPE_SEGMENT_INDEX] === 'latest') {
 		return MUTABLE_REDIRECT_CACHE_CONTROL;

@@ -5,12 +5,6 @@ const CACHE_INFLIGHT_JOIN_RETRIES = 1;
 const CACHE_PRODUCE_TIMEOUT_MS = 15000;
 const CACHE_PRODUCE_TIMEOUT_MESSAGE = 'Cache produce timed out';
 
-interface CacheMSetEntry<T> {
-	key: string;
-	value: T;
-	ttlSeconds?: number;
-}
-
 interface CacheProduceTracking {
 	generation: number;
 	produces: number;
@@ -53,8 +47,6 @@ export abstract class ICacheService {
 	abstract ttl(key: string): Promise<number>;
 
 	abstract mget<T>(keys: Array<string>): Promise<Array<T | null>>;
-
-	abstract mset<T>(entries: Array<CacheMSetEntry<T>>): Promise<void>;
 
 	abstract deletePattern(pattern: string): Promise<number>;
 

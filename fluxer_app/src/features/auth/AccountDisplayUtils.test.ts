@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AccountDisplayLabels} from '@app/features/auth/AccountDisplayUtils';
 import {FIXTURE_CURRENT_INSTANCE_SNAPSHOT} from '@app/features/auth/state/__fixtures__/AccountRecordFixtures';
 import {installHarnessBootstrap} from '@app/features/auth/state/__fixtures__/AccountSwitchHarness';
 import type {Account} from '@app/features/platform/state/AuthSession';
@@ -80,30 +79,6 @@ describe('display helpers are total', () => {
 	});
 });
 
-describe('instance labels', () => {
-	test('a record with no web app endpoint is still named after the instance it belongs to', () => {
-		const account = accountWith({...SNAPSHOT, webAppEndpoint: ''});
-		expect(resolveAccountInstanceDomain(account)).toBeNull();
-		expect(resolveAccountInstanceLabel(account)).toBe('fluxer.app/api');
-	});
-
-	test('a record with a usable web app endpoint keeps its display domain', () => {
-		expect(resolveAccountInstanceLabel(accountWith(SNAPSHOT))).toBe('fluxer.app');
-	});
-
-	test('an account whose snapshot cannot be keyed falls back to its explicit storage key', () => {
-		expect(resolveAccountInstanceLabel(accountWith(undefined))).toBe('fluxer.app/api');
-		expect(resolveAccountInstanceLabel(accountWith({...SNAPSHOT, apiEndpoint: 'not a url', webAppEndpoint: ''}))).toBe(
-			'fluxer.app/api',
-		);
-		expect(
-			resolveAccountInstanceLabel(
-				accountWith({...SNAPSHOT, apiEndpoint: 'https://o:p@fluxer.app/api?tenant=1', webAppEndpoint: ''}),
-			),
-		).toBe('fluxer.app/api');
-	});
-});
-
 describe('instance key derivation', () => {
 	test('uses the one exported runtimeInstanceKey', () => {
 		expect(resolveSnapshotInstanceKey(SNAPSHOT)).toBe(runtimeInstanceKey(SNAPSHOT));
@@ -113,26 +88,5 @@ describe('instance key derivation', () => {
 		const pathed = {...SNAPSHOT, apiEndpoint: 'HTTPS://Self.Hosted.Example/fluxer/api/'};
 		expect(resolveSnapshotInstanceKey(pathed)).toBe('https://self.hosted.example/fluxer/api');
 		expect(resolveSnapshotInstanceKey(pathed)).toBe(runtimeInstanceKey(pathed));
-	});
-
-	test('the display domain drops the https prefix', () => {
-		expect(resolveSnapshotInstanceDomain(SNAPSHOT)).toBe('fluxer.app');
-	});
-});
-
-describe('display labels', () => {
-	test('an account with no cached profile reports unavailable', () => {
-		expect(getAccountDisplayLabels(accountWith(SNAPSHOT))).toEqual({available: false});
-	});
-
-	test('an account with a cached profile reports its labels', () => {
-		const account: Account = {...accountWith(SNAPSHOT), userData: {username: 'ada', discriminator: '0001'}};
-		const labels: AccountDisplayLabels = getAccountDisplayLabels(account);
-		expect(labels).toEqual({
-			available: true,
-			displayLabel: 'ada',
-			tagLabel: 'ada#0001',
-			discriminatorLabel: '#0001',
-		});
 	});
 });

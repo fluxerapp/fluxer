@@ -12,7 +12,7 @@ import {
 	errorToVoiceEngineV2Error,
 	type VoiceEngineV2CommandResult,
 	type VoiceEngineV2Implementation,
-} from '@fluxer/voice_engine_v2/src/implementations';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import {
 	getVoiceEngineV2CommandResourceKey,
 	type VoiceEngineV2Command,
@@ -554,5 +554,3 @@ export function assertEventLogInvariants(runtime: VoiceEngineV2Runtime): void {
 	assert.ok(runtime instanceof VoiceEngineV2Runtime, 'assertEventLogInvariants requires a runtime instance');
 	runtime.verifyEventLogInvariants();
 }
-
-export {commandResultToEvent} from '@fluxer/voice_engine_v2/src/runtime/commandEvents';

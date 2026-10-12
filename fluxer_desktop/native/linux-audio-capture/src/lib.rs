@@ -1,9 +1,9 @@
+#![cfg(target_os = "linux")]
 #![allow(clippy::too_many_lines)]
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod audio_contract;
-mod backend;
 mod direct_buffer;
 
 #[cfg(target_os = "linux")]
@@ -16,15 +16,12 @@ mod self_identity;
 #[cfg(all(test, target_os = "linux"))]
 mod test_alloc;
 
-use std::ptr;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSinkHandleRef};
 use napi::Env;
-use napi::JsValue;
 use napi::Status;
-use napi::bindgen_prelude::{ArrayBuffer, Error, Function, Object, Result, Unknown, ValueType};
+use napi::bindgen_prelude::{ArrayBuffer, Error, Function, Object, Result, Unknown};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 
@@ -32,7 +29,6 @@ use crate::audio_contract::{
     MAX_INVENTORY_FIELD_LENGTH, MAX_INVENTORY_FIELDS, MAX_ROUTING_RULE_KEY_LENGTH,
     MAX_ROUTING_RULE_KEYS_PER_PATTERN, MAX_ROUTING_RULE_PATTERNS, MAX_ROUTING_RULE_VALUE_LENGTH,
 };
-use crate::backend::{CaptureBridge as CaptureBridgeTrait, DirectCapture as DirectCaptureTrait};
 use crate::routing::{PropMap, PropPattern, RoutingRule, SelfIdentity};
 
 type LifecycleTsfn =
@@ -45,48 +41,27 @@ fn make_self_identity() -> SelfIdentity {
     id
 }
 
-#[cfg(not(target_os = "linux"))]
-#[allow(dead_code)]
-fn make_self_identity() -> SelfIdentity {
-    SelfIdentity::default()
-}
-
 #[cfg(target_os = "linux")]
-fn open_capture_backend() -> Option<(Box<dyn CaptureBridgeTrait>, &'static str)> {
+fn open_capture_backend() -> Option<(pipewire_bridge::PipeWireBridge, &'static str)> {
     if let Some(bridge) = pipewire_bridge::PipeWireBridge::open() {
         bridge.populate_self_identity(make_self_identity());
-        return Some((Box::new(bridge), "pipewire"));
+        return Some((bridge, "pipewire"));
     }
-    None
-}
-
-#[cfg(not(target_os = "linux"))]
-fn open_capture_backend() -> Option<(Box<dyn CaptureBridgeTrait>, &'static str)> {
     None
 }
 
 #[cfg(target_os = "linux")]
-fn open_direct_backend() -> Option<Box<dyn DirectCaptureTrait>> {
+fn open_direct_backend() -> Option<pipewire_bridge::PipeWireDirectCapture> {
     if let Some(direct) = pipewire_bridge::PipeWireDirectCapture::open() {
         direct.populate_self_identity(make_self_identity());
-        return Some(Box::new(direct));
+        return Some(direct);
     }
-    None
-}
-
-#[cfg(not(target_os = "linux"))]
-fn open_direct_backend() -> Option<Box<dyn DirectCaptureTrait>> {
     None
 }
 
 #[cfg(target_os = "linux")]
 fn pipewire_reachable() -> bool {
     pipewire_bridge::daemon_reachable()
-}
-
-#[cfg(not(target_os = "linux"))]
-fn pipewire_reachable() -> bool {
-    false
 }
 
 #[napi(js_name = "pipeWireAvailable")]
@@ -105,7 +80,7 @@ pub fn audio_backend() -> &'static str {
 
 #[napi]
 pub struct AudioBridge {
-    backend: Mutex<Option<Box<dyn CaptureBridgeTrait>>>,
+    backend: Mutex<Option<pipewire_bridge::PipeWireBridge>>,
     name: &'static str,
 }
 
@@ -176,34 +151,9 @@ impl Default for AudioBridge {
     }
 }
 
-fn retain_screen_audio_sink_handle(
-    value: Unknown<'_>,
-) -> Result<Arc<NativeScreenFrameSinkHandleRef>> {
-    if value.get_type()? != ValueType::External {
-        return Err(generic_error(
-            "DirectAudioCapture.setScreenAudioSink expects a native external sink handle",
-        ));
-    }
-    let raw_value = value.value();
-    let mut data: *mut std::ffi::c_void = ptr::null_mut();
-    let status =
-        unsafe { napi::sys::napi_get_value_external(raw_value.env, raw_value.value, &mut data) };
-    if status != napi::sys::Status::napi_ok || data.is_null() {
-        return Err(generic_error(
-            "DirectAudioCapture.setScreenAudioSink received an empty native external sink handle",
-        ));
-    }
-    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
-        .and_then(NativeScreenFrameSinkHandle::retain_ref)
-        .ok_or_else(|| {
-            generic_error("DirectAudioCapture.setScreenAudioSink received an invalid handle")
-        })?;
-    Ok(Arc::new(handle))
-}
-
 #[napi]
 pub struct DirectAudioCapture {
-    backend: Mutex<Option<Box<dyn DirectCaptureTrait>>>,
+    backend: Mutex<Option<pipewire_bridge::PipeWireDirectCapture>>,
     lifecycle_tsfn: Mutex<Option<LifecycleTsfn>>,
 }
 
@@ -272,36 +222,6 @@ impl DirectAudioCapture {
             channels: frame.channels,
             timestamp_us: frame.timestamp_us.max(0) as f64,
         }))
-    }
-
-    #[napi(js_name = "setScreenAudioSink")]
-    pub fn set_screen_audio_sink(&self, sink_handle: Unknown<'_>) -> Result<()> {
-        let sink = retain_screen_audio_sink_handle(sink_handle)?;
-        if !sink.supports_screen_audio() {
-            return Err(generic_error(
-                "DirectAudioCapture.setScreenAudioSink handle does not support screen audio",
-            ));
-        }
-        let guard = self
-            .backend
-            .lock()
-            .map_err(|_| generic_error("DirectAudioCapture backend poisoned"))?;
-        if let Some(b) = guard.as_ref() {
-            b.set_screen_audio_sink(sink);
-        }
-        Ok(())
-    }
-
-    #[napi(js_name = "clearScreenAudioSink")]
-    pub fn clear_screen_audio_sink(&self) -> Result<()> {
-        let guard = self
-            .backend
-            .lock()
-            .map_err(|_| generic_error("DirectAudioCapture backend poisoned"))?;
-        if let Some(b) = guard.as_ref() {
-            b.clear_screen_audio_sink();
-        }
-        Ok(())
     }
 
     #[napi]
@@ -496,6 +416,3 @@ fn generic_error(reason: impl Into<String>) -> Error {
 fn invalid_arg(reason: impl Into<String>) -> Error {
     Error::new(Status::InvalidArg, reason.into())
 }
-
-#[allow(dead_code)]
-fn _keep_arc_in_scope(_: Arc<()>) {}

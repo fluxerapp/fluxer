@@ -123,3 +123,22 @@ export const getAuthErrorMessage = (error: unknown, i18n: I18n): string => {
 	}
 	return i18n._(AN_UNEXPECTED_ERROR_OCCURRED_DESCRIPTOR);
 };
+
+export function resolveAuthBannerError(
+	error: string | null,
+	fieldErrors: ReadonlyMap<string, string> | null | undefined,
+	renderedFields: ReadonlySet<string>,
+): string | null {
+	if (error != null) {
+		return error;
+	}
+	if (fieldErrors == null) {
+		return null;
+	}
+	for (const [fieldName, message] of fieldErrors) {
+		if (!renderedFields.has(fieldName)) {
+			return message;
+		}
+	}
+	return null;
+}

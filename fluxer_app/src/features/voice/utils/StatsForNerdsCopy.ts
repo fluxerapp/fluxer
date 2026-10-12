@@ -281,7 +281,6 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		voiceProcessingMode: VoiceSettings.getVoiceProcessingMode(),
 		vadThreshold: VoiceSettings.getVadThreshold(),
 		vadAutoSensitivity: VoiceSettings.getVadAutoSensitivity(),
-		vadEnhanced: VoiceSettings.getVadEnhanced(),
 		cameraResolution: VoiceSettings.getCameraResolution(),
 		screenshareResolution: VoiceSettings.getScreenshareResolution(),
 		videoFrameRate: VoiceSettings.getVideoFrameRate(),
@@ -306,7 +305,6 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 				VoiceSettings.getScreenShareBitrateBudget(),
 			) / 1000000,
 		linuxAudioCapture: {
-			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
 			onlySpeakers: VoiceSettings.getLinuxAudioCaptureOnlySpeakers(),
 			onlyDefaultSpeakers: VoiceSettings.getLinuxAudioCaptureOnlyDefaultSpeakers(),
 			ignoreInputMedia: VoiceSettings.getLinuxAudioCaptureIgnoreInputMedia(),
@@ -468,6 +466,22 @@ async function collectDesktopMetadata(): Promise<Record<string, unknown>> {
 	};
 }
 
+export function getSystemInfo(): StatsForNerdsData['system'] {
+	const nav = navigator as Navigator & {deviceMemory?: number};
+	const mem = (
+		performance as Performance & {memory?: {usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number}}
+	).memory;
+	return {
+		platform: navigator.platform,
+		userAgent: navigator.userAgent.replace(/^Mozilla\/5\.0\s*/, ''),
+		hardwareConcurrency: navigator.hardwareConcurrency,
+		deviceMemoryGB: nav.deviceMemory ?? null,
+		jsHeapUsedMB: mem ? Math.round((mem.usedJSHeapSize / 1048576) * 10) / 10 : null,
+		jsHeapTotalMB: mem ? Math.round((mem.totalJSHeapSize / 1048576) * 10) / 10 : null,
+		jsHeapLimitMB: mem ? Math.round((mem.jsHeapSizeLimit / 1048576) * 10) / 10 : null,
+	};
+}
+
 export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
@@ -534,15 +548,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 		},
 		gpu: null,
 		appMetrics: null,
-		system: {
-			platform: navigator.platform,
-			userAgent: navigator.userAgent.replace(/^Mozilla\/5\.0\s*/, ''),
-			hardwareConcurrency: navigator.hardwareConcurrency,
-			deviceMemoryGB: (navigator as Navigator & {deviceMemory?: number}).deviceMemory ?? null,
-			jsHeapUsedMB: null,
-			jsHeapTotalMB: null,
-			jsHeapLimitMB: null,
-		},
+		system: getSystemInfo(),
 		heapHistory: [],
 		cpuHistory: [],
 	};

@@ -2,7 +2,6 @@
 
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID} from '@app/api/BrandedTypes';
-import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
@@ -21,13 +20,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 	};
 	const deps = getWorkerDependencies();
 	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
-	const deletionService = new UserMessageDeletionService({
-		channelRepository: deps.channelRepository,
-		gatewayService: deps.gatewayService,
-		storageService: deps.storageService,
-		purgeQueue: deps.purgeQueue,
-		workerService: deps.workerService,
-	});
+	const deletionService = deps.channelService.userMessageDeletion;
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
 	const total = payload.user_ids.length;
 	let deletedMessages = 0;

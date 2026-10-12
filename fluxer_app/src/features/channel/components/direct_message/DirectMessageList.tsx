@@ -239,11 +239,9 @@ export const DMList = observer(() => {
 	const filteredDmChannels = getSortedDmChannels(dmChannels, currentUserId);
 	const dmListNavigationRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-dm-list-focus-item="true"]',
-		orientation: 'vertical',
-		loop: true,
+
 		enabled: KeyboardMode.keyboardModeEnabled,
 		restoreFocusOnWindowFocus: false,
-		manageTabIndex: true,
 	});
 	const routeDmChannelId = getDmRouteChannelId(location.pathname);
 	const isMobileDmIndexRoute = isMobile && location.pathname === Routes.ME;

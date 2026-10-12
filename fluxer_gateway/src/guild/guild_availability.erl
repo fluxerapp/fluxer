@@ -6,15 +6,12 @@
 -export([
     is_guild_unavailable_for_user/2,
     handle_unavailability_transition/2,
-    get_cached_unavailability_mode/1,
-    is_unavailable_hidden_enabled/1,
     is_unavailable_hidden_enabled_from_cache/1,
     is_guild_unavailable_for_user_from_cache/2,
     update_unavailability_cache_for_state/1,
     schedule_availability_recheck/1,
     handle_availability_recheck/1,
-    send_guild_create_to_session/4,
-    send_guild_create_to_session/5
+    send_guild_create_to_session/4, send_guild_create_to_session/5
 ]).
 
 -type guild_state() :: map().
@@ -39,14 +36,6 @@ is_guild_unavailable_for_user(UserId, State) ->
         available ->
             false
     end.
-
--spec get_cached_unavailability_mode(guild_id()) -> unavailability_mode().
-get_cached_unavailability_mode(GuildId) ->
-    guild_availability_cache:get_cached_unavailability_mode(GuildId).
-
--spec is_unavailable_hidden_enabled(guild_state()) -> boolean().
-is_unavailable_hidden_enabled(State) ->
-    guild_availability_check:is_unavailable_hidden_enabled(State).
 
 -spec is_unavailable_hidden_enabled_from_cache(guild_id()) -> boolean().
 is_unavailable_hidden_enabled_from_cache(GuildId) ->
@@ -185,7 +174,7 @@ do_disconnect(
     Pid = maps:get(pid, SessionData, undefined),
     maybe_send_guild_leave(Pid, GuildId, UnavailableHidden),
     {VoiceState, UpdatedUsers} = maybe_disconnect_voice(UserId, ProcessedUsers, State),
-    NewState = guild_sessions:remove_session(SessionId, VoiceState),
+    NewState = guild_sessions_connect:remove_session(SessionId, VoiceState),
     {NewState, UpdatedUsers}.
 
 -spec should_disconnect_user(user_id(), boolean(), guild_state()) -> boolean().
@@ -246,28 +235,6 @@ handle_recheck_transition(_OldMode, _CurrentMode, _GuildId, State) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-schedule_availability_recheck_available_no_timer_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(State, schedule_availability_recheck(State)),
-    receive
-        availability_recheck -> ?assert(false, unexpected_timer)
-    after 50 ->
-        ok
-    end.
-
-schedule_availability_recheck_unavailable_sets_timer_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    Parent = self(),
-    {Pid, MonitorRef} = spawn_monitor(fun() ->
-        Parent ! {scheduled, self(), schedule_availability_recheck(State)}
-    end),
-    receive
-        {scheduled, Pid, Result} -> ?assertEqual(State, Result)
-    end,
-    receive
-        {'DOWN', MonitorRef, process, Pid, normal} -> ok
-    end.
 
 handle_recheck_transition_clears_cache_on_recovery_test() ->
     GuildId = 99001,
