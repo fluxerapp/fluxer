@@ -325,6 +325,7 @@ async function registerAccount(
 			timezone: null,
 			invite_code: data.invite_code?.trim() || null,
 			flags: user.flags.toString(),
+			date_of_birth: user.dateOfBirth,
 		},
 		null,
 		user.id.toString(),

@@ -564,6 +564,7 @@ export class SsoService {
 					timezone: null,
 					invite_code: null,
 					flags: user.flags.toString(),
+					date_of_birth: user.dateOfBirth,
 				},
 				null,
 				user.id.toString(),
