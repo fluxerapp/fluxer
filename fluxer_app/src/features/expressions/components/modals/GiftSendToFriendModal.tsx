@@ -48,7 +48,12 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 	const handleCopy = useCopyLinkHandler(giftUrl, true);
 	const {sendingTo, sentTo, send: handleSendGift} = useSendLinkToRecipients(() => giftUrl);
 	return (
-		<Modal.Root size="small" centered data-flx="expressions.gift-send-to-friend-modal.modal-root">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="expressions.gift-send-to-friend-modal.modal-root"
+		>
 			<Modal.Header
 				title={i18n._(YOU_ALREADY_HAVE_LIFETIME_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 				data-flx="expressions.gift-send-to-friend-modal.modal-header"

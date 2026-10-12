@@ -326,7 +326,12 @@ const InviteModalContent = observer(function InviteModalContent({
 		return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_SECONDS_DESCRIPTOR, {seconds});
 	};
 	return (
-		<Modal.Root size="small" centered data-flx="invite.invite-modal.modal-root--2">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="invite.invite-modal.modal-root--2"
+		>
 			<Modal.Header
 				title={!showAdvanced ? title : i18n._(INVITE_LINK_SETTINGS_DESCRIPTOR)}
 				data-flx="invite.invite-modal.modal-header--2"

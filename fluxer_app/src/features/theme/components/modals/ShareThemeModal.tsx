@@ -144,7 +144,12 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 		send: handleSendTheme,
 	} = useSendLinkToRecipients(() => (themeUrl ? `${i18n._(CHECK_OUT_MY_CUSTOM_THEME_DESCRIPTOR)}\n${themeUrl}` : null));
 	return (
-		<Modal.Root size="small" centered data-flx="theme.share-theme-modal.modal-root">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="theme.share-theme-modal.modal-root"
+		>
 			<Modal.Header title={i18n._(SHARE_YOUR_THEME_DESCRIPTOR)} data-flx="theme.share-theme-modal.modal-header">
 				<div className={selectorStyles.headerSearch} data-flx="theme.share-theme-modal.div">
 					<Input

@@ -361,6 +361,7 @@ export const ForwardModal = observer(
 			<Modal.Root
 				size="small"
 				centered
+				className={selectorStyles.selectorRoot}
 				initialFocusRef={shouldFocusSearch ? searchInputRef : undefined}
 				data-flx="messaging.forward-modal.modal-root"
 			>
@@ -388,7 +389,7 @@ export const ForwardModal = observer(
 				</Modal.Header>
 				<Modal.Content
 					padding="none"
-					className={modalStyles.destinationList}
+					className={selectorStyles.selectorContent}
 					data-flx="messaging.forward-modal.modal-content"
 				>
 					<div className={selectorStyles.listContainer} data-flx="messaging.forward-modal.div--2">

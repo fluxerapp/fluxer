@@ -45,7 +45,12 @@ export const CreateDMModal = observer((props: CreateDMModalProps) => {
 		}
 	}, [modalLogic]);
 	return (
-		<Modal.Root size="small" centered data-flx="channel.create-dm-modal.modal-root">
+		<Modal.Root
+			size="small"
+			centered
+			className={selectorStyles.selectorRoot}
+			data-flx="channel.create-dm-modal.modal-root"
+		>
 			<Modal.Header title={i18n._(SELECT_FRIENDS_DESCRIPTOR)} data-flx="channel.create-dm-modal.modal-header">
 				{!restriction && (
 					<>
