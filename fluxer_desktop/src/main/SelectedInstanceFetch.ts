@@ -15,7 +15,6 @@ const INSTANCE_RESPONSE_MAX_BYTES = 1024 * 1024;
 const INSTANCE_RESPONSE_MAX_CHUNKS = 1024;
 const INSTANCE_FETCH_TIMEOUT_MS = 15_000;
 
-const SELECTED_INSTANCE_SERVICE_NAME = 'desktop_selected_instance';
 const INSTANCE_RESPONSE_DESCRIPTION = 'Instance response';
 const RESET_CONTENT_STATUS = 205;
 
@@ -80,7 +79,6 @@ export class DesktopSelectedInstanceClient {
 			headers: request.headers ?? null,
 			method,
 			originTrust: DesktopOriginTrust.BOUND,
-			serviceName: SELECTED_INSTANCE_SERVICE_NAME,
 			signal: request.signal ?? null,
 			timeoutMs,
 			url: request.url,

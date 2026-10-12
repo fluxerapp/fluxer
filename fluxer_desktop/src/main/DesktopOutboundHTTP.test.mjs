@@ -65,7 +65,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 500,
 				url: 'https://media.internal/avatars/1.webp',
@@ -104,7 +103,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 500,
 				url: 'https://media.internal/avatars/1.webp',
@@ -161,7 +159,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 500,
 				url: 'https://media.mixed.example/avatars/1.webp',
@@ -193,44 +190,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		outboundHTTP.cleanup();
 	});
 
-	test('a request that cannot be constructed releases its in-flight slot', async () => {
-		const {port, server} = await startServer({
-			'/ok': (_request, response) => sendImage(response, 'image/png', PNG_BYTES),
-		});
-		try {
-			const outboundHTTP = new DesktopOutboundHTTP({
-				resolveHostAddresses: stubResolver({'lan.example': ['127.0.0.1']}),
-			});
-			await outboundHTTP.registerAnchoredOrigins({
-				anchorOrigin: `http://lan.example:${port}`,
-				origins: [`http://lan.example:${port}`],
-			});
-			const send = (headers) =>
-				outboundHTTP.request({
-					body: null,
-					expectedOrigin: `http://lan.example:${port}`,
-					headers,
-					method: 'GET',
-					originTrust: DesktopOriginTrust.REGISTERED,
-					serviceName: 'slot-leak',
-					signal: null,
-					timeoutMs: 2000,
-					url: `http://lan.example:${port}/ok`,
-				});
-
-			for (let attempt = 0; attempt < 80; attempt += 1) {
-				await assert.rejects(send({'x-bad': 'a\u0001b'}));
-			}
-			const message = await send(null);
-
-			assert.equal(message.status, 200);
-			message.message.resume();
-			outboundHTTP.cleanup();
-		} finally {
-			server.close();
-		}
-	});
-
 	test('a request whose signal already aborted is refused instead of sent', async () => {
 		const seen = [];
 		const {port, server} = await startServer({
@@ -257,7 +216,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: null,
 					method: 'GET',
 					originTrust: DesktopOriginTrust.REGISTERED,
-					serviceName: 'aborted',
 					signal: controller.signal,
 					timeoutMs: 2000,
 					url: `http://lan.example:${port}/ok`,
@@ -289,7 +247,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 2000,
 				url: `http://media.lan.example:${port}/media/ok`,
@@ -331,7 +288,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: {'content-type': 'application/json', 'x-fluxer-sudo-mode-jwt': 'previous'},
 					method,
 					originTrust: DesktopOriginTrust.REGISTERED,
-					serviceName: 'test',
 					signal: null,
 					timeoutMs: 2000,
 					url: `http://lan.example:${port}/api/v1/oauth2/applications/1`,
@@ -549,7 +505,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 			headers: null,
 			method: 'GET',
 			originTrust: DesktopOriginTrust.BOUND,
-			serviceName: 'test',
 			signal,
 			timeoutMs: 2000,
 			url: `https://home.example:${port}/ping`,
@@ -577,7 +532,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 			headers: null,
 			method: 'GET',
 			originTrust: DesktopOriginTrust.BOUND,
-			serviceName: 'test',
 			signal: null,
 			timeoutMs: 200,
 			url: 'http://blackhole.example:9/ping',
@@ -606,7 +560,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.BOUND,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 2000,
 				url: `http://mixed.example:${port}/ping`,
@@ -632,7 +585,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: null,
 					method: 'GET',
 					originTrust: DesktopOriginTrust.BOUND,
-					serviceName: 'test',
 					signal: null,
 					timeoutMs: 2000,
 					url: `http://127.0.0.1:${other.port}/steal`,
@@ -670,7 +622,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: null,
 					method: 'GET',
 					originTrust: DesktopOriginTrust.BOUND,
-					serviceName: 'test',
 					signal: null,
 					timeoutMs: 5000,
 					url: `http://127.0.0.1:${port}/ping`,
@@ -720,7 +671,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: {'content-type': 'text/plain'},
 					method: 'PUT',
 					originTrust: DesktopOriginTrust.BOUND,
-					serviceName: 'test',
 					signal: null,
 					timeoutMs: 5000,
 					url: `http://127.0.0.1:${port}/upload`,
@@ -775,7 +725,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 					headers: null,
 					method: 'GET',
 					originTrust: DesktopOriginTrust.REGISTERED,
-					serviceName: 'test',
 					signal: null,
 					timeoutMs: 2000,
 					url: 'https://unrouted.example/',
@@ -826,7 +775,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 2000,
 				url: `http://dual.example:${port}/ping`,
@@ -857,7 +805,6 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 				headers: null,
 				method: 'GET',
 				originTrust: DesktopOriginTrust.REGISTERED,
-				serviceName: 'test',
 				signal: null,
 				timeoutMs: 3000,
 				url: `http://multi.example:${port}/ping`,
@@ -1007,7 +954,6 @@ describe('DesktopOutboundHTTP system proxy routes', () => {
 			headers: {Accept: 'image/png'},
 			method: 'GET',
 			originTrust: DesktopOriginTrust.REGISTERED,
-			serviceName: 'test',
 			signal: null,
 			timeoutMs: 500,
 			url: 'https://media.blocked.example/avatar.png',
@@ -1061,7 +1007,6 @@ describe('DesktopOutboundHTTP system proxy routes', () => {
 			headers: null,
 			method: 'GET',
 			originTrust,
-			serviceName: 'test',
 			signal: null,
 			timeoutMs: 500,
 			url,

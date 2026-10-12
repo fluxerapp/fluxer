@@ -41,7 +41,6 @@ async function fetchThrough(certificates, port) {
 			headers: null,
 			method: 'GET',
 			originTrust: DesktopOriginTrust.REGISTERED,
-			serviceName: 'test',
 			signal: null,
 			timeoutMs: 3000,
 			url: `https://ca.example:${port}/`,

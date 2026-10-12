@@ -16,10 +16,12 @@ function createLogger() {
 
 function createSession() {
 	const session = {
+		requestFilter: null,
 		requestListener: null,
 		webRequest: {
-			onBeforeSendHeaders: (listener) => {
-				session.requestListener = listener;
+			onBeforeSendHeaders: (...args) => {
+				session.requestFilter = args.length > 1 ? args[0] : null;
+				session.requestListener = args.at(-1);
 			},
 		},
 	};
@@ -139,6 +141,12 @@ describe('DesktopRuntimeSecurity', () => {
 			}),
 			{},
 		);
+	});
+
+	test('only intercepts local app requests and the YouTube embed frame', () => {
+		const {session} = createInstalled();
+
+		assert.deepEqual(session.requestFilter, {urls: ['fluxer-app://*/*', 'https://www.youtube.com/embed/*']});
 	});
 
 	test('installs once per session and stops listening after cleanup', () => {
