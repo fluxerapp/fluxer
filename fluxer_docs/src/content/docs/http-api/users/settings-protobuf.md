@@ -86,7 +86,7 @@ An over-length string draws two entries for the one path.
 | double_tap_action | int32 | [Double tap action](#double-tap-actions) on a message |
 | swipe_right_to_left_action | int32 | [Swipe right to left action](#swipe-right-to-left-actions) in a channel |
 
-<sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
+<sup>1</sup> The entries are inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
 <sup>2</sup> The only bare scalar on the root message, so it has no presence and reads as false until a client stores true. It applies to the content a client is about to send, and the first-party client leaves the URLs inside inline code and code blocks unchanged
 

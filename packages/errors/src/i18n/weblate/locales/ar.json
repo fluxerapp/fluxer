@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "اسم المستخدم أو مفتاح الاسترداد غير صحيح.",
 	"auth_and_registration.password_is_too_common": "كلمة مرورك شائعة جدًا. اختر كلمة مرور يصعب تخمينها.",
 	"auth_and_registration.password_not_set": "لم تُعيّن كلمة المرور.",
+	"auth_and_registration.setup_token_invalid": "رمز الإعداد هذا غير صحيح. تحقق من الرمز وحاول مرة أخرى.",
+	"auth_and_registration.setup_token_required": "لم يتم إعداد هذا المثيل بعد. أكمل الإعداد في متصفح ويب باستخدام رمز الإعداد قبل إنشاء الحسابات.",
 	"auth_and_registration.username_sign_in_only": "هذا متاح فقط على المثيلات التي يسجّل فيها الأشخاص الدخول باسم مستخدم.",
 	"bots.bot_discriminator_cannot_be_changed": "لا يمكن تغيير مميّز البوت.",
 	"bots.bot_is_private": "هذا البوت خاص.",

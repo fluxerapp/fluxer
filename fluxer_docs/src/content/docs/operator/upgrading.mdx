@@ -79,6 +79,8 @@ printf '\nFLUXER_PROFILE_PSEUDONYM_SECRET=%s\n' "$(openssl rand -hex 32)" >> .en
 
 Do not paste `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env`. Compose does not execute shell commands in that file.
 
+An upgrade does not write `FLUXER_SETUP_TOKEN`. An instance with no admin account yet asks for the setup token after the upgrade. [Create the first admin](/operator/get-started/#first-run) has where to find it. An instance whose admin access was granted outside setup also logs a generated setup token after the upgrade.
+
 ## Keep a local compose change
 
 An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `external-object-store.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.

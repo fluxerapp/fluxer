@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Invalid username or recovery key.",
 	"auth_and_registration.password_is_too_common": "Your password is too common. Please choose a less predictable password.",
 	"auth_and_registration.password_not_set": "Password isn't set.",
+	"auth_and_registration.setup_token_invalid": "That setup token is not correct. Check the token and try again.",
+	"auth_and_registration.setup_token_required": "This instance is not set up yet. Finish setup in a web browser with the setup token before creating accounts.",
 	"auth_and_registration.username_sign_in_only": "This is only available on instances where people sign in with a username.",
 	"bots.bot_discriminator_cannot_be_changed": "Bot discriminator can't be changed.",
 	"bots.bot_is_private": "This bot is private.",

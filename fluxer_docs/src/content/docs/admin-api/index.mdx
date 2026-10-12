@@ -28,8 +28,6 @@ No Admin operation declares an OAuth2 scope, an MFA requirement, or a sudo requi
 
 An Admin API key authenticates as the account that created it, and Fluxer reads it only on a path below `/v1/admin`. A request presenting a key on any other path is treated as a request with no credential. Fluxer authorises a key-authenticated request twice. The key's own ACL set must satisfy the operation, and unless the owning account holds `*` that account must itself hold one of the ACLs the operation names. When an ACL is removed from a key, or from the account that owns the key, the key no longer passes a check for that ACL on its next request. The key does not need to be rotated.
 
-Initial setup is the single exception. While `app_public.setup.configured` is false, a session credential reaches the [instance configuration](/admin-api/instance/) operations without holding any ACL. The session that switches setup to configured is granted `*` immediately. After `app_public.setup.configured` becomes true, those operations require an accepted credential and the ACLs they name.
-
 Admin authorisation runs before request validation on every operation except [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), whose body is validated first because its ACL is selected from that body. An account lacking the required ACL is therefore refused with 403 even when its query string or body is also malformed.
 
 ## ACL evaluation

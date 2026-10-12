@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Kullanıcı adı veya kurtarma anahtarı geçersiz.",
 	"auth_and_registration.password_is_too_common": "Şifren çok yaygın. Lütfen tahmin edilmesi daha zor bir şifre seç.",
 	"auth_and_registration.password_not_set": "Şifre ayarlanmamış.",
+	"auth_and_registration.setup_token_invalid": "Bu kurulum belirteci doğru değil. Belirteci kontrol edip tekrar deneyin.",
+	"auth_and_registration.setup_token_required": "Bu örnek henüz kurulmadı. Hesap oluşturmadan önce kurulum belirtecini kullanarak bir web tarayıcısında kurulumu tamamlayın.",
 	"auth_and_registration.username_sign_in_only": "Bu yalnızca kullanıcı adıyla giriş yapılan kurulumlarda kullanılabilir.",
 	"bots.bot_discriminator_cannot_be_changed": "Bot etiketi değiştirilemez.",
 	"bots.bot_is_private": "Bu bot özel.",

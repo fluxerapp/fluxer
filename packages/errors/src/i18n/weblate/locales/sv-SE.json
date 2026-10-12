@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Fel användarnamn eller återställningsnyckel.",
 	"auth_and_registration.password_is_too_common": "Ditt lösenord är för vanligt. Välj ett lösenord som är svårare att gissa.",
 	"auth_and_registration.password_not_set": "Inget lösenord har angetts.",
+	"auth_and_registration.setup_token_invalid": "Den konfigurationstokenen är inte korrekt. Kontrollera tokenen och försök igen.",
+	"auth_and_registration.setup_token_required": "Den här instansen är inte konfigurerad än. Slutför konfigurationen i en webbläsare med konfigurationstokenen innan du skapar konton.",
 	"auth_and_registration.username_sign_in_only": "Det här är bara tillgängligt på instanser där man loggar in med ett användarnamn.",
 	"bots.bot_discriminator_cannot_be_changed": "Botdiskriminatorn kan inte ändras.",
 	"bots.bot_is_private": "Denna bot är privat.",

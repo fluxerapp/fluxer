@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Ugyldigt brugernavn eller gendannelsesnøgle.",
 	"auth_and_registration.password_is_too_common": "Din adgangskode er for almindelig. Vælg en adgangskode, der er sværere at gætte.",
 	"auth_and_registration.password_not_set": "Der er ikke angivet nogen adgangskode.",
+	"auth_and_registration.setup_token_invalid": "Det opsætningstoken er ikke korrekt. Tjek tokenet, og prøv igen.",
+	"auth_and_registration.setup_token_required": "Denne instans er endnu ikke sat op. Afslut opsætningen i en webbrowser med opsætningstokenet, før du opretter konti.",
 	"auth_and_registration.username_sign_in_only": "Dette er kun tilgængeligt på instanser, hvor man logger ind med et brugernavn.",
 	"bots.bot_discriminator_cannot_be_changed": "En bots tag kan ikke ændres.",
 	"bots.bot_is_private": "Denne bot er privat.",

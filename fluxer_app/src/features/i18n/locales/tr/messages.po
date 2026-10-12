@@ -1911,6 +1911,16 @@ msgstr "{productName}, {host} adresine taşındı. Yeni uygulamayı yüklediğin
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "{productName}, {host} adresine taşındı. Yeni uygulamayı yüklemek için tarayıcınızda açın."
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "{productName}, artık {host} adresinde. Oradan yükleyin, ardından bu uygulamayla giriş yapın."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "{productName} artık {host} adresinde. Oradan yükleyin."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "{productName} uygulamasının cihazlarınızı listelemek için mikrofon
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} uygulamasının ekran kaydı erişimine ihtiyacı var. İşletim sisteminizin gizlilik ayarlarından ekran kaydına izin verin ve uygulamayı yeniden başlatın."
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} artık {host} adresinde. Oradan yükleyin, ardından bu uygulamayla giriş yapın."
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} artık {host} adresinde. Oradan yükleyin."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "Devam eden arama"
 msgid "Call confirmation"
 msgstr "Arama onayı"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "Arama ayrı bir pencerede açıldı"
@@ -14361,6 +14361,11 @@ msgstr "Adınızı girin"
 msgid "Enter your password."
 msgstr "Parolanızı girin."
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "Kurulum belirtecini girin"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "Kurtarma anahtarınızı ve kurtarma kitinizdeki kurtarma anahtarını girin, ardından yeni bir şifre seçin."
@@ -19448,7 +19453,7 @@ msgstr "Eski tarife"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "/tts mesajınızı sesli okusun. Bu ayar kapalıyken bu komutlar normal metin olarak kalır."
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "Bu topluluktaki botların size DM göndermesine izin ver"
@@ -25279,7 +25284,7 @@ msgstr "Plan"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
+msgid "Plans, perks, gifts and your subscription are all on one page."
 msgstr "Planlar, avantajlar, hediyeler ve aboneliğiniz tek bir sayfada."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -25403,7 +25408,7 @@ msgstr "Kullanıcıyı ayrı pencerede göster"
 msgid "Pop out video"
 msgstr "Videoyu ayrı pencerede göster"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "Ayrı bir pencerede"
@@ -30120,6 +30125,11 @@ msgstr "Ayarlar."
 msgid "Setup key"
 msgstr "Kurulum anahtarı"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "Kurulum belirteci"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "#0000 etiketi Visionary abonelerine özeldir. Visionary artık satın al
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API bu sayfadan farklı bir kaynakta olduğu için kurulum istekleri oturumunuz olmadan gönderiliyor. Bu kurulum için yapılandırılan genel kaynağı ve portu kontrol edin, ardından sayfayı yeniden yükleyin."
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "API, ilk başladığında belirteci günlüğüne yazdı. FLUXER_SETUP_TOKEN'ı ayarladıysanız, bu değeri kullanın."
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "Uygulama çöktü"
@@ -33685,6 +33700,11 @@ msgstr "Sistem, {target} adlı kullanıcıya {role} rolünü verdi"
 msgid "The system removed the role {role} from {target}"
 msgstr "Sistem, {role} rolünü {target} adlı kullanıcıdan kaldırdı"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "Bu belirteç, bu örneği sizin çalıştırdığınızı kanıtlar. Yalnızca buna sahip olan kişi yönetici hesabı oluşturabilir."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "Üçüncü taraf"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "Bu hesap engellenemez."
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "Bu hesap bu örneğin yöneticisi değil. Kurulumu tamamlamak için bir yönetici hesabıyla oturum açın."
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

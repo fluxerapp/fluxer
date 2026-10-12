@@ -444,10 +444,13 @@ Whether the deployment has finished its initial configuration, and where an oper
 | configured | boolean | Whether initial deployment configuration is complete |
 | admin_url<sup>1</sup> | ?string | The admin application URL used to continue setup, or null |
 | account_identity_locked? | boolean | Whether the sign-in method can no longer change, sent only while a self-hosted deployment is not configured |
+| setup_token_required? | boolean | Whether registration needs the setup token, sent only while a self-hosted deployment is not configured |
 
 <sup>1</sup> The value is the deployment's configured admin endpoint, and it is null when no admin endpoint is configured
 
 `account_identity_locked` is true once the first account exists, and on a deployment stored as already in use. [Set the setup sign-in method](#set-the-setup-sign-in-method) returns 409 there.
+
+`setup_token_required` is true while [Register an account](/http-api/authentication/#register-an-account) refuses a body without `setup_token`. It is false once the first admin account exists, and on a deployment that does not enforce the token.
 
 ## Public legal configuration object
 
@@ -615,8 +618,8 @@ Chooses how members sign in on a new self-hosted deployment, and on an `email` d
 
 The setup wizard calls this before the owner account exists. The choice stays open on a self-hosted deployment until setup is complete or the first account exists. After that, on a deployment that was already in use before username sign-in existed, and on every hosted deployment, the route returns 409 `ACCOUNT_IDENTITY_LOCKED`. The choice and the first registration take turns, so a choice never lands after the first account exists. A repeated call while the choice is open replaces the earlier one.
 
-:::caution[Anyone can call this before the first account exists]
-The route needs no credential, the same as the rule that makes the first registration the instance admin. An operator finishes setup in the same sitting that brings the deployment up.
+:::caution[The setup token stands in for a credential]
+The route needs no credential. While `setup_token_required` is true in the [public setup state](#public-setup-state-object), a call without the correct `setup_token` is refused.
 :::
 
 ### JSON body
@@ -625,18 +628,21 @@ The route needs no credential, the same as the rule that makes the first registr
 | --- | --- | --- |
 | mode | string | The [account identity mode](#account-identity-modes) to use |
 | tag_style?<sup>1</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles). Defaults to `none` |
+| setup_token?<sup>2</sup> | ?string | The setup token of the deployment (1-256 characters) |
 
 <sup>1</sup> A `username` instance always uses `none`. Sending `random` with `username` returns the field code `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN` on `tag_style`
+
+<sup>2</sup> Checked the way [Register an account](/http-api/authentication/#register-an-account) checks it, with the same field codes and the same allowance for wrong tokens
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [account identity](#account-identity-object) object | The mode was stored |
-| 400 | [error response](/http-api/#error-response) | The body is invalid, or `random` tags were requested with `username` |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, `random` tags were requested with `username`, or the setup token is missing or wrong |
 | 409 | [error response](/http-api/#error-response) | `ACCOUNT_IDENTITY_LOCKED`, because the sign-in method can no longer change |
 | 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a registration or another choice held the turn for more than 15 seconds |
-| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request, or the address has used its wrong setup token allowance |
 
 ### Side effects
 

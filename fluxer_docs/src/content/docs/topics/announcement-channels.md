@@ -4,7 +4,7 @@ title: Announcement channels
 description: Publishing messages from an announcement channel into the channels that follow it.
 ---
 
-An announcement channel is a guild text channel, [type](/http-api/channels/#channel-types) `5`, whose messages can be published. Other channels follow it, and each published message is copied into every following channel. The copy is posted by a channel follower [webhook](/http-api/webhooks/#webhook-types) that lives in the following channel.
+An announcement channel is a guild text channel, [type](/http-api/channels/#channel-types) `5`, whose messages can be published. Other channels follow it, and each published message is copied into every following channel. The copy is posted by a channel follower [webhook](/http-api/webhooks/#webhook-types) that is in the following channel.
 
 Every guild can create announcement channels. [Create guild channel](/http-api/guild-channels/#create-guild-channel) accepts `type` `5`, and an announcement channel has the fields, permissions, and slowmode of a text channel.
 

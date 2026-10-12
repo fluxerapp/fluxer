@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Ugyldig brukernavn eller gjenopprettingsnøkkel.",
 	"auth_and_registration.password_is_too_common": "Passordet ditt er for vanlig. Velg et passord som er vanskeligere å gjette.",
 	"auth_and_registration.password_not_set": "Det er ikke angitt noe passord.",
+	"auth_and_registration.setup_token_invalid": "Oppsettstokenen er ikke riktig. Sjekk tokenen og prøv igjen.",
+	"auth_and_registration.setup_token_required": "Denne instansen er ikke satt opp ennå. Fullfør oppsettet i en nettleser med oppsettstokenen før du oppretter kontoer.",
 	"auth_and_registration.username_sign_in_only": "Dette er bare tilgjengelig på instanser der man logger inn med brukernavn.",
 	"bots.bot_discriminator_cannot_be_changed": "Botens diskriminator kan ikke endres.",
 	"bots.bot_is_private": "Denne boten er privat.",

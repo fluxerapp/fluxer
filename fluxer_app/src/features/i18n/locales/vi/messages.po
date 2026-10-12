@@ -1911,6 +1911,16 @@ msgstr "{productName} đã chuyển sang {host}. Hãy cài đặt ứng dụng m
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "{productName} đã chuyển sang {host}. Mở trên trình duyệt để cài đặt ứng dụng mới."
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} hiện đã có tại {host}. Hãy cài đặt từ đó, sau đó đăng nhập bằng ứng dụng này."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "{productName} hiện đã có tại {host}. Hãy cài đặt từ đó."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "{productName} cần quyền truy cập micrô để liệt kê thiết b
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} cần quyền truy cập ghi màn hình. Hãy cho phép ghi màn hình trong cài đặt quyền riêng tư của hệ điều hành và khởi động lại ứng dụng."
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} hiện đã có tại {host}. Hãy cài đặt từ đó, sau đó đăng nhập bằng ứng dụng này."
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} giờ đã có tại {host}. Hãy cài đặt từ đó."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "Có cuộc gọi đang diễn ra"
 msgid "Call confirmation"
 msgstr "Xác nhận cuộc gọi"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "Cuộc gọi đang ở cửa sổ riêng"
@@ -14361,6 +14361,11 @@ msgstr "Nhập tên của bạn"
 msgid "Enter your password."
 msgstr "Nhập mật khẩu của bạn."
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "Nhập mã thiết lập của bạn"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "Nhập tên người dùng và khóa khôi phục từ bộ dụng cụ khôi phục của bạn, sau đó chọn mật khẩu mới."
@@ -19448,7 +19453,7 @@ msgstr "Giá cũ"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "Cho phép /tts đọc to tin nhắn của bạn. Tắt cài đặt này sẽ giữ các lệnh đó dưới dạng văn bản thông thường."
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "Cho phép bot trong cộng đồng này nhắn tin trực tiếp cho bạn"
@@ -25279,7 +25284,7 @@ msgstr "Gói dịch vụ"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
+msgid "Plans, perks, gifts and your subscription are all on one page."
 msgstr "Các gói, đặc quyền, quà tặng và gói đăng ký của bạn đều nằm trên một trang."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -25403,7 +25408,7 @@ msgstr "Mở người dùng ở cửa sổ riêng"
 msgid "Pop out video"
 msgstr "Mở video ở cửa sổ riêng"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "Đang ở cửa sổ riêng"
@@ -30120,6 +30125,11 @@ msgstr "Cài đặt."
 msgid "Setup key"
 msgstr "Khóa thiết lập"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "Mã thiết lập"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "Thẻ #0000 được dành riêng cho người đăng ký Visionary. Vis
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API đang ở một nguồn gốc khác với trang này, nên các yêu cầu thiết lập được gửi đi mà không có phiên của bạn. Hãy kiểm tra nguồn gốc và cổng công khai mà máy chủ này được cấu hình, sau đó tải lại."
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "API đã ghi mã thiết lập vào nhật ký trong lần khởi động đầu tiên. Nếu bạn đã đặt FLUXER_SETUP_TOKEN, hãy dùng giá trị đó."
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "Ứng dụng đã gặp sự cố"
@@ -33685,6 +33700,11 @@ msgstr "Hệ thống đã cấp cho {target} vai trò {role}"
 msgid "The system removed the role {role} from {target}"
 msgstr "Hệ thống đã gỡ bỏ vai trò {role} khỏi {target}"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "Mã thiết lập chứng minh bạn đang vận hành phiên bản này. Chỉ người có mã này mới có thể tạo tài khoản quản trị viên."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "Bên thứ ba"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "Không thể chặn tài khoản này."
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "Tài khoản này không phải là quản trị viên của phiên bản này. Hãy đăng nhập bằng tài khoản quản trị viên để hoàn tất thiết lập."
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

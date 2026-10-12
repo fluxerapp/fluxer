@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Nom d'utilisateur ou clé de récupération invalide.",
 	"auth_and_registration.password_is_too_common": "Votre mot de passe est trop courant. Choisissez-en un moins prévisible.",
 	"auth_and_registration.password_not_set": "Le mot de passe n'est pas défini.",
+	"auth_and_registration.setup_token_invalid": "Ce jeton d'installation n'est pas correct. Vérifiez le jeton et réessayez.",
+	"auth_and_registration.setup_token_required": "Cette instance n'est pas encore configurée. Terminez la configuration dans un navigateur web avec le jeton d'installation avant de créer des comptes.",
 	"auth_and_registration.username_sign_in_only": "Ceci n'est disponible que sur les instances où l'on se connecte avec un nom d'utilisateur.",
 	"bots.bot_discriminator_cannot_be_changed": "Le discriminateur du bot ne peut pas être modifié.",
 	"bots.bot_is_private": "Ce bot est privé.",

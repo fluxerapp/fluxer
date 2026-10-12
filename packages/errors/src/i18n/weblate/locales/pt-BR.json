@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Nome de usuário ou chave de recuperação inválidos.",
 	"auth_and_registration.password_is_too_common": "Sua senha é muito comum. Escolha uma senha menos previsível.",
 	"auth_and_registration.password_not_set": "A senha não foi definida.",
+	"auth_and_registration.setup_token_invalid": "Esse token de configuração não está correto. Verifique o token e tente novamente.",
+	"auth_and_registration.setup_token_required": "Esta instância ainda não foi configurada. Conclua a configuração em um navegador da web com o token de configuração antes de criar contas.",
 	"auth_and_registration.username_sign_in_only": "Isso só está disponível em instâncias onde o login é feito com nome de usuário.",
 	"bots.bot_discriminator_cannot_be_changed": "O discriminador do bot não pode ser alterado.",
 	"bots.bot_is_private": "Este bot é privado.",

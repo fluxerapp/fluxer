@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Neplatné uživatelské jméno nebo klíč pro obnovení.",
 	"auth_and_registration.password_is_too_common": "Vaše heslo je příliš běžné. Zvolte si hůře odhadnutelné heslo.",
 	"auth_and_registration.password_not_set": "Heslo není nastavené.",
+	"auth_and_registration.setup_token_invalid": "Tento nastavovací token není správný. Zkontrolujte token a zkuste to znovu.",
+	"auth_and_registration.setup_token_required": "Tato instance ještě není nastavená. Dokončete nastavení v prohlížeči pomocí nastavovacího tokenu před vytvořením účtů.",
 	"auth_and_registration.username_sign_in_only": "Tato možnost je dostupná jen na instancích, kde se lidé přihlašují uživatelským jménem.",
 	"bots.bot_discriminator_cannot_be_changed": "Čtyřmístný identifikátor bota nelze změnit.",
 	"bots.bot_is_private": "Tento bot je soukromý.",

@@ -20,12 +20,12 @@ const TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the modal that explains how to install the app from its new domain. productName is the app name.',
 });
 const INTRO_DESCRIPTOR = msg({
-	message: '{productName} now lives at {host}. Install it from there, then sign in with this app.',
+	message: '{productName} is now at {host}. Install it from there, then sign in with this app.',
 	comment:
 		'Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.',
 });
 const INSTALL_INTRO_DESCRIPTOR = msg({
-	message: '{productName} now lives at {host}. Install it from there.',
+	message: '{productName} is now at {host}. Install it from there.',
 	comment:
 		'Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.',
 });

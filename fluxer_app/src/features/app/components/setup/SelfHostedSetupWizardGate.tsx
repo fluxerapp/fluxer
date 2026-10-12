@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
 import {
@@ -39,6 +40,7 @@ import {
 	type ServiceIntegrationDraft,
 	type ServiceSelection,
 	ServicesStep,
+	SetupTokenStep,
 	SignInMethodStep,
 	ThemeStep,
 	toSmtpTlsMode,
@@ -48,15 +50,16 @@ import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding'
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {AuthRegisterDraftContext, type AuthRegisterFormDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
-import {BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {BACK_DESCRIPTOR, SIGN_OUT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {readBlobAsDataUrl as fileToBase64} from '@app/features/platform/utils/BlobDataUrl';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureValidationErrors} from '@app/features/platform/utils/ResponseInspection';
 import Theme from '@app/features/theme/state/Theme';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
@@ -131,6 +134,11 @@ const LOADING_DESCRIPTOR = msg({
 const LOAD_ERROR_DESCRIPTOR = msg({
 	message: 'Could not load the instance configuration. Try reloading the page.',
 	comment: 'Error shown when the setup wizard fails to load the instance configuration.',
+});
+const NOT_ADMIN_DESCRIPTOR = msg({
+	message: 'This account is not an admin of this instance. Sign in with an admin account to finish setup.',
+	comment:
+		'Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.',
 });
 const ORIGIN_MISMATCH_DESCRIPTOR = msg({
 	message:
@@ -460,6 +468,8 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const [tagStyleChoice, setTagStyleChoice] = useState<TagStyle>(() => RuntimeConfig.tagStyle);
 	const [savingSignInMethod, setSavingSignInMethod] = useState(false);
 	const [signInMethodError, setSignInMethodError] = useState<string | null>(null);
+	const [setupToken, setSetupToken] = useState('');
+	const [setupTokenError, setSetupTokenError] = useState<string | null>(null);
 	const [creatingRecoveryKit, setCreatingRecoveryKit] = useState(false);
 
 	const [productName, setProductName] = useState('');
@@ -552,8 +562,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setForceUnauthenticatedSetup(false);
 	}, [authStoreAuthenticated, forceUnauthenticatedSetup]);
 
-	const resetStaleSetupSession = useCallback(async () => {
-		logger.warn('The setup session token was rejected. Clearing the stale local setup session.');
+	const resetSetupSession = useCallback(async () => {
 		setForceUnauthenticatedSetup(true);
 		registerFormDraftsRef.current.clear();
 		setConfig(null);
@@ -569,16 +578,23 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSmtpTestResult(null);
 		setSignInMethodError(null);
 		setSavingSignInMethod(false);
+		setSetupToken('');
+		setSetupTokenError(null);
 		setCreatingRecoveryKit(false);
 		try {
 			await SessionManager.logout();
 		} catch (error) {
-			logger.warn('Failed to fully clear stale setup session', error);
+			logger.warn('Failed to fully clear the setup session', error);
 			Authentication.handleSessionStart({token: null});
 			SessionManager.setUserId(null);
 		}
 		Authentication.handleLogout({skipRedirect: true});
 	}, [clearStepNavigationLock]);
+
+	const signOutOfSetup = useCallback(async () => {
+		await resetSetupSession();
+		if (RuntimeConfig.appPublic.setup.setup_token_required !== true) RouterUtils.replaceWith(Routes.LOGIN);
+	}, [resetSetupSession]);
 
 	const hydrateFromConfig = useCallback((next: InstanceConfigResponse) => {
 		setConfig(next);
@@ -643,7 +659,12 @@ export const SelfHostedSetupWizardGate = observer(() => {
 					error instanceof HttpError && error.status === 401 ? await classifySetupUnauthorized() : 'unknown';
 				if (cancelled) return;
 				if (cause === 'stale_session') {
-					await resetStaleSetupSession();
+					logger.warn('The setup session token was rejected. Clearing the stale local setup session.');
+					await resetSetupSession();
+					return;
+				}
+				if (error instanceof HttpError && error.status === 403) {
+					setLoadError(NOT_ADMIN_DESCRIPTOR);
 					return;
 				}
 				logger.error('Failed to load instance configuration', error);
@@ -653,7 +674,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		return () => {
 			cancelled = true;
 		};
-	}, [isAuthenticated, config, accountWorkAdmitted, hydrateFromConfig, resetStaleSetupSession]);
+	}, [isAuthenticated, config, accountWorkAdmitted, hydrateFromConfig, resetSetupSession]);
 
 	const serviceAvailability: ServiceAvailability = useMemo(
 		() => ({
@@ -675,17 +696,20 @@ export const SelfHostedSetupWizardGate = observer(() => {
 
 	const hasConfig = Boolean(config);
 	const identityLocked = RuntimeConfig.appPublic.setup.account_identity_locked === true;
+	const setupTokenRequired = RuntimeConfig.appPublic.setup.setup_token_required === true;
 	const syncedSnapshot =
 		wizardSnapshot.context.isAuthenticated !== isAuthenticated ||
 		wizardSnapshot.context.hasConfig !== hasConfig ||
 		wizardSnapshot.context.accountIdentity !== accountIdentity ||
-		wizardSnapshot.context.identityLocked !== identityLocked
+		wizardSnapshot.context.identityLocked !== identityLocked ||
+		wizardSnapshot.context.setupTokenRequired !== setupTokenRequired
 			? transitionSetupWizardSnapshot(wizardSnapshot, {
 					type: 'wizard.sync',
 					isAuthenticated,
 					hasConfig,
 					accountIdentity,
 					identityLocked,
+					setupTokenRequired,
 				})
 			: wizardSnapshot;
 	if (syncedSnapshot !== wizardSnapshot) {
@@ -712,6 +736,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const canAdvance = useMemo(() => {
 		if (step === 'welcome') return !isAuthenticated || Boolean(config);
 		if (step === 'admin_account' || step === 'loading') return false;
+		if (step === 'setup_token') return setupToken.trim().length > 0;
 		if (step === 'sign_in_method') return !savingSignInMethod;
 		if (step === 'admin_recovery_kit') return hasRecoveryKit;
 		if (step === 'branding') return !productNameError;
@@ -731,6 +756,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		integrationDraft,
 		savingSignInMethod,
 		hasRecoveryKit,
+		setupToken,
 	]);
 
 	const goNext = useCallback(() => {
@@ -745,6 +771,36 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setWizardSnapshot((current) => transitionSetupWizardSnapshot(current, {type: 'wizard.back'}));
 	}, [beginStepNavigation]);
 
+	const handleSetupTokenChange = useCallback((value: string) => {
+		setSetupToken(value);
+		setSetupTokenError(null);
+	}, []);
+
+	const submittedSetupToken = setupTokenRequired ? setupToken.trim() : undefined;
+
+	const handleSetupTokenRejected = useCallback(async (message: string) => {
+		setSetupTokenError(message);
+		try {
+			await RuntimeConfig.refreshDiscovery();
+		} catch (error) {
+			logger.warn('Failed to refresh discovery after the setup token was rejected', error);
+		}
+		const required = RuntimeConfig.appPublic.setup.setup_token_required === true;
+		setWizardSnapshot((current) =>
+			transitionSetupWizardSnapshot(
+				transitionSetupWizardSnapshot(current, {
+					type: 'wizard.sync',
+					isAuthenticated: current.context.isAuthenticated,
+					hasConfig: current.context.hasConfig,
+					accountIdentity: current.context.accountIdentity,
+					identityLocked: current.context.identityLocked,
+					setupTokenRequired: required,
+				}),
+				{type: 'wizard.goto', step: 'setup_token'},
+			),
+		);
+	}, []);
+
 	const submitSignInMethod = useCallback(async () => {
 		if (savingSignInMethod) return;
 		setSavingSignInMethod(true);
@@ -754,8 +810,16 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		try {
 			let saved: Awaited<ReturnType<typeof setSetupAccountIdentity>> | null = null;
 			try {
-				saved = await setSetupAccountIdentity(signInMethod, effectiveTagStyle);
+				saved = await setSetupAccountIdentity(signInMethod, effectiveTagStyle, submittedSetupToken);
 			} catch (error) {
+				const setupTokenViolation = failureValidationErrors(error)?.find(
+					(violation) => violation.path === 'setup_token',
+				);
+				if (setupTokenViolation) {
+					await handleSetupTokenRejected(setupTokenViolation.message);
+					setSavingSignInMethod(false);
+					return;
+				}
 				if (failureCode(error) !== APIErrorCodes.ACCOUNT_IDENTITY_LOCKED) {
 					throw error;
 				}
@@ -792,7 +856,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		}
 		setSavingSignInMethod(false);
 		goNext();
-	}, [savingSignInMethod, signInMethod, tagStyleChoice, i18n, goNext]);
+	}, [savingSignInMethod, signInMethod, tagStyleChoice, submittedSetupToken, handleSetupTokenRejected, i18n, goNext]);
 
 	const handleSignInMethodChange = useCallback((mode: AccountIdentityMode) => {
 		setSignInMethod(mode);
@@ -1022,6 +1086,15 @@ export const SelfHostedSetupWizardGate = observer(() => {
 												>
 													{i18n._(loadError)}
 												</p>
+												{loadError === NOT_ADMIN_DESCRIPTOR && (
+													<Button
+														variant="secondary"
+														onClick={signOutOfSetup}
+														data-flx="app.self-hosted-setup-wizard-gate.load-error-sign-out"
+													>
+														{i18n._(SIGN_OUT_DESCRIPTOR)}
+													</Button>
+												)}
 											</div>
 										) : (
 											<SteppedCarousel
@@ -1038,6 +1111,14 @@ export const SelfHostedSetupWizardGate = observer(() => {
 														isAuthenticated={isAuthenticated}
 														initialFocusRef={welcomeInitialFocusRef}
 														data-flx="app.setup.self-hosted-setup-wizard-gate.welcome-step"
+													/>
+												)}
+												{step === 'setup_token' && (
+													<SetupTokenStep
+														value={setupToken}
+														onChange={handleSetupTokenChange}
+														error={setupTokenError}
+														data-flx="app.setup.self-hosted-setup-wizard-gate.setup-token-step"
 													/>
 												)}
 												{step === 'theme' && (
@@ -1068,6 +1149,8 @@ export const SelfHostedSetupWizardGate = observer(() => {
 													<AdminAccountStep
 														theme={setupTheme}
 														usernameSignIn={accountIdentity === AccountIdentityModes.USERNAME}
+														setupToken={submittedSetupToken}
+														onSetupTokenRejected={handleSetupTokenRejected}
 														data-flx="app.setup.self-hosted-setup-wizard-gate.admin-account-step"
 													/>
 												)}

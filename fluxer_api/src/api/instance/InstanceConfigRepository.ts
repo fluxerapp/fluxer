@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
 import type {StoredLimitConfig} from '@app/api/constants/LimitConfig';
@@ -32,6 +33,7 @@ import {
 import {InstanceConfigCache} from '@app/api/instance/InstanceConfigCache';
 import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {getDefaultProductName, setCachedProductName} from '@app/api/instance/ProductName';
+import {isSetupTokenEnforced} from '@app/api/instance/SetupToken';
 import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValidation';
 import {Logger} from '@app/api/Logger';
 import {isStoredLimitConfig} from '@app/api/limits/LimitConfigValidation';
@@ -44,6 +46,7 @@ import {
 import {InstanceConfiguration, Users} from '@app/api/Tables';
 import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '@app/api/utils/AttachmentDecay';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {randomBase64Url, secretMatchesHash, sha256Hex} from '@app/api/utils/SecretHash';
 import {
 	type AccountIdentityMode,
 	AccountIdentityModes,
@@ -120,6 +123,8 @@ const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const ADMIN_BOOTSTRAP_KEY = 'admin_bootstrapped';
+const ADMIN_BOOTSTRAP_USER_ID_KEY = 'admin_bootstrap_user_id';
+const SETUP_TOKEN_HASH_KEY = 'setup_token_hash';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
 const LIMIT_CONFIG_KEY = 'limit_config';
 const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
@@ -1484,8 +1489,95 @@ export class InstanceConfigRepository {
 		return (await this.getConfig(ADMIN_BOOTSTRAP_KEY)) === 'true';
 	}
 
-	async markAdminBootstrapped(): Promise<void> {
-		await this.setConfig(ADMIN_BOOTSTRAP_KEY, 'true');
+	async confirmAdminBootstrapped(): Promise<boolean> {
+		const cache = this.configCache;
+		const stored = (await this.fetchConfigFromDatabase(ADMIN_BOOTSTRAP_KEY)) === 'true';
+		if (stored !== (await this.isAdminBootstrapped())) cache.update(ADMIN_BOOTSTRAP_KEY, stored ? 'true' : 'false');
+		return stored;
+	}
+
+	async claimAdminBootstrap(userId: UserID | null = null): Promise<boolean> {
+		const cache = this.configCache;
+		const {written} = await this.compareAndSetStoredValue(cache, ADMIN_BOOTSTRAP_KEY, (raw) => ({
+			value: raw === 'true' ? null : 'true',
+			result: undefined,
+		}));
+		if (!written) return false;
+		await this.recordAdminBootstrapClaimant(cache, userId);
+		await this.publishAdminBootstrapRefresh(cache.sourceId);
+		return true;
+	}
+
+	private async recordAdminBootstrapClaimant(cache: InstanceConfigCache, userId: UserID | null): Promise<void> {
+		const claimant = userId?.toString() ?? '';
+		try {
+			await this.compareAndSetStoredValue(cache, ADMIN_BOOTSTRAP_USER_ID_KEY, (raw) => ({
+				value: (raw ?? '') === claimant ? null : claimant,
+				result: undefined,
+			}));
+		} catch (error) {
+			Logger.error({error}, 'Could not record which account claimed the admin bootstrap');
+		}
+	}
+
+	async getUnconfirmedAdminBootstrapClaimant(): Promise<UserID | null> {
+		const [bootstrapped, claimant] = await Promise.all([
+			this.fetchConfigFromDatabase(ADMIN_BOOTSTRAP_KEY),
+			this.fetchConfigFromDatabase(ADMIN_BOOTSTRAP_USER_ID_KEY),
+		]);
+		if (bootstrapped !== 'true' || !claimant || !/^\d+$/.test(claimant)) return null;
+		return createUserID(BigInt(claimant));
+	}
+
+	async releaseAdminBootstrap(): Promise<void> {
+		const cache = this.configCache;
+		const {written} = await this.compareAndSetStoredValue(cache, ADMIN_BOOTSTRAP_KEY, (raw) => ({
+			value: raw === 'true' ? 'false' : null,
+			result: undefined,
+		}));
+		if (written) await this.publishAdminBootstrapRefresh(cache.sourceId);
+	}
+
+	private async publishAdminBootstrapRefresh(sourceId: string): Promise<void> {
+		try {
+			await this.publishRefresh(sourceId);
+		} catch (error) {
+			Logger.error(
+				{error},
+				'Could not publish the admin bootstrap change. Other API processes see it after the next instance config change or a restart',
+			);
+		}
+	}
+
+	async isSetupTokenGateOpen(): Promise<boolean> {
+		return isSetupTokenEnforced(Config) && !(await this.isAdminBootstrapped());
+	}
+
+	async isSetupTokenRequired(): Promise<boolean> {
+		return (await this.isSetupTokenGateOpen()) && !(await this.getAppPublicConfig()).setup.configured;
+	}
+
+	async createSetupTokenIfAbsent(): Promise<string | null> {
+		const token = randomBase64Url(32);
+		const {written} = await this.compareAndSetStoredValue(this.configCache, SETUP_TOKEN_HASH_KEY, (raw) => ({
+			value: raw ? null : sha256Hex(token),
+			result: undefined,
+		}));
+		return written ? token : null;
+	}
+
+	async verifySetupToken(presented: string | null | undefined): Promise<boolean> {
+		const expectedHash = Config.instance.setup.token
+			? sha256Hex(Config.instance.setup.token)
+			: await this.fetchConfigFromDatabase(SETUP_TOKEN_HASH_KEY);
+		return secretMatchesHash(presented, expectedHash);
+	}
+
+	async burnSetupToken(): Promise<void> {
+		await this.compareAndSetStoredValue(this.configCache, SETUP_TOKEN_HASH_KEY, (raw) => ({
+			value: raw ? '' : null,
+			result: undefined,
+		}));
 	}
 
 	async getAccountIdentity(): Promise<AccountIdentity> {

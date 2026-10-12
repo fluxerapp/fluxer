@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "ชื่อผู้ใช้หรือคีย์กู้คืนไม่ถูกต้อง",
 	"auth_and_registration.password_is_too_common": "รหัสผ่านของคุณเป็นรหัสที่พบบ่อยเกินไป โปรดเลือกรหัสผ่านที่เดาได้ยากขึ้น",
 	"auth_and_registration.password_not_set": "ยังไม่ได้ตั้งรหัสผ่าน",
+	"auth_and_registration.setup_token_invalid": "โทเค็นการตั้งค่านี้ไม่ถูกต้อง โปรดตรวจสอบโทเค็นแล้วลองอีกครั้ง",
+	"auth_and_registration.setup_token_required": "อินสแตนซ์นี้ยังไม่ได้ตั้งค่าให้เสร็จสิ้น โปรดตั้งค่าให้เสร็จสิ้นในเว็บเบราว์เซอร์ด้วยโทเค็นการตั้งค่าก่อนที่จะสร้างบัญชี",
 	"auth_and_registration.username_sign_in_only": "ใช้ได้เฉพาะในอินสแตนซ์ที่ลงชื่อเข้าใช้ด้วยชื่อผู้ใช้เท่านั้น",
 	"bots.bot_discriminator_cannot_be_changed": "ไม่สามารถเปลี่ยน discriminator ของบอทได้",
 	"bots.bot_is_private": "บอทนี้เป็นส่วนตัว",

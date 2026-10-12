@@ -11,6 +11,7 @@ import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 	REGISTRATION_REJECTED_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
+import {clearUsedSetupToken} from '@app/api/instance/SetupToken';
 import {deriveSsoRedirectUri, normalizeAndValidateSsoConfig} from '@app/api/instance/SsoConfigValidation';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -44,7 +45,6 @@ import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experim
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
-import {createMiddleware} from 'hono/factory';
 
 const INSTANCE_BRANDING_ENTITY_ID = 0n;
 const ATTACHMENT_EXPIRY_RULE_FIELDS = [
@@ -187,49 +187,6 @@ function buildAdminIssuedRegistrationUrl(code: string): string {
 	return `${baseUrl}/register?registration_url=${encodeURIComponent(code)}`;
 }
 
-function requireSetupSessionOrAdminACL(requiredACL: string) {
-	const requireAcl = requireAdminACL(requiredACL);
-	return createMiddleware<HonoEnv>(async (ctx, next) => {
-		const user = ctx.get('user');
-		const tokenType = ctx.get('authTokenType');
-		if (user && tokenType === 'session') {
-			const appPublic = await getInstanceConfigRepository().getAppPublicConfig();
-			if (!appPublic.setup.configured) {
-				ctx.set('adminUserId', user.id);
-				ctx.set('adminUserAcls', user.acls);
-				await next();
-				return;
-			}
-		}
-		return requireAcl(ctx, next);
-	});
-}
-
-function hasAdminAuthenticationACL(acls: ReadonlySet<string>): boolean {
-	return acls.has(AdminACLs.AUTHENTICATE) || acls.has(AdminACLs.WILDCARD);
-}
-
-function completesInitialSetup(data: InstanceConfigUpdateRequest, setupConfigured: boolean): boolean {
-	return (
-		!setupConfigured &&
-		data.app_public?.setup != null &&
-		readOptionalField(data.app_public.setup, 'configured') === true
-	);
-}
-
-async function grantSetupCompleterAdminACL(ctx: Context<HonoEnv>): Promise<boolean> {
-	const user = ctx.get('user');
-	if (!user || ctx.get('authTokenType') !== 'session' || hasAdminAuthenticationACL(user.acls)) {
-		return false;
-	}
-	const nextACLs = new Set(user.acls);
-	nextACLs.add(AdminACLs.WILDCARD);
-	const updatedUser = await ctx.get('userRepository').patchUpsert(user.id, {acls: nextACLs}, user.toRow());
-	ctx.set('user', updatedUser);
-	ctx.set('adminUserAcls', updatedUser.acls);
-	return true;
-}
-
 function relayConsentStamp(
 	current: PushRelayConfig,
 	patch: PushRelayConfigUpdateRequest,
@@ -346,7 +303,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.get(
 		'/admin/instance/config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireSetupSessionOrAdminACL(AdminACLs.INSTANCE_CONFIG_VIEW),
+		requireAdminACL(AdminACLs.INSTANCE_CONFIG_VIEW),
 		OpenAPI({
 			operationId: 'get_admin_instance_config',
 			summary: 'Get instance configuration',
@@ -374,7 +331,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.patch(
 		'/admin/instance/config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireSetupSessionOrAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
 		Validator('json', InstanceConfigUpdateRequest),
 		OpenAPI({
 			operationId: 'update_admin_instance_config',
@@ -390,11 +347,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			assertSelfHostedBillingSections(data);
 			await assertBillingCompatibleWithPremiumMode(data);
-			const appPublicBeforeUpdate = completesInitialSetup(data, false)
-				? await instanceConfigRepository.getAppPublicConfig()
-				: null;
-			const shouldGrantSetupCompleterAdmin =
-				appPublicBeforeUpdate !== null && completesInitialSetup(data, appPublicBeforeUpdate.setup.configured);
 			if (data.gateway_rollout) {
 				const patch = data.gateway_rollout;
 				const landed = await instanceConfigRepository.updateGatewayRolloutConfig((current) =>
@@ -628,16 +580,14 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				);
 			}
 			if (data.app_public?.setup) {
+				const configured = readOptionalField(data.app_public.setup, 'configured');
 				await instanceConfigRepository.setAppPublicConfig({
-					setup: omitUndefinedFields({
-						configured: readOptionalField(data.app_public.setup, 'configured'),
-					}),
+					setup: omitUndefinedFields({configured}),
 				});
-			}
-			let grantedSetupCompleterAdmin = false;
-			if (shouldGrantSetupCompleterAdmin) {
-				grantedSetupCompleterAdmin = await grantSetupCompleterAdminACL(ctx);
-				await instanceConfigRepository.markAdminBootstrapped();
+				if (configured === true) {
+					await instanceConfigRepository.claimAdminBootstrap();
+					await clearUsedSetupToken(instanceConfigRepository);
+				}
 			}
 			await recordAdminWrite(ctx, {
 				targetType: 'instance_config',
@@ -645,7 +595,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				action: 'update_instance_config',
 				metadata: {
 					sections: listSuppliedSections(data),
-					granted_acls: grantedSetupCompleterAdmin ? AdminACLs.WILDCARD : undefined,
 				},
 			});
 			return ctx.json(await buildInstanceConfigResponse());
@@ -654,7 +603,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.post(
 		'/admin/instance/config/branding-assets',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireSetupSessionOrAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
 		Validator('json', BrandingAssetUploadRequest),
 		OpenAPI({
 			operationId: 'create_admin_instance_branding_asset',
@@ -690,7 +639,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.post(
 		'/admin/instance/config/smtp-tests',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireSetupSessionOrAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
 		Validator('json', InstanceEmailSmtpTestRequest),
 		OpenAPI({
 			operationId: 'create_admin_instance_smtp_test',

@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "अमान्य यूज़रनेम या रिकवरी की।",
 	"auth_and_registration.password_is_too_common": "आपका पासवर्ड बहुत कॉमन है। कृपया ऐसा पासवर्ड चुनें जिसका अंदाज़ा लगाना मुश्किल हो।",
 	"auth_and_registration.password_not_set": "पासवर्ड सेट नहीं है।",
+	"auth_and_registration.setup_token_invalid": "वह सेटअप टोकन सही नहीं है। टोकन जांचें और पुनः प्रयास करें।",
+	"auth_and_registration.setup_token_required": "यह इंस्टेंस अभी तक सेट अप नहीं हुआ है। खाते बनाने से पहले सेटअप टोकन के साथ वेब ब्राउज़र में सेटअप पूरा करें।",
 	"auth_and_registration.username_sign_in_only": "यह सिर्फ़ उन इंस्टेंस पर उपलब्ध है जहाँ लोग यूज़रनेम से साइन इन करते हैं।",
 	"bots.bot_discriminator_cannot_be_changed": "बॉट डिस्क्रिमिनेटर को बदला नहीं जा सकता।",
 	"bots.bot_is_private": "यह बॉट प्राइवेट है।",

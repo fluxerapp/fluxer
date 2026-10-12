@@ -2003,6 +2003,14 @@ Referenced attachment "{filename}" wasn't found in message attachments
 
 Session timed out
 
+### `SETUP_TOKEN_INVALID`
+
+That setup token is not correct. Check the token and try again.
+
+### `SETUP_TOKEN_REQUIRED`
+
+This instance is not set up yet. Finish setup in a web browser with the setup token before creating accounts.
+
 ### `SNOWFLAKE_OUT_OF_RANGE`
 
 Invalid snowflake

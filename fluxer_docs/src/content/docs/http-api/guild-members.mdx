@@ -6,7 +6,7 @@ description: Guild member objects, profiles, voice moderation, ownership, remova
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
+A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries are on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
 
 An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) also returns 403 `ACCESS_DENIED` when the guild exists in storage but the Gateway reports it as not found.
 

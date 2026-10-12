@@ -27,7 +27,6 @@ export const InstanceConfigAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase
 	{
 		method: 'GET',
 		route: '/admin/instance/config',
-		name: 'admin acl',
 		async prepare({harness, admin}) {
 			await createRegistrationUrl(harness, admin);
 			return {
@@ -37,23 +36,6 @@ export const InstanceConfigAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase
 					targetType: 'instance_config',
 					targetId: '0',
 					metadata: {registration_url_count: '1', pending_registration_count: '0'},
-				},
-			};
-		},
-	},
-	{
-		method: 'GET',
-		route: '/admin/instance/config',
-		name: 'setup session',
-		async prepare() {
-			await getInstanceConfigRepository().setAppPublicConfig({setup: {configured: false}});
-			return {
-				request: {path: '/admin/instance/config'},
-				expected: {
-					action: 'get_instance_config',
-					targetType: 'instance_config',
-					targetId: '0',
-					metadata: {registration_url_count: '0', pending_registration_count: '0'},
 				},
 			};
 		},

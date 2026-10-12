@@ -25,6 +25,7 @@ import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 	type RegistrationUrlClaim,
 } from '@app/api/instance/InstanceConfigRepository';
+import {assertSetupToken, clearUsedSetupToken, isSetupTokenEnforced} from '@app/api/instance/SetupToken';
 import type {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
 import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
@@ -85,6 +86,11 @@ interface RegisterParams {
 	requestCache: RequestCache;
 }
 
+interface RegisterAccountParams extends RegisterParams {
+	clientIp: string;
+	setupTokenVerified: boolean;
+}
+
 export interface RegistrationDependencies {
 	inviteService: InviteService;
 	instanceConfigRepository: InstanceConfigRepository;
@@ -114,16 +120,26 @@ export async function register(
 	deps: RegistrationDependencies,
 	params: RegisterParams,
 ): Promise<RegisterResult> {
-	if (!ctx.services.config.instance.selfHosted || (await deps.instanceConfigRepository.isAccountIdentityLocked())) {
-		return await registerAccount(ctx, deps, params);
+	const {config, rateLimit, cache} = ctx.services;
+	const clientIp = requireConfiguredClientIp(params.request, config.proxy);
+	const setupTokenVerified = await assertSetupToken({
+		rateLimit,
+		config,
+		repository: deps.instanceConfigRepository,
+		presented: params.data.setup_token,
+		clientIp,
+	});
+	const account = {...params, clientIp, setupTokenVerified};
+	if (!config.instance.selfHosted || (await deps.instanceConfigRepository.isAccountIdentityLocked())) {
+		return await registerAccount(ctx, deps, account);
 	}
-	return await withAccountIdentitySetupLock(ctx.services.cache, () => registerAccount(ctx, deps, params));
+	return await withAccountIdentitySetupLock(cache, () => registerAccount(ctx, deps, account));
 }
 
 async function registerAccount(
 	ctx: ApiContext,
 	deps: RegistrationDependencies,
-	{data, request, requestCache}: RegisterParams,
+	{data, request, requestCache, clientIp, setupTokenVerified}: RegisterAccountParams,
 ): Promise<RegisterResult> {
 	const {users, snowflake, emailDnsValidation, config} = ctx.services;
 	const {inviteService, instanceConfigRepository, singleCommunityService, discriminatorService, kvActivityTracker} =
@@ -144,8 +160,9 @@ async function registerAccount(
 		throw InputValidationError.fromCode('consent', ValidationErrorCodes.MUST_AGREE_TO_TOS_AND_PRIVACY_POLICY);
 	}
 	const now = new Date();
-	const registrationAccess = await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
-	const clientIp = requireConfiguredClientIp(request, config.proxy);
+	const registrationAccess = setupTokenVerified
+		? {pendingApproval: false, registrationUrl: null}
+		: await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
 	const geoipResult = await lookupGeoip(clientIp);
 	const countryCode = geoipResult.countryCode;
 	const collectDateOfBirth = appPublicConfig.registration.collect_date_of_birth;
@@ -168,7 +185,7 @@ async function registerAccount(
 	}
 	const rawEmail = usernameMode ? null : (data.email ?? null);
 	const emailKey = rawEmail ? rawEmail.toLowerCase() : null;
-	const enforceRateLimits = !config.dev.relaxRegistrationRateLimits;
+	const enforceRateLimits = !config.dev.relaxRegistrationRateLimits && !setupTokenVerified;
 	await enforceRegistrationRateLimits(ctx, {enforceRateLimits, clientIp, emailKey});
 	if (rawEmail) {
 		if (isBlockedEmailDomain(extractEmailDomain(rawEmail))) {
@@ -217,13 +234,14 @@ async function registerAccount(
 		discriminator = await allocateDiscriminator(discriminatorService, usernameCandidate);
 	}
 	const username = usernameCandidate!;
-	const grantBootstrapAdmin =
+	const bootstrapAdminEligible =
 		shouldAttemptBootstrapAdminGrant(config, {
 			rawEmail,
 			hasPassword: Boolean(data.password),
 			usernameMode,
 			pendingApproval: registrationAccess.pendingApproval,
 			setupConfigured: appPublicConfig.setup.configured,
+			setupTokenVerified,
 		}) && !(await instanceConfigRepository.isAdminBootstrapped());
 	if (
 		profileSubstringBlocklistCache.containsBannedSubstring('username', username) ||
@@ -258,7 +276,7 @@ async function registerAccount(
 		privacy_agreed_at: requiresPrivacyConsent ? now : null,
 		last_active_at: now,
 		last_active_ip: clientIp,
-		acls: grantBootstrapAdmin ? new Set([AdminACLs.WILDCARD]) : null,
+		acls: null,
 		traits: registrationAccess.pendingApproval ? new Set([REGISTRATION_PENDING_APPROVAL_TRAIT]) : null,
 		version: 1,
 	};
@@ -269,6 +287,7 @@ async function registerAccount(
 	);
 	let user: User;
 	let createAttempted = false;
+	let grantBootstrapAdmin = false;
 	let usernameReservation: UsernameReservation | null = null;
 	try {
 		if (uniqueUsernames) {
@@ -286,8 +305,9 @@ async function registerAccount(
 				client_ip: clientIp,
 			});
 		}
+		grantBootstrapAdmin = bootstrapAdminEligible && (await instanceConfigRepository.claimAdminBootstrap(userId));
 		createAttempted = true;
-		user = await users.create(userRow);
+		user = await users.create(grantBootstrapAdmin ? {...userRow, acls: new Set([AdminACLs.WILDCARD])} : userRow);
 	} catch (error) {
 		if (!createAttempted) {
 			await withdrawSignupOfUncreatedAccount(instanceConfigRepository, {
@@ -295,10 +315,15 @@ async function registerAccount(
 				registrationUrlUse,
 				pendingApproval: registrationAccess.pendingApproval,
 			});
+		} else if (grantBootstrapAdmin) {
+			await releaseBootstrapAdminOfUncreatedAccount(instanceConfigRepository, userId);
 		}
 		throw error;
 	} finally {
 		await usernameReservation?.release();
+	}
+	if (grantBootstrapAdmin) {
+		await clearUsedSetupToken(instanceConfigRepository);
 	}
 	await users.upsertSettings(
 		UserSettings.getDefaultUserSettings({
@@ -348,9 +373,6 @@ async function registerAccount(
 		user,
 		origin: AuthSession.resolveSessionOrigin(ctx, request),
 	});
-	if (grantBootstrapAdmin) {
-		await instanceConfigRepository.markAdminBootstrapped();
-	}
 	return {
 		user_id: user.id.toString(),
 		token,
@@ -365,11 +387,13 @@ function shouldAttemptBootstrapAdminGrant(
 		usernameMode: boolean;
 		pendingApproval: boolean;
 		setupConfigured: boolean;
+		setupTokenVerified: boolean;
 	},
 ): boolean {
+	const claimedAccount = params.usernameMode ? params.hasPassword : params.rawEmail !== null;
+	if (isSetupTokenEnforced(config)) return params.setupTokenVerified && claimedAccount;
 	const localDevInstance = config.nodeEnv === 'development' && !config.dev.testModeEnabled;
 	const setupBootstrapOpen = !params.setupConfigured;
-	const claimedAccount = params.usernameMode ? params.hasPassword : params.rawEmail !== null;
 	return (
 		(config.instance.selfHosted || localDevInstance || setupBootstrapOpen) && claimedAccount && !params.pendingApproval
 	);
@@ -428,6 +452,20 @@ async function withdrawSignupOfUncreatedAccount(
 		Logger.warn(
 			{userId: signup.userId.toString(), registrationUrlId: signup.registrationUrlUse?.registration_url_id, error},
 			'[AuthRegistration] Failed to withdraw the registration URL use or pending approval of an account that was never created',
+		);
+	}
+}
+
+async function releaseBootstrapAdminOfUncreatedAccount(
+	instanceConfigRepository: InstanceConfigRepository,
+	userId: UserID,
+): Promise<void> {
+	try {
+		await instanceConfigRepository.releaseAdminBootstrap();
+	} catch (error) {
+		Logger.error(
+			{userId: userId.toString(), error},
+			'[AuthRegistration] Failed to release the admin bootstrap claim of an account that was never created',
 		);
 	}
 }

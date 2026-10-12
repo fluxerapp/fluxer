@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {createAuthHarness, createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {getConfig} from '@app/api/Config';
 import {getCachedAccountIdentity, getCachedAccountIdentityMode} from '@app/api/instance/AccountIdentityModeCache';
@@ -14,10 +15,12 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const ACCOUNT_IDENTITY_CONFIG_KEY = 'account_identity_config';
+const SETUP_TOKEN = 'setup-token-for-tests-0123456789-abcdefghijklmnopqrstuvwxyz';
+const WRONG_SETUP_TOKEN = 'wrong-setup-token-0123456789-abcdefghijklmnopqrstuvwxyz';
 
 interface DiscoveryResponse {
 	features: {account_identity: string; emails_enabled: boolean; tag_style: string};
-	app_public: {setup: {configured: boolean; account_identity_locked?: boolean}};
+	app_public: {setup: {configured: boolean; account_identity_locked?: boolean; setup_token_required?: boolean}};
 }
 
 interface AdminInstanceConfigResponse {
@@ -33,6 +36,7 @@ describe('Account identity mode', () => {
 	let originalSetupConfigured: boolean;
 	let originalAccountIdentity: typeof config.instance.accountIdentity;
 	let originalTagStyle: typeof config.instance.tagStyle;
+	let originalSetupToken: typeof config.instance.setup.token;
 
 	beforeAll(async () => {
 		harness = await createAuthHarness();
@@ -45,6 +49,7 @@ describe('Account identity mode', () => {
 		originalSetupConfigured = config.instance.setup.configured;
 		originalAccountIdentity = config.instance.accountIdentity;
 		originalTagStyle = config.instance.tagStyle;
+		originalSetupToken = config.instance.setup.token;
 	});
 	afterEach(() => {
 		vi.restoreAllMocks();
@@ -53,6 +58,7 @@ describe('Account identity mode', () => {
 		config.instance.setup.configured = originalSetupConfigured;
 		config.instance.accountIdentity = originalAccountIdentity;
 		config.instance.tagStyle = originalTagStyle;
+		config.instance.setup.token = originalSetupToken;
 		repository.clearCacheForTesting();
 	});
 	afterAll(async () => {
@@ -239,7 +245,7 @@ describe('Account identity mode', () => {
 
 	it('stamps email when the admin was bootstrapped', async () => {
 		useFreshSelfHostedInstance();
-		await repository.markAdminBootstrapped();
+		await repository.claimAdminBootstrap();
 		await repository.ensureAccountIdentityMode();
 		expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.EMAIL, source: 'existing_instance'});
 	});
@@ -321,7 +327,7 @@ describe('Account identity mode', () => {
 	it('skips the users probe when a cheaper signal already decides', async () => {
 		useFreshSelfHostedInstance();
 		const probe = vi.spyOn(repository as unknown as {hasAnyUser: () => Promise<boolean>}, 'hasAnyUser');
-		await repository.markAdminBootstrapped();
+		await repository.claimAdminBootstrap();
 		await repository.ensureAccountIdentityMode();
 		expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.EMAIL, source: 'existing_instance'});
 		expect(await repository.isAccountIdentityLocked()).toBe(true);
@@ -537,6 +543,77 @@ describe('Account identity mode', () => {
 			await cache.releaseLock('account-identity-setup', token!);
 			expect((await pending).token).toBeTruthy();
 			expect(await repository.isAccountIdentityLocked()).toBe(true);
+		});
+	});
+
+	describe('setup token', () => {
+		async function putModeWithToken(setupToken?: string) {
+			return await createBuilderWithoutAuth<{
+				mode?: string;
+				tag_style?: string;
+				errors?: Array<{path: string; code: string}>;
+			}>(harness)
+				.put('/instance/setup/account-identity')
+				.body(
+					setupToken === undefined
+						? {mode: AccountIdentityModes.EMAIL}
+						: {mode: AccountIdentityModes.EMAIL, setup_token: setupToken},
+				)
+				.executeRaw();
+		}
+
+		it('reports in discovery whether registration needs the setup token', async () => {
+			useFreshSelfHostedInstance();
+			await repository.ensureAccountIdentityMode();
+			expect((await fetchDiscovery()).app_public.setup.setup_token_required).toBe(false);
+			config.instance.setup.token = SETUP_TOKEN;
+			const {text, json} = await createBuilderWithoutAuth<DiscoveryResponse>(harness)
+				.get('/.well-known/fluxer')
+				.executeRaw();
+			expect(json.app_public.setup.setup_token_required).toBe(true);
+			expect(text).not.toContain(SETUP_TOKEN);
+			expect(text).not.toContain(createHash('sha256').update(SETUP_TOKEN).digest('hex'));
+			await repository.claimAdminBootstrap();
+			expect((await fetchDiscovery()).app_public.setup.setup_token_required).toBe(false);
+			await repository.setAppPublicConfig({setup: {configured: true}});
+			expect((await fetchDiscovery()).app_public.setup).not.toHaveProperty('setup_token_required');
+		});
+
+		it('leaves the setup token out of discovery on the hosted service', async () => {
+			config.instance.selfHosted = false;
+			config.instance.setup.token = SETUP_TOKEN;
+			await repository.setAppPublicConfig({setup: {configured: false}});
+			expect((await fetchDiscovery()).app_public.setup).not.toHaveProperty('setup_token_required');
+		});
+
+		it('needs the setup token to choose the sign-in method while one is required', async () => {
+			useFreshSelfHostedInstance();
+			await repository.ensureAccountIdentityMode();
+			config.instance.setup.token = SETUP_TOKEN;
+			const missing = await putModeWithToken();
+			expect(missing.response.status).toBe(400);
+			expect(missing.json.errors?.map(({path, code}) => ({path, code}))).toEqual([
+				{path: 'setup_token', code: ValidationErrorCodes.SETUP_TOKEN_REQUIRED},
+			]);
+			const wrong = await putModeWithToken(WRONG_SETUP_TOKEN);
+			expect(wrong.response.status).toBe(400);
+			expect(wrong.json.errors?.map(({path, code}) => ({path, code}))).toEqual([
+				{path: 'setup_token', code: ValidationErrorCodes.SETUP_TOKEN_INVALID},
+			]);
+			expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.USERNAME});
+			const correct = await putModeWithToken(SETUP_TOKEN);
+			expect(correct.response.status).toBe(200);
+			expect(correct.json).toEqual({mode: AccountIdentityModes.EMAIL, tag_style: 'none'});
+			expect(await readStoredRow()).toMatchObject({mode: AccountIdentityModes.EMAIL, source: 'setup'});
+		});
+
+		it('chooses the sign-in method without a setup token when none is required', async () => {
+			useFreshSelfHostedInstance();
+			await repository.ensureAccountIdentityMode();
+			const tokenless = await putModeWithToken();
+			expect(tokenless.response.status).toBe(200);
+			const ignored = await putModeWithToken(WRONG_SETUP_TOKEN);
+			expect(ignored.response.status).toBe(200);
 		});
 	});
 

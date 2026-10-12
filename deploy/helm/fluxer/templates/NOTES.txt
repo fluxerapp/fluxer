@@ -9,9 +9,13 @@ Open {{ $o }} once every pod is ready:
 
 The admin panel is at {{ $o }}{{ $v.adminBasePath }}.
 
-Register the first account and finish the setup wizard in the same sitting.
-Until the wizard is finished, any account that registers can change the
-instance configuration.
+The setup wizard asks for the setup token before it creates the admin account:
+
+  kubectl -n {{ .Release.Namespace }} get secret {{ include "fluxer.secretName" . }} -o jsonpath='{.data.FLUXER_SETUP_TOKEN}' | base64 -d
+
+A Secret with no FLUXER_SETUP_TOKEN has a token the API wrote to its log once:
+
+  kubectl -n {{ .Release.Namespace }} logs deployment/api | grep -i 'setup token'
 {{- if eq $v.edge.expose "loadBalancer" }}
 
 Point DNS for {{ $v.domain }} at the external address of the edge-public Service:

@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Niepoprawna nazwa użytkownika lub klucz odzyskiwania.",
 	"auth_and_registration.password_is_too_common": "Twoje hasło jest zbyt popularne. Wybierz mniej przewidywalne hasło.",
 	"auth_and_registration.password_not_set": "Hasło nie jest ustawione.",
+	"auth_and_registration.setup_token_invalid": "Ten token konfiguracji jest nieprawidłowy. Sprawdź token i spróbuj ponownie.",
+	"auth_and_registration.setup_token_required": "Ta instancja nie została jeszcze skonfigurowana. Zakończ konfigurację w przeglądarce internetowej za pomocą tokenu konfiguracji przed utworzeniem kont.",
 	"auth_and_registration.username_sign_in_only": "Ta opcja jest dostępna tylko na instancjach, na których loguje się nazwą użytkownika.",
 	"bots.bot_discriminator_cannot_be_changed": "Nie można zmienić dyskryminatora bota.",
 	"bots.bot_is_private": "Ten bot jest prywatny.",

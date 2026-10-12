@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Грешно потребителско име или ключ за възстановяване.",
 	"auth_and_registration.password_is_too_common": "Паролата ти е твърде често срещана. Избери по-трудна за отгатване парола.",
 	"auth_and_registration.password_not_set": "Паролата не е зададена.",
+	"auth_and_registration.setup_token_invalid": "Този токен за настройка не е правилен. Проверете токена и опитайте отново.",
+	"auth_and_registration.setup_token_required": "Тази инстанция все още не е настроена. Завършете настройката в уеб браузър с токена за настройка, преди да създавате акаунти.",
 	"auth_and_registration.username_sign_in_only": "Това е налично само на инстанции, където хората се вписват с потребителско име.",
 	"bots.bot_discriminator_cannot_be_changed": "Дискриминаторът на бота не може да се променя.",
 	"bots.bot_is_private": "Този бот е частен.",

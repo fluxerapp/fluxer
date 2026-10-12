@@ -9,7 +9,7 @@ import {useLingui} from '@lingui/react/macro';
 import {CrownIcon} from '@phosphor-icons/react';
 
 const LINK_CARD_BODY_DESCRIPTOR = msg({
-	message: 'Plans, perks, gifts and your subscription all live on one page.',
+	message: 'Plans, perks, gifts and your subscription are all on one page.',
 	comment: 'Text on the card in settings that links to the Plutonium page.',
 });
 const LINK_CARD_BUTTON_DESCRIPTOR = msg({

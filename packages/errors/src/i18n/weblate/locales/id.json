@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Nama pengguna atau kunci pemulihan tidak valid.",
 	"auth_and_registration.password_is_too_common": "Kata sandimu terlalu umum. Pilih kata sandi yang lebih sulit ditebak.",
 	"auth_and_registration.password_not_set": "Kata sandi belum diatur.",
+	"auth_and_registration.setup_token_invalid": "Token penyiapan itu tidak benar. Periksa token dan coba lagi.",
+	"auth_and_registration.setup_token_required": "Instans ini belum diatur. Selesaikan penyiapan di peramban web dengan token penyiapan sebelum membuat akun.",
 	"auth_and_registration.username_sign_in_only": "Ini hanya tersedia di instance yang masuk dengan nama pengguna.",
 	"bots.bot_discriminator_cannot_be_changed": "Diskriminator bot tidak dapat diubah.",
 	"bots.bot_is_private": "Bot ini bersifat pribadi.",

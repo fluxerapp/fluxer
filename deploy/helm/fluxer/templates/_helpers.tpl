@@ -185,6 +185,7 @@ public: {{ substr 56 121 $der | b64enc | replace "+" "-" | replace "/" "_" | tri
 {{- else if and (hasPrefix "FLUXER_LIVEKIT_" $k) (eq (include "fluxer.livekitMode" $) "off") }}
 {{- else if and (eq $k "FLUXER_VALKEY_PASSWORD") (not $.Values.valkey.enabled) }}
 {{- else if and (eq $k "FLUXER_NATS_AUTH_TOKEN") (not $.Values.nats.enabled) }}
+{{- else if and (eq $k "FLUXER_SETUP_TOKEN") (or $.Values.secrets.existingSecret (and (not $.Values.secrets.generate) (not (include "fluxer.string" (get $.Values.secrets.values $k | default ""))))) }}
 {{- else }}
 {{- $keys = append $keys $k }}
 {{- end }}

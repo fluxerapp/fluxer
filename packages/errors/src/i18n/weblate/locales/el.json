@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Λανθασμένο όνομα χρήστη ή κλειδί ανάκτησης.",
 	"auth_and_registration.password_is_too_common": "Ο κωδικός πρόσβασής σου είναι πολύ κοινός. Διάλεξε έναν λιγότερο προβλέψιμο κωδικό πρόσβασης.",
 	"auth_and_registration.password_not_set": "Ο κωδικός πρόσβασης δεν έχει οριστεί.",
+	"auth_and_registration.setup_token_invalid": "Αυτό το διακριτικό ρύθμισης δεν είναι σωστό. Ελέγξτε το διακριτικό και δοκιμάστε ξανά.",
+	"auth_and_registration.setup_token_required": "Αυτή η παρουσία δεν έχει ρυθμιστεί ακόμα. Ολοκληρώστε τη ρύθμιση σε ένα πρόγραμμα περιήγησης ιστού με το διακριτικό ρύθμισης πριν δημιουργήσετε λογαριασμούς.",
 	"auth_and_registration.username_sign_in_only": "Αυτό είναι διαθέσιμο μόνο σε εγκαταστάσεις όπου η σύνδεση γίνεται με όνομα χρήστη.",
 	"bots.bot_discriminator_cannot_be_changed": "Το διακριτικό του bot δεν μπορεί να αλλάξει.",
 	"bots.bot_is_private": "Αυτό το bot είναι ιδιωτικό.",

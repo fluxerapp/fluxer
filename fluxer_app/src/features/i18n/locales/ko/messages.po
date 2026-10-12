@@ -1911,6 +1911,16 @@ msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설�
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설치하려면 브라우저에서 열어 주세요."
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "{productName}이(가) 이제 {host}(으)로 이전되었습니다. 해당 주소에서 설치한 후 이 앱으로 로그인하세요."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "{productName}이(가) 이제 {host}(으)로 이전되었습니다. 해당 주소에서 설치하세요."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "{productName}에서 기기 목록을 보려면 마이크 접근 권한�
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName}에 화면 녹화 접근 권한이 필요합니다. 운영체제 개인 정보 보호 설정에서 화면 녹화를 허용하고 앱을 다시 시작하세요."
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName}이(가) 이제 {host}에 있습니다. 해당 주소에서 설치한 후 이 앱으로 로그인하세요."
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName}이(가) 이제 {host}에 있습니다. 해당 주소에서 설치하세요."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "통화 참여 가능"
 msgid "Call confirmation"
 msgstr "통화 확인"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "통화가 팝업 창으로 열림"
@@ -14361,6 +14361,11 @@ msgstr "이름을 입력하세요"
 msgid "Enter your password."
 msgstr "비밀번호를 입력하세요."
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "설정 토큰을 입력하세요"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "복구 키트를 받은 복구 키와 사용자 이름을 입력한 다음, 새 비밀번호를 선택하세요."
@@ -19448,7 +19453,7 @@ msgstr "기존 요금"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "/tts가 내 메시지를 소리 내어 읽도록 허용합니다. 이 설정을 비활성화하면 해당 명령은 일반 텍스트로 유지됩니다."
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "이 커뮤니티의 봇이 나에게 DM을 보내도록 허용"
@@ -25279,8 +25284,8 @@ msgstr "플랜"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
-msgstr "플랜, 혜택, 선물 및 구독 정보가 모두 한 페이지에 있습니다."
+msgid "Plans, perks, gifts and your subscription are all on one page."
+msgstr "플랜, 혜택, 선물 및 구독 정보를 한 페이지에서 모두 확인하세요."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "Platform"
@@ -25403,7 +25408,7 @@ msgstr "사용자 팝아웃"
 msgid "Pop out video"
 msgstr "영상 팝아웃"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "팝아웃됨"
@@ -30120,6 +30125,11 @@ msgstr "설정."
 msgid "Setup key"
 msgstr "설정 키"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "설정 토큰"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "#0000 태그는 Visionary 구독자 전용입니다. Visionary는 더 �
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API가 이 페이지와 다른 출처에 있어 설정 요청이 세션 없이 전송됩니다. 이 인스턴스에 설정된 공개 출처와 포트를 확인한 후 새로고침하세요."
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "API가 처음 시작될 때 토큰을 로그에 기록했습니다. FLUXER_SETUP_TOKEN을 설정했다면 해당 값을 사용하세요."
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "앱이 비정상적으로 종료되었습니다"
@@ -33685,6 +33700,11 @@ msgstr "시스템에서 {target}님에게 {role} 역할을 부여했습니다"
 msgid "The system removed the role {role} from {target}"
 msgstr "시스템에서 {role} 역할을 {target}님에게서 제거했습니다"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "토큰은 사용자가 이 인스턴스를 실행한다는 것을 증명합니다. 토큰을 가진 사람만이 관리자 계정을 만들 수 있습니다."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "타사"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "이 계정은 차단할 수 없습니다."
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "이 계정은 이 인스턴스의 관리자가 아닙니다. 설정을 완료하려면 관리자 계정으로 로그인하세요."
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

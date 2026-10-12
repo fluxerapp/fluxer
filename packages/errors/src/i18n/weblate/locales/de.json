@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Der Benutzername oder der Wiederherstellungsschlüssel ist ungültig.",
 	"auth_and_registration.password_is_too_common": "Dein Passwort wird zu häufig verwendet. Wähle bitte ein Passwort, das weniger leicht zu erraten ist.",
 	"auth_and_registration.password_not_set": "Das Passwort ist nicht festgelegt.",
+	"auth_and_registration.setup_token_invalid": "Dieses Einrichtungstoken ist nicht korrekt. Überprüfe das Token und versuche es erneut.",
+	"auth_and_registration.setup_token_required": "Diese Instanz ist noch nicht eingerichtet. Schließe die Einrichtung in einem Webbrowser mit dem Einrichtungstoken ab, bevor du Konten erstellst.",
 	"auth_and_registration.username_sign_in_only": "Das ist nur auf Instanzen verfügbar, auf denen man sich mit einem Benutzernamen anmeldet.",
 	"bots.bot_discriminator_cannot_be_changed": "Der Bot-Discriminator kann nicht geändert werden.",
 	"bots.bot_is_private": "Dieser Bot ist privat.",

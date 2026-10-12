@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "ユーザー名またはリカバリーキーが正しくありません。",
 	"auth_and_registration.password_is_too_common": "パスワードが一般的すぎます。より推測されにくいパスワードを設定してください。",
 	"auth_and_registration.password_not_set": "パスワードが未設定です。",
+	"auth_and_registration.setup_token_invalid": "そのセットアップトークンは正しくありません。トークンを確認して、もう一度お試しください。",
+	"auth_and_registration.setup_token_required": "このインスタンスはまだセットアップされていません。アカウントを作成する前に、セットアップトークンを使用してウェブブラウザでセットアップを完了してください。",
 	"auth_and_registration.username_sign_in_only": "この機能は、ユーザー名でサインインするインスタンスでのみ利用できます。",
 	"bots.bot_discriminator_cannot_be_changed": "ボットの識別子は変更できません。",
 	"bots.bot_is_private": "このボットは非公開です。",

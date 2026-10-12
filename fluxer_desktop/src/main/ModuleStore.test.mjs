@@ -207,7 +207,7 @@ const RENDERER_BAD_MEMBER = packModule('fluxer_renderer', [['assets/index-v1.js'
 });
 
 describe('ModuleStore', () => {
-	test('lives beside the account store, never inside it', () => {
+	test('is beside the account store, never inside it', () => {
 		const userDataPath = createUserData();
 		const root = getModuleStoreRoot(userDataPath);
 		assert.equal(root, path.join(userDataPath, 'modules'));

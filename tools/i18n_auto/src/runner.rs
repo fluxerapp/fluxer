@@ -1136,7 +1136,7 @@ pub fn sync_source_locale(
     if matches!(&config.catalog_layout, CatalogLayout::StaticJson(_)) {
         log(
             &format!(
-                "[{SOURCE_LOCALE}] Source strings live in the static source catalog; nothing to sync"
+                "[{SOURCE_LOCALE}] Source strings are in the static source catalog; nothing to sync"
             ),
             false,
         );

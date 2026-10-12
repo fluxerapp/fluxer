@@ -461,6 +461,8 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.PASSWORD_IS_TOO_COMMON]: 'auth_and_registration.password_is_too_common',
 	[ValidationErrorCodes.PASSWORD_NOT_SET]: 'auth_and_registration.password_not_set',
 	[ValidationErrorCodes.SESSION_TIMEOUT]: 'account.session_timeout',
+	[ValidationErrorCodes.SETUP_TOKEN_INVALID]: 'auth_and_registration.setup_token_invalid',
+	[ValidationErrorCodes.SETUP_TOKEN_REQUIRED]: 'auth_and_registration.setup_token_required',
 	[ValidationErrorCodes.SSO_IDENTITY_MISMATCH]: 'auth_and_oauth.sso_identity_mismatch',
 	[ValidationErrorCodes.SSO_MISCONFIGURED]: 'auth_and_oauth.sso_misconfigured',
 	[ValidationErrorCodes.SSO_PROVIDER_DID_NOT_RETURN_EMAIL]: 'auth_and_oauth.sso_provider_did_not_return_email',

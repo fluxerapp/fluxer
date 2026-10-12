@@ -47,6 +47,7 @@ import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigReposito
 import {type LegalUrls, resolveLegalUrls} from '@app/api/instance/LegalUrls';
 import {NatsConfigPublisher} from '@app/api/instance/NatsConfigPublisher';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
+import {ensureSetupToken} from '@app/api/instance/SetupToken';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -481,6 +482,11 @@ export async function initializeServiceSingletons(): Promise<void> {
 			await getInstanceConfigRepository().initialize();
 			assertServiceSingletonInitializationActive(owner);
 			await getInstanceConfigRepository().ensureAccountIdentityMode();
+			assertServiceSingletonInitializationActive(owner);
+			await ensureSetupToken(
+				getInstanceConfigRepository(),
+				async (userId) => (await getUserRepository().findUnique(userId)) !== null,
+			);
 			assertServiceSingletonInitializationActive(owner);
 			await limitConfigService.initialize();
 			assertServiceSingletonInitializationActive(owner);

@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "用户名或恢复密钥错误。",
 	"auth_and_registration.password_is_too_common": "你的密码太常见了。请换一个更难猜的密码。",
 	"auth_and_registration.password_not_set": "密码未设置。",
+	"auth_and_registration.setup_token_invalid": "该设置令牌不正确。请检查令牌后重试。",
+	"auth_and_registration.setup_token_required": "此实例尚未设置。请先在网络浏览器中使用设置令牌完成设置，然后再创建帐户。",
 	"auth_and_registration.username_sign_in_only": "仅在使用用户名登录的实例上可用。",
 	"bots.bot_discriminator_cannot_be_changed": "机器人识别码无法更改。",
 	"bots.bot_is_private": "此机器人是私有的。",

@@ -397,6 +397,12 @@
                 "null"
               ]
             },
+            "FLUXER_SETUP_TOKEN": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "FLUXER_LIVEKIT_API_KEY": {
               "type": [
                 "string",

@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Netinkamas naudotojo vardas arba atkūrimo raktas.",
 	"auth_and_registration.password_is_too_common": "Tavo slaptažodis per dažnai naudojamas. Pasirink sunkiau nuspėjamą slaptažodį.",
 	"auth_and_registration.password_not_set": "Slaptažodis nenustatytas.",
+	"auth_and_registration.setup_token_invalid": "Šis sąrankos žetonas neteisingas. Patikrinkite žetoną ir bandykite dar kartą.",
+	"auth_and_registration.setup_token_required": "Ši instancija dar nėra nustatyta. Baigkite sąranką žiniatinklio naršyklėje naudodami sąrankos žetoną prieš kurdami paskyras.",
 	"auth_and_registration.username_sign_in_only": "Tai galima tik instancijose, kuriose jungiamasi naudotojo vardu.",
 	"bots.bot_discriminator_cannot_be_changed": "Boto diskriminatoriaus negalima pakeisti.",
 	"bots.bot_is_private": "Šis botas yra privatus.",

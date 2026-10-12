@@ -42,6 +42,9 @@ export const RegisterRequest = z.object({
 		.nullish()
 		.describe('Admin-issued registration URL code to use for this registration'),
 	theme: RegisterThemeType.optional().describe('Initial UI theme preference for the new account'),
+	setup_token: createStringType(1, 256)
+		.nullish()
+		.describe('Setup token of a new self-hosted instance. Required until the first admin account exists'),
 });
 
 export type RegisterRequest = z.infer<typeof RegisterRequest>;

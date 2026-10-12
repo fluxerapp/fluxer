@@ -1911,6 +1911,16 @@ msgstr "Το {productName} μεταφέρθηκε στο {host}. Εγκατασ�
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "Το {productName} μεταφέρθηκε στο {host}. Ανοίξτε το στο πρόγραμμα περιήγησής σας για να εγκαταστήσετε τη νέα εφαρμογή."
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "Το {productName} βρίσκεται πλέον στο {host}. Εγκαταστήστε το από εκεί και, στη συνέχεια, συνδεθείτε με αυτήν την εφαρμογή."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "Το {productName} βρίσκεται τώρα στο {host}. Εγκαταστήστε το από εκεί."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "Το {productName} χρειάζεται πρόσβαση στο μικρ
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "Το {productName} χρειάζεται πρόσβαση στην εγγραφή οθόνης. Επιτρέψτε την εγγραφή οθόνης στις ρυθμίσεις απορρήτου του λειτουργικού σας συστήματος και επανεκκινήστε την εφαρμογή."
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "Το {productName} βρίσκεται πλέον στο {host}. Εγκαταστήστε το από εκεί και, στη συνέχεια, συνδεθείτε με αυτήν την εφαρμογή."
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "Το {productName} βρίσκεται πλέον στο {host}. Εγκαταστήστε το από εκεί."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "Διαθέσιμη κλήση"
 msgid "Call confirmation"
 msgstr "Επιβεβαίωση κλήσης"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "Η κλήση είναι σε ξεχωριστό παράθυρο"
@@ -14361,6 +14361,11 @@ msgstr "Πληκτρολογήστε το όνομά σας"
 msgid "Enter your password."
 msgstr "Εισάγετε τον κωδικό πρόσβασής σας."
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "Εισαγάγετε το διακριτικό ρύθμισης"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "Εισαγάγετε το όνομα χρήστη σας και το κλειδί ανάκτησης από το κιτ ανάκτησής σας, και στη συνέχεια επιλέξτε έναν νέο κωδικό πρόσβασης."
@@ -19448,7 +19453,7 @@ msgstr "Παλιά τιμή"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "Αφήστε το /tts να διαβάσει το μήνυμά σας δυνατά. Η απενεργοποίηση της ρύθμισης διατηρεί αυτές τις εντολές ως κανονικό κείμενο."
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "Να επιτρέπονται τα DM από bot αυτής της κοινότητας"
@@ -25279,7 +25284,7 @@ msgstr "Πρόγραμμα"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
+msgid "Plans, perks, gifts and your subscription are all on one page."
 msgstr "Πλάνα, προνόμια, δώρα και η συνδρομή σας βρίσκονται όλα σε μία σελίδα."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -25403,7 +25408,7 @@ msgstr "Άνοιγμα χρήστη σε ξεχωριστό παράθυρο"
 msgid "Pop out video"
 msgstr "Άνοιγμα βίντεο σε ξεχωριστό παράθυρο"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "Εμφανίζεται σε ξεχωριστό παράθυρο"
@@ -30120,6 +30125,11 @@ msgstr "Ρυθμίσεις."
 msgid "Setup key"
 msgstr "Κλειδί εγκατάστασης"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "Διακριτικό ρύθμισης"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "Η ετικέτα #0000 είναι δεσμευμένη για τους 
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "Το API βρίσκεται σε διαφορετική προέλευση από αυτήν τη σελίδα, οπότε τα αιτήματα ρύθμισης αποστέλλονται χωρίς τη συνεδρία σας. Ελέγξτε τη δημόσια προέλευση και τη θύρα με την οποία έχει ρυθμιστεί αυτή η παρουσία και έπειτα ανανεώστε τη σελίδα."
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "Το API έγραψε το token στο αρχείο καταγραφής του κατά την πρώτη εκκίνηση. Αν ορίσατε το FLUXER_SETUP_TOKEN, χρησιμοποιήστε αυτήν την τιμή."
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "Η εφαρμογή έκλεισε απροσδόκητα"
@@ -33685,6 +33700,11 @@ msgstr "Το σύστημα έδωσε στον/στην {target} τον ρόλ�
 msgid "The system removed the role {role} from {target}"
 msgstr "Το σύστημα αφαίρεσε τον ρόλο {role} από τον/την {target}"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "Το token αποδεικνύει ότι διαχειρίζεστε αυτήν την παρουσία. Μόνο το άτομο που το έχει μπορεί να δημιουργήσει τον λογαριασμό διαχειριστή."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "Τρίτα μέρη"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "Αυτός ο λογαριασμός δεν μπορεί να μπλοκαριστεί."
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "Αυτός ο λογαριασμός δεν είναι διαχειριστής αυτής της παρουσίας. Συνδεθείτε με έναν λογαριασμό διαχειριστή για να ολοκληρώσετε τη ρύθμιση."
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

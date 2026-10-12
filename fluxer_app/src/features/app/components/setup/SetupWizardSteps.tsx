@@ -56,6 +56,24 @@ const WELCOME_LANGUAGE_LABEL_DESCRIPTOR = msg({
 	message: 'Language',
 	comment: 'Label for the setup wizard language selector.',
 });
+const SETUP_TOKEN_TITLE_DESCRIPTOR = msg({
+	message: 'Enter your setup token',
+	comment: 'Setup wizard title for the step that asks the operator for the setup token of a new instance.',
+});
+const SETUP_TOKEN_BODY_DESCRIPTOR = msg({
+	message: 'The token proves that you run this instance. Only the person who has it can create the admin account.',
+	comment: 'Setup wizard body explaining why the operator has to enter the setup token.',
+});
+const SETUP_TOKEN_LABEL_DESCRIPTOR = msg({
+	message: 'Setup token',
+	comment: 'Label for the setup token input in the setup wizard.',
+});
+const SETUP_TOKEN_HELP_DESCRIPTOR = msg({
+	message:
+		'The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value.',
+	comment:
+		'Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.',
+});
 const THEME_TITLE_DESCRIPTOR = msg({
 	message: 'Choose a theme',
 	comment: 'Setup wizard title for choosing the initial account theme.',
@@ -558,6 +576,37 @@ export const WelcomeStep = observer(
 	},
 );
 
+export const SetupTokenStep = observer(
+	({value, onChange, error}: {value: string; onChange: (value: string) => void; error: string | null}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.setup-token-step">
+				<StepHeader
+					title={i18n._(SETUP_TOKEN_TITLE_DESCRIPTOR)}
+					body={i18n._(SETUP_TOKEN_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.setup-token-step.step-header"
+				/>
+				<Input
+					label={i18n._(SETUP_TOKEN_LABEL_DESCRIPTOR)}
+					type="text"
+					value={value}
+					onChange={(event) => onChange(event.target.value)}
+					autoComplete="off"
+					spellCheck={false}
+					maxLength={256}
+					error={error ?? undefined}
+					footer={
+						<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.setup-token-help">
+							{i18n._(SETUP_TOKEN_HELP_DESCRIPTOR)}
+						</p>
+					}
+					data-flx="app.self-hosted-setup-wizard-gate.setup-token-input"
+				/>
+			</section>
+		);
+	},
+);
+
 export const ThemeStep = observer(
 	({theme, onThemeChange}: {theme: ThemeType; onThemeChange: (theme: ThemeType) => void}) => {
 		const {i18n} = useLingui();
@@ -685,31 +734,45 @@ export const AdminIntroStep = observer(() => {
 	);
 });
 
-export const AdminAccountStep = observer(({theme, usernameSignIn}: {theme: ThemeType; usernameSignIn: boolean}) => {
-	const {i18n} = useLingui();
-	return (
-		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
-			<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
-				<AuthRegisterFormCore
-					fields={{
-						showEmail: !usernameSignIn,
-						showPassword: true,
-						showPasswordConfirmation: true,
-						showUsernameValidation: true,
-						requireUsername: usernameSignIn,
-					}}
-					submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
-					redirectPath=""
-					runtimeSnapshot={RuntimeConfig.getSnapshot()}
-					offerRecoveryKit={usernameSignIn}
-					theme={theme}
-					showLegalConsent={false}
-					data-flx="app.self-hosted-setup-wizard-gate.admin-register-form"
-				/>
-			</div>
-		</section>
-	);
-});
+export const AdminAccountStep = observer(
+	({
+		theme,
+		usernameSignIn,
+		setupToken,
+		onSetupTokenRejected,
+	}: {
+		theme: ThemeType;
+		usernameSignIn: boolean;
+		setupToken: string | undefined;
+		onSetupTokenRejected: (message: string) => void;
+	}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
+				<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
+					<AuthRegisterFormCore
+						fields={{
+							showEmail: !usernameSignIn,
+							showPassword: true,
+							showPasswordConfirmation: true,
+							showUsernameValidation: true,
+							requireUsername: usernameSignIn,
+						}}
+						submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
+						redirectPath=""
+						runtimeSnapshot={RuntimeConfig.getSnapshot()}
+						offerRecoveryKit={usernameSignIn}
+						theme={theme}
+						showLegalConsent={false}
+						setupToken={setupToken}
+						onSetupTokenRejected={onSetupTokenRejected}
+						data-flx="app.self-hosted-setup-wizard-gate.admin-register-form"
+					/>
+				</div>
+			</section>
+		);
+	},
+);
 
 export const AdminRecoveryKitStep = observer(
 	({hasRecoveryKit, creating, onCreate}: {hasRecoveryKit: boolean; creating: boolean; onCreate: () => void}) => {

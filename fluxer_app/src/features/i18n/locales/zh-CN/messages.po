@@ -1911,6 +1911,16 @@ msgstr "{productName} 已迁移到 {host}。安装新应用后，你将自动登
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "{productName} 已迁移到 {host}。请在浏览器中打开以安装新应用。"
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} 现已迁移至 {host}。请从新地址安装，然后使用此应用登录。"
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "{productName} 现已迁移至 {host}。请从新地址安装。"
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "{productName} 需要麦克风权限才能列出你的设备。"
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} 需要屏幕录制权限。请在操作系统的隐私设置中允许屏幕录制，然后重启应用。"
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} 现已迁移至 {host}。请从新地址安装，然后使用此应用登录。"
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} 现已迁移至 {host}。请从新地址安装。"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "可加入通话"
 msgid "Call confirmation"
 msgstr "通话确认"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "通话已弹出"
@@ -14361,6 +14361,11 @@ msgstr "输入你的名字"
 msgid "Enter your password."
 msgstr "请输入你的密码。"
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "输入你的设置令牌"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "输入您的用户名和恢复工具包中的恢复密钥，然后选择一个新密码。"
@@ -19448,7 +19453,7 @@ msgstr "旧版费率"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "让 /tts 朗读你的消息。禁用此设置后，这些命令将显示为普通文本。"
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "允许此社区中的机器人私信你"
@@ -25279,8 +25284,8 @@ msgstr "套餐"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
-msgstr "方案、福利、礼物和你的订阅都在一个页面上。"
+msgid "Plans, perks, gifts and your subscription are all on one page."
+msgstr "套餐、福利、礼品和您的订阅都在一个页面上。"
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "Platform"
@@ -25403,7 +25408,7 @@ msgstr "弹出用户"
 msgid "Pop out video"
 msgstr "弹出视频"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "已弹出"
@@ -30120,6 +30125,11 @@ msgstr "设置。"
 msgid "Setup key"
 msgstr "设置密钥"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "设置令牌"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "#0000 标签为 Visionary 订阅者保留。Visionary 已无法再购买
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API 与此页面不同源，因此设置请求不会带上你的会话。请检查此实例配置的公开源地址和端口，然后重新加载。"
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "API 首次启动时将令牌写入了日志。如果您设置了 FLUXER_SETUP_TOKEN，请使用该值。"
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "应用崩溃了"
@@ -33685,6 +33700,11 @@ msgstr "系统已将身份组 {role} 授予 {target}"
 msgid "The system removed the role {role} from {target}"
 msgstr "系统已移除 {target} 的身份组 {role}"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "该令牌证明您运行的是此实例。只有拥有该令牌的人才能创建管理员帐户。"
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "第三方"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "此账号无法被屏蔽。"
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "此账号不是此实例的管理员。请使用管理员账号登录以完成设置。"
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Неправильне ім'я користувача або ключ відновлення.",
 	"auth_and_registration.password_is_too_common": "Твій пароль занадто поширений. Обери менш передбачуваний пароль.",
 	"auth_and_registration.password_not_set": "Пароль не встановлено.",
+	"auth_and_registration.setup_token_invalid": "Цей токен налаштування неправильний. Перевірте токен і спробуйте ще раз.",
+	"auth_and_registration.setup_token_required": "Цей екземпляр ще не налаштовано. Завершіть налаштування у веб-браузері за допомогою токена налаштування перед створенням облікових записів.",
 	"auth_and_registration.username_sign_in_only": "Це доступно лише на екземплярах, де вхід виконується за іменем користувача.",
 	"bots.bot_discriminator_cannot_be_changed": "Дискримінатор бота не можна змінити.",
 	"bots.bot_is_private": "Цей бот приватний.",

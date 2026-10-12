@@ -572,6 +572,7 @@ Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per h
 | invite_code? | ?string | The invite accepted immediately after registration (0-256 characters) |
 | registration_url_code?<sup>6</sup> | ?string | The administrator-issued registration URL code (1-256 characters) |
 | theme? | string | The initial theme preference, one of `dark`, `dark_legacy`, `coal`, `light`, or `system` |
+| setup_token?<sup>7</sup> | ?string | The setup token of a new self-hosted instance (1-256 characters) |
 
 <sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain the instance blocks, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`. A `username` instance accepts any string of 1-320 characters here, because older apps send one, and discards it. It stores no address and sends no email. It does not check the address against DNS or the blocklists, or whether another account uses it
 
@@ -585,9 +586,13 @@ Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per h
 
 <sup>6</sup> A code supplied on an instance with administrator registration URLs disabled, and a code that does not resolve, both return 400 `REGISTRATION_URL_INVALID`. A valid code overrides the closed registration mode and replaces the instance approval mode with its own approval setting
 
+<sup>7</sup> Required while a self-hosted instance is unconfigured and has no admin account, where an absent or blank value returns the field code `SETUP_TOKEN_REQUIRED`. Accepted until the first admin account exists, and a wrong value returns the field code `SETUP_TOKEN_INVALID`. Ignored afterwards, on a hosted instance, and on a self-hosted instance that does not [enforce the token](/operator/configuration/#setup-token). Surrounding whitespace is trimmed
+
 Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless the region sets a different minimum, and the applied minimum appears only in the localised message.
 
 Registration returns 403 `REGISTRATION_CLOSED` when the instance is closed and no valid registration URL was supplied. A username whose discriminator space is exhausted returns the field code `TOO_MANY_USERS_WITH_THIS_USERNAME`. A username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
+
+After the route rate limit, the CAPTCHA and schema validation, the setup token is checked before every other registration rule. A registration that presents the correct token is admitted whatever the registration mode is, is exempt from the registration allowances above, and receives the wildcard [Admin ACL](/admin-api/#acl-registry) when it creates a claimed account, which needs `email` on an `email` instance and `password` on a `username` instance. A client IP address is permitted 10 wrong tokens per 30 minutes, and further requests that present a token from that address return 429 until the window passes, the correct token included. A request with no token does not count.
 
 :::caution[Registration reports an address already in use]
 [Log in with a password](#log-in-with-a-password) and [request password recovery](#request-password-recovery) are enumeration-safe and registration is not. An address that already holds an account returns the field code `EMAIL_ALREADY_IN_USE`, so an unauthenticated caller learns from the response whether that address is registered.
@@ -602,10 +607,10 @@ There is no retry key. A repeated request with the same values creates a second 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [authentication token response](#authentication-token-response) \| [registration pending approval response](#registration-pending-approval-response-object) | Registration completed or entered the approval state |
-| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, or registration URL code is invalid |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, registration URL code, or setup token is invalid |
 | 403 | [error response](/http-api/#error-response) | SSO enforcement, registration policy, or content moderation rejects the registration |
 | 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a self-hosted instance with no account yet is still settling its [sign-in method](/http-api/instance/#set-the-setup-sign-in-method) after 15 seconds |
-| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request, or the address has used its wrong setup token allowance |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
 

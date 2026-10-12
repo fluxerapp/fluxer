@@ -3,7 +3,7 @@
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createNamedStringLiteralUnion, createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const LimitFilterResponse = z.object({
@@ -55,6 +55,12 @@ export const InstanceSetupSchema = z
 			.optional()
 			.describe(
 				'Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change',
+			),
+		setup_token_required: z
+			.boolean()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. True when registration needs the setup token',
 			),
 	})
 	.describe('Initial setup state for self-hosted instances');
@@ -297,6 +303,9 @@ export const InstanceAccountIdentityUpdateRequest = z.object({
 	tag_style: TagStyleSchema.optional().describe(
 		'How usernames are tagged. Defaults to none. Username sign-in accepts only none',
 	),
+	setup_token: createStringType(1, 256)
+		.nullish()
+		.describe('Setup token of a new self-hosted instance. Required until the first admin account exists'),
 });
 
 export type InstanceAccountIdentityUpdateRequest = z.infer<typeof InstanceAccountIdentityUpdateRequest>;

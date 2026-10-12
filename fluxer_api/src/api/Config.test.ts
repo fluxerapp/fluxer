@@ -259,3 +259,42 @@ describe('buildAPIConfigFromMaster trusted callers', () => {
 		);
 	});
 });
+
+async function setupTokenFromEnv(env: Record<string, string>): Promise<string | null> {
+	for (const [key, value] of Object.entries(env)) {
+		vi.stubEnv(key, value);
+	}
+	resetConfig();
+	return buildAPIConfigFromMaster(await loadConfig()).instance.setup.token;
+}
+
+describe('buildAPIConfigFromMaster setup token', () => {
+	const setupToken = 's'.repeat(32);
+
+	test('reads the token from FLUXER_SETUP_TOKEN', async () => {
+		expect(await setupTokenFromEnv({FLUXER_SETUP_TOKEN: ` ${setupToken}\n`})).toBe(setupToken);
+	});
+
+	test.each(['', '  '])('leaves the token unset for %j', async (blank) => {
+		expect(await setupTokenFromEnv({FLUXER_SETUP_TOKEN: blank})).toBeNull();
+	});
+
+	test('leaves the token unset when the variable is missing', async () => {
+		expect(await setupTokenFromEnv({})).toBeNull();
+	});
+
+	test('accepts a token of 256 characters', async () => {
+		expect(await setupTokenFromEnv({FLUXER_SETUP_TOKEN: 's'.repeat(256)})).toBe('s'.repeat(256));
+	});
+
+	test.each([
+		['shorter than 32 characters', 's'.repeat(31)],
+		['longer than 256 characters', 's'.repeat(257)],
+		['holding a form feed', `${'s'.repeat(16)}\f${'s'.repeat(16)}`],
+		['holding a text direction override', `${'s'.repeat(16)}\u202E${'s'.repeat(16)}`],
+	])('fails at boot on a token %s', async (_case, token) => {
+		await expect(setupTokenFromEnv({FLUXER_SETUP_TOKEN: token})).rejects.toThrow(
+			'FLUXER_SETUP_TOKEN must be 32 to 256 printable characters',
+		);
+	});
+});

@@ -102,6 +102,10 @@ secrets:
     FLUXER_ADMIN_SECRET_KEY_BASE: ""
     # Client secret of the built-in admin OAuth application.
     FLUXER_ADMIN_OAUTH_CLIENT_SECRET: ""
+    # Setup token the wizard asks for before the first admin account. With
+    # existingSecret, or with generate false and no value here, the API makes
+    # one on its first start and writes it to its log once.
+    FLUXER_SETUP_TOKEN: ""
     # LiveKit API key.
     FLUXER_LIVEKIT_API_KEY: fluxer
     # LiveKit API secret, at least 32 characters.

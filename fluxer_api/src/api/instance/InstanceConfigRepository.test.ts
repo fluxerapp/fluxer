@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {createUserID} from '@app/api/BrandedTypes';
 import {Config, getConfig} from '@app/api/Config';
 import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
@@ -14,6 +15,7 @@ import {
 } from '@app/api/instance/InstanceConfigRepository';
 import {getLegalUrls, setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
 import {getInstanceProductName, setCachedProductName} from '@app/api/instance/ProductName';
+import {ensureSetupToken, isSetupTokenEnforced} from '@app/api/instance/SetupToken';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
 import {dockerAvailable, startPostgresKv, stopPostgresKv} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
@@ -38,6 +40,8 @@ const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
 const POSTGRES_KV_TABLE = 'kv_instance_config_races';
+const SETUP_TOKEN_HASH_KEY = 'setup_token_hash';
+const ENV_SETUP_TOKEN = 'setup-token-for-tests-0123456789-abcdefghijklmnopqrstuvwxyz';
 describe('InstanceConfigRepository', () => {
 	const repositories: Array<InstanceConfigRepository> = [];
 
@@ -944,6 +948,271 @@ function registrationUrlParams(maxUses: number | null) {
 		approvalRequired: false,
 	};
 }
+
+describe('InstanceConfigRepository setup token', () => {
+	const repositories: Array<InstanceConfigRepository> = [];
+	const config = getConfig();
+	let executor: InstanceConfigWriteRaceExecutor;
+	let kvProvider: MockKVProvider;
+	let originalSelfHosted: boolean;
+	let originalNodeEnv: typeof config.nodeEnv;
+	let originalSetupToken: typeof config.instance.setup.token;
+	let originalSetupConfigured: boolean;
+
+	beforeEach(() => {
+		executor = new InstanceConfigWriteRaceExecutor(new InMemoryCassandraQueryExecutor());
+		setCassandraQueryExecutorForTesting(executor);
+		kvProvider = new MockKVProvider();
+		originalSelfHosted = config.instance.selfHosted;
+		originalNodeEnv = config.nodeEnv;
+		originalSetupToken = config.instance.setup.token;
+		originalSetupConfigured = config.instance.setup.configured;
+	});
+
+	afterEach(() => {
+		config.instance.selfHosted = originalSelfHosted;
+		config.nodeEnv = originalNodeEnv;
+		config.instance.setup.token = originalSetupToken;
+		config.instance.setup.configured = originalSetupConfigured;
+		for (const repository of repositories) {
+			repository.shutdown();
+		}
+		repositories.length = 0;
+		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
+	});
+
+	function createPod(): InstanceConfigRepository {
+		const repository = new InstanceConfigRepository(kvProvider);
+		repositories.push(repository);
+		return repository;
+	}
+
+	function useSelfHostedProduction(): void {
+		config.instance.selfHosted = true;
+		config.nodeEnv = 'production';
+		config.instance.setup.token = null;
+		config.instance.setup.configured = false;
+	}
+
+	function sha256(value: string): string {
+		return createHash('sha256').update(value).digest('hex');
+	}
+
+	const accountExists = async () => true;
+	const accountMissing = async () => false;
+
+	it('generates one setup token when two pods start together and stores only its hash', async () => {
+		const tokens = await Promise.all([createPod().createSetupTokenIfAbsent(), createPod().createSetupTokenIfAbsent()]);
+		const generated = tokens.filter((token) => token !== null);
+		expect(generated).toHaveLength(1);
+		expect(tokens.filter((token) => token === null)).toHaveLength(1);
+		const stored = await executor.readDirectly(SETUP_TOKEN_HASH_KEY);
+		expect(stored).toBe(sha256(generated[0]!));
+		expect(stored).not.toBe(generated[0]);
+		expect(await createPod().createSetupTokenIfAbsent()).toBeNull();
+	});
+
+	it('verifies only the generated setup token', async () => {
+		const pod = createPod();
+		for (const presented of ['anything', '', null, undefined]) {
+			expect(await pod.verifySetupToken(presented)).toBe(false);
+		}
+		const token = await pod.createSetupTokenIfAbsent();
+		expect(await pod.verifySetupToken(token)).toBe(true);
+		expect(await createPod().verifySetupToken(token)).toBe(true);
+		for (const presented of [`${token}x`, sha256(token!), '', null, undefined]) {
+			expect(await pod.verifySetupToken(presented)).toBe(false);
+		}
+	});
+
+	it('takes the environment setup token over a generated one', async () => {
+		const pod = createPod();
+		const generated = await pod.createSetupTokenIfAbsent();
+		config.instance.setup.token = ENV_SETUP_TOKEN;
+		expect(await pod.verifySetupToken(ENV_SETUP_TOKEN)).toBe(true);
+		expect(await pod.verifySetupToken(generated)).toBe(false);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBe(sha256(generated!));
+	});
+
+	it('burns the stored setup token and leaves it alone when the admin bootstrap is only claimed', async () => {
+		useSelfHostedProduction();
+		const pod = createPod();
+		const token = await pod.createSetupTokenIfAbsent();
+		await pod.claimAdminBootstrap();
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBe(sha256(token!));
+		await pod.burnSetupToken();
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBe('');
+		expect(await pod.verifySetupToken(token)).toBe(false);
+		expect(await pod.verifySetupToken('')).toBe(false);
+		await ensureSetupToken(pod, accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBe('');
+	});
+
+	it('writes nothing when there is no stored setup token to burn', async () => {
+		await createPod().burnSetupToken();
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBeNull();
+	});
+
+	it('releases a claimed admin bootstrap so it can be claimed again', async () => {
+		const pod = createPod();
+		await pod.releaseAdminBootstrap();
+		expect(await executor.readDirectly('admin_bootstrapped')).toBeNull();
+		expect(await pod.claimAdminBootstrap()).toBe(true);
+		expect(await pod.isAdminBootstrapped()).toBe(true);
+		await pod.releaseAdminBootstrap();
+		expect(await pod.isAdminBootstrapped()).toBe(false);
+		expect(await createPod().isAdminBootstrapped()).toBe(false);
+		expect(await pod.claimAdminBootstrap()).toBe(true);
+		expect(await pod.claimAdminBootstrap()).toBe(false);
+	});
+
+	it('keeps a won admin bootstrap claim when the refresh cannot be published', async () => {
+		const pod = createPod();
+		await pod.isAdminBootstrapped();
+		vi.spyOn(kvProvider, 'publish').mockRejectedValueOnce(new Error('kv down'));
+		expect(await pod.claimAdminBootstrap()).toBe(true);
+		expect(await pod.isAdminBootstrapped()).toBe(true);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('true');
+	});
+
+	it('enforces the setup token only on self-hosted instances that run in production or configure one', async () => {
+		const pod = createPod();
+		const gate = async () => ({
+			enforced: isSetupTokenEnforced(config),
+			open: await pod.isSetupTokenGateOpen(),
+			required: await pod.isSetupTokenRequired(),
+		});
+		config.instance.setup.configured = false;
+		config.instance.selfHosted = false;
+		config.nodeEnv = 'production';
+		config.instance.setup.token = ENV_SETUP_TOKEN;
+		expect(await gate()).toEqual({enforced: false, open: false, required: false});
+		config.instance.selfHosted = true;
+		config.nodeEnv = 'development';
+		config.instance.setup.token = null;
+		expect(await gate()).toEqual({enforced: false, open: false, required: false});
+		config.instance.setup.token = ENV_SETUP_TOKEN;
+		expect(await gate()).toEqual({enforced: true, open: true, required: true});
+		config.nodeEnv = 'production';
+		config.instance.setup.token = null;
+		expect(await gate()).toEqual({enforced: true, open: true, required: true});
+		config.instance.setup.configured = true;
+		expect(await gate()).toEqual({enforced: true, open: true, required: false});
+		config.instance.setup.configured = false;
+		expect(await gate()).toEqual({enforced: true, open: true, required: true});
+		await pod.setAppPublicConfig({setup: {configured: true}});
+		expect(await gate()).toEqual({enforced: true, open: true, required: false});
+		await pod.claimAdminBootstrap();
+		expect(await gate()).toEqual({enforced: true, open: false, required: false});
+	});
+
+	it('stores a setup token on the first production start and keeps it on the next', async () => {
+		useSelfHostedProduction();
+		await ensureSetupToken(createPod(), accountExists);
+		const stored = await executor.readDirectly(SETUP_TOKEN_HASH_KEY);
+		expect(stored).toMatch(/^[a-f0-9]{64}$/);
+		await ensureSetupToken(createPod(), accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBe(stored);
+	});
+
+	it('stores a setup token when setup is configured but no admin exists', async () => {
+		useSelfHostedProduction();
+		config.instance.setup.configured = true;
+		await ensureSetupToken(createPod(), accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toMatch(/^[a-f0-9]{64}$/);
+	});
+
+	it('stores no setup token when one is set in the environment', async () => {
+		useSelfHostedProduction();
+		config.instance.setup.token = ENV_SETUP_TOKEN;
+		await ensureSetupToken(createPod(), accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBeNull();
+	});
+
+	it('stores no setup token on the hosted service or in self-hosted development', async () => {
+		useSelfHostedProduction();
+		config.instance.selfHosted = false;
+		await ensureSetupToken(createPod(), accountExists);
+		config.instance.selfHosted = true;
+		config.nodeEnv = 'development';
+		await ensureSetupToken(createPod(), accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBeNull();
+	});
+
+	it('stores no setup token once the admin exists', async () => {
+		useSelfHostedProduction();
+		const pod = createPod();
+		await pod.claimAdminBootstrap();
+		await ensureSetupToken(pod, accountExists);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBeNull();
+	});
+
+	it('releases an admin bootstrap claim at start when the claiming account was never created', async () => {
+		useSelfHostedProduction();
+		const pod = createPod();
+		expect(await pod.claimAdminBootstrap(createUserID(4242n))).toBe(true);
+		expect(await executor.readDirectly('admin_bootstrap_user_id')).toBe('4242');
+		await ensureSetupToken(createPod(), accountExists);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('true');
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toBeNull();
+		const restarted = createPod();
+		await ensureSetupToken(restarted, accountMissing);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('false');
+		expect(await restarted.isSetupTokenGateOpen()).toBe(true);
+		expect(await executor.readDirectly(SETUP_TOKEN_HASH_KEY)).toMatch(/^[a-f0-9]{64}$/);
+	});
+
+	it('keeps an admin bootstrap claim at start when no claiming account is recorded', async () => {
+		useSelfHostedProduction();
+		const pod = createPod();
+		await pod.claimAdminBootstrap();
+		expect(await executor.readDirectly('admin_bootstrap_user_id')).toBeNull();
+		await ensureSetupToken(createPod(), accountMissing);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('true');
+		await pod.releaseAdminBootstrap();
+		await pod.claimAdminBootstrap(createUserID(4242n));
+		await pod.releaseAdminBootstrap();
+		await pod.claimAdminBootstrap();
+		expect(await executor.readDirectly('admin_bootstrap_user_id')).toBe('');
+		await ensureSetupToken(createPod(), accountMissing);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('true');
+	});
+
+	it('keeps a won admin bootstrap claim when the claiming account cannot be recorded', async () => {
+		const pod = createPod();
+		executor.watch('admin_bootstrap_user_id');
+		executor.competeBeforeEachWrite(async () => {
+			throw new Error('database down');
+		});
+		expect(await pod.claimAdminBootstrap(createUserID(4242n))).toBe(true);
+		expect(await pod.isAdminBootstrapped()).toBe(true);
+		expect(await executor.readDirectly('admin_bootstrapped')).toBe('true');
+		expect(await executor.readDirectly('admin_bootstrap_user_id')).toBeNull();
+	});
+
+	it('confirms the admin bootstrap against the database and repairs a stale snapshot', async () => {
+		const stale = createPod();
+		const writer = createPod();
+		expect(await stale.isAdminBootstrapped()).toBe(false);
+		vi.spyOn(kvProvider, 'publish').mockRejectedValueOnce(new Error('kv down'));
+		await writer.claimAdminBootstrap();
+		expect(await stale.isAdminBootstrapped()).toBe(false);
+		expect(await stale.confirmAdminBootstrapped()).toBe(true);
+		expect(await stale.isAdminBootstrapped()).toBe(true);
+		vi.spyOn(kvProvider, 'publish').mockRejectedValueOnce(new Error('kv down'));
+		await writer.releaseAdminBootstrap();
+		expect(await stale.isAdminBootstrapped()).toBe(true);
+		expect(await stale.confirmAdminBootstrapped()).toBe(false);
+		expect(await stale.isAdminBootstrapped()).toBe(false);
+	});
+
+	it('refuses to start when the setup token cannot be stored', async () => {
+		useSelfHostedProduction();
+		const pod = createPod();
+		vi.spyOn(pod, 'createSetupTokenIfAbsent').mockRejectedValueOnce(new Error('database down'));
+		await expect(ensureSetupToken(pod, accountExists)).rejects.toThrow('database down');
+	});
+});
 
 describe('InstanceConfigRepository concurrent writes', () => {
 	describe('in memory', () => {

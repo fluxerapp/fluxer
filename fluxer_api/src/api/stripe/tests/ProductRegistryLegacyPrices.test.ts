@@ -6,7 +6,7 @@ import {afterAll, beforeAll, describe, expect, test} from 'vitest';
 
 // Mirrors the live BRL/TRY configuration after the repricing: the BRL slots point at the new list
 // prices, TRY is not configured at all (production has no TRY prices), and every retired price id
-// lives only in the legacy map.
+// is only in the legacy map.
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
 	monthlyBrl: 'price_1TMbqsFPC94Os7FdfElrIIaZ',

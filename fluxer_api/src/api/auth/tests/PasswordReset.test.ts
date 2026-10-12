@@ -12,7 +12,8 @@ import {
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {generateUniquePassword, HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Password reset flow', () => {
 	let harness: ApiTestHarness;
@@ -103,6 +104,61 @@ describe('Password reset flow', () => {
 		await createBuilder(harness, resetResp.token).get('/users/@me').expect(HTTP_STATUS.OK).execute();
 		const login = await loginUser(harness, {email: account.email, password: newPassword});
 		expect('token' in login && login.token.length > 0).toBe(true);
+	});
+	it('accepts a reset token for only one of several concurrent resets', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/forgot')
+			.body({email: account.email})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const token = findLastTestEmail(emails, 'password_reset')!.metadata!.token!;
+		const results = await Promise.all(
+			Array.from({length: 4}, () =>
+				createBuilderWithoutAuth(harness)
+					.post('/auth/reset')
+					.body({token, password: generateUniquePassword()})
+					.executeRaw(),
+			),
+		);
+		const statuses = results.map(({response}) => response.status).sort();
+		expect(statuses).toEqual(
+			[HTTP_STATUS.OK, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST].sort(),
+		);
+	});
+	it('keeps a reset token usable when the reset fails before the password is written', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/forgot')
+			.body({email: account.email})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const token = findLastTestEmail(emails, 'password_reset')!.metadata!.token!;
+		const patchUpsert = vi
+			.spyOn(UserRepository.prototype, 'patchUpsert')
+			.mockRejectedValueOnce(new Error('the user row write failed'));
+		try {
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/reset')
+				.body({token, password: generateUniquePassword()})
+				.expect(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+				.execute();
+		} finally {
+			patchUpsert.mockRestore();
+		}
+		const newPassword = generateUniquePassword();
+		const resetResp = await createBuilderWithoutAuth<LoginSuccessResponse>(harness)
+			.post('/auth/reset')
+			.body({token, password: newPassword})
+			.execute();
+		expect(resetResp.token.length).toBeGreaterThan(0);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/reset')
+			.body({token, password: generateUniquePassword()})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
 	});
 	it('rejects invalid reset token', async () => {
 		await createTestAccount(harness);

@@ -6,7 +6,7 @@ description: Guild objects, creation templates, configuration registries, and li
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A guild is a community with its own channels, roles, members, and configuration. Membership and ownership transfer live on [Guild members](/http-api/guild-members/), and channels on [Guild channels](/http-api/guild-channels/).
+A guild is a community with its own channels, roles, members, and configuration. Membership and ownership transfer are on [Guild members](/http-api/guild-members/), and channels on [Guild channels](/http-api/guild-channels/).
 
 [List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild) declare the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes), and a bearer credential without that scope receives 403 `MISSING_OAUTH_SCOPE`. Every other route rejects a bearer credential with 403 `ACCESS_DENIED`.
 

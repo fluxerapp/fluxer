@@ -399,6 +399,7 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 	const setup = readRecord(source.setup, 'appPublic.setup');
 	const legal = readRecord(source.legal, 'appPublic.legal');
 	const registration = readRecord(source.registration, 'appPublic.registration');
+	const setupTokenRequired = readOptionalBoolean(setup, 'setup_token_required', 'appPublic.setup.setup_token_required');
 	return {
 		branding: {
 			product_name: readNonEmptyString(branding, 'product_name', 'appPublic.branding.product_name'),
@@ -418,6 +419,7 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 		setup: {
 			configured: readBoolean(setup, 'configured', 'appPublic.setup.configured'),
 			admin_url: readNullableAbsoluteHttpUrl(setup, 'admin_url', 'appPublic.setup.admin_url'),
+			...(setupTokenRequired === undefined ? {} : {setup_token_required: setupTokenRequired}),
 		},
 		legal: {
 			terms_url: readNullableAbsoluteHttpUrl(legal, 'terms_url', 'appPublic.legal.terms_url'),

@@ -11390,7 +11390,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED.",
+				"description": "Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED. While the instance requires a setup token, the request must send it as setup_token.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -29472,6 +29472,10 @@
 					"tag_style": {
 						"description": "How usernames are tagged. Defaults to none. Username sign-in accepts only none",
 						"$ref": "#/components/schemas/TagStyleSchema"
+					},
+					"setup_token": {
+						"description": "Setup token of a new self-hosted instance. Required until the first admin account exists",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["mode"]
@@ -32830,6 +32834,10 @@
 						],
 						"enum": ["dark", "dark_legacy", "coal", "light", "system"],
 						"type": "string"
+					},
+					"setup_token": {
+						"description": "Setup token of a new self-hosted instance. Required until the first admin account exists",
+						"type": ["string", "null"]
 					}
 				}
 			},
@@ -33568,6 +33576,10 @@
 					"admin_url": {"description": "Admin panel URL to continue instance setup", "type": ["string", "null"]},
 					"account_identity_locked": {
 						"description": "Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change",
+						"type": "boolean"
+					},
+					"setup_token_required": {
+						"description": "Present only while a self-hosted instance is unconfigured. True when registration needs the setup token",
 						"type": "boolean"
 					}
 				},

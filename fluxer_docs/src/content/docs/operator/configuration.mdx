@@ -18,7 +18,7 @@ The pass unlocks nothing in the software, and self-hosting stays free. If you ha
 We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer).
 :::
 
-Fluxer reads its settings from environment variables. They live in a file named `.env`, in the same directory as `docker-compose.yml`.
+Fluxer reads its settings from environment variables. They are in a file named `.env`, in the same directory as `docker-compose.yml`.
 
 The installer in [Get started](/operator/get-started/) writes `.env` and fills in every secret. Start with [Core identity and public address](#core-identity-and-public-address) and [Secrets you must generate](#secrets-you-must-generate).
 
@@ -1146,7 +1146,7 @@ Set by Docker. Node identity in metrics and logs.
 
 #### `FLUXER_ENV`
 
-Default `development`. The runtime mode. `development`, `production`, or `test`. Compose pins `production`, which gates Postgres validation and the admin cookie flags.
+Default `development`. The runtime mode. `development`, `production`, or `test`. Compose pins `production`, which gates Postgres validation and the admin cookie flags. On a self-hosted instance, `production` also enforces the [setup token](#setup-token).
 
 #### `FLUXER_SELF_HOSTED`
 
@@ -1278,7 +1278,13 @@ Default empty. The incident history page of the status page.
 
 #### `FLUXER_INSTANCE_SETUP_CONFIGURED`
 
-Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says.
+Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says. Setting it to `true` on a new instance skips the setup wizard and opens registration, and nobody becomes admin by registering first. The admin account is then created by a [registration request](/http-api/authentication/#register-an-account) that includes `setup_token`.
+
+<a id="setup-token"></a>
+
+#### `FLUXER_SETUP_TOKEN`
+
+Default empty. The setup token of a new self-hosted instance, 32 to 256 characters, and a value outside that range fails startup. Until the first admin account exists, only the registration that presents this token becomes the admin. While the instance is also unconfigured, every registration must present it. Unset, the API generates a token on the first start, stores only its hash and writes the token to its log once. A value set here always replaces the generated one. It is read by the `api` service only and is ignored once the first admin exists. Off a self-hosted instance it is ignored. The installer writes one into `.env`, and [Create the first admin](/operator/get-started/#first-run) has where the wizard asks for it.
 
 #### `FLUXER_ACCOUNT_IDENTITY`
 
@@ -1300,7 +1306,7 @@ Default empty. The guild that grants the visionary role. Snowflake.
 
 Default empty. The role granted there. Snowflake.
 
-Completing setup saves that state independently of the environment default. Later branding or legal updates preserve it. Setting `FLUXER_INSTANCE_SETUP_CONFIGURED` back to `false` does not reopen the wizard or restore the unauthenticated setup access and first-registration admin grant described in [Get started](/operator/get-started/).
+Completing setup saves that state independently of the environment default. Later branding or legal updates preserve it. Setting `FLUXER_INSTANCE_SETUP_CONFIGURED` back to `false` does not reopen the wizard or restore the admin grant described in [Create the first admin](/operator/get-started/#first-run).
 
 ## API and worker settings
 

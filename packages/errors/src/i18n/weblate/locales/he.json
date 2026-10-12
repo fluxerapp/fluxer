@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "שם משתמש או מפתח שחזור שגויים.",
 	"auth_and_registration.password_is_too_common": "הסיסמה שלך נפוצה מדי. מומלץ לבחור סיסמה פחות צפויה.",
 	"auth_and_registration.password_not_set": "סיסמה לא הוגדרה.",
+	"auth_and_registration.setup_token_invalid": "אסימון ההגדרה הזה אינו תקין. בדוק את האסימון ונסה שוב.",
+	"auth_and_registration.setup_token_required": "מופע זה עדיין לא הוגדר. השלם את ההגדרה בדפדפן אינטרנט באמצעות אסימון ההגדרה לפני יצירת חשבונות.",
 	"auth_and_registration.username_sign_in_only": "אפשרות זו זמינה רק במופעים שבהם מתחברים עם שם משתמש.",
 	"bots.bot_discriminator_cannot_be_changed": "לא ניתן לשנות את המזהה של הבוט.",
 	"bots.bot_is_private": "הבוט הזה פרטי.",

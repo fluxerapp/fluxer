@@ -8,6 +8,7 @@ import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import {normalizeString} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 
 function extractHostname(url: string): string {
@@ -121,6 +122,24 @@ function buildTrustedCallers(master: MasterConfig): Array<TrustedCallerConfig> {
 		});
 	}
 	return trustedCallers;
+}
+
+const SETUP_TOKEN_MIN_LENGTH = 32;
+const SETUP_TOKEN_MAX_LENGTH = 256;
+
+function resolveSetupToken(master: MasterConfig): string | null {
+	const token = master.instance.setup.token?.trim();
+	if (!token) return null;
+	if (
+		token.length < SETUP_TOKEN_MIN_LENGTH ||
+		token.length > SETUP_TOKEN_MAX_LENGTH ||
+		normalizeString(token) !== token
+	) {
+		throw new Error(
+			`FLUXER_SETUP_TOKEN must be ${SETUP_TOKEN_MIN_LENGTH} to ${SETUP_TOKEN_MAX_LENGTH} printable characters`,
+		);
+	}
+	return token;
 }
 
 export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
@@ -402,6 +421,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			},
 			setup: {
 				configured: master.instance.setup.configured,
+				token: resolveSetupToken(master),
 			},
 			accountIdentity: master.instance.account_identity,
 			tagStyle: master.instance.tag_style,

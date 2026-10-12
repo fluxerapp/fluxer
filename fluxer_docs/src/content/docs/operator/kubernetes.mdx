@@ -63,9 +63,11 @@ helm install fluxer ./fluxer/deploy/helm/fluxer \
 
 The first install pulls every image, creates the volumes and the buckets, and takes a few minutes. `helm test fluxer -n fluxer` then checks that the edge answers and serves the discovery document for the hostname. Keep `fluxer-values.yaml`, because every later upgrade passes it again.
 
-:::caution[Finish setup before anyone else reaches the hostname]
-An unconfigured instance lets any account that registers read and change the instance configuration. Register the first account and finish the wizard in the same sitting that brings the release up, as [Create the first admin](/operator/get-started/#first-run) describes.
-:::
+The setup wizard asks for the setup token, as [Create the first admin](/operator/get-started/#first-run) describes. The chart keeps it in the Secret:
+
+```bash
+kubectl -n fluxer get secret fluxer-env -o jsonpath='{.data.FLUXER_SETUP_TOKEN}' | base64 -d
+```
 
 ## Exposure
 
@@ -159,6 +161,7 @@ The chart keeps every secret in one Secret named `fluxer-env`. Each key below ta
 | `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` | Generated, 32 random bytes in base64 |
 | `FLUXER_ADMIN_SECRET_KEY_BASE` | Generated, 64 letters and digits |
 | `FLUXER_ADMIN_OAUTH_CLIENT_SECRET` | Generated, 64 letters and digits |
+| `FLUXER_SETUP_TOKEN` | Generated, 64 letters and digits |
 | `FLUXER_LIVEKIT_API_KEY` | The fixed value `fluxer` |
 | `FLUXER_LIVEKIT_API_SECRET` | Generated, 64 letters and digits |
 | `FLUXER_VAPID_PUBLIC_KEY` | Generated P-256 pair |
@@ -176,7 +179,7 @@ kubectl -n fluxer exec postgres-0 -- psql -U fluxer -c "ALTER ROLE fluxer PASSWO
 
 ### A Secret you manage
 
-Set `secrets.existingSecret` to the name of a Secret you create, holding every key in the table above. The chart then renders no Secret and never changes yours. The install stops when the Secret does not exist, lacks a key, or holds a setting that disagrees with one the chart sets itself, and it names the Secret and the keys. After editing it, restart the release so the pods read the new values:
+Set `secrets.existingSecret` to the name of a Secret you create, holding every key in the table above. `FLUXER_SETUP_TOKEN` is the one optional key. Without it the API makes a token on its first start and writes it to its log once. The chart then renders no Secret and never changes yours. The install stops when the Secret does not exist, lacks a key, or holds a setting that disagrees with one the chart sets itself, and it names the Secret and the keys. After editing it, restart the release so the pods read the new values:
 
 ```bash
 kubectl -n fluxer rollout restart deployment,statefulset -l app.kubernetes.io/instance=fluxer
@@ -315,7 +318,7 @@ kubectl -n fluxer exec postgres-0 -- sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POS
 
 Keep `fluxer-env.yaml` as safe as the database. Without it a restored database has no matching Postgres password, and every signed session and token stops working.
 
-Uploads live on the volume `data-seaweedfs-0`. Snapshot it with your storage provider's VolumeSnapshot class. Without one, stop the store and copy the volume out through a helper pod:
+Uploads are on the volume `data-seaweedfs-0`. Snapshot it with your storage provider's VolumeSnapshot class. Without one, stop the store and copy the volume out through a helper pod:
 
 ```bash
 kubectl -n fluxer scale statefulset seaweedfs --replicas=0

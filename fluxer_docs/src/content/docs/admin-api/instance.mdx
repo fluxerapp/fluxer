@@ -12,12 +12,6 @@ Every write is a merge over the stored configuration, and an omitted key leaves 
 
 Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`.
 
-:::note[Initial setup accepts a plain session credential]
-Until setup is marked complete, [Get instance configuration](#get-instance-configuration), [Update instance configuration](#update-instance-configuration), [Create branding asset](#create-branding-asset), and [Create SMTP test](#create-smtp-test) also accept a session credential holding no Admin ACL.
-:::
-
-That relaxation applies only to a session credential, so an Admin API key and a bearer token are evaluated normally even before setup is complete. Completing setup grants the acting session the wildcard ACL. Registration URLs, pending registrations, and limit configuration always need their own ACL.
-
 :::caution[No read returns a stored secret]
 A secret is reported by a companion boolean such as `client_secret_set`. Except for the single sign-on client secret, that boolean is true whether the value is stored here or supplied by deployment configuration.
 :::
@@ -627,7 +621,7 @@ Display metadata for one [limit key](/http-api/instance/#limit-keys), which an e
 
 <RouteHeader method="GET" path="/v1/admin/instance/config" auditReason />
 
-Returns the [instance configuration](#instance-configuration-object) object. Requires `instance:config:view`, or a session credential until setup is marked complete.
+Returns the [instance configuration](#instance-configuration-object) object. Requires `instance:config:view`.
 
 ### Response
 
@@ -637,7 +631,7 @@ Returns the [instance configuration](#instance-configuration-object) object. Req
 
 ### Side effects
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_instance_config`, target type `instance_config`, target ID `0`, and metadata keys `registration_url_count` and `pending_registration_count`. Before setup is complete, a session credential holding no Admin ACL records the entry with its own account as the acting Admin.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_instance_config`, target type `instance_config`, target ID `0`, and metadata keys `registration_url_count` and `pending_registration_count`.
 
 ### Rate limit
 
@@ -647,7 +641,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="PATCH" path="/v1/admin/instance/config" auditReason />
 
-Applies a merge patch to the stored configuration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
+Applies a merge patch to the stored configuration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
 
 :::note[Every section is optional and merged independently]
 The body has one optional object for each section. Fluxer leaves an absent section alone. Within a section, an absent key keeps its stored value, and a key sent as null clears the stored value where the schema permits null.
@@ -728,9 +722,9 @@ The order is `gateway_rollout`, `push_relay`, `domain_migration`, `voice_p2p`, `
 
 Fluxer publishes a `gateway_rollout` change to the Gateway cluster. A `push_relay` change reaches the push service without a restart. A `billing` change applies without a restart. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
 
-Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
+An update that sets `app_public.setup.configured` to true also marks the deployment as bootstrapped, so no later registration receives the wildcard Admin ACL.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_instance_config`, target type `instance_config`, and target ID `0`. The metadata key `sections` lists the names of the non-null top-level sections in the body, comma-separated in alphabetical order, and is absent when the body supplies none. The update that completes initial setup and grants the wildcard ACL also records `granted_acls` as `*`. No value from the body is recorded. A request that fails part way records no entry.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_instance_config`, target type `instance_config`, and target ID `0`. The metadata key `sections` lists the names of the non-null top-level sections in the body, comma-separated in alphabetical order, and is absent when the body supplies none. No value from the body is recorded. A request that fails part way records no entry.
 
 ### Rate limit
 
@@ -740,7 +734,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="POST" path="/v1/admin/instance/config/branding-assets" auditReason />
 
-Uploads an image, stores its [Media Proxy](/media-proxy/overview/) URL in the selected branding slot, and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
+Uploads an image, stores its [Media Proxy](/media-proxy/overview/) URL in the selected branding slot, and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
 
 ### JSON body
 
@@ -776,7 +770,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="POST" path="/v1/admin/instance/config/smtp-tests" auditReason />
 
-Opens a connection to an SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`, or a session credential until setup is marked complete.
+Opens a connection to an SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`.
 
 :::note[A rejected credential is still a successful test]
 A test that runs to completion answers 200 whether or not the server accepted the connection. The `ok` field is the verdict and `error` is the failure text.

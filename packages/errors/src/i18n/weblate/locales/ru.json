@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Неверное имя пользователя или ключ восстановления.",
 	"auth_and_registration.password_is_too_common": "Твой пароль слишком распространённый. Придумай менее предсказуемый пароль.",
 	"auth_and_registration.password_not_set": "Пароль не установлен.",
+	"auth_and_registration.setup_token_invalid": "Этот токен настройки неверен. Проверьте токен и попробуйте снова.",
+	"auth_and_registration.setup_token_required": "Этот экземпляр еще не настроен. Завершите настройку в браузере с помощью токена настройки перед созданием учетных записей.",
 	"auth_and_registration.username_sign_in_only": "Это доступно только в экземплярах, где вход выполняется по имени пользователя.",
 	"bots.bot_discriminator_cannot_be_changed": "Дискриминатор бота нельзя изменить.",
 	"bots.bot_is_private": "Этот бот приватный.",

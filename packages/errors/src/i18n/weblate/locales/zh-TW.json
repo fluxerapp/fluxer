@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "使用者名稱或復原金鑰無效。",
 	"auth_and_registration.password_is_too_common": "你的密碼太常見。請選擇較難預測的密碼。",
 	"auth_and_registration.password_not_set": "密碼尚未設定。",
+	"auth_and_registration.setup_token_invalid": "這個設定權杖不正確。請檢查權杖後再試一次。",
+	"auth_and_registration.setup_token_required": "此執行個體尚未設定。請先在網頁瀏覽器中使用設定權杖完成設定，然後再建立帳號。",
 	"auth_and_registration.username_sign_in_only": "僅適用於以使用者名稱登入的實例。",
 	"bots.bot_discriminator_cannot_be_changed": "機器人識別碼無法變更。",
 	"bots.bot_is_private": "此機器人為私人機器人。",

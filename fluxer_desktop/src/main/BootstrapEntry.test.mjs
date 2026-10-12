@@ -222,7 +222,7 @@ describe('Bootstrap entry point', () => {
 		assert.doesNotMatch(
 			source,
 			/import\('@electron\/main\/Autostart'\)/,
-			'Autostart.ts pulls the main process i18n and the Linux portals in. The bootstrap only needs the launch check, which lives in the light AutostartLaunch module.',
+			'Autostart.ts pulls the main process i18n and the Linux portals in. The bootstrap only needs the launch check, which is in the light AutostartLaunch module.',
 		);
 	});
 

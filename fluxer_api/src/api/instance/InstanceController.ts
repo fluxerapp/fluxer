@@ -9,11 +9,13 @@ import {
 	isDiscoveryNotModified,
 	nextDiscoveryValidators,
 } from '@app/api/instance/DiscoveryValidators';
+import {assertSetupToken} from '@app/api/instance/SetupToken';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {isBillingActive, isPremiumTieringActive, isStripeServiceable} from '@app/api/stripe/BillingConfigCache';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
@@ -130,10 +132,13 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					instanceConfigRepository.getDomainMigrationConfig(),
 					instanceConfigRepository.getAccountIdentity(),
 				]);
-			const accountIdentityLocked =
+			const openSetup =
 				Config.instance.selfHosted && !appPublicConfig.setup.configured
-					? await instanceConfigRepository.isAccountIdentityLocked()
-					: undefined;
+					? {
+							account_identity_locked: await instanceConfigRepository.isAccountIdentityLocked(),
+							setup_token_required: await instanceConfigRepository.isSetupTokenRequired(),
+						}
+					: {};
 			const discovery = buildDiscoveryResponse(
 				buildDiscoveryStaticInput(
 					gifService,
@@ -142,7 +147,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 						setup: {
 							...appPublicConfig.setup,
 							admin_url: Config.endpoints.admin || null,
-							...(accountIdentityLocked === undefined ? {} : {account_identity_locked: accountIdentityLocked}),
+							...openSetup,
 						},
 					},
 					{
@@ -187,15 +192,23 @@ export function InstanceController(app: Hono<HonoEnv>) {
 			security: [],
 			tags: ['Instance'],
 			description:
-				'Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED.',
+				'Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED. While the instance requires a setup token, the request must send it as setup_token.',
 		}),
 		async (ctx) => {
-			const {mode, tag_style} = ctx.req.valid('json');
+			const {mode, tag_style, setup_token} = ctx.req.valid('json');
+			const instanceConfigRepository = ctx.get('instanceConfigRepository');
+			const {config, rateLimit, cache} = ctx.get('apiContext').services;
+			await assertSetupToken({
+				rateLimit,
+				config,
+				repository: instanceConfigRepository,
+				presented: setup_token,
+				clientIp: requireConfiguredClientIp(ctx.req.raw, config.proxy),
+			});
 			if (mode === AccountIdentityModes.USERNAME && tag_style === TagStyles.RANDOM) {
 				throw InputValidationError.fromCode('tag_style', ValidationErrorCodes.TAG_STYLE_REQUIRES_EMAIL_SIGN_IN);
 			}
-			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const identity = await withAccountIdentitySetupLock(ctx.get('apiContext').services.cache, async () => {
+			const identity = await withAccountIdentitySetupLock(cache, async () => {
 				if (await instanceConfigRepository.isAccountIdentityLocked()) {
 					throw new AccountIdentityLockedError();
 				}

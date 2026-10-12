@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Ongeldige gebruikersnaam of herstelsleutel.",
 	"auth_and_registration.password_is_too_common": "Je wachtwoord komt te vaak voor. Kies een minder voorspelbaar wachtwoord.",
 	"auth_and_registration.password_not_set": "Wachtwoord is niet ingesteld.",
+	"auth_and_registration.setup_token_invalid": "Die instellingstoken is niet correct. Controleer de token en probeer het opnieuw.",
+	"auth_and_registration.setup_token_required": "Deze instantie is nog niet ingesteld. Voltooi de installatie in een webbrowser met de instellingstoken voordat je accounts aanmaakt.",
 	"auth_and_registration.username_sign_in_only": "Dit is alleen beschikbaar op instanties waar je inlogt met een gebruikersnaam.",
 	"bots.bot_discriminator_cannot_be_changed": "De discriminator van een bot kan niet worden gewijzigd.",
 	"bots.bot_is_private": "Deze bot is privé.",

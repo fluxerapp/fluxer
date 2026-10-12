@@ -6,7 +6,7 @@ description: User objects, public profiles, account tags, and the settings recor
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A user is a Fluxer account. Another account sees the [partial user object](#partial-user-object), and the owner sees the [user object](#user-object). Account mutation lives on [Current user](/http-api/users/current-user/).
+A user is a Fluxer account. Another account sees the [partial user object](#partial-user-object), and the owner sees the [user object](#user-object). Account mutation is on [Current user](/http-api/users/current-user/).
 
 Every route on this page takes a user session token or a bot token. An OAuth2 bearer credential is rejected with 403 `ACCESS_DENIED`.
 

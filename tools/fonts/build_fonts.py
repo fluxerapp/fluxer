@@ -610,7 +610,7 @@ def subset_options() -> SubsetOptions:
     options.legacy_kern = True
     options.layout_features = ["*"]  # CJK needs vert/vrt2/halt/palt/trad/smpl
     options.layout_scripts = ["*"]
-    options.name_IDs = ["*"]  # the OFL rename lives in the name table
+    options.name_IDs = ["*"]  # the OFL rename is in the name table
     options.name_legacy = True
     options.name_languages = ["*"]
     options.notdef_outline = True

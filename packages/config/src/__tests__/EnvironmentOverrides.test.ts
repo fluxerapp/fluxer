@@ -50,6 +50,12 @@ describe('buildNamedFluxerEnvOverrides', () => {
 		).toEqual({});
 	});
 
+	test('maps the setup token onto the instance setup section', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_SETUP_TOKEN: 'a-setup-token-of-at-least-32-characters'})).toEqual({
+			instance: {setup: {token: 'a-setup-token-of-at-least-32-characters'}},
+		});
+	});
+
 	test('a blank canonical name falls through to its alias', () => {
 		expect(
 			buildNamedFluxerEnvOverrides({

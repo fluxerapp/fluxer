@@ -1911,6 +1911,16 @@ msgstr "{productName} har flyttat till {host}. Installera den nya appen så är 
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
 msgstr "{productName} har flyttat till {host}. Öppna det i webbläsaren för att installera den nya appen."
 
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} finns nu på {host}. Installera det därifrån och logga sedan in med den här appen."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
+msgid "{productName} is now at {host}. Install it from there."
+msgstr "{productName} finns nu på {host}. Installera det därifrån."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{productName} member since"
@@ -1950,16 +1960,6 @@ msgstr "{productName} behöver mikrofonåtkomst för att visa dina enheter."
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} behöver åtkomst till skärminspelning. Tillåt skärminspelning i operativsystemets sekretessinställningar och starta om appen."
-
-#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} finns nu på {host}. Installera det därifrån och logga sedan in med den här appen."
-
-#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
-#: src/features/app/domain_migration/DomainMovedStepsModal.tsx
-msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} finns nu på {host}. Installera det därifrån."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
@@ -6365,7 +6365,7 @@ msgstr "Samtal tillgängligt"
 msgid "Call confirmation"
 msgstr "Samtalsbekräftelse"
 
-#. Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.
+#. Overlay text shown in the in-app call area while the call view is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Call is popped out"
 msgstr "Samtalet är öppnat i ett separat fönster"
@@ -14361,6 +14361,11 @@ msgstr "Ange ditt namn"
 msgid "Enter your password."
 msgstr "Ange ditt lösenord."
 
+#. Setup wizard title for the step that asks the operator for the setup token of a new instance.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Enter your setup token"
+msgstr "Ange din konfigurationstoken"
+
 #: src/features/auth/components/pages/RecoverAccountPage.tsx
 msgid "Enter your username and the recovery key from your recovery kit, then choose a new password."
 msgstr "Ange ditt användarnamn och återställningsnyckeln från ditt återställningskit, välj sedan ett nytt lösenord."
@@ -19448,7 +19453,7 @@ msgstr "Äldre pris"
 msgid "Let /tts read your message aloud. Disabling the setting keeps those commands as regular text."
 msgstr "Låt /tts läsa upp ditt meddelande. Om du inaktiverar inställningen visas dessa kommandon som vanlig text."
 
-#. Toggle label in the community privacy modal: allow DMs from bots that live in this community.
+#. Toggle label in the community privacy modal: allow DMs from bots that are in this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
 msgid "Let bots in this community DM you"
 msgstr "Låt botar i den här communityn skicka direktmeddelanden till dig"
@@ -25279,8 +25284,8 @@ msgstr "Plan"
 
 #. Text on the card in settings that links to the Plutonium page.
 #: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx
-msgid "Plans, perks, gifts and your subscription all live on one page."
-msgstr "Prenumerationer, förmåner, gåvor och ditt abonnemang finns alla på en sida."
+msgid "Plans, perks, gifts and your subscription are all on one page."
+msgstr "Prenumerationer, förmåner, gåvor och ditt abonnemang finns allt på en sida."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "Platform"
@@ -25403,7 +25408,7 @@ msgstr "Öppna användare i eget fönster"
 msgid "Pop out video"
 msgstr "Visa video i eget fönster"
 
-#. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
+#. Overlay text shown on a voice participant tile while it is in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx
 msgid "Popped out"
 msgstr "Visas i separat fönster"
@@ -30120,6 +30125,11 @@ msgstr "Inställningar."
 msgid "Setup key"
 msgstr "Konfigurationsnyckel"
 
+#. Label for the setup token input in the setup wizard.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "Setup token"
+msgstr "Konfigurationstoken"
+
 #. Label in the channel and chat typing users.
 #: src/features/typing/utils/TypingTierText.ts
 msgid "Several people are typing..."
@@ -33428,6 +33438,11 @@ msgstr "Taggen #0000 är reserverad för Visionary-medlemmar. Visionary kan inte
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API:et har ett annat ursprung än den här sidan, så konfigurationsförfrågningar skickas utan din session. Kontrollera vilket offentligt ursprung och vilken port instansen är konfigurerad med och ladda sedan om."
 
+#. Help text under the setup token input in the setup wizard. FLUXER_SETUP_TOKEN is an environment variable name and must not be translated.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The API wrote the token to its log the first time it started. If you set FLUXER_SETUP_TOKEN, use that value."
+msgstr "API:et skrev tokenen till sin logg första gången det startade. Om du har angett FLUXER_SETUP_TOKEN använder du det värdet."
+
 #: src/features/app/components/ErrorFallback.tsx
 msgid "The app crashed"
 msgstr "Appen kraschade"
@@ -33685,6 +33700,11 @@ msgstr "Systemet gav {target} rollen {role}"
 msgid "The system removed the role {role} from {target}"
 msgstr "Systemet tog bort rollen {role} från {target}"
 
+#. Setup wizard body explaining why the operator has to enter the setup token.
+#: src/features/app/components/setup/SetupWizardSteps.tsx
+msgid "The token proves that you run this instance. Only the person who has it can create the admin account."
+msgstr "Tokenen bevisar att du driver den här instansen. Bara den som har den kan skapa administratörskontot."
+
 #. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "The update did not download or install. Try again or download it yourself."
@@ -33902,6 +33922,11 @@ msgstr "Tredje part"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
 msgstr "Det här kontot kan inte blockeras."
+
+#. Error shown in the setup wizard when the signed-in account lacks admin access to the unconfigured instance. A sign out button follows.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
+msgid "This account is not an admin of this instance. Sign in with an admin account to finish setup."
+msgstr "Det här kontot är inte administratör för den här instansen. Logga in med ett administratörskonto för att slutföra installationen."
 
 #. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts

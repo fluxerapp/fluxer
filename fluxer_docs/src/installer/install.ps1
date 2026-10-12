@@ -196,6 +196,7 @@ $FluxerSecretKeys = @(
 	@{Name = 'FLUXER_ADMIN_SECRET_KEY_BASE'; Kind = 'hex'}
 	@{Name = 'FLUXER_ADMIN_OAUTH_CLIENT_SECRET'; Kind = 'hex'}
 	@{Name = 'LIVEKIT_API_SECRET'; Kind = 'hex'}
+	@{Name = 'FLUXER_SETUP_TOKEN'; Kind = 'hex'}
 	@{Name = 'FLUXER_VAPID_PUBLIC_KEY'; Kind = 'vapid_public'}
 	@{Name = 'FLUXER_VAPID_PRIVATE_KEY'; Kind = 'vapid_private'}
 )
@@ -212,6 +213,13 @@ $FluxerNonSecretKeys = @(
 
 function Write-FluxerLine([string]$Message) {
 	Write-Host $Message
+}
+
+function Write-FluxerFirstRun([string]$EnvPath) {
+	Write-FluxerLine 'Open it and enter this setup token to create the admin account:'
+	Write-FluxerLine ''
+	Write-FluxerLine "  $(Get-FluxerEnvValue $EnvPath 'FLUXER_SETUP_TOKEN')"
+	Write-FluxerLine ''
 }
 
 function Write-FluxerProblem([string]$Message) {
@@ -692,7 +700,8 @@ function Move-FluxerStackFiles([string]$StagingDir, [string]$TargetDir) {
 # knows. FLUXER_VAPID_EMAIL is optional, and compose derives admin@FLUXER_DOMAIN while it is unset.
 # The five other non-secret keys in the list above ship correct in .env.example and need no edit.
 #
-# Every secret in .env.example contains the literal CHANGE_ME. A key whose name ends in _BASE64
+# Every secret in .env.example contains the literal CHANGE_ME, apart from FLUXER_SETUP_TOKEN,
+# which sits there as a commented line. A key whose name ends in _BASE64
 # takes 32 random bytes as base64, every other key takes 32 random bytes as hex, and the VAPID pair
 # comes from the generator above.
 #
@@ -1457,7 +1466,7 @@ function Get-FluxerFreeKb([string]$Path) {
 #   docker compose up -d
 function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDir) {
 	if (-not (Test-FluxerStackDefinesService 'seaweedfs' $TargetDir)) {
-		Write-FluxerLine 'Skipping the uploads copy. This stack defines no seaweedfs service, so its objects live outside the stack and only the operator of that store can copy them.'
+		Write-FluxerLine 'Skipping the uploads copy. This stack defines no seaweedfs service, so its objects are outside the stack and only the operator of that store can copy them.'
 		return
 	}
 	$present = @()
@@ -2263,7 +2272,8 @@ function Invoke-FluxerInstall {
 
 		if ($NoStart) {
 			Write-FluxerLine "Run docker compose up -d in $targetDir to start the instance."
-			Write-FluxerLine "Secrets live in $envPath. Back that file up."
+			Write-FluxerFirstRun $envPath
+			Write-FluxerLine "Secrets are in $envPath. Back that file up."
 			exit 0
 		}
 
@@ -2281,8 +2291,8 @@ function Invoke-FluxerInstall {
 		}
 		Test-FluxerPublicHealth $readyOrigin
 		Write-FluxerLine "Instance ready at $readyOrigin"
-		Write-FluxerLine 'Open it and create the first admin account. Finish the setup wizard in the same sitting.'
-		Write-FluxerLine "Secrets live in $envPath. Back that file up."
+		Write-FluxerFirstRun $envPath
+		Write-FluxerLine "Secrets are in $envPath. Back that file up."
 	} finally {
 		Pop-Location
 	}

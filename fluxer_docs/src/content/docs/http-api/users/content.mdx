@@ -6,7 +6,7 @@ description: Recent mentions, saved messages, and deletion of the caller's own m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Recent mentions and saved messages are private lists that only the account owning them can read. Further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
+Recent mentions and saved messages are private lists that only the account owning them can read. Further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests are on [Data harvests](/http-api/users/data-harvest/).
 
 These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 

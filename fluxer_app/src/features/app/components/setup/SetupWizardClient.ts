@@ -42,8 +42,13 @@ export async function uploadBrandingAsset(
 export async function setSetupAccountIdentity(
 	mode: InstanceAccountIdentityUpdateRequest['mode'],
 	tagStyle?: InstanceAccountIdentityUpdateRequest['tag_style'],
+	setupToken?: string,
 ): Promise<InstanceAccountIdentityResponse> {
-	const body: InstanceAccountIdentityUpdateRequest = tagStyle === undefined ? {mode} : {mode, tag_style: tagStyle};
+	const body: InstanceAccountIdentityUpdateRequest = {
+		mode,
+		...(tagStyle === undefined ? {} : {tag_style: tagStyle}),
+		...(setupToken ? {setup_token: setupToken} : {}),
+	};
 	const response = await http.put<InstanceAccountIdentityResponse>(Endpoints.INSTANCE_SETUP_ACCOUNT_IDENTITY, {body});
 	return response.body;
 }

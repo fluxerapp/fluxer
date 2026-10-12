@@ -15,11 +15,11 @@ import {useCallback} from 'react';
 
 const CALL_POPPED_OUT_DESCRIPTOR = msg({
 	message: 'Call is popped out',
-	comment: 'Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.',
+	comment: 'Overlay text shown in the in-app call area while the call view is in a separate popped-out window.',
 });
 const TILE_POPPED_OUT_DESCRIPTOR = msg({
 	message: 'Popped out',
-	comment: 'Overlay text shown on a voice participant tile while it lives in a separate popped-out window.',
+	comment: 'Overlay text shown on a voice participant tile while it is in a separate popped-out window.',
 });
 
 const FOCUS_WINDOW_DESCRIPTOR = msg({

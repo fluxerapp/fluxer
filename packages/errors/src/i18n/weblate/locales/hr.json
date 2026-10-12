@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Neispravno korisničko ime ili ključ za oporavak.",
 	"auth_and_registration.password_is_too_common": "Tvoja je lozinka previše uobičajena. Odaberi manje predvidljivu lozinku.",
 	"auth_and_registration.password_not_set": "Lozinka nije postavljena.",
+	"auth_and_registration.setup_token_invalid": "Taj token za postavljanje nije ispravan. Provjerite token i pokušajte ponovno.",
+	"auth_and_registration.setup_token_required": "Ova instanca još nije postavljena. Završite postavljanje u web-pregledniku pomoću tokena za postavljanje prije stvaranja računa.",
 	"auth_and_registration.username_sign_in_only": "Ovo je dostupno samo na instancama na kojima se prijavljuje korisničkim imenom.",
 	"bots.bot_discriminator_cannot_be_changed": "Diskriminator bota ne može se promijeniti.",
 	"bots.bot_is_private": "Ovaj bot je privatan.",

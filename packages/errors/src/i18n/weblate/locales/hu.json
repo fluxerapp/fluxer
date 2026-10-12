@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Érvénytelen felhasználónév vagy helyreállítási kulcs.",
 	"auth_and_registration.password_is_too_common": "A jelszavad túl gyakori. Válassz nehezebben kitalálható jelszót.",
 	"auth_and_registration.password_not_set": "Nincs beállítva jelszó.",
+	"auth_and_registration.setup_token_invalid": "A megadott beállítási token nem helyes. Ellenőrizd a tokent, és próbáld meg újra.",
+	"auth_and_registration.setup_token_required": "Ez a példány még nincs beállítva. Fejezd be a beállítást egy webböngészőben a beállítási token használatával, mielőtt fiókokat hoznál létre.",
 	"auth_and_registration.username_sign_in_only": "Ez csak olyan példányokon érhető el, ahol felhasználónévvel lehet bejelentkezni.",
 	"bots.bot_discriminator_cannot_be_changed": "A bot számazonosítója nem módosítható.",
 	"bots.bot_is_private": "Ez a bot zárt.",

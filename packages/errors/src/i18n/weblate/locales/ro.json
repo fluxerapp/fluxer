@@ -108,6 +108,8 @@
 	"auth_and_registration.invalid_recovery_key": "Nume de utilizator sau cheie de recuperare incorecte.",
 	"auth_and_registration.password_is_too_common": "Parola ta este prea comună. Alege o parolă mai greu de ghicit.",
 	"auth_and_registration.password_not_set": "Parola nu este setată.",
+	"auth_and_registration.setup_token_invalid": "Tokenul de configurare nu este corect. Verifică tokenul și încearcă din nou.",
+	"auth_and_registration.setup_token_required": "Instanța nu este configurată încă. Finalizează configurarea într-un browser web cu tokenul de configurare înainte de a crea conturi.",
 	"auth_and_registration.username_sign_in_only": "Această opțiune este disponibilă doar pe instanțele unde autentificarea se face cu un nume de utilizator.",
 	"bots.bot_discriminator_cannot_be_changed": "Discriminatorul botului nu poate fi schimbat.",
 	"bots.bot_is_private": "Acest bot este privat.",

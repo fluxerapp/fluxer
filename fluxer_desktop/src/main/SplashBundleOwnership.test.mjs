@@ -100,7 +100,7 @@ describe('splash bundle ownership', () => {
 		assert.equal(
 			edges.has(SPLASH_MODULE),
 			false,
-			'Updater.ts imports this module into the main app bundle, so a splash import here drags the whole splash across the bundle boundary. The presentation lives in ShellUpdateSplash.ts.',
+			'Updater.ts imports this module into the main app bundle, so a splash import here drags the whole splash across the bundle boundary. The presentation is in ShellUpdateSplash.ts.',
 		);
 	});
 });
