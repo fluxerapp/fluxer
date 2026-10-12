@@ -115,6 +115,13 @@ const REJECTED_SERVER_SIDE_COPY_ERRORS = new Set([
 	'MethodNotAllowed',
 ]);
 
+function encodedEndpointPath(endpoint: string): Array<string> {
+	return (URL.parse(endpoint)?.pathname ?? '')
+		.split('/')
+		.filter((segment) => segment !== '')
+		.map((segment) => encodeURIComponent(decodeURIComponent(segment)));
+}
+
 function isRejectedServerSideCopy(error: unknown): boolean {
 	return (
 		error instanceof S3ServiceException &&
@@ -126,6 +133,7 @@ export class StorageService implements IStorageService {
 	private readonly client: S3Client;
 	private readonly presignClient: S3Client;
 	private readonly provider: S3ProviderSettings;
+	private readonly endpointPath: Array<string>;
 
 	constructor(provider?: S3ProviderSettings) {
 		this.provider = provider ?? {
@@ -136,6 +144,7 @@ export class StorageService implements IStorageService {
 			accessKeyId: Config.s3.accessKeyId,
 			secretAccessKey: Config.s3.secretAccessKey,
 		};
+		this.endpointPath = encodedEndpointPath(this.provider.endpoint);
 		this.client = buildPooledS3Client({
 			endpoint: this.provider.endpoint,
 			region: this.provider.region,
@@ -492,7 +501,7 @@ export class StorageService implements IStorageService {
 				new CopyObjectCommand({
 					Bucket: destinationBucket,
 					Key: destinationKey,
-					CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
+					CopySource: this.copySource(sourceBucket, sourceKey),
 					ContentType: newContentType,
 					MetadataDirective: newContentType ? 'REPLACE' : undefined,
 				}),
@@ -506,6 +515,14 @@ export class StorageService implements IStorageService {
 				copyError,
 			);
 		}
+	}
+
+	private copySource(bucket: string, key: string): string {
+		const encodedBucket = encodeURIComponent(bucket);
+		const location = this.provider.forcePathStyle
+			? [...this.endpointPath, encodedBucket]
+			: [encodedBucket, ...this.endpointPath];
+		return [...location, ...key.split('/').map(encodeURIComponent)].join('/');
 	}
 
 	private async copyObjectThroughApi(

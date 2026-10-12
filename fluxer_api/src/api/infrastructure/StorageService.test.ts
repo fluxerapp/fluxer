@@ -225,3 +225,55 @@ describe('StorageService.listObjects', () => {
 		);
 	});
 });
+
+function copySourceFor(endpoint: string, forcePathStyle: boolean): Promise<unknown> {
+	const service = new StorageService({
+		endpoint,
+		forcePathStyle,
+		region: 'us-east-1',
+		accessKeyId: 'fluxer',
+		secretAccessKey: 'fluxer-secret',
+	});
+	let copySource: unknown;
+	Object.assign(service, {
+		client: {
+			send: async (command: {input: {CopySource?: unknown}}) => {
+				copySource = command.input.CopySource;
+				return {};
+			},
+		},
+	});
+	return service
+		.copyObject({
+			sourceBucket: 'fluxer-uploads',
+			sourceKey: 'a b/c+d.pdf',
+			destinationBucket: 'fluxer-cdn',
+			destinationKey: 'attachments/1/2/c.pdf',
+		})
+		.then(() => copySource);
+}
+
+describe('StorageService.copyObject copy source', () => {
+	it.each([
+		['http://seaweedfs:8333', true],
+		['http://seaweedfs:8333/', true],
+		['https://s3.example.test', false],
+	])(
+		'names only the bucket and key for an endpoint without a path (%s, path style %s)',
+		async (endpoint, pathStyle) => {
+			await expect(copySourceFor(endpoint, pathStyle)).resolves.toBe('fluxer-uploads/a%20b/c%2Bd.pdf');
+		},
+	);
+
+	it('puts the endpoint path in front of the bucket with path-style addressing', async () => {
+		await expect(copySourceFor('https://s3.example.test/real%20bucket/sub/', true)).resolves.toBe(
+			'real%20bucket/sub/fluxer-uploads/a%20b/c%2Bd.pdf',
+		);
+	});
+
+	it('puts the endpoint path between the bucket and the key with virtual-hosted addressing', async () => {
+		await expect(copySourceFor('https://s3.example.test/real%20bucket/sub', false)).resolves.toBe(
+			'fluxer-uploads/real%20bucket/sub/a%20b/c%2Bd.pdf',
+		);
+	});
+});

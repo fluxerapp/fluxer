@@ -514,6 +514,8 @@ Every uploaded file lands in an S3-compatible object store, which the stack prov
 
 Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to empty instead. Compose forwards it from `.env` with a default of `http://seaweedfs:8333`, the bundled store.
 
+An endpoint with a bucket in its path, such as `https://s3.example.com/my-bucket` with `FLUXER_S3_FORCE_PATH_STYLE=true`, keeps every Fluxer bucket inside that one bucket. Each bucket name becomes a key prefix there, so uploads land under `fluxer-uploads/` in `my-bucket`.
+
 #### `FLUXER_S3_PUBLIC_ENDPOINT`
 
 No default. The host substituted into presigned URLs, which are the only place it appears. Compose forwards it from `.env`, and uses `FLUXER_S3_ENDPOINT` when it is unset, except on `app-proxy`, which gets only a value `.env` sets and adds it to its Content Security Policy. `admin` reads it to find the origin that report downloads are presigned against. See `FLUXER_S3_BUCKET_REPORTS`.
