@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import type * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import authStyles from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherAuthFlow.module.css';
 import pageStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
@@ -35,6 +36,7 @@ export const AccountSwitcherRegisterStep = observer(function AccountSwitcherRegi
 			/>
 		);
 	}
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
 	return (
 		<>
 			<h1
@@ -49,10 +51,11 @@ export const AccountSwitcherRegisterStep = observer(function AccountSwitcherRegi
 			>
 				<AuthRegisterFormCore
 					fields={{
-						showEmail: true,
+						showEmail: !usernameSignIn,
 						showPassword: true,
 						showPasswordConfirmation: true,
 						showUsernameValidation: true,
+						requireUsername: usernameSignIn,
 					}}
 					submitLabel={<Trans>Create account</Trans>}
 					redirectPath=""
