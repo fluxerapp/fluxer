@@ -332,7 +332,7 @@ All are optional.
 
 #### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
-Default `false`. Whether the client-IP header is trusted. Compose forwards it from `.env` with a default of `true`, because the edge sets the header on every upstream hop. The API has no peer-address fallback, so `false` on `api` makes every non-exempt request a 403.
+Default `false`. Whether the client-IP header is trusted. Compose forwards it from `.env` with a default of `true`, because the edge sets the header on every upstream hop. With `false`, `api` ignores the header and uses the address of the peer that opened the connection. That suits an `api` that clients reach directly. Behind any proxy it makes every request look as though it came from the proxy.
 
 #### `FLUXER_CLIENT_IP_HEADER_NAME`
 
@@ -342,7 +342,7 @@ Default `x-forwarded-for`. Which header has the client IP. Read by `api`, `worke
 
 Default empty. Addresses and CIDR ranges exempt from IP bans. Comma separated. A bare IPv4 address exempts that address, a bare IPv6 address exempts its /64, and a CIDR range such as `2001:db8:1200::/56` exempts every address in it. Every entry must parse as an IP or a CIDR range or the API fails at boot. Compose forwards it from `.env`.
 
-The API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address, and for every request while `FLUXER_TRUST_CLIENT_IP_HEADER` is `false`. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
+While `FLUXER_TRUST_CLIENT_IP_HEADER` is `true`, the API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
 
 #### `FLUXER_API_TRUSTED_CALLERS`
 

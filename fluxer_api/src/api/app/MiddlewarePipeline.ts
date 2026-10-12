@@ -15,6 +15,7 @@ import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
 import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
 import {UserMiddleware} from '@app/api/middleware/UserMiddleware';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {PeerAddressMiddleware} from '@app/api/utils/RequestClientIp';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import {cors} from '@fluxer/hono/src/middleware/Cors';
@@ -35,6 +36,7 @@ interface MiddlewarePipelineOptions {
 export function configureMiddleware(routes: HonoApp, options: MiddlewarePipelineOptions): void {
 	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName, maxInflightRequests} = options;
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
+	routes.use(PeerAddressMiddleware);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
 	routes.use(

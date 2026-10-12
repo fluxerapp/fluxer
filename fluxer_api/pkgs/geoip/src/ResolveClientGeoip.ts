@@ -2,18 +2,11 @@
 
 import {AGE_BLOCKED_GEOS, AGE_RESTRICTED_GEOS} from '@fluxer/instance_bootstrap/src/AgeGeos';
 import type {GeolocationResponse} from '@fluxer/instance_bootstrap/src/Types';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 
-interface ResolveClientGeoipOptions {
-	maxmindDbPath: string | undefined;
-	trustClientIpHeader: boolean;
-	clientIpHeaderName: string;
-}
-
 export async function resolveClientGeoip(
-	req: Request,
-	options: ResolveClientGeoipOptions,
+	ip: string | null,
+	maxmindDbPath: string | undefined,
 ): Promise<GeolocationResponse> {
 	const response: GeolocationResponse = {
 		countryCode: null,
@@ -23,14 +16,10 @@ export async function resolveClientGeoip(
 		ageRestrictedGeos: AGE_RESTRICTED_GEOS,
 		ageBlockedGeos: AGE_BLOCKED_GEOS,
 	};
-	const ip = extractClientIp(req, {
-		trustClientIpHeader: options.trustClientIpHeader,
-		clientIpHeaderName: options.clientIpHeaderName,
-	});
 	if (!ip) {
 		return response;
 	}
-	const geoip = await lookupGeoipByIp(ip, options.maxmindDbPath);
+	const geoip = await lookupGeoipByIp(ip, maxmindDbPath);
 	response.countryCode = geoip.countryCode;
 	response.regionCode = geoip.regionCode ?? null;
 	response.latitude = geoip.latitude != null ? geoip.latitude.toString() : null;

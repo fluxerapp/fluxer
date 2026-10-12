@@ -102,6 +102,17 @@ export function parseIpAddress(value: string): ParsedIpAddress | null {
 	};
 }
 
+export function canonicalizeIpAddress(value: string): string | null {
+	const parsed = parseIpAddress(value);
+	if (!parsed) {
+		return null;
+	}
+	if (parsed.family === 'ipv4') {
+		return parsed.normalized;
+	}
+	return getIpv4MappedIpv6(expandIpv6ToGroups(parsed.normalized)) ?? parsed.normalized;
+}
+
 export function isValidIp(value: string): boolean {
 	return parseIpAddress(value) !== null;
 }

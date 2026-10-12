@@ -2,31 +2,34 @@
 
 import {configureMiddleware} from '@app/api/app/MiddlewarePipeline';
 import {Config} from '@app/api/Config';
+import {InstanceController} from '@app/api/instance/InstanceController';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler, AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {Hono} from 'hono';
 import {afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const CLIENT_IP_HEADER_NAME = 'x-real-ip';
 
-function createProductionApp(): Hono<HonoEnv> {
+function createProductionApp(trustClientIpHeader = true): Hono<HonoEnv> {
 	const routes = new Hono<HonoEnv>({strict: true});
 	configureMiddleware(routes, {
 		logger: new NoopLogger(),
 		nodeEnv: 'production',
 		corsOrigins: ['https://web.fluxer.app'],
-		trustClientIpHeader: true,
+		trustClientIpHeader,
 		clientIpHeaderName: CLIENT_IP_HEADER_NAME,
 		maxInflightRequests: 100,
 	});
 	routes.onError(AppErrorHandler);
 	routes.notFound(AppNotFoundHandler);
+	InstanceController(routes);
 	routes.post('/internal/rpc', (ctx) => ctx.json({ok: true}));
 	routes.get('/connections/bluesky/jwks.json', (ctx) => ctx.json({keys: []}));
-	routes.get('/users/@me', (ctx) => ctx.json({ok: true}));
+	routes.get('/users/@me', (ctx) => ctx.json({ok: true, ip: getRequestClientIp(ctx)}));
 	const app = new Hono<HonoEnv>({strict: true});
 	app.route('/v1', routes);
 	app.route('/', routes);
@@ -90,5 +93,53 @@ describe('client ip requirements across the production middleware pipeline', () 
 		const response = await app.request('http://api:8080/users/@me');
 		expect(response.status).toBe(403);
 		expect(await response.json()).toMatchObject({code: 'FORBIDDEN'});
+	});
+
+	it('resolves the custom client ip header while it is trusted', async () => {
+		const app = createProductionApp();
+		const response = await app.request(
+			'http://api:8080/v1/users/@me',
+			{headers: {[CLIENT_IP_HEADER_NAME]: '203.0.113.10', 'x-forwarded-for': '198.51.100.1'}},
+			{incoming: {socket: {remoteAddress: '10.0.0.5'}}},
+		);
+		expect(response.status).toBe(200);
+		expect(await response.json()).toMatchObject({ip: '203.0.113.10'});
+	});
+
+	describe('with the client ip header untrusted', () => {
+		beforeEach(() => {
+			Config.proxy.trust_client_ip_header = false;
+		});
+
+		it('keys the request on the peer address and ignores a spoofed header', async () => {
+			const app = createProductionApp(false);
+			const response = await app.request(
+				'http://api:8080/v1/users/@me',
+				{headers: {[CLIENT_IP_HEADER_NAME]: '203.0.113.10', 'x-forwarded-for': '203.0.113.11'}},
+				{incoming: {socket: {remoteAddress: '::ffff:198.51.100.20'}}},
+			);
+			expect(response.status).toBe(200);
+			expect(await response.json()).toMatchObject({ip: '198.51.100.20'});
+		});
+
+		it('serves the discovery document', async () => {
+			const app = createProductionApp(false);
+			const response = await app.request(
+				'http://api:8080/.well-known/fluxer',
+				{headers: {'x-forwarded-for': '203.0.113.10'}},
+				{incoming: {socket: {remoteAddress: '198.51.100.20'}}},
+			);
+			expect(response.status).toBe(200);
+		});
+
+		it('serves the internal rpc route', async () => {
+			const app = createProductionApp(false);
+			const response = await app.request('http://api:8080/internal/rpc', {
+				method: 'POST',
+				headers: {'content-type': 'application/json'},
+				body: '{}',
+			});
+			expect(response.status).toBe(200);
+		});
 	});
 });

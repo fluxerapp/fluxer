@@ -3,19 +3,20 @@
 import {Config} from '@app/api/Config';
 import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
+import {type ClientIpResolution, PeerAddressMiddleware} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 interface Harness {
-	request: (headers: Record<string, string>) => Promise<Response>;
+	request: (headers: Record<string, string>, peerAddress?: string) => Promise<Response>;
 	resolutions: Array<ClientIpResolution | undefined>;
 }
 
 function createHarness(path = 'http://localhost/v1/messages'): Harness {
 	const resolutions: Array<ClientIpResolution | undefined> = [];
 	const app = new Hono<HonoEnv>();
+	app.use(PeerAddressMiddleware);
 	app.use(RequireClientIpMiddleware());
 	app.get('/v1/messages', (ctx) => {
 		resolutions.push(ctx.get('clientIpResolution'));
@@ -25,7 +26,8 @@ function createHarness(path = 'http://localhost/v1/messages'): Harness {
 	app.get('/internal/rpc', (ctx) => ctx.text('OK'));
 	app.onError(AppErrorHandler);
 	return {
-		request: async (headers) => app.request(path, {headers}),
+		request: async (headers, peerAddress) =>
+			app.request(path, {headers}, peerAddress ? {incoming: {socket: {remoteAddress: peerAddress}}} : undefined),
 		resolutions,
 	};
 }
@@ -53,12 +55,26 @@ describe('RequireClientIpMiddleware', () => {
 		expect(await response.json()).toMatchObject({code: 'FORBIDDEN'});
 	});
 
-	it('rejects a request when the header is not trusted with 403', async () => {
+	it('passes an untrusted request on its peer address and ignores the header', async () => {
+		Config.proxy.trust_client_ip_header = false;
+		const harness = createHarness();
+		const response = await harness.request({'x-forwarded-for': '203.0.113.10'}, '::ffff:198.51.100.20');
+		expect(response.status).toBe(200);
+		expect(harness.resolutions[0]?.ip).toBe('198.51.100.20');
+	});
+
+	it('rejects an untrusted request with no peer address with 403', async () => {
 		Config.proxy.trust_client_ip_header = false;
 		const harness = createHarness();
 		const response = await harness.request({'x-forwarded-for': '203.0.113.10'});
 		expect(response.status).toBe(403);
 		expect(await response.json()).toMatchObject({code: 'FORBIDDEN'});
+	});
+
+	it('ignores the peer address while the header is trusted', async () => {
+		const harness = createHarness();
+		const response = await harness.request({}, '198.51.100.20');
+		expect(response.status).toBe(403);
 	});
 
 	it('rejects a request with no client ip header with 403 FORBIDDEN', async () => {

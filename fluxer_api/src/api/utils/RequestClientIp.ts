@@ -9,7 +9,9 @@ import {
 	requireClientIp,
 	resolveClientIpHeaderName,
 } from '@fluxer/ip_utils/src/ClientIp';
+import type {HttpBindings} from '@hono/node-server';
 import type {Context} from 'hono';
+import {createMiddleware} from 'hono/factory';
 
 export interface ClientIpResolution {
 	trustClientIpHeader: boolean;
@@ -20,6 +22,20 @@ export interface ClientIpResolution {
 interface ClientIpResolutionOptions {
 	trustClientIpHeader: boolean;
 	clientIpHeaderName: string;
+}
+
+const peerAddresses = new WeakMap<Request, string>();
+
+export const PeerAddressMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
+	const remoteAddress = (ctx.env as Partial<HttpBindings> | undefined)?.incoming?.socket?.remoteAddress;
+	if (remoteAddress) {
+		peerAddresses.set(ctx.req.raw, remoteAddress);
+	}
+	await next();
+});
+
+function withPeerAddress(request: Request, options: ClientIpResolutionOptions) {
+	return {...options, peerAddress: peerAddresses.get(request) ?? null};
 }
 
 export function resolveClientIpWithOptions(ctx: Context<HonoEnv>, options: ClientIpResolutionOptions): string | null {
@@ -33,7 +49,7 @@ export function resolveClientIpWithOptions(ctx: Context<HonoEnv>, options: Clien
 	) {
 		return cached.ip;
 	}
-	const ip = extractClientIp(ctx.req.raw, {trustClientIpHeader, clientIpHeaderName});
+	const ip = extractClientIp(ctx.req.raw, withPeerAddress(ctx.req.raw, {trustClientIpHeader, clientIpHeaderName}));
 	ctx.set('clientIpResolution', {trustClientIpHeader, clientIpHeaderName, ip});
 	return ip;
 }
@@ -43,11 +59,11 @@ function proxyClientIpOptions(proxy: APIConfig['proxy']): ClientIpResolutionOpti
 }
 
 export function extractConfiguredClientIp(request: Request): string | null {
-	return extractClientIp(request, proxyClientIpOptions(Config.proxy));
+	return extractClientIp(request, withPeerAddress(request, proxyClientIpOptions(Config.proxy)));
 }
 
 export function requireConfiguredClientIp(request: Request, proxy: APIConfig['proxy']): string {
-	return requireClientIp(request, proxyClientIpOptions(proxy));
+	return requireClientIp(request, withPeerAddress(request, proxyClientIpOptions(proxy)));
 }
 
 export function getRequestClientIp(ctx: Context<HonoEnv>): string | null {
