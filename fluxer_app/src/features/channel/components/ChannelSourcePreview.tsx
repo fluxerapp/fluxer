@@ -294,7 +294,7 @@ export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 			{renderChannelAvatar(channel, resolvedAvatarSize, avatarFallbackLabels)}
 			<div className={styles.textContainer} data-flx="channel.channel-source-preview.text-container">
 				<div className={styles.nameRow} data-flx="channel.channel-source-preview.name-row">
-					{channel.guildId ? ChannelUtils.getIcon(channel, {weight: 'bold'}) : null}
+					{channel.guildId ? ChannelUtils.getIcon(channel, {className: styles.channelIcon, weight: 'bold'}) : null}
 					{renderNameAction()}
 					{mentionCount != null && mentionCount > 0 ? (
 						<MentionBadge
