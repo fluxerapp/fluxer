@@ -155,17 +155,12 @@ function renderInstanceBadge({
 }
 
 interface RenderInstanceDomainArgs {
-	readonly fallbackInstanceLabel: string;
 	readonly instanceBadge: AccountInstanceBadgeInfo | null;
 	readonly showInstance: boolean;
 }
 
-function renderInstanceDomain({
-	fallbackInstanceLabel,
-	instanceBadge,
-	showInstance,
-}: RenderInstanceDomainArgs): React.ReactNode {
-	if (!showInstance) {
+function renderInstanceDomain({instanceBadge, showInstance}: RenderInstanceDomainArgs): React.ReactNode {
+	if (!showInstance || instanceBadge == null) {
 		return null;
 	}
 	return (
@@ -174,7 +169,7 @@ function renderInstanceDomain({
 			data-flx="auth.accounts.account-switcher-modal.account-profile-picker.render-instance-domain.domain-row"
 		>
 			<span data-flx="auth.accounts.account-switcher-modal.account-profile-picker.render-instance-domain.span">
-				{instanceBadge?.title ?? fallbackInstanceLabel}
+				{instanceBadge.title}
 			</span>
 		</div>
 	);
@@ -264,7 +259,7 @@ const AccountProfileTile = observer(function AccountProfileTile({
 	const secondaryDisabled = disabled || resolveAccountPickerDisabled(secondaryActionDisabled, account, context);
 	const selectLabel = resolveSelectLabel({i18n, showInstance, accountTag: tagLabel, instanceLabel});
 	const removeLabel = i18n._(resolveRemoveAccountDescriptor(context.isCurrent), {accountTag: tagLabel});
-	const instanceDomain = renderInstanceDomain({fallbackInstanceLabel, instanceBadge, showInstance});
+	const instanceDomain = renderInstanceDomain({instanceBadge, showInstance});
 	const avatarFrameRef = useRef<HTMLSpanElement | null>(null);
 	const handlePrimaryAction = useCallback(() => {
 		if (primaryDisabled) {

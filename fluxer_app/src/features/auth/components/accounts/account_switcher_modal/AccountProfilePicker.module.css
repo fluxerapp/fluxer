@@ -184,7 +184,7 @@
 	position: relative;
 	z-index: 2;
 	display: flex;
-	width: var(--account-profile-frame-size);
+	width: calc(100% - 0.5rem);
 	height: var(--account-profile-domain-height);
 	font-size: 0.85rem;
 	align-items: center;
