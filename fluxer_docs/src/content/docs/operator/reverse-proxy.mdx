@@ -4,13 +4,23 @@ title: Behind your own reverse proxy
 description: Serving a Fluxer instance from nginx, Caddy, Traefik, HAProxy, Apache, or a tunnel.
 ---
 
-:::tip[Plutonium and donations fund Fluxer]
-We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::tip[The Operator Pass is coming]
+The [Operator Pass](https://fluxer.app/pass) gives you a direct line to the Fluxer team. It goes on sale in early November 2026 for $199 or €199, paid once. The price goes up on 1 January 2027. Pass holders get these perks for life.
+
+- A private channel in Fluxer Labs where the team answers questions about your instance
+- The Operator role in Fluxer Labs
+- An Operator Pass profile badge
+- Invitations to test new features on your instance
+- Your avatar and name on the Fluxer website, if you want
+
+The pass unlocks nothing in the software, and self-hosting stays free. If you have Visionary, you already have the pass.
+
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer).
 :::
 
 Fluxer runs behind any proxy that terminates TLS and forwards WebSocket upgrades.
 
-The stack ships Caddy and runs it by default on `80` and `443`. One extra Compose file stops that and publishes a single plain HTTP port instead. That port already routes every path to the right internal service, so the proxy in front needs one routing rule: send everything to it.
+The stack ships Caddy and runs it by default on `80` and `443`. One extra Compose file stops that and publishes a single plain HTTP port. That port routes every path to the right internal service. The proxy in front forwards everything to it unchanged.
 
 ## Enable the overlay
 
@@ -26,7 +36,7 @@ Or set `COMPOSE_FILE` in `.env` once and keep typing plain `docker compose` comm
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml
 ```
 
-On a first install, `sh install.sh --tls proxy` writes that line and `FLUXER_EDGE_BIND` into `.env` for you, so there is nothing to add by hand. [Installer flags](/operator/get-started/#installer-flags) lists it with the rest.
+On a first install, `sh install.sh --tls proxy` writes that line and `FLUXER_EDGE_BIND` into `.env`. [Installer flags](/operator/get-started/#installer-flags) lists it with the rest.
 
 The port binds `127.0.0.1:8080` by default. `FLUXER_EDGE_BIND` sets both the interface and the host port. Move the port when something else on the host already holds `8080`:
 
@@ -47,10 +57,6 @@ curl -i http://127.0.0.1:8080/_health
 ```
 
 `/_health` returns `200 OK` from the edge itself without reaching an upstream, so it is the health check to give your proxy.
-
-:::note[There is nothing to configure inside the instance]
-Forward all paths unchanged to the edge. No internal routing changes are needed.
-:::
 
 ## What every proxy must do
 
@@ -121,15 +127,9 @@ FLUXER_PUBLIC_SCHEME=https
 FLUXER_PUBLIC_PORT=443
 ```
 
-They stay `https` on `443` even though the instance itself speaks plain HTTP on `8080`. Clients read every base URL from the discovery document the API builds out of these values.
+They stay `https` on `443` though the edge speaks plain HTTP on `8080`. Clients read every base URL from the discovery document the API builds from these values.
 
-Serving on a port other than `443` means changing one of those variables:
-
-```ini
-FLUXER_PUBLIC_PORT=8443
-```
-
-Your proxy holds the public port, and the overlay pins the edge to plain HTTP on `8080` whatever that port is, so nothing else in `.env` moves with it.
+To serve on another public port, change `FLUXER_PUBLIC_PORT` alone. The proxy holds that port, and the overlay keeps the edge on `8080`.
 
 Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with all three settings. Conflicting addresses can break sign-in and setup. See [The public origin](/operator/configuration/#the-public-origin).
 
@@ -455,7 +455,7 @@ The edge reads the variable at container start, so apply a change with `docker c
 
 ## Caching in front of Fluxer
 
-Media reads are the only traffic worth caching, and the instance expects no cache in front of it. Every rule below is a correctness rule rather than a tuning choice, and a cache that cannot follow one should not store media at all.
+Media reads are the only traffic worth caching, and the instance expects no cache in front of it. A cache that cannot follow every rule below must not store media.
 
 #### Leave the signature parameters out of the cache key
 
@@ -489,7 +489,7 @@ Every media 200 is `public, max-age=31536000` with no `ETag` and no `Last-Modifi
 
 ## Turning the signature policy on
 
-`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` is the instance switch, and a proxy that verifies signatures has one of its own. Both sides name the same three states, `off`, `report`, and `enforce`. Both read their setting once at start, so apply an instance change with `docker compose up -d media-proxy`, which replaces the container. `docker compose restart media-proxy` reuses the old environment and changes nothing.
+`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` is the instance switch, and a proxy that verifies signatures has one of its own. Both sides name the same three states, `off`, `report`, and `enforce`. Apply an instance change with `docker compose up -d media-proxy`.
 
 Turn the policy on in this order, and stop wherever a refusal appears that you did not expect:
 
@@ -547,4 +547,4 @@ FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com
 
 The policy entry is the origin alone, with no port or path. The hostname needs a valid TLS certificate and must reach the `/livekit` route on the edge with WebSocket upgrades. The media ports above never belong in the policy, because WebRTC media is not governed by `connect-src`. A separate hostname is rarely needed, since media goes to the address LiveKit advertises, not to a hostname.
 
-`api` writes `FLUXER_LIVEKIT_URL` into the default voice server at start, and `app-proxy` builds the policy at container start, so apply the change with `docker compose up -d api app-proxy`. `docker compose restart` reuses the existing containers with their old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other variables.
+`api` writes `FLUXER_LIVEKIT_URL` into the default voice server at start, and `app-proxy` builds the policy at container start. Apply the change with `docker compose up -d api app-proxy`. [Content Security Policy](/operator/configuration/#content-security-policy) has the other variables.

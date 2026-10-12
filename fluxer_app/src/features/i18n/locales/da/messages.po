@@ -37334,11 +37334,6 @@ msgstr "Brugernavnet skal være på mindst 1 tegn"
 msgid "Username must be at most 32 characters"
 msgstr "Brugernavnet må højst være 32 tegn"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Brugernavnslogin rulles stadig ud til mobilappsene. Fuld understøttelse på alle platforme kommer snart."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

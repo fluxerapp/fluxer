@@ -37334,11 +37334,6 @@ msgstr "使用者名稱至少須有 1 個字元"
 msgid "Username must be at most 32 characters"
 msgstr "使用者名稱最多 32 個字元"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Username 登入功能仍在行動應用程式中逐步推出。完整支援所有平台即將推出。"
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

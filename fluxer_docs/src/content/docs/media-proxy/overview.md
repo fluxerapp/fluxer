@@ -105,7 +105,7 @@ The policy applies to a response the Media Proxy generates, and a shared cache i
 
 A `static` or `relay` endpoint ignores the policy. The [upload relay](/media-proxy/upload-relay/) and the [operator and internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) are exempt from it. A method other than `GET` or `HEAD` on a read path returns 405 whatever its `Origin`.
 
-The reference self-hosted deployment leaves the policy `off`. An operator who turns it on gets the instance public origin as the only entry, and [Media Proxy settings](/operator/configuration/#media-proxy-settings) states how to allow `https://web.fluxer.app` as well.
+The reference self-hosted deployment leaves the policy `off`. An operator who turns it on gets the instance public origin as the only entry.
 
 ## Signed attachment URLs
 

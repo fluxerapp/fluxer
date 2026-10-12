@@ -37334,11 +37334,6 @@ msgstr "Tên người dùng phải có ít nhất 1 ký tự"
 msgid "Username must be at most 32 characters"
 msgstr "Tên người dùng phải có tối đa 32 ký tự"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Tính năng đăng nhập bằng tên người dùng vẫn đang được triển khai cho ứng dụng di động. Hỗ trợ đầy đủ trên mọi nền tảng sẽ sớm ra mắt."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

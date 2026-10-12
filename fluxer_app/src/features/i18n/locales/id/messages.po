@@ -37334,11 +37334,6 @@ msgstr "Nama pengguna minimal 1 karakter"
 msgid "Username must be at most 32 characters"
 msgstr "Nama pengguna maksimal 32 karakter"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Masuk dengan nama pengguna masih diluncurkan ke aplikasi seluler. Dukungan penuh di setiap platform akan segera hadir."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

@@ -4,8 +4,18 @@ title: Upgrading
 description: Upgrading and rolling back an instance with the installer, what the backup covers, and how to restore it.
 ---
 
-:::tip[Plutonium and donations fund Fluxer]
-We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::tip[The Operator Pass is coming]
+The [Operator Pass](https://fluxer.app/pass) gives you a direct line to the Fluxer team. It goes on sale in early November 2026 for $199 or €199, paid once. The price goes up on 1 January 2027. Pass holders get these perks for life.
+
+- A private channel in Fluxer Labs where the team answers questions about your instance
+- The Operator role in Fluxer Labs
+- An Operator Pass profile badge
+- Invitations to test new features on your instance
+- Your avatar and name on the Fluxer website, if you want
+
+The pass unlocks nothing in the software, and self-hosting stays free. If you have Visionary, you already have the pass.
+
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer).
 :::
 
 An upgrade moves an instance to a newer release. `install.sh --update` does all of it: back up, download the new stack files, pull the new images, recreate the containers that changed. The stack files are the compose files, the `Caddyfile` and `.env.example`. Allow about twenty minutes, most of it the backup and the pull.
@@ -33,7 +43,7 @@ The stack files on `main` can run ahead of the `v1` images. The current `docker-
 
 | Step | What it does |
 | --- | --- |
-| Mint | Writes any key the refreshed stack requires that `.env` does not hold, listed under [Run the upgrade](#run-the-upgrade) |
+| Mint | Writes any key the refreshed stack requires that `.env` does not hold, listed below |
 | Record | Writes the image references, the image ID each container has, and the tag `.env` names, into a new record directory |
 | Save | Copies `.env` and the stack files into that record |
 | Dump | Dumps the database with the stack still serving, and checks the custom-format header on the result |
@@ -47,45 +57,27 @@ The stack files on `main` can run ahead of the `v1` images. The current `docker-
 
 A failed run leaves the instance running on the images it already had.
 
-`docker compose up -d` does not notice a changed `Caddyfile`. The script restarts `edge` by name to pick it up.
-
 An instance set up before the edge served LiveKit at `/livekit` needs one edit that the upgrade does not make. Until you make it, voice does not connect. [Voice signalling moved to /livekit](#voice-signalling-moved-to-livekit) has the edit.
 
 The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one. [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the error Compose prints when `COMPOSE_FILE` names a file that does not exist.
 
 The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
 
-Upgrades change `FLUXER_IMAGE_TAG` and add missing required secrets. Existing values are preserved, except for the unusable upload-relay placeholder described below.
+Upgrades change `FLUXER_IMAGE_TAG` and write any of the three secrets below that `.env` lacks or holds as `CHANGE_ME`. Every other value in `.env` is kept.
 
-The refreshed stack requires `FLUXER_ERLANG_COOKIE`. `--update` generates a missing value as 64 hex characters. Without it, Compose commands fail with `set FLUXER_ERLANG_COOKIE in .env`.
+- `FLUXER_ERLANG_COOKIE`.
+- `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64`. It must decode to at least 32 bytes.
+- `FLUXER_PROFILE_PSEUDONYM_SECRET`.
 
-To write it by hand, run the generator in a shell:
+A missing one stops every Compose command with `set <name> in .env`. To write one by hand, run its line in a shell:
 
 ```bash
 printf '\nFLUXER_ERLANG_COOKIE=%s\n' "$(openssl rand -hex 32)" >> .env
-```
-
-Do not paste `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env`. Compose does not execute shell commands in that file.
-
-`api` and `media-proxy` require `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` to decode to at least 32 bytes. `--update` replaces a missing or `CHANGE_ME` value with a generated secret. Both services must use the same value.
-
-To write it by hand, run the generator in a shell the same way:
-
-```bash
 printf '\nFLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=%s\n' "$(openssl rand -base64 32)" >> .env
-```
-
-The refreshed stack requires `FLUXER_PROFILE_PSEUDONYM_SECRET` on `api`, `worker`, and `users-shard`. `--update` replaces a missing or `CHANGE_ME` value with 64 hex characters. Without it, Compose commands fail with `set FLUXER_PROFILE_PSEUDONYM_SECRET in .env`.
-
-To write it by hand, run the generator in a shell the same way:
-
-```bash
 printf '\nFLUXER_PROFILE_PSEUDONYM_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env
 ```
 
-## The script is the reference
-
-Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.
+Do not paste `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env`. Compose does not execute shell commands in that file.
 
 ## Keep a local compose change
 
@@ -97,9 +89,7 @@ The supported way to hold a local choice is a separate file, listed in `COMPOSE_
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 ```
 
-Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those files, and no other file from the working directory. An override file is never backed up with them, so keep it wherever the rest of the configuration lives.
-
-Keep environment settings in `.env`. Upgrades preserve them apart from the tag and required-secret changes described above.
+Compose merges the files left to right, and `local.compose.yml` wins over the ones before it. An upgrade replaces only the stack files, and a file outside that set survives it. A record copies only `.env` and the stack files. Back up an override file yourself.
 
 [Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for. [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
 
@@ -316,7 +306,7 @@ docker compose exec -T postgres sh -c 'pg_restore -U $POSTGRES_USER -d $POSTGRES
 docker compose up -d
 ```
 
-`--clean` prints notices about objects that do not exist yet, which is expected against a fresh directory. The role and database come from the `postgres` container's environment, which follows `FLUXER_POSTGRES_USERNAME` and `FLUXER_POSTGRES_DATABASE`, the same way the installer's dump reads them. These commands are for the bundled database. A database outside the stack restores with its own tools.
+`--clean` prints notices about objects that do not exist yet, which is expected against a fresh directory. These commands are for the bundled database, like the dump in [Backups](/operator/get-started/#backups). A database outside the stack restores with its own tools.
 
 PowerShell has no `<` redirection. On Windows, copy the dump into the container and name it as a file:
 
@@ -339,7 +329,7 @@ docker run --rm -v fluxer_seaweedfs-data:/data \
 docker compose up -d
 ```
 
-For a `seaweedfs-data.tar`, write `tar xf` in place of `tar xzf`. `tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` instead of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
+For a `seaweedfs-data.tar`, write `tar xf` in place of `tar xzf`. `tar` extracts over whatever is already on the volume. The `find` empties it first. In PowerShell write `${PWD}` in place of `$PWD`. Success is an existing attachment URL answering 200 again.
 
 ## Move to a new Postgres major version
 

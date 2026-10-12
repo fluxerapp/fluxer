@@ -4,13 +4,13 @@ title: Sign-in methods
 description: Usernames or email addresses as the way members sign in, recovery kits, and admin reset links.
 ---
 
-A self-hosted instance signs members in with a username or with an email address. A new instance uses usernames unless SMTP is set up. The method is chosen once, before setup is complete and before the first account exists, and it cannot change after that.
+A self-hosted instance signs members in with a username or with an email address. A new instance uses usernames unless the email switch is on. The method is chosen once, before setup is complete and before the first account exists, and it cannot change after that.
 
 ## Usernames
 
 Usernames are the default on a new instance. Members register with a username and a password. The instance never asks for an email address and stores none. It sends no email at all and needs no SMTP server.
 
-Every username is unique, and members sign in with the username alone. A username instance never uses tags, as [username tags](#username-tags) describes.
+Every username is unique, and members sign in with the username alone.
 
 A forgotten password is recovered with a [recovery kit](#recovery-kits), or with an [admin reset link](#admin-reset-links) when the kit is gone too.
 
@@ -35,13 +35,13 @@ Bot accounts keep their random discriminators, and the apps and the admin dashbo
 
 ### Random tags
 
-Every account gets a random tag of four digits, such as `alex#4821`. Several members can share a name. This is how every instance worked before tag styles existed. Random tags need email sign-in.
+Every account gets a random tag of four digits, such as `alex#4821`. Several members can share a name. Random tags need email sign-in.
 
 Members can change their tag after confirming their password or second factor, where the custom tag perk allows it. A tag someone else holds returns `TAG_ALREADY_TAKEN`.
 
 ## Email
 
-Members register and sign in with an email address. This is how every instance worked before username sign-in existed. Email verification and password recovery send mail. An email instance needs SMTP set up under [Email](/operator/configuration/#email). Without SMTP, every address is marked verified at registration and a forgotten password has no reset path.
+Members register and sign in with an email address. Email verification and password recovery send mail. An email instance needs SMTP set up under [Email](/operator/configuration/#email). Without SMTP, every address is marked verified at registration and a forgotten password has no reset path.
 
 ## Choosing the method
 
@@ -49,9 +49,9 @@ The setup wizard asks how members sign in, straight after the theme step and bef
 
 When Email is picked, the same step asks how usernames are tagged. No tags is the recommended choice.
 
-To decide before the first start, set `FLUXER_ACCOUNT_IDENTITY` to `username` or `email` in `.env`. For an email instance, set `FLUXER_TAG_STYLE` to `none` or `random`. A username instance ignores `FLUXER_TAG_STYLE`. The API reads them once, on the first start of a new instance, and stores the result. Without `FLUXER_ACCOUNT_IDENTITY`, a new instance with SMTP set up starts as an email instance with the tag style from `FLUXER_TAG_STYLE`, and any other new instance starts as a username instance. The wizard can still change the stored choice until setup is complete or the first account exists. An instance stored as already in use never offers the choice.
+To decide before the first start, set `FLUXER_ACCOUNT_IDENTITY` to `username` or `email` in `.env`. For an email instance, set `FLUXER_TAG_STYLE` to `none` or `random`. A username instance ignores `FLUXER_TAG_STYLE`. The API reads them once, on the first start of a new instance, and stores the result. Without `FLUXER_ACCOUNT_IDENTITY`, a new instance starts on email when the [email switch](/operator/configuration/#email) is on and on usernames when it is not. The wizard can still change the stored choice until setup is complete or the first account exists. An instance stored as already in use never offers the choice.
 
-The method and the tag style are fixed once the instance has its first account or setup is complete. The Instance Config page in the admin dashboard shows them, read-only. Nothing changes them later.
+The Instance Config page in the admin dashboard shows the method and the tag style, read-only.
 
 The hosted service at `fluxer.app` always uses email.
 
@@ -63,7 +63,7 @@ An instance that was running before this release stays on email with random tags
 - Setup is marked complete, in the database or through `FLUXER_INSTANCE_SETUP_CONFIGURED`.
 - The first admin was already granted.
 
-An instance with none of these is new. It starts on the value of `FLUXER_ACCOUNT_IDENTITY` when that is set. Otherwise it starts on email when email delivery is switched on, through `FLUXER_EMAIL_ENABLED` or the admin dashboard, and on usernames when it is not. The setup wizard can still change the choice on a new instance.
+An instance with none of these is new, and starts as [Choosing the method](#choosing-the-method) describes.
 
 When that check cannot read the database, the API stores nothing and the instance behaves as an email instance. The next start runs the check again.
 
@@ -108,7 +108,7 @@ A guild ban on an email instance also blocks the banned account's email address,
 
 ## Apps
 
-The web app an instance serves supports both methods. A Fluxer app built before username sign-in only offers email sign-in, and it checks that the value looks like an email address. The mobile app is one of them until an update adds username sign-in.
+The web, desktop and mobile apps support both methods. A Fluxer app built before username sign-in only offers email sign-in, and it checks that the value looks like an email address.
 
 Members on such an app sign in with the username, `@` and the instance host, such as `alex@chat.example.com`, until the app is updated. The instance host is the host of the instance web address, of any address in `FLUXER_APP_ORIGIN_ALIASES` or of `FLUXER_DOMAIN`, in any letter case and with or without a port. These apps expect a dot in the host, so an instance at a host without one, such as `localhost`, cannot be reached this way.
 

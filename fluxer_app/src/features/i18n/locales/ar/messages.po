@@ -37334,11 +37334,6 @@ msgstr "يجب أن يتكون اسم المستخدم من حرف واحد عل
 msgid "Username must be at most 32 characters"
 msgstr "يجب ألا يتجاوز اسم المستخدم 32 حرفًا"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "تسجيل الدخول باسم المستخدم لا يزال قيد الطرح على تطبيقات الهاتف المحمول. سيتم توفير الدعم الكامل على كل منصة قريبًا."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

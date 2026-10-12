@@ -6,8 +6,18 @@ description: Bring up a Fluxer instance with Docker Compose, from a fresh host t
 
 import InstallerChecksum from '@/components/InstallerChecksum.astro';
 
-:::tip[Plutonium and donations fund Fluxer]
-We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::tip[The Operator Pass is coming]
+The [Operator Pass](https://fluxer.app/pass) gives you a direct line to the Fluxer team. It goes on sale in early November 2026 for $199 or €199, paid once. The price goes up on 1 January 2027. Pass holders get these perks for life.
+
+- A private channel in Fluxer Labs where the team answers questions about your instance
+- The Operator role in Fluxer Labs
+- An Operator Pass profile badge
+- Invitations to test new features on your instance
+- Your avatar and name on the Fluxer website, if you want
+
+The pass unlocks nothing in the software, and self-hosting stays free. If you have Visionary, you already have the pass.
+
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer).
 :::
 
 By the end you have a Fluxer instance on a hostname you own, running the web app, HTTP API, Gateway, admin dashboard, uploads, search and voice signalling in Docker containers on one machine. Allow about 30 minutes, most of it spent downloading images.
@@ -27,11 +37,11 @@ By the end you have a Fluxer instance on a hostname you own, running the web app
 | Outbound | Working DNS resolution from inside the containers |
 | Host tools | `curl` and `openssl` on Linux. macOS ships both. The Windows installer needs neither |
 
-Memory limits are ceilings, not reservations. On a 4 GB host, lower the `api` and `worker` limits first. With Docker Desktop, check the RAM assigned to its Linux virtual machine rather than the host's total.
+Memory limits are ceilings. On a 4 GB host, lower the `api` and `worker` limits first. With Docker Desktop, check the RAM of its Linux virtual machine.
 
-The stack is one Compose project. The edge and LiveKit are the only services that publish ports.
+The edge and LiveKit are the only services that publish ports.
 
-The steps below use the bundled Caddy, which obtains and renews a TLS certificate for the hostname and needs no configuration. To put your own proxy in front, add the `docker-compose.proxy.yml` overlay. The stack then leaves 80 and 443 alone and publishes one plain HTTP port for your proxy to forward to. [Behind your own reverse proxy](/operator/reverse-proxy/) has the overlay, the requirements, and worked configuration for nginx, Caddy, Traefik, HAProxy, Apache, a Cloudflare Tunnel and Nginx Proxy Manager.
+The steps below use the bundled Caddy, which obtains and renews a TLS certificate for the hostname. To put your own proxy in front, add the `docker-compose.proxy.yml` overlay. The stack then leaves 80 and 443 alone and publishes one plain HTTP port for your proxy to forward to. [Behind your own reverse proxy](/operator/reverse-proxy/) has the overlay, the requirements, and worked configuration for nginx, Caddy, Traefik, HAProxy, Apache, a Cloudflare Tunnel and Nginx Proxy Manager.
 
 ## Step 1: Install Docker
 
@@ -77,7 +87,7 @@ Open these ports on the host:
 | 7881 | tcp | LiveKit media, published by the LiveKit container |
 | 7882 | udp | LiveKit media, published by the LiveKit container |
 
-A machine behind a home router needs 80, 443 and both LiveKit ports forwarded to it. The certificate is issued from the public internet, and voice media arrives on the LiveKit ports directly. Running your own reverse proxy changes only the first two. The proxy holds them, and the stack binds a plain HTTP port on the loopback. 7881 and 7882 have to reach the host either way, because voice media never goes through a proxy.
+A machine behind a home router needs 80, 443 and both LiveKit ports forwarded to it. The certificate is issued from the public internet, and voice media arrives on the LiveKit ports directly. Behind your own reverse proxy, the proxy holds 80 and 443 and the stack binds a plain HTTP port on the loopback. 7881 and 7882 still have to reach the host.
 
 For another port, open that one instead of 443 and read [Serving on another port](#serving-on-another-port).
 
@@ -120,9 +130,7 @@ Invoke-WebRequest https://fluxer.dev/install.ps1.sha256 -OutFile install.ps1.sha
 
 Read the script before you run it. It writes `.env`, and that file holds every secret the instance has.
 
-The run below uses the bundled TLS. Add `--tls proxy` when something else terminates TLS, and read [Behind your own reverse proxy](/operator/reverse-proxy/) first.
-
-Then run it with the hostname from Step 2. `--email` is optional and sets the contact address on outgoing web push. It defaults to `admin@` and the hostname.
+Run it with the hostname from Step 2. The command below uses the bundled TLS. When something else terminates TLS, add `--tls proxy` after reading [Behind your own reverse proxy](/operator/reverse-proxy/).
 
 ```bash
 sh install.sh --domain chat.example.com
@@ -140,7 +148,7 @@ The run prints one line per phase and ends with the URL to open.
 
 ### Serving on another port
 
-The installer writes an `.env` for `https` on `443` and has no flag for another port. The two lines below in `.env` move the instance to another port. `FLUXER_PUBLIC_PORT` sets the port of the public address, and `FLUXER_HTTPS_PORT` sets the host port the edge publishes HTTPS on:
+The installer writes an `.env` for `https` on `443` and has no flag for another port. Set both lines below in `.env`. `FLUXER_PUBLIC_PORT` is the port of the public address, and every endpoint the services advertise follows it. `FLUXER_HTTPS_PORT` is the host port the edge publishes HTTPS on.
 
 ```ini
 FLUXER_PUBLIC_PORT=8443
@@ -151,7 +159,7 @@ FLUXER_HTTPS_PORT=8443
 docker compose up -d
 ```
 
-`FLUXER_PUBLIC_PORT` is the port of the public address, and every endpoint the services advertise follows it. It does not move what the host publishes, so `FLUXER_HTTPS_PORT` has to name the same port. Move `FLUXER_PUBLIC_SCHEME` with them when the new port serves plain HTTP, and set `FLUXER_HTTP_PORT` instead of `FLUXER_HTTPS_PORT`. `.env.example` ships beside `.env` and writes out both complete recipes.
+For plain HTTP on the new port, also set `FLUXER_PUBLIC_SCHEME=http`, and set `FLUXER_HTTP_PORT` in place of `FLUXER_HTTPS_PORT`. `.env.example` ships beside `.env` and writes out both complete recipes.
 
 Host 80 stays published on the `https` recipe and still answers the ACME challenge. Let's Encrypt only ever connects to the public 80 or 443, so the certificate is issued if a router in front forwards public 80 to this host. Serve your own certificate from the `Caddyfile` when it cannot.
 
@@ -177,10 +185,6 @@ Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the publi
 | `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent |
 
 Run `--dry-run` first to see what a set of flags does. The PowerShell script takes the same flags as `-Domain`, `-Email` and so on, and has no `-AllowRoot`. [Upgrading](/operator/upgrading/#run-the-upgrade) has the flags that only `--update` and `--rollback` read, and the exit codes.
-
-### The script is the reference
-
-Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.
 
 ## Step 5: Check that it works
 
@@ -232,7 +236,7 @@ On a username instance the wizard shows the owner's [recovery kit](/operator/sig
 
 Create the owner account with an email address at a domain you control. Email delivery is optional, and [Email](/operator/configuration/#email) sets it up at any time.
 
-Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
+Once email is on, registration checks that the address domain can receive mail. A `.lan`, `.internal` or `home.arpa` address fails. Use a domain with public records, or leave email off.
 
 `.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
@@ -240,9 +244,13 @@ Once email is on, the address goes through a DNS check before the account exists
 
 Sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
 
-The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. [This feedback post](https://feedback.fluxer.com/p/641) tracks that, and is being worked on.
-
 [Configuration](/operator/configuration/) lists every runtime setting and the environment variable each one overrides. [Deployment availability](/http-api/deployment-availability/) lists the routes that exist only on the hosted deployment.
+
+## Connect the apps
+
+The web app is at your instance address. The desktop app asks for an instance first. Enter the instance address, such as `chat.example.com`. One desktop app can hold accounts on several instances and switch between them. The mobile apps take the same address.
+
+The Flathub build of the desktop app may not connect to an instance yet. Its update is pending. To skip the wait, uninstall the Flathub copy and install our own Flatpak from [Linux repositories](/downloads/linux-repositories/#flatpak). It uses the same application id, `app.fluxer.Fluxer`.
 
 ## Backups
 
@@ -302,7 +310,7 @@ cd ~/fluxer
 sh install.sh --update
 ```
 
-`--update` records the running images, backs up the database and the uploads, refreshes the stack files, pulls, recreates, and verifies. It leaves every secret in `.env` untouched. On Windows it is `.\install.ps1 -Update`. Run `sh install.sh --update --dry-run` first to see the plan.
+On Windows it is `.\install.ps1 -Update`.
 
 [Upgrading](/operator/upgrading/) covers what the backup holds, rolling back, pinning a release and reclaiming disk.
 

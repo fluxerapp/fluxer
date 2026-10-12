@@ -37334,11 +37334,6 @@ msgstr "यूज़रनेम कम से कम 1 वर्ण का ह�
 msgid "Username must be at most 32 characters"
 msgstr "यूज़रनेम ज़्यादा से ज़्यादा 32 वर्णों का होना चाहिए"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "यूज़रनेम साइन-इन अभी भी मोबाइल ऐप्स में रोल आउट हो रहा है। हर प्लेटफ़ॉर्म पर पूरा सपोर्ट जल्द ही आ रहा है।"
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

@@ -37334,11 +37334,6 @@ msgstr "Gebruikersnaam moet minstens 1 teken lang zijn"
 msgid "Username must be at most 32 characters"
 msgstr "Gebruikersnaam mag maximaal 32 tekens lang zijn"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Aanmelden met een gebruikersnaam wordt nog uitgerold naar de mobiele apps. Volledige ondersteuning op elk platform volgt binnenkort."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"

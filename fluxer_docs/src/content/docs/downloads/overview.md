@@ -19,7 +19,7 @@ Every path names a channel, either `stable` or `canary`. The two are published i
 | `/arch/` | A pacman repository, one directory per architecture |
 | `/deb/` | An apt repository in the `dists` and `pool` layout |
 | `/rpm/` | A dnf repository, one directory per channel and architecture |
-| `/keys/` | The public signing key for the apt and rpm repositories |
+| `/keys/` | The public signing key for every repository |
 
 ## What it guarantees
 
@@ -29,6 +29,4 @@ Artifacts under a version directory never change once published, so they are cac
 
 ## Signing
 
-The apt and rpm repositories are signed. The public key lives at `/keys/fluxer-archive-keyring.asc`, and the entrypoint files reference it, so a client verifies every package it installs.
-
-The flatpak and pacman repositories are unsigned and rely on HTTPS for transport integrity. pacman still verifies each package against the SHA256 its index records, and flatpak verifies each object against its content address.
+Every repository is signed with one key. `/keys/` publishes it as `fluxer-archive-keyring.asc`, and as `fluxer-archive-keyring.gpg` for apt. [Linux repositories](/downloads/linux-repositories/) shows how each repository gets the key.

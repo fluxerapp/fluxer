@@ -37334,11 +37334,6 @@ msgstr "Käyttäjänimen on oltava vähintään 1 merkki pitkä"
 msgid "Username must be at most 32 characters"
 msgstr "Käyttäjänimen pituus saa olla enintään 32 merkkiä"
 
-#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
-#: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
-msgstr "Käyttäjänimellä kirjautuminen on vielä kehitysvaiheessa mobiilisovelluksissa. Täysi tuki kaikilla alustoilla on tulossa pian."
-
 #. Heading above the choice of how usernames are tagged in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Username tags"
