@@ -256,14 +256,14 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 				...(userData ? {userData} : {}),
 				runtimeSnapshot,
 			});
-			if (offerRecoveryKit && showPassword && values.password) {
-				void createRecoveryKitWithPasswordAndOpen({
-					userId: response.user_id,
-					password: values.password,
-					username: response.user?.username,
-					discriminator: response.user?.discriminator,
-				});
-			}
+		}
+		if (offerRecoveryKit && showPassword && values.password) {
+			void createRecoveryKitWithPasswordAndOpen({
+				userId: response.user_id,
+				password: values.password,
+				username: response.user?.username,
+				discriminator: response.user?.discriminator,
+			});
 		}
 		onAuthenticated?.();
 		clearRegisterFormDraft(draftKey);

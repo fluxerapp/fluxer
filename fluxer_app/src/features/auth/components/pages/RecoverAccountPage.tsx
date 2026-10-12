@@ -23,6 +23,7 @@ import {formatRecoveryKeyInput} from '@fluxer/constants/src/RecoveryKeyUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import type {ReactNode} from 'react';
 import {useCallback, useEffect, useId, useState} from 'react';
 
 const RECOVER_ACCOUNT_DESCRIPTOR = msg({
@@ -88,30 +89,28 @@ function showRecoveredKit(payload: LoginSuccessPayload, kit: PendingRecoveryKit)
 	rememberRecoveryKit(payload.userId, kit.createdAt);
 }
 
-interface RecoverAccountPageContentProps {
+const EMPTY_RECOVERY_FRAGMENT: RecoveryFragment = {username: '', key: ''};
+
+interface RecoverAccountFormProps {
 	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+	readonly fragment?: RecoveryFragment;
+	readonly footerLink?: ReactNode;
+	readonly onRecovered: (payload: LoginSuccessPayload) => Promise<void>;
 }
 
-const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
+export const RecoverAccountForm = observer(function RecoverAccountForm({
 	runtimeSnapshot,
-}: RecoverAccountPageContentProps) {
+	fragment = EMPTY_RECOVERY_FRAGMENT,
+	footerLink,
+	onRecovered,
+}: RecoverAccountFormProps) {
 	const {i18n} = useLingui();
 	const loginId = useId();
 	const keyId = useId();
 	const passwordId = useId();
 	const confirmPasswordId = useId();
-	const [fragment] = useState(readRecoveryFragment);
-	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
-	useEffect(() => {
-		if (!usernameSignIn) {
-			RouterUtils.replaceWith(Routes.LOGIN);
-		}
-	}, [usernameSignIn]);
 	const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
 	const [pendingKit, setPendingKit] = useState<PendingRecoveryKit | null>(null);
-	useEffect(() => {
-		clearRecoveryFragment();
-	}, []);
 	const {form, isLoading, error, fieldErrors} = useAuthForm({
 		initialValues: {
 			login: fragment.username,
@@ -137,21 +136,27 @@ const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
 				setMfaChallenge(result.challenge);
 				return false;
 			}
-			showRecoveredKit(result.payload, {...result.kit, login});
-			await AuthenticationCommands.completeLogin({...result.payload, runtimeSnapshot});
+			try {
+				await onRecovered(result.payload);
+			} finally {
+				showRecoveredKit(result.payload, {...result.kit, login});
+			}
 			return undefined;
 		},
 		firstFieldName: 'login',
 	});
 	const handleMfaSuccess = useCallback(
 		async (payload: LoginSuccessPayload) => {
-			if (pendingKit) {
-				showRecoveredKit(payload, pendingKit);
+			try {
+				await onRecovered(payload);
+				AuthenticationCommands.clearMfaTicket();
+			} finally {
+				if (pendingKit) {
+					showRecoveredKit(payload, pendingKit);
+				}
 			}
-			await AuthenticationCommands.completeLogin({...payload, runtimeSnapshot});
-			AuthenticationCommands.clearMfaTicket();
 		},
-		[pendingKit, runtimeSnapshot],
+		[onRecovered, pendingKit],
 	);
 	const handleMfaCancel = useCallback(() => {
 		AuthenticationCommands.clearMfaTicket();
@@ -265,11 +270,46 @@ const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
 				<p className={styles.hint} data-flx="auth.recover-account-page.no-kit-hint">
 					<Trans>No recovery kit? Ask an admin of this instance for a password reset link.</Trans>
 				</p>
+				{footerLink}
+			</div>
+		</>
+	);
+});
+
+interface RecoverAccountPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
+	runtimeSnapshot,
+}: RecoverAccountPageContentProps) {
+	const {i18n} = useLingui();
+	const [fragment] = useState(readRecoveryFragment);
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
+	useEffect(() => {
+		if (!usernameSignIn) {
+			RouterUtils.replaceWith(Routes.LOGIN);
+		}
+	}, [usernameSignIn]);
+	useEffect(() => {
+		clearRecoveryFragment();
+	}, []);
+	const handleRecovered = useCallback(
+		(payload: LoginSuccessPayload) => AuthenticationCommands.completeLogin({...payload, runtimeSnapshot}),
+		[runtimeSnapshot],
+	);
+	return (
+		<RecoverAccountForm
+			runtimeSnapshot={runtimeSnapshot}
+			fragment={fragment}
+			footerLink={
 				<AuthRouterLink to={Routes.LOGIN} className={styles.link} data-flx="auth.recover-account-page.link">
 					{i18n._(BACK_TO_SIGN_IN_DESCRIPTOR)}
 				</AuthRouterLink>
-			</div>
-		</>
+			}
+			onRecovered={handleRecovered}
+			data-flx="auth.recover-account-page.recover-account-form"
+		/>
 	);
 });
 

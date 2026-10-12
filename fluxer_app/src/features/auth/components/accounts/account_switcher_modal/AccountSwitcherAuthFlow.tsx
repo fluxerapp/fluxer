@@ -2,6 +2,7 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AccountSwitcherAuthShell} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherAuthShell';
 import {
@@ -12,6 +13,7 @@ import {
 import {AccountSwitcherLoginStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherLoginStep';
 import {AccountSwitcherRegisterStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherRegisterStep';
 import forgotStyles from '@app/features/auth/components/pages/ForgotPasswordPage.module.css';
+import {RecoverAccountForm} from '@app/features/auth/components/pages/RecoverAccountPage';
 import {shouldRenderInstanceStep} from '@app/features/auth/flow/auth_login_core/AuthLoginInstanceStep';
 import {ForgotPasswordForm} from '@app/features/auth/flow/ForgotPasswordForm';
 import MFAScreen from '@app/features/auth/flow/MfaScreen';
@@ -102,7 +104,7 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 	const mfaMethods = Authentication.availableMfaMethods;
 	const hasMfaChallenge = mfaChallengePurpose === purpose && mfaTicket != null && mfaMethods != null;
 	let authStep: AccountSwitcherAuthStep;
-	if (hasMfaChallenge) {
+	if (hasMfaChallenge && selectedAuthStep !== AccountSwitcherAuthStep.FORGOT) {
 		authStep = AccountSwitcherAuthStep.MFA;
 	} else {
 		authStep = selectedAuthStep;
@@ -148,6 +150,14 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 		},
 		[authRuntimeTarget, onLoginComplete, redirectAfterLogin],
 	);
+	const handleAccountRecovered = useCallback(
+		async (payload: LoginSuccessPayload) => {
+			const runtimeSnapshot = requireSelectedRuntimeSnapshot(authRuntimeTarget);
+			await AuthenticationCommands.completeLogin({...payload, runtimeSnapshot}, {redirectPath: redirectAfterLogin});
+			await onLoginComplete(payload);
+		},
+		[authRuntimeTarget, onLoginComplete, redirectAfterLogin],
+	);
 	const handleRegisterComplete = useCallback(
 		async (response: AuthenticationCommands.TokenResponse) => {
 			const runtimeSnapshot = requireSelectedRuntimeSnapshot(authRuntimeTarget);
@@ -168,7 +178,10 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 				AuthenticationCommands.clearMfaTicket();
 				return;
 			case AccountSwitcherAuthStep.REGISTER:
+				showLoginStep();
+				return;
 			case AccountSwitcherAuthStep.FORGOT:
+				AuthenticationCommands.clearMfaTicket();
 				showLoginStep();
 				return;
 			case AccountSwitcherAuthStep.LOGIN:
@@ -203,14 +216,25 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 						data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.register-step"
 					/>
 				);
-			case AccountSwitcherAuthStep.FORGOT:
+			case AccountSwitcherAuthStep.FORGOT: {
+				const runtimeSnapshot = requireSelectedRuntimeSnapshot(authRuntimeTarget);
+				if (usesUsernameSignIn(runtimeSnapshot.features)) {
+					return (
+						<RecoverAccountForm
+							runtimeSnapshot={runtimeSnapshot}
+							onRecovered={handleAccountRecovered}
+							data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.recover-account-step"
+						/>
+					);
+				}
 				return (
 					<ForgotPasswordForm
-						runtimeSnapshot={requireSelectedRuntimeSnapshot(authRuntimeTarget)}
+						runtimeSnapshot={runtimeSnapshot}
 						renderContainer={renderForgotPasswordContainer}
 						data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.forgot-password-step"
 					/>
 				);
+			}
 			case AccountSwitcherAuthStep.LOGIN:
 				return (
 					<AccountSwitcherLoginStep

@@ -59,6 +59,7 @@ export const AccountSwitcherRegisterStep = observer(function AccountSwitcherRegi
 					}}
 					submitLabel={<Trans>Create account</Trans>}
 					redirectPath=""
+					offerRecoveryKit={usernameSignIn}
 					runtimeSnapshot={runtimeSnapshot}
 					onRegister={onRegister}
 					showLegalConsent

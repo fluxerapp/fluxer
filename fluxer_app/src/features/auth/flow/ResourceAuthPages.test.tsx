@@ -13,7 +13,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-	snapshot: {apiEndpoint: 'https://instance.example/api', apiCodeVersion: 7} as RuntimeConfigSnapshot,
+	snapshot: {apiEndpoint: 'https://instance.example/api', apiCodeVersion: 7, features: {}} as RuntimeConfigSnapshot,
 	reset: vi.fn(),
 	completeLogin: vi.fn(),
 	search: '',

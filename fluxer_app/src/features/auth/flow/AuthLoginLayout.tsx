@@ -903,23 +903,23 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	};
 	const renderCredentialStep = (): ReactNode => {
 		const forgotPasswordLink =
-			identifierField === 'login' ? (
-				<AuthRouterLink
-					to={Routes.RECOVER_ACCOUNT}
-					className={styles.link}
-					data-flx="auth.flow.auth-login-layout.link.recover"
-				>
-					{i18n._(FORGOT_YOUR_PASSWORD_DESCRIPTOR)}
-				</AuthRouterLink>
-			) : (
-				resolveForgotPasswordLink(
-					emailsEnabled,
-					forgotPasswordAction,
-					<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.flow.auth-login-layout.link">
-						{i18n._(FORGOT_YOUR_PASSWORD_DESCRIPTOR)}
-					</AuthRouterLink>,
-				)
-			);
+			identifierField === 'login'
+				? (forgotPasswordAction ?? (
+						<AuthRouterLink
+							to={Routes.RECOVER_ACCOUNT}
+							className={styles.link}
+							data-flx="auth.flow.auth-login-layout.link.recover"
+						>
+							{i18n._(FORGOT_YOUR_PASSWORD_DESCRIPTOR)}
+						</AuthRouterLink>
+					))
+				: resolveForgotPasswordLink(
+						emailsEnabled,
+						forgotPasswordAction,
+						<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.flow.auth-login-layout.link">
+							{i18n._(FORGOT_YOUR_PASSWORD_DESCRIPTOR)}
+						</AuthRouterLink>,
+					);
 		return (
 			<AuthLoginCredentialStepPanel
 				extraTopContent={extraTopContent}

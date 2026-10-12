@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
@@ -163,6 +164,7 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 		);
 	const runtimeSso = resolveAuthPanelSso(runtimeSnapshot);
 	const sso = runtimeSso?.enabled === true && runtimeSso.enforced === true;
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
 	const header = (
 		<>
 			<DesktopDeepLinkPrompt
@@ -185,9 +187,19 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 				/>
 			) : (
 				<AuthRegisterFormCore
-					fields={{showUsername: false}}
+					fields={
+						usernameSignIn
+							? {
+									showPassword: true,
+									showPasswordConfirmation: true,
+									showUsernameValidation: true,
+									requireUsername: true,
+								}
+							: {showUsername: false}
+					}
 					submitLabel={config.submitLabel}
 					redirectPath={config.registerRedirectPath(id, safeRedirect)}
+					offerRecoveryKit={usernameSignIn}
 					onRegister={onRegisterComplete}
 					runtimeSnapshot={runtimeSnapshot}
 					onAuthenticated={runtimeTarget.reset}
