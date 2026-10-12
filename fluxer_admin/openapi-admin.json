@@ -11107,7 +11107,7 @@
 								"category": {"type": "string"},
 								"scope": {"type": "string"},
 								"isToggle": {"type": "boolean"},
-								"unit": {"type": "string", "enum": ["bytes", "count"]},
+								"unit": {"type": "string", "enum": ["bytes", "count", "bps"]},
 								"min": {"type": "number"},
 								"max": {"type": "number"}
 							},
@@ -11154,6 +11154,7 @@
 							"max_private_channels_per_user",
 							"max_reactions_per_message",
 							"max_relationships",
+							"max_screen_share_bitrate",
 							"max_users_per_message_reaction",
 							"max_voice_message_duration",
 							"max_webhooks_per_channel",

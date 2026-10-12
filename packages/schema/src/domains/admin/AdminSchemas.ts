@@ -1683,7 +1683,7 @@ const LimitKeyMetadataSchema = z.object({
 	category: z.string(),
 	scope: z.string(),
 	isToggle: z.boolean(),
-	unit: z.enum(['bytes', 'count']).optional(),
+	unit: z.enum(['bytes', 'count', 'bps']).optional(),
 	min: z.number().optional(),
 	max: z.number().optional(),
 });

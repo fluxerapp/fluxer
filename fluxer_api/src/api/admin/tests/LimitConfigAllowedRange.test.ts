@@ -8,7 +8,11 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
+import {
+	MAX_BIO_LENGTH,
+	MAX_SCREEN_SHARE_BITRATE_CEILING,
+	MIN_SCREEN_SHARE_BITRATE_CEILING,
+} from '@fluxer/constants/src/LimitConstants';
 import type {LimitConfigGetResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {z} from 'zod';
@@ -57,6 +61,30 @@ describe('limit config allowed ranges', () => {
 			max_bio_length: MAX_BIO_LENGTH,
 		});
 		expect(saved.metadata.max_bio_length).toMatchObject({min: 0, max: MAX_BIO_LENGTH});
+	});
+
+	it('keeps a screen share bitrate ceiling inside its allowed range', async () => {
+		const admin = await createAdmin();
+		const rule = (bitrate: number) => ({
+			id: 'vip',
+			filters: {traits: ['vip']},
+			limits: {max_screen_share_bitrate: bitrate},
+		});
+		for (const bitrate of [MIN_SCREEN_SHARE_BITRATE_CEILING - 1, MAX_SCREEN_SHARE_BITRATE_CEILING + 1]) {
+			await createBuilder(harness, admin.token)
+				.put('/admin/limit-config')
+				.body({limit_config: {traitDefinitions: ['vip'], rules: [rule(bitrate)]}})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+				.execute();
+		}
+		const saved = await createBuilder<LimitConfigResponse>(harness, admin.token)
+			.put('/admin/limit-config')
+			.body({limit_config: {traitDefinitions: ['vip'], rules: [rule(25_000_000)]}})
+			.execute();
+		expect(saved.limit_config.rules.find((entry) => entry.id === 'vip')?.limits).toEqual({
+			max_screen_share_bitrate: 25_000_000,
+		});
+		expect(saved.defaults.default?.max_screen_share_bitrate).toBe(9_000_000);
 	});
 
 	it('reads a stored bio length above the profile maximum as the maximum', async () => {

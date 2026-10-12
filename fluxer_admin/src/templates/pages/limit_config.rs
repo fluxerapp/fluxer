@@ -28,6 +28,7 @@ const CATEGORY_ORDER: &[&str] = &[
     "expressions",
     "files",
     "social",
+    "media",
 ];
 
 pub fn limit_config_page(

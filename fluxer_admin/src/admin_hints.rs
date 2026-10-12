@@ -12,6 +12,11 @@ pub fn limit_key_hint(key: &str) -> Option<Hint<'static>> {
                 "Community creation policy",
             )),
         }),
+        "max_screen_share_bitrate" => Some(Hint {
+            name: Some("Max Screen Share Bitrate"),
+            body: "In bits per second, so 9000000 is 9 Mbps. Raising it also raises the automatic bitrate of every screen share quality. Accounts with Higher Video Quality can pick their own bitrate up to this value.",
+            link: None,
+        }),
         _ => None,
     }
 }
