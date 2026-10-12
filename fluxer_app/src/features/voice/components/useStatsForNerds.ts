@@ -172,8 +172,11 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
 			maxBitrateMbps:
 				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
-					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
-				1000000,
+					getScreenShareBitrateBps(
+						effectiveScreenShareSettings.resolution,
+						effectiveScreenShareSettings.frameRate,
+						VoiceSettings.getScreenShareBitrateBudget(),
+					)) / 1000000,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),

@@ -1005,6 +1005,11 @@ msgstr "{authorNickname} 希望在回复中被 @ 提及。仍要发送不带提�
 msgid "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}"
 msgstr "{backgroundCount, plural, other {自定义背景}} {backgroundCount} / {maxBackgroundImages}"
 
+#. Option label of the screen share bitrate select in the video tab. bitrate is a formatted number of megabits per second. Mbps is a technical unit token.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "{bitrate} Mbps"
+msgstr "{bitrate} 兆比特每秒"
+
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
@@ -5411,6 +5416,7 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "自动补全建议：{label}，第 {selectedOptionPosition} 项，共 {resultCount} 项"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Default option of the screen share bitrate select in the video tab.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -5420,6 +5426,7 @@ msgstr "自动补全建议：{label}，第 {selectedOptionPosition} 项，共 {r
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 #: src/features/voice/components/VoiceSettingsMenus.tsx
 msgid "Automatic"
@@ -5983,7 +5990,9 @@ msgid "Biometrics"
 msgstr "生物识别"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+#. Short label in the video tab for the screen share video bitrate select. Keep it concise.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+#: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Bitrate"
 msgstr "比特率"
 
@@ -14552,15 +14561,15 @@ msgstr "已启用"
 msgid "Encoder path"
 msgstr "编码器路径"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+msgid "Encoder path, SVC mode, and content hint"
+msgstr "编码器路径、SVC 模式和内容提示"
+
 #. Description for the encoder path select.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts
 msgid "Encoder preference for new screen shares."
 msgstr "新屏幕共享的首选编码器。"
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
-msgid "Encoder, SVC, and bitrate presets"
-msgstr "编码器、SVC 和比特率预设"
 
 #. Label for the choice of how the SMTP connection is encrypted.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -40428,6 +40437,11 @@ msgstr "有了 {PREMIUM_PRODUCT_NAME}，你可以使用动态头像（{ANIMATED_
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}. You also get animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "有了 {premiumProductName}，你的单次文件上传限制将提高到 {fileSizeLimit}，此外还有动态头像、更长的消息以及许多其他 {premiumProductName} 福利。"
+
+#. Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth."
+msgstr "使用“自动”时，比特率会根据您的分辨率和帧率进行调整。更高的值可以使快速移动的画面更清晰，但会占用更多上传带宽。"
 
 #. Label in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx

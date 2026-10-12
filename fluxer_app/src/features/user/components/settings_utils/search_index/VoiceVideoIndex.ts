@@ -149,12 +149,8 @@ const SVC_DESCRIPTOR = msg({
 	message: 'SVC',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const BITRATE_DESCRIPTOR = msg({
-	message: 'Bitrate',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR = msg({
-	message: 'Encoder, SVC, and bitrate presets',
+	message: 'Encoder path, SVC mode, and content hint',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
@@ -244,7 +240,6 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 			SOFTWARE_ENCODER_DESCRIPTOR,
 			HARDWARE_ENCODER_DESCRIPTOR,
 			SVC_DESCRIPTOR,
-			BITRATE_DESCRIPTOR,
 			PRODUCT_NAME,
 		],
 		description: TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR,

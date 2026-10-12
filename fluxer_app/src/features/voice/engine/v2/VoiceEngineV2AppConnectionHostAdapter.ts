@@ -45,12 +45,12 @@ import {
 	getRoomVideoPublishDefaults,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {getScreenShareBitrateCeilingBps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {
 	ExternalE2EEKeyProvider,
 	LocalTrack,
@@ -149,7 +149,7 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
 	return {
 		screenShareEncoding: {
-			maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+			maxBitrate: getScreenShareBitrateCeilingBps(),
 			maxFramerate: 30,
 			priority: 'high',
 		},

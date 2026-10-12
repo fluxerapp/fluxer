@@ -38,6 +38,7 @@ function targetOf(overrides: {mode?: 'gaming' | 'screenshare' | 'custom'; softwa
 		context: 'display',
 		sourceDimensions: null,
 		hintSetting: 'auto',
+		bitrate: {ceilingBps: 9_000_000, chosenBps: null},
 		...(overrides.softwareEncoderClamp === undefined ? {} : {softwareEncoderClamp: overrides.softwareEncoderClamp}),
 	});
 }
@@ -62,6 +63,7 @@ describe('display capture constraints', () => {
 		const {captureOptions} = buildScreenShareOptions({
 			resolution: 'high',
 			frameRate: 60,
+			maxBitrate: 6_000_000,
 			context: 'display',
 			includeAudio: true,
 			contentHint: 'text',

@@ -102,6 +102,25 @@ const MIRROR_CAMERA_DESCRIPTOR = msg({
 	message: 'Mirror camera',
 	comment: 'Switch label in the video tab for flipping the local camera preview horizontally.',
 });
+const SCREEN_SHARE_BITRATE_DESCRIPTOR = msg({
+	message: 'Bitrate',
+	comment: 'Short label in the video tab for the screen share video bitrate select. Keep it concise.',
+});
+const SCREEN_SHARE_BITRATE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth.',
+	comment:
+		'Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.',
+});
+const SCREEN_SHARE_BITRATE_AUTOMATIC_DESCRIPTOR = msg({
+	message: 'Automatic',
+	comment: 'Default option of the screen share bitrate select in the video tab.',
+});
+const SCREEN_SHARE_BITRATE_MBPS_DESCRIPTOR = msg({
+	message: '{bitrate} Mbps',
+	comment:
+		'Option label of the screen share bitrate select in the video tab. bitrate is a formatted number of megabits per second. Mbps is a technical unit token.',
+});
 const SCREEN_SHARE_QUALITY_DESCRIPTOR = msg({
 	message: 'Screen share quality',
 	comment: 'Short label in the video tab. Keep it concise.',
@@ -176,6 +195,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 		const screenShareState = resolveUserVideoTabScreenShareState({
 			quality: screenShareQuality,
 			hintSetting: screenShareContentHint,
+			bitrate: voiceSettings.getScreenShareBitrateBudget(),
 			selfHosted: !showPremium,
 		});
 		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<OfferedScreenShareResolution>> =
@@ -189,6 +209,15 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 				value,
 				label: i18n._(FPS_DESCRIPTOR, {frameRate: value}),
 			}));
+		const bitrateOptions: ReadonlyArray<ComboboxOption<number | null>> = [
+			{value: null, label: i18n._(SCREEN_SHARE_BITRATE_AUTOMATIC_DESCRIPTOR)},
+			...screenShareState.bitrateOptions.map((value) => ({
+				value,
+				label: i18n._(SCREEN_SHARE_BITRATE_MBPS_DESCRIPTOR, {
+					bitrate: i18n.number(value / 1_000_000, {maximumFractionDigits: 1}),
+				}),
+			})),
+		];
 		const handleCameraPreview = async () => {
 			const granted = await requestPermission();
 			if (granted) {
@@ -386,6 +415,19 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 								savedResolution: getScreenShareResolutionLabel(i18n, screenShareState.saved.resolution),
 							})}
 						</div>
+					)}
+					{hasHigherQuality && (
+						<CompactComboboxRow<number | null>
+							label={i18n._(SCREEN_SHARE_BITRATE_DESCRIPTOR)}
+							description={i18n._(SCREEN_SHARE_BITRATE_DESCRIPTION_DESCRIPTOR)}
+							options={bitrateOptions}
+							value={screenShareState.bitrate}
+							onChange={(value) => VoiceSettingsCommands.update({screenShareBitrate: value})}
+							isSearchable={false}
+							controlWidth="small"
+							dataFlx="user.video-tab.select.screen-share-bitrate-change"
+							data-flx="user.user-video-tab.video-tab.compact-combobox-row.screen-share-bitrate-change"
+						/>
 					)}
 				</div>
 				<div className={styles.actionRow} data-flx="user.video-tab.advanced-video-settings-section">

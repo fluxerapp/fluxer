@@ -12,6 +12,7 @@ import type {ScreenShareContentHint} from '@app/features/voice/utils/CodecCapabi
 import {
 	resolveScreenShareFrameRate,
 	resolveScreenShareTarget,
+	type ScreenShareBitrateBudget,
 	type ScreenShareContext,
 	type ScreenShareQualityInput,
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
@@ -35,10 +36,15 @@ const FREE_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution>
 const PREMIUM_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['high', 'ultra', 'source'];
 const FREE_SCREEN_SHARE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30];
 const PREMIUM_SCREEN_SHARE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30, 60];
+const SCREEN_SHARE_BITRATE_STEPS_BPS: ReadonlyArray<number> = [
+	2_000_000, 4_000_000, 6_000_000, 8_000_000, 10_000_000, 15_000_000, 20_000_000, 25_000_000, 30_000_000, 40_000_000,
+	50_000_000,
+];
 
 export interface UserVideoTabScreenShareInput {
 	quality: ScreenShareQualityInput;
 	hintSetting: ScreenShareContentHint;
+	bitrate: ScreenShareBitrateBudget;
 	selfHosted: boolean;
 }
 
@@ -52,6 +58,8 @@ export interface UserVideoTabScreenShareState {
 	frameRate: SupportedScreenShareFrameRate;
 	resolutionOptions: ReadonlyArray<UserVideoTabResolutionOption>;
 	frameRateOptions: ReadonlyArray<SupportedScreenShareFrameRate>;
+	bitrate: number | null;
+	bitrateOptions: ReadonlyArray<number>;
 	preset: Exclude<StreamingMode, 'custom'> | null;
 	presetOverriddenByContext: boolean;
 	saved: {resolution: OfferedScreenShareResolution; frameRate: SupportedScreenShareFrameRate} | null;
@@ -82,8 +90,20 @@ function buildFrameRateOptions(
 	return SUPPORTED_SCREEN_SHARE_FRAME_RATES.filter((value) => value === effective || offered.includes(value));
 }
 
+function buildBitrateOptions(budget: ScreenShareBitrateBudget): ReadonlyArray<number> {
+	const offered = new Set(SCREEN_SHARE_BITRATE_STEPS_BPS.filter((value) => value < budget.ceilingBps));
+	offered.add(budget.ceilingBps);
+	if (budget.chosenBps !== null) offered.add(budget.chosenBps);
+	return [...offered].sort((a, b) => a - b);
+}
+
 export function resolveUserVideoTabScreenShareState(input: UserVideoTabScreenShareInput): UserVideoTabScreenShareState {
-	const target = resolveScreenShareTarget({...input.quality, sourceDimensions: null, hintSetting: input.hintSetting});
+	const target = resolveScreenShareTarget({
+		...input.quality,
+		sourceDimensions: null,
+		hintSetting: input.hintSetting,
+		bitrate: input.bitrate,
+	});
 	const resolution = offeredScreenShareResolution(target.resolution);
 	return {
 		resolution,
@@ -95,6 +115,8 @@ export function resolveUserVideoTabScreenShareState(input: UserVideoTabScreenSha
 			resolution,
 		),
 		frameRateOptions: buildFrameRateOptions(input.quality.entitled, target.frameRate),
+		bitrate: input.bitrate.chosenBps,
+		bitrateOptions: buildBitrateOptions(input.bitrate),
 		preset: input.quality.mode === 'custom' ? null : input.quality.mode,
 		presetOverriddenByContext: selectStreamSettingsPresetOverriddenByContext(input.quality.mode, input.quality.context),
 		saved: target.tierLimited

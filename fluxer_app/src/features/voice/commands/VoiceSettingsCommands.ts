@@ -60,6 +60,7 @@ type VoiceSettingsPatch = Partial<{
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
+	screenShareBitrate: number | null;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;
 	vadEnhanced: boolean;

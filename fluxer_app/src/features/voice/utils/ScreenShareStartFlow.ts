@@ -331,6 +331,7 @@ export function buildConfiguredScreenShareOptions(input: ScreenShareOptionsBuild
 	const {captureOptions, publishOptions} = buildScreenShareOptions({
 		resolution: input.target.resolution,
 		frameRate: input.target.frameRate,
+		maxBitrate: input.target.maxBitrate,
 		context: input.target.context,
 		includeAudio: input.includeAudio,
 		contentHint: input.target.contentHint,

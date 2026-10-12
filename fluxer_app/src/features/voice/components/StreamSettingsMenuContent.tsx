@@ -356,6 +356,7 @@ export const StreamSettingsMenuContent = observer(
 			...quality,
 			sourceDimensions: null,
 			hintSetting: VoiceSettings.getScreenShareContentHint(),
+			bitrate: VoiceSettings.getScreenShareBitrateBudget(),
 		});
 		const presetOverriddenByContext = selectStreamSettingsPresetOverriddenByContext(currentMode, shareContext);
 		const captureAudioEnabled = isAppShare

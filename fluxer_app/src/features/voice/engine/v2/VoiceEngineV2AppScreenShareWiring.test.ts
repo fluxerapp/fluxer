@@ -244,7 +244,10 @@ vi.mock('@app/features/user/components/modals/tabs/components/CompactComboboxRow
 	};
 });
 
-vi.mock('@app/features/voice/utils/VideoQualityEntitlement', () => ({hasHigherVideoQuality: () => menuEntitled}));
+vi.mock('@app/features/voice/utils/VideoQualityEntitlement', () => ({
+	hasHigherVideoQuality: () => menuEntitled,
+	getScreenShareBitrateCeilingBps: () => 9_000_000,
+}));
 
 vi.mock('@app/features/voice/engine/ScreenShareCodecNegotiation', () => ({
 	default: {
@@ -726,7 +729,12 @@ describe('the video settings tab', () => {
 		{value: 'source', isDisabled: true},
 	];
 	const stateOf = (quality: Parameters<typeof resolveScreenShareQualityPick>[0], selfHosted = false) =>
-		resolveUserVideoTabScreenShareState({quality, hintSetting: 'auto', selfHosted});
+		resolveUserVideoTabScreenShareState({
+			quality,
+			hintSetting: 'auto',
+			bitrate: {ceilingBps: 9_000_000, chosenBps: null},
+			selfHosted,
+		});
 
 	it('shows a free account the clamped values, the saved ones and no preset note', () => {
 		const quality = {
@@ -741,6 +749,8 @@ describe('the video settings tab', () => {
 			frameRate: 30,
 			resolutionOptions: FREE_RESOLUTION_OPTIONS,
 			frameRateOptions: [15, 30],
+			bitrate: null,
+			bitrateOptions: [2_000_000, 4_000_000, 6_000_000, 8_000_000, 9_000_000],
 			preset: null,
 			presetOverriddenByContext: false,
 			saved: {resolution: 'source', frameRate: 30},

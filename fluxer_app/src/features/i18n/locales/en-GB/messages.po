@@ -1005,6 +1005,11 @@ msgstr "{authorNickname} prefers to be @mentioned on replies. Send without the m
 msgid "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}"
 msgstr "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}"
 
+#. Option label of the screen share bitrate select in the video tab. bitrate is a formatted number of megabits per second. Mbps is a technical unit token.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "{bitrate} Mbps"
+msgstr "{bitrate} Mbps"
+
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
@@ -5411,6 +5416,7 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Default option of the screen share bitrate select in the video tab.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -5420,6 +5426,7 @@ msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCou
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 #: src/features/voice/components/VoiceSettingsMenus.tsx
 msgid "Automatic"
@@ -5983,7 +5990,9 @@ msgid "Biometrics"
 msgstr "Biometrics"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+#. Short label in the video tab for the screen share video bitrate select. Keep it concise.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+#: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Bitrate"
 msgstr "Bitrate"
 
@@ -14552,15 +14561,15 @@ msgstr "Enabled"
 msgid "Encoder path"
 msgstr "Encoder path"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+msgid "Encoder path, SVC mode, and content hint"
+msgstr "Encoder path, SVC mode, and content hint"
+
 #. Description for the encoder path select.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts
 msgid "Encoder preference for new screen shares."
 msgstr "Encoder preference for new screen shares."
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
-msgid "Encoder, SVC, and bitrate presets"
-msgstr "Encoder, SVC and bitrate presets"
 
 #. Label for the choice of how the SMTP connection is encrypted.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -40428,6 +40437,11 @@ msgstr "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVA
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}. You also get animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}. You also get animated avatars, longer messages, and many other {premiumProductName} perks."
+
+#. Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth."
+msgstr "With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth."
 
 #. Label in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx

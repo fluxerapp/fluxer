@@ -23,7 +23,6 @@ import {
 	resolveScreenShareLayering,
 	resolveScreenShareSenderCodec,
 	resolveScreenShareTarget,
-	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
 	type ScreenShareContext,
 	type ScreenShareLayering,
 	type ScreenShareLimitClass,
@@ -195,13 +194,11 @@ export async function releaseScreenShareCaptureCleanup(snapshot: ScreenShareCapt
 	}
 }
 
-function clampScreenShareEncoding(encoding: VideoEncoding): VideoEncoding {
+function clampScreenShareEncoding(encoding: VideoEncoding, ceilingBps: number): VideoEncoding {
 	return {
 		...encoding,
 		maxBitrate:
-			typeof encoding.maxBitrate === 'number'
-				? Math.min(encoding.maxBitrate, SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS)
-				: encoding.maxBitrate,
+			typeof encoding.maxBitrate === 'number' ? Math.min(encoding.maxBitrate, ceilingBps) : encoding.maxBitrate,
 		priority: encoding.priority ?? 'high',
 	};
 }
@@ -222,6 +219,7 @@ export function resolveConfiguredScreenShareTarget(
 		context,
 		sourceDimensions,
 		hintSetting: VoiceSettings.getScreenShareContentHint(),
+		bitrate: VoiceSettings.getScreenShareBitrateBudget(),
 		codec: getPreferredScreenShareCodec(),
 		softwareEncoderClamp: ActiveScreenShareSource.isSoftwareEncoderClamped(),
 	});
@@ -261,7 +259,7 @@ function getStatsKind(
 
 function resolveScreenShareEncoding(target: ScreenShareTarget, publishOptions?: TrackPublishOptions): VideoEncoding {
 	if (publishOptions?.screenShareEncoding) {
-		return clampScreenShareEncoding(publishOptions.screenShareEncoding);
+		return clampScreenShareEncoding(publishOptions.screenShareEncoding, target.bitrate.ceilingBps);
 	}
 	return {maxBitrate: target.maxBitrate, maxFramerate: target.frameRate, priority: 'high'};
 }

@@ -1343,6 +1343,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 			context: shareContext,
 			sourceDimensions: null,
 			hintSetting: VoiceSettings.getScreenShareContentHint(),
+			bitrate: VoiceSettings.getScreenShareBitrateBudget(),
 		});
 		const streamSummaryTitle =
 			streamSummary.mode === 'gaming'

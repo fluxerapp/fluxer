@@ -231,6 +231,10 @@ const FRAME_RATE_DESCRIPTOR = msg({
 	message: 'Frame rate',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const BITRATE_DESCRIPTOR = msg({
+	message: 'Bitrate',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
 const FPS_DESCRIPTOR = msg({
 	message: 'FPS',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -342,6 +346,7 @@ export const voiceVideoSections = [
 			STREAMING_DESCRIPTOR,
 			FRAME_RATE_DESCRIPTOR,
 			FPS_DESCRIPTOR,
+			BITRATE_DESCRIPTOR,
 			HD_DESCRIPTOR,
 			MESSAGE_1080P_DESCRIPTOR,
 			MESSAGE_1440P_DESCRIPTOR,

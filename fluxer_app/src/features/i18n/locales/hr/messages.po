@@ -1005,6 +1005,11 @@ msgstr "{authorNickname} želi @spominjanje u odgovorima. Želite li svejedno po
 msgid "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}"
 msgstr "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {prilagođena pozadina} few {prilagođene pozadine} other {prilagođenih pozadina}}"
 
+#. Option label of the screen share bitrate select in the video tab. bitrate is a formatted number of megabits per second. Mbps is a technical unit token.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "{bitrate} Mbps"
+msgstr "{bitrate} Mbps"
+
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
@@ -5411,6 +5416,7 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Prijedlog automatskog dovršavanja: {label}, {selectedOptionPosition} od {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Default option of the screen share bitrate select in the video tab.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -5420,6 +5426,7 @@ msgstr "Prijedlog automatskog dovršavanja: {label}, {selectedOptionPosition} od
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 #: src/features/voice/components/VoiceSettingsMenus.tsx
 msgid "Automatic"
@@ -5983,7 +5990,9 @@ msgid "Biometrics"
 msgstr "Biometrija"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+#. Short label in the video tab for the screen share video bitrate select. Keep it concise.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+#: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Bitrate"
 msgstr "Brzina prijenosa podataka"
 
@@ -14552,15 +14561,15 @@ msgstr "Omogućeno"
 msgid "Encoder path"
 msgstr "Način kodiranja"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
+msgid "Encoder path, SVC mode, and content hint"
+msgstr "Putanja kodera, SVC način rada i savjet za sadržaj"
+
 #. Description for the encoder path select.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts
 msgid "Encoder preference for new screen shares."
 msgstr "Željeni način kodiranja za nova dijeljenja zaslona."
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
-msgid "Encoder, SVC, and bitrate presets"
-msgstr "Kodeci, SVC i unaprijed postavljene vrijednosti protoka"
 
 #. Label for the choice of how the SMTP connection is encrypted.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -40428,6 +40437,11 @@ msgstr "Uz {PREMIUM_PRODUCT_NAME} možete koristiti animirane avatare ({ANIMATED
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}. You also get animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "Uz {premiumProductName} ograničenje veličine pojedine datoteke povećava se na {fileSizeLimit}. Dobivate i animirane avatare, duže poruke i mnoge druge pogodnosti {premiumProductName}."
+
+#. Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx
+msgid "With Automatic, the bitrate follows your resolution and frame rate. Higher values keep fast motion sharper and use more upload bandwidth."
+msgstr "Uz Automatski, protok podataka prati vašu razlučivost i broj sličica u sekundi. Veće vrijednosti zadržavaju oštrinu brze akcije i koriste više propusnosti za prijenos."
 
 #. Label in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx

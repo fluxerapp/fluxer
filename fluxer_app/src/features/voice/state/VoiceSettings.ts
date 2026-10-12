@@ -14,7 +14,11 @@ import {
 	isVoiceNoiseSuppressionBackend,
 	type VoiceNoiseSuppressionBackend,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import type {ScreenShareBitrateBudget} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	getScreenShareBitrateCeilingBps,
+	hasHigherVideoQuality,
+} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
 import {
 	DEFAULT_VOICE_PROCESSING_MODE,
@@ -104,6 +108,7 @@ type VoiceSettingsUpdate = Partial<{
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
+	screenShareBitrate: number | null;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;
 	vadEnhanced: boolean;
@@ -478,6 +483,7 @@ class VoiceSettings {
 	screenShareSoftwareQualityRetiredV1 = false;
 	screenShareEncoderModePrefV2: ScreenShareEncoderMode = DEFAULT_SCREEN_SHARE_ENCODER_MODE;
 	screenShareScalabilityModePrefV2: ScreenShareScalabilityModePreference = DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
+	screenShareBitrate: number | null = null;
 	vadThreshold = 50;
 	vadAutoSensitivity = true;
 	vadEnhanced = true;
@@ -533,6 +539,8 @@ class VoiceSettings {
 				getScreenShareEncoderMode: false,
 				getScreenShareScalabilityMode: false,
 				getScreenShareScalabilityModeOverride: false,
+				getScreenShareBitrate: false,
+				getScreenShareBitrateBudget: false,
 				getVadThreshold: false,
 				getVadAutoSensitivity: false,
 				getVadEnhanced: false,
@@ -651,6 +659,7 @@ class VoiceSettings {
 				'screenShareSoftwareQualityRetiredV1',
 				'screenShareEncoderModePrefV2',
 				'screenShareScalabilityModePrefV2',
+				'screenShareBitrate',
 				'vadThreshold',
 				'vadAutoSensitivity',
 				'vadEnhanced',
@@ -896,6 +905,19 @@ class VoiceSettings {
 		return mode === 'auto' ? undefined : mode;
 	}
 
+	getScreenShareBitrate(): number | null {
+		return validateScreenShareBitrate(this.screenShareBitrate);
+	}
+
+	getScreenShareBitrateBudget(): ScreenShareBitrateBudget {
+		const ceilingBps = getScreenShareBitrateCeilingBps();
+		const chosen = this.getScreenShareBitrate();
+		return {
+			ceilingBps,
+			chosenBps: chosen !== null && hasHigherVideoQuality() ? Math.min(chosen, ceilingBps) : null,
+		};
+	}
+
 	getVadThreshold(): number {
 		return this.vadThreshold;
 	}
@@ -1031,6 +1053,7 @@ class VoiceSettings {
 		if (validated.screenShareEncoderMode !== undefined) this.screenShareEncoderMode = validated.screenShareEncoderMode;
 		if (validated.screenShareScalabilityMode !== undefined)
 			this.screenShareScalabilityMode = validated.screenShareScalabilityMode;
+		if (validated.screenShareBitrate !== undefined) this.screenShareBitrate = validated.screenShareBitrate;
 		if (validated.vadThreshold !== undefined) this.vadThreshold = validated.vadThreshold;
 		if (validated.vadAutoSensitivity !== undefined) this.vadAutoSensitivity = validated.vadAutoSensitivity;
 		if (validated.vadEnhanced !== undefined) this.vadEnhanced = validated.vadEnhanced;
@@ -1160,6 +1183,10 @@ class VoiceSettings {
 			),
 			screenShareEncoderMode,
 			screenShareScalabilityMode,
+			screenShareBitrate:
+				data.screenShareBitrate === undefined
+					? this.screenShareBitrate
+					: validateScreenShareBitrate(data.screenShareBitrate),
 			vadThreshold: Math.max(0, Math.min(100, data.vadThreshold ?? this.vadThreshold)),
 			vadAutoSensitivity: data.vadAutoSensitivity ?? this.vadAutoSensitivity,
 			vadEnhanced: data.vadEnhanced ?? this.vadEnhanced,
@@ -1223,6 +1250,10 @@ function validateScreenShareScalabilityMode(mode: unknown): ScreenShareScalabili
 	return mode === 'single_layer' || mode === 'temporal' || mode === 'auto'
 		? mode
 		: DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
+}
+
+function validateScreenShareBitrate(value: unknown): number | null {
+	return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.round(value) : null;
 }
 
 function validateScreenShareContentHint(hint: unknown): ScreenShareContentHint {
