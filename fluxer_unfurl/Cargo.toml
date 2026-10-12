@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
-ammonia = "4.2.0"
+ammonia = "4.2.3"
 anyhow = "1.0.104"
 chrono = { version = "0.4.45", default-features = false, features = ["std"] }
 encoding_rs = "0.8.41"
