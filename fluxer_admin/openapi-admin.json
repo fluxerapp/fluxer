@@ -3074,7 +3074,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Permanently deletes a guild. Deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.",
+				"description": "Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{

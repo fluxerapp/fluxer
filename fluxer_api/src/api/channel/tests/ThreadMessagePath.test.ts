@@ -9,6 +9,7 @@ import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@ap
 import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {processRecordedGuildDeletions, recordGuildDeletions} from '@app/api/guild/tests/GuildDeletionTestUtils';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons';
 import {ThreadState as ThreadStateTable} from '@app/api/Tables';
@@ -481,11 +482,13 @@ describe('thread message path', () => {
 			const queue = getKVThreadAutoArchiveQueue();
 			const guildId = createGuildID(BigInt(s.guildId));
 			expect(await queue.listGuilds()).toContain(guildId);
+			const worker = recordGuildDeletions();
 			await createBuilder(harness, s.owner.token)
 				.post(`/guilds/${s.guildId}/delete`)
 				.body({password: s.owner.password})
 				.expect(204)
 				.execute();
+			await processRecordedGuildDeletions(worker);
 			expect(await queue.listGuilds()).not.toContain(guildId);
 			expect(await queue.getDue(guildId, Number.MAX_SAFE_INTEGER, 10)).toEqual([]);
 		});

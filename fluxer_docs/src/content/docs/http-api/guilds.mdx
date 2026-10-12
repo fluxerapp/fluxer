@@ -739,7 +739,7 @@ Replacing an image removes the previous asset. A failed replacement leaves the p
 
 <RouteHeader method="POST" path="/v1/guilds/{guild_id}/delete" mfa />
 
-Permanently deletes the guild and returns 204 with an empty body. Requires the guild owner and sudo mode. Emits a [Guild Delete](/gateway/events/#guild-delete) Gateway event to every member session.
+Permanently deletes the guild and returns 204 with an empty body. Requires the guild owner and sudo mode. Emits a [Guild Delete](/gateway/events/#guild-delete) Gateway event to every member session. The guild is unavailable from that point, and its channels, messages and other records are removed in the background shortly after.
 
 Fluxer refuses a non-owner with 403 `MISSING_PERMISSIONS`. A bot can never own a guild, so a bot credential never satisfies the requirement.
 

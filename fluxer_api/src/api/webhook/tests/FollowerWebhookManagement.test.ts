@@ -24,6 +24,7 @@ import {
 	setupFanoutWorld,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {processRecordedGuildDeletions, recordGuildDeletions} from '@app/api/guild/tests/GuildDeletionTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -295,11 +296,13 @@ describe('Follower webhook management', () => {
 		await follow(harness, b.owner.token, a.ann.id, b.t1.id);
 		await follow(harness, b.owner.token, a.ann.id, b.t2.id);
 		expect(await sourceIndex(a.ann.id)).toHaveLength(2);
+		const worker = recordGuildDeletions();
 		await createBuilder(harness, b.owner.token)
 			.post(`/guilds/${b.guild.id}/delete`)
 			.body({password: b.owner.password})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
+		await processRecordedGuildDeletions(worker);
 		expect(await sourceIndex(a.ann.id)).toEqual([]);
 	});
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {processRecordedGuildDeletions, recordGuildDeletions} from '@app/api/guild/tests/GuildDeletionTestUtils';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -113,11 +114,13 @@ describe('Guild Folder Operations', () => {
 		const invite = await createChannelInvite(harness, owner.token, channel.id);
 		await acceptInvite(harness, member1.token, invite.code);
 		await acceptInvite(harness, member2.token, invite.code);
+		const worker = recordGuildDeletions();
 		await createBuilder(harness, owner.token)
 			.post(`/guilds/${guild.id}/delete`)
 			.body({password: owner.password})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.executeWithResponse();
+		await processRecordedGuildDeletions(worker);
 		const {json: ownerSettings} = await createBuilder<UserSettingsResponse>(harness, owner.token)
 			.get('/users/@me/settings')
 			.expect(HTTP_STATUS.OK)

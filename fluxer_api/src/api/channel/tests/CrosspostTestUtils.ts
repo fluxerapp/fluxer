@@ -22,7 +22,7 @@ import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {DisabledLiveKitService} from '@app/api/infrastructure/DisabledLiveKitService';
 import {InMemoryVoiceRoomStore} from '@app/api/infrastructure/InMemoryVoiceRoomStore';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
-import {createGuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
+import {createGuildStackServices, type GuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
 import {getVoiceAvailabilityService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getAssetDeletionQueue,
@@ -190,7 +190,7 @@ export function createStallGate(): StallGate & {hit: () => Promise<void>} {
 	};
 }
 
-export function createTestChannelService(): ChannelService {
+export function createTestGuildStack(): GuildStackServices {
 	return createGuildStackServices({
 		apiContext: createApiContext(),
 		channelRepository: getChannelRepository(),
@@ -214,7 +214,11 @@ export function createTestChannelService(): ChannelService {
 		voiceRoomStore: new InMemoryVoiceRoomStore(),
 		liveKitService: new DisabledLiveKitService(),
 		voiceAvailabilityService: getVoiceAvailabilityService(),
-	}).channelService;
+	});
+}
+
+export function createTestChannelService(): ChannelService {
+	return createTestGuildStack().channelService;
 }
 
 export {sendChannelMessage as postMessage} from '@app/api/channel/tests/ChannelTestUtils';

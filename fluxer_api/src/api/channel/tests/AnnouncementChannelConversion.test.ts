@@ -22,6 +22,7 @@ import {
 	sendMessage,
 	setupFanoutWorld,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
+import {processRecordedGuildDeletions} from '@app/api/guild/tests/GuildDeletionTestUtils';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -315,6 +316,7 @@ describe('Announcement channel conversion', () => {
 			.body({password: owner.password})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.executeWithResponse();
+		await processRecordedGuildDeletions(worker);
 		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals.map((job) => job.payload.sourceChannelId).sort()).toEqual([first.id, second.id].sort());
 		for (const job of removals) {
@@ -333,6 +335,7 @@ describe('Announcement channel conversion', () => {
 			.body(null)
 			.expect(HTTP_STATUS.OK)
 			.execute();
+		await processRecordedGuildDeletions(worker);
 		const removals = worker.byTask('removeChannelFollowers');
 		expect(removals).toHaveLength(1);
 		expect(removals[0]?.payload).toEqual({

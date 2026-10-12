@@ -405,7 +405,7 @@ Each applied group records one Admin audit entry with the target type `guild` an
 
 <RouteHeader method="DELETE" path="/v1/admin/guilds/{guild_id}" auditReason />
 
-Permanently deletes a guild and every record it owns. Requires `guild:delete`.
+Permanently deletes a guild and every record it owns. Requires `guild:delete`. The guild becomes unavailable to every member at once, and a `guildProcessDeletion` job on the `lifecycle` lane removes its records.
 
 ### Path parameters
 

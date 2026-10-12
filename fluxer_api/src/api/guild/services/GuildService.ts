@@ -141,6 +141,7 @@ export class GuildService {
 			webhookRepository,
 			guildAuditLogService,
 			limitConfigService,
+			workerService,
 		);
 		this.members = new GuildMemberService(
 			guildRepository,

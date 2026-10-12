@@ -11,7 +11,7 @@ import {
 	createPermissionOverwrite,
 	createRole,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {createTestChannelService} from '@app/api/channel/tests/CrosspostTestUtils';
+import {createTestGuildStack} from '@app/api/channel/tests/CrosspostTestUtils';
 import {getGatewayService, getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getAvatarService,
@@ -31,6 +31,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
+import guildProcessDeletion from '@app/api/worker/tasks/GuildProcessDeletion';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -201,6 +202,7 @@ export const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
 	syncCrosspostedMessage,
 	syncCrosspostCopies,
 	removeChannelFollowers,
+	guildProcessDeletion,
 };
 
 export function enableCrosspostWorker(
@@ -210,6 +212,7 @@ export function enableCrosspostWorker(
 	const worker = new SyncTaskWorkerService({...crosspostTaskHandlers, ...extraHandlers}, {deferred: true});
 	setInjectedWorkerService(worker);
 	resetApiServicesForTesting();
+	const guildStack = createTestGuildStack();
 	setWorkerDependenciesForTest({
 		channelRepository: getChannelRepository(),
 		webhookRepository: getWebhookRepository(),
@@ -222,7 +225,8 @@ export function enableCrosspostWorker(
 		snowflakeService: getSnowflakeService(),
 		cacheService: getCacheService(),
 		limitConfigService: getLimitConfigService(),
-		channelService: createTestChannelService(),
+		channelService: guildStack.channelService,
+		guildService: guildStack.guildService,
 		workerService: worker,
 		...extraDependencies,
 	});

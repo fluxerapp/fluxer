@@ -20,6 +20,7 @@ import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
 import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
 import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
 import flushUserActivityBuffer from '@app/api/worker/tasks/FlushUserActivityBuffer';
+import guildProcessDeletion from '@app/api/worker/tasks/GuildProcessDeletion';
 import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
 import handleMentions from '@app/api/worker/tasks/HandleMentions';
 import harvestGuildData from '@app/api/worker/tasks/HarvestGuildData';
@@ -91,6 +92,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	expireReportSnapshots,
 	expireStaleJobs,
 	extractEmbeds,
+	guildProcessDeletion,
 	handleMentions,
 	handleMentionChunk,
 	harvestGuildData,

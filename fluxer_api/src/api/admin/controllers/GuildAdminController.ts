@@ -253,7 +253,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'delete_admin_guild',
 			summary: 'Delete guild',
 			description:
-				'Permanently deletes a guild. Deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.',
+				'Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.',
 			responseSchema: SuccessResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
