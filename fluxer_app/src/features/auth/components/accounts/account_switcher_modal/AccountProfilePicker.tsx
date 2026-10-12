@@ -173,7 +173,9 @@ function renderInstanceDomain({
 			className={styles.domainRow}
 			data-flx="auth.accounts.account-switcher-modal.account-profile-picker.render-instance-domain.domain-row"
 		>
-			<span>{instanceBadge?.title ?? fallbackInstanceLabel}</span>
+			<span data-flx="auth.accounts.account-switcher-modal.account-profile-picker.render-instance-domain.span">
+				{instanceBadge?.title ?? fallbackInstanceLabel}
+			</span>
 		</div>
 	);
 }
