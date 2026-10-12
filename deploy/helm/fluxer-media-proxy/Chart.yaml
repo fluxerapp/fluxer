@@ -1,6 +1,0 @@
-apiVersion: v2
-name: fluxer-media-proxy
-description: Fluxer media proxy and upload relay workloads.
-type: application
-version: 0.1.0
-appVersion: "v1"

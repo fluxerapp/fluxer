@@ -312,6 +312,10 @@ Default `private_ranges`. The peer addresses whose `X-Forwarded-For` header the 
 
 Default `zstd gzip`. The response compression the edge offers, written as the arguments of the Caddy `encode` directive. `gzip` alone stops the edge offering zstd. Read by the edge container only, and it takes effect on `docker compose up -d edge`.
 
+#### `FLUXER_EDGE_GLOBAL_OPTIONS`
+
+No default. Extra Caddy global options on one line, added to the global block of the edge Caddyfile, such as `email admin@chat.example.com` for the ACME account. Compose forwards it from `.env` to `edge`, and an empty value adds nothing.
+
 #### `FLUXER_EDGE_BIND`
 
 Default `127.0.0.1:8080`. Where the plain-HTTP port binds. Read only under the overlay. `0.0.0.0:8080` must be firewalled to the proxy host, because the edge takes the client address from the `X-Forwarded-For` header of any peer in `FLUXER_EDGE_TRUSTED_PROXIES`.
@@ -1648,7 +1652,7 @@ A front proxy must not add a [Content-Security-Policy of its own](/operator/reve
 
 ## Keys in .env.example that no service reads
 
-Docker Compose or the edge container consumes most of the names below, and each of those reaches a service under a different name. Setting one outside Compose, in Kubernetes or a systemd unit, does nothing.
+Docker Compose or the edge container consumes most of the names below, and each of those reaches a service under a different name. Setting one outside Compose, in Kubernetes or a systemd unit, does nothing. The [Kubernetes](/operator/kubernetes/) chart sets the names they stand for itself.
 
 #### `FLUXER_DOMAIN`
 
@@ -1666,7 +1670,7 @@ Read by the edge container only, and only in the bundled layout. Both overlays o
 
 Read by Docker Compose as the default for `FLUXER_EDGE_SITE_ADDRESS` when that name is unset.
 
-#### `FLUXER_EDGE_TRUSTED_PROXIES` and `FLUXER_EDGE_ENCODE`
+#### `FLUXER_EDGE_TRUSTED_PROXIES`, `FLUXER_EDGE_ENCODE` and `FLUXER_EDGE_GLOBAL_OPTIONS`
 
 Read by the edge container only. They take effect on `docker compose up -d edge`.
 

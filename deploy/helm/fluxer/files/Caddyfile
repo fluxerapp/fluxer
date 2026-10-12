@@ -1,0 +1,64 @@
+{
+	servers {
+		trusted_proxies static {$FLUXER_EDGE_TRUSTED_PROXIES:private_ranges}
+		trusted_proxies_strict
+	}
+	{$FLUXER_EDGE_GLOBAL_OPTIONS}
+}
+
+{$FLUXER_EDGE_SITE_ADDRESS} {
+	encode {$FLUXER_EDGE_ENCODE:zstd gzip}
+
+	handle /_health {
+		respond "OK" 200
+	}
+
+	handle_path /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle /gateway {
+		rewrite * /
+		reverse_proxy gateway:8080
+	}
+
+	handle_path /gateway/* {
+		reverse_proxy gateway:8080
+	}
+
+	handle_path /media/* {
+		reverse_proxy media-proxy:8080
+	}
+
+	handle_path /livekit/* {
+		reverse_proxy livekit:7880
+	}
+
+	handle {$FLUXER_ADMIN_BASE_PATH:/admin} {
+		rewrite * /
+		reverse_proxy admin:8080
+	}
+
+	handle_path {$FLUXER_ADMIN_BASE_PATH:/admin}/* {
+		reverse_proxy admin:8080
+	}
+
+	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*
+	handle @staticAssets {
+		reverse_proxy static-proxy:8080
+	}
+
+	handle /.well-known/fluxer {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy app-proxy:8080
+	}
+}
+
+:8088 {
+	handle /.well-known/fluxer {
+		reverse_proxy api:8080
+	}
+}

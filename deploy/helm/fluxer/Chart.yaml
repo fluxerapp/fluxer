@@ -1,0 +1,13 @@
+apiVersion: v2
+name: fluxer
+description: A complete Fluxer instance on Kubernetes, at parity with the self-hosted Docker Compose stack.
+type: application
+version: 0.1.0
+appVersion: "v1"
+kubeVersion: ">=1.29.0-0"
+home: https://docs.fluxer.app/operator/kubernetes/
+sources:
+  - https://github.com/fluxerapp/fluxer/tree/main/deploy/helm/fluxer
+keywords:
+  - fluxer
+  - chat

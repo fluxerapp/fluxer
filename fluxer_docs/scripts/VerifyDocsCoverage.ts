@@ -1755,6 +1755,64 @@ console.log('self-hosting guide against deploy/self-hosting');
 	failures += section('self-hosting guide disagreements', problems);
 }
 
+console.log('Kubernetes page against deploy/helm/fluxer');
+{
+	const chartValues = await readFile(path.join(REPO_ROOT, 'deploy/helm/fluxer/values.yaml'), 'utf8');
+	const page = await readFile(path.join(DOCS_ROOT, 'operator/kubernetes.mdx'), 'utf8');
+	const problems: Array<string> = [];
+
+	const chartKeys: Array<string> = [];
+	let inSecrets = false;
+	let inValues = false;
+	for (const line of chartValues.split('\n')) {
+		if (/^\S/u.test(line)) {
+			inSecrets = line.startsWith('secrets:');
+			inValues = false;
+			continue;
+		}
+		if (inSecrets && /^ {2}\S/u.test(line)) {
+			inValues = line.startsWith('  values:');
+			continue;
+		}
+		const key = inValues ? line.match(/^ {4}([A-Z][A-Z0-9_]*):/u) : null;
+		if (key != null) {
+			chartKeys.push(key[1]);
+		}
+	}
+	if (chartKeys.length === 0) {
+		problems.push('found no keys under secrets.values in deploy/helm/fluxer/values.yaml');
+	}
+
+	const tableKeys = new Set<string>();
+	const header = '| Key | Chart default |';
+	const lines = page.split('\n');
+	const start = lines.indexOf(header);
+	if (start === -1) {
+		problems.push(`operator/kubernetes.mdx has no table headed \`${header}\``);
+	} else {
+		for (const row of lines.slice(start + 2)) {
+			const cell = row.match(/^\| `([A-Z][A-Z0-9_]*)` \|/u);
+			if (cell == null) {
+				break;
+			}
+			tableKeys.add(cell[1]);
+		}
+	}
+	for (const key of chartKeys) {
+		if (!tableKeys.has(key)) {
+			problems.push(`secrets.values.${key} is missing from the secret table on operator/kubernetes.mdx`);
+		}
+	}
+	for (const key of tableKeys) {
+		if (!chartKeys.includes(key)) {
+			problems.push(`operator/kubernetes.mdx lists ${key}, which secrets.values does not declare`);
+		}
+	}
+	console.log(`  chart secret keys: ${chartKeys.length.toString()}`);
+	console.log(`  documented in the secret table: ${tableKeys.size.toString()}`);
+	failures += section('Kubernetes page disagreements', problems);
+}
+
 console.log('unthrottled routes and global bucket claims');
 {
 	const unthrottled = controllerRoutes

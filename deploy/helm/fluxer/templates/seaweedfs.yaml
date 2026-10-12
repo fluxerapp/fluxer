@@ -1,0 +1,136 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.seaweedfs }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "seaweedfs" "component" "storage" "w" . }}
+{{- $healthz := dict "path" "/healthz" "port" "s3" }}
+{{- $secrets := include "fluxer.secretData" $ | fromJson }}
+{{- $init := $.Files.Get "files/seaweedfs-init.sh" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: s3
+      port: 8333
+      targetPort: s3
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: seaweedfs
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: seaweedfs
+  podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/init: {{ list $init (get $secrets "FLUXER_S3_ACCESS_KEY_ID" | default "") (get $secrets "FLUXER_S3_SECRET_ACCESS_KEY" | default "") $.Values.s3.buckets | toJson | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 1000) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: seaweedfs
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          args:
+            - server
+            - -s3
+            - -dir=/data
+            - -master.telemetry=false
+            - -ip=127.0.0.1
+            - -ip.bind=127.0.0.1
+            - -s3.ip.bind=0.0.0.0
+          env:
+            - name: GOMEMLIMIT
+              value: {{ .gomemlimit | quote }}
+            - name: WEED_MASTER_VOLUME_GROWTH_COPY_1
+              value: {{ include "fluxer.string" .volumeGrowth | quote }}
+          ports:
+            - name: s3
+              containerPort: 8333
+              protocol: TCP
+          startupProbe:
+            httpGet: {{ toJson $healthz }}
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet: {{ toJson $healthz }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet: {{ toJson $healthz }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+        - name: seaweedfs-init
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - {{ $init | quote }}
+          env:
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "FLUXER_S3_ACCESS_KEY" "key" "FLUXER_S3_ACCESS_KEY_ID") | nindent 12 }}
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "FLUXER_S3_SECRET_KEY" "key" "FLUXER_S3_SECRET_ACCESS_KEY") | nindent 12 }}
+            - name: FLUXER_S3_BUCKET_CDN
+              value: {{ $.Values.s3.buckets.cdn | quote }}
+            - name: FLUXER_S3_BUCKET_UPLOADS
+              value: {{ $.Values.s3.buckets.uploads | quote }}
+            - name: FLUXER_S3_BUCKET_REPORTS
+              value: {{ $.Values.s3.buckets.reports | quote }}
+            - name: FLUXER_S3_BUCKET_HARVESTS
+              value: {{ $.Values.s3.buckets.harvests | quote }}
+            - name: FLUXER_SEAWEEDFS_INIT_ATTEMPTS
+              value: {{ include "fluxer.string" .initAttempts | quote }}
+          readinessProbe:
+            exec:
+              command: ["test", "-f", "/tmp/fluxer-buckets-ready"]
+            periodSeconds: 5
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+  volumeClaimTemplates:
+    {{- include "fluxer.pvc" .persistence | nindent 4 }}
+{{- end }}
+{{- end }}

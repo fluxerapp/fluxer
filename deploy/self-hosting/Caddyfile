@@ -3,6 +3,7 @@
 		trusted_proxies static {$FLUXER_EDGE_TRUSTED_PROXIES:private_ranges}
 		trusted_proxies_strict
 	}
+	{$FLUXER_EDGE_GLOBAL_OPTIONS}
 }
 
 {$FLUXER_EDGE_SITE_ADDRESS} {

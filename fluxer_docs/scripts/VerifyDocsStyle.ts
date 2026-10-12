@@ -320,6 +320,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/webhooks.mdx', {'table-identifier': 1, 'table-parallel': 1}],
 	['media-proxy/responses-and-limits.md', {'table-cell': 2}],
 	['media-proxy/routes.mdx', {'table-cell': 1}],
+	['operator/kubernetes.mdx', {'table-identifier': 1}],
 	['voice/index.md', {'table-parallel': 1}],
 ]);
 

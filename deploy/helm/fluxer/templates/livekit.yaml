@@ -1,0 +1,156 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.livekit }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "livekit" "component" "voice" "w" . }}
+{{- $tcp := .tcpPort | int }}
+{{- $udp := .udpPort | int }}
+{{- if eq .expose "nodePort" }}
+{{- $tcp = .nodePorts.tcp | int }}
+{{- $udp = .nodePorts.udp | int }}
+{{- end }}
+{{- $useExternal := and .useExternalIP (ne .expose "loadBalancer") }}
+{{- $secrets := include "fluxer.secretData" $ | fromJson }}
+{{- $config := dict
+  "port" 7880
+  "log_level" .logLevel
+  "rtc" (dict "tcp_port" $tcp "udp_port" $udp "use_external_ip" $useExternal "node_ip" (.nodeIP | default "") "stun_servers" .stunServers) }}
+{{- $config = mergeOverwrite $config (deepCopy (.extraConfig | default dict)) }}
+{{- $configYaml := toYaml $config }}
+{{- $root := dict "path" "/" "port" "http" }}
+{{- $webhook := ternary "http://edge:8080/api/webhooks/livekit" "http://api:8080/webhooks/livekit" (eq .expose "hostNetwork") }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 7880
+      targetPort: 7880
+      protocol: TCP
+{{- if ne .expose "hostNetwork" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit-rtc
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+  {{- with .serviceAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ ternary "LoadBalancer" "NodePort" (eq .expose "loadBalancer") }}
+  externalTrafficPolicy: Local
+  {{- if and (eq .expose "loadBalancer") .loadBalancerIP }}
+  loadBalancerIP: {{ .loadBalancerIP }}
+  {{- end }}
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: rtc-tcp
+      port: {{ $tcp }}
+      targetPort: rtc-tcp
+      protocol: TCP
+      {{- if eq .expose "nodePort" }}
+      nodePort: {{ $tcp }}
+      {{- end }}
+    - name: rtc-udp
+      port: {{ $udp }}
+      targetPort: rtc-udp
+      protocol: UDP
+      {{- if eq .expose "nodePort" }}
+      nodePort: {{ $udp }}
+      {{- end }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ list $configYaml $webhook (get $secrets "FLUXER_LIVEKIT_API_KEY" | default "") (get $secrets "FLUXER_LIVEKIT_API_SECRET" | default "") | toJson | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- if eq .expose "hostNetwork" }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 65532) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: livekit
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              export LIVEKIT_KEYS="${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+              export LIVEKIT_CONFIG="$(printf '%s\nwebhook:\n  api_key: %s\n  urls:\n    - %s\n' "$LIVEKIT_CONFIG" "$LIVEKIT_API_KEY" "$LIVEKIT_WEBHOOK_URL")"
+              exec /livekit-server
+          env:
+            - name: LIVEKIT_CONFIG
+              value: {{ $configYaml | quote }}
+            - name: LIVEKIT_WEBHOOK_URL
+              value: {{ $webhook }}
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "LIVEKIT_API_KEY" "key" "FLUXER_LIVEKIT_API_KEY") | nindent 12 }}
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "LIVEKIT_API_SECRET" "key" "FLUXER_LIVEKIT_API_SECRET") | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 7880
+              protocol: TCP
+            - name: rtc-tcp
+              containerPort: {{ $tcp }}
+              protocol: TCP
+            - name: rtc-udp
+              containerPort: {{ $udp }}
+              protocol: UDP
+          startupProbe:
+            httpGet: {{ toJson $root }}
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet: {{ toJson $root }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet: {{ toJson $root }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+{{- end }}
+{{- end }}

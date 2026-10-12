@@ -167,6 +167,7 @@ export default defineConfig({
 						'operator/configuration',
 						'operator/reverse-proxy',
 						'operator/upgrading',
+						'operator/kubernetes',
 					],
 				},
 				{
