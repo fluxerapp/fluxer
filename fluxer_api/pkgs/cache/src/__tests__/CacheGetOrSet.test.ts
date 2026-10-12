@@ -62,7 +62,9 @@ describe('ICacheService.getOrSet', () => {
 		expect(factory).toHaveBeenCalledTimes(1);
 	});
 
-	it('resolves the ttl from the produced value', async () => {
+	it('resolves the ttl from the produced value', async ({onTestFinished}) => {
+		const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+		onTestFinished(() => now.mockRestore());
 		const client = new MockKVProvider();
 		const provider = new KVCacheProvider({client});
 		const resolver = (value: number | null) => (value === null ? 5 : 30);
