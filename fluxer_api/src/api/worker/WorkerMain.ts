@@ -40,7 +40,11 @@ import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartu
 import {CronScheduler} from '@app/api/worker/CronScheduler';
 import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
 import {clearWorkerDependencies, setWorkerDependencies} from '@app/api/worker/WorkerContext';
-import {initializeWorkerDependencies, type WorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {
+	guildInvitePauseDeps,
+	initializeWorkerDependencies,
+	type WorkerDependencies,
+} from '@app/api/worker/WorkerDependencies';
 import {WorkerHeartbeat} from '@app/api/worker/WorkerHeartbeat';
 import {
 	resolveCronSchedulerEnabled,
@@ -108,6 +112,7 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 	}
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
 	cron.upsert('drainActivitySpool', 'drainActivitySpool', {}, '*/5 * * * * *', {ledger: false});
+	cron.upsert('liftExpiredGuildInvitePauses', 'liftExpiredGuildInvitePauses', {}, '0 * * * * *', {ledger: false});
 	cron.upsert('archiveInactiveThreads', 'archiveInactiveThreads', {}, '0 * * * * *', {
 		ledger: false,
 		enabled: () => true,
@@ -328,6 +333,7 @@ export async function startWorkerMain(): Promise<void> {
 					},
 					dependencies.channelRepository,
 				),
+				guildInvites: guildInvitePauseDeps(dependencies),
 			});
 			Logger.info('Account action consumer started');
 		}

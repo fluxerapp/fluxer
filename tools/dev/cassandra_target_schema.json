@@ -5903,6 +5903,10 @@
 				{
 					"name": "content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "invites_paused_until",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((guild_id))",

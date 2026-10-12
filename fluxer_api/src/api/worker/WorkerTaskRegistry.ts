@@ -27,6 +27,7 @@ import harvestGuildData from '@app/api/worker/tasks/HarvestGuildData';
 import harvestUserData from '@app/api/worker/tasks/HarvestUserData';
 import indexChannelMessages from '@app/api/worker/tasks/IndexChannelMessages';
 import indexGuildMembers from '@app/api/worker/tasks/IndexGuildMembers';
+import liftExpiredGuildInvitePauses from '@app/api/worker/tasks/LiftExpiredGuildInvitePauses';
 import messageShred from '@app/api/worker/tasks/MessageShred';
 import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
 import pollGooglePlayVoidedPurchases from '@app/api/worker/tasks/PollGooglePlayVoidedPurchases';
@@ -99,6 +100,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	harvestUserData,
 	indexChannelMessages,
 	indexGuildMembers,
+	liftExpiredGuildInvitePauses,
 	messageShred,
 	processAssetDeletionQueue,
 	processCachePurgeQueue,

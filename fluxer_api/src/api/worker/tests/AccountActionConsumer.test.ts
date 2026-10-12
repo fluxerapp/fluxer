@@ -208,7 +208,12 @@ function harness(): Harness {
 		authored: authored as unknown as AccountStateDeps['authored'],
 		now: () => NOW,
 	};
-	h.deps = {js: {} as AccountActionDeps['js'], state, now: () => NOW};
+	h.deps = {
+		js: {} as AccountActionDeps['js'],
+		state,
+		guildInvites: {} as AccountActionDeps['guildInvites'],
+		now: () => NOW,
+	};
 	return h;
 }
 

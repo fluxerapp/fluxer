@@ -49,6 +49,7 @@ export interface GuildRow {
 	audit_logs_indexed_at: Date | null;
 	members_indexed_at: Date | null;
 	message_history_cutoff: Date | null;
+	invites_paused_until: Date | null;
 	version: number;
 }
 
@@ -87,6 +88,7 @@ export const GUILD_COLUMNS = [
 	'audit_logs_indexed_at',
 	'members_indexed_at',
 	'message_history_cutoff',
+	'invites_paused_until',
 	'version',
 ] as const satisfies ReadonlyArray<keyof GuildRow>;
 

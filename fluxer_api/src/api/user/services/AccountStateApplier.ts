@@ -123,7 +123,7 @@ function observedOf(user: User): Observed {
 }
 
 export function outcomeOf(
-	env: Pick<ActionEnvelope, 'id'> & {type: string; user_id?: string},
+	env: Pick<ActionEnvelope, 'id'> & {type: string; user_id?: string; guild_id?: string},
 	status: OutcomeStatus,
 	user: User | null = null,
 	detail: string | null = null,
@@ -136,6 +136,7 @@ export function outcomeOf(
 		observed: user ? observedOf(user) : null,
 	};
 	if (env.user_id) outcome.user_id = env.user_id;
+	if (env.guild_id) outcome.guild_id = env.guild_id;
 	return outcome;
 }
 

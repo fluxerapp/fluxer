@@ -13,6 +13,7 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
+import {emitGuildJoinRefused, emitInviteCreated, emitInviteDeleted} from '@app/api/infrastructure/activity/GuildEvents';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -243,6 +244,7 @@ export class InviteService {
 				action: 'create',
 				auditLogReason,
 			});
+			await emitInviteCreated(newInvite);
 		}
 		return {invite: newInvite, isNew: true};
 	}
@@ -291,13 +293,18 @@ export class InviteService {
 		if ((guild.disabledOperations & GuildOperations.INSTANT_INVITES) !== 0) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		if (guild.features.has(GuildFeatures.INVITES_DISABLED)) {
-			throw new InvitesDisabledError();
-		}
+		const vanityCode = guild.vanityUrlCode ? vanityCodeToInviteCode(guild.vanityUrlCode) : null;
+		const isVanityInvite = invite.code === vanityCode;
 		const existingMember = await this.apiContext.services.gateway.hasGuildMember({
 			guildId: invite.guildId,
 			userId,
 		});
+		if (guild.features.has(GuildFeatures.INVITES_DISABLED)) {
+			if (!existingMember) {
+				await emitGuildJoinRefused({guildId: guild.id, userId, joinSource: isVanityInvite ? 'vanity' : 'invite'});
+			}
+			throw new InvitesDisabledError();
+		}
 		if (existingMember) {
 			return invite;
 		}
@@ -308,8 +315,6 @@ export class InviteService {
 				throw new TemporaryInviteRequiresPresenceError();
 			}
 		}
-		const vanityCode = guild.vanityUrlCode ? vanityCodeToInviteCode(guild.vanityUrlCode) : null;
-		const isVanityInvite = invite.code === vanityCode;
 		const guildId = invite.guildId;
 		const reservedInvite = await this.reserveInviteUse(invite);
 		await this.withReservedInviteUse(reservedInvite, () =>
@@ -459,6 +464,7 @@ export class InviteService {
 			action: 'delete',
 			auditLogReason,
 		});
+		await emitInviteDeleted(invite);
 	}
 
 	async dispatchInviteCreate(

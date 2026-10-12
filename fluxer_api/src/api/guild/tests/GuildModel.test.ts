@@ -43,6 +43,7 @@ function createGuild(overrides: Partial<GuildRow> = {}): Guild {
 		audit_logs_indexed_at: null,
 		members_indexed_at: null,
 		message_history_cutoff: null,
+		invites_paused_until: null,
 		version: 1,
 		...overrides,
 	});

@@ -25,6 +25,8 @@ import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {memberEndsInvitePause} from '@app/api/guild/services/GuildInvitePauseApplier';
+import {emitGuildCreated, emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -393,6 +395,7 @@ export class GuildOperationsService {
 			audit_logs_indexed_at: null,
 			members_indexed_at: null,
 			message_history_cutoff: null,
+			invites_paused_until: null,
 			version: 1,
 		};
 		batch.addPrepared(Guilds.insert(guildData));
@@ -425,6 +428,7 @@ export class GuildOperationsService {
 		await batch.execute();
 		await this.channelRepository.threads.ensureGuildMarker(guildId, {permsSeededAt: new Date()});
 		const guild = new Guild(guildData);
+		await emitGuildCreated(guild);
 		await this.gatewayService.startGuild(guildId);
 		await this.gatewayService.joinGuild({userId: user.id, guildId});
 		if (!user.isBot) {
@@ -507,6 +511,10 @@ export class GuildOperationsService {
 			}
 		}
 		const updatedFeatures = this.computeUpdatedFeatures(previousFeatures, data.features);
+		const endsInvitePause = memberEndsInvitePause(currentGuild, updatedFeatures);
+		if (endsInvitePause) {
+			updatedFeatures.delete(GuildFeatures.RAID_DETECTED);
+		}
 		const featuresChanged = !setsEqual(previousFeatures, updatedFeatures);
 		const patch: Partial<GuildRow> = {};
 		if (data.name !== undefined) {
@@ -617,6 +625,9 @@ export class GuildOperationsService {
 		if (featuresChanged) {
 			patch.features = updatedFeatures;
 		}
+		if (endsInvitePause) {
+			patch.invites_paused_until = null;
+		}
 		const preparedAssets = await this.prepareGuildAssetUpdates(currentGuild, data, patch);
 		let updatedGuild: Guild;
 		if (Object.keys(patch).length === 0) {
@@ -635,6 +646,14 @@ export class GuildOperationsService {
 			Logger.error({error, guildId}, 'Failed to commit asset changes after successful guild update');
 		}
 		await this.helpers.dispatchGuildUpdate(updatedGuild);
+		if (featuresChanged) {
+			await emitGuildFeaturesChanged({
+				previous: currentGuild,
+				updated: updatedGuild,
+				actorId: userId,
+				source: 'member',
+			});
+		}
 		const guildSearchService = getGuildSearchService();
 		if (guildSearchService) {
 			let discoveryContext: GuildDiscoveryContext | undefined;

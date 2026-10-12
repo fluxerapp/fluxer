@@ -49,6 +49,7 @@ export class Guild {
 	readonly auditLogsIndexedAt: Date | null;
 	readonly membersIndexedAt: Date | null;
 	readonly messageHistoryCutoff: Date | null;
+	readonly invitesPausedUntil: Date | null;
 	readonly version: number;
 
 	constructor(row: GuildRow) {
@@ -89,6 +90,7 @@ export class Guild {
 		this.auditLogsIndexedAt = row.audit_logs_indexed_at ?? null;
 		this.membersIndexedAt = row.members_indexed_at ?? null;
 		this.messageHistoryCutoff = row.message_history_cutoff ?? null;
+		this.invitesPausedUntil = row.invites_paused_until ?? null;
 		this.version = row.version;
 	}
 
@@ -128,6 +130,7 @@ export class Guild {
 			audit_logs_indexed_at: this.auditLogsIndexedAt,
 			members_indexed_at: this.membersIndexedAt,
 			message_history_cutoff: this.messageHistoryCutoff,
+			invites_paused_until: this.invitesPausedUntil,
 			version: this.version,
 		};
 	}

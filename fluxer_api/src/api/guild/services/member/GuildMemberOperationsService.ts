@@ -23,6 +23,7 @@ import type {GuildMemberSearchIndexService} from '@app/api/guild/services/member
 import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {JoinSource} from '@app/api/infrastructure/activity/Contract.generated';
+import {emitGuildMemberRemoved} from '@app/api/infrastructure/activity/GuildEvents';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -388,6 +389,7 @@ export class GuildMemberOperationsService {
 			);
 		}
 		await this.gatewayService.leaveGuild({userId: targetId, guildId});
+		await emitGuildMemberRemoved({guildId, userId: targetId, actorId: userId, kind: 'kicked'});
 	}
 
 	async addUserToGuild(
@@ -541,6 +543,7 @@ export class GuildMemberOperationsService {
 			});
 		}
 		await this.gatewayService.leaveGuild({userId, guildId});
+		await emitGuildMemberRemoved({guildId, userId, actorId: null, kind: 'left'});
 	}
 
 	private async validateTimeout(params: {

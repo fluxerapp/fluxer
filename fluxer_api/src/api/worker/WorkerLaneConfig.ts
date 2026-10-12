@@ -59,6 +59,7 @@ const LANE_CONFIG = {
 			'bulkBanFileShas',
 			'bulkDeleteMessagesForUsers',
 			'drainActivitySpool',
+			'liftExpiredGuildInvitePauses',
 		] as const,
 		retiredTasks: ['sendScheduledMessage', 'finalizeNcmecAttachmentReport'],
 		concurrency: 8,

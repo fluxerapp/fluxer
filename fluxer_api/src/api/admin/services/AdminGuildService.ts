@@ -57,6 +57,7 @@ export class AdminGuildService {
 			entityAssetService: deps.entityAssetService,
 			auditService: deps.auditService,
 			updatePropagator: this.updatePropagator,
+			guildService: deps.guildService,
 		});
 		this.vanityService = new AdminGuildVanityService({
 			guildRepository: deps.guildRepository,

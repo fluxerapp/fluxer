@@ -25,6 +25,7 @@ import {
 	THREAD_AUDIT_LOG_ACTION_TYPES,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {withGuildUpdateLock} from '@app/api/guild/GuildUpdateLock';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
@@ -53,7 +54,6 @@ import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstant
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {ResourceLockedError} from '@fluxer/errors/src/domains/core/ResourceLockedError';
 import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGuildEmojiError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
@@ -79,10 +79,6 @@ interface StoredGuildAuditLogListResponse extends Omit<GuildAuditLogListResponse
 	audit_log_entries: Array<StoredGuildAuditLogEntryResponse>;
 	webhooks: Array<StoredAuditLogWebhookResponse>;
 }
-
-const GUILD_UPDATE_LOCK_TTL_SECONDS = 10;
-const GUILD_UPDATE_LOCK_RETRY_DELAY_MS = 50;
-const GUILD_UPDATE_LOCK_MAX_WAIT_MS = 5000;
 
 export class GuildService {
 	public readonly data: GuildDataService;
@@ -211,9 +207,10 @@ export class GuildService {
 		auditLogReason?: string | null,
 	): Promise<GuildResponse> {
 		const {guildId, requestCache} = params;
-		const {guild, previousFeatures, updatedFeatures} = await this.withGuildUpdateLock(guildId, requestCache, () =>
-			this.data.operations.updateGuild(params, auditLogReason),
-		);
+		const {guild, previousFeatures, updatedFeatures} = await this.withUpdateLock(guildId, () => {
+			requestCache.guilds.delete(guildId);
+			return this.data.operations.updateGuild(params, auditLogReason);
+		});
 		if (
 			previousFeatures.has(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES) &&
 			!updatedFeatures.has(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES)
@@ -223,30 +220,8 @@ export class GuildService {
 		return guild;
 	}
 
-	private async withGuildUpdateLock<T>(guildId: GuildID, requestCache: RequestCache, fn: () => Promise<T>): Promise<T> {
-		const lockKey = `guild:${guildId}:update`;
-		const lockToken = await this.acquireGuildUpdateLock(lockKey);
-		if (!lockToken) {
-			throw new ResourceLockedError();
-		}
-		try {
-			requestCache.guilds.delete(guildId);
-			return await fn();
-		} finally {
-			await this.cacheService.releaseLock(lockKey, lockToken);
-		}
-	}
-
-	private async acquireGuildUpdateLock(lockKey: string): Promise<string | null> {
-		const startTime = Date.now();
-		while (Date.now() - startTime < GUILD_UPDATE_LOCK_MAX_WAIT_MS) {
-			const token = await this.cacheService.acquireLock(lockKey, GUILD_UPDATE_LOCK_TTL_SECONDS);
-			if (token) {
-				return token;
-			}
-			await new Promise((resolve) => setTimeout(resolve, GUILD_UPDATE_LOCK_RETRY_DELAY_MS));
-		}
-		return null;
+	withUpdateLock<T>(guildId: GuildID, fn: () => Promise<T>): Promise<T> {
+		return withGuildUpdateLock(this.cacheService, guildId, fn);
 	}
 
 	async getEmojiMetadata(emojiId: EmojiID): Promise<GuildEmojiMetadataResponse> {

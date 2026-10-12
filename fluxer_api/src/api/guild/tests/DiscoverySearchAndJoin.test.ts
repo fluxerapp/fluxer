@@ -6,7 +6,14 @@ import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
 import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
-import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {createChannel, createGuild, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {
+	idleActivityEvents,
+	resetActivityEventsForTests,
+	startActivityEvents,
+} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
+import type {Event} from '@app/api/infrastructure/activity/Contract.generated';
 import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
 import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
@@ -20,11 +27,13 @@ import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/wo
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryChannelPreviewResponse,
 	DiscoveryGuildListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
@@ -41,6 +50,14 @@ interface LiveGuildCounts {
 }
 
 const WORKER_HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
+
+class CapturingPublisher implements ActivityPublisher {
+	readonly events: Array<Event> = [];
+
+	async publish(_subject: string, payload: string): Promise<void> {
+		this.events.push(JSON.parse(payload) as Event);
+	}
+}
 
 class LiveCountsGatewayService extends NoopGatewayService {
 	constructor(private readonly liveCounts: Map<string, LiveGuildCounts>) {
@@ -248,6 +265,46 @@ describe('Discovery Search and Join', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
 				.execute();
 		});
+		test('should publish a refusal for a non-member discovery join while invites are disabled', async () => {
+			const publisher = new CapturingPublisher();
+			await startActivityEvents({publisher, kv: new MockKVProvider()});
+			try {
+				const owner = await createTestAccount(harness);
+				const guild = await createGuild(harness, owner.token, 'Closed Discovery Guild');
+				await setGuildMemberCount(harness, guild.id, 10);
+				const admin = await createTestAccount(harness);
+				await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+				await applyAndApprove(
+					harness,
+					owner.token,
+					admin.token,
+					guild.id,
+					'Join this closed community',
+					DiscoveryCategories.GAMING,
+				);
+				await updateGuild(harness, owner.token, guild.id, {
+					features: [...guild.features, GuildFeatures.INVITES_DISABLED],
+				});
+				const joiner = await createTestAccount(harness);
+				for (const account of [owner, joiner]) {
+					await createBuilder(harness, account.token)
+						.post(`/discovery/guilds/${guild.id}/join`)
+						.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.INVITES_DISABLED)
+						.execute();
+				}
+				await idleActivityEvents();
+				const refusals = publisher.events.filter((event) => event.kind === 'guild_join_refused');
+				expect(refusals.map((event) => [event.key, event.data])).toEqual([
+					[
+						joiner.userId,
+						{guild_id: guild.id, user_id: joiner.userId, cause: 'invites_paused', join_source: 'discovery'},
+					],
+				]);
+			} finally {
+				resetActivityEventsForTests();
+			}
+		});
+
 		test('should not allow bot accounts to join discoverable guilds', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'No Bots Guild');
