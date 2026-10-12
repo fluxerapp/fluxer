@@ -125,7 +125,6 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 						splashDimensions={splashDimensions}
 						patternImageUrl={patternReady ? foodPatternUrl : null}
 						splashAlignment={splashAlignment}
-						useFullCover={true}
 						data-flx="invite.invite-page-preview-modal.background"
 					/>
 					<div className={styles.foreground} data-flx="invite.invite-page-preview-modal.foreground">

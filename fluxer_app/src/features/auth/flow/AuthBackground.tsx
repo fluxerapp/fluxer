@@ -5,91 +5,49 @@ import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type React from 'react';
 
-const getSplashAlignmentStyles = (alignment: ValueOf<typeof GuildSplashCardAlignment>) => {
+const getSplashObjectPosition = (alignment: ValueOf<typeof GuildSplashCardAlignment>) => {
 	switch (alignment) {
 		case GuildSplashCardAlignment.LEFT:
-			return {transformOrigin: 'bottom left', objectPosition: 'left bottom'};
+			return 'left bottom';
 		case GuildSplashCardAlignment.RIGHT:
-			return {transformOrigin: 'bottom right', objectPosition: 'right bottom'};
+			return 'right bottom';
 		default:
-			return {transformOrigin: 'bottom center', objectPosition: 'center bottom'};
+			return 'center bottom';
 	}
 };
 
 export interface AuthBackgroundProps {
 	splashUrl: string | null;
 	splashDimensions?: {width: number; height: number} | null;
-	splashScale?: number | null;
 	patternImageUrl?: string | null;
 	className?: string;
-	useFullCover?: boolean;
 	splashAlignment?: ValueOf<typeof GuildSplashCardAlignment>;
 }
 
 export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 	splashUrl,
 	splashDimensions,
-	splashScale,
 	patternImageUrl,
 	className,
-	useFullCover = false,
 	splashAlignment = GuildSplashCardAlignment.CENTER,
 }) => {
-	const shouldShowSplash = splashUrl && splashDimensions && (useFullCover || splashScale);
-	const {transformOrigin, objectPosition} = getSplashAlignmentStyles(splashAlignment);
-	if (shouldShowSplash) {
-		if (useFullCover) {
-			return (
-				<div className={className} data-flx="auth.flow.auth-background.div">
-					<div style={{position: 'absolute', inset: 0}} data-flx="auth.flow.auth-background.div--2">
-						<img
-							src={splashUrl}
-							alt=""
-							style={{
-								position: 'absolute',
-								inset: 0,
-								width: '100%',
-								height: '100%',
-								objectFit: 'cover',
-								objectPosition,
-							}}
-							data-flx="auth.flow.auth-background.img"
-						/>
-						<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay" />
-					</div>
-				</div>
-			);
-		}
+	if (splashUrl && splashDimensions) {
 		return (
-			<div className={styles.rightSplit} data-flx="auth.flow.auth-background.right-split">
-				<div
-					className={styles.splashImage}
+			<div className={className} data-flx="auth.flow.auth-background.div">
+				<img
+					src={splashUrl}
+					alt=""
 					style={{
-						width: splashDimensions.width,
-						height: splashDimensions.height,
-						transform: `scale(${splashScale})`,
-						transformOrigin,
+						position: 'absolute',
+						inset: 0,
+						width: '100%',
+						height: '100%',
+						objectFit: 'cover',
+						objectPosition: getSplashObjectPosition(splashAlignment),
 					}}
-					data-flx="auth.flow.auth-background.splash-image"
-				>
-					<img
-						src={splashUrl}
-						alt=""
-						width={splashDimensions.width}
-						height={splashDimensions.height}
-						style={{
-							position: 'absolute',
-							left: 0,
-							top: 0,
-							width: '100%',
-							height: '100%',
-							objectFit: 'cover',
-							objectPosition,
-						}}
-						data-flx="auth.flow.auth-background.img--2"
-					/>
-					<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay--2" />
-				</div>
+					data-flx="auth.flow.auth-background.img"
+				/>
+				<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay" />
 			</div>
 		);
 	}

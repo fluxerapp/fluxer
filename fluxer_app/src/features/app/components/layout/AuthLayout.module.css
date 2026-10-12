@@ -54,17 +54,6 @@
 	width: 100%;
 }
 
-.rightSplit {
-	bottom: 0;
-	inset-inline-end: 0;
-	opacity: 1;
-	pointer-events: none;
-	position: fixed;
-	transition: opacity 0.4s ease;
-	width: auto;
-	z-index: 0;
-}
-
 .leftSplit {
 	display: flex;
 	flex-direction: column;
@@ -126,10 +115,9 @@
 	visibility: hidden;
 }
 
-.splashImage {
+.splashBackdrop {
 	position: fixed;
-	right: 0;
-	bottom: 0;
+	inset: 0;
 	pointer-events: none;
 	overflow: hidden;
 	z-index: 0;
