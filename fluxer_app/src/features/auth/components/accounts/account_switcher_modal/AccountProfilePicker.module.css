@@ -7,6 +7,8 @@
 	--account-profile-instance-badge-size: 3rem;
 	--account-profile-state-badge-size: 2.25rem;
 	--account-profile-name-color: var(--text-on-brand-primary);
+	--account-profile-domain-height: 0;
+	--account-profile-domain-gap: 0;
 	--account-profile-name-gap: 0.625rem;
 	--account-profile-name-height: 1.5rem;
 	--account-profile-more-size: 1.25rem;
@@ -41,6 +43,12 @@
 	min-width: 0;
 }
 
+.tileSlotWithDomain {
+	--account-profile-domain-height: 1.1rem;
+	--account-profile-domain-gap: 0.3rem;
+	--account-profile-name-gap: 0.125rem;
+}
+
 .tile {
 	position: relative;
 	z-index: 1;
@@ -70,7 +78,12 @@
 	top: 100%;
 	right: 0;
 	left: 0;
-	height: calc(var(--account-profile-name-gap) + var(--account-profile-name-height));
+	height: calc(
+		var(--account-profile-domain-gap) +
+		var(--account-profile-domain-height) +
+		var(--account-profile-name-gap) +
+		var(--account-profile-name-height)
+	);
 	content: '';
 }
 
@@ -99,7 +112,8 @@
 	color: var(--text-secondary);
 	transition:
 		background-color 40ms ease,
-		box-shadow 40ms ease;
+		box-shadow 40ms ease,
+		transform 120ms ease-out;
 }
 
 .avatarFrame::before {
@@ -134,6 +148,14 @@
 	box-shadow: 0 0 0 0.125rem color-mix(in srgb, var(--background-modifier-hover) 66%, var(--background-secondary));
 }
 
+@media (prefers-reduced-motion: no-preference) {
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.tile:not(:disabled):hover
+		.avatarFrame {
+		transform: scale(1.03);
+	}
+}
+
 .tileCurrent .avatarFrame::before {
 	border-color: transparent;
 }
@@ -156,6 +178,28 @@
 	box-shadow:
 		0 0 0 0.25rem var(--status-online),
 		0 0 0 0.375rem color-mix(in srgb, var(--status-online) 20%, transparent);
+}
+
+.domainRow {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	width: var(--account-profile-frame-size);
+	height: var(--account-profile-domain-height);
+	font-size: 0.85rem;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary-muted);
+	gap: 0.1rem;
+	margin: var(--account-profile-domain-gap) auto 0;
+	pointer-events: none;
+}
+
+.domainRow > span {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .nameRow {
