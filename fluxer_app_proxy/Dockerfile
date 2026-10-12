@@ -40,6 +40,7 @@ COPY packages/desktop_ipc/package.json ./packages/desktop_ipc/
 COPY packages/geo_utils/package.json ./packages/geo_utils/
 COPY packages/instance_bootstrap/package.json ./packages/instance_bootstrap/
 COPY packages/limits/package.json ./packages/limits/
+COPY packages/record_utils/package.json ./packages/record_utils/
 COPY packages/schema/package.json ./packages/schema/
 COPY packages/snowflake/package.json ./packages/snowflake/
 COPY packages/voice_engine_v2/package.json ./packages/voice_engine_v2/
@@ -54,6 +55,7 @@ COPY packages/desktop_ipc/ ./packages/desktop_ipc/
 COPY packages/geo_utils/ ./packages/geo_utils/
 COPY packages/instance_bootstrap/ ./packages/instance_bootstrap/
 COPY packages/limits/ ./packages/limits/
+COPY packages/record_utils/ ./packages/record_utils/
 COPY packages/schema/ ./packages/schema/
 COPY packages/snowflake/ ./packages/snowflake/
 COPY packages/voice_engine_v2/ ./packages/voice_engine_v2/
