@@ -148,7 +148,7 @@ function registerSelfUpdater(getMainWindow: () => BrowserWindow | null): void {
 			return;
 		}
 		try {
-			await checkDesktopUpdateNow();
+			await checkDesktopUpdateNow({manual: true});
 			send(getMainWindow(), {type: 'not-available', context});
 		} catch (error) {
 			log.warn('Desktop update check failed', error);
@@ -164,7 +164,7 @@ function registerManualUpdater(
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
 		if (context === 'user') {
 			try {
-				await checkDesktopUpdateNow();
+				await checkDesktopUpdateNow({manual: true});
 			} catch (error) {
 				log.warn('Desktop module update check failed', error);
 			}

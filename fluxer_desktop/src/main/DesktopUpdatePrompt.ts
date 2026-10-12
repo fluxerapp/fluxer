@@ -41,7 +41,7 @@ async function runUpdateCheck(): Promise<void> {
 	for (;;) {
 		let manualVersion: string | null = null;
 		try {
-			const state = await checkDesktopUpdateNow();
+			const state = await checkDesktopUpdateNow({manual: true});
 			if (state.updating === true) {
 				logger.info('A desktop update is already running, leaving it to finish');
 				return;
@@ -129,7 +129,7 @@ export function startDesktopUpdateFromShell(): void {
 
 export async function updateFromCommandLine(): Promise<void> {
 	try {
-		const state = await checkDesktopUpdateNow();
+		const state = await checkDesktopUpdateNow({manual: true});
 		if (!state.available) {
 			logger.info('The command line asked for an update and none is waiting');
 			return;

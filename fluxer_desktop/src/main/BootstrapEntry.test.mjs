@@ -195,12 +195,9 @@ describe('Bootstrap entry point', () => {
 		);
 	});
 
-	test('the module poll only checks, it never downloads or reloads underneath the user', () => {
-		const poll = source.slice(
-			source.indexOf('function armModulePoll('),
-			source.indexOf('async function refuseUnsupportedBuild('),
-		);
-		assert.match(poll, /void checkDesktopUpdateNow\(\)/);
+	test('the update poll only checks, it never downloads or reloads underneath the user', () => {
+		const poll = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'DesktopUpdatePoll.ts'), 'utf8');
+		assert.match(source, /check: \(\) => checkDesktopUpdateNow\(\),/);
 		assert.doesNotMatch(
 			poll,
 			/installPending|reloadIgnoringCache|refreshModuleRoots|activateMergedForRendererReload/,
@@ -208,12 +205,9 @@ describe('Bootstrap entry point', () => {
 		);
 		assert.doesNotMatch(source, /reloadIgnoringCache/);
 	});
-	test('a module poll that went quiet says so when it comes back', () => {
-		assert.match(
-			source,
-			/if \(failing\) \{\n\t+failing = false;\n\t+logger\.info\('The module poll recovered'\);\n\t+\}/,
-			'The failure is logged once and then suppressed until recovery. Without a line on the way back, a reader of the log cannot tell a poll that recovered from one that is still failing, which is the whole question that warning raises.',
-		);
+
+	test('a reload of the renderer checks for an update right away', () => {
+		assert.match(source, /observeRendererLaunchConfirmed\(wakeDesktopUpdatePoll\);/);
 	});
 
 	test('a minimized login launch converges the modules without flashing the splash', () => {

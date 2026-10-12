@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {WINDOWS_APP_USER_MODEL_ID, WINDOWS_TOAST_ACTIVATOR_CLSID} from '@electron/common/DesktopIdentity';
-import {type ModulePollPlan, nextModulePollDelay, resolveModulePollPlan} from '@electron/common/ModulePollPlan';
+import {resolveModulePollPlan} from '@electron/common/ModulePollPlan';
 import {
 	hasOfflineRenderer,
 	ModuleSystemLaunchDecision,
@@ -13,6 +13,7 @@ import {
 	resolveModuleSystemLaunch,
 } from '@electron/common/ModuleSystem';
 import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {armDesktopUpdatePoll, wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {DesktopUpdateRun, type DesktopUpdateTakeover} from '@electron/main/DesktopUpdateRun';
 import {armOpenUrlForwarding, observeRendererLaunchConfirmed} from '@electron/main/ModuleBootHandoff';
 import type {ModuleLaunchAttempt, ModuleStore as ModuleStoreInstance} from '@electron/main/ModuleStore';
@@ -132,51 +133,6 @@ async function launchMainApp(permit: ModuleLaunchPermit, logger: BootstrapLogger
 		);
 	}
 	await import(MAIN_PROCESS_ENTRY_URL);
-}
-
-function armModulePoll(plan: ModulePollPlan, logger: BootstrapLogger): void {
-	let inFlight = false;
-	let failing = false;
-	logger.info('Polling the module manifest', {
-		intervalMs: plan.intervalMs,
-		jitterRatio: plan.jitterRatio,
-	});
-	const schedule = (): void => {
-		const timer = setTimeout(tick, nextModulePollDelay(plan));
-		timer.unref();
-	};
-	const tick = (): void => {
-		if (inFlight) {
-			schedule();
-			return;
-		}
-		inFlight = true;
-		void checkDesktopUpdateNow()
-			.then((state) => {
-				if (failing) {
-					failing = false;
-					logger.info('The module poll recovered');
-				}
-				if (state.available) {
-					logger.info('A desktop update is available, waiting for the user to start it');
-				}
-			})
-			.catch((error: unknown) => {
-				if (!failing) {
-					failing = true;
-					logger.warn('The module poll failed, staying quiet until it recovers', error);
-				}
-			})
-			.finally(() => {
-				inFlight = false;
-				schedule();
-			});
-	};
-	if (process.platform === 'linux') {
-		tick();
-	} else {
-		schedule();
-	}
 }
 
 async function refuseUnsupportedBuild(reason: string): Promise<never> {
@@ -811,8 +767,8 @@ async function runModuleBootstrap(): Promise<void> {
 		);
 		markSplashLaunching();
 		armDesktopUpdate({
-			check: async () => {
-				const check = await desktopUpdate.check();
+			check: async (manual) => {
+				const check = await desktopUpdate.check({manual});
 				recordPendingUpdate(check);
 				return check;
 			},
@@ -821,7 +777,15 @@ async function runModuleBootstrap(): Promise<void> {
 		armMainWindowHandoff(updater, permit.launchAttempt, () => {
 			desktopUpdate.markLaunchSettled();
 			preloadUpdateSplash();
-			armModulePoll(resolveModulePollPlan(readDevModulePollInterval()), logger);
+			armDesktopUpdatePoll(
+				{
+					plan: resolveModulePollPlan(readDevModulePollInterval()),
+					check: () => checkDesktopUpdateNow(),
+					logger,
+				},
+				process.platform === 'linux',
+			);
+			observeRendererLaunchConfirmed(wakeDesktopUpdatePoll);
 		});
 		app.once('before-quit', () => {
 			closeSplashWindow();

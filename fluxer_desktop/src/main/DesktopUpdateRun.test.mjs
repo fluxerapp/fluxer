@@ -16,6 +16,7 @@ function harness({
 	shellResults = [],
 	installFails = false,
 	settled = true,
+	now = () => 0,
 } = {}) {
 	const steps = [];
 	const published = [];
@@ -70,6 +71,7 @@ function harness({
 			failures.push(failure);
 		},
 		logger: {info: quiet, warn: quiet, error: quiet},
+		now,
 	});
 	if (settled) run.markLaunchSettled();
 	return {run, steps, published, failures};
@@ -142,6 +144,36 @@ describe('DesktopUpdateRun', () => {
 		);
 		assert.deepEqual(await run.check(), {shellNewer: true, modulesChanged: false}, 'a newer manifest shell does');
 		assert.deepEqual(steps, ['probe', 'takeover', 'close', 'shell-update', 'reopen', 'probe', 'probe']);
+	});
+
+	test('a manual check offers the shell again even after the platform feed said it had nothing', async () => {
+		const lagging = {shellLatestVersion: '2026.1012.154032', shellNewer: true, modulesChanged: false};
+		const {run} = harness({probes: [lagging], shellResults: [{reason: 'no-update', detail: null}]});
+		await run.start();
+		assert.deepEqual(await run.check(), {shellNewer: false, modulesChanged: false});
+
+		assert.deepEqual(
+			await run.check({manual: true}),
+			{shellNewer: true, modulesChanged: false},
+			'one stale answer from the platform feed must not make Check for updates say up to date for the rest of the session',
+		);
+		assert.deepEqual(await run.check(), {shellNewer: true, modulesChanged: false});
+	});
+
+	test('the background check offers a lagging shell again once the platform feed had time to catch up', async () => {
+		let clock = 0;
+		const lagging = {shellLatestVersion: '2026.1012.154032', shellNewer: true, modulesChanged: false};
+		const {run} = harness({
+			probes: [lagging],
+			shellResults: [{reason: 'no-update', detail: null}],
+			now: () => clock,
+		});
+		await run.start();
+
+		clock = 9 * 60_000;
+		assert.deepEqual(await run.check(), {shellNewer: false, modulesChanged: false});
+		clock = 10 * 60_000;
+		assert.deepEqual(await run.check(), {shellNewer: true, modulesChanged: false});
 	});
 
 	test('a shell update that failed on the network is retried by the next click', async () => {

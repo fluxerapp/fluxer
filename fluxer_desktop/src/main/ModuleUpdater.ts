@@ -324,6 +324,7 @@ export class ModuleUpdater {
 	private startupUpdatePolicy: ModuleStartupUpdatePolicy;
 	private manifestObservationTail: Promise<void> = Promise.resolve();
 	private recordedManifestSha256: string | null = null;
+	private lastAccepted: {readonly document: ModuleManifestDocument; readonly metadataVersion: number} | null = null;
 
 	public constructor(options: ModuleUpdaterOptions) {
 		this.store = options.store;
@@ -448,7 +449,7 @@ export class ModuleUpdater {
 			try {
 				const document = await this.manifestRepository.fetchLatest();
 				fetched = true;
-				const manifest = await this.observeManifest(document);
+				const manifest = await this.acceptManifest(document);
 				const startupUpdateRequired = await this.startupUpdateRequired();
 				if (!startupUpdateRequired) {
 					return await this.launchIfAtFloor();
@@ -502,7 +503,9 @@ export class ModuleUpdater {
 				}
 				const delayMs = backoff.fail();
 				const exhausted =
-					backoff.reachedCeiling || isRejectedManifestError(error) || (await this.onlyForcedByShellChange());
+					backoff.reachedCeiling ||
+					error instanceof ModuleManifestEquivocationError ||
+					(await this.onlyForcedByShellChange());
 				if (exhausted || !fetched) {
 					const decision = await this.planner.evaluateUnreachableLaunch(
 						this.isStartupUpdateEnforced(),
@@ -623,7 +626,7 @@ export class ModuleUpdater {
 	}
 
 	private async resolveManifestForEnsure(): Promise<DesktopModuleUpdateManifest> {
-		return this.observeManifest(await this.manifestRepository.resolveMemoizedDocument());
+		return this.acceptManifest(await this.manifestRepository.resolveMemoizedDocument());
 	}
 
 	private async updateShellFirst(manifest: DesktopModuleUpdateManifest): Promise<boolean> {
@@ -642,9 +645,19 @@ export class ModuleUpdater {
 	}
 
 	public async checkForUpdate(): Promise<DesktopUpdateProbe> {
-		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
-		const shellLatestVersion = manifest.shell.latestVersion.source;
-		const shellNewer = compareModuleVersions(manifest.shell.latestVersion, this.shellVersion) > 0;
+		const [manifest, feedLatest] = await Promise.all([
+			this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY),
+			this.manifestRepository.fetchShellLatestVersion().catch((error: unknown) => {
+				this.reportFailure(error);
+				return null;
+			}),
+		]);
+		const shellLatest =
+			feedLatest != null && compareModuleVersions(feedLatest, manifest.shell.latestVersion) > 0
+				? feedLatest
+				: manifest.shell.latestVersion;
+		const shellLatestVersion = shellLatest.source;
+		const shellNewer = compareModuleVersions(shellLatest, this.shellVersion) > 0;
 		if (this.planner.shellUpdateRequired(manifest)) {
 			return {shellLatestVersion, shellNewer, modulesChanged: false};
 		}
@@ -672,7 +685,25 @@ export class ModuleUpdater {
 
 	private async fetchFreshManifest(mode: ModuleManifestObservationMode): Promise<DesktopModuleUpdateManifest> {
 		this.manifestRepository.clearMemo();
-		return await this.observeManifest(await this.manifestRepository.fetchLatest(), mode);
+		return await this.acceptManifest(await this.manifestRepository.fetchLatest(), mode);
+	}
+
+	private async acceptManifest(
+		document: ModuleManifestDocument,
+		mode: ModuleManifestObservationMode = ModuleManifestObservationMode.RECORD_FETCH,
+	): Promise<DesktopModuleUpdateManifest> {
+		try {
+			return await this.observeManifest(document, mode);
+		} catch (error) {
+			if (!(error instanceof ModuleManifestRollbackError)) {
+				throw error;
+			}
+			const fallback = this.lastAccepted?.document ?? (await this.manifestRepository.readCached());
+			if (fallback == null || fallback === document) {
+				throw error;
+			}
+			return await this.observeManifest(fallback, mode);
+		}
 	}
 
 	private async collectPendingItems(
@@ -923,6 +954,10 @@ export class ModuleUpdater {
 	): Promise<DesktopModuleUpdateManifest> {
 		const observe = async (): Promise<DesktopModuleUpdateManifest> => {
 			const manifest = this.manifestRepository.parse(document);
+			const accepted = this.lastAccepted;
+			if (accepted != null && manifest.metadataVersion < accepted.metadataVersion) {
+				throw new ModuleManifestRollbackError(this.manifestFeed, manifest.metadataVersion, accepted.metadataVersion);
+			}
 			const observation: ModuleManifestFeedObservation = {
 				feed: this.manifestFeed,
 				metadataVersion: manifest.metadataVersion,
@@ -937,6 +972,7 @@ export class ModuleUpdater {
 				await this.persistManifest(document, manifest, observation);
 				this.recordedManifestSha256 = observation.manifestSha256;
 			}
+			this.lastAccepted = {document, metadataVersion: manifest.metadataVersion};
 			return manifest;
 		};
 		const observed = this.manifestObservationTail.then(observe, observe);

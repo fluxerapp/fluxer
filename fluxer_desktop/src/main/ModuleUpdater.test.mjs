@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {Buffer} from 'node:buffer';
 import {createHash} from 'node:crypto';
-import {mkdirSync, mkdtempSync, writeFileSync} from 'node:fs';
+import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {rm} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -129,7 +129,14 @@ function createUpdater(store, modules, options = {}) {
 		fetch: async (url, init) => {
 			requests.push(url);
 			const response = options.respond == null ? null : await options.respond(url, init);
-			return response ?? new Response(bytes, {status: 200, headers: {etag: '"manifest-1"'}});
+			if (response != null) {
+				return response;
+			}
+			if (String(url).endsWith('/latest.json')) {
+				const version = options.shellFeed ?? options.shellLatest ?? SHELL_VERSION;
+				return new Response(JSON.stringify({version}), {status: 200, headers: {etag: `"feed-${version}"`}});
+			}
+			return new Response(bytes, {status: 200, headers: {etag: '"manifest-1"'}});
 		},
 		sleep: async (ms) => {
 			sleeps.push(ms);
@@ -412,7 +419,7 @@ describe('ModuleUpdater.run', () => {
 		assert.equal(store.getState().boot_attempt, 2);
 	});
 
-	test('a manifest older than the one already seen launches the verified set without retrying', async () => {
+	test('a manifest older than the one already seen launches on the last accepted manifest without retrying', async () => {
 		const userDataPath = createUserData();
 		const store = await openStore(userDataPath);
 		installModuleOnDisk(getModuleStoreRoot(userDataPath), 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
@@ -423,13 +430,30 @@ describe('ModuleUpdater.run', () => {
 
 		const outcome = await updater.run();
 
-		assert.equal(outcome.status, 'unreachable-launch');
+		assert.equal(outcome.status, 'launching');
 		assert.deepEqual(outcome.committed, {fluxer_renderer: RENDERER_SHA});
 		assert.deepEqual(sleeps, []);
-		assert.deepEqual(
-			reports.map((report) => report.type),
-			['manifest-rollback'],
-		);
+		assert.deepEqual(reports, []);
+		assert.equal(store.getState().manifest_high_water[0].metadataVersion, 5);
+	});
+
+	test('an older manifest with no accepted copy to fall back on retries like an outage instead of blocking', async () => {
+		const userDataPath = createUserData();
+		const storeRoot = getModuleStoreRoot(userDataPath);
+		const store = await openStore(userDataPath);
+		installModuleOnDisk(storeRoot, 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
+		await store.commit({fluxer_renderer: RENDERER_SHA});
+		const seen = createUpdater(store, {fluxer_renderer: RENDERER_SHA}, {metadataVersion: 5});
+		assert.equal((await seen.updater.run()).status, 'launching');
+		rmSync(path.join(storeRoot, 'manifest.json'));
+		const {updater, sleeps, reports} = createUpdater(store, {fluxer_renderer: NEXT_RENDERER_SHA}, {metadataVersion: 4});
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'unreachable-launch');
+		assert.deepEqual(outcome.committed, {fluxer_renderer: RENDERER_SHA});
+		assert.ok(sleeps.length > 0, 'a stale edge copy clears within a minute, so the launch retries before giving up');
+		assert.ok(reports.every((report) => report.type === 'manifest-rollback'));
 	});
 
 	test('a package the server no longer has demotes an optional module to its committed digest', async () => {
@@ -501,7 +525,7 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 		assert.deepEqual(check, {shellLatestVersion: SHELL_VERSION, shellNewer: false, modulesChanged: true});
 		assert.deepEqual(
 			requests.map((url) => String(url).split('/').pop()),
-			['modules.json'],
+			['modules.json', 'latest.json'],
 		);
 		assert.deepEqual(installs, []);
 		assert.deepEqual(store.getCommitted(), {fluxer_renderer: RENDERER_SHA});
@@ -519,6 +543,96 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 			shellNewer: true,
 			modulesChanged: false,
 		});
+	});
+
+	test('a shell feed ahead of the manifest offers the newer shell', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater} = createUpdater(store, {fluxer_renderer: RENDERER_SHA}, {shellFeed: '2026.1012.154032'});
+
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: '2026.1012.154032',
+			shellNewer: true,
+			modulesChanged: false,
+		});
+	});
+
+	test('a shell feed behind the manifest never hides the shell the manifest names', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: RENDERER_SHA},
+			{shellLatest: '2026.824.1', shellFeed: SHELL_VERSION},
+		);
+
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: '2026.824.1',
+			shellNewer: true,
+			modulesChanged: false,
+		});
+	});
+
+	test('an unreachable shell feed still answers from the manifest', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{respond: async (url) => (String(url).endsWith('/latest.json') ? new Response('', {status: 503}) : null)},
+		);
+
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: SHELL_VERSION,
+			shellNewer: false,
+			modulesChanged: true,
+		});
+	});
+
+	test('repeat checks revalidate both feeds and reuse them when nothing changed', async () => {
+		const {store} = await storeOnRenderer();
+		const conditions = [];
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{
+				shellFeed: '2026.824.1',
+				respond: async (url, init) => {
+					const etag = init?.headers?.['if-none-match'] ?? null;
+					conditions.push([String(url).split('/').pop(), etag]);
+					return etag == null ? null : new Response(null, {status: 304});
+				},
+			},
+		);
+		const first = await updater.checkForUpdate();
+
+		const second = await updater.checkForUpdate();
+
+		assert.deepEqual(second, first);
+		assert.deepEqual(second, {shellLatestVersion: '2026.824.1', shellNewer: true, modulesChanged: true});
+		assert.deepEqual(conditions.slice(-2), [
+			['modules.json', '"manifest-1"'],
+			['latest.json', '"feed-2026.824.1"'],
+		]);
+	});
+
+	test('an older manifest during a background check reads as nothing new instead of failing', async () => {
+		const {store} = await storeOnRenderer();
+		let metadataVersion = 6;
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{
+				respond: async (url) =>
+					String(url).endsWith('/modules.json')
+						? new Response(manifestBytes({fluxer_renderer: NEXT_RENDERER_SHA}, {metadataVersion}), {status: 200})
+						: null,
+			},
+		);
+		const fresh = await updater.checkForUpdate();
+		metadataVersion = 5;
+
+		const stale = await updater.checkForUpdate();
+
+		assert.deepEqual(stale, fresh);
+		assert.deepEqual(stale, {shellLatestVersion: SHELL_VERSION, shellNewer: false, modulesChanged: true});
 	});
 
 	test('a module that needs the next shell reads as a shell update, not as a module update', async () => {

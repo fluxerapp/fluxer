@@ -71,6 +71,50 @@ describe('DesktopUpdateGate', () => {
 		stop();
 	});
 
+	test('a background poll joins a check already running instead of starting another', async () => {
+		const pending = deferred();
+		const calls = [];
+		armDesktopUpdate({
+			check: async (manual) => {
+				calls.push(manual);
+				await pending.promise;
+				return {shellNewer: false, modulesChanged: false};
+			},
+			start: async () => {},
+		});
+
+		const first = checkDesktopUpdateNow();
+		const second = checkDesktopUpdateNow();
+		pending.resolve();
+		await Promise.all([first, second]);
+
+		assert.deepEqual(calls, [false]);
+	});
+
+	test('a manual check never settles for the answer of a background poll that was already running', async () => {
+		const pending = deferred();
+		const calls = [];
+		armDesktopUpdate({
+			check: async (manual) => {
+				calls.push(manual);
+				if (!manual) {
+					await pending.promise;
+					return {shellNewer: false, modulesChanged: false};
+				}
+				return {shellNewer: true, modulesChanged: false};
+			},
+			start: async () => {},
+		});
+
+		const background = checkDesktopUpdateNow();
+		const manual = checkDesktopUpdateNow({manual: true});
+		pending.resolve();
+		await background;
+
+		assert.deepEqual(await manual, {available: true, updating: false});
+		assert.deepEqual(calls, [false, true]);
+	});
+
 	test('a shell update that could not finish stays available for the next click', async () => {
 		armDesktopUpdate({
 			check: async () => ({shellNewer: true, modulesChanged: false}),

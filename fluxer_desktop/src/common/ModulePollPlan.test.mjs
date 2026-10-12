@@ -19,9 +19,12 @@ describe('how often a client re-checks the module manifest', () => {
 		);
 	});
 
-	test('a shipped build polls every ten minutes, not every two seconds', () => {
+	test('a shipped build polls every 75 to 105 seconds', () => {
 		assert.equal(resolveModulePollPlan(null).intervalMs, MODULE_POLL_INTERVAL_MS);
-		assert.equal(MODULE_POLL_INTERVAL_MS, 10 * 60 * 1000);
+		assert.equal(MODULE_POLL_INTERVAL_MS, 90 * 1000);
+		const plan = resolveModulePollPlan(null);
+		assert.ok(nextModulePollDelay(plan, () => 0) >= 75 * 1000);
+		assert.ok(nextModulePollDelay(plan, () => 1) <= 105 * 1000);
 	});
 
 	test('a shipped build spreads the poll so clients do not stampede the manifest', () => {
@@ -34,8 +37,8 @@ describe('how often a client re-checks the module manifest', () => {
 		const mid = nextModulePollDelay(plan, () => 0.5);
 		const high = nextModulePollDelay(plan, () => 1);
 		assert.equal(mid, plan.intervalMs);
-		assert.equal(low, plan.intervalMs * (1 - plan.jitterRatio));
-		assert.equal(high, plan.intervalMs * (1 + plan.jitterRatio));
+		assert.equal(low, Math.round(plan.intervalMs * (1 - plan.jitterRatio)));
+		assert.equal(high, Math.round(plan.intervalMs * (1 + plan.jitterRatio)));
 		assert.ok(low < mid && mid < high);
 	});
 

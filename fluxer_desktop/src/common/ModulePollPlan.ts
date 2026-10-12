@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const MODULE_POLL_INTERVAL_MS = 10 * 60 * 1000;
-const MODULE_POLL_JITTER_RATIO = 0.2;
+export const MODULE_POLL_INTERVAL_MS = 90 * 1000;
+const MODULE_POLL_JITTER_RATIO = 0.15;
 
 export interface ModulePollPlan {
 	readonly intervalMs: number;

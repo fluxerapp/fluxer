@@ -22,6 +22,7 @@ import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath
 import {resolveDesktopLandingUrl} from '@electron/main/DesktopLastRoute';
 import {DesktopRuntimeSecurity} from '@electron/main/DesktopRuntimeSecurity';
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
+import {wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
 import {isNativeGatewayAvailable} from '@electron/main/GatewaySocketNativeBoundary';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
@@ -856,6 +857,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	});
 	mainWindow.on('restore', refreshDesktopTrayMenu);
 	mainWindow.on('show', refreshDesktopTrayMenu);
+	mainWindow.on('show', wakeDesktopUpdatePoll);
 	mainWindow.on('hide', refreshDesktopTrayMenu);
 	mainWindow.on('close', (event) => {
 		if (saveTimeout) clearTimeout(saveTimeout);
