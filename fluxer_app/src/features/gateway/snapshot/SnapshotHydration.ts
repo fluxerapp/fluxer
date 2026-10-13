@@ -227,7 +227,7 @@ function hydrateAccountMetadata(metadata: SnapshotAccountMetadataRow): void {
 	WebAuthnCredentials.setCredentials(metadata.webAuthnCredentials);
 }
 
-function hydrateThreads(parsed: ParsedSnapshot): void {
+function guildsWithChannels(parsed: ParsedSnapshot): Array<GuildReadyData> {
 	const channelsByGuild = new Map<string, Array<WireChannel>>();
 	for (const channel of parsed.channels) {
 		if (channel.guild_id == null) continue;
@@ -238,9 +238,7 @@ function hydrateThreads(parsed: ParsedSnapshot): void {
 		}
 		channels.push(channel);
 	}
-	const guilds = parsed.guilds.map((guild) => ({...guild, channels: channelsByGuild.get(guild.id) ?? []}));
-	ThreadGuilds.handleGatewayReady(guilds);
-	ChannelThreads.handleGatewayReady(guilds);
+	return parsed.guilds.map((guild) => ({...guild, channels: channelsByGuild.get(guild.id) ?? []}));
 }
 
 function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUserId: string): void {
@@ -256,8 +254,10 @@ function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUse
 		GuildCount.handleGatewayReady(parsed.guilds);
 		GuildMembers.handleGatewayReady(parsed.guilds);
 		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
+		const threadGuilds = guildsWithChannels(parsed);
+		ThreadGuilds.handleGatewayReady(threadGuilds);
 		Channels.hydrateFromSnapshot(parsed.channels, selfUserId);
-		hydrateThreads(parsed);
+		ChannelThreads.handleGatewayReady(threadGuilds);
 		GuildVerification.handleGatewayReady();
 		Permission.handleGatewayReady();
 		MemberSearch.handleGatewayReady();
