@@ -15,6 +15,7 @@ import NativePermission from '@app/features/permissions/system/state/NativePermi
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {parseNumericInput} from '@app/features/ui/components/form/ComboboxNumericInput';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
@@ -161,10 +162,8 @@ const resolvePushToTalkReleaseDelayInput = (
 	options: ReadonlyArray<ComboboxOption<number>>,
 ): number | undefined => {
 	const normalized = inputValue.trim().toLowerCase();
-	const numericMatch = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
+	const parsedValue = parseNumericInput(normalized);
+	if (parsedValue === undefined) return undefined;
 	const unitMatch = normalized.match(/[0-9.]\s*([a-z]+)/);
 	const unit = unitMatch?.[1] ?? 'ms';
 	const valueInMs = unit.startsWith('s') ? parsedValue * 1000 : parsedValue;

@@ -21,17 +21,12 @@ export interface ComboboxOption<V extends Primitive = string> {
 	isDisabled?: boolean;
 }
 
-export function resolveNearestNumericOption(
+function findOptionByLabel<V extends Primitive, O extends ComboboxOption<V>>(
 	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined {
-	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	return options.reduce((nearest, option) =>
-		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
-	).value;
+	options: ReadonlyArray<O>,
+): O | undefined {
+	const lowered = inputValue.trim().toLowerCase();
+	return options.find((option) => option.label.trim().toLowerCase() === lowered);
 }
 
 export interface ComboboxFilterOption<O> {
@@ -197,6 +192,8 @@ export const Combobox = observer(function Combobox<
 	);
 	const resolveInputValue = useCallback(
 		(inputValue: string): V | undefined => {
+			const labelMatch = findOptionByLabel<V, O>(inputValue, options);
+			if (labelMatch) return labelMatch.value;
 			const customValue = autoSelectValueFromInput?.(inputValue, options);
 			if (customValue !== undefined) return customValue;
 			if (!autoSelectExactMatch) return undefined;
