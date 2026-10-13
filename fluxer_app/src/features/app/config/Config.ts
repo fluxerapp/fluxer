@@ -24,6 +24,16 @@ if (!parsedBuildInfo.success) {
 }
 const buildInfo = parsedBuildInfo.output;
 
+const SERVED_RELEASE_CHANNEL_META_SELECTOR = 'meta[name="fluxer-release-channel"]';
+
+function servedReleaseChannel(): 'stable' | 'canary' | null {
+	if (typeof document === 'undefined') {
+		return null;
+	}
+	const value = document.querySelector<HTMLMetaElement>(SERVED_RELEASE_CHANNEL_META_SELECTOR)?.content;
+	return value === 'stable' || value === 'canary' ? value : null;
+}
+
 function clientReleaseChannel(value: (typeof buildInfo)['PUBLIC_RELEASE_CHANNEL']): 'stable' | 'canary' {
 	switch (value) {
 		case 'stable':
@@ -36,5 +46,5 @@ function clientReleaseChannel(value: (typeof buildInfo)['PUBLIC_RELEASE_CHANNEL'
 
 export default {
 	PUBLIC_BUILD_VERSION: buildInfo.PUBLIC_BUILD_VERSION,
-	PUBLIC_RELEASE_CHANNEL: clientReleaseChannel(buildInfo.PUBLIC_RELEASE_CHANNEL),
+	PUBLIC_RELEASE_CHANNEL: servedReleaseChannel() ?? clientReleaseChannel(buildInfo.PUBLIC_RELEASE_CHANNEL),
 } as const;
