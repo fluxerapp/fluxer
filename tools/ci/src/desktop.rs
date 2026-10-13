@@ -49,7 +49,7 @@ const LINUX_LIBFIDO2_VERSION: &str = "1.16.0";
 const LINUX_LIBFIDO2_SOURCE_SHA256: &str =
     "8c2b6fb279b5b42e9ac92ade71832e485852647b53607c43baaafbbcecea04e4";
 pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
-const MACOS_MINIMUM_SYSTEM_VERSION: &str = "13.0";
+pub(crate) const MACOS_MINIMUM_SYSTEM_VERSION: &str = "13.0";
 const DESKTOP_PAYLOAD_PREFIX: &str = "desktop";
 const DESKTOP_SHARED_ASSETS_DIR_NAME: &str = "desktop-shared-assets";
 const DESKTOP_SHARED_ASSETS_PAYLOAD_DIR_NAME: &str = "renderer";
