@@ -107,6 +107,7 @@ function extractStreamFromGet(out: GetObjectCommandOutput): Readable {
 }
 
 const REJECTED_SERVER_SIDE_COPY_ERRORS = new Set([
+	'NoSuchBucket',
 	'NoSuchKey',
 	'NotFound',
 	'NotImplemented',
@@ -239,6 +240,8 @@ export class StorageService implements IStorageService {
 		contentType,
 		contentLength,
 		expiresAt,
+		cacheControl,
+		contentDisposition,
 	}: {
 		bucket: string;
 		key: string;
@@ -246,6 +249,8 @@ export class StorageService implements IStorageService {
 		contentType?: string;
 		contentLength?: number;
 		expiresAt?: Date;
+		cacheControl?: string;
+		contentDisposition?: string;
 	}): Promise<void> {
 		const size = contentLength ?? (await fs.promises.stat(filePath)).size;
 		if (size <= STREAM_UPLOAD_PART_BYTES) {
@@ -258,6 +263,8 @@ export class StorageService implements IStorageService {
 					ContentType: contentType,
 					ContentLength: size,
 					Expires: expiresAt,
+					CacheControl: cacheControl,
+					ContentDisposition: contentDisposition,
 				}),
 			);
 			return;
@@ -278,6 +285,8 @@ export class StorageService implements IStorageService {
 					Body: stream,
 					ContentType: contentType,
 					Expires: expiresAt,
+					CacheControl: cacheControl,
+					ContentDisposition: contentDisposition,
 				},
 				partSize: STREAM_UPLOAD_PART_BYTES,
 				queueSize: STREAM_UPLOAD_CONCURRENCY,
@@ -426,9 +435,6 @@ export class StorageService implements IStorageService {
 		contentLength: number;
 		contentRange?: string | null;
 		contentType?: string | null;
-		cacheControl?: string | null;
-		contentDisposition?: string | null;
-		expires?: Date | null;
 		etag?: string | null;
 		lastModified?: Date | null;
 	} | null> {
@@ -441,9 +447,6 @@ export class StorageService implements IStorageService {
 				contentLength: out.ContentLength ?? 0,
 				contentRange: out.ContentRange ?? null,
 				contentType: out.ContentType ?? null,
-				cacheControl: out.CacheControl ?? null,
-				contentDisposition: out.ContentDisposition ?? null,
-				expires: out.Expires ?? null,
 				etag: out.ETag ?? null,
 				lastModified: out.LastModified ?? null,
 			};
@@ -468,6 +471,10 @@ export class StorageService implements IStorageService {
 
 	async writeObjectToDisk(bucket: string, key: string, filePath: string): Promise<void> {
 		await this.ensureDirectoryExists(path.dirname(filePath));
+		await this.downloadObject(bucket, key, filePath);
+	}
+
+	private async downloadObject(bucket: string, key: string, filePath: string): Promise<GetObjectCommandOutput> {
 		const out = await this.client.send(new GetObjectCommand({Bucket: bucket, Key: key}));
 		const stream = extractStreamFromGet(out);
 		const writeStream = fs.createWriteStream(filePath);
@@ -477,6 +484,7 @@ export class StorageService implements IStorageService {
 			writeStream.destroy();
 			throw error;
 		}
+		return out;
 	}
 
 	async copyObject({
@@ -507,7 +515,7 @@ export class StorageService implements IStorageService {
 				}),
 			);
 		} catch (copyError) {
-			if (sourceBucket === destinationBucket || !isRejectedServerSideCopy(copyError)) {
+			if (!isRejectedServerSideCopy(copyError)) {
 				throw copyError;
 			}
 			await this.copyObjectThroughApi(
@@ -541,38 +549,28 @@ export class StorageService implements IStorageService {
 		},
 		copyError: unknown,
 	): Promise<void> {
-		const source = await this.streamObject({bucket: sourceBucket, key: sourceKey});
-		if (!source) {
-			throw copyError;
-		}
-		Logger.warn(
-			{sourceBucket, destinationBucket, error: copyError},
-			'Object storage rejected a cross-bucket copy, copying through the API instead',
-		);
-		const upload = new Upload({
-			client: this.client,
-			params: {
-				Bucket: destinationBucket,
-				Key: destinationKey,
-				Body: source.body,
-				ContentType: newContentType ?? source.contentType ?? undefined,
+		const downloadedSource = temporaryFile();
+		try {
+			const source = await this.downloadObject(sourceBucket, sourceKey, downloadedSource);
+			Logger.warn(
+				{sourceBucket, destinationBucket, error: copyError},
+				'Object storage rejected a server-side copy, copying through the API instead',
+			);
+			await this.uploadObjectFromFile({
+				bucket: destinationBucket,
+				key: destinationKey,
+				filePath: downloadedSource,
+				contentType: newContentType ?? source.ContentType,
 				...(newContentType
 					? {}
 					: {
-							CacheControl: source.cacheControl ?? undefined,
-							ContentDisposition: source.contentDisposition ?? undefined,
-							Expires: source.expires ?? undefined,
+							cacheControl: source.CacheControl,
+							contentDisposition: source.ContentDisposition,
+							expiresAt: source.Expires,
 						}),
-			},
-			partSize: STREAM_UPLOAD_PART_BYTES,
-			queueSize: STREAM_UPLOAD_CONCURRENCY,
-			leavePartsOnError: false,
-		});
-		try {
-			await upload.done();
-		} catch (error) {
-			source.body.destroy();
-			throw error;
+			});
+		} finally {
+			await fs.promises.unlink(downloadedSource).catch(() => undefined);
 		}
 	}
 

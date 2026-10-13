@@ -524,6 +524,10 @@ Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to e
 
 An endpoint with a bucket in its path, such as `https://s3.example.com/my-bucket` with `FLUXER_S3_FORCE_PATH_STYLE=true`, keeps every Fluxer bucket inside that one bucket. Each bucket name becomes a key prefix there, so uploads land under `fluxer-uploads/` in `my-bucket`.
 
+An endpoint with the bucket in its hostname, such as `https://my-bucket.s3.example.com` with `FLUXER_S3_FORCE_PATH_STYLE=true`, turns each bucket name into a key prefix the same way. The store cannot resolve a Fluxer bucket name as the source of a server-side copy there. The API downloads the object to its temporary directory and uploads the copy from there.
+
+The API cannot list objects through either kind of endpoint, because the store reads the bucket name in a listing request as a key. [Report deletion](/admin-api/reports/#report-retention) lists a report's profile snapshot images first. On a store that answers the listing with an error, the deletion fails. Separate buckets do not have this limit.
+
 #### `FLUXER_S3_PUBLIC_ENDPOINT`
 
 No default. The host substituted into presigned URLs, which are the only place it appears. Compose forwards it from `.env`, and uses `FLUXER_S3_ENDPOINT` when it is unset, except on `app-proxy`, which gets only a value `.env` sets and adds it to its Content Security Policy. `admin` reads it to find the origin that report downloads are presigned against. See `FLUXER_S3_BUCKET_REPORTS`.

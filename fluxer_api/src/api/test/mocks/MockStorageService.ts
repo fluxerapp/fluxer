@@ -216,9 +216,6 @@ export class MockStorageService implements IStorageService {
 		contentLength: number;
 		contentRange?: string | null;
 		contentType?: string | null;
-		cacheControl?: string | null;
-		contentDisposition?: string | null;
-		expires?: Date | null;
 		etag?: string | null;
 		lastModified?: Date | null;
 	} | null> {
@@ -247,9 +244,6 @@ export class MockStorageService implements IStorageService {
 			contentLength: slice.length,
 			contentRange,
 			contentType: obj?.contentType ?? 'application/octet-stream',
-			cacheControl: null,
-			contentDisposition: null,
-			expires: null,
 			etag: computeEtag(data),
 			lastModified: obj?.lastModified ?? null,
 		};

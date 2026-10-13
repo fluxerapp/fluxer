@@ -20,7 +20,7 @@ function splitBucket(path: string): {bucket: string; key: string} {
 	return {bucket, key: key.join('/')};
 }
 
-function singleBucketStore() {
+function singleBucketStore(unresolvedSourceCode = 'NoSuchBucket') {
 	const objects = new Map<string, {body: Uint8Array; contentType: string}>();
 	const resolve = (url: URL): {bucket: string; key: string} => {
 		const path = decodeURIComponent(url.pathname.slice(1));
@@ -58,7 +58,7 @@ function singleBucketStore() {
 			}
 			const source = splitBucket(decodeURIComponent(copySource.replace(/^\//u, '')));
 			if (source.bucket !== REAL_BUCKET) {
-				return errorResponse('NoSuchBucket', 404);
+				return errorResponse(unresolvedSourceCode, unresolvedSourceCode === 'AccessDenied' ? 403 : 404);
 			}
 			const object = objects.get(source.key);
 			if (!object) {
@@ -127,3 +127,59 @@ describe('StorageService with every bucket inside one real bucket', () => {
 		await expect(service.readObject(REAL_BUCKET, 'attachments/1/3/file.pdf')).resolves.toEqual(PDF);
 	});
 });
+
+describe.each(['NoSuchBucket', 'AccessDenied'])(
+	'StorageService with the bucket in the endpoint hostname, store answers %s',
+	(code) => {
+		let objects: ReturnType<typeof singleBucketStore>;
+
+		beforeEach(() => {
+			objects = singleBucketStore(code);
+		});
+
+		it('copies a non-media attachment out of the uploads prefix', async () => {
+			const service = storage(`https://${REAL_BUCKET}.${HOST}`, true);
+			await service.uploadObject({bucket: 'fluxer-uploads', key: 'upload 1', body: PDF});
+
+			await expect(
+				service.copyObjectWithMetadataStripping({
+					sourceBucket: 'fluxer-uploads',
+					sourceKey: 'upload 1',
+					destinationBucket: 'fluxer',
+					destinationKey: 'attachments/1/2/file.pdf',
+					contentType: 'application/pdf',
+				}),
+			).resolves.toBeNull();
+
+			expect(objects.get('fluxer/attachments/1/2/file.pdf')).toEqual({body: PDF, contentType: 'application/pdf'});
+		});
+
+		it('copies within the cdn prefix', async () => {
+			const service = storage(`https://${REAL_BUCKET}.${HOST}`, true);
+			await service.uploadObject({bucket: 'fluxer', key: 'emojis/1', body: PDF, contentType: 'image/png'});
+
+			await service.copyObject({
+				sourceBucket: 'fluxer',
+				sourceKey: 'emojis/1',
+				destinationBucket: 'fluxer',
+				destinationKey: 'emojis/2',
+			});
+
+			expect(objects.get('fluxer/emojis/2')).toEqual({body: PDF, contentType: 'image/png'});
+		});
+
+		it('reports a missing source as a missing object', async () => {
+			const service = storage(`https://${REAL_BUCKET}.${HOST}`, true);
+
+			await expect(
+				service.copyObject({
+					sourceBucket: 'fluxer',
+					sourceKey: 'emojis/missing',
+					destinationBucket: 'fluxer',
+					destinationKey: 'emojis/3',
+				}),
+			).rejects.toMatchObject({name: 'NoSuchKey'});
+			expect(objects.has('fluxer/emojis/3')).toBe(false);
+		});
+	},
+);

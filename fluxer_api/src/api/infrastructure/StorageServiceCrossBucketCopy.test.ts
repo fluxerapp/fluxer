@@ -187,7 +187,7 @@ describe('StorageService copies on providers that reject cross-bucket CopyObject
 		expect(ceph.objects.has(`${CDN}/attachments/1/4/missing.pdf`)).toBe(false);
 	});
 
-	it('does not retry a failed same-bucket copy through the API', async () => {
+	it('reports a missing same-bucket source as a missing object', async () => {
 		await expect(
 			storage().copyObject({
 				sourceBucket: CDN,
