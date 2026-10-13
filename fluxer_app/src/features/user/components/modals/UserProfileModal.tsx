@@ -766,6 +766,7 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 		return (
 			<Modal.Root
 				size="medium"
+				centered
 				initialFocusRef={autoFocusNote ? noteRef : undefined}
 				className={userProfileModalStyles.modalRoot}
 				data-flx="user.user-profile-modal.modal-root"

@@ -65,6 +65,7 @@ interface ProfilePreviewProps {
 	showMessageButton?: boolean;
 	showPreviewLabel?: boolean;
 	previewCustomStatus?: CustomStatus | null;
+	onAvatarClick?: () => void;
 }
 
 export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
@@ -90,6 +91,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		showMessageButton = true,
 		showPreviewLabel = true,
 		previewCustomStatus,
+		onAvatarClick,
 	}) => {
 		const {i18n} = useLingui();
 		const previewOverrides = useMemo<ProfilePreviewOverrides>(
@@ -245,7 +247,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 							avatarUrl={finalAvatarUrl}
 							hoverAvatarUrl={finalHoverAvatarUrl}
 							isClickable={true}
-							onAvatarClick={openMockProfile}
+							onAvatarClick={onAvatarClick ?? openMockProfile}
 							data-flx="user.profile.profile-preview.profile-card-banner"
 						/>
 						<UserProfileBadges

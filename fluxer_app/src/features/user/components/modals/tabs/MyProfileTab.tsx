@@ -30,7 +30,10 @@ import * as UserCommands from '@app/features/user/commands/UserCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import styles from '@app/features/user/components/modals/tabs/MyProfileTab.module.css';
 import {AccentColorPicker} from '@app/features/user/components/modals/tabs/my_profile_tab/AccentColorPicker';
-import {AvatarUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
+import {
+	AvatarUploader,
+	useChangeAvatarAction,
+} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
 import {BIO_MARKDOWN_PARSER_FLAGS, BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
 import {UsernameSection} from '@app/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection';
@@ -615,6 +618,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		form.setValue('avatar', null);
 		transitionAvatarAsset({type: 'asset.cleared'});
 	}, [form, transitionAvatarAsset]);
+	const {openChangeAvatar} = useChangeAvatarAction({onAvatarChange: handleAvatarChange});
 	const handleBannerChange = useCallback(
 		(base64: string) => {
 			form.setValue('banner', base64);
@@ -674,6 +678,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const guilds = Guilds.getGuilds();
 	const selectedGuild = selectedGuildId ? guilds.find((g) => g.id === selectedGuildId) : null;
 	const isPerGuildProfileCustomizationDisabled = isPerGuildProfile && !hasPerGuildProfiles;
+	const isAvatarCustomizationDisabled = isProfileCustomizationLocked || isPerGuildProfileCustomizationDisabled;
 	const isPronounsDisabled = isProfileCustomizationLocked;
 	const profileCustomizationDescription = isProfileEmailLocked
 		? isPerGuildProfile
@@ -840,7 +845,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											hasAvatar={hasAvatar}
 											onAvatarChange={handleAvatarChange}
 											onAvatarClear={handleAvatarClear}
-											disabled={isProfileCustomizationLocked || isPerGuildProfileCustomizationDisabled}
+											disabled={isAvatarCustomizationDisabled}
 											disableModeSelection={isProfileCustomizationLocked}
 											isPerGuildProfile={isPerGuildProfile}
 											errorMessage={form.formState.errors.avatar?.message}
@@ -934,6 +939,9 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										}}
 										ignoreGuildAvatarInPreview={isPerGuildProfile && avatarAsset.mode === 'inherit'}
 										ignoreGuildBannerInPreview={isPerGuildProfile && bannerAsset.mode === 'inherit'}
+										onAvatarClick={
+											mobileLayout.enabled && !isAvatarCustomizationDisabled ? openChangeAvatar : undefined
+										}
 										data-flx="user.my-profile-tab.my-profile-tab-component.profile-preview"
 									/>
 								</div>

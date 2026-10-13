@@ -116,6 +116,203 @@ interface AvatarUploaderProps {
 	onAvatarModeChange?: (mode: AvatarMode) => void;
 }
 
+interface ChangeAvatarActionOptions {
+	onAvatarChange: (base64: string) => void;
+	requireAnimatedAvatarEntitlement?: boolean;
+}
+
+export function useChangeAvatarAction({
+	onAvatarChange,
+	requireAnimatedAvatarEntitlement = true,
+}: ChangeAvatarActionOptions) {
+	const {i18n} = useLingui();
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
+	const hasAnimatedAvatarEntitlement = isLimitToggleEnabled(
+		{feature_animated_avatar: LimitResolver.resolve({key: 'feature_animated_avatar', fallback: 0})},
+		'feature_animated_avatar',
+	);
+	const canUploadAnimatedAvatar = !requireAnimatedAvatarEntitlement || hasAnimatedAvatarEntitlement;
+	const processAvatarFile = useCallback(
+		async (file: File) => {
+			if (file.size > GlobalLimits.getAvatarMaxSize()) {
+				showGenericErrorModal({
+					title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
+					message: i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
+						imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+					}),
+					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+				});
+				return;
+			}
+			const svg = isSvgFile(file);
+			if (!svg && !(await canCropFile(file))) {
+				showGenericErrorModal({
+					title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
+					message: getAssetFormatErrorMessage(i18n, 'avatar', 'unsupported_mime'),
+					dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+				});
+				return;
+			}
+			const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
+			if (animated && !canUploadAnimatedAvatar) {
+				if (shouldShowPremiumFeatures()) {
+					ModalCommands.push(
+						modal(() => (
+							<ConfirmModal
+								title={i18n._(ANIMATED_AVATARS_REQUIRE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+								description={
+									<>
+										<p data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.p">
+											<Trans>
+												Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME}{' '}
+												subscribers.
+											</Trans>
+										</p>
+										<p
+											className={styles.spacedParagraph}
+											data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.spaced-paragraph"
+										>
+											{RuntimeConfig.usesUniqueUsernames ? (
+												<Trans>
+													With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
+													profile banners, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
+												</Trans>
+											) : (
+												<Trans>
+													With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
+													profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
+												</Trans>
+											)}
+										</p>
+									</>
+								}
+								primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+								primaryVariant="primary"
+								secondaryText={i18n._(CANCEL_DESCRIPTOR)}
+								onPrimary={() => {
+									window.setTimeout(() => {
+										PremiumModalCommands.open();
+									}, 0);
+								}}
+								data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.confirm-modal"
+							/>
+						)),
+					);
+				} else {
+					ModalCommands.push(
+						modal(() => (
+							<GenericErrorModal
+								title={i18n._(ANIMATED_AVATARS_NOT_AVAILABLE_DESCRIPTOR)}
+								message={
+									<Trans>
+										Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static
+										image instead.
+									</Trans>
+								}
+								data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.confirm-modal--2"
+							/>
+						)),
+					);
+				}
+				return;
+			}
+			const isAnimatedAvif = animated && format === 'avif';
+			if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
+				showAnimatedAvifUnsupportedModal({i18n});
+				return;
+			}
+			const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
+			ModalCommands.push(
+				modal(() => (
+					<AssetCropModal
+						assetType={AssetType.AVATAR}
+						imageUrl={base64}
+						onCropComplete={(croppedBlob) => {
+							void readBlobAsDataUrl(croppedBlob).then(
+								(croppedBase64) => {
+									onAvatarChange(croppedBase64);
+								},
+								() => {
+									showGenericErrorModal({
+										title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
+										message: i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
+										dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+									});
+								},
+							);
+						}}
+						onSkip={
+							isAnimatedAvif
+								? undefined
+								: () => {
+										onAvatarChange(base64);
+									}
+						}
+						data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.asset-crop-modal"
+					/>
+				)),
+			);
+		},
+		[canUploadAnimatedAvatar, onAvatarChange, i18n],
+	);
+	const showAvatarUploadError = useCallback(() => {
+		showGenericErrorModal({
+			title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
+			message: i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR),
+			dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+		});
+	}, [i18n]);
+	const handlePickAvatarFile = useCallback(async () => {
+		try {
+			const [file] = await openFilePicker({accept: getAcceptString('avatar')});
+			if (!file) return;
+			await processAvatarFile(file);
+		} catch {
+			showAvatarUploadError();
+		}
+	}, [processAvatarFile, showAvatarUploadError]);
+	const handleSelectAvatarGif = useCallback(
+		async (gif: Gif) => {
+			try {
+				await processAvatarFile(await downloadGifAsImageFile(gif));
+			} catch {
+				showAvatarUploadError();
+			}
+		},
+		[processAvatarFile, showAvatarUploadError],
+	);
+	const handleAvatarUpload = useCallback(() => {
+		const uploadHint = canUploadAnimatedAvatar
+			? formatImageUploadRecommendedHint(i18n, {
+					formats: ANIMATED_IMAGE_FORMATS,
+					maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+					recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
+				})
+			: shouldShowPremiumFeatures()
+				? formatImageUploadRecommendedHintWithNote(i18n, {
+						formats: STATIC_IMAGE_FORMATS,
+						maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+						recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
+						note: i18n._(ANIMATED_AVATARS_REQUIRE_PREMIUM_NOTE_DESCRIPTOR, {
+							animatedAvatarFormats: ANIMATED_AVATAR_FORMATS,
+							premiumProductName: getPremiumProductName(),
+						}),
+					})
+				: formatImageUploadRecommendedHint(i18n, {
+						formats: STATIC_IMAGE_FORMATS,
+						maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+						recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
+					});
+		openAssetSourceModal({
+			title: i18n._(CHANGE_AVATAR_DESCRIPTOR),
+			uploadHint,
+			onPickUpload: handlePickAvatarFile,
+			onSelectGif: (gif) => void handleSelectAvatarGif(gif),
+		});
+	}, [canUploadAnimatedAvatar, handlePickAvatarFile, handleSelectAvatarGif, i18n]);
+	return {canUploadAnimatedAvatar, openChangeAvatar: handleAvatarUpload};
+}
+
 export const AvatarUploader = observer(
 	({
 		hasAvatar,
@@ -129,13 +326,11 @@ export const AvatarUploader = observer(
 		avatarMode = 'inherit',
 		onAvatarModeChange,
 	}: AvatarUploaderProps) => {
-		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const {i18n} = useLingui();
-		const hasAnimatedAvatarEntitlement = isLimitToggleEnabled(
-			{feature_animated_avatar: LimitResolver.resolve({key: 'feature_animated_avatar', fallback: 0})},
-			'feature_animated_avatar',
-		);
-		const canUploadAnimatedAvatar = !requireAnimatedAvatarEntitlement || hasAnimatedAvatarEntitlement;
+		const {canUploadAnimatedAvatar, openChangeAvatar: handleAvatarUpload} = useChangeAvatarAction({
+			onAvatarChange,
+			requireAnimatedAvatarEntitlement,
+		});
 		const getAvatarModeOptions = useCallback(
 			() => [
 				{
@@ -157,184 +352,6 @@ export const AvatarUploader = observer(
 			],
 			[canUploadAnimatedAvatar, i18n],
 		);
-		const processAvatarFile = useCallback(
-			async (file: File) => {
-				if (file.size > GlobalLimits.getAvatarMaxSize()) {
-					showGenericErrorModal({
-						title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
-						message: i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
-						}),
-						dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
-					});
-					return;
-				}
-				const svg = isSvgFile(file);
-				if (!svg && !(await canCropFile(file))) {
-					showGenericErrorModal({
-						title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
-						message: getAssetFormatErrorMessage(i18n, 'avatar', 'unsupported_mime'),
-						dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
-					});
-					return;
-				}
-				const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
-				if (animated && !canUploadAnimatedAvatar) {
-					if (shouldShowPremiumFeatures()) {
-						ModalCommands.push(
-							modal(() => (
-								<ConfirmModal
-									title={i18n._(ANIMATED_AVATARS_REQUIRE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
-									description={
-										<>
-											<p data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.p">
-												<Trans>
-													Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to{' '}
-													{PREMIUM_PRODUCT_NAME} subscribers.
-												</Trans>
-											</p>
-											<p
-												className={styles.spacedParagraph}
-												data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.spaced-paragraph"
-											>
-												{RuntimeConfig.usesUniqueUsernames ? (
-													<Trans>
-														With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
-														profile banners, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
-													</Trans>
-												) : (
-													<Trans>
-														With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
-														profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
-													</Trans>
-												)}
-											</p>
-										</>
-									}
-									primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
-									primaryVariant="primary"
-									secondaryText={i18n._(CANCEL_DESCRIPTOR)}
-									onPrimary={() => {
-										window.setTimeout(() => {
-											PremiumModalCommands.open();
-										}, 0);
-									}}
-									data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.confirm-modal"
-								/>
-							)),
-						);
-					} else {
-						ModalCommands.push(
-							modal(() => (
-								<GenericErrorModal
-									title={i18n._(ANIMATED_AVATARS_NOT_AVAILABLE_DESCRIPTOR)}
-									message={
-										<Trans>
-											Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static
-											image instead.
-										</Trans>
-									}
-									data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.confirm-modal--2"
-								/>
-							)),
-						);
-					}
-					return;
-				}
-				const isAnimatedAvif = animated && format === 'avif';
-				if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
-					showAnimatedAvifUnsupportedModal({i18n});
-					return;
-				}
-				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await readBlobAsDataUrl(file);
-				ModalCommands.push(
-					modal(() => (
-						<AssetCropModal
-							assetType={AssetType.AVATAR}
-							imageUrl={base64}
-							onCropComplete={(croppedBlob) => {
-								void readBlobAsDataUrl(croppedBlob).then(
-									(croppedBase64) => {
-										onAvatarChange(croppedBase64);
-									},
-									() => {
-										showGenericErrorModal({
-											title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
-											message: i18n._(FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR),
-											dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
-										});
-									},
-								);
-							}}
-							onSkip={
-								isAnimatedAvif
-									? undefined
-									: () => {
-											onAvatarChange(base64);
-										}
-							}
-							data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.asset-crop-modal"
-						/>
-					)),
-				);
-			},
-			[canUploadAnimatedAvatar, onAvatarChange, i18n],
-		);
-		const showAvatarUploadError = useCallback(() => {
-			showGenericErrorModal({
-				title: i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
-				message: i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR),
-				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
-			});
-		}, [i18n]);
-		const handlePickAvatarFile = useCallback(async () => {
-			try {
-				const [file] = await openFilePicker({accept: getAcceptString('avatar')});
-				if (!file) return;
-				await processAvatarFile(file);
-			} catch {
-				showAvatarUploadError();
-			}
-		}, [processAvatarFile, showAvatarUploadError]);
-		const handleSelectAvatarGif = useCallback(
-			async (gif: Gif) => {
-				try {
-					await processAvatarFile(await downloadGifAsImageFile(gif));
-				} catch {
-					showAvatarUploadError();
-				}
-			},
-			[processAvatarFile, showAvatarUploadError],
-		);
-		const handleAvatarUpload = useCallback(() => {
-			const uploadHint = canUploadAnimatedAvatar
-				? formatImageUploadRecommendedHint(i18n, {
-						formats: ANIMATED_IMAGE_FORMATS,
-						maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
-						recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
-					})
-				: shouldShowPremiumFeatures()
-					? formatImageUploadRecommendedHintWithNote(i18n, {
-							formats: STATIC_IMAGE_FORMATS,
-							maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
-							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
-							note: i18n._(ANIMATED_AVATARS_REQUIRE_PREMIUM_NOTE_DESCRIPTOR, {
-								animatedAvatarFormats: ANIMATED_AVATAR_FORMATS,
-								premiumProductName: getPremiumProductName(),
-							}),
-						})
-					: formatImageUploadRecommendedHint(i18n, {
-							formats: STATIC_IMAGE_FORMATS,
-							maxSize: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
-							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
-						});
-			openAssetSourceModal({
-				title: i18n._(CHANGE_AVATAR_DESCRIPTOR),
-				uploadHint,
-				onPickUpload: handlePickAvatarFile,
-				onSelectGif: (gif) => void handleSelectAvatarGif(gif),
-			});
-		}, [canUploadAnimatedAvatar, handlePickAvatarFile, handleSelectAvatarGif, i18n]);
 		const handleModeChange = useCallback(
 			(mode: AvatarMode) => {
 				if (mode === 'custom') {
