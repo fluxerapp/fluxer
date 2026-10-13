@@ -133,6 +133,7 @@ function projectAppPublic(appPublic: InstanceDiscoveryDocument['appPublic']): In
 			premium_info_url: value.branding.premium_info_url ?? null,
 		},
 		setup: {
+			...value.setup,
 			configured: requireDefined(value.setup.configured, 'app_public.setup.configured'),
 			admin_url: requireDefined(value.setup.admin_url, 'app_public.setup.admin_url'),
 		},

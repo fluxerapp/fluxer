@@ -66,6 +66,7 @@ const USERNAME_CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 
 function phaseSteps(
 	phase: WizardPhase,
+	currentStep: WizardStep,
 	accountIdentity: AccountIdentityMode,
 	identityLocked: boolean,
 	setupTokenRequired: boolean,
@@ -73,7 +74,9 @@ function phaseSteps(
 	switch (phase) {
 		case 'register':
 			return REGISTER_STEPS.filter(
-				(step) => (step !== 'sign_in_method' || !identityLocked) && (step !== 'setup_token' || setupTokenRequired),
+				(step) =>
+					step === currentStep ||
+					((step !== 'sign_in_method' || !identityLocked) && (step !== 'setup_token' || setupTokenRequired)),
 			);
 		case 'loading':
 			return LOADING_STEPS;
@@ -90,12 +93,13 @@ interface SetupWizardMachineContext {
 	accountIdentity: AccountIdentityMode;
 	identityLocked: boolean;
 	setupTokenRequired: boolean;
+	setupTokenRejected: boolean;
 }
 
 export type SetupWizardMachineEvent =
 	| {type: 'wizard.next'}
 	| {type: 'wizard.back'}
-	| {type: 'wizard.goto'; step: WizardStep}
+	| {type: 'wizard.setupTokenRejected'}
 	| {
 			type: 'wizard.sync';
 			isAuthenticated: boolean;
@@ -116,9 +120,10 @@ export interface SetupWizardModel {
 function contextSteps(context: SetupWizardMachineContext): ReadonlyArray<WizardStep> {
 	return phaseSteps(
 		derivePhase(context.isAuthenticated, context.hasConfig),
+		context.step,
 		context.accountIdentity,
 		context.identityLocked,
-		context.setupTokenRequired,
+		context.setupTokenRequired || context.setupTokenRejected,
 	);
 }
 
@@ -128,13 +133,6 @@ function advance(context: SetupWizardMachineContext, delta: number): Partial<Set
 	const safeIndex = index < 0 ? 0 : index;
 	const nextIndex = Math.min(steps.length - 1, Math.max(0, safeIndex + delta));
 	return {step: steps[nextIndex], direction: Math.sign(delta)};
-}
-
-function jump(context: SetupWizardMachineContext, step: WizardStep): Partial<SetupWizardMachineContext> {
-	const steps = contextSteps(context);
-	const targetIndex = steps.indexOf(step);
-	if (targetIndex < 0) return {};
-	return {step, direction: Math.sign(targetIndex - steps.indexOf(context.step))};
 }
 
 function targetsPhase(event: SetupWizardMachineEvent, context: SetupWizardMachineContext, phase: WizardPhase): boolean {
@@ -169,7 +167,7 @@ const setupWizardStateMachine = setup({
 		}),
 		goNext: assign(({context}) => advance(context, 1)),
 		goBack: assign(({context}) => advance(context, -1)),
-		goTo: assign(({context, event}) => (event.type === 'wizard.goto' ? jump(context, event.step) : {})),
+		requireSetupToken: assign({setupTokenRejected: () => true, step: () => 'setup_token', direction: () => -1}),
 		enterRegister: assign({step: () => REGISTER_STEPS[0], direction: () => 0}),
 		enterLoading: assign({step: () => LOADING_STEPS[0], direction: () => 0}),
 		enterConfigure: assign({step: () => CONFIGURE_STEPS[0], direction: () => 0}),
@@ -184,6 +182,7 @@ const setupWizardStateMachine = setup({
 		accountIdentity: AccountIdentityModes.EMAIL,
 		identityLocked: false,
 		setupTokenRequired: false,
+		setupTokenRejected: false,
 	},
 	initial: 'register',
 	on: {
@@ -200,7 +199,7 @@ const setupWizardStateMachine = setup({
 			on: {
 				'wizard.next': {actions: 'goNext'},
 				'wizard.back': {actions: 'goBack'},
-				'wizard.goto': {actions: 'goTo'},
+				'wizard.setupTokenRejected': {actions: 'requireSetupToken'},
 			},
 		},
 		loading: {

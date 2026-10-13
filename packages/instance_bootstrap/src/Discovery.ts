@@ -75,6 +75,16 @@ const BRANDING_URL_KEYS = Object.freeze([
 	'premium_info_url',
 ] as const) satisfies ReadonlyArray<keyof InstanceBranding>;
 
+const SETUP_FLAG_KEYS = Object.freeze([
+	'configured',
+	'account_identity_locked',
+	'setup_token_required',
+] as const) satisfies ReadonlyArray<keyof InstanceSetup>;
+
+const LEGAL_URL_KEYS = Object.freeze(['terms_url', 'privacy_url', 'guidelines_url'] as const) satisfies ReadonlyArray<
+	keyof InstanceLegal
+>;
+
 interface InstanceDiscoveryEndpoints {
 	readonly api: string;
 	readonly gateway: string;
@@ -744,9 +754,11 @@ function parseSetup(value: unknown): Readonly<Partial<InstanceSetup>> {
 		return {};
 	}
 	const setup: Partial<InstanceSetup> = {};
-	const configured = readBoolean(source, 'configured');
-	if (configured != null) {
-		setup.configured = configured;
+	for (const key of SETUP_FLAG_KEYS) {
+		const flag = readBoolean(source, key);
+		if (flag != null) {
+			setup[key] = flag;
+		}
 	}
 	if (Object.hasOwn(source, 'admin_url')) {
 		setup.admin_url = readAbsoluteHTTPURL(source, 'admin_url');
@@ -760,11 +772,10 @@ function parseLegal(value: unknown): Readonly<Partial<InstanceLegal>> {
 		return {};
 	}
 	const legal: Partial<InstanceLegal> = {};
-	if (Object.hasOwn(source, 'terms_url')) {
-		legal.terms_url = readAbsoluteHTTPURL(source, 'terms_url');
-	}
-	if (Object.hasOwn(source, 'privacy_url')) {
-		legal.privacy_url = readAbsoluteHTTPURL(source, 'privacy_url');
+	for (const key of LEGAL_URL_KEYS) {
+		if (Object.hasOwn(source, key)) {
+			legal[key] = readAbsoluteHTTPURL(source, key);
+		}
 	}
 	return legal;
 }

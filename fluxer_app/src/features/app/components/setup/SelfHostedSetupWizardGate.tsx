@@ -776,29 +776,11 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSetupTokenError(null);
 	}, []);
 
-	const submittedSetupToken = setupTokenRequired ? setupToken.trim() : undefined;
+	const submittedSetupToken = setupToken.trim() || undefined;
 
-	const handleSetupTokenRejected = useCallback(async (message: string) => {
+	const handleSetupTokenRejected = useCallback((message: string) => {
 		setSetupTokenError(message);
-		try {
-			await RuntimeConfig.refreshDiscovery();
-		} catch (error) {
-			logger.warn('Failed to refresh discovery after the setup token was rejected', error);
-		}
-		const required = RuntimeConfig.appPublic.setup.setup_token_required === true;
-		setWizardSnapshot((current) =>
-			transitionSetupWizardSnapshot(
-				transitionSetupWizardSnapshot(current, {
-					type: 'wizard.sync',
-					isAuthenticated: current.context.isAuthenticated,
-					hasConfig: current.context.hasConfig,
-					accountIdentity: current.context.accountIdentity,
-					identityLocked: current.context.identityLocked,
-					setupTokenRequired: required,
-				}),
-				{type: 'wizard.goto', step: 'setup_token'},
-			),
-		);
+		setWizardSnapshot((current) => transitionSetupWizardSnapshot(current, {type: 'wizard.setupTokenRejected'}));
 	}, []);
 
 	const submitSignInMethod = useCallback(async () => {
@@ -816,7 +798,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 					(violation) => violation.path === 'setup_token',
 				);
 				if (setupTokenViolation) {
-					await handleSetupTokenRejected(setupTokenViolation.message);
+					handleSetupTokenRejected(setupTokenViolation.message);
 					setSavingSignInMethod(false);
 					return;
 				}

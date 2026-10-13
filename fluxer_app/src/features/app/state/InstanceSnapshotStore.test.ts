@@ -23,6 +23,7 @@ import {
 import type {InstanceDiscoveryResponse} from '@fluxer/instance_bootstrap/src/Types';
 import {computeWireFormat} from '@fluxer/limits/src/LimitDiffer';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
+import {InstanceAppPublicSchema} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {runInAction} from 'mobx';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -215,6 +216,45 @@ describe('runtimeSnapshotFromDiscovery', () => {
 		const snapshot = runtimeSnapshotFromDiscovery(parseInstanceDiscoveryDocument(document));
 		expect(snapshot.appPublic.branding.icon_url).toBe('https://cdn.d.test/icon.png?v=3');
 		expect(snapshot.appPublic.legal.terms_url).toBe('https://d.test/legal?doc=terms');
+	});
+
+	test('keeps every public app field the discovery schema defines', () => {
+		const document = discoveryDocument('q.test');
+		document.app_public = {
+			branding: {
+				product_name: 'Fluxer q.test',
+				icon_url: 'https://cdn.q.test/icon.png',
+				symbol_url: 'https://cdn.q.test/symbol.png',
+				logo_url: 'https://cdn.q.test/logo.png',
+				wordmark_url: 'https://cdn.q.test/wordmark.png',
+				favicon_url: 'https://cdn.q.test/favicon.png',
+				theme_color: '#4641d9',
+				status_page_url: 'https://status.q.test',
+				status_page_incident_history_url: 'https://status.q.test/history',
+				premium_product_name: 'Supporter',
+				premium_info_url: 'https://q.test/premium',
+			},
+			setup: {
+				configured: false,
+				admin_url: 'https://q.test/admin',
+				account_identity_locked: true,
+				setup_token_required: true,
+			},
+			legal: {
+				terms_url: 'https://q.test/terms',
+				privacy_url: 'https://q.test/privacy',
+				guidelines_url: 'https://q.test/guidelines',
+			},
+			registration: {collect_date_of_birth: true},
+		};
+		const snapshot = runtimeSnapshotFromDiscovery(parseInstanceDiscoveryDocument(document));
+		expect(snapshot.appPublic).toEqual(document.app_public);
+		expect(requireRuntimeConfigSnapshot(JSON.parse(JSON.stringify(snapshot))).appPublic).toEqual(document.app_public);
+		for (const section of ['branding', 'setup', 'legal', 'registration'] as const) {
+			expect(Object.keys(snapshot.appPublic[section]).sort()).toEqual(
+				Object.keys(InstanceAppPublicSchema.shape[section].shape).sort(),
+			);
+		}
 	});
 
 	test('rejects a branding URL that is not an absolute HTTP URL', () => {
