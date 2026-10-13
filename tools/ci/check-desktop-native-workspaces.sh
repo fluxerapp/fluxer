@@ -9,6 +9,7 @@ native_root="$repo_root/fluxer_desktop/native"
 cargo_bin="${CARGO_BIN:-cargo}"
 cargo_deny_bin="${CARGO_DENY_BIN:-cargo-deny}"
 native_target_dir="${DESKTOP_NATIVE_CARGO_TARGET_DIR:-$repo_root/target/desktop-native-workspaces}"
+windows_backend_target="x86_64-pc-windows-msvc"
 mode="${1:-}"
 
 linux_workspaces=(
@@ -130,6 +131,21 @@ run_clippy() {
 		-D warnings
 }
 
+run_clippy_windows_backend() {
+	local manifest="$1"
+
+	CARGO_TARGET_DIR="$native_target_dir" \
+		"$cargo_bin" clippy \
+		--manifest-path "$manifest" \
+		--workspace \
+		--all-targets \
+		--all-features \
+		--locked \
+		--target "$windows_backend_target" \
+		-- \
+		-D warnings
+}
+
 run_tests() {
 	local manifest="$1"
 
@@ -190,6 +206,7 @@ if [ "$mode" = clippy ] || [ "$mode" = test ]; then
 fi
 
 checked_count=0
+windows_backend_count=0
 
 cd "$native_root"
 
@@ -210,9 +227,14 @@ while IFS= read -r manifest; do
 		case "$category" in
 		linux) printf 'Clippy full Linux/shared coverage: %s\n' "$relative_manifest" ;;
 		macos) printf 'Clippy Linux stub/common coverage; macOS backend not validated: %s\n' "$relative_manifest" ;;
-		windows) printf 'Clippy Linux stub/common coverage; Windows backend not validated: %s\n' "$relative_manifest" ;;
+		windows) printf 'Clippy Linux stub/common coverage: %s\n' "$relative_manifest" ;;
 		esac
 		run_clippy "$manifest"
+		if [ "$category" = windows ]; then
+			printf 'Clippy Windows backend coverage for %s: %s\n' "$windows_backend_target" "$relative_manifest"
+			run_clippy_windows_backend "$manifest"
+			windows_backend_count=$((windows_backend_count + 1))
+		fi
 		;;
 	test)
 		case "$category" in
@@ -227,5 +249,5 @@ while IFS= read -r manifest; do
 done <"$manifest_list"
 
 discovered_count=$((linux_count + macos_count + windows_count))
-printf 'Desktop native workspace categories: discovered=%s linux-full=%s macos-stub-common=%s windows-stub-common=%s\n' "$discovered_count" "$linux_count" "$macos_count" "$windows_count"
-printf 'Desktop native %s summary: checked=%s\n' "$mode" "$checked_count"
+printf 'Desktop native workspace categories: discovered=%s linux-full=%s macos-stub-common=%s windows=%s\n' "$discovered_count" "$linux_count" "$macos_count" "$windows_count"
+printf 'Desktop native %s summary: checked=%s windows-backend=%s\n' "$mode" "$checked_count" "$windows_backend_count"

@@ -3,6 +3,7 @@
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import {stopWindowsScreenCaptureGuard} from '@electron/main/WindowsScreenCaptureGuard';
+import {reportWindowsCaptureItemReuse} from '@electron/main/WindowsWindowCaptureItemReuse';
 import {app, powerSaveBlocker} from 'electron';
 import log from 'electron-log';
 
@@ -631,6 +632,7 @@ export function releaseStreamingPriority(): void {
 		restoreProcessPriority();
 		restoreGpuSchedulingPriority();
 		stopWindowsScreenCaptureGuard('streaming-priority-release');
+		reportWindowsCaptureItemReuse('streaming-priority-release');
 		log.info('[StreamingPriority] Released');
 	}
 }
@@ -645,5 +647,6 @@ export function resetStreamingPriority(): void {
 	restoreProcessPriority();
 	restoreGpuSchedulingPriority();
 	stopWindowsScreenCaptureGuard('streaming-priority-reset');
+	reportWindowsCaptureItemReuse('streaming-priority-reset');
 	log.info('[StreamingPriority] Reset');
 }

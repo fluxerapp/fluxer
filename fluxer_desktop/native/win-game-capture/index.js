@@ -94,9 +94,27 @@ function restoreGpuSchedulingPriority(processId) {
 	}
 }
 
+function reuseWindowCaptureItems() {
+	if (!binding) return false;
+	try {
+		binding.reuseWindowCaptureItems();
+		return true;
+	} catch (error) {
+		console.warn('[win-game-capture] reuseWindowCaptureItems failed:', error?.message || error);
+		return false;
+	}
+}
+
+function windowCaptureItemCalls() {
+	if (!binding) return null;
+	return binding.windowCaptureItemCalls();
+}
+
 module.exports = {
 	elevateGpuSchedulingPriority,
 	restoreGpuSchedulingPriority,
+	reuseWindowCaptureItems,
+	windowCaptureItemCalls,
 	get loadError() {
 		return loadError;
 	},

@@ -117,6 +117,7 @@ jobs:
         with:
           toolchain: "1.98.1"
           components: clippy, rustfmt
+          targets: x86_64-pc-windows-msvc
 
       - name: Install pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -208,7 +209,7 @@ jobs:
       - name: Clippy (warnings as errors)
         run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 
-      - name: Clippy (desktop native workspaces on Linux, warnings as errors)
+      - name: Clippy (desktop native workspaces on Linux and Windows backends, warnings as errors)
         run: tools/ci/check-desktop-native-workspaces.sh clippy
 
       - name: Verify the source-built ffmpeg CLI is on PATH
