@@ -362,6 +362,7 @@ pub struct AppProxyConfig {
     pub csp: CspConfig,
     pub same_origin_hosts: Vec<String>,
     pub manifest_scope_extensions: Vec<String>,
+    pub release_channel: Option<&'static str>,
     pub self_hosted: bool,
 }
 
@@ -477,7 +478,27 @@ impl AppProxyConfig {
                 "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
                 &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
             ),
+            release_channel: parse_release_channel(
+                "RELEASE_CHANNEL",
+                &cfg::read_env("RELEASE_CHANNEL", ""),
+            ),
             self_hosted: cfg::read_bool_env("FLUXER_SELF_HOSTED", false),
+        }
+    }
+}
+
+fn parse_release_channel(name: &'static str, raw: &str) -> Option<&'static str> {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "" => None,
+        "stable" => Some("stable"),
+        "canary" => Some("canary"),
+        _ => {
+            warn_invalid(&InvalidAppProxyEnvironmentError::new(
+                name,
+                raw,
+                "stable or canary",
+            ));
+            None
         }
     }
 }
@@ -589,6 +610,21 @@ mod tests {
             ),
             vec!["canary.fluxer.com".to_owned()]
         );
+    }
+
+    #[test]
+    fn release_channel_accepts_only_stable_or_canary() {
+        assert_eq!(
+            parse_release_channel("TEST_CHANNEL", " Stable "),
+            Some("stable")
+        );
+        assert_eq!(
+            parse_release_channel("TEST_CHANNEL", "canary"),
+            Some("canary")
+        );
+        assert_eq!(parse_release_channel("TEST_CHANNEL", ""), None);
+        assert_eq!(parse_release_channel("TEST_CHANNEL", "development"), None);
+        assert_eq!(parse_release_channel("TEST_CHANNEL", "\"><script>"), None);
     }
 
     #[test]
