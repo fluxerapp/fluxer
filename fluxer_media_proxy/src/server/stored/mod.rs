@@ -27,9 +27,9 @@ use crate::{
             filename_from_storage_key,
         },
         response::{
-            MediaResponse, content_disposition_header,
+            GeneratedMediaResponse, MediaResponse, content_disposition_header,
             error::{storage_error_response, text_with_source},
-            media_response,
+            generated_media_response, media_response,
         },
         state::AppState,
         transform::{
@@ -146,11 +146,10 @@ pub(in crate::server) async fn serve_asset_image(
         resize_mode: Some(resize_mode),
     });
     if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
-        return media_response(MediaResponse {
+        return generated_media_response(GeneratedMediaResponse {
             method,
             data: hit.data.as_bytes().clone().into(),
             content_type: hit.format.mime(),
-            range_header,
             disposition: Some(content_disposition_header(
                 hit.format.mime(),
                 requested_download,
@@ -202,11 +201,10 @@ pub(in crate::server) async fn serve_asset_image(
             });
         }
     };
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method,
         data: transformed.into(),
         content_type: out_ext.mime(),
-        range_header,
         disposition: Some(content_disposition_header(
             out_ext.mime(),
             requested_download,
@@ -390,7 +388,6 @@ async fn serve_spooled_attachment_video(
                 filename,
                 route: TransformRoute::Attachment,
                 params,
-                headers,
             },
         )
     };

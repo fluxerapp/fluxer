@@ -230,6 +230,47 @@ async fn an_asset_image_transform_is_served_and_then_reused_from_its_content_ide
     );
 }
 
+#[tokio::test]
+async fn a_ranged_request_for_an_asset_transform_is_answered_with_the_whole_body() {
+    let tmp = tempfile::tempdir().unwrap();
+    let storage_root = tmp.path().canonicalize().unwrap();
+    let app = test_app_state(asset_test_config(&storage_root));
+    let asset = parse_standard_asset_path(ASSET_TEST_PATH).unwrap();
+    app.store
+        .write_object(
+            &app.cfg.storage.bucket_cdn,
+            &asset.storage_key,
+            &crate::test_fixtures::synthetic_png(512, 512),
+            "image/png",
+        )
+        .await
+        .unwrap();
+    let params = HashMap::new();
+    let mut range = HeaderMap::new();
+    range.insert(header::RANGE, "bytes=0-3".parse().unwrap());
+    let mut bodies = Vec::new();
+    for headers in [&range, &range, &HeaderMap::new()] {
+        let response = serve_asset_image(
+            &app,
+            Method::GET,
+            parse_standard_asset_path(ASSET_TEST_PATH).unwrap(),
+            &params,
+            headers,
+        )
+        .await;
+        assert_eq!(StatusCode::OK, response.status());
+        assert!(!response.headers().contains_key(header::ACCEPT_RANGES));
+        assert!(!response.headers().contains_key(header::CONTENT_RANGE));
+        bodies.push(response_body(response).await);
+    }
+    assert!(bodies[2].len() > 4);
+    assert_eq!(bodies[2], bodies[0]);
+    assert_eq!(bodies[2], bodies[1]);
+    let rendered = app.metrics.render();
+    assert!(rendered.contains("fluxer_media_proxy_transform_cache_misses_total 1\n"));
+    assert!(rendered.contains("fluxer_media_proxy_transform_cache_hits_total 2\n"));
+}
+
 #[test]
 fn a_transform_failure_on_a_source_the_browser_cannot_show_stays_an_error() {
     let svg_failure = |error| {
@@ -379,6 +420,70 @@ async fn a_stored_passthrough_serves_objects_larger_than_the_buffer_cap() {
             .and_then(|value| value.to_str().ok())
     );
     assert_eq!(&b"head"[..], &response_body(get).await[..]);
+}
+
+#[tokio::test]
+async fn a_ranged_request_for_a_rasterised_stored_svg_is_answered_with_the_whole_body() {
+    let tmp = tempfile::tempdir().unwrap();
+    let storage_root = tmp.path().canonicalize().unwrap();
+    let app = test_app_state(asset_test_config(&storage_root));
+    let bucket = app.cfg.storage.bucket_cdn.clone();
+    let key = "attachments/1/2/pic.svg";
+    app.store
+        .write_object(
+            &bucket,
+            key,
+            br#"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="red"/></svg>"#,
+            "image/svg+xml",
+        )
+        .await
+        .unwrap();
+    let mut range = HeaderMap::new();
+    range.insert(header::RANGE, "bytes=0-3".parse().unwrap());
+    let mut past_the_end = HeaderMap::new();
+    past_the_end.insert(header::RANGE, "bytes=1048576-2097151".parse().unwrap());
+    let mut bodies = Vec::new();
+    for (method, headers) in [
+        (Method::GET, &range),
+        (Method::GET, &past_the_end),
+        (Method::HEAD, &range),
+        (Method::GET, &HeaderMap::new()),
+    ] {
+        let response = passthrough::serve_stored_raw(&app, method, &bucket, key, headers).await;
+        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(
+            Some("image/webp"),
+            response
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok())
+        );
+        assert!(!response.headers().contains_key(header::ACCEPT_RANGES));
+        assert!(!response.headers().contains_key(header::CONTENT_RANGE));
+        let declared_len = response
+            .headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<usize>().ok());
+        bodies.push((declared_len, response_body(response).await));
+    }
+    let [
+        (fresh_len, fresh_body),
+        (cached_len, cached_body),
+        (head_len, head_body),
+        (whole_len, whole_body),
+    ] = bodies.try_into().expect("four responses");
+    assert_eq!("image/webp", mime::sniff(&whole_body).mime);
+    assert_eq!(Some(whole_body.len()), whole_len);
+    assert_eq!(whole_len, fresh_len);
+    assert_eq!(whole_len, cached_len);
+    assert_eq!(whole_len, head_len);
+    assert_eq!(whole_body, fresh_body);
+    assert_eq!(whole_body, cached_body);
+    assert!(head_body.is_empty());
+    let rendered = app.metrics.render();
+    assert!(rendered.contains("fluxer_media_proxy_transform_cache_misses_total 1\n"));
+    assert!(rendered.contains("fluxer_media_proxy_transform_cache_hits_total 3\n"));
 }
 
 fn poster_params() -> HashMap<String, String> {

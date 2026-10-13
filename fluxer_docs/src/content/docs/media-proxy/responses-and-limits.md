@@ -130,7 +130,7 @@ Every route-produced error response uses `Cache-Control: no-store`, and a succes
 
 ## Range response headers
 
-A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. Outside `static` mode that `Content-Type` is `text/plain; charset=utf-8` when it names a JavaScript media type, and a 200 or 206 with no `Content-Type` gets the same value. [Content detection](/media-proxy/overview/#content-detection) defines both rules. A 206 also sets `Content-Range` to the selected interval over the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
+A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. A [transformed representation](/media-proxy/overview/#transformed-representations) has no `Accept-Ranges` and is always complete. Outside `static` mode that `Content-Type` is `text/plain; charset=utf-8` when it names a JavaScript media type, and a 200 or 206 with no `Content-Type` gets the same value. [Content detection](/media-proxy/overview/#content-detection) defines both rules. A 206 also sets `Content-Range` to the selected interval over the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
 
 <sup>1</sup> A streamed signed external response omits `Content-Length` when the origin declared none
 

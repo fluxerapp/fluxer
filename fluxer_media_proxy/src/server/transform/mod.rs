@@ -31,9 +31,9 @@ use crate::{
         },
         native_task_executor::{NativeTaskExecutor, NativeTaskExecutorSettings},
         response::{
-            MediaResponse, content_disposition_header,
+            GeneratedMediaResponse, MediaResponse, content_disposition_header,
             error::{text_with_reason, text_with_source},
-            media_response,
+            generated_media_response, media_response,
         },
         transform::{
             cache::{
@@ -350,7 +350,6 @@ pub(in crate::server) struct CachedVideoTransformRequest<'a> {
     pub(in crate::server) filename: &'a str,
     pub(in crate::server) route: TransformRoute,
     pub(in crate::server) params: &'a HashMap<String, String>,
-    pub(in crate::server) headers: &'a HeaderMap,
 }
 
 pub(in crate::server) fn cached_video_transform_response(
@@ -371,10 +370,6 @@ pub(in crate::server) fn cached_video_transform_response(
         data: hit.data.as_bytes().clone(),
         content_type: hit.format.mime(),
         filename: request.filename,
-        range_header: request
-            .headers
-            .get(header::RANGE)
-            .and_then(|v| v.to_str().ok()),
         requested_download: transform.requested_download,
     }))
 }
@@ -432,7 +427,6 @@ async fn serve_video_transform(
             data: hit.data.as_bytes().clone(),
             content_type: hit.format.mime(),
             filename,
-            range_header,
             requested_download: transform.requested_download,
         });
     }
@@ -486,7 +480,6 @@ async fn serve_video_transform(
         data: transformed,
         content_type: format.mime(),
         filename,
-        range_header,
         requested_download: transform.requested_download,
     })
 }
@@ -571,7 +564,6 @@ async fn serve_image_transform(
             data: hit.data.as_bytes().clone(),
             content_type: response_content_type,
             filename,
-            range_header,
             requested_download: transform.requested_download,
         });
     }
@@ -636,7 +628,6 @@ async fn serve_image_transform(
         data: transformed,
         content_type: response_content_type,
         filename,
-        range_header,
         requested_download: transform.requested_download,
     })
 }
@@ -725,7 +716,6 @@ pub(in crate::server) struct CachedTransformProbe<'a> {
     pub(in crate::server) filename: &'a str,
     pub(in crate::server) route: TransformRoute,
     pub(in crate::server) params: &'a HashMap<String, String>,
-    pub(in crate::server) headers: &'a HeaderMap,
 }
 
 // Answers a repeat transform from the cache without the caller fetching the source
@@ -742,7 +732,6 @@ pub(in crate::server) fn cached_transform_response(
         filename,
         route,
         params,
-        headers,
     } = probe;
     let transform = validate_transform_parameters(params, &runtime.limits(), route).ok()?;
     let source_is_svg = is_svg_content_type(content_type)
@@ -787,7 +776,6 @@ pub(in crate::server) fn cached_transform_response(
         data: hit.data.as_bytes().clone(),
         content_type: &response_content_type,
         filename,
-        range_header: headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
         requested_download: transform.requested_download,
     }))
 }
@@ -797,7 +785,6 @@ struct TransformedBytes<'a> {
     data: Bytes,
     content_type: &'a str,
     filename: &'a str,
-    range_header: Option<&'a str>,
     requested_download: bool,
 }
 
@@ -807,11 +794,10 @@ fn transformed_response(request: TransformedBytes<'_>) -> Response {
         request.requested_download,
         Some(request.filename),
     ));
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method: request.method,
         data: request.data.into(),
         content_type: request.content_type,
-        range_header: request.range_header,
         disposition,
     })
 }

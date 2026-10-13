@@ -335,6 +335,81 @@ async fn a_full_size_jxl_above_the_static_output_cap_is_downscaled() {
     );
 }
 
+async fn jxl_attachment(
+    runtime: &TransformRuntime,
+    method: Method,
+    params: &HashMap<String, String>,
+    headers: &HeaderMap,
+) -> Response {
+    serve_bytes_or_transform(
+        runtime,
+        ServeBytesRequest {
+            method,
+            data: Bytes::from_static(JXL_64_LOSSY_ALPHA),
+            content_type: "image/jxl".to_owned(),
+            cache_identity: "art.jxl",
+            filename: "art.jxl",
+            route: TransformRoute::Attachment,
+            params,
+            headers,
+        },
+    )
+    .await
+}
+
+#[tokio::test]
+async fn a_ranged_request_for_a_transform_is_answered_with_the_whole_body() {
+    let runtime = test_runtime();
+    let transform = HashMap::from([("format".to_owned(), "webp".to_owned())]);
+    let mut ranged = HeaderMap::new();
+    ranged.insert(header::RANGE, "bytes=0-3".parse().unwrap());
+    let mut bodies = Vec::new();
+    for (method, headers) in [
+        (Method::GET, &ranged),
+        (Method::HEAD, &ranged),
+        (Method::GET, &HeaderMap::new()),
+    ] {
+        let response = jxl_attachment(&runtime, method, &transform, headers).await;
+        assert_eq!(StatusCode::OK, response.status());
+        assert!(!response.headers().contains_key(header::ACCEPT_RANGES));
+        assert!(!response.headers().contains_key(header::CONTENT_RANGE));
+        let declared_len = response
+            .headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<usize>().ok());
+        let body = to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("body");
+        bodies.push((declared_len, body));
+    }
+    let [
+        (ranged_len, ranged_body),
+        (head_len, head_body),
+        (whole_len, whole_body),
+    ] = bodies.try_into().expect("three responses");
+    assert!(whole_body.len() > 4);
+    assert_eq!(Some(whole_body.len()), whole_len);
+    assert_eq!(whole_len, ranged_len);
+    assert_eq!(whole_len, head_len);
+    assert_eq!(whole_body, ranged_body);
+    assert!(head_body.is_empty());
+
+    let original = jxl_attachment(&runtime, Method::GET, &HashMap::new(), &ranged).await;
+    assert_eq!(StatusCode::PARTIAL_CONTENT, original.status());
+    assert_eq!(
+        Some("bytes"),
+        original
+            .headers()
+            .get(header::ACCEPT_RANGES)
+            .and_then(|value| value.to_str().ok())
+    );
+    let original_body = to_bytes(original.into_body(), usize::MAX)
+        .await
+        .expect("body");
+    assert_eq!(&JXL_64_LOSSY_ALPHA[..4], &original_body[..]);
+}
+
 #[test]
 fn the_budget_leaves_room_for_the_cache_and_headroom() {
     assert_eq!(

@@ -95,7 +95,6 @@ fn external_cached_transform(
     url: &str,
     method: &Method,
     params: &HashMap<String, String>,
-    headers: &HeaderMap,
 ) -> Option<Response> {
     let hint = app.media.external_hints().get(url)?;
     let filename = url_filename(&hint.url);
@@ -109,7 +108,6 @@ fn external_cached_transform(
             filename: &filename,
             route: TransformRoute::External,
             params,
-            headers,
         },
     )
 }
@@ -295,7 +293,7 @@ pub(in crate::server) async fn serve_external(
     };
     if prepared.wants_transform
         && let Some(cached) =
-            external_cached_transform(app, &prepared.url, &prepared.method, params, headers)
+            external_cached_transform(app, &prepared.url, &prepared.method, params)
     {
         return cached;
     }

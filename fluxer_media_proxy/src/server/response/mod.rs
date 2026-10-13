@@ -69,6 +69,41 @@ pub(in crate::server) fn media_response(response: MediaResponse<'_>) -> Response
     )
 }
 
+pub(in crate::server) struct GeneratedMediaResponse<'a> {
+    pub(in crate::server) method: Method,
+    pub(in crate::server) data: BudgetedBytes,
+    pub(in crate::server) content_type: &'a str,
+    pub(in crate::server) disposition: Option<HeaderValue>,
+}
+
+pub(in crate::server) fn generated_media_response(
+    response: GeneratedMediaResponse<'_>,
+) -> Response {
+    let GeneratedMediaResponse {
+        method,
+        data,
+        content_type,
+        disposition,
+    } = response;
+    let total_len = data.len();
+    let body = if method == Method::HEAD {
+        Body::empty()
+    } else {
+        Body::from(retained_response_bytes(data))
+    };
+    let mut response = media_body_response(
+        body,
+        StatusCode::OK,
+        total_len,
+        content_type,
+        None,
+        Some(total_len as u64),
+        disposition,
+    );
+    response.headers_mut().remove(header::ACCEPT_RANGES);
+    response
+}
+
 pub(in crate::server) fn media_body_response(
     body: Body,
     status: StatusCode,

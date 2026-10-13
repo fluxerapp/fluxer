@@ -14,11 +14,11 @@ use crate::{
             load_media_input, read_sniff_prefix, resolve_metadata,
         },
         response::{
-            MediaResponse,
+            GeneratedMediaResponse,
             error::{
                 canonical_reason_str, json_response, storage_error_response, text, text_with_source,
             },
-            media_response,
+            generated_media_response,
         },
         state::AppState,
         transform::execution::{
@@ -231,11 +231,10 @@ pub(in crate::server) async fn thumbnail_handler(
             }
         }
     };
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method: Method::GET,
         data: BudgetedBytes::from(Bytes::from(media.bytes)),
         content_type: media.content_type,
-        range_header: None,
         disposition: None,
     })
 }
