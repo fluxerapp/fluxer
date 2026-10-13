@@ -42,7 +42,6 @@ import type {
 	ThemeLocalFileReference,
 	TrayPresenceStatus,
 	TrayRuntimeStatePayload,
-	UpdaterDownloadOption,
 	VirtmicBackend,
 	VirtmicNode,
 	VoiceBackgroundMediaCacheRequest,
@@ -115,7 +114,6 @@ export type UpdaterEvent =
 			context: UpdaterContext;
 			version: string | null;
 			downloadUrl?: string;
-			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
 	| {
 			type: 'not-available';
@@ -129,7 +127,7 @@ export type UpdaterEvent =
 	| {
 			type: 'unsupported';
 			context: UpdaterContext;
-			reason: 'platform' | 'unpackaged' | 'managed-package';
+			reason: 'platform' | 'unpackaged';
 			downloadUrl?: string;
 	  };
 

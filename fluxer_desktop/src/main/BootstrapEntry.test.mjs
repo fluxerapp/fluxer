@@ -68,19 +68,20 @@ describe('Bootstrap entry point', () => {
 			'Relaunching runs the same binary, refetches the same manifest and blocks again. On Linux, portable and Flatpak the shell cannot self update at all, so a retry is an unescapable loop.',
 		);
 		assert.match(source, /const shellUpdatePlan = resolveShellUpdatePlan\(\);/);
+		assert.match(source, /armBlockedShellUpdate\(\);/);
+	});
+	test('a shell that can update itself tries to before the modules, and the block only arms the download page', () => {
 		assert.match(
 			source,
-			/armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
+			/shellUpdatePlan\.capability === ShellUpdateCapability\.SELF_UPDATE\n\t+\? async \(latestVersion\) => \{/,
 		);
-	});
-	test('a shell that can update itself tries to, and still falls through to the manual screen when it cannot', () => {
-		assert.match(source, /if \(shellUpdatePlan\.capability === ShellUpdateCapability\.SELF_UPDATE\) \{/);
 		assert.match(source, /return await runShellSelfUpdate\(shellUpdatePlan, \{/);
 		assert.match(
 			source,
-			/logger\.error\('The shell self update failed, falling back to a manual download', failure\);\n\t{5}\}\n\t{5}openSplashWindow\(\);\n\t{5}armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
-			'The manual screen is the fallback, so arming it must sit after the self update attempt rather than inside its else branch.',
+			/capability: shellUpdatePlan\.capability,\n\t{5}\}\);\n\t{5}openSplashWindow\(\);\n\t{5}armBlockedShellUpdate\(\);/,
+			'The updater already attempted the self update before it returned the block, so the block must not try again.',
 		);
+		assert.doesNotMatch(source, /The shell self update failed, falling back to a manual download/);
 	});
 	test('the self update is imported inside the update loop, never at the top level', () => {
 		assert.doesNotMatch(
@@ -92,16 +93,13 @@ describe('Bootstrap entry point', () => {
 	});
 
 	test('the self update paints its own progress rather than leaving the checking screen up', () => {
-		assert.match(source, /setSplashState\(\{status: 'shell-update-downloading', requiredSecurityUpdate, progress\}\);/);
-		assert.match(source, /setSplashState\(\{status: 'shell-update-restarting', requiredSecurityUpdate\}\);/);
-		assert.match(source, /await runShellSelfUpdateOnSplash\(outcome\.requiredSecurityUpdate\)/);
+		assert.match(source, /setSplashState\(\{status: 'shell-update-downloading', progress\}\);/);
+		assert.match(source, /setSplashState\(\{status: 'shell-update-restarting'\}\);/);
+		assert.match(source, /const result = await runShellSelfUpdateOnSplash\(\);/);
 	});
 	test('the retry affordance still belongs to the module update block', () => {
 		assert.match(source, /setSplashState\(\{status, action: SplashAction\.RETRY, message\}\);/);
-		assert.match(
-			source,
-			/return await blockUntilRelaunch\(\n\t+outcome\.requiredSecurityUpdate \? 'blocked-security-update-required' : 'blocked-update-required',\n\t+\);/,
-		);
+		assert.match(source, /return await blockUntilRelaunch\('blocked-update-required'\);/);
 	});
 
 	test('the retry listener is registered once, beside the quit listener, never inside the block helper', () => {
@@ -170,16 +168,13 @@ describe('Bootstrap entry point', () => {
 			/setSplashState\(\{status, action: SplashAction\.RETRY, message\}\);\n\t+setSecondInstanceSink\(focusSplashWindow\);/,
 			'blockUntilRelaunch never settles, so index.ts never installs handleSecondInstance and the buffered launches would sit there forever. Pointing the sink at the splash is the only response left.',
 		);
-		assert.match(
-			source,
-			/armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);\n\t+setSecondInstanceSink\(focusSplashWindow\);/,
-		);
+		assert.match(source, /armBlockedShellUpdate\(\);\n\t+setSecondInstanceSink\(focusSplashWindow\);/);
 	});
 	test('an unreachable update server is retried in process instead of waiting for a click', () => {
 		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
 		assert.match(
 			bootstrap,
-			/if \(outcome\.updateServerUnreachable\) \{\n\t+showBlockedSplash\([^;]*UPDATE_SERVER_UNREACHABLE_MESSAGE,\n\t+\);\n\t+await updateServerRetry\.holdUntilNextAttempt\(\);\n[^\n]*\n\t+return null;/,
+			/if \(outcome\.updateServerUnreachable\) \{\n\t+showBlockedSplash\('blocked-update-unreachable', UPDATE_SERVER_UNREACHABLE_MESSAGE\);\n\t+await updateServerRetry\.holdUntilNextAttempt\(\);\n[^\n]*\n\t+return null;/,
 			'blockUntilRelaunch never settles, so a splash that reached it while the network was down stayed there after the network came back until the user pressed Retry now.',
 		);
 		assert.match(bootstrap, /onSplashNetworkOnline\(\(\) => \{\n[^\n]*\n\t+updateServerRetry\.networkReturned\(\);/);
@@ -232,10 +227,7 @@ describe('Bootstrap entry point', () => {
 			/const showBlockedSplash = \(status: SplashStatus, message: string \| null = null\): void => \{\n\t\topenSplashWindow\(\);\n\t\tsetSplashState\(\{status, action: SplashAction\.RETRY, message\}\);/,
 			'A blocked or failed boot never reaches the main window, so a minimized login launch would otherwise sit invisible forever with nothing in the tray to bring it back.',
 		);
-		assert.match(
-			source,
-			/openSplashWindow\(\);\n\t+armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
-		);
+		assert.match(source, /openSplashWindow\(\);\n\t+armBlockedShellUpdate\(\);/);
 	});
 
 	test('the update splash hides the app only once it is on screen, in its own theme', () => {

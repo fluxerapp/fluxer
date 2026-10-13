@@ -10,16 +10,6 @@ import {installElectronStub} from './LocalAppTestSupport.test.mjs';
 const MODULE_URL = new URL('./SplashWindow.ts', import.meta.url).href;
 const PRELOAD_PATH = fileURLToPath(new URL('../preload/splash.cjs', import.meta.url));
 const PRELOAD_SOURCE = readFileSync(PRELOAD_PATH, 'utf8');
-const STYLESHEET_PATH = fileURLToPath(new URL('../splash/index.css', import.meta.url));
-const STYLESHEET_SOURCE = readFileSync(STYLESHEET_PATH, 'utf8');
-
-const MANUAL_UPDATE_OPTIONS = Object.freeze([
-	{value: 'deb', label: 'Debian (deb)', buttonLabel: 'Download', kind: 'download'},
-	{value: 'rpm', label: 'Fedora (rpm)', buttonLabel: 'Download', kind: 'download'},
-	{value: 'appimage', label: 'Linux (AppImage)', buttonLabel: 'Download', kind: 'download'},
-	{value: 'tar_gz', label: 'Linux (tar.gz)', buttonLabel: 'Download', kind: 'download'},
-	{value: 'nope', label: "I'll figure it out", buttonLabel: 'Okay', kind: 'quit'},
-]);
 
 const quitCalls = [];
 const ipcRegistrations = [];
@@ -512,9 +502,7 @@ describe('splash state serialisation', () => {
 				progress: 42.5,
 			}),
 			{
-				layout: 'splash',
 				status: 'downloading-updates',
-				requiredSecurityUpdate: false,
 				current: 3,
 				total: 7,
 				progress: 42.5,
@@ -524,8 +512,6 @@ describe('splash state serialisation', () => {
 				bytesPerSecond: null,
 				action: null,
 				message: null,
-				versionLabel: null,
-				options: null,
 			},
 		);
 	});
@@ -542,9 +528,7 @@ describe('splash state serialisation', () => {
 				seconds: -4,
 			}),
 			{
-				layout: 'splash',
 				status: 'update-failure',
-				requiredSecurityUpdate: false,
 				current: null,
 				total: null,
 				progress: 0,
@@ -554,8 +538,6 @@ describe('splash state serialisation', () => {
 				bytesPerSecond: null,
 				action: null,
 				message: null,
-				versionLabel: null,
-				options: null,
 			},
 		);
 	});
@@ -572,17 +554,6 @@ describe('splash state serialisation', () => {
 		assert.equal(serializeSplashState({status: 'not-a-splash-status'}).status, 'checking-for-updates');
 	});
 
-	test('falls back to the splash layout on anything the renderer could not lay out', async () => {
-		const {serializeSplashState, SplashLayout, SplashStatus} = await loadSplashWindow('serialise-layout');
-		const layoutFor = (layout) => serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, layout}).layout;
-
-		assert.equal(layoutFor(SplashLayout.MANUAL_UPDATE), 'manual-update');
-		assert.equal(layoutFor(SplashLayout.SPLASH), 'splash');
-		assert.equal(layoutFor('dice-roll'), 'splash');
-		assert.equal(layoutFor(undefined), 'splash');
-		assert.equal(layoutFor(null), 'splash');
-	});
-
 	test('carries every shipped action through and drops one the renderer could not route', async () => {
 		const {serializeSplashState, SplashAction, SplashStatus} = await loadSplashWindow('serialise-action');
 		const actionFor = (action) => serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, action}).action;
@@ -597,49 +568,6 @@ describe('splash state serialisation', () => {
 		assert.equal(actionFor({kind: 'retry', label: 'l'.repeat(200)}).label.length, 48);
 	});
 
-	test('carries the whole picker through and drops entries the renderer could not route', async () => {
-		const {serializeSplashState, SplashStatus} = await loadSplashWindow('serialise-options');
-		const optionsFor = (options) => serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, options}).options;
-
-		assert.deepEqual(optionsFor(MANUAL_UPDATE_OPTIONS), MANUAL_UPDATE_OPTIONS);
-		assert.equal(optionsFor(undefined), null);
-		assert.equal(optionsFor('deb'), null);
-		assert.equal(optionsFor([]), null);
-		assert.equal(optionsFor([{value: 'deb', label: 'Debian', buttonLabel: 'Download', kind: 'launch-anyway'}]), null);
-		assert.equal(optionsFor([{value: 'DEB', label: 'Debian', buttonLabel: 'Download', kind: 'download'}]), null);
-		assert.equal(optionsFor([{value: '../etc', label: 'Debian', buttonLabel: 'Download', kind: 'download'}]), null);
-		assert.equal(optionsFor([{value: 'deb', label: '  ', buttonLabel: 'Download', kind: 'download'}]), null);
-		assert.equal(optionsFor([{value: 'deb', label: 'Debian', buttonLabel: '', kind: 'download'}]), null);
-		assert.deepEqual(
-			optionsFor([
-				{value: 'deb', label: 'Debian', buttonLabel: 'Download', kind: 'download'},
-				{value: 'not valid', label: 'Nope', buttonLabel: 'Nope', kind: 'download'},
-			]),
-			[{value: 'deb', label: 'Debian', buttonLabel: 'Download', kind: 'download'}],
-		);
-		assert.equal(
-			optionsFor(
-				Array.from({length: 12}, (_entry, index) => ({
-					value: `format_${index}`,
-					label: `Format ${index}`,
-					buttonLabel: 'Download',
-					kind: 'download',
-				})),
-			).length,
-			8,
-		);
-		assert.equal(
-			optionsFor([{value: 'deb', label: 'l'.repeat(200), buttonLabel: 'b'.repeat(200), kind: 'download'}])[0].label
-				.length,
-			48,
-		);
-		assert.equal(
-			optionsFor([{value: 'deb', label: 'l'.repeat(200), buttonLabel: 'b'.repeat(200), kind: 'download'}])[0]
-				.buttonLabel.length,
-			24,
-		);
-	});
-
 	test('only a state that carries a way out counts as an affordance', async () => {
 		const {hasSplashAffordance, serializeSplashState, SplashAction, SplashStatus} =
 			await loadSplashWindow('affordance-predicate');
@@ -650,43 +578,6 @@ describe('splash state serialisation', () => {
 			hasSplashAffordance(serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, action: SplashAction.QUIT})),
 			true,
 		);
-		assert.equal(
-			hasSplashAffordance(
-				serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE, options: MANUAL_UPDATE_OPTIONS}),
-			),
-			true,
-		);
-	});
-
-	test('the manual layout can never be serialised without a way out of it', async () => {
-		const {hasSplashAffordance, serializeSplashState, SplashLayout, SplashStatus} =
-			await loadSplashWindow('affordance-manual');
-		const manual = (patch) =>
-			serializeSplashState({layout: SplashLayout.MANUAL_UPDATE, status: SplashStatus.BLOCKED_SHELL_UPDATE, ...patch});
-
-		assert.deepEqual(manual({}).action, {kind: 'quit', label: 'Quit'});
-		assert.deepEqual(manual({action: {kind: 'launch-anyway', label: 'Launch anyway'}, options: []}).action, {
-			kind: 'quit',
-			label: 'Quit',
-		});
-		assert.equal(hasSplashAffordance(manual({})), true);
-		assert.equal(manual({options: MANUAL_UPDATE_OPTIONS}).action, null);
-		assert.deepEqual(manual({options: MANUAL_UPDATE_OPTIONS}).options, MANUAL_UPDATE_OPTIONS);
-		assert.equal(serializeSplashState({status: SplashStatus.BLOCKED_SHELL_UPDATE}).action, null);
-	});
-
-	test('only a token the main process could have minted survives the download payload check', async () => {
-		const {toSplashDownloadValue} = await loadSplashWindow('download-payload');
-
-		assert.equal(toSplashDownloadValue('deb'), 'deb');
-		assert.equal(toSplashDownloadValue('tar_gz'), 'tar_gz');
-		assert.equal(toSplashDownloadValue(undefined), null);
-		assert.equal(toSplashDownloadValue(null), null);
-		assert.equal(toSplashDownloadValue(42), null);
-		assert.equal(toSplashDownloadValue('../../etc/passwd'), null);
-		assert.equal(toSplashDownloadValue('https://evil.example/x'), null);
-		assert.equal(toSplashDownloadValue('a'.repeat(33)), null);
-		assert.equal(toSplashDownloadValue(''), null);
 	});
 });
 
@@ -791,9 +682,7 @@ describe('splash IPC', () => {
 			{
 				channel: 'desktop-splash:state',
 				payload: {
-					layout: 'splash',
 					status: 'downloading-updates',
-					requiredSecurityUpdate: false,
 					current: 2,
 					total: 5,
 					progress: 40,
@@ -803,8 +692,6 @@ describe('splash IPC', () => {
 					bytesPerSecond: null,
 					action: null,
 					message: null,
-					versionLabel: null,
-					options: null,
 				},
 			},
 		]);
@@ -827,9 +714,7 @@ describe('splash IPC', () => {
 			{
 				channel: 'desktop-splash:state',
 				payload: {
-					layout: 'splash',
 					status: 'verifying',
-					requiredSecurityUpdate: false,
 					current: null,
 					total: null,
 					progress: null,
@@ -839,8 +724,6 @@ describe('splash IPC', () => {
 					bytesPerSecond: null,
 					action: null,
 					message: null,
-					versionLabel: null,
-					options: null,
 				},
 			},
 		]);
@@ -888,23 +771,22 @@ describe('splash IPC', () => {
 		assert.equal(onlineCount, 1);
 	});
 
-	test('hands the download listener the chosen option, and nothing at all for a bare click', async () => {
+	test('notifies download listeners only for the splash sender and hands them nothing from the payload', async () => {
 		const {onSplashOpenDownload, openSplashWindow} = await loadSplashWindow('ipc-open-download');
 
 		const window = withPlatformResult('darwin', () => openSplashWindow());
-		const values = [];
-		onSplashOpenDownload((value) => {
-			values.push(value);
+		const calls = [];
+		onSplashOpenDownload((...args) => {
+			calls.push(args);
 		});
-		emitIpc('desktop-splash:open-download', {sender: new FakeWebContents()}, 'deb');
+		emitIpc('desktop-splash:open-download', {sender: new FakeWebContents()});
 
-		assert.deepEqual(values, []);
+		assert.deepEqual(calls, []);
 
 		emitIpc('desktop-splash:open-download', {sender: window.webContents});
-		emitIpc('desktop-splash:open-download', {sender: window.webContents}, 'tar_gz');
 		emitIpc('desktop-splash:open-download', {sender: window.webContents}, 'https://evil.example');
 
-		assert.deepEqual(values, [null, 'tar_gz', null]);
+		assert.deepEqual(calls, [[], []]);
 	});
 
 	test('stops sending state once the splash is closed', async () => {
@@ -1060,10 +942,6 @@ class StubNode {
 	querySelector(selector) {
 		return this.descendants().find((node) => node.matches(selector)) ?? null;
 	}
-
-	querySelectorAll(selector) {
-		return this.descendants().filter((node) => node.matches(selector));
-	}
 }
 
 const {serializeSplashState: serializePreloadState} = await loadSplashWindow('preload-state-producer');
@@ -1143,13 +1021,7 @@ function createPreloadHarness(options = {}) {
 		liveIntervals: () => intervals.filter((timer) => !timer.cleared),
 		mount,
 		query,
-		queryAll: (selector) => mount.querySelectorAll(selector),
 		click: (selector) => query(selector).dispatch('click'),
-		changeSelect: (value) => {
-			const select = query('#dl-select-input');
-			select.value = value;
-			select.dispatch('change');
-		},
 		sendState: (payload) => ipcListeners.get('desktop-splash:state')({}, serializePreloadState(payload)),
 		reveal: () => ipcListeners.get('desktop-splash:revealed')({}),
 		sent,
@@ -1172,14 +1044,6 @@ function createPreloadHarness(options = {}) {
 		networkOnline: () => windowListeners.get('online')(),
 		statusText: () => query('.splash-status').textContent,
 	};
-}
-
-function styleRule(selector) {
-	const marker = `\n${selector} {`;
-	const start = STYLESHEET_SOURCE.indexOf(marker);
-	assert.notEqual(start, -1, `${selector} is missing from the splash stylesheet`);
-	const end = STYLESHEET_SOURCE.indexOf('\n}', start);
-	return STYLESHEET_SOURCE.slice(start + marker.length, end);
 }
 
 describe('splash preload rendering', () => {
@@ -1418,21 +1282,6 @@ describe('splash preload rendering', () => {
 		assert.deepEqual(harness.sent.at(-1), {channel: 'desktop-splash:open-download', payload: undefined});
 	});
 
-	test('offers only a quit action on a package manager owned install', async () => {
-		const {serializeSplashState, SplashAction} = await loadSplashWindow('preload-managed-action');
-		const harness = createPreloadHarness();
-		await harness.start();
-
-		harness.sendState(serializeSplashState({status: 'blocked-shell-update-managed', action: SplashAction.QUIT}));
-
-		assert.equal(harness.statusText(), 'Update Fluxer through your package manager');
-		assert.equal(harness.query('.splash-action').textContent, 'Quit');
-
-		harness.click('.splash-action');
-
-		assert.deepEqual(harness.channels(), ['desktop-splash:ready', 'desktop-splash:quit']);
-	});
-
 	test('routes a click to the current action kind without rebuilding the button', async () => {
 		const {serializeSplashState, SplashAction} = await loadSplashWindow('preload-action-swap');
 		const harness = createPreloadHarness();
@@ -1471,112 +1320,12 @@ describe('splash preload rendering', () => {
 	});
 });
 
-describe('splash preload manual update layout', () => {
-	function manualState(patch = {}) {
-		return {
-			layout: 'manual-update',
-			status: 'blocked-shell-update',
-			current: null,
-			total: null,
-			progress: null,
-			seconds: null,
-			action: null,
-			message: 'A new version of Fluxer is ready to install.',
-			versionLabel: 'Version 2026.823.1 available',
-			options: MANUAL_UPDATE_OPTIONS,
-			...patch,
-		};
-	}
-
-	test('renders the validated markup, every format and the opt-out', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-
-		harness.sendState(manualState());
-
-		assert.equal(harness.mount.replaceChildrenCalls, 2);
-		assert.equal(harness.query('.splash-inner-dl').children.length, 4);
-		assert.equal(harness.query('.splash-mark-dl').querySelector('img').getAttribute('src'), './symbol.svg');
-		assert.equal(harness.query('.dl-update-message').textContent, 'A new version of Fluxer is ready to install.');
-		assert.equal(harness.query('.dl-version-message').textContent, 'Version 2026.823.1 available');
-		assert.deepEqual(
-			harness.queryAll('option').map((node) => [node.value, node.textContent]),
-			[
-				['deb', 'Debian (deb)'],
-				['rpm', 'Fedora (rpm)'],
-				['appimage', 'Linux (AppImage)'],
-				['tar_gz', 'Linux (tar.gz)'],
-				['nope', "I'll figure it out"],
-			],
-		);
-		assert.equal(harness.query('#dl-select-input').value, 'deb');
-		assert.equal(harness.query('#dl-button').textContent, 'Download');
-		assert.equal(harness.query('#dl-button').tagName, 'button');
-	});
-
-	test('clicking with a real format sends that format on the download channel', async () => {
-		const harness = createPreloadHarness();
-		await harness.start();
-		harness.sendState(manualState());
-
-		harness.click('#dl-button');
-		harness.changeSelect('tar_gz');
-		harness.click('#dl-button');
-
-		assert.deepEqual(harness.sent.slice(1), [
-			{channel: 'desktop-splash:open-download', payload: 'deb'},
-			{channel: 'desktop-splash:open-download', payload: 'tar_gz'},
-		]);
-	});
-
-	test('clicking the opt-out quits and opens nothing', async () => {
-		const harness = createPreloadHarness();
-		await harness.start();
-		harness.sendState(manualState());
-
-		harness.changeSelect('nope');
-		harness.click('#dl-button');
-
-		assert.deepEqual(harness.sent.slice(1), [{channel: 'desktop-splash:quit', payload: 'nope'}]);
-	});
-
-	test('a picker with nothing routable in it falls back to a quit control instead of a dead window', async () => {
-		const harness = createPreloadHarness();
-		await harness.start();
-
-		harness.sendState(manualState({options: null}));
-
-		assert.equal(harness.query('.dl-select-frame'), null);
-		assert.equal(harness.query('#dl-button').textContent, 'Quit');
-		assert.equal(harness.query('.dl-update-message').textContent, 'A new version of Fluxer is ready to install.');
-
-		harness.click('#dl-button');
-
-		assert.deepEqual(harness.channels(), ['desktop-splash:ready', 'desktop-splash:quit']);
-	});
-
-	test('a manual state that carries an action instead of a picker renders that action', () => {
-		const harness = createPreloadHarness();
-		harness.start();
-
-		harness.sendState(manualState({options: null, action: {kind: 'download', label: 'Download update'}}));
-
-		assert.equal(harness.query('.dl-select-frame'), null);
-		assert.equal(harness.query('#dl-button').textContent, 'Download update');
-
-		harness.click('#dl-button');
-
-		assert.deepEqual(harness.sent.at(-1), {channel: 'desktop-splash:open-download', payload: undefined});
-	});
-});
-
 describe('splash preload contract', () => {
-	test('knows every status and layout the main process can send', async () => {
-		const {SplashLayout, SplashStatus} = await loadSplashWindow('preload-status-parity');
+	test('knows every status the main process can send', async () => {
+		const {SplashStatus} = await loadSplashWindow('preload-status-parity');
 		const {context} = createPreloadHarness();
 
 		assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext('SplashStatus', context))), SplashStatus);
-		assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext('SplashLayout', context))), SplashLayout);
 	});
 
 	test('shows the bar only for a numeric progress on a status that carries one', () => {
@@ -1592,23 +1341,6 @@ describe('splash preload contract', () => {
 		assert.equal(shows({status: 'shell-update-restarting', progress: 50}), false);
 		assert.equal(shows({status: 'verifying', progress: 50}), false);
 		assert.equal(shows({status: 'launching', progress: 50}), false);
-	});
-
-	test('clamps the manual update message so a long one can never push the controls out of the window', () => {
-		const message = styleRule('.dl-update-message');
-
-		assert.match(message, /-webkit-line-clamp: \d+;/);
-		assert.match(message, /overflow: hidden;/);
-		assert.match(message, /min-height: 0;/);
-		assert.match(styleRule('.splash-inner-dl'), /overflow: hidden;/);
-	});
-
-	test('keeps every manual control out of the shrink path and out of the drag region', () => {
-		for (const selector of ['.dl-select-frame', '.dl-action-frame']) {
-			assert.match(styleRule(selector), /flex: none;/, `${selector} must never shrink`);
-			assert.match(styleRule(selector), /-webkit-app-region: no-drag;/, `${selector} must stay clickable`);
-		}
-		assert.match(styleRule('.dl-version-message'), /flex: none;/);
 	});
 
 	test('uses the same channel names as the main process', async () => {

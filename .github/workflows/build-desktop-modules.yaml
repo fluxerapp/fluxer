@@ -16,18 +16,22 @@ on:
         required: false
         default: ""
         type: string
-      allow_shell_drift:
-        description: Publish even though shell sources changed since the live shell was built. Only when the renderer does not depend on those changes.
-        required: false
-        default: false
-        type: boolean
+      shell_contract:
+        description: "Did the shell contract change since the oldest shell these modules still reach? unchanged refuses if it did. compatible keeps older shells on these modules because the renderer still works on them. raise stops sending these modules to shells without the new contract: Linux and managed shells keep their current renderer, Windows and macOS update their shell first."
+        required: true
+        type: choice
+        options:
+          - unchanged
+          - compatible
+          - raise
+        default: unchanged
 permissions:
   contents: write
   id-token: write
   actions: read
 
 concurrency:
-  group: desktop-modules-${{ inputs.channel }}
+  group: desktop-${{ inputs.channel }}
   cancel-in-progress: false
 
 env:
@@ -260,13 +264,14 @@ jobs:
           owner: fluxerapp
           repositories: fluxer
           permission-contents: read
-      - name: Check the live shell runs these modules
+      - name: Check which shells run these modules
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          ALLOW_SHELL_DRIFT: ${{ inputs.allow_shell_drift }}
+          SHELL_CONTRACT: ${{ inputs.shell_contract }}
+          DESKTOP_MODULES_ONLY_RELEASE: true
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step check_shell_drift
+          --step check_shell_contract
 
       - name: Build the modules-only manifests
         run: >-

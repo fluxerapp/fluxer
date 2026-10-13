@@ -1037,6 +1037,112 @@ describe('ModuleStore rejected module sets', () => {
 	});
 });
 
+describe('ModuleStore shell ranges beside older shells', () => {
+	test('state written by this shell stays readable by shells that require linux_security_minimum', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		await install(store, RENDERER_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256});
+
+		const written = readState(userDataPath);
+
+		assert.equal(Object.hasOwn(written, 'linux_security_minimum'), true);
+		assert.equal(written.linux_security_minimum, null);
+		assert.equal(written.state_version, MODULE_STATE_VERSION);
+	});
+
+	test('state that persisted a security minimum still opens', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		await install(store, RENDERER_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256});
+		const legacy = readState(userDataPath);
+		legacy.linux_security_minimum = {version: '2026.900.1', required_modules: ['fluxer_renderer']};
+		delete legacy.shell_ranges;
+		writeFileSync(path.join(store.root, MODULE_STATE_FILE_NAME), JSON.stringify(legacy));
+
+		const reopened = await openStore(userDataPath);
+
+		assert.equal(reopened.recoveredUnreadableState, null);
+		assert.deepEqual(reopened.getCommitted(), {fluxer_renderer: RENDERER_V1.sha256});
+		assert.deepEqual(reopened.getState().shell_ranges, {});
+		await reopened.commit({fluxer_renderer: RENDERER_V1.sha256});
+		assert.equal(readState(userDataPath).linux_security_minimum, null);
+	});
+
+	test('shell ranges survive a reopen and garbage collection prunes them', async () => {
+		const userDataPath = createUserData();
+		const earlierRun = await openStore(userDataPath);
+		await install(earlierRun, RENDERER_V1);
+		await earlierRun.commit({fluxer_renderer: RENDERER_V1.sha256});
+		const orphan = await install(earlierRun, GRAMMARS_V1);
+		await earlierRun.recordShellRanges([
+			{module: 'fluxer_renderer', sha256: RENDERER_V1.sha256, minimum: SHELL_VERSION, maximum: null},
+			{module: 'fluxer_grammars', sha256: GRAMMARS_V1.sha256, minimum: null, maximum: '2026.900.1'},
+			{module: 'fluxer_renderer', sha256: 'd'.repeat(64), minimum: '2026.900.1', maximum: null},
+		]);
+		const store = await openStore(userDataPath);
+
+		assert.deepEqual(store.getShellRange('fluxer_renderer', RENDERER_V1.sha256), {
+			minimum_shell_version: SHELL_VERSION,
+			maximum_shell_version: null,
+		});
+		assert.deepEqual(store.getShellRange('fluxer_grammars', GRAMMARS_V1.sha256), {
+			minimum_shell_version: null,
+			maximum_shell_version: '2026.900.1',
+		});
+
+		await markLaunched(store);
+		await store.collectGarbage();
+
+		assert.equal(existsSync(orphan.directory), false);
+		assert.deepEqual(Object.keys(readState(userDataPath).shell_ranges), [`fluxer_renderer/${RENDERER_V1.sha256}`]);
+		assert.equal(store.getShellRange('fluxer_grammars', GRAMMARS_V1.sha256), null);
+	});
+
+	test('a recorded range that no longer parses is dropped instead of discarding the state', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		const state = readState(userDataPath);
+		state.shell_ranges = {
+			[`fluxer_renderer/${'d'.repeat(64)}`]: {minimum_shell_version: 'not a version', maximum_shell_version: null},
+			[`fluxer_renderer/${'e'.repeat(64)}`]: {minimum_shell_version: SHELL_VERSION, maximum_shell_version: null},
+		};
+		writeFileSync(path.join(store.root, MODULE_STATE_FILE_NAME), JSON.stringify(state));
+
+		const reopened = await openStore(userDataPath);
+
+		assert.equal(reopened.recoveredUnreadableState, null);
+		assert.deepEqual(Object.keys(reopened.getState().shell_ranges), [`fluxer_renderer/${'e'.repeat(64)}`]);
+	});
+
+	test('retireIncompatible drops non-runnable pairs from committed, previous and floor', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		await install(store, RENDERER_V1);
+		await install(store, RENDERER_V2);
+		await install(store, GRAMMARS_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256});
+		await store.commit({fluxer_renderer: RENDERER_V2.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+		await store.recordManifestFetch({
+			etag: null,
+			fetchedAt: MANIFEST_FETCHED_AT,
+			manifest: manifestObservation(1, 'a'.repeat(64)),
+			floor: {fluxer_renderer: RENDERER_V2.sha256, fluxer_grammars: GRAMMARS_V1.sha256},
+		});
+
+		const retired = await store.retireIncompatible(
+			(moduleName, digest) => !(moduleName === 'fluxer_renderer' && digest === RENDERER_V2.sha256),
+		);
+
+		assert.deepEqual(retired, ['fluxer_renderer']);
+		assert.deepEqual(store.getCommitted(), {fluxer_grammars: GRAMMARS_V1.sha256});
+		assert.deepEqual(store.getState().previous, {fluxer_renderer: RENDERER_V1.sha256});
+		assert.deepEqual(store.getState().floor, {fluxer_grammars: GRAMMARS_V1.sha256});
+		assert.deepEqual(await store.retireIncompatible(() => true), []);
+	});
+});
+
 describe('ModuleStore on Windows sharing violations', () => {
 	test('a rename that an antivirus scanner briefly locks is retried instead of failing the install', async () => {
 		const userDataPath = createUserData();

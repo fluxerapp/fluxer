@@ -63,6 +63,7 @@ function createStore({
 	bootAttempt = 0,
 	missing = [],
 	installedManifests = {},
+	shellRanges = {},
 } = {}) {
 	const absent = new Set(missing);
 	return {
@@ -77,6 +78,7 @@ function createStore({
 		isRejected: (moduleName, sha256) => rejected[moduleName] === sha256,
 		isInstalled: async (moduleName, sha256) => !absent.has(`${moduleName}:${sha256}`),
 		getInstalledManifest: async (moduleName, sha256) => installedManifests[`${moduleName}:${sha256}`] ?? null,
+		getShellRange: (moduleName, sha256) => shellRanges[`${moduleName}/${sha256}`] ?? null,
 	};
 }
 
@@ -237,13 +239,109 @@ describe('ModuleUpdatePlanner.plan', () => {
 		assert.deepEqual(plan.items, []);
 		assert.deepEqual(plan.base, {fluxer_renderer: RENDERER_SHA});
 	});
+
+	test('plan keeps the committed renderer and assets when the feed renderer needs a newer shell', async () => {
+		const dictionarySha = 'd'.repeat(64);
+		const store = createStore({committed: {fluxer_renderer: RENDERER_SHA, fluxer_overlay: OVERLAY_SHA}});
+		const planner = createPlanner(store);
+		const plan = await planner.plan(
+			manifest({
+				modules: {
+					fluxer_renderer: {sha256: 'c'.repeat(64), minimumShellVersion: '2026.900.1'},
+					fluxer_overlay: {sha256: 'e'.repeat(64)},
+					fluxer_dict_en: {sha256: dictionarySha},
+				},
+				required: ['fluxer_renderer', 'fluxer_dict_en'],
+			}),
+		);
+
+		assert.deepEqual(
+			plan.items.map((item) => [item.module, item.entry.sha256, item.requirement]),
+			[['fluxer_dict_en', dictionarySha, 'required']],
+		);
+		assert.deepEqual(plan.base, {fluxer_renderer: RENDERER_SHA, fluxer_overlay: OVERLAY_SHA});
+	});
+});
+
+describe('ModuleUpdatePlanner.compatibleEntry', () => {
+	test('a shell below the manifest shell floor gets no entry even when the entry has no floor', () => {
+		const planner = createPlanner(createStore());
+		const feed = manifest({shellMinimum: '2026.900.1', modules: {fluxer_renderer: {sha256: RENDERER_SHA}}});
+
+		assert.equal(planner.compatibleEntry(feed, 'fluxer_renderer'), null);
+	});
+
+	test('an entry inside its shell range is returned, one outside or missing is not', () => {
+		const planner = createPlanner(createStore());
+		const feed = manifest({
+			shellMinimum: '0.0.0',
+			modules: {
+				fluxer_renderer: {sha256: RENDERER_SHA, minimumShellVersion: SHELL_VERSION},
+				fluxer_overlay: {sha256: OVERLAY_SHA, minimumShellVersion: '2026.900.1'},
+			},
+		});
+
+		assert.equal(planner.compatibleEntry(feed, 'fluxer_renderer')?.sha256, RENDERER_SHA);
+		assert.equal(planner.compatibleEntry(feed, 'fluxer_overlay'), null);
+		assert.equal(planner.compatibleEntry(feed, 'toString'), null);
+	});
+});
+
+describe('ModuleUpdatePlanner.isRunnable', () => {
+	const cachedFeed = () =>
+		manifest({
+			shellMinimum: '0.0.0',
+			modules: {fluxer_renderer: {sha256: RENDERER_SHA, minimumShellVersion: '2026.900.1'}},
+		});
+
+	test('a module with no record and no cached entry is runnable', () => {
+		const planner = createPlanner(createStore());
+
+		assert.equal(planner.isRunnable('fluxer_renderer', RENDERER_SHA, null), true);
+	});
+
+	test('a recorded range this shell is outside of is not runnable', () => {
+		const planner = createPlanner(
+			createStore({
+				shellRanges: {
+					[`fluxer_renderer/${RENDERER_SHA}`]: {minimum_shell_version: '2026.900.1', maximum_shell_version: null},
+					[`fluxer_overlay/${OVERLAY_SHA}`]: {minimum_shell_version: null, maximum_shell_version: '2026.823.0'},
+				},
+			}),
+		);
+
+		assert.equal(planner.isRunnable('fluxer_renderer', RENDERER_SHA, null), false);
+		assert.equal(planner.isRunnable('fluxer_overlay', OVERLAY_SHA, null), false);
+	});
+
+	test('a recorded range that ends on this shell is runnable', () => {
+		const planner = createPlanner(
+			createStore({
+				shellRanges: {
+					[`fluxer_renderer/${RENDERER_SHA}`]: {
+						minimum_shell_version: SHELL_VERSION,
+						maximum_shell_version: SHELL_VERSION,
+					},
+				},
+			}),
+		);
+
+		assert.equal(planner.isRunnable('fluxer_renderer', RENDERER_SHA, cachedFeed()), true);
+	});
+
+	test('the cached manifest stands in for a missing record only for the same sha', () => {
+		const planner = createPlanner(createStore());
+
+		assert.equal(planner.isRunnable('fluxer_renderer', RENDERER_SHA, cachedFeed()), false);
+		assert.equal(planner.isRunnable('fluxer_renderer', 'f'.repeat(64), cachedFeed()), true);
+	});
 });
 
 describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 	test('a store that never reached the manifest feed blocks with nothing-installed', async () => {
 		const planner = createPlanner(createStore({committed: {fluxer_renderer: RENDERER_SHA}, lastManifestFetch: null}));
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.BLOCK,
 			reason: ModuleUpdaterBlockReason.NOTHING_INSTALLED,
 		});
@@ -252,7 +350,7 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 	test('an empty committed set with no offline renderer blocks with nothing-installed', async () => {
 		const planner = createPlanner(createStore({committed: {}}));
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.BLOCK,
 			reason: ModuleUpdaterBlockReason.NOTHING_INSTALLED,
 		});
@@ -261,22 +359,8 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 	test('an offline renderer carries an empty committed set past the nothing-installed block', async () => {
 		const planner = createPlanner(createStore({committed: {}}), {hasOfflineRenderer: true});
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
-		});
-	});
-
-	test('boot attempts at the rollback threshold block with rollback-exhausted', async () => {
-		const planner = createPlanner(
-			createStore({
-				committed: {fluxer_renderer: RENDERER_SHA},
-				bootAttempt: MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD,
-			}),
-		);
-
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
-			kind: ModuleUnreachableLaunchDecision.BLOCK,
-			reason: ModuleUpdaterBlockReason.ROLLBACK_EXHAUSTED,
 		});
 	});
 
@@ -288,17 +372,8 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 			}),
 		);
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
-		});
-	});
-
-	test('a pending security update blocks with unreachable-below-floor', async () => {
-		const planner = createPlanner(createStore({committed: {fluxer_renderer: RENDERER_SHA}}));
-
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(false, true), {
-			kind: ModuleUnreachableLaunchDecision.BLOCK,
-			reason: ModuleUpdaterBlockReason.UNREACHABLE_BELOW_FLOOR,
 		});
 	});
 
@@ -309,11 +384,11 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 		});
 		const planner = createPlanner(store);
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.BLOCK,
 			reason: ModuleUpdaterBlockReason.UNREACHABLE_BELOW_FLOOR,
 		});
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(false, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(false), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
 		});
 	});
@@ -326,7 +401,7 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 			}),
 		);
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(false, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(false), {
 			kind: ModuleUnreachableLaunchDecision.BLOCK,
 			reason: ModuleUpdaterBlockReason.UNREACHABLE_BELOW_FLOOR,
 		});
@@ -340,7 +415,7 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 			}),
 		);
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
 		});
 	});
@@ -439,20 +514,8 @@ describe('ModuleUpdatePlanner with a renderer bundled in the shell', () => {
 	test('a fresh install that never reached the feed launches the bundled renderer', async () => {
 		const planner = bundledPlanner(createStore({lastManifestFetch: null}));
 
-		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
 		});
-	});
-
-	test('the bundle meets a Linux security minimum it is at least as new as', async () => {
-		const planner = bundledPlanner(createStore());
-
-		assert.equal(
-			await planner.securityUpdateRequired({
-				version: parseModuleVersion(SHELL_VERSION, 'minimum'),
-				requiredModules: ['fluxer_renderer'],
-			}),
-			false,
-		);
 	});
 });

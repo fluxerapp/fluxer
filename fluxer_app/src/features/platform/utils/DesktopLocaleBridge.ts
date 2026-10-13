@@ -275,6 +275,20 @@ const UPDATE_MANUAL_DETAIL_DESCRIPTOR = msg({
 	message: 'Download the new version to update {appName}.',
 	comment: 'Native desktop dialog body under the headline announcing a new version that must be downloaded by hand.',
 });
+const UPDATE_MANAGED_DETAIL_DESCRIPTOR = msg({
+	message: 'Update {appName} with your package manager, or download the new version.',
+	comment:
+		'Native desktop dialog body under the headline announcing a new version, shown on a Linux install managed by a package manager such as a deb, rpm or AUR package. {appName} is the desktop app name (typically Fluxer).',
+});
+const UPDATE_FLATPAK_DETAIL_DESCRIPTOR = msg({
+	message: 'Update {appName} from your software center.',
+	comment:
+		'Native desktop dialog body under the headline announcing a new version, shown on a Flatpak install. {appName} is the desktop app name (typically Fluxer).',
+});
+const UPDATE_OPEN_SOFTWARE_CENTER_DESCRIPTOR = msg({
+	message: 'Open software center',
+	comment: 'Native desktop dialog button on a Flatpak install that opens the software center page for the desktop app.',
+});
 const UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR = msg({
 	message: '{appName} is up to date.',
 	comment: 'Native desktop dialog headline after a manual update check found nothing newer.',
@@ -513,6 +527,9 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.update.download': UPDATE_DOWNLOAD_DESCRIPTOR,
 	'desktop.update.manualMessage': UPDATE_MANUAL_MESSAGE_DESCRIPTOR,
 	'desktop.update.manualDetail': UPDATE_MANUAL_DETAIL_DESCRIPTOR,
+	'desktop.update.managedDetail': UPDATE_MANAGED_DETAIL_DESCRIPTOR,
+	'desktop.update.flatpakDetail': UPDATE_FLATPAK_DETAIL_DESCRIPTOR,
+	'desktop.update.openSoftwareCenter': UPDATE_OPEN_SOFTWARE_CENTER_DESCRIPTOR,
 	'desktop.update.upToDateMessage': UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR,
 	'desktop.update.upToDateDetail': UPDATE_UP_TO_DATE_DETAIL_DESCRIPTOR,
 	'desktop.update.checkFailedMessage': UPDATE_CHECK_FAILED_MESSAGE_DESCRIPTOR,

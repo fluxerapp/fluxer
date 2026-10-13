@@ -104,7 +104,6 @@ const SPLASH_STATUS_BY_UPDATER_STATUS: Readonly<Record<ModuleUpdaterStatus, Spla
 function toSplashState(state: ModuleUpdaterSplashState): SplashState {
 	return {
 		status: state.stalled ? 'download-stalled' : SPLASH_STATUS_BY_UPDATER_STATUS[state.status],
-		requiredSecurityUpdate: state.requiredSecurityUpdate,
 		current: state.current,
 		total: state.total,
 		progress: state.progress,
@@ -339,19 +338,17 @@ async function runModuleBootstrap(): Promise<void> {
 	};
 	armSplashActions();
 
-	const runShellSelfUpdateOnSplash = async (
-		requiredSecurityUpdate: boolean,
-	): Promise<{readonly reason: string; readonly detail: string | null}> => {
+	const runShellSelfUpdateOnSplash = async (): Promise<{readonly reason: string; readonly detail: string | null}> => {
 		if (shellUpdatePlan.capability !== ShellUpdateCapability.SELF_UPDATE) {
 			return {reason: 'unsupported', detail: null};
 		}
 		const {runShellSelfUpdate} = await import('@electron/main/ShellSelfUpdate');
 		return await runShellSelfUpdate(shellUpdatePlan, {
 			onDownloading: (progress) => {
-				setSplashState({status: 'shell-update-downloading', requiredSecurityUpdate, progress});
+				setSplashState({status: 'shell-update-downloading', progress});
 			},
 			onRestarting: () => {
-				setSplashState({status: 'shell-update-restarting', requiredSecurityUpdate});
+				setSplashState({status: 'shell-update-restarting'});
 			},
 		});
 	};
@@ -404,7 +401,7 @@ async function runModuleBootstrap(): Promise<void> {
 		}
 		const recordPendingUpdate = (check: {readonly shellNewer: boolean; readonly modulesChanged: boolean}): void => {
 			try {
-				if (check.modulesChanged) {
+				if (check.modulesChanged || check.shellNewer) {
 					fs.writeFileSync(pendingUpdateMarker, '');
 				} else {
 					fs.rmSync(pendingUpdateMarker, {force: true});
@@ -422,13 +419,14 @@ async function runModuleBootstrap(): Promise<void> {
 			forceStartupUpdate: store.shellVersionChanged || updateWasPending || isDesktopUpdateRequested(),
 			selfUpdateShellFirst:
 				shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE
-					? async (latestVersion, requiredSecurityUpdate) => {
+					? async (latestVersion) => {
 							logger.info('A newer shell is available, updating it before the modules', {latestVersion});
-							const result = await runShellSelfUpdateOnSplash(requiredSecurityUpdate);
+							const result = await runShellSelfUpdateOnSplash();
 							logger.warn('The shell self update did not restart the app, converging the modules for this shell', {
 								latestVersion,
 								...result,
 							});
+							return result;
 						}
 					: undefined,
 			fetch: moduleNetworkFetch,
@@ -461,11 +459,7 @@ async function runModuleBootstrap(): Promise<void> {
 				outcome = await updater.run();
 			} catch (error) {
 				logger.error('The module updater failed', error);
-				return await blockUntilRelaunch(
-					updater.getLastState().requiredSecurityUpdate
-						? 'blocked-security-update-required'
-						: 'blocked-update-required',
-				);
+				return await blockUntilRelaunch('blocked-update-required');
 			}
 			switch (outcome.status) {
 				case 'launching':
@@ -490,12 +484,8 @@ async function runModuleBootstrap(): Promise<void> {
 						minimumVersion: outcome.minimumVersion,
 						capability: shellUpdatePlan.capability,
 					});
-					if (shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE) {
-						const failure = await runShellSelfUpdateOnSplash(outcome.requiredSecurityUpdate);
-						logger.error('The shell self update failed, falling back to a manual download', failure);
-					}
 					openSplashWindow();
-					armBlockedShellUpdate(shellUpdatePlan, outcome.latestVersion, outcome.requiredSecurityUpdate);
+					armBlockedShellUpdate();
 					setSecondInstanceSink(focusSplashWindow);
 					return await new Promise<never>(() => {});
 				}
@@ -507,17 +497,12 @@ async function runModuleBootstrap(): Promise<void> {
 						updateServerUnreachable: outcome.updateServerUnreachable,
 					});
 					if (outcome.updateServerUnreachable) {
-						showBlockedSplash(
-							outcome.requiredSecurityUpdate ? 'blocked-security-update-required' : 'blocked-update-unreachable',
-							UPDATE_SERVER_UNREACHABLE_MESSAGE,
-						);
+						showBlockedSplash('blocked-update-unreachable', UPDATE_SERVER_UNREACHABLE_MESSAGE);
 						await updateServerRetry.holdUntilNextAttempt();
 						logger.info('Retrying the update server');
 						return null;
 					}
-					return await blockUntilRelaunch(
-						outcome.requiredSecurityUpdate ? 'blocked-security-update-required' : 'blocked-update-required',
-					);
+					return await blockUntilRelaunch('blocked-update-required');
 				default:
 					return unhandledModuleUpdaterOutcome(outcome);
 			}
@@ -723,7 +708,7 @@ async function runModuleBootstrap(): Promise<void> {
 		const desktopUpdate = new DesktopUpdateRun({
 			probe: () => updater.checkForUpdate(),
 			canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
-			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(false),
+			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(),
 			installModules: async () => {
 				const launchAttempt = await updater.installPending();
 				if (launchAttempt != null) {

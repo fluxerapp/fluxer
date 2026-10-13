@@ -8,12 +8,10 @@ import {MANUAL_DESKTOP_FORMATS, type ManualDesktopFormat} from '@electron/main/S
 import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {
 	DOWNLOAD_PAGE_URL,
-	getManualDownloadOptions,
 	getManualDownloadUrl,
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
-	type UpdaterDownloadOption,
 } from '@electron/main/UpdaterDownloads';
 import {app, type BrowserWindow, ipcMain, net} from 'electron';
 import log from 'electron-log';
@@ -29,7 +27,6 @@ type UpdaterEvent =
 			context: UpdaterContext;
 			version?: string | null;
 			downloadUrl?: string;
-			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
 	| {
 			type: 'not-available';
@@ -43,7 +40,7 @@ type UpdaterEvent =
 	| {
 			type: 'unsupported';
 			context: UpdaterContext;
-			reason: 'platform' | 'unpackaged' | 'managed-package';
+			reason: 'platform' | 'unpackaged';
 			downloadUrl?: string;
 	  };
 
@@ -104,7 +101,9 @@ async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promis
 
 export async function findNewerManualShell(): Promise<ManualLatestInfo | null> {
 	const plan = resolveShellUpdatePlan();
-	if (plan.capability !== ShellUpdateCapability.MANUAL_DOWNLOAD || plan.reason !== 'platform') {
+	const managed = plan.capability === ShellUpdateCapability.MANAGED_PACKAGE;
+	const manual = plan.capability === ShellUpdateCapability.MANUAL_DOWNLOAD && plan.reason === 'platform';
+	if (!managed && !manual) {
 		return null;
 	}
 	const latest = await fetchManualLatest({forceRefresh: true});
@@ -116,13 +115,11 @@ function sendManualUpdateAvailable(
 	context: UpdaterContext,
 	latest: ManualLatestInfo,
 ): void {
-	const downloadOptions = getManualDownloadOptions(latest);
 	send(getMainWindow(), {
 		type: 'available',
 		context,
 		version: latest.version,
 		downloadUrl: getManualDownloadUrl(latest),
-		...(downloadOptions.length > 0 ? {downloadOptions} : {}),
 	});
 }
 
@@ -157,10 +154,7 @@ function registerSelfUpdater(getMainWindow: () => BrowserWindow | null): void {
 	});
 }
 
-function registerManualUpdater(
-	getMainWindow: () => BrowserWindow | null,
-	reason: 'platform' | 'unpackaged' | 'managed-package',
-): void {
+function registerManualUpdater(getMainWindow: () => BrowserWindow | null, unpackaged: boolean): void {
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
 		if (context === 'user') {
 			try {
@@ -169,13 +163,8 @@ function registerManualUpdater(
 				log.warn('Desktop module update check failed', error);
 			}
 		}
-		if (reason !== 'platform') {
-			send(getMainWindow(), {
-				type: 'unsupported',
-				context,
-				reason,
-				...(reason === 'unpackaged' ? {downloadUrl: DOWNLOAD_PAGE_URL} : {}),
-			});
+		if (unpackaged) {
+			send(getMainWindow(), {type: 'unsupported', context, reason: 'unpackaged', downloadUrl: DOWNLOAD_PAGE_URL});
 			return;
 		}
 		await checkManualUpdate(context, getMainWindow);
@@ -184,14 +173,12 @@ function registerManualUpdater(
 
 export function registerUpdater(getMainWindow: () => BrowserWindow | null) {
 	const plan = resolveShellUpdatePlan();
-	switch (plan.capability) {
-		case ShellUpdateCapability.SELF_UPDATE:
-			registerSelfUpdater(getMainWindow);
-			return;
-		case ShellUpdateCapability.MANAGED_PACKAGE:
-			registerManualUpdater(getMainWindow, 'managed-package');
-			return;
-		default:
-			registerManualUpdater(getMainWindow, plan.reason);
+	if (plan.capability === ShellUpdateCapability.SELF_UPDATE) {
+		registerSelfUpdater(getMainWindow);
+		return;
 	}
+	registerManualUpdater(
+		getMainWindow,
+		plan.capability === ShellUpdateCapability.MANUAL_DOWNLOAD && plan.reason === 'unpackaged',
+	);
 }

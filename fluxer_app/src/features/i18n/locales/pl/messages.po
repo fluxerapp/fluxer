@@ -1802,6 +1802,16 @@ msgstr "Uruchom ponownie aplikację {PRODUCT_NAME}, aby zastosować zmianę pask
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Uruchom ponownie aplikację {PRODUCT_NAME}, aby wyłączyć przyspieszenie sprzętowe Chromium. Używaj tej opcji tylko przy rozwiązywaniu problemów z grafiką lub wysokim obciążeniem GPU."
 
+#. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} {version} is available. Update it from your software center."
+msgstr "{productName} w wersji {version} jest dostępna. Zaktualizuj ją z centrum oprogramowania."
+
+#. Desktop updater modal body for a Linux install managed by a package manager, such as a deb, rpm or AUR package, when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} {version} is available. Update it with your package manager, or download the new version."
+msgstr "Dostępna jest nowa wersja {productName} {version}. Zaktualizuj ją za pomocą menedżera pakietów lub pobierz nową wersję."
+
 #. Accessible label for the Fluxer application icon.
 #: src/features/ui/components/icons/FluxerIconMark.tsx
 msgid "{productName} application icon"
@@ -2668,11 +2678,6 @@ msgstr "Pomocny bot, który potrafi zdziałać cuda!"
 #: src/features/search/utils/SearchUtils.ts
 msgid "a hostname, e.g. {exampleDomain}"
 msgstr "nazwa hosta, np. {exampleDomain}"
-
-#. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
-msgstr "Dostępna jest aktualizacja aplikacji komputerowej dla systemu Linux. Wybierz format pakietu dla tego systemu, a {productName} zapisze go lokalnie."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx
@@ -11427,11 +11432,6 @@ msgstr "Dźwięk wyłączony"
 msgid "Deafened by moderators"
 msgstr "Dźwięk wyłączony przez moderatorów"
 
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "DEB package"
-msgstr "Pakiet DEB"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
@@ -12095,20 +12095,10 @@ msgstr "Powiadomienia na komputerze zostały zablokowane. Możesz je włączyć 
 msgid "Desktop startup"
 msgstr "Uruchamianie z systemem"
 
-#. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
-msgid "Desktop update {version} available. Choose a Linux package."
-msgstr "Dostępna aktualizacja aplikacji komputerowej {version}. Wybierz pakiet dla systemu Linux."
-
 #. Modal title shown when a new desktop app update can be downloaded.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Desktop update available"
 msgstr "Dostępna aktualizacja aplikacji komputerowej"
-
-#. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format and no version is known.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
-msgid "Desktop update available. Choose a Linux package."
-msgstr "Dostępna aktualizacja aplikacji. Wybierz pakiet dla systemu Linux."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13048,11 +13038,6 @@ msgstr "Pobierz instalator"
 #: src/features/ui/action_menu/items/MediaMenuData.tsx
 msgid "Download media"
 msgstr "Pobierz multimedia"
-
-#. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Download package"
-msgstr "Pobierz pakiet"
 
 #. Button that downloads the account recovery kit as a PDF file.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
@@ -18280,11 +18265,6 @@ msgstr "Zainstaluj ją z menu przeglądarki."
 msgid "Install the new app"
 msgstr "Zainstaluj nową aplikację"
 
-#. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Installed"
-msgstr "Zainstalowano"
-
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Installed version: {currentVersion}."
@@ -19793,11 +19773,6 @@ msgstr "Aplikacja dla systemu Linux"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Linux default"
 msgstr "Domyślne urządzenie audio systemu Linux."
-
-#. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Linux package"
-msgstr "Pakiet dla systemu Linux"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
@@ -22430,11 +22405,6 @@ msgstr "Nowe wątki przestaną być widoczne na liście kanału po tym okresie b
 msgid "New users can't join right now. You can still create an account or sign in, then try this link again later."
 msgstr "Nowi użytkownicy nie mogą teraz dołączyć. Nadal możesz utworzyć konto lub się zalogować, a później spróbować ponownie użyć tego linku."
 
-#. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "New version"
-msgstr "Nowa wersja"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -24142,6 +24112,8 @@ msgid "Open settings"
 msgstr "Otwórz ustawienia"
 
 #. Button label that opens the software center via appstream protocol.
+#. Native desktop dialog button on a Flatpak install that opens the software center page for the desktop app.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Open software center"
 msgstr "Otwórz centrum oprogramowania"
@@ -28463,11 +28435,6 @@ msgstr "Okrągłe pole wyboru"
 #: src/features/channel/components/guild_members_page/MembersTableFooter.tsx
 msgid "Rows per page"
 msgstr "Wiersze na stronę"
-
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "RPM package"
-msgstr "Pakiet RPM"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -33120,11 +33087,6 @@ msgstr "Stuknij Udostępnij, a następnie Do ekranu początkowego."
 msgid "Tap to add a note"
 msgstr "Dotknij, aby dodać notatkę"
 
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "tar.gz archive"
-msgstr "Archiwum tar.gz"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Taskbar badge"
@@ -33512,11 +33474,6 @@ msgstr "Połączenie jest szyfrowane protokołem TLS tylko wtedy, gdy serwer go 
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Nie udało się pobrać aktualizacji aplikacji komputerowej. Gdy połączenie będzie stabilne, spróbuj ponownie za pomocą przycisku aktualizacji."
-
-#. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
-msgstr "Pobrany plik został zapisany na Twoim komputerze. Zainstaluj go za pomocą swojego menedżera pakietów."
 
 #. Activity log detail line under a deleted emoji, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the emoji, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -36548,10 +36505,20 @@ msgstr "Do 4K przy 60 kl./s"
 msgid "Up to 720p at 30 FPS"
 msgstr "Do 720p przy 30 kl./s"
 
+#. Native desktop dialog body under the headline announcing a new version, shown on a Flatpak install. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update {appName} from your software center."
+msgstr "Zaktualizuj {appName} z centrum oprogramowania."
+
 #. Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Update {appName} now"
 msgstr "Zaktualizuj {appName} teraz"
+
+#. Native desktop dialog body under the headline announcing a new version, shown on a Linux install managed by a package manager such as a deb, rpm or AUR package. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update {appName} with your package manager, or download the new version."
+msgstr "Zaktualizuj {appName} za pomocą menedżera pakietów lub pobierz nową wersję."
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx

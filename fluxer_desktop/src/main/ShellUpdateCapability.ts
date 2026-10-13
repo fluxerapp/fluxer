@@ -40,6 +40,12 @@ export function decideShellUpdatePlan(runtime: ShellUpdateRuntime): ShellUpdateP
 	if (runtime.flatpak) {
 		return {capability: ShellUpdateCapability.MANAGED_PACKAGE};
 	}
+	if (runtime.platform === 'linux') {
+		if (!runtime.portable && runtime.appImage != null) {
+			return {capability: ShellUpdateCapability.SELF_UPDATE, updater: 'appimage', target: runtime.appImage};
+		}
+		return {capability: ShellUpdateCapability.MANAGED_PACKAGE};
+	}
 	if (runtime.portable) {
 		return {capability: ShellUpdateCapability.MANUAL_DOWNLOAD, reason: 'platform'};
 	}
@@ -48,9 +54,6 @@ export function decideShellUpdatePlan(runtime: ShellUpdateRuntime): ShellUpdateP
 	}
 	if (runtime.platform === 'darwin') {
 		return {capability: ShellUpdateCapability.SELF_UPDATE, updater: 'electron'};
-	}
-	if (runtime.platform === 'linux' && runtime.appImage != null) {
-		return {capability: ShellUpdateCapability.SELF_UPDATE, updater: 'appimage', target: runtime.appImage};
 	}
 	return {capability: ShellUpdateCapability.MANUAL_DOWNLOAD, reason: 'platform'};
 }

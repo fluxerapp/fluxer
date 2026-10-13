@@ -82,15 +82,34 @@ describe('parseModuleUpdateManifest', () => {
 		);
 	});
 
-	test('refuses linux_security_minimum.required_modules naming an Object.prototype property', () => {
+	test('linux_security_minimum is ignored, even one shipped shells would enforce', () => {
 		const bytes = manifestBytes({
 			platform: 'linux',
-			linux_security_minimum: {version: SHELL_VERSION, required_modules: ['constructor']},
+			shell: {latest_version: '2026.900.1', minimum_version: '0.0.0'},
+			linux_security_minimum: {version: '2026.900.1', required_modules: ['constructor']},
 		});
 
-		assert.throws(() => parseModuleUpdateManifest(bytes, {...EXPECTED_TARGET, platform: 'linux'}), {
-			name: 'ModuleManifestMalformedError',
-			message: /linux_security_minimum\.required_modules names an undeclared module: constructor/u,
+		const manifest = parseModuleUpdateManifest(bytes, {...EXPECTED_TARGET, platform: 'linux'});
+
+		assert.equal(Object.hasOwn(manifest, 'linuxSecurityMinimum'), false);
+		assert.equal(manifest.shell.minimumVersion.source, '0.0.0');
+	});
+
+	test('a manifest carrying shell_compatibility parses', () => {
+		const bytes = manifestBytes({
+			shell_compatibility: {
+				minimum_shell_version: '0.0.0',
+				source_sha: 'b'.repeat(40),
+				previous_source_sha: 'c'.repeat(40),
+				floor_source_sha: null,
+				decision: 'compatible',
+				contract_base_sha: 'c'.repeat(40),
+				contract_changes: ['fluxer_desktop/src/preload/index.ts'],
+			},
 		});
+
+		const manifest = parseModuleUpdateManifest(bytes, EXPECTED_TARGET);
+
+		assert.equal(manifest.modules.fluxer_renderer.sha256, RENDERER_SHA);
 	});
 });

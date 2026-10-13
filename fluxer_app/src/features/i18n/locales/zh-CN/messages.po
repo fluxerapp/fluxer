@@ -1802,6 +1802,16 @@ msgstr "{PRODUCT_NAME} 需要重启才能使标题栏更改生效。"
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} 需要重启才能禁用 Chromium 的硬件加速。仅在排查图形故障或 GPU 占用过高时使用此功能。"
 
+#. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} {version} is available. Update it from your software center."
+msgstr "{productName} {version} 可用。请从您的软件中心更新。"
+
+#. Desktop updater modal body for a Linux install managed by a package manager, such as a deb, rpm or AUR package, when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} {version} is available. Update it with your package manager, or download the new version."
+msgstr "{productName} {version} 已发布。请使用你的包管理器进行更新，或下载新版本。"
+
 #. Accessible label for the Fluxer application icon.
 #: src/features/ui/components/icons/FluxerIconMark.tsx
 msgid "{productName} application icon"
@@ -2668,11 +2678,6 @@ msgstr "一个能做很多厉害事情的实用机器人！"
 #: src/features/search/utils/SearchUtils.ts
 msgid "a hostname, e.g. {exampleDomain}"
 msgstr "主机名，例如 {exampleDomain}"
-
-#. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
-msgstr "Linux 桌面端有可用更新。请选择适用于此系统的软件包格式，{productName} 会将其保存到本地。"
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx
@@ -11427,11 +11432,6 @@ msgstr "已拒听"
 msgid "Deafened by moderators"
 msgstr "被管理员设为拒听"
 
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "DEB package"
-msgstr "DEB 软件包"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
@@ -12095,20 +12095,10 @@ msgstr "桌面通知已被屏蔽。你之后可以在浏览器设置、用户设
 msgid "Desktop startup"
 msgstr "桌面端启动"
 
-#. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
-msgid "Desktop update {version} available. Choose a Linux package."
-msgstr "桌面版更新 {version} 已可用。请选择一个 Linux 软件包。"
-
 #. Modal title shown when a new desktop app update can be downloaded.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Desktop update available"
 msgstr "有可用的桌面版更新"
-
-#. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format and no version is known.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
-msgid "Desktop update available. Choose a Linux package."
-msgstr "有可用的桌面版更新。请选择一个 Linux 软件包。"
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13048,11 +13038,6 @@ msgstr "下载安装程序"
 #: src/features/ui/action_menu/items/MediaMenuData.tsx
 msgid "Download media"
 msgstr "下载媒体文件"
-
-#. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Download package"
-msgstr "下载安装包"
 
 #. Button that downloads the account recovery kit as a PDF file.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
@@ -18280,11 +18265,6 @@ msgstr "从浏览器菜单中安装。"
 msgid "Install the new app"
 msgstr "安装新应用"
 
-#. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Installed"
-msgstr "已安装"
-
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Installed version: {currentVersion}."
@@ -19793,11 +19773,6 @@ msgstr "Linux 应用"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Linux default"
 msgstr "Linux 默认"
-
-#. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "Linux package"
-msgstr "Linux 安装包"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
@@ -22430,11 +22405,6 @@ msgstr "新创建的帖子在不活跃一段时间后将不再显示在频道列
 msgid "New users can't join right now. You can still create an account or sign in, then try this link again later."
 msgstr "新用户暂时无法加入。你仍然可以创建账号或登录，稍后再次尝试此链接。"
 
-#. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "New version"
-msgstr "新版本"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -24142,6 +24112,8 @@ msgid "Open settings"
 msgstr "打开设置"
 
 #. Button label that opens the software center via appstream protocol.
+#. Native desktop dialog button on a Flatpak install that opens the software center page for the desktop app.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Open software center"
 msgstr "打开软件中心"
@@ -28463,11 +28435,6 @@ msgstr "圆形样式复选框"
 #: src/features/channel/components/guild_members_page/MembersTableFooter.tsx
 msgid "Rows per page"
 msgstr "每页行数"
-
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "RPM package"
-msgstr "RPM 软件包"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -33120,11 +33087,6 @@ msgstr "轻点“共享”，然后轻点“添加到主屏幕”。"
 msgid "Tap to add a note"
 msgstr "轻触添加备注"
 
-#. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "tar.gz archive"
-msgstr "tar.gz 压缩包"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Taskbar badge"
@@ -33512,11 +33474,6 @@ msgstr "如果服务器提供该选项，连接将升级到 TLS。"
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "桌面更新下载失败。请在网络连接稳定后通过更新按钮重试。"
-
-#. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
-msgstr "下载的文件已保存到你的电脑。请使用你的常规软件包管理器进行安装。"
 
 #. Activity log detail line under a deleted emoji, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the emoji, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -36548,10 +36505,20 @@ msgstr "最高 4K 60 帧"
 msgid "Up to 720p at 30 FPS"
 msgstr "最高 720p，30 帧/秒"
 
+#. Native desktop dialog body under the headline announcing a new version, shown on a Flatpak install. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update {appName} from your software center."
+msgstr "从你的软件中心更新 {appName}。"
+
 #. Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Update {appName} now"
 msgstr "立即更新 {appName}"
+
+#. Native desktop dialog body under the headline announcing a new version, shown on a Linux install managed by a package manager such as a deb, rpm or AUR package. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update {appName} with your package manager, or download the new version."
+msgstr "使用你的包管理器更新 {appName}，或下载新版本。"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx

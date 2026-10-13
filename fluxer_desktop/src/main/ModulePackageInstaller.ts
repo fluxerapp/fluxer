@@ -201,6 +201,14 @@ export class ModulePackageInstaller {
 					sha256: item.entry.sha256,
 					download: (resumeFrom) => this.openPackageStream(item, current, total, resumeFrom),
 				});
+				await this.store.recordShellRanges([
+					{
+						module: item.module,
+						sha256: item.entry.sha256,
+						minimum: item.entry.minimumShellVersion?.source ?? null,
+						maximum: item.entry.maximumShellVersion?.source ?? null,
+					},
+				]);
 				this.onProgress({
 					phase: ModulePackageInstallPhase.INSTALLING,
 					current,

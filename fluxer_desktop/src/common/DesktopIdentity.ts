@@ -7,11 +7,6 @@ const DESKTOP_APP_NAMES: Record<BuildChannel, string> = {
 	canary: 'Fluxer Canary',
 	development: 'Fluxer Development',
 };
-const DESKTOP_ARTIFACT_PRODUCT_NAMES: Record<BuildChannel, string> = {
-	stable: 'Fluxer',
-	canary: 'Fluxer-Canary',
-	development: 'Fluxer-Development',
-};
 const MACOS_BUNDLE_IDS: Record<BuildChannel, string> = {
 	stable: 'app.fluxer',
 	canary: 'app.fluxer.canary',
@@ -49,7 +44,6 @@ const WINDOWS_TOAST_ACTIVATOR_CLSIDS: Record<BuildChannel, string> = {
 };
 
 export const DESKTOP_APP_NAME = DESKTOP_APP_NAMES[BUILD_CHANNEL];
-export const DESKTOP_ARTIFACT_PRODUCT_NAME = DESKTOP_ARTIFACT_PRODUCT_NAMES[BUILD_CHANNEL];
 export const MACOS_BUNDLE_ID = MACOS_BUNDLE_IDS[BUILD_CHANNEL];
 export const LINUX_DESKTOP_ENTRY_ID = LINUX_DESKTOP_ENTRY_IDS[BUILD_CHANNEL];
 export const LINUX_PORTAL_SESSION_TOKEN = LINUX_PORTAL_SESSION_TOKENS[BUILD_CHANNEL];

@@ -24,11 +24,6 @@ const DIAGNOSTICS_COPIED_MS = 2000;
 const BYTES_PER_MEGABYTE = 1000000;
 const BYTES_PER_KILOBYTE = 1000;
 
-const SplashLayout = Object.freeze({
-	SPLASH: 'splash',
-	MANUAL_UPDATE: 'manual-update',
-});
-
 const SplashStatus = Object.freeze({
 	CHECKING_FOR_UPDATES: 'checking-for-updates',
 	DOWNLOADING_UPDATES: 'downloading-updates',
@@ -40,10 +35,7 @@ const SplashStatus = Object.freeze({
 	SHELL_UPDATE_RESTARTING: 'shell-update-restarting',
 	BLOCKED_UPDATE_REQUIRED: 'blocked-update-required',
 	BLOCKED_UPDATE_UNREACHABLE: 'blocked-update-unreachable',
-	BLOCKED_SECURITY_UPDATE_REQUIRED: 'blocked-security-update-required',
-	BLOCKED_SECURITY_UPDATE_MANAGED: 'blocked-security-update-managed',
 	BLOCKED_SHELL_UPDATE: 'blocked-shell-update',
-	BLOCKED_SHELL_UPDATE_MANAGED: 'blocked-shell-update-managed',
 	BLOCKED_UNSUPPORTED_BUILD: 'blocked-unsupported-build',
 	LAUNCHING: 'launching',
 	UNREACHABLE_LAUNCH: 'unreachable-launch',
@@ -61,7 +53,6 @@ const DIAGNOSTICS_STATUSES = new Set([
 	SplashStatus.DOWNLOAD_STALLED,
 	SplashStatus.BLOCKED_UPDATE_REQUIRED,
 	SplashStatus.BLOCKED_UPDATE_UNREACHABLE,
-	SplashStatus.BLOCKED_SECURITY_UPDATE_REQUIRED,
 	SplashStatus.BLOCKED_SHELL_UPDATE,
 	SplashStatus.BLOCKED_UNSUPPORTED_BUILD,
 	SplashStatus.UNREACHABLE_LAUNCH,
@@ -73,9 +64,7 @@ const ACTION_CHANNELS = new Map([
 	['quit', SPLASH_QUIT_CHANNEL],
 ]);
 const DEFAULT_STATE = Object.freeze({
-	layout: SplashLayout.SPLASH,
 	status: SplashStatus.CHECKING_FOR_UPDATES,
-	requiredSecurityUpdate: false,
 	current: null,
 	total: null,
 	progress: null,
@@ -85,15 +74,11 @@ const DEFAULT_STATE = Object.freeze({
 	bytesPerSecond: null,
 	action: null,
 	message: null,
-	versionLabel: null,
-	options: null,
 });
 
 let splashState = null;
-let renderedLayout = null;
-let renderedManualSignature = null;
+let splashBuilt = false;
 let countdownTimer = null;
-let selectedOption = null;
 let splashStartedAt = Number.POSITIVE_INFINITY;
 let diagnosticsRevealTimer = null;
 let diagnosticsCopiedTimer = null;
@@ -101,43 +86,25 @@ let diagnosticsCopiedTimer = null;
 function getStatusText(state) {
 	switch (state.status) {
 		case SplashStatus.DOWNLOADING_UPDATES:
-			return state.requiredSecurityUpdate
-				? `Downloading required security update ${state.current ?? 0} of ${state.total ?? 0}…`
-				: `Downloading update ${state.current ?? 0} of ${state.total ?? 0}…`;
+			return `Downloading update ${state.current ?? 0} of ${state.total ?? 0}…`;
 		case SplashStatus.INSTALLING_UPDATES:
-			return state.requiredSecurityUpdate
-				? `Installing required security update ${state.current ?? 0} of ${state.total ?? 0}…`
-				: `Installing update ${state.current ?? 0} of ${state.total ?? 0}…`;
+			return `Installing update ${state.current ?? 0} of ${state.total ?? 0}…`;
 		case SplashStatus.VERIFYING:
-			return state.requiredSecurityUpdate ? 'Verifying required security update…' : 'Verifying files…';
+			return 'Verifying files…';
 		case SplashStatus.DOWNLOAD_STALLED:
 			return `Download stalled. Retrying in ${state.seconds ?? 0} sec…`;
 		case SplashStatus.UPDATE_FAILURE:
-			return state.requiredSecurityUpdate
-				? `Required security update failed. Retrying in ${state.seconds ?? 0} sec…`
-				: `Update failed. Retrying in ${state.seconds ?? 0} sec…`;
+			return `Update failed. Retrying in ${state.seconds ?? 0} sec…`;
 		case SplashStatus.SHELL_UPDATE_DOWNLOADING:
-			return state.requiredSecurityUpdate ? 'Downloading required security update…' : 'Updating Fluxer…';
+			return 'Updating Fluxer…';
 		case SplashStatus.SHELL_UPDATE_RESTARTING:
-			return state.requiredSecurityUpdate
-				? 'Restarting to finish the required security update…'
-				: 'Restarting to finish the update…';
+			return 'Restarting to finish the update…';
 		case SplashStatus.BLOCKED_UPDATE_REQUIRED:
-			return state.requiredSecurityUpdate
-				? 'A required security update is needed to continue'
-				: 'Update required to continue';
+			return 'Update required to continue';
 		case SplashStatus.BLOCKED_UPDATE_UNREACHABLE:
 			return "Can't reach the Fluxer update server";
-		case SplashStatus.BLOCKED_SECURITY_UPDATE_REQUIRED:
-			return 'A required security update is needed to continue';
-		case SplashStatus.BLOCKED_SECURITY_UPDATE_MANAGED:
-			return 'Install the required security update through your package manager';
 		case SplashStatus.BLOCKED_SHELL_UPDATE:
-			return state.requiredSecurityUpdate
-				? 'A required security update is needed to continue'
-				: 'A new version of Fluxer is required';
-		case SplashStatus.BLOCKED_SHELL_UPDATE_MANAGED:
-			return 'Update Fluxer through your package manager';
+			return 'A new version of Fluxer is required';
 		case SplashStatus.BLOCKED_UNSUPPORTED_BUILD:
 			return 'This installation is incomplete. Reinstall Fluxer';
 		case SplashStatus.LAUNCHING:
@@ -147,7 +114,7 @@ function getStatusText(state) {
 		case SplashStatus.WAITING_LOCAL_NETWORK:
 			return 'Waiting for local network permission…';
 		default:
-			return state.requiredSecurityUpdate ? 'Checking for required security update…' : 'Checking for updates…';
+			return 'Checking for updates…';
 	}
 }
 
@@ -184,7 +151,6 @@ function getMetricsText(state) {
 }
 
 function shouldShowDiagnostics(state) {
-	if (state.layout !== SplashLayout.SPLASH) return false;
 	if (DIAGNOSTICS_HIDDEN_STATUSES.has(state.status)) return false;
 	if (DIAGNOSTICS_STATUSES.has(state.status)) return true;
 	return Date.now() - splashStartedAt >= DIAGNOSTICS_REVEAL_MS;
@@ -223,19 +189,15 @@ function createProgressPlaceholder() {
 	return placeholder;
 }
 
-function sendSplashAction(kind, value) {
+function sendSplashAction(kind) {
 	const channel = ACTION_CHANNELS.get(kind);
 	if (channel == null) return;
-	if (value === undefined) {
-		ipcRenderer.send(channel);
-		return;
-	}
-	ipcRenderer.send(channel, value);
+	ipcRenderer.send(channel);
 }
 
 function onSplashActionClick() {
 	if (splashState == null || splashState.action == null) return;
-	sendSplashAction(splashState.action.kind, undefined);
+	sendSplashAction(splashState.action.kind);
 }
 
 function buildSplashLayout(mount) {
@@ -329,111 +291,12 @@ function reconcileAction(mount, state) {
 	existing.textContent = state.action.label;
 }
 
-function findSelectedOption() {
-	if (splashState == null || splashState.options == null) return null;
-	return splashState.options.find((option) => option.value === selectedOption) ?? null;
-}
-
-function manualUpdateSignature(state) {
-	return JSON.stringify([state.action, state.options]);
-}
-
-function patchManualUpdateText(mount, state) {
-	const message = mount.querySelector('.dl-update-message');
-	if (message != null) {
-		message.textContent = state.message ?? '';
-	}
-	const version = mount.querySelector('.dl-version-message');
-	if (version != null) {
-		version.textContent = state.versionLabel ?? '';
-	}
-}
-
-function buildManualUpdateLayout(mount, state) {
-	const splash = createNode('div');
-	splash.id = 'splash';
-	const inner = createNode('div', 'splash-inner-dl');
-	const markBox = createNode('div', 'splash-mark-dl');
-	markBox.appendChild(createMark(null));
-	const message = createNode('div', 'dl-update-message');
-	message.textContent = state.message ?? '';
-	const version = createNode('div', 'dl-version-message');
-	version.textContent = state.versionLabel ?? '';
-	inner.appendChild(markBox);
-	inner.appendChild(message);
-	inner.appendChild(buildManualUpdateControl(state));
-	inner.appendChild(version);
-	splash.appendChild(inner);
-	mount.replaceChildren(splash);
-}
-
-function buildManualUpdateControl(state) {
-	return state.options == null ? buildManualUpdateAction(state) : buildManualUpdatePicker(state);
-}
-
-function buildManualUpdateAction(state) {
-	const frame = createNode('div', 'dl-action-frame');
-	const button = createNode('button', 'dl-button');
-	button.id = 'dl-button';
-	button.textContent = state.action.label;
-	button.addEventListener('click', onSplashActionClick);
-	frame.appendChild(button);
-	return frame;
-}
-
-function buildManualUpdatePicker(state) {
-	const frame = createNode('div', 'dl-select-frame');
-	const selectBox = createNode('div', 'dl-select');
-	const select = createNode('select');
-	select.id = 'dl-select-input';
-	for (const option of state.options) {
-		const node = createNode('option');
-		node.value = option.value;
-		node.textContent = option.label;
-		select.appendChild(node);
-	}
-	selectBox.appendChild(select);
-	const button = createNode('button', 'dl-button');
-	button.id = 'dl-button';
-	if (findSelectedOption() == null) {
-		selectedOption = state.options[0].value;
-	}
-	const initial = findSelectedOption();
-	select.value = selectedOption;
-	button.textContent = initial == null ? '' : initial.buttonLabel;
-	select.addEventListener('change', () => {
-		selectedOption = select.value;
-		const option = findSelectedOption();
-		button.textContent = option == null ? '' : option.buttonLabel;
-	});
-	button.addEventListener('click', () => {
-		const option = findSelectedOption();
-		if (option == null) return;
-		sendSplashAction(option.kind, option.value);
-	});
-	frame.appendChild(selectBox);
-	frame.appendChild(button);
-	return frame;
-}
-
 function render() {
 	const mount = document.getElementById(SPLASH_MOUNT_ID);
 	if (mount == null) return;
 	const state = splashState ?? DEFAULT_STATE;
-	if (state.layout === SplashLayout.MANUAL_UPDATE) {
-		const signature = manualUpdateSignature(state);
-		if (renderedLayout !== SplashLayout.MANUAL_UPDATE || renderedManualSignature !== signature) {
-			renderedLayout = SplashLayout.MANUAL_UPDATE;
-			renderedManualSignature = signature;
-			buildManualUpdateLayout(mount, state);
-			return;
-		}
-		patchManualUpdateText(mount, state);
-		return;
-	}
-	if (renderedLayout !== SplashLayout.SPLASH) {
-		renderedLayout = SplashLayout.SPLASH;
-		renderedManualSignature = null;
+	if (!splashBuilt) {
+		splashBuilt = true;
 		buildSplashLayout(mount);
 	}
 	const statusNode = mount.querySelector('.splash-status');
@@ -454,7 +317,7 @@ function render() {
 }
 
 function hasCountdown(state) {
-	return state.layout === SplashLayout.SPLASH && state.seconds != null && state.seconds > 0;
+	return state.seconds != null && state.seconds > 0;
 }
 
 function stopCountdown() {

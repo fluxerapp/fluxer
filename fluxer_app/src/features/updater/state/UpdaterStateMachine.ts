@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UpdaterDownloadOption} from '@app/types/electron.d';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 interface NativeUpdateInfo {
@@ -31,7 +30,6 @@ interface UpdaterMachineContext {
 	manualNativeDownloadInFlight: boolean;
 	nativeUnsupported: NativeUnsupportedUpdate | null;
 	nativeManualDownloadUrl: string | null;
-	nativeManualDownloadOptions: ReadonlyArray<UpdaterDownloadOption>;
 }
 
 export type UpdaterMachineEvent =
@@ -43,7 +41,6 @@ export type UpdaterMachineEvent =
 			type: 'native.available';
 			version: string | null;
 			downloadUrl: string | null;
-			downloadOptions: ReadonlyArray<UpdaterDownloadOption>;
 	  }
 	| {type: 'native.notAvailable'; now: number}
 	| {type: 'native.error'}
@@ -55,8 +52,6 @@ export type UpdaterMachineEvent =
 	  }
 	| {type: 'manualDownload.started'}
 	| {type: 'manualDownload.finished'};
-
-const EMPTY_DOWNLOAD_OPTIONS: ReadonlyArray<UpdaterDownloadOption> = Object.freeze([]);
 
 function createEmptyNativeUpdateInfo(): NativeUpdateInfo {
 	return {
@@ -81,7 +76,6 @@ function createInitialUpdaterContext(): UpdaterMachineContext {
 		manualNativeDownloadInFlight: false,
 		nativeUnsupported: null,
 		nativeManualDownloadUrl: null,
-		nativeManualDownloadOptions: EMPTY_DOWNLOAD_OPTIONS,
 	};
 }
 
@@ -97,7 +91,6 @@ function clearNativeUpdate(context: UpdaterMachineContext): UpdaterMachineContex
 			native: createEmptyNativeUpdateInfo(),
 		},
 		nativeManualDownloadUrl: null,
-		nativeManualDownloadOptions: EMPTY_DOWNLOAD_OPTIONS,
 	};
 }
 
@@ -141,7 +134,6 @@ const updaterStateMachine = setup({
 				isChecking: false,
 				nativeUnsupported: null,
 				nativeManualDownloadUrl: event.downloadUrl,
-				nativeManualDownloadOptions: [...event.downloadOptions],
 			};
 		}),
 		applyNativeNotAvailable: assign(({context, event}) => {
@@ -231,7 +223,7 @@ export function transitionUpdaterMachineSnapshot(
 }
 
 export function hasManualNativeDownload(snapshot: UpdaterMachineSnapshot): boolean {
-	return Boolean(snapshot.context.nativeManualDownloadUrl) || snapshot.context.nativeManualDownloadOptions.length > 0;
+	return Boolean(snapshot.context.nativeManualDownloadUrl);
 }
 
 export function getUpdaterDisplayVersion(snapshot: UpdaterMachineSnapshot): string | null {

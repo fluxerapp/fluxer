@@ -21,6 +21,15 @@ on:
         required: false
         default: ""
         type: string
+      shell_contract:
+        description: "Did the shell contract change since the oldest shell these modules still reach? unchanged refuses if it did. compatible keeps older shells on these modules because the renderer still works on them. raise stops sending these modules to shells without the new contract: Linux and managed shells keep their current renderer, Windows and macOS update their shell first."
+        required: true
+        type: choice
+        options:
+          - unchanged
+          - compatible
+          - raise
+        default: unchanged
 permissions:
   contents: write
   id-token: write
@@ -28,7 +37,7 @@ permissions:
 
 concurrency:
   group: desktop-${{ inputs.channel }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CHANNEL: ${{ inputs.channel }}
@@ -53,6 +62,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: main
+          fetch-depth: 0
 
       - name: Set up Rust toolchain (CI helpers)
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
@@ -77,6 +87,18 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step set_metadata
           --channel "${{ inputs.channel }}"
+
+      - name: Check which shells run these modules
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          CHANNEL: ${{ steps.meta.outputs.build_channel }}
+          SOURCE_SHA: ${{ steps.meta.outputs.source_sha }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          SHELL_CONTRACT: ${{ inputs.shell_contract }}
+          DESKTOP_MODULES_ONLY_RELEASE: false
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
+          --step check_shell_contract
 
   matrix:
     name: Resolve build matrix
@@ -745,6 +767,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
+          fetch-depth: 0
 
       - name: Set up Rust toolchain (CI helpers)
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
@@ -770,6 +793,24 @@ jobs:
         with:
           name: desktop-modules-${{ needs.meta.outputs.build_channel }}-${{ needs.meta.outputs.version }}-${{ needs.meta.outputs.source_sha }}
           path: desktop-modules
+
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: read
+      - name: Check which shells run these modules
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          SHELL_CONTRACT: ${{ inputs.shell_contract }}
+          DESKTOP_MODULES_ONLY_RELEASE: false
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
+          --step check_shell_contract
 
       - name: Build desktop module manifest
         run: >-

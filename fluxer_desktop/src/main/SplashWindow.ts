@@ -11,11 +11,6 @@ const SPLASH_WINDOW_HEIGHT_DEFAULT = 350;
 const SPLASH_BACKGROUND_COLOR = '#1a1a1a';
 const SPLASH_ACTION_LABEL_MAX_LENGTH = 48;
 const SPLASH_MESSAGE_MAX_LENGTH = 160;
-const SPLASH_VERSION_LABEL_MAX_LENGTH = 64;
-const SPLASH_OPTION_LABEL_MAX_LENGTH = 48;
-const SPLASH_OPTION_BUTTON_LABEL_MAX_LENGTH = 24;
-const SPLASH_OPTION_MAX_COUNT = 8;
-const SPLASH_OPTION_VALUE_PATTERN = /^[a-z0-9_]{1,32}$/;
 const SPLASH_PROGRESS_MAX = 100;
 
 export const SPLASH_READY_WATCHDOG_MS = 3000;
@@ -31,13 +26,6 @@ export const DESKTOP_SPLASH_NETWORK_ONLINE_CHANNEL = 'desktop-splash:network-onl
 export const DESKTOP_SPLASH_OPEN_LOGS_CHANNEL = 'desktop-splash:open-logs';
 export const DESKTOP_SPLASH_COPY_DIAGNOSTICS_CHANNEL = 'desktop-splash:copy-diagnostics';
 
-export const SplashLayout = Object.freeze({
-	SPLASH: 'splash',
-	MANUAL_UPDATE: 'manual-update',
-} as const);
-
-export type SplashLayout = (typeof SplashLayout)[keyof typeof SplashLayout];
-
 export const SplashStatus = Object.freeze({
 	CHECKING_FOR_UPDATES: 'checking-for-updates',
 	DOWNLOADING_UPDATES: 'downloading-updates',
@@ -49,10 +37,7 @@ export const SplashStatus = Object.freeze({
 	SHELL_UPDATE_RESTARTING: 'shell-update-restarting',
 	BLOCKED_UPDATE_REQUIRED: 'blocked-update-required',
 	BLOCKED_UPDATE_UNREACHABLE: 'blocked-update-unreachable',
-	BLOCKED_SECURITY_UPDATE_REQUIRED: 'blocked-security-update-required',
-	BLOCKED_SECURITY_UPDATE_MANAGED: 'blocked-security-update-managed',
 	BLOCKED_SHELL_UPDATE: 'blocked-shell-update',
-	BLOCKED_SHELL_UPDATE_MANAGED: 'blocked-shell-update-managed',
 	BLOCKED_UNSUPPORTED_BUILD: 'blocked-unsupported-build',
 	LAUNCHING: 'launching',
 	UNREACHABLE_LAUNCH: 'unreachable-launch',
@@ -74,13 +59,6 @@ export interface SplashActionDescriptor {
 	readonly label: string;
 }
 
-export interface SplashDownloadOption {
-	readonly value: string;
-	readonly label: string;
-	readonly buttonLabel: string;
-	readonly kind: SplashActionKind;
-}
-
 export const SplashAction = Object.freeze({
 	RETRY: Object.freeze({kind: SplashActionKind.RETRY, label: 'Retry now'}),
 	DOWNLOAD: Object.freeze({kind: SplashActionKind.DOWNLOAD, label: 'Download update'}),
@@ -89,8 +67,6 @@ export const SplashAction = Object.freeze({
 
 export interface SplashState {
 	readonly status: SplashStatus;
-	readonly requiredSecurityUpdate?: boolean;
-	readonly layout?: SplashLayout | null;
 	readonly current?: number | null;
 	readonly total?: number | null;
 	readonly progress?: number | null;
@@ -100,14 +76,10 @@ export interface SplashState {
 	readonly bytesPerSecond?: number | null;
 	readonly action?: SplashActionDescriptor | null;
 	readonly message?: string | null;
-	readonly versionLabel?: string | null;
-	readonly options?: ReadonlyArray<SplashDownloadOption> | null;
 }
 
 export interface SerializedSplashState {
-	readonly layout: SplashLayout;
 	readonly status: SplashStatus;
-	readonly requiredSecurityUpdate: boolean;
 	readonly current: number | null;
 	readonly total: number | null;
 	readonly progress: number | null;
@@ -117,22 +89,18 @@ export interface SerializedSplashState {
 	readonly bytesPerSecond: number | null;
 	readonly action: SplashActionDescriptor | null;
 	readonly message: string | null;
-	readonly versionLabel: string | null;
-	readonly options: ReadonlyArray<SplashDownloadOption> | null;
 }
 
 type SplashListener = () => void;
-type SplashDownloadListener = (value: string | null) => void;
 
 const logger = createChildLogger('SplashWindow');
-const SPLASH_LAYOUTS = new Set<string>(Object.values(SplashLayout));
 const SPLASH_STATUSES = new Set<string>(Object.values(SplashStatus));
 const SPLASH_ACTION_KINDS = new Set<string>(Object.values(SplashActionKind));
 const readyListeners = new Set<SplashListener>();
 const retryListeners = new Set<SplashListener>();
 const quitListeners = new Set<SplashListener>();
 const networkOnlineListeners = new Set<SplashListener>();
-const openDownloadListeners = new Set<SplashDownloadListener>();
+const openDownloadListeners = new Set<SplashListener>();
 const openLogsListeners = new Set<SplashListener>();
 const copyDiagnosticsListeners = new Set<SplashListener>();
 
@@ -172,41 +140,9 @@ function toSplashAction(action: SplashActionDescriptor | null | undefined): Spla
 	return {kind: action.kind, label};
 }
 
-function toSplashOption(option: SplashDownloadOption): SplashDownloadOption | null {
-	if (option == null || typeof option !== 'object') return null;
-	if (typeof option.value !== 'string' || !SPLASH_OPTION_VALUE_PATTERN.test(option.value)) return null;
-	if (!SPLASH_ACTION_KINDS.has(option.kind)) return null;
-	const label = toSplashText(option.label, SPLASH_OPTION_LABEL_MAX_LENGTH);
-	if (label == null) return null;
-	const buttonLabel = toSplashText(option.buttonLabel, SPLASH_OPTION_BUTTON_LABEL_MAX_LENGTH);
-	if (buttonLabel == null) return null;
-	return {value: option.value, label, buttonLabel, kind: option.kind};
-}
-
-function toSplashOptions(
-	options: ReadonlyArray<SplashDownloadOption> | null | undefined,
-): ReadonlyArray<SplashDownloadOption> | null {
-	if (!Array.isArray(options)) return null;
-	const accepted: Array<SplashDownloadOption> = [];
-	for (const option of options.slice(0, SPLASH_OPTION_MAX_COUNT)) {
-		const normalized = toSplashOption(option);
-		if (normalized != null) {
-			accepted.push(normalized);
-		}
-	}
-	return accepted.length === 0 ? null : accepted;
-}
-
-function withManualUpdateAffordance(state: SerializedSplashState): SerializedSplashState {
-	if (state.layout !== SplashLayout.MANUAL_UPDATE || hasSplashAffordance(state)) return state;
-	return {...state, action: SplashAction.QUIT};
-}
-
 export function serializeSplashState(state: SplashState): SerializedSplashState {
-	return withManualUpdateAffordance({
-		layout: SPLASH_LAYOUTS.has(state.layout as string) ? (state.layout as SplashLayout) : SplashLayout.SPLASH,
+	return {
 		status: SPLASH_STATUSES.has(state.status) ? state.status : SplashStatus.CHECKING_FOR_UPDATES,
-		requiredSecurityUpdate: state.requiredSecurityUpdate === true,
 		current: toSplashCount(state.current),
 		total: toSplashCount(state.total),
 		progress: toSplashProgress(state.progress),
@@ -216,18 +152,11 @@ export function serializeSplashState(state: SplashState): SerializedSplashState 
 		bytesPerSecond: toSplashCount(state.bytesPerSecond),
 		action: toSplashAction(state.action),
 		message: toSplashText(state.message, SPLASH_MESSAGE_MAX_LENGTH),
-		versionLabel: toSplashText(state.versionLabel, SPLASH_VERSION_LABEL_MAX_LENGTH),
-		options: toSplashOptions(state.options),
-	});
+	};
 }
 
 export function hasSplashAffordance(state: SerializedSplashState): boolean {
-	return state.action != null || state.options != null;
-}
-
-export function toSplashDownloadValue(value: unknown): string | null {
-	if (typeof value !== 'string') return null;
-	return SPLASH_OPTION_VALUE_PATTERN.test(value) ? value : null;
+	return state.action != null;
 }
 
 export function getSplashWindowHeight(platform: NodeJS.Platform): number {
@@ -238,10 +167,7 @@ export function shouldQuitOnSplashClosed(platform: NodeJS.Platform, isLaunchLatc
 	return platform !== 'darwin' && !isLaunchLatched;
 }
 
-function addSplashListener<T extends SplashListener | SplashDownloadListener>(
-	listeners: Set<T>,
-	listener: T,
-): () => void {
+function addSplashListener(listeners: Set<SplashListener>, listener: SplashListener): () => void {
 	listeners.add(listener);
 	return () => {
 		listeners.delete(listener);
@@ -252,16 +178,6 @@ function emitSplashListeners(listeners: Set<SplashListener>): void {
 	for (const listener of Array.from(listeners)) {
 		try {
 			listener();
-		} catch (error) {
-			logger.error('A splash listener threw', error);
-		}
-	}
-}
-
-function emitSplashDownloadListeners(value: string | null): void {
-	for (const listener of Array.from(openDownloadListeners)) {
-		try {
-			listener(value);
 		} catch (error) {
 			logger.error('A splash listener threw', error);
 		}
@@ -311,9 +227,9 @@ function registerSplashIpc(): void {
 		if (!isSplashSender(event)) return;
 		emitSplashListeners(networkOnlineListeners);
 	});
-	ipcMain.on(DESKTOP_SPLASH_OPEN_DOWNLOAD_CHANNEL, (event, value: unknown) => {
+	ipcMain.on(DESKTOP_SPLASH_OPEN_DOWNLOAD_CHANNEL, (event) => {
 		if (!isSplashSender(event)) return;
-		emitSplashDownloadListeners(toSplashDownloadValue(value));
+		emitSplashListeners(openDownloadListeners);
 	});
 	ipcMain.on(DESKTOP_SPLASH_OPEN_LOGS_CHANNEL, (event) => {
 		if (!isSplashSender(event)) return;
@@ -527,7 +443,7 @@ export function onSplashNetworkOnline(listener: SplashListener): () => void {
 	return addSplashListener(networkOnlineListeners, listener);
 }
 
-export function onSplashOpenDownload(listener: SplashDownloadListener): () => void {
+export function onSplashOpenDownload(listener: SplashListener): () => void {
 	return addSplashListener(openDownloadListeners, listener);
 }
 

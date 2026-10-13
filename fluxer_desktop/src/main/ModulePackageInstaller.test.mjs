@@ -85,6 +85,7 @@ function createInstaller({respond, resumeFrom}) {
 			installModule: async ({download}) => {
 				downloads.push(await collect(await download(resumeFrom)));
 			},
+			recordShellRanges: async () => {},
 		},
 		packageOrigin: PACKAGE_ORIGIN,
 		fetch: async (url, init) => {

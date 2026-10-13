@@ -3,20 +3,12 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {
-	AVAILABLE_DESCRIPTOR as AVAILABLE_VERSION_LABEL_DESCRIPTOR,
-	CLOSE_DESCRIPTOR,
-	UNKNOWN_DESCRIPTOR as UNKNOWN_VERSION_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import {isCanaryDesktop, openExternalUrl} from '@app/features/ui/utils/NativeUtils';
-import styles from '@app/features/updater/commands/UpdaterModalCommands.module.css';
-import type {UpdaterDownloadFormat, UpdaterDownloadOption} from '@app/types/electron.d';
-import {i18n, type MessageDescriptor} from '@lingui/core';
+import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {useMemo, useState} from 'react';
 
 const DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Desktop update available',
@@ -34,10 +26,6 @@ const A_NEW_DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR = msg({
 const DOWNLOAD_INSTALLER_DESCRIPTOR = msg({
 	message: 'Download installer',
 	comment: 'Button label that downloads a desktop update installer.',
-});
-const DOWNLOAD_PACKAGE_DESCRIPTOR = msg({
-	message: 'Download package',
-	comment: 'Button label that downloads a selected Linux desktop update package.',
 });
 const DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR = msg({
 	message: '{productName} closes, installs the update and opens again.',
@@ -90,6 +78,16 @@ const SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR = msg({
 	message: 'This install is managed by your system. Update {productName} from your software center or package manager.',
 	comment: 'Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.',
 });
+const MANAGED_SHELL_UPDATE_FLATPAK_BODY_DESCRIPTOR = msg({
+	message: '{productName} {version} is available. Update it from your software center.',
+	comment:
+		'Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.',
+});
+const MANAGED_SHELL_UPDATE_PACKAGE_BODY_DESCRIPTOR = msg({
+	message: '{productName} {version} is available. Update it with your package manager, or download the new version.',
+	comment:
+		'Desktop updater modal body for a Linux install managed by a package manager, such as a deb, rpm or AUR package, when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.',
+});
 const OPEN_SOFTWARE_CENTER_DESCRIPTOR = msg({
 	message: 'Open software center',
 	comment: 'Button label that opens the software center via appstream protocol.',
@@ -115,55 +113,24 @@ const DESKTOP_UPDATE_DOWNLOAD_FAILED_BODY_DESCRIPTOR = msg({
 		'The desktop update could not be downloaded. Try again from the update button when your connection is stable.',
 	comment: 'Modal body shown when a desktop update download fails.',
 });
-const LINUX_PACKAGE_UPDATE_INTRO_DESCRIPTOR = msg({
-	message:
-		'A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally.',
-	comment:
-		'Linux desktop updater modal body shown before version details and package format selector. productName is the app name.',
-});
-const INSTALLED_VERSION_LABEL_DESCRIPTOR = msg({
-	message: 'Installed',
-	comment: 'Label for the installed desktop version in the Linux update modal.',
-});
-
-const NEW_VERSION_DESCRIPTOR = msg({
-	message: 'New version',
-	comment: 'Fallback version label when the available desktop version is unknown.',
-});
-const LINUX_PACKAGE_LABEL_DESCRIPTOR = msg({
-	message: 'Linux package',
-	comment: 'Select label for choosing the Linux desktop package format to download.',
-});
-const PACKAGE_HELP_DESCRIPTOR = msg({
-	message: 'The downloaded file is saved to your computer. Install it with your normal package manager.',
-	comment: 'Help text below the Linux package format selector in the desktop updater modal.',
-});
-const DEB_PACKAGE_FORMAT_DESCRIPTOR = msg({
-	message: 'DEB package',
-	comment:
-		'Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".',
-});
-const RPM_PACKAGE_FORMAT_DESCRIPTOR = msg({
-	message: 'RPM package',
-	comment:
-		'Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".',
-});
-const TAR_GZ_ARCHIVE_FORMAT_DESCRIPTOR = msg({
-	message: 'tar.gz archive',
-	comment:
-		'Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".',
-});
-
-const DOWNLOAD_FORMAT_LABEL_DESCRIPTORS: Partial<Record<UpdaterDownloadFormat, MessageDescriptor>> = {
-	deb: DEB_PACKAGE_FORMAT_DESCRIPTOR,
-	rpm: RPM_PACKAGE_FORMAT_DESCRIPTOR,
-	tar_gz: TAR_GZ_ARCHIVE_FORMAT_DESCRIPTOR,
-};
-
 const UPDATE_AVAILABLE_KEY = 'updater-available';
 const UP_TO_DATE_KEY = 'updater-up-to-date';
 const UNSUPPORTED_KEY = 'updater-unsupported';
 const ERROR_KEY = 'updater-error';
+
+function openSoftwareCenter(appId: string = isCanaryDesktop() ? 'app.fluxer.FluxerCanary' : 'app.fluxer.Fluxer'): void {
+	void openExternalUrl(`appstream://${appId}`);
+}
+
+function managedShellUpdateBody(version: string | null, flatpakAppId: string | null): string {
+	const productName = RuntimeConfig.productName;
+	if (version == null) {
+		return i18n._(SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR, {productName});
+	}
+	return flatpakAppId != null
+		? i18n._(MANAGED_SHELL_UPDATE_FLATPAK_BODY_DESCRIPTOR, {productName, version})
+		: i18n._(MANAGED_SHELL_UPDATE_PACKAGE_BODY_DESCRIPTOR, {productName, version});
+}
 
 export function pushUpdateAvailableModal(version: string | null, onDownload: () => void | Promise<void>): void {
 	ModalCommands.pushWithKey(
@@ -187,6 +154,36 @@ export function pushUpdateAvailableModal(version: string | null, onDownload: () 
 	);
 }
 
+export function pushManagedShellUpdateModal({
+	version,
+	flatpakAppId,
+}: {
+	version: string | null;
+	flatpakAppId: string | null;
+}): void {
+	ModalCommands.pushWithKey(
+		modal(() => (
+			<ConfirmModal
+				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
+				description={managedShellUpdateBody(version, flatpakAppId)}
+				primaryText={
+					flatpakAppId != null ? i18n._(OPEN_SOFTWARE_CENTER_DESCRIPTOR) : i18n._(OPEN_DESKTOP_DOWNLOADS_DESCRIPTOR)
+				}
+				secondaryText={i18n._(LATER_DESCRIPTOR)}
+				onPrimary={() => {
+					if (flatpakAppId != null) {
+						openSoftwareCenter(flatpakAppId);
+						return;
+					}
+					void openExternalUrl(DESKTOP_DOWNLOAD_URL);
+				}}
+				data-flx="updater.updater-modal-commands.push-managed-shell-update-modal.confirm-modal"
+			/>
+		)),
+		UPDATE_AVAILABLE_KEY,
+	);
+}
+
 export function pushDesktopUpdateAvailableModal(onUpdate: () => void | Promise<void>): void {
 	ModalCommands.pushWithKey(
 		modal(() => (
@@ -199,90 +196,6 @@ export function pushDesktopUpdateAvailableModal(onUpdate: () => void | Promise<v
 					await onUpdate();
 				}}
 				data-flx="updater.updater-modal-commands.push-desktop-update-available-modal.confirm-modal"
-			/>
-		)),
-		UPDATE_AVAILABLE_KEY,
-	);
-}
-
-interface ManualUpdateAvailableModalProps {
-	currentVersion: string | null;
-	version: string | null;
-	options: ReadonlyArray<UpdaterDownloadOption>;
-	onDownload: (option: UpdaterDownloadOption) => void | Promise<void>;
-}
-
-function ManualUpdateAvailableModal({currentVersion, version, options, onDownload}: ManualUpdateAvailableModalProps) {
-	const [selectedFormat, setSelectedFormat] = useState<UpdaterDownloadOption['format'] | null>(
-		options[0]?.format ?? null,
-	);
-	const selectOptions = useMemo(
-		() =>
-			options.map((option) => {
-				const descriptor = DOWNLOAD_FORMAT_LABEL_DESCRIPTORS[option.format];
-				return {
-					value: option.format,
-					label: descriptor ? i18n._(descriptor) : option.label,
-				};
-			}),
-		[options],
-	);
-	const selectedOption = options.find((option) => option.format === selectedFormat) ?? options[0];
-	return (
-		<ConfirmModal
-			title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
-			description={
-				<div className={styles.manualUpdateBody} data-flx="updater.manual-update.body">
-					<p className={styles.manualUpdateIntro} data-flx="updater.manual-update.intro">
-						{i18n._(LINUX_PACKAGE_UPDATE_INTRO_DESCRIPTOR, {productName: RuntimeConfig.productName})}
-					</p>
-					<dl className={styles.versionList} data-flx="updater.manual-update.version-list">
-						<dt className={styles.versionLabel} data-flx="updater.manual-update.installed-label">
-							{i18n._(INSTALLED_VERSION_LABEL_DESCRIPTOR)}
-						</dt>
-						<dd className={styles.versionValue} data-flx="updater.manual-update.installed-value">
-							{currentVersion ?? i18n._(UNKNOWN_VERSION_DESCRIPTOR)}
-						</dd>
-						<dt className={styles.versionLabel} data-flx="updater.manual-update.available-label">
-							{i18n._(AVAILABLE_VERSION_LABEL_DESCRIPTOR)}
-						</dt>
-						<dd className={styles.versionValue} data-flx="updater.manual-update.available-value">
-							{version ?? i18n._(NEW_VERSION_DESCRIPTOR)}
-						</dd>
-					</dl>
-					<Combobox
-						className={styles.packageSelect}
-						label={i18n._(LINUX_PACKAGE_LABEL_DESCRIPTOR)}
-						value={selectedFormat}
-						options={selectOptions}
-						onChange={setSelectedFormat}
-						isSearchable={false}
-						density="compact"
-						data-flx="updater.manual-update.package-select.change"
-					/>
-					<p className={styles.manualUpdateHelp} data-flx="updater.manual-update.help">
-						{i18n._(PACKAGE_HELP_DESCRIPTOR)}
-					</p>
-				</div>
-			}
-			primaryText={i18n._(DOWNLOAD_PACKAGE_DESCRIPTOR)}
-			secondaryText={i18n._(LATER_DESCRIPTOR)}
-			onPrimary={async () => {
-				if (selectedOption) {
-					await onDownload(selectedOption);
-				}
-			}}
-			data-flx="updater.updater-modal-commands.push-manual-update-available-modal.confirm-modal"
-		/>
-	);
-}
-
-export function pushManualUpdateAvailableModal(options: ManualUpdateAvailableModalProps): void {
-	ModalCommands.pushWithKey(
-		modal(() => (
-			<ManualUpdateAvailableModal
-				data-flx="updater.updater-modal-commands.push-manual-update-available-modal.manual-update-available-modal"
-				{...options}
 			/>
 		)),
 		UPDATE_AVAILABLE_KEY,
@@ -320,13 +233,7 @@ export function pushUnsupportedUpdateModal(
 						description={i18n._(SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						primaryText={i18n._(OPEN_SOFTWARE_CENTER_DESCRIPTOR)}
 						secondaryText={i18n._(CLOSE_DESCRIPTOR)}
-						onPrimary={() => {
-							const appstreamUrl = isCanaryDesktop()
-								? 'appstream://app.fluxer.FluxerCanary'
-								: 'appstream://app.fluxer.Fluxer';
-
-							void openExternalUrl(appstreamUrl);
-						}}
+						onPrimary={() => openSoftwareCenter()}
 						data-flx="updater.updater-modal-commands.push-unsupported-update-modal.confirm-modal"
 					/>
 				);
