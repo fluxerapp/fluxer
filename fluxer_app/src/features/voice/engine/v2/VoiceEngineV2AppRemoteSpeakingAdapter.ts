@@ -64,8 +64,7 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 	private audioContext: AudioContext | null = null;
 	private audioContextIsShared = false;
 	private analysers = new Map<string, AnalyserHandle>();
-	private installedVisibilityListener = false;
-	private roomForRehydrate: Room | null = null;
+	private hydratedRoom: Room | null = null;
 	private machineSnapshot: VoiceRemoteSpeakingSnapshot = createVoiceRemoteSpeakingSnapshot();
 	private autoScheduleTimerId: number | null = null;
 	private readonly autoSchedule: boolean;
@@ -96,9 +95,6 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 					clearRemoteVoicePlaybackBoost(command.identity);
 					this.reapplyParticipantVolume(command.identity);
 					break;
-				case 'rehydrateRemoteAnalysers':
-					if (this.roomForRehydrate) this.hydrateFromRoom(this.roomForRehydrate);
-					break;
 			}
 		}
 	}
@@ -110,22 +106,6 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 		this.analysers.clear();
 		this.closeAudioContext();
 		this.stopAutoSchedule();
-	}
-
-	private ensureVisibilityListener(): void {
-		if (this.installedVisibilityListener) return;
-		if (typeof document === 'undefined') return;
-		document.addEventListener('visibilitychange', () => {
-			if (document.hidden) {
-				if (this.machineSnapshot.context.analyserSuspendedByVisibility) return;
-				this.detachAllAdapterAnalysers();
-				this.applyCommands(this.transition({type: 'remote.visibilityHidden'}));
-			} else {
-				if (!this.machineSnapshot.context.analyserSuspendedByVisibility) return;
-				this.applyCommands(this.transition({type: 'remote.visibilityVisible'}));
-			}
-		});
-		this.installedVisibilityListener = true;
 	}
 
 	private getAudioContext(): AudioContext | null {
@@ -166,8 +146,6 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 			this.analysers.size <= REMOTE_SPEAKING_ANALYSER_HANDLES_CAP,
 			'remote speaking analyser registry exceeded cap',
 		);
-		this.ensureVisibilityListener();
-		if (this.machineSnapshot.context.analyserSuspendedByVisibility) return;
 		if (participant.isLocal) return;
 		if (publication.source !== VoiceTrackSource.Microphone) return;
 		if (track.kind !== VoiceTrackKind.Audio) return;
@@ -249,12 +227,12 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 		);
 		this.detachAllAdapterAnalysers();
 		this.applyCommands(this.transition({type: 'remote.clear'}));
-		this.roomForRehydrate = null;
+		this.hydratedRoom = null;
 		assert.equal(this.analysers.size, 0, 'clear post-condition: no analysers');
 	}
 
 	private reapplyParticipantVolume(identity: string): void {
-		const room = getRoomFromMediaEngine() ?? this.roomForRehydrate;
+		const room = getRoomFromMediaEngine() ?? this.hydratedRoom;
 		const participant = room?.remoteParticipants.get(identity);
 		if (!participant) return;
 		try {
@@ -267,9 +245,7 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 	hydrateFromRoom(room: Room): void {
 		assertObjectLike<Room>(room, 'hydrateFromRoom.room');
 		assert.ok(room.remoteParticipants instanceof Map, 'hydrateFromRoom.room.remoteParticipants must be a Map');
-		this.ensureVisibilityListener();
-		this.roomForRehydrate = room;
-		if (this.machineSnapshot.context.analyserSuspendedByVisibility) return;
+		this.hydratedRoom = room;
 		room.remoteParticipants.forEach((participant) => {
 			participant.audioTrackPublications.forEach((publication) => {
 				const remotePub = publication as RemoteTrackPublication;
@@ -287,7 +263,6 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 			this.analysers.size <= REMOTE_SPEAKING_ANALYSER_HANDLES_CAP,
 			'tickHost pre-condition: analyser cap respected',
 		);
-		if (this.machineSnapshot.context.analyserSuspendedByVisibility) return;
 		const sizeBefore = this.analysers.size;
 		const expired: Array<AnalyserHandle> = [];
 		for (const handle of this.analysers.values()) {

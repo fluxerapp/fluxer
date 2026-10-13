@@ -38,12 +38,10 @@ interface RemoteSpeakingAnalyserState {
 export type VoiceRemoteSpeakingCommand =
 	| {type: 'setAudioLevelSpeaking'; identity: string; speaking: boolean}
 	| {type: 'setPlaybackBoost'; identity: string; boost: number}
-	| {type: 'clearPlaybackBoost'; identity: string}
-	| {type: 'rehydrateRemoteAnalysers'};
+	| {type: 'clearPlaybackBoost'; identity: string};
 
 interface VoiceRemoteSpeakingMachineContext {
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState>;
-	analyserSuspendedByVisibility: boolean;
 	commands: ReadonlyArray<VoiceRemoteSpeakingCommand>;
 }
 
@@ -51,8 +49,6 @@ export type VoiceRemoteSpeakingEvent =
 	| {type: 'remote.attach'; identity: string; track: unknown}
 	| {type: 'remote.detach'; identity: string}
 	| {type: 'remote.tick'; identity: string; rms: number; threshold: number; nowMs: number; trackEnded?: boolean}
-	| {type: 'remote.visibilityHidden'}
-	| {type: 'remote.visibilityVisible'}
 	| {type: 'remote.clear'}
 	| {type: 'remote.clearCommands'};
 const EMPTY_REMOTE_COMMANDS: ReadonlyArray<VoiceRemoteSpeakingCommand> = [];
@@ -68,10 +64,9 @@ const REMOTE_PLAYBACK_UNITY_EPSILON = 0.01;
 
 function remoteContext(
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState> = new Map(),
-	analyserSuspendedByVisibility = false,
 	commands: ReadonlyArray<VoiceRemoteSpeakingCommand> = EMPTY_REMOTE_COMMANDS,
 ): VoiceRemoteSpeakingMachineContext {
-	return {analysers, analyserSuspendedByVisibility, commands};
+	return {analysers, commands};
 }
 
 function appendRemoteCommands(
@@ -210,26 +205,14 @@ function tickRemoteAnalyser(
 	return appendRemoteCommands({...context, analysers}, commands);
 }
 
-function detachAllRemoteAnalysers(
-	context: VoiceRemoteSpeakingMachineContext,
-	analyserSuspendedByVisibility: boolean,
-): VoiceRemoteSpeakingMachineContext {
-	if (context.analysers.size === 0) {
-		return context.analyserSuspendedByVisibility === analyserSuspendedByVisibility
-			? context
-			: {...context, analyserSuspendedByVisibility};
-	}
+function detachAllRemoteAnalysers(context: VoiceRemoteSpeakingMachineContext): VoiceRemoteSpeakingMachineContext {
+	if (context.analysers.size === 0) return context;
 	const commands: Array<VoiceRemoteSpeakingCommand> = [];
 	for (const identity of context.analysers.keys()) {
 		commands.push({type: 'setAudioLevelSpeaking', identity, speaking: false});
 		commands.push({type: 'clearPlaybackBoost', identity});
 	}
-	return appendRemoteCommands(remoteContext(new Map(), analyserSuspendedByVisibility, context.commands), commands);
-}
-
-function showRemoteAnalysers(context: VoiceRemoteSpeakingMachineContext): VoiceRemoteSpeakingMachineContext {
-	if (!context.analyserSuspendedByVisibility) return context;
-	return appendRemoteCommands({...context, analyserSuspendedByVisibility: false}, [{type: 'rehydrateRemoteAnalysers'}]);
+	return appendRemoteCommands(remoteContext(new Map(), context.commands), commands);
 }
 
 const voiceRemoteSpeakingStateMachine = setup({
@@ -245,9 +228,7 @@ const voiceRemoteSpeakingStateMachine = setup({
 			event.type === 'remote.detach' ? detachRemoteAnalyser(context, event.identity) : context,
 		),
 		tick: assign(({context, event}) => (event.type === 'remote.tick' ? tickRemoteAnalyser(context, event) : context)),
-		hide: assign(({context}) => detachAllRemoteAnalysers(context, true)),
-		show: assign(({context}) => showRemoteAnalysers(context)),
-		clear: assign(({context}) => detachAllRemoteAnalysers(context, false)),
+		clear: assign(({context}) => detachAllRemoteAnalysers(context)),
 		clearCommands: assign(({context}) => ({...context, commands: EMPTY_REMOTE_COMMANDS})),
 	},
 }).createMachine({
@@ -257,8 +238,6 @@ const voiceRemoteSpeakingStateMachine = setup({
 		'remote.attach': {actions: 'attach'},
 		'remote.detach': {actions: 'detach'},
 		'remote.tick': {actions: 'tick'},
-		'remote.visibilityHidden': {actions: 'hide'},
-		'remote.visibilityVisible': {actions: 'show'},
 		'remote.clear': {actions: 'clear'},
 		'remote.clearCommands': {actions: 'clearCommands'},
 	},
