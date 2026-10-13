@@ -13,6 +13,7 @@ import {useCallback} from 'react';
 interface AccountDisplayIdentityView {
 	readonly isAvailable: boolean;
 	readonly displayLabel: string;
+	readonly usernameLabel: string;
 	readonly tagLabel: string;
 	readonly discriminatorLabel: string | null;
 }
@@ -22,11 +23,18 @@ function createAccountDisplayIdentityView(
 	unavailableLabel: string,
 ): AccountDisplayIdentityView {
 	if (!labels.available) {
-		return {isAvailable: false, displayLabel: unavailableLabel, tagLabel: unavailableLabel, discriminatorLabel: null};
+		return {
+			isAvailable: false,
+			displayLabel: unavailableLabel,
+			usernameLabel: unavailableLabel,
+			tagLabel: unavailableLabel,
+			discriminatorLabel: null,
+		};
 	}
 	return {
 		isAvailable: true,
 		displayLabel: labels.displayLabel,
+		usernameLabel: labels.usernameLabel,
 		tagLabel: labels.tagLabel,
 		discriminatorLabel: labels.discriminatorLabel,
 	};
@@ -64,7 +72,7 @@ export function AccountIdentityText({
 	const discriminatorLabel = identityView.discriminatorLabel;
 	return (
 		<>
-			{identityView.displayLabel}
+			{identityView.usernameLabel}
 			{discriminatorLabel == null ? null : (
 				<span className={discriminatorClassName} data-flx="auth.accounts.account-identity.discriminator">
 					{discriminatorLabel}

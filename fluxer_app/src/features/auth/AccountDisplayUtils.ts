@@ -5,9 +5,14 @@ import {usesUniqueUsernames} from '@app/features/app/utils/AccountIdentityFeatur
 import {normalizeInstanceDomain} from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
 import {parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import type {Account} from '@app/features/platform/state/AuthSession';
-import {formatTagForStreamerMode, getDisplayName} from '@app/features/user/utils/NicknameUtils';
-import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
+import {
+	formatNameForStreamerMode,
+	formatTagForStreamerMode,
+	getDisplayName,
+} from '@app/features/user/utils/NicknameUtils';
+import {formatUserTag, shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import {msg} from '@lingui/core/macro';
+import {noteText} from '../theme/fonts/ScriptFontLoader';
 
 export const ACCOUNT_DETAILS_UNAVAILABLE_DESCRIPTOR = msg({
 	message: 'Account details unavailable',
@@ -18,6 +23,7 @@ export type AccountDisplayLabels =
 	| {
 			readonly available: true;
 			readonly displayLabel: string;
+			readonly usernameLabel: string;
 			readonly tagLabel: string;
 			readonly discriminatorLabel: string | null;
 	  }
@@ -32,14 +38,17 @@ export function getAccountDisplayLabels(account: Account): AccountDisplayLabels 
 	}
 	const displayLabel = getDisplayName(userData);
 	const discriminator = userData.discriminator;
+	const usernameLabel = formatNameForStreamerMode(userData.username);
+	noteText(usernameLabel);
 	const uniqueUsernames = account.instance != null && usesUniqueUsernames(account.instance.features);
 	if (!shouldShowDiscriminator(userData, uniqueUsernames)) {
-		return {available: true, displayLabel, tagLabel: displayLabel, discriminatorLabel: null};
+		return {available: true, displayLabel, usernameLabel, tagLabel: displayLabel, discriminatorLabel: null};
 	}
 	return {
 		available: true,
 		displayLabel,
-		tagLabel: formatTagForStreamerMode(`${displayLabel}#${discriminator}`),
+		usernameLabel,
+		tagLabel: formatTagForStreamerMode(formatUserTag(userData, uniqueUsernames)),
 		discriminatorLabel: formatTagForStreamerMode(`#${discriminator}`),
 	};
 }
