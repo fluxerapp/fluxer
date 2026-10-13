@@ -5,6 +5,7 @@ import localMediaFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/l
 import microphoneFailureRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/microphone_failure_recovery.json';
 import permissionsRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/permissions_recovery.json';
 import pttPtmFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/ptt_ptm.json';
+import pttSelfMuteFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/ptt_self_mute.json';
 import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
@@ -49,6 +50,7 @@ interface LocalMediaFixture {
 const fixtures = [
 	localMediaFixtureJson,
 	pttPtmFixtureJson,
+	pttSelfMuteFixtureJson,
 	deviceHotswapFixtureJson,
 	permissionsRecoveryFixtureJson,
 	microphoneFailureRecoveryFixtureJson,

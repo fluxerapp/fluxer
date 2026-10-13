@@ -35,10 +35,10 @@ interface SelfMuteMenuItemProps {
 export const SelfMuteMenuItem: React.FC<SelfMuteMenuItemProps> = observer(
 	({connectionId, isDeviceSpecific = false, label}) => {
 		const {i18n} = useLingui();
-		const voiceState = connectionId
-			? MediaEngine.getVoiceStateByConnectionId(connectionId)
-			: MediaEngine.getCurrentUserVoiceState();
-		const isSelfMuted = voiceState?.self_mute ?? false;
+		const isSelfMuted =
+			isDeviceSpecific && connectionId
+				? VoiceStateCommands.getSelfMuteForConnection(connectionId)
+				: VoiceStateCommands.getCurrentSelfMute();
 		const handleToggle = useCallback(() => {
 			if (isDeviceSpecific && connectionId) {
 				VoiceStateCommands.toggleSelfMuteForConnection(connectionId);

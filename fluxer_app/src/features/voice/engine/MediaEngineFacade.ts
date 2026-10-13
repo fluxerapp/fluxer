@@ -144,7 +144,7 @@ import voiceEngineV2AppScreenShareExecutionAdapter, {
 	type ScreenShareReconnectSnapshot,
 	shouldRestoreScreenShareAfterReconnect,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
-import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import {selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppStatsHostAdapter';
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
@@ -1503,7 +1503,7 @@ class MediaEngineFacade extends Store {
 
 	private getEffectiveSelfMuteForVoiceStatePayload(): boolean {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
-		return selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(this.voiceEngineV2Snapshot);
+		return selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload(this.voiceEngineV2Snapshot);
 	}
 
 	private cancelPendingServerDisconnect(): void {
@@ -1534,7 +1534,10 @@ class MediaEngineFacade extends Store {
 			raw.connection_id,
 		);
 		LocalVoiceState.seedConnectionState(raw.connection_id, {
-			selfMute: currentVoiceState?.self_mute ?? LocalVoiceState.getSelfMute(),
+			selfMute:
+				this.isPushToTalkActive() || this.isPushToMuteActive()
+					? LocalVoiceState.getSelfMute()
+					: (currentVoiceState?.self_mute ?? LocalVoiceState.getSelfMute()),
 			selfDeaf: currentVoiceState?.self_deaf ?? LocalVoiceState.getSelfDeaf(),
 			selfVideo: currentVoiceState?.self_video ?? LocalVoiceState.getSelfVideo(),
 			selfStream: currentVoiceState?.self_stream ?? LocalVoiceState.getSelfStream(),
@@ -2041,7 +2044,10 @@ class MediaEngineFacade extends Store {
 			selfStream: payload.self_stream,
 		});
 		if (partial?.viewer_stream_keys !== undefined) {
-			syncVoiceStateToServer(guildId, channelId, connectionId, {viewer_stream_keys: payload.viewer_stream_keys});
+			syncVoiceStateToServer(guildId, channelId, connectionId, {
+				self_mute: payload.self_mute,
+				viewer_stream_keys: payload.viewer_stream_keys,
+			});
 		}
 	}
 
@@ -2302,12 +2308,8 @@ class MediaEngineFacade extends Store {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
-	handlePushToTalkModeChange(options: {preserveSelfMute?: boolean} = {}): void {
-		voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(
-			this.room,
-			() => this.getCurrentUserVoiceState(),
-			options,
-		);
+	handlePushToTalkModeChange(): void {
+		voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(this.room, () => this.getCurrentUserVoiceState());
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
@@ -2387,11 +2389,9 @@ class MediaEngineFacade extends Store {
 				requestMicrophoneRefresh: (targetRoom, request) =>
 					voiceEngineV2AppMediaExecutionAdapter.requestMicrophoneRefresh(targetRoom, request),
 				configureVoiceInput: (targetRoom) => voiceEngineV2AppMediaExecutionAdapter.configureVoiceInput(targetRoom),
-				handleInputKeybindChange: (targetRoom, options) =>
-					voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(
-						targetRoom,
-						() => this.getCurrentUserVoiceState(),
-						options,
+				handleInputKeybindChange: (targetRoom) =>
+					voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(targetRoom, () =>
+						this.getCurrentUserVoiceState(),
 					),
 				applyAllLocalAudioPreferences: () => voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(room),
 			},

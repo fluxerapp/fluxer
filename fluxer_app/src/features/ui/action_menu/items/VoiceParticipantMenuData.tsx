@@ -667,7 +667,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			const useConnectionSpecificControls =
 				connectionId !== undefined && (isGroupedItem || connectionId !== MediaEngine.connectionId);
 			if (useConnectionSpecificControls) {
-				const isSelfMuted = connectionVoiceState?.self_mute ?? false;
+				const isSelfMuted = VoiceStateCommands.getSelfMuteForConnection(connectionId);
 				const isSelfDeafened = connectionVoiceState?.self_deaf ?? false;
 				const isCameraOn = connectionVoiceState?.self_video ?? false;
 				const isStreaming = connectionVoiceState?.self_stream ?? false;
@@ -726,7 +726,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				}
 				if (isDeviceScopedMenu) advancedActions.push(createCopyDeviceIdAction(connectionId));
 			} else if (currentConnectionId && canUseCurrentConnectionAsRoot) {
-				const isSelfMuted = currentUserVoiceState?.self_mute ?? false;
+				const isSelfMuted = VoiceStateCommands.getCurrentSelfMute();
 				const isSelfDeafened = currentUserVoiceState?.self_deaf ?? false;
 				const isCameraOn = currentConnectionVoiceState?.self_video ?? false;
 				const isStreaming = currentConnectionVoiceState?.self_stream ?? false;
@@ -909,7 +909,9 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 			const bulkActions: Array<MenuItemType> = [];
 			const connectionIds = userVoiceStates.map((u) => u.connectionId);
 			if (isCurrentUser && isCurrentUserConnectedToVoice) {
-				const allMuted = userVoiceStates.every(({voiceState}) => voiceState.self_mute);
+				const allMuted = userVoiceStates.every(({connectionId}) =>
+					VoiceStateCommands.getSelfMuteForConnection(connectionId),
+				);
 				bulkActions.push({
 					icon: (
 						<SelfMuteIcon

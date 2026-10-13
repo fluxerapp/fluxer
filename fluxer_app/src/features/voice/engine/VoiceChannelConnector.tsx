@@ -16,7 +16,7 @@ import {
 	type VoiceMediaEngineVoiceState,
 } from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import type {VoiceStateSyncPartial} from '@app/features/voice/engine/VoiceStateSyncTypes';
-import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import {selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {isChannelP2p} from '@app/features/voice/state/ChannelP2pStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
@@ -180,7 +180,7 @@ export function sendVoiceStateConnect(
 	LocalVoiceState.ensurePermissionMute();
 	const snapshot = getVoiceEngineV2SnapshotFromMediaEngine();
 	const effectiveSelfMute = snapshot
-		? selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(snapshot)
+		? selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload(snapshot)
 		: LocalVoiceState.getSelfMute();
 	const selfMute = applyVoiceSpeakPermissionToSelfMute(guildId, channelId, effectiveSelfMute);
 	const connectionId = getVoiceConnectionContextFromMediaEngine()?.connectionId ?? null;
@@ -227,7 +227,7 @@ export function syncVoiceStateToServer(
 	if (!socket) return;
 	const snapshot = getVoiceEngineV2SnapshotFromMediaEngine();
 	const effectiveSelfMute = snapshot
-		? selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(snapshot)
+		? selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload(snapshot)
 		: LocalVoiceState.getSelfMute();
 	const selfMute = applyVoiceSpeakPermissionToSelfMute(guildId, channelId, partial?.self_mute ?? effectiveSelfMute);
 	socket.updateVoiceStateExplicit({

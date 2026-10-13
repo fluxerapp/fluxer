@@ -206,6 +206,7 @@ const UserAreaInner = observer(
 		}, [hasVoiceConnection]);
 		const wrapperClassName = styles.userAreaInnerWrapper;
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
+		const isSelfMuted = isMuted || muteReason === 'self';
 		const microphoneState = selectUserAreaMicrophoneState({
 			effectiveAudioMuted: isMuted,
 			effectiveAudioDeafened: isDeafened,
@@ -214,7 +215,6 @@ const UserAreaInner = observer(
 			isPermissionMuted,
 			muteReason,
 			isPushToTalkEffective,
-			isPushToTalkHeld: Keybind.pushToTalkHeld,
 			isPushToMuteEffective: Keybind.isPushToMuteEffective(),
 			isPushToMuteHeld: Keybind.pushToMuteHeld,
 		});
@@ -224,7 +224,8 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
+			if (isPushToTalkEffective && !isSelfMuted)
+				return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();
@@ -232,7 +233,8 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
+			if (isPushToTalkEffective && !isSelfMuted)
+				return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();

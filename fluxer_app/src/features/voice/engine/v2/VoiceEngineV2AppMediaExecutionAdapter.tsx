@@ -540,15 +540,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			await this.enforceSpeakPermissionMute(room);
 			return;
 		}
-		const pttActive = isPushToTalkActiveFromAppState();
-		const ptmActive = isPushToMuteActiveFromAppState();
-		const effectiveMute =
-			audioState.effectiveDeaf ||
-			audioState.serverMute ||
-			audioState.selfMute ||
-			(pttActive && !Keybind.pushToTalkHeld) ||
-			(ptmActive && Keybind.pushToMuteHeld);
-		if (effectiveMute) {
+		if (audioState.effectiveDeaf || audioState.serverMute || audioState.selfMute) {
 			this.setAudioPublicationsMuted(room, true, 'voice state update');
 			this.syncLocalSpeakingOverride(room);
 			return;
@@ -1506,7 +1498,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			serverDeaf: serverVoiceState?.deaf,
 		});
 		if (isMutedOrDeafened(audioState)) return;
-		const targetMute = audioState.selfMute || !held;
+		const targetMute = getEffectiveSelfMuteForVoiceStatePayloadFromV2AudioControls();
 		const ok = this.setMicrophonePublicationsMuted(room, targetMute, 'push to talk');
 		if (!ok) {
 			this.syncVoiceState({self_mute: true});
@@ -1545,11 +1537,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.syncLocalSpeakingOverride(room);
 	}
 
-	handlePushToTalkModeChange(
-		room: Room | null,
-		getCurrentUserVoiceState: () => VoiceState | null,
-		options: {preserveSelfMute?: boolean} = {},
-	): void {
+	handlePushToTalkModeChange(room: Room | null, getCurrentUserVoiceState: () => VoiceState | null): void {
 		assertNullableObjectLike<Room>(room, 'handlePushToTalkModeChange.room');
 		assert.equal(
 			typeof getCurrentUserVoiceState,
@@ -1558,9 +1546,6 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		);
 		Keybind.resetPushToTalkState();
 		Keybind.resetPushToMuteState();
-		if (!options.preserveSelfMute && isPushToTalkActiveFromAppState() && LocalVoiceState.getSelfMute()) {
-			LocalVoiceState.updateSelfMute(false);
-		}
 		const serverVoiceState = getCurrentUserVoiceState();
 		const audioState = this.getEffectiveAudioState({
 			serverMute: serverVoiceState?.mute ?? false,

@@ -104,7 +104,7 @@ export const DirectCallLobbyBottomSheet = observer(function DirectCallLobbyBotto
 	useMediaEngineVersion();
 	const callHeaderState = useCallHeaderState(channel);
 	const voiceState = MediaEngine.getCurrentUserVoiceState(channel.guildId ?? null);
-	const localSelfMute = LocalVoiceState.getSelfMute();
+	const localSelfMute = VoiceStateCommands.getCurrentSelfMute();
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const localSelfVideo = LocalVoiceState.getSelfVideo();
 	const currentLatency = MediaEngine.currentLatency;
@@ -112,7 +112,7 @@ export const DirectCallLobbyBottomSheet = observer(function DirectCallLobbyBotto
 	const voiceServerEndpoint = MediaEngine.voiceServerEndpoint;
 	const connectionId = MediaEngine.connectionId;
 	const isConnected = MediaEngine.connected && MediaEngine.channelId === channel.id;
-	const isMuted = voiceState ? voiceState.self_mute : localSelfMute;
+	const isMuted = localSelfMute;
 	const isDeafened = voiceState ? voiceState.self_deaf : localSelfDeaf;
 	const isCameraOn = voiceState ? Boolean(voiceState.self_video) : localSelfVideo;
 	const cameraCapBlocked = useCameraUserCapBlocked(isCameraOn);

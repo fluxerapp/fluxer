@@ -229,7 +229,7 @@ describe('push-to-talk mode reconcile', () => {
 		dispose();
 	});
 
-	it('flips push-to-talk only on settled states and preserves self-mute when it does', () => {
+	it('flips push-to-talk only on settled states and reconciles once per flip', () => {
 		const {Keybind, AppStorage, reactToPushToTalkModeChanges} = modules;
 		const reconcile = vi.fn();
 		const dispose = reactToPushToTalkModeChanges(reconcile);
@@ -238,7 +238,7 @@ describe('push-to-talk mode reconcile', () => {
 			emit(status);
 			expect(Keybind.isPushToTalkEffective()).toBe(effective);
 			expect(reconcile).toHaveBeenCalledTimes(1);
-			expect(reconcile).toHaveBeenLastCalledWith({preserveSelfMute: true});
+			expect(reconcile).toHaveBeenLastCalledWith();
 		};
 		expectFlip(portalStatus('declined'), false);
 		expect(AppStorage.getJSON(PORTAL_ASSIGNED_ACTIONS_KEY)).toEqual([]);
@@ -251,8 +251,12 @@ describe('push-to-talk mode reconcile', () => {
 		expectFlip(portalStatus('bound'), true);
 		reconcile.mockClear();
 		Keybind.setTransmitMode('voice_activity');
-		expect(reconcile).toHaveBeenLastCalledWith({preserveSelfMute: false});
+		expect(Keybind.isPushToTalkEffective()).toBe(false);
+		expect(reconcile).toHaveBeenCalledTimes(1);
+		expect(reconcile).toHaveBeenLastCalledWith();
 		Keybind.setTransmitMode('voice_push_to_talk');
+		expect(Keybind.isPushToTalkEffective()).toBe(true);
+		expect(reconcile).toHaveBeenCalledTimes(2);
 		dispose();
 	});
 });

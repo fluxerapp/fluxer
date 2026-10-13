@@ -23,14 +23,13 @@ interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly participantMutes: Readonly<Record<string, boolean>>;
 	readonly connectionVolumes: Readonly<Record<string, Readonly<Record<string, number>>>>;
 	readonly streamAudioRevision: number;
-	readonly transmitMode: typeof Keybind.transmitMode;
 	readonly pushToMuteActive: boolean;
 }
 
 export interface VoiceEngineV2AppAudioPreferencesMediaAdapter {
 	requestMicrophoneRefresh(room: Room, request: {republish: boolean}): Promise<void>;
 	configureVoiceInput(room: Room): void;
-	handleInputKeybindChange(room: Room, options: {preserveSelfMute: boolean}): void;
+	handleInputKeybindChange(room: Room): void;
 	applyAllLocalAudioPreferences(room: Room): void;
 }
 
@@ -50,7 +49,6 @@ function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2AppAudio
 		participantMutes: ParticipantVolume.localMutes,
 		connectionVolumes: ParticipantVolume.connectionVolumesByLocalConnectionId,
 		streamAudioRevision: StreamAudioPrefs.audioPrefsRevision,
-		transmitMode: Keybind.transmitMode,
 		pushToMuteActive: Keybind.isPushToMuteEffective(),
 	};
 }
@@ -97,7 +95,7 @@ function syncVoiceEngineV2AppAudioPreferences(
 	);
 	assert.equal(typeof logger.warn, 'function', 'audio preferences sync logger missing warn');
 	if (previous.pushToMuteActive !== current.pushToMuteActive) {
-		adapter.handleInputKeybindChange(room, {preserveSelfMute: previous.transmitMode === current.transmitMode});
+		adapter.handleInputKeybindChange(room);
 	}
 	const republish = hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings);
 	if (republish || hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous.audioSettings, current.audioSettings)) {

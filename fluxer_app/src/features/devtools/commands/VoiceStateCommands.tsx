@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
-import Keybind from '@app/features/input/state/InputKeybind';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
@@ -119,14 +118,10 @@ const requestMicrophoneDirectly = async (): Promise<boolean> => {
 };
 
 export async function toggleSelfMute(_guildId: string | null = null): Promise<void> {
-	if (Keybind.isPushToTalkEffective()) {
-		logger.debug('Ignoring self-mute toggle: push-to-talk controls the microphone');
-		return;
-	}
 	const room = MediaEngine.room;
 	const connectedChannelId = MediaEngine.channelId;
 	const microphoneFailureLatched = MediaEngine.isMicrophoneFailureLatched();
-	const currentMute = LocalVoiceState.getSelfMute() || microphoneFailureLatched;
+	const currentMute = getCurrentSelfMute();
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
 	const willUnmute = currentMute;
@@ -238,7 +233,20 @@ const updateConnectionsProperty = async (
 	}
 };
 
+export function getCurrentSelfMute(): boolean {
+	return LocalVoiceState.getSelfMute() || MediaEngine.isMicrophoneFailureLatched();
+}
+
+export function getSelfMuteForConnection(connectionId: string): boolean {
+	if (connectionId === MediaEngine.connectionId) return getCurrentSelfMute();
+	return MediaEngine.getVoiceStateByConnectionId(connectionId)?.self_mute ?? false;
+}
+
 export async function toggleSelfMuteForConnection(connectionId: string): Promise<void> {
+	if (connectionId === MediaEngine.connectionId) {
+		await toggleSelfMute(null);
+		return;
+	}
 	const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 	if (!voiceState) return;
 	const target = !voiceState.self_mute;
@@ -265,7 +273,16 @@ export async function turnOffStreamForConnection(connectionId: string): Promise<
 }
 
 export async function bulkMuteConnections(connectionIds: Array<string>, mute: boolean = true): Promise<void> {
-	await updateConnectionsProperty(connectionIds, 'self_mute', mute);
+	const currentConnectionId = MediaEngine.connectionId;
+	if (currentConnectionId && connectionIds.includes(currentConnectionId)) {
+		if (!mute) MediaEngine.clearMicrophoneFailureLatch();
+		LocalVoiceState.updateSelfMute(mute);
+	}
+	await updateConnectionsProperty(
+		connectionIds.filter((connectionId) => connectionId !== currentConnectionId),
+		'self_mute',
+		mute,
+	);
 }
 
 export async function bulkDeafenConnections(connectionIds: Array<string>, deafen: boolean = true): Promise<void> {

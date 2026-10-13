@@ -211,11 +211,15 @@ export function selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload(
 	return selectVoiceEngineV2AppEffectiveSelfMuteFromAudioControls(selectVoiceEngineV2AppLocalMedia(source).audio);
 }
 
-export function selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(
+export function selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload(
 	source: VoiceEngineV2AppProjectionSource,
 ): boolean {
 	assertNonNullObject(source, 'source');
-	return selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(selectVoiceEngineV2AppLocalMedia(source).audio);
+	const audio = selectVoiceEngineV2AppLocalMedia(source).audio;
+	return (
+		selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(audio) ||
+		selectVoiceEngineV2AppEffectiveSelfMuteFromAudioControls(audio)
+	);
 }
 
 function selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(audio: VoiceEngineV2AudioControls): boolean {

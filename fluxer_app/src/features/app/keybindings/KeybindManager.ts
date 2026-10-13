@@ -521,7 +521,7 @@ class KeybindManager {
 				}),
 			);
 		}
-		this.disposers.push(reactToPushToTalkModeChanges((options) => MediaEngine.handlePushToTalkModeChange(options)));
+		this.disposers.push(reactToPushToTalkModeChanges(() => MediaEngine.handlePushToTalkModeChange()));
 		this.disposers.push(
 			reaction(
 				() => ({entries: this.buildHoldBindingEntries(), routing: this.getGlobalHoldRouting()}),

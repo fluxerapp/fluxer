@@ -551,6 +551,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		isGuildDeafened,
 		isPermissionMuted,
 		isPushToTalkEffective,
+		isSelfMuted: effectiveAudioState.effectiveMute || muteReason === 'self',
 		effectiveMuted,
 		canStream,
 		isCameraEnabled,
