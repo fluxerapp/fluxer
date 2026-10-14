@@ -13,6 +13,7 @@ import type {
 } from '@electron/common/Types';
 import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/DesktopUpdateGate';
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
+import {areModuleUpdatesDisabled} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {app, type BrowserWindow, clipboard, Menu, nativeImage, Tray} from 'electron';
@@ -399,13 +400,15 @@ function buildTrayMenu(): Menu {
 			click: () => runTrayMenuAction(startDesktopUpdateFromShell),
 		});
 	}
-	menuTemplate.push({
-		label: t('desktop.tray.checkForUpdates'),
-		click: () =>
-			runTrayMenuAction(() => {
-				void checkForUpdatesFromShell();
-			}),
-	});
+	if (!areModuleUpdatesDisabled()) {
+		menuTemplate.push({
+			label: t('desktop.tray.checkForUpdates'),
+			click: () =>
+				runTrayMenuAction(() => {
+					void checkForUpdatesFromShell();
+				}),
+		});
+	}
 	if (trayState.buildInfo) {
 		menuTemplate.push({
 			label: t('desktop.tray.copyBuildInfo'),

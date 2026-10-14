@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const {execFile} = require('node:child_process');
+const {readFileSync} = require('node:fs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -102,6 +103,7 @@ const isMacBuild = process.argv.includes('--mac');
 const isWindowsBuild = process.argv.includes('--win');
 const targetPlatform = isLinuxBuild ? 'linux' : isMacBuild ? 'darwin' : isWindowsBuild ? 'win32' : process.platform;
 const metadataName = isLinuxBuild ? linuxPackageName : packageName;
+const shellVersion = process.env.VERSION || readBundledRendererVersion();
 const supportedTargetArchs = ['x64', 'arm64'];
 const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;
@@ -642,6 +644,15 @@ function packagePathParts(packageName) {
 		return parts;
 	}
 	return [packageName];
+}
+
+function readBundledRendererVersion() {
+	try {
+		const {version} = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'renderer', 'version.json'), 'utf8'));
+		return typeof version === 'string' && /^\d+\.\d+\.\d+$/u.test(version) ? version : null;
+	} catch {
+		return null;
+	}
 }
 
 function isNonEmptyString(value) {
@@ -1623,7 +1634,7 @@ module.exports = {
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
-		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
+		...(shellVersion ? {version: shellVersion} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxDesktopId}.desktop`} : {}),
 	},
 	extraResources: [

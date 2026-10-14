@@ -159,7 +159,12 @@ export function describeLaunchDiagnosticOptions(argv: ReadonlyArray<string> = pr
 		spellcheck: getSpellcheckLaunchMode(argv),
 		v8CodeCacheDisabled: shouldDisableV8CodeCache(argv),
 		nativeGatewayDisableReason: getNativeGatewayDisableReason(argv),
+		moduleUpdatesDisabled: areModuleUpdatesDisabled(),
 	};
+}
+
+export function areModuleUpdatesDisabled(): boolean {
+	return truthyEnv('FLUXER_DISABLE_MODULE_UPDATES');
 }
 
 export function isDesktopUpdateRequested(argv: ReadonlyArray<string> = process.argv): boolean {

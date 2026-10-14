@@ -159,7 +159,7 @@ async function runModuleBootstrap(): Promise<void> {
 	const {configureUserDataPath} = await import('@electron/common/UserDataPath');
 	const {armNativeProbeCache} = await import('@electron/main/NativeProbeCache');
 	const {isStartMinimizedLaunch} = await import('@electron/main/AutostartLaunch');
-	const {isDesktopUpdateRequested} = await import('@electron/main/LaunchOptions');
+	const {areModuleUpdatesDisabled, isDesktopUpdateRequested} = await import('@electron/main/LaunchOptions');
 	const {relaunchStableLaunchPath} = await import('@electron/main/LinuxLaunchPath');
 	const {getDesktopLocalAppProtocol} = await import('@electron/main/LocalAppProtocol');
 	const {
@@ -410,6 +410,10 @@ async function runModuleBootstrap(): Promise<void> {
 				logger.warn('Failed to record whether an update is waiting', error);
 			}
 		};
+		const moduleUpdatesDisabled = areModuleUpdatesDisabled();
+		if (moduleUpdatesDisabled) {
+			logger.info('Module updates are disabled by FLUXER_DISABLE_MODULE_UPDATES');
+		}
 		const updater = new ModuleUpdater({
 			store,
 			shellVersion: app.getVersion(),
@@ -417,6 +421,7 @@ async function runModuleBootstrap(): Promise<void> {
 			bundledRendererVersion: BUNDLED_RENDERER_VERSION,
 			preferUnversionedBundle: app.isPackaged,
 			forceStartupUpdate: store.shellVersionChanged || updateWasPending || isDesktopUpdateRequested(),
+			moduleUpdatesDisabled,
 			selfUpdateShellFirst:
 				shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE
 					? async (latestVersion) => {
@@ -705,35 +710,37 @@ async function runModuleBootstrap(): Promise<void> {
 			},
 		};
 
-		const desktopUpdate = new DesktopUpdateRun({
-			probe: () => updater.checkForUpdate(),
-			canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
-			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(),
-			installModules: async () => {
-				const launchAttempt = await updater.installPending();
-				if (launchAttempt != null) {
-					await refreshModuleRoots(launchAttempt.committed);
-				}
-				return launchAttempt;
-			},
-			takeover: updateTakeover,
-			publish: (check) => {
-				recordPendingUpdate(check);
-				publishDesktopUpdateCheck(check);
-			},
-			reportFailure: (failure) => {
-				void import('@electron/main/DesktopUpdatePrompt')
-					.then(({reportDesktopUpdateFailure}) => reportDesktopUpdateFailure(failure))
-					.catch((error: unknown) => {
-						logger.error('Failed to report the desktop update failure', error);
-					});
-			},
-			openDownloadsPage: async () => {
-				const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
-				await shell.openExternal(DOWNLOAD_PAGE_URL);
-			},
-			logger,
-		});
+		const desktopUpdate = moduleUpdatesDisabled
+			? null
+			: new DesktopUpdateRun({
+					probe: () => updater.checkForUpdate(),
+					canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
+					runShellSelfUpdate: () => runShellSelfUpdateOnSplash(),
+					installModules: async () => {
+						const launchAttempt = await updater.installPending();
+						if (launchAttempt != null) {
+							await refreshModuleRoots(launchAttempt.committed);
+						}
+						return launchAttempt;
+					},
+					takeover: updateTakeover,
+					publish: (check) => {
+						recordPendingUpdate(check);
+						publishDesktopUpdateCheck(check);
+					},
+					reportFailure: (failure) => {
+						void import('@electron/main/DesktopUpdatePrompt')
+							.then(({reportDesktopUpdateFailure}) => reportDesktopUpdateFailure(failure))
+							.catch((error: unknown) => {
+								logger.error('Failed to report the desktop update failure', error);
+							});
+					},
+					openDownloadsPage: async () => {
+						const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
+						await shell.openExternal(DOWNLOAD_PAGE_URL);
+					},
+					logger,
+				});
 
 		const permit = await runModuleUpdateLoop();
 		localNetworkHint.disarm();
@@ -741,25 +748,30 @@ async function runModuleBootstrap(): Promise<void> {
 			recordPendingUpdate({shellNewer: false, modulesChanged: false});
 		}
 		await refreshModuleRoots(permit.launchAttempt.committed);
-		setOnDemandModuleInstaller(
-			createOnDemandModuleInstaller({
-				ensure: (moduleName) => updater.ensureModule(moduleName),
-				refresh: serveOnDemandModules,
-				onFailure: (moduleName, error) => {
-					logger.error('Failed to install a module on demand', {module: moduleName, error});
-				},
-			}),
-		);
 		markSplashLaunching();
-		armDesktopUpdate({
-			check: async (manual) => {
-				const check = await desktopUpdate.check({manual});
-				recordPendingUpdate(check);
-				return check;
-			},
-			start: () => desktopUpdate.start(),
-		});
+		if (desktopUpdate != null) {
+			setOnDemandModuleInstaller(
+				createOnDemandModuleInstaller({
+					ensure: (moduleName) => updater.ensureModule(moduleName),
+					refresh: serveOnDemandModules,
+					onFailure: (moduleName, error) => {
+						logger.error('Failed to install a module on demand', {module: moduleName, error});
+					},
+				}),
+			);
+			armDesktopUpdate({
+				check: async (manual) => {
+					const check = await desktopUpdate.check({manual});
+					recordPendingUpdate(check);
+					return check;
+				},
+				start: () => desktopUpdate.start(),
+			});
+		}
 		armMainWindowHandoff(updater, permit.launchAttempt, () => {
+			if (desktopUpdate == null) {
+				return;
+			}
 			desktopUpdate.markLaunchSettled();
 			preloadUpdateSplash();
 			armDesktopUpdatePoll(

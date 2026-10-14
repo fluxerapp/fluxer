@@ -267,6 +267,7 @@ interface ModuleUpdaterOptions {
 	readonly bundledRendererVersion?: string | null;
 	readonly preferUnversionedBundle?: boolean;
 	readonly forceStartupUpdate?: boolean;
+	readonly moduleUpdatesDisabled?: boolean;
 	readonly selfUpdateShellFirst?: (latestVersion: string) => Promise<{readonly reason: string}>;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
 	readonly report?: (report: ModuleUpdaterReport) => void;
@@ -286,6 +287,7 @@ export class ModuleUpdater {
 	private readonly shellVersion: ModuleVersion;
 	private readonly hasOfflineRenderer: boolean;
 	private readonly forceStartupUpdate: boolean;
+	private readonly moduleUpdatesDisabled: boolean;
 	private readonly selfUpdateShellFirst: ((latestVersion: string) => Promise<{readonly reason: string}>) | null;
 	private readonly shellFirstAttempts = new Map<string, {readonly reason: string} | null>();
 	private readonly manifestFeed: ModuleManifestFeedIdentity;
@@ -314,6 +316,7 @@ export class ModuleUpdater {
 		this.shellVersion = parseModuleVersion(options.shellVersion, 'desktop shell version');
 		this.hasOfflineRenderer = options.hasOfflineRenderer ?? false;
 		this.forceStartupUpdate = options.forceStartupUpdate ?? false;
+		this.moduleUpdatesDisabled = options.moduleUpdatesDisabled ?? false;
 		this.selfUpdateShellFirst = options.selfUpdateShellFirst ?? null;
 		const releaseChannel = options.releaseChannel ?? BUILD_CHANNEL;
 		this.platform = options.platform ?? process.platform;
@@ -418,6 +421,18 @@ export class ModuleUpdater {
 				return reverted;
 			}
 		}
+		if (this.moduleUpdatesDisabled) {
+			const decision = await this.planner.evaluateUnreachableLaunch(this.startupUpdateEnforced);
+			if (decision.kind === ModuleUnreachableLaunchDecision.LAUNCH) {
+				return await this.launchUnreachable();
+			}
+			return this.blockUpdateRequired(
+				decision.reason,
+				[],
+				'module updates are disabled by FLUXER_DISABLE_MODULE_UPDATES',
+				{updateServerUnreachable: true},
+			);
+		}
 		if (this.platform === 'linux' && !(await this.startupUpdateRequired())) {
 			return await this.launchIfAtFloor();
 		}
@@ -486,13 +501,7 @@ export class ModuleUpdater {
 				if (exhausted || !fetched) {
 					const decision = await this.planner.evaluateUnreachableLaunch(this.startupUpdateEnforced);
 					if (decision.kind === ModuleUnreachableLaunchDecision.LAUNCH) {
-						const launchAttempt = await this.store.recordLaunchAttempt();
-						this.emit(ModuleUpdaterStatus.UNREACHABLE_LAUNCH);
-						return {
-							status: ModuleUpdaterStatus.UNREACHABLE_LAUNCH,
-							committed: this.store.getCommitted(),
-							launchAttempt,
-						};
+						return await this.launchUnreachable();
 					}
 					if (exhausted) {
 						return this.blockUpdateRequired(decision.reason, [], describeErrorChain(error), {
@@ -798,6 +807,16 @@ export class ModuleUpdater {
 			committed: this.store.getCommitted(),
 			rolledBack: false,
 			belowFloor: [],
+			launchAttempt,
+		};
+	}
+
+	private async launchUnreachable(): Promise<ModuleUpdaterOutcome> {
+		const launchAttempt = await this.store.recordLaunchAttempt();
+		this.emit(ModuleUpdaterStatus.UNREACHABLE_LAUNCH);
+		return {
+			status: ModuleUpdaterStatus.UNREACHABLE_LAUNCH,
+			committed: this.store.getCommitted(),
 			launchAttempt,
 		};
 	}

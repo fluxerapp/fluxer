@@ -275,3 +275,26 @@ describe('Bootstrap entry point', () => {
 		);
 	});
 });
+
+describe('FLUXER_DISABLE_MODULE_UPDATES', () => {
+	test('reads the environment variable like the other FLUXER_DISABLE switches', async () => {
+		const {areModuleUpdatesDisabled} = await import('./LaunchOptions.ts');
+		const previous = process.env.FLUXER_DISABLE_MODULE_UPDATES;
+		try {
+			delete process.env.FLUXER_DISABLE_MODULE_UPDATES;
+			assert.equal(areModuleUpdatesDisabled(), false);
+			for (const value of ['1', 'true', 'YES', 'on']) {
+				process.env.FLUXER_DISABLE_MODULE_UPDATES = value;
+				assert.equal(areModuleUpdatesDisabled(), true);
+			}
+			process.env.FLUXER_DISABLE_MODULE_UPDATES = '0';
+			assert.equal(areModuleUpdatesDisabled(), false);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.FLUXER_DISABLE_MODULE_UPDATES;
+			} else {
+				process.env.FLUXER_DISABLE_MODULE_UPDATES = previous;
+			}
+		}
+	});
+});
