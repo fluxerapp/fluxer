@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import '@fluxer/schema/src/ZodJitless';
 import '@app/app/AbortSignalPolyfill';
 import '@app/app/BootShell.css';
 import {startAppStorage} from '@app/features/platform/state/AppStorageBootstrap';
