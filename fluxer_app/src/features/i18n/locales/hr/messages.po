@@ -2129,6 +2129,11 @@ msgstr "Zaslon korisnika {streamerDisplayName}"
 msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} sekundi"
 
+#. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
+msgstr "{textChannelCount, plural, one {# tekstualni kanal} other {# tekstualnih kanala}}, {forumChannelCount, plural, one {# forum kanal} other {# forum kanala}}, {voiceChannelCount, plural, one {# glasovni kanal} other {# glasovnih kanala}}, {categoryCount, plural, one {# kategorija} other {# kategorija}}, {roleCount, plural, one {# uloga} other {# uloga}}"
+
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
@@ -2138,6 +2143,11 @@ msgstr "{textChannelCount, plural, one {# tekstualni kanal} few {# tekstualna ka
 #: src/features/theme/state/ThemeLibrary.ts
 msgid "{themeName} Copy"
 msgstr "{themeName} (kopija)"
+
+#. Error in the import-template form when the third-party platform named by {theOtherPlatform} temporarily refused the desktop app template lookup because of too many requests.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "{theOtherPlatform} is limiting template lookups right now. Try again in a moment."
+msgstr "{theOtherPlatform} trenutačno ograničava preuzimanje predložaka. Pokušajte ponovno za trenutak."
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts
@@ -10203,6 +10213,11 @@ msgstr "Nije moguće učitati postavke"
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
 msgid "Couldn't load the report form."
 msgstr "Nismo mogli učitati obrazac za prijavu."
+
+#. Instructions in the desktop app import-template flow shown when looking up the template directly failed, so the user has to fetch the JSON in a browser and paste it instead. "JSON" must not be translated.
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+msgid "Couldn't load the template automatically. Open the link below in your browser, then copy the entire JSON response and paste it into the box."
+msgstr "Nismo mogli automatski učitati predložak. Otvorite vezu ispod u svojem pregledniku, zatim kopirajte cijeli JSON odgovor i zalijepite ga u okvir."
 
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx
 msgid "Couldn't load this application"
@@ -33897,6 +33912,11 @@ msgstr "Treća opcija"
 msgid "Third party"
 msgstr "Treća strana"
 
+#. Error in the import-template form when the desktop app loaded the template from the third-party platform named by {theOtherPlatform} but its contents were not in the expected shape.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "This {theOtherPlatform} template couldn't be read. It may use a format Fluxer doesn't support yet."
+msgstr "Ovu predlogu s {theOtherPlatform} nije moguće pročitati. Možda koristi format koji Fluxer još ne podržava."
+
 #. Body of the block-user error modal when the target is a system account that cannot be blocked.
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
@@ -38481,6 +38501,11 @@ msgstr "Nismo pronašli nedavnu kupnju za povrat novca na ovom računu."
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx
 msgid "We couldn't find an active subscription on this account. Refresh and try again."
 msgstr "Nismo pronašli aktivnu pretplatu na ovom računu. Osvježite i pokušajte ponovno."
+
+#. Error in the import-template form when the desktop app looked up the template and the third-party platform named by {theOtherPlatform} said it does not exist or has expired.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "We couldn't find that {theOtherPlatform} template. Check the link and try again."
+msgstr "Nismo mogli pronaći taj predložak {theOtherPlatform}. Provjerite poveznicu i pokušajte ponovno."
 
 #. Error message in the message forward failed modal.
 #: src/features/messaging/components/modals/ForwardModal.tsx

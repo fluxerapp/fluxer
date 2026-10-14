@@ -54,7 +54,9 @@ export function mapTemplateChannelTypeToFluxer(channelType: number): number | nu
 		channelType === ChannelTypes.GUILD_TEXT ||
 		channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
 		channelType === ChannelTypes.GUILD_VOICE ||
-		channelType === ChannelTypes.GUILD_CATEGORY
+		channelType === ChannelTypes.GUILD_CATEGORY ||
+		channelType === ChannelTypes.GUILD_FORUM ||
+		channelType === ChannelTypes.GUILD_MEDIA
 	) {
 		return channelType;
 	}
@@ -138,6 +140,21 @@ export const THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR = msg({
 	message: "This doesn't look like a valid template response. Make sure you copied the entire JSON document.",
 	comment:
 		'Validation error in the paste-template-JSON form when the JSON parses but lacks the expected third-party template fields.',
+});
+export const THE_OTHER_PLATFORM_TEMPLATE_NOT_FOUND_DESCRIPTOR = msg({
+	message: "We couldn't find that {theOtherPlatform} template. Check the link and try again.",
+	comment:
+		'Error in the import-template form when the desktop app looked up the template and the third-party platform named by {theOtherPlatform} said it does not exist or has expired.',
+});
+export const THE_OTHER_PLATFORM_TEMPLATE_RATE_LIMITED_DESCRIPTOR = msg({
+	message: '{theOtherPlatform} is limiting template lookups right now. Try again in a moment.',
+	comment:
+		'Error in the import-template form when the third-party platform named by {theOtherPlatform} temporarily refused the desktop app template lookup because of too many requests.',
+});
+export const THE_OTHER_PLATFORM_TEMPLATE_UNREADABLE_DESCRIPTOR = msg({
+	message: "This {theOtherPlatform} template couldn't be read. It may use a format Fluxer doesn't support yet.",
+	comment:
+		'Error in the import-template form when the desktop app loaded the template from the third-party platform named by {theOtherPlatform} but its contents were not in the expected shape.',
 });
 export const IMPORT_TEMPLATE_FORM_DESCRIPTOR = msg({
 	message: 'Import template form',

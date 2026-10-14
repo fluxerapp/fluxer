@@ -36430,13 +36430,16 @@
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string"}],
 						"description": "The template-local channel ID"
 					},
-					"type": {"type": "number", "description": "The channel type (0 = text, 2 = voice, 4 = category)"},
+					"type": {
+						"type": "number",
+						"description": "The channel type (0 = text, 2 = voice, 4 = category, 5 = announcement, 13 = stage, 15 = forum, 16 = media)"
+					},
 					"name": {
 						"description": "The name of the channel",
 						"anyOf": [{"type": "string", "maxLength": 100}, {"type": "null"}]
 					},
 					"topic": {
-						"description": "The channel topic, shortened to the Fluxer channel topic limit",
+						"description": "The channel topic or forum guidelines, shortened to the limit for the channel type",
 						"anyOf": [{"type": "string", "maxLength": 4096}, {"type": "null"}]
 					},
 					"position": {"description": "The position of the channel", "$ref": "#/components/schemas/Int32Type"},
@@ -36462,38 +36465,129 @@
 						"description": "The per-user voice connection limit for voice channels",
 						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
 					},
-					"nsfw": {"description": "Whether the channel is NSFW", "type": "boolean"},
+					"nsfw": {"description": "Whether the channel is NSFW", "type": ["boolean", "null"]},
 					"rate_limit_per_user": {
 						"description": "Slowmode rate limit in seconds",
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 21600
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
 					},
 					"permission_overwrites": {
 						"description": "Permission overwrites for this channel",
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"anyOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string"}],
-									"description": "The ID of the role or user for this overwrite"
-								},
-								"type": {
-									"description": "The type of overwrite (0/role = role, 1/member = member)",
-									"type": ["number", "string"]
-								},
-								"allow": {
-									"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
-									"description": "The allowed permissions bitfield as a string"
-								},
-								"deny": {
-									"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
-									"description": "The denied permissions bitfield as a string"
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"anyOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string"}],
+											"description": "The ID of the role or user for this overwrite"
+										},
+										"type": {
+											"description": "The type of overwrite (0/role = role, 1/member = member)",
+											"type": ["number", "string"]
+										},
+										"allow": {
+											"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
+											"description": "The allowed permissions bitfield as a string"
+										},
+										"deny": {
+											"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
+											"description": "The denied permissions bitfield as a string"
+										}
+									},
+									"required": ["id", "type", "allow", "deny"]
 								}
 							},
-							"required": ["id", "type", "allow", "deny"]
-						}
+							{"type": "null"}
+						]
+					},
+					"available_tags": {
+						"description": "Tags for forum and media channels",
+						"anyOf": [
+							{
+								"maxItems": 100,
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"name": {"type": "string", "maxLength": 100, "description": "The name of the tag"},
+										"moderated": {
+											"description": "Whether only moderators can apply the tag",
+											"type": ["boolean", "null"]
+										},
+										"emoji_id": {
+											"description": "A custom emoji reference, ignored on import",
+											"anyOf": [
+												{
+													"anyOf": [
+														{"type": "string", "maxLength": 64},
+														{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+													]
+												},
+												{"type": "null"}
+											]
+										},
+										"emoji_name": {
+											"description": "The unicode emoji of the tag",
+											"anyOf": [{"type": "string", "maxLength": 64}, {"type": "null"}]
+										}
+									},
+									"required": ["name"]
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction for forum and media posts",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"emoji_id": {
+										"description": "A custom emoji reference, ignored on import",
+										"anyOf": [
+											{
+												"anyOf": [
+													{"type": "string", "maxLength": 64},
+													{"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+												]
+											},
+											{"type": "null"}
+										]
+									},
+									"emoji_name": {
+										"description": "The unicode emoji",
+										"anyOf": [{"type": "string", "maxLength": 64}, {"type": "null"}]
+									}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"default_sort_order": {
+						"description": "Default post sort order for forum and media channels",
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
+					},
+					"default_forum_layout": {
+						"description": "Default layout for forum channels",
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
+					},
+					"default_tag_setting": {
+						"description": "How posts are filtered by several tags",
+						"anyOf": [{"type": "string", "maxLength": 32}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads",
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
+					},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
+					},
+					"flags": {
+						"description": "Channel flags",
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					}
 				},
 				"required": ["id", "type", "position"]

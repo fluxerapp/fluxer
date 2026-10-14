@@ -18,6 +18,7 @@ import {
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
 import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
@@ -25,6 +26,11 @@ import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {
+	buildTemplateThreadParentConfig,
+	clipTemplateTopic,
+	mapOtherPlatformTemplateChannelType,
+} from '@app/api/guild/services/data/TemplateChannelImport';
 import {memberEndsInvitePause} from '@app/api/guild/services/GuildInvitePauseApplier';
 import {emitGuildCreated, emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
@@ -43,7 +49,16 @@ import {getGuildSearchService} from '@app/api/SearchFactory';
 import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {deleteThreadSearchDocuments} from '@app/api/search/thread/ThreadSearchService';
-import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '@app/api/Tables';
+import {
+	Channels,
+	ChannelsByGuild,
+	GuildMembers,
+	GuildMembersByUserId,
+	GuildRoles,
+	Guilds,
+	ThreadOnlyChannelsByGuild,
+	ThreadParentConfig as ThreadParentConfigTable,
+} from '@app/api/Tables';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
@@ -71,6 +86,7 @@ import {
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 	VOICE_CHANNEL_USER_LIMIT_MAX,
 } from '@fluxer/constants/src/LimitConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {
 	DEFAULT_THREAD_PERMISSIONS,
 	THREAD_AWARE_ALL_PERMISSIONS,
@@ -190,7 +206,6 @@ const THREAD_PURGE_CONCURRENCY = 8;
 const GUILD_DELETION_MEMBER_CONCURRENCY = 25;
 const GUILD_DELETION_PENDING_FEATURES = [GuildFeatures.UNAVAILABLE_FOR_EVERYONE, GuildFeatures.UNAVAILABLE_HIDDEN];
 const TEMPLATE_AFK_TIMEOUT_MAX_SECONDS = 3600;
-const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
 
 function isSystemChannelType(type: number): boolean {
 	return type === ChannelTypes.GUILD_TEXT || type === ChannelTypes.GUILD_ANNOUNCEMENT;
@@ -1024,7 +1039,7 @@ export class GuildOperationsService {
 				throw new GuildTemplateInvalidError();
 			}
 			seenChannelKeys.add(channelKey);
-			const fluxerType = this.mapOtherPlatformTemplateChannelTypeToFluxer(channel.type);
+			const fluxerType = mapOtherPlatformTemplateChannelType(channel.type);
 			if (fluxerType == null) {
 				skippedOtherPlatformChannelTypes.add(channel.type);
 				continue;
@@ -1102,7 +1117,9 @@ export class GuildOperationsService {
 			const parentKey = channel.parent_id != null ? this.getTemplateEntityKey(channel.parent_id) : null;
 			const parentType = parentKey != null ? channelTypeMap.get(parentKey) : null;
 			const parentId =
-				parentKey != null && parentType === ChannelTypes.GUILD_CATEGORY ? (channelIdMap.get(parentKey) ?? null) : null;
+				fluxerType !== ChannelTypes.GUILD_CATEGORY && parentKey != null && parentType === ChannelTypes.GUILD_CATEGORY
+					? (channelIdMap.get(parentKey) ?? null)
+					: null;
 			const isVoice = fluxerType === ChannelTypes.GUILD_VOICE;
 			let permissionOverwrites: Map<RoleID | UserID, PermissionOverwrite> | null = null;
 			if (channel.permission_overwrites && channel.permission_overwrites.length > 0) {
@@ -1132,7 +1149,7 @@ export class GuildOperationsService {
 					guild_id: guildId,
 					type: fluxerType,
 					name: channel.name,
-					topic: channel.topic ?? null,
+					topic: clipTemplateTopic(channel.topic, fluxerType),
 					icon_hash: null,
 					url: null,
 					parent_id: parentId,
@@ -1160,11 +1177,25 @@ export class GuildOperationsService {
 				}),
 			);
 			batch.addPrepared(
-				ChannelsByGuild.upsertAll({
-					guild_id: guildId,
-					channel_id: channelId,
-				}),
+				THREAD_ONLY_CHANNEL_TYPES.has(fluxerType)
+					? ThreadOnlyChannelsByGuild.upsertAll({guild_id: guildId, channel_id: channelId})
+					: ChannelsByGuild.upsertAll({guild_id: guildId, channel_id: channelId}),
 			);
+			const parentConfig = await buildTemplateThreadParentConfig(channel, fluxerType, () =>
+				this.snowflakeService.generate(),
+			);
+			if (parentConfig) {
+				const ops: Record<string, DbOp<unknown>> = {};
+				for (const [key, value] of Object.entries(parentConfig)) {
+					if (value !== undefined) ops[key] = Db.set(value);
+				}
+				batch.addPrepared(
+					ThreadParentConfigTable.patchByPk(
+						{guild_id: guildId, channel_id: channelId},
+						ops as Parameters<typeof ThreadParentConfigTable.patchByPk>[1],
+					),
+				);
+			}
 		}
 		let systemChannelId: ChannelID | null = null;
 		if (template.system_channel_id != null) {
@@ -1239,21 +1270,6 @@ export class GuildOperationsService {
 			return namedEveryoneRole;
 		}
 		return roles.find((role) => this.getTemplateEntityKey(role.id) === '0') ?? null;
-	}
-
-	private mapOtherPlatformTemplateChannelTypeToFluxer(channelType: number): number | null {
-		if (
-			channelType === ChannelTypes.GUILD_TEXT ||
-			channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
-			channelType === ChannelTypes.GUILD_VOICE ||
-			channelType === ChannelTypes.GUILD_CATEGORY
-		) {
-			return channelType;
-		}
-		if (channelType === THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE) {
-			return ChannelTypes.GUILD_VOICE;
-		}
-		return null;
 	}
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {

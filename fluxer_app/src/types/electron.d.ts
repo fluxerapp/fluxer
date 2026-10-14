@@ -59,6 +59,7 @@ import type {DesktopLegacyHarvest} from '@fluxer/desktop_ipc/src/LegacyHarvestCo
 import type {DesktopLocalAppUploadProgress} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 import type {DesktopRuntimeConfigAPI} from '@fluxer/desktop_ipc/src/LocalAppRuntimeContract';
 import type {DesktopModuleAPI, DesktopUpdateAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {OtherPlatformTemplateAPI} from '@fluxer/desktop_ipc/src/OtherPlatformTemplateContract';
 import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {AuthenticationResponseJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
@@ -370,6 +371,7 @@ export interface ElectronAPI {
 	desktopStorage?: DesktopStorageAPI;
 	desktopKnownInstances?: DesktopKnownInstanceStorageAPI;
 	desktopHandoff?: DesktopHandoffAPI;
+	otherPlatformTemplate?: OtherPlatformTemplateAPI;
 	voiceEngine?: VoiceEngineV2BridgeHardwareEncoderApi;
 	desktopRuntimeConfig?: DesktopRuntimeConfigAPI;
 	desktopLegacyHarvest?: DesktopLegacyHarvestAPI;

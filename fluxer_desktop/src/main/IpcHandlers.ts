@@ -49,6 +49,10 @@ import {
 } from '@electron/main/NativeGatewayTransport';
 import {registerNotificationIpcHandlers} from '@electron/main/NotificationsIpc';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
+import {
+	cleanupOtherPlatformTemplateHandlers,
+	registerOtherPlatformTemplateHandlers,
+} from '@electron/main/OtherPlatformTemplateIpc';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
 import {
@@ -487,6 +491,7 @@ export function registerIpcHandlers(): void {
 	registerPasskeyHandlers();
 	registerLinuxAppearanceHandlers();
 	registerBrowserHandoffHandlers();
+	registerOtherPlatformTemplateHandlers();
 }
 
 let linuxAppearanceSubscription: LinuxAppearanceSubscription | null = null;
@@ -570,6 +575,7 @@ export function cleanupIpcHandlers(_options: {quitting?: boolean} = {}): void {
 	browserHandoff?.cleanup();
 	browserHandoff = null;
 	setHandoffReturnLinkSink(null);
+	cleanupOtherPlatformTemplateHandlers();
 	if (linuxAppearanceSubscription) {
 		try {
 			linuxAppearanceSubscription.close();

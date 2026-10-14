@@ -59,6 +59,7 @@ import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/Capability
 import type {NativeGatewayTransportAPI} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import type {DesktopKnownInstanceStorageAPI} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
 import type {DesktopModuleAPI, DesktopUpdateAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {OtherPlatformTemplateAPI} from '@fluxer/desktop_ipc/src/OtherPlatformTemplateContract';
 import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {
@@ -384,6 +385,7 @@ export interface ElectronAPI {
 	desktopKnownInstances: DesktopKnownInstanceStorageAPI;
 	desktopHandoff: DesktopHandoffAPI;
 	nativeGatewayTransport: NativeGatewayTransportAPI;
+	otherPlatformTemplate: OtherPlatformTemplateAPI;
 }
 
 export interface GlobalShortcutsPortalStatus {

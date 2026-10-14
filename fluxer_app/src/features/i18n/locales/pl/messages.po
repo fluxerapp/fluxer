@@ -2129,6 +2129,11 @@ msgstr "Ekran użytkownika {streamerDisplayName}"
 msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} sekund"
 
+#. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
+msgstr "{textChannelCount, plural, one {# kanał tekstowy} other {# kanałów tekstowych}}, {forumChannelCount, plural, one {# kanał na forum} other {# kanałów na forum}}, {voiceChannelCount, plural, one {# kanał głosowy} other {# kanałów głosowych}}, {categoryCount, plural, one {# kategoria} other {# kategorii}}, {roleCount, plural, one {# rola} other {# ról}}"
+
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
@@ -2138,6 +2143,11 @@ msgstr "{textChannelCount, plural, one {# kanał tekstowy} few {# kanały teksto
 #: src/features/theme/state/ThemeLibrary.ts
 msgid "{themeName} Copy"
 msgstr "Kopia {themeName}"
+
+#. Error in the import-template form when the third-party platform named by {theOtherPlatform} temporarily refused the desktop app template lookup because of too many requests.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "{theOtherPlatform} is limiting template lookups right now. Try again in a moment."
+msgstr "{theOtherPlatform} tymczasowo ogranicza wyszukiwanie szablonów. Spróbuj ponownie za chwilę."
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts
@@ -10203,6 +10213,11 @@ msgstr "Nie można załadować ustawień"
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts
 msgid "Couldn't load the report form."
 msgstr "Nie udało się załadować formularza zgłoszenia."
+
+#. Instructions in the desktop app import-template flow shown when looking up the template directly failed, so the user has to fetch the JSON in a browser and paste it instead. "JSON" must not be translated.
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
+msgid "Couldn't load the template automatically. Open the link below in your browser, then copy the entire JSON response and paste it into the box."
+msgstr "Nie udało się automatycznie załadować szablonu. Otwórz poniższy link w przeglądarce, a następnie skopiuj całą odpowiedź JSON i wklej ją do pola."
 
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx
 msgid "Couldn't load this application"
@@ -33897,6 +33912,11 @@ msgstr "Trzecia opcja"
 msgid "Third party"
 msgstr "Inne firmy"
 
+#. Error in the import-template form when the desktop app loaded the template from the third-party platform named by {theOtherPlatform} but its contents were not in the expected shape.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "This {theOtherPlatform} template couldn't be read. It may use a format Fluxer doesn't support yet."
+msgstr "Ten szablon z {theOtherPlatform} nie mógł zostać odczytany. Może używać formatu, którego Fluxer jeszcze nie obsługuje."
+
 #. Body of the block-user error modal when the target is a system account that cannot be blocked.
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx
 msgid "This account can't be blocked."
@@ -38481,6 +38501,11 @@ msgstr "Nie znaleźliśmy na tym koncie niedawnego zakupu, za który można uzys
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx
 msgid "We couldn't find an active subscription on this account. Refresh and try again."
 msgstr "Nie znaleźliśmy aktywnej subskrypcji na tym koncie. Odśwież i spróbuj ponownie."
+
+#. Error in the import-template form when the desktop app looked up the template and the third-party platform named by {theOtherPlatform} said it does not exist or has expired.
+#: src/features/guild/components/modals/add_guild_modal/shared.ts
+msgid "We couldn't find that {theOtherPlatform} template. Check the link and try again."
+msgstr "Nie znaleźliśmy tego szablonu {theOtherPlatform}. Sprawdź link i spróbuj ponownie."
 
 #. Error message in the message forward failed modal.
 #: src/features/messaging/components/modals/ForwardModal.tsx
