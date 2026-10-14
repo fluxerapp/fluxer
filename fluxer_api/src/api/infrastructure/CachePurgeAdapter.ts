@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {APICachePurgeConfig} from '@app/api/config/APIConfig';
+import {createControllerCachePurgeAdapter} from '@app/api/infrastructure/ControllerCachePurgeAdapter';
 import {createHttpCachePurgeAdapter} from '@app/api/infrastructure/HttpCachePurgeAdapter';
 import {createNoneCachePurgeAdapter} from '@app/api/infrastructure/NoneCachePurgeAdapter';
 import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
@@ -17,6 +18,7 @@ export interface CachePurgeAdapter {
 const CACHE_PURGE_ADAPTERS = {
 	none: createNoneCachePurgeAdapter,
 	http: createHttpCachePurgeAdapter,
+	controller: createControllerCachePurgeAdapter,
 } satisfies Record<CachePurgeAdapterName, (config: APICachePurgeConfig) => CachePurgeAdapter>;
 
 export function createCachePurgeAdapter(config: APICachePurgeConfig): CachePurgeAdapter {

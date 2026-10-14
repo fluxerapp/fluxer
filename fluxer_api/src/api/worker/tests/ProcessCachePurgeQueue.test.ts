@@ -64,7 +64,11 @@ describe('processCachePurgeQueue', () => {
 	let previousMedia: string;
 
 	beforeEach(() => {
-		previousCachePurge = {adapter: Config.cachePurge.adapter, http: Config.cachePurge.http};
+		previousCachePurge = {
+			adapter: Config.cachePurge.adapter,
+			http: Config.cachePurge.http,
+			controller: Config.cachePurge.controller,
+		};
 		previousMedia = Config.endpoints.media;
 		Config.endpoints.media = MEDIA;
 		Config.cachePurge.adapter = 'http';

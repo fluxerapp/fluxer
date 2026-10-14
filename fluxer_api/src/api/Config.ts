@@ -374,6 +374,11 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				token: master.integrations.cache_purge.http.token,
 				timeoutMs: master.integrations.cache_purge.http.timeout_ms,
 			},
+			controller: {
+				endpoint: master.integrations.cache_purge.controller.endpoint,
+				token: master.integrations.cache_purge.controller.token,
+				timeoutMs: master.integrations.cache_purge.controller.timeout_ms,
+			},
 		},
 		clamav: {
 			enabled: master.integrations.clamav.enabled,

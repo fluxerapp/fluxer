@@ -239,6 +239,12 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['integrations', 'cache_purge', 'http', 'timeout_ms'],
 		parse: parseInteger,
 	},
+	FLUXER_CACHE_PURGE_CONTROLLER_ENDPOINT: {path: ['integrations', 'cache_purge', 'controller', 'endpoint']},
+	FLUXER_CACHE_PURGE_CONTROLLER_TOKEN: {path: ['integrations', 'cache_purge', 'controller', 'token']},
+	FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS: {
+		path: ['integrations', 'cache_purge', 'controller', 'timeout_ms'],
+		parse: parseInteger,
+	},
 	FLUXER_BLOCKLIST_FEEDS_ENABLED: {path: ['integrations', 'blocklist_feeds', 'enabled'], parse: parseBoolean},
 	FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: {
 		path: ['integrations', 'breached_password_check', 'enabled'],
