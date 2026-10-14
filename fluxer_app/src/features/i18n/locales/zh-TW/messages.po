@@ -11546,6 +11546,10 @@ msgstr "預設通知設定"
 msgid "Default notifications"
 msgstr "預設通知"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Default output device"
+msgstr "預設輸出裝置"
+
 #. Label of the forum setting that picks the reaction button shown on every post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Default reaction"
@@ -12219,6 +12223,10 @@ msgstr "僅音訊裝置"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Device details"
 msgstr "裝置詳細資訊"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Device not connected"
+msgstr "裝置未連線"
 
 #. Toast shown after a saved login session was signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
@@ -14376,6 +14384,7 @@ msgid "Entire system"
 msgstr "整個系統"
 
 #: src/features/voice/components/AudioSourcePickerLinux.tsx
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Entire system audio"
 msgstr "整個系統音訊"
 
@@ -15601,6 +15610,10 @@ msgstr "正在追蹤"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx
 msgid "Following master • {effectiveValue}"
 msgstr "跟隨主音量 • {effectiveValue}"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Follows your Windows sound settings"
+msgstr "遵循你的 Windows 音效設定"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -20521,6 +20534,10 @@ msgstr "為闔家適宜的空間提供最高等級的保護"
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "可能會導致觀眾出現相容性問題。我們正在努力改善此情況。"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "May include call audio from mixer apps"
+msgstr "可能包含來自混音應用程式的通話音訊"
+
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
@@ -25308,6 +25325,11 @@ msgstr "播放。"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Playback"
 msgstr "播放"
+
+#. Submenu label in the stream settings menu of a Windows screen share. Picks which playback devices the shared desktop audio comes from.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Playback devices"
+msgstr "播放裝置"
 
 #. Section / menu header above the playback rate options in the media player.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

@@ -10,8 +10,10 @@ mod windows_version;
 use std::sync::Arc;
 
 use napi::{
-    Env,
-    bindgen_prelude::{Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown},
+    Env, Task,
+    bindgen_prelude::{
+        AsyncTask, Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown,
+    },
     sys,
     threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue},
 };
@@ -46,11 +48,50 @@ enum CaptureScope {
     SessionMixer,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+enum EndpointSelector {
+    All,
+    Devices { default: bool, ids: Vec<String> },
+}
+
+const DEFAULT_ENDPOINT: &str = "default";
+const MAX_ENDPOINT_ENTRIES: usize = 16;
+const MAX_ENDPOINT_ID_CHARS: usize = 512;
+
+fn parse_endpoints(raw: Option<Vec<String>>) -> Result<EndpointSelector> {
+    let Some(entries) = raw else {
+        return Ok(EndpointSelector::All);
+    };
+    if entries.is_empty() || entries.len() > MAX_ENDPOINT_ENTRIES {
+        return Err(Error::new(Status::InvalidArg, "invalid endpoints"));
+    }
+    let mut default = false;
+    let mut ids: Vec<String> = Vec::new();
+    for entry in entries {
+        if entry == DEFAULT_ENDPOINT {
+            default = true;
+            continue;
+        }
+        if entry.chars().count() > MAX_ENDPOINT_ID_CHARS
+            || entry.contains('\0')
+            || !entry.starts_with('{')
+        {
+            return Err(Error::new(Status::InvalidArg, "invalid endpoints"));
+        }
+        if !ids.contains(&entry) {
+            ids.push(entry);
+        }
+    }
+    Ok(EndpointSelector::Devices { default, ids })
+}
+
+#[derive(Debug, Clone)]
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 struct LoopbackOptions {
     include_tree: bool,
     capture_scope: CaptureScope,
+    endpoints: EndpointSelector,
 }
 
 #[derive(Debug, Clone)]
@@ -66,6 +107,7 @@ impl Default for LoopbackOptions {
         Self {
             include_tree: true,
             capture_scope: CaptureScope::Process,
+            endpoints: EndpointSelector::All,
         }
     }
 }
@@ -102,9 +144,17 @@ fn validate_options(raw: RawOptions) -> Result<LoopbackOptions> {
         CaptureScope::System | CaptureScope::SessionMixer => false,
         CaptureScope::Process => raw.include_process_tree.unwrap_or(true),
     };
+    let endpoints = parse_endpoints(raw.endpoints)?;
+    if endpoints != EndpointSelector::All && capture_scope != CaptureScope::SessionMixer {
+        return Err(Error::new(
+            Status::InvalidArg,
+            "endpoints require session-mixer scope",
+        ));
+    }
     Ok(LoopbackOptions {
         include_tree,
         capture_scope,
+        endpoints,
     })
 }
 
@@ -114,6 +164,7 @@ struct RawOptions {
     capture_scope: Option<String>,
     sample_rate: Option<u32>,
     channels: Option<u32>,
+    endpoints: Option<Vec<String>>,
 }
 
 fn read_raw_options(env: &Env, value: Unknown) -> Result<RawOptions> {
@@ -128,6 +179,7 @@ fn read_raw_options(env: &Env, value: Unknown) -> Result<RawOptions> {
         capture_scope: object.get("captureScope").ok().flatten(),
         sample_rate: object.get("sampleRate").ok().flatten(),
         channels: object.get("channels").ok().flatten(),
+        endpoints: object.get("endpoints")?,
     })
     .map(|mut opts| {
         let _ = env;
@@ -405,6 +457,11 @@ impl ProcessLoopback {
     pub fn dispose(&self) {
         self.inner.dispose();
     }
+
+    #[napi(js_name = "setEndpoints")]
+    pub fn set_endpoints(&self, endpoints: Vec<String>) -> Result<bool> {
+        self.inner.set_endpoints(endpoints)
+    }
 }
 
 impl Drop for ProcessLoopback {
@@ -611,6 +668,43 @@ pub fn resolve_audio_root_pid(pid: u32) -> u32 {
     platform::resolve_audio_root_pid(pid)
 }
 
+#[napi(object)]
+pub struct PlaybackDeviceSession {
+    pub pid: u32,
+    pub root_pid: u32,
+    pub exe: String,
+    pub state: String,
+    pub excluded: bool,
+}
+
+#[napi(object)]
+pub struct PlaybackDevice {
+    pub id: String,
+    pub name: String,
+    pub is_default: bool,
+    pub sessions: Vec<PlaybackDeviceSession>,
+}
+
+pub struct ListPlaybackDevicesTask;
+
+impl Task for ListPlaybackDevicesTask {
+    type Output = Vec<PlaybackDevice>;
+    type JsValue = Vec<PlaybackDevice>;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        platform::list_playback_devices()
+    }
+
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        Ok(output)
+    }
+}
+
+#[napi(js_name = "listPlaybackDevices")]
+pub fn list_playback_devices() -> AsyncTask<ListPlaybackDevicesTask> {
+    AsyncTask::new(ListPlaybackDevicesTask)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -621,7 +715,94 @@ mod tests {
             capture_scope: scope.map(|s| s.to_string()),
             sample_rate: None,
             channels: None,
+            endpoints: None,
         }
+    }
+
+    fn raw_with_endpoints(scope: &str, endpoints: &[&str]) -> RawOptions {
+        RawOptions {
+            endpoints: Some(endpoints.iter().map(|entry| entry.to_string()).collect()),
+            ..raw_with_scope(Some(scope))
+        }
+    }
+
+    const SPEAKERS_ID: &str = "{0.0.0.00000000}.{6f1e8a2c-0000-4000-8000-000000000001}";
+
+    #[test]
+    fn missing_endpoints_capture_every_device() {
+        let opts = validate_options(raw_with_scope(Some("session-mixer"))).expect("validates");
+        assert_eq!(opts.endpoints, EndpointSelector::All);
+    }
+
+    #[test]
+    fn default_endpoint_is_accepted_with_session_mixer() {
+        let opts = validate_options(raw_with_endpoints("session-mixer", &["default"]))
+            .expect("default endpoint validates");
+        assert_eq!(
+            opts.endpoints,
+            EndpointSelector::Devices {
+                default: true,
+                ids: Vec::new()
+            }
+        );
+    }
+
+    #[test]
+    fn device_ids_and_default_are_accepted_and_deduplicated() {
+        let opts = validate_options(raw_with_endpoints(
+            "session-mixer",
+            &[SPEAKERS_ID, "default", SPEAKERS_ID],
+        ))
+        .expect("device ids validate");
+        assert_eq!(
+            opts.endpoints,
+            EndpointSelector::Devices {
+                default: true,
+                ids: vec![SPEAKERS_ID.to_string()]
+            }
+        );
+    }
+
+    #[test]
+    fn endpoints_require_session_mixer_scope() {
+        for scope in ["system", "process"] {
+            let err = validate_options(raw_with_endpoints(scope, &["default"]))
+                .expect_err("endpoints outside session-mixer should fail");
+            assert_eq!(err.status, Status::InvalidArg);
+            assert_eq!(err.reason, "endpoints require session-mixer scope");
+        }
+    }
+
+    #[test]
+    fn malformed_endpoint_lists_are_rejected() {
+        let too_many: Vec<String> = (0..17).map(|index| format!("{{{index}}}")).collect();
+        let too_long = format!("{{{}", "a".repeat(512));
+        let cases: Vec<Vec<String>> = vec![
+            Vec::new(),
+            too_many,
+            vec!["speakers".to_string()],
+            vec!["{abc\0}".to_string()],
+            vec![too_long],
+        ];
+        for endpoints in cases {
+            let raw = RawOptions {
+                endpoints: Some(endpoints),
+                ..raw_with_scope(Some("session-mixer"))
+            };
+            let err = validate_options(raw).expect_err("malformed endpoints should fail");
+            assert_eq!(err.status, Status::InvalidArg);
+            assert_eq!(err.reason, "invalid endpoints");
+        }
+    }
+
+    #[test]
+    fn endpoint_id_at_the_length_limit_is_accepted() {
+        let at_limit = format!("{{{}", "a".repeat(511));
+        let raw = RawOptions {
+            endpoints: Some(vec![at_limit]),
+            ..raw_with_scope(Some("session-mixer"))
+        };
+        validate_options(raw).expect("512-char id validates");
     }
 
     #[test]
@@ -829,6 +1010,7 @@ mod tests {
             capture_scope: Some("process".to_string()),
             sample_rate: Some(48_000),
             channels: Some(2),
+            endpoints: None,
         };
         validate_options(raw).expect("canonical 48k stereo should validate");
     }
@@ -882,15 +1064,15 @@ mod tests {
 #[cfg(target_os = "windows")]
 mod platform {
     use super::{
-        Callbacks, CaptureScope, FRAME_QUEUE_LIMIT, FramePayload, FrameSamples, LoopbackOptions,
-        ProcessLoopbackRuntimeProbe,
+        Callbacks, CaptureScope, EndpointSelector, FRAME_QUEUE_LIMIT, FramePayload, FrameSamples,
+        LoopbackOptions, PlaybackDevice, PlaybackDeviceSession, ProcessLoopbackRuntimeProbe,
+        parse_endpoints,
     };
     use crate::pcm_pool::{PCM_SLOT_SAMPLES_MAX, PcmFramePool, PcmPoolError, PooledPcmFrame};
     use crate::{audio_contract, process_tree, session_mixer};
     use fluxer_rt_thread::{PriorityProfile, RealtimePriorityGuard};
     use napi::bindgen_prelude::{Error, Result, Status};
     use std::{
-        collections::BTreeSet,
         ffi::c_void,
         mem::{ManuallyDrop, size_of, zeroed},
         sync::{
@@ -900,6 +1082,7 @@ mod platform {
         thread::{self, JoinHandle},
         time::{Duration, Instant},
     };
+    use windows::Win32::Devices::FunctionDiscovery::PKEY_Device_FriendlyName;
     use windows::Win32::Foundation::{
         CloseHandle, HANDLE, HWND, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
     };
@@ -909,13 +1092,14 @@ mod platform {
         AUDCLNT_STREAMFLAGS_LOOPBACK, AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
         AUDIOCLIENT_ACTIVATION_PARAMS, AUDIOCLIENT_ACTIVATION_PARAMS_0,
         AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK, AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS,
-        ActivateAudioInterfaceAsync, AudioSessionStateExpired, DEVICE_STATE_ACTIVE,
-        IActivateAudioInterfaceAsyncOperation, IActivateAudioInterfaceCompletionHandler,
-        IActivateAudioInterfaceCompletionHandler_Impl, IAudioCaptureClient, IAudioClient,
-        IAudioSessionControl, IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator,
-        MMDeviceEnumerator, PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
+        ActivateAudioInterfaceAsync, AudioSessionStateActive, AudioSessionStateExpired,
+        AudioSessionStateInactive, DEVICE_STATE_ACTIVE, IActivateAudioInterfaceAsyncOperation,
+        IActivateAudioInterfaceCompletionHandler, IActivateAudioInterfaceCompletionHandler_Impl,
+        IAudioCaptureClient, IAudioClient, IAudioSessionControl, IAudioSessionControl2,
+        IAudioSessionManager2, IMMDevice, IMMDeviceEnumerator, IMMEndpoint, MMDeviceEnumerator,
+        PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
         PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE, WAVE_FORMAT_PCM, WAVEFORMATEX,
-        WAVEFORMATEXTENSIBLE, WAVEFORMATEXTENSIBLE_0, eRender,
+        WAVEFORMATEXTENSIBLE, WAVEFORMATEXTENSIBLE_0, eConsole, eRender,
     };
     use windows::Win32::Media::KernelStreaming::WAVE_FORMAT_EXTENSIBLE;
     use windows::Win32::Media::Multimedia::KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
@@ -923,11 +1107,12 @@ mod platform {
         GetFileVersionInfoSizeW, GetFileVersionInfoW, VS_FIXEDFILEINFO, VerQueryValueW,
     };
     use windows::Win32::System::Com::StructuredStorage::{
-        PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0,
+        PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0, PropVariantClear,
+        PropVariantToStringAlloc,
     };
     use windows::Win32::System::Com::{
-        BLOB, CLSCTX_ALL, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoUninitialize,
-        IAgileObject, IAgileObject_Impl,
+        BLOB, CLSCTX_ALL, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoTaskMemFree,
+        CoUninitialize, IAgileObject, IAgileObject_Impl, STGM_READ,
     };
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
@@ -938,7 +1123,7 @@ mod platform {
     };
     use windows::Win32::System::Variant::VT_BLOB;
     use windows::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId;
-    use windows::core::{Interface, PCWSTR, implement};
+    use windows::core::{Interface, PCWSTR, PWSTR, implement};
 
     const PROCESS_LOOPBACK_DEVICE: &[u16] = &[
         b'V' as u16,
@@ -980,10 +1165,11 @@ mod platform {
     const BACKSLASH_UTF16: &[u16] = &[b'\\' as u16, 0];
     const PROCESS_LOOPBACK_PROBE_TIMEOUT_MS: u32 = 1_500;
     const PROCESS_LOOPBACK_PROBE_COUNT: u64 = 2;
-    const SESSION_MIXER_REFRESH_INTERVAL: Duration = Duration::from_millis(1_000);
-    const SESSION_MIXER_WAIT_TIMEOUT_MS: u32 = 250;
+    const SESSION_MIXER_REFRESH_INTERVAL: Duration = Duration::from_millis(500);
+    const SESSION_MIXER_WAIT_TIMEOUT_MS: u32 = 10;
+    const SESSION_MIXER_HOLD_US: i64 = 40_000;
     const MAX_SESSION_MIXER_CAPTURES: usize = 48;
-    const MAX_SESSION_MIXER_EMIT_FRAMES: usize = audio_contract::TARGET_SAMPLE_RATE as usize / 2;
+    const PLAYBACK_DEVICE_LISTING_TIMEOUT: Duration = Duration::from_secs(3);
     const PROCESS_LOOPBACK_ACTIVATION_ATTEMPTS: usize = 3;
 
     struct OwnedHandle(HANDLE);
@@ -1048,6 +1234,14 @@ mod platform {
         worker: Mutex<WorkerState>,
         stop_signal: Arc<AtomicBool>,
         disposed: AtomicBool,
+        endpoints: Arc<Mutex<EndpointSelector>>,
+        endpoints_dirty: Arc<AtomicBool>,
+    }
+
+    fn lock_endpoints(endpoints: &Mutex<EndpointSelector>) -> MutexGuard<'_, EndpointSelector> {
+        endpoints
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     impl Inner {
@@ -1066,9 +1260,12 @@ mod platform {
                     "ProcessLoopback refuses to capture Fluxer's own process tree",
                 ));
             }
+            let endpoints = Arc::new(Mutex::new(options.endpoints.clone()));
             Ok(Self {
                 pid,
                 options,
+                endpoints,
+                endpoints_dirty: Arc::new(AtomicBool::new(false)),
                 callbacks: Arc::new(callbacks),
                 worker: Mutex::new(WorkerState {
                     worker: None,
@@ -1109,6 +1306,8 @@ mod platform {
             let stop_signal = self.stop_signal.clone();
             let stop_event_for_thread = stop_event.clone();
             let callbacks = self.callbacks.clone();
+            let endpoints = self.endpoints.clone();
+            let endpoints_dirty = self.endpoints_dirty.clone();
 
             let join = match thread::Builder::new()
                 .name("fluxer-win-process-loopback".to_string())
@@ -1120,6 +1319,10 @@ mod platform {
                         &callbacks,
                         stop_event_for_thread.raw(),
                         stop_signal.as_ref(),
+                        SessionMixerEndpoints {
+                            selector: endpoints.as_ref(),
+                            dirty: endpoints_dirty.as_ref(),
+                        },
                     );
                     if let Err(message) = result {
                         callbacks.emit_error(message);
@@ -1162,6 +1365,22 @@ mod platform {
             }
             self.stop();
         }
+
+        pub(crate) fn set_endpoints(&self, endpoints: Vec<String>) -> Result<bool> {
+            if self.options.capture_scope != CaptureScope::SessionMixer {
+                return Ok(false);
+            }
+            let selector = parse_endpoints(Some(endpoints))?;
+            *lock_endpoints(&self.endpoints) = selector;
+            self.endpoints_dirty.store(true, Ordering::SeqCst);
+            Ok(true)
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    struct SessionMixerEndpoints<'a> {
+        selector: &'a Mutex<EndpointSelector>,
+        dirty: &'a AtomicBool,
     }
 
     fn generic(message: impl Into<String>) -> Error {
@@ -1388,11 +1607,12 @@ mod platform {
         callbacks: &Callbacks,
         stop_event: HANDLE,
         stop_signal: &AtomicBool,
+        endpoints: SessionMixerEndpoints<'_>,
     ) -> std::result::Result<(), String> {
         let _com = ComApartment::initialize().map_err(|err| err.reason.to_string())?;
         let _rt_guard = RealtimePriorityGuard::acquire(PriorityProfile::Audio).ok();
         if capture_scope == CaptureScope::SessionMixer {
-            return session_mixer_capture_thread(callbacks, stop_event, stop_signal);
+            return session_mixer_capture_thread(callbacks, stop_event, stop_signal, endpoints);
         }
 
         let client = match activate_loopback_client(pid, include_tree, capture_scope, stop_event) {
@@ -1626,25 +1846,49 @@ mod platform {
         callbacks: &Callbacks,
         stop_event: HANDLE,
         stop_signal: &AtomicBool,
+        endpoints: SessionMixerEndpoints<'_>,
     ) -> std::result::Result<(), String> {
+        let enumerator = create_device_enumerator().map_err(|err| err.reason.to_string())?;
+        let sample_rate = audio_contract::TARGET_SAMPLE_RATE;
+        let channels = usize::from(audio_contract::TARGET_CHANNELS);
         let mut captures: Vec<SessionCapture> = Vec::new();
-        refresh_session_mixer_captures(&mut captures, stop_event)?;
+        let mut activity = session_mixer::SessionActivity::default();
+        endpoints.dirty.store(false, Ordering::SeqCst);
+        let selector = lock_endpoints(endpoints.selector).clone();
+        refresh_session_mixer_captures(
+            &mut captures,
+            &mut activity,
+            &enumerator,
+            &selector,
+            stop_event,
+        )
+        .map_err(|err| err.reason.to_string())?;
         callbacks.emit_started();
         let mut handles: Vec<HANDLE> = Vec::with_capacity(MAX_SESSION_MIXER_CAPTURES + 1);
         rebuild_session_mixer_handles(&mut handles, &captures, stop_event);
         let mut packets: Vec<CapturedPacket> = Vec::new();
+        let mut timeline = session_mixer::MixTimeline::default();
         let mut last_refresh = Instant::now();
         while !stop_signal.load(Ordering::SeqCst) {
-            if last_refresh.elapsed() >= SESSION_MIXER_REFRESH_INTERVAL {
-                refresh_session_mixer_captures(&mut captures, stop_event)?;
+            let endpoints_changed = endpoints.dirty.swap(false, Ordering::SeqCst);
+            if endpoints_changed || last_refresh.elapsed() >= SESSION_MIXER_REFRESH_INTERVAL {
+                if endpoints_changed {
+                    activity.clear();
+                }
+                let selector = lock_endpoints(endpoints.selector).clone();
+                refresh_session_mixer_captures(
+                    &mut captures,
+                    &mut activity,
+                    &enumerator,
+                    &selector,
+                    stop_event,
+                )
+                .map_err(|err| err.reason.to_string())?;
                 rebuild_session_mixer_handles(&mut handles, &captures, stop_event);
                 last_refresh = Instant::now();
             }
             let wait =
                 unsafe { WaitForMultipleObjects(&handles, false, SESSION_MIXER_WAIT_TIMEOUT_MS) };
-            if wait == WAIT_TIMEOUT {
-                continue;
-            }
             if wait.0 == u32::MAX {
                 return Err("WaitForMultipleObjects failed in session mixer".to_string());
             }
@@ -1655,7 +1899,20 @@ mod platform {
             for capture in &captures {
                 drain_packets_into(&capture.capture, capture.sample_format, &mut packets)?;
             }
-            packets = emit_mixed_packets(std::mem::take(&mut packets), callbacks);
+            for packet in packets.drain(..) {
+                timeline.push(packet, sample_rate, channels);
+            }
+            if let Some(mixed) = timeline.drain_ready(
+                current_performance_timestamp_us(),
+                SESSION_MIXER_HOLD_US,
+                sample_rate,
+                channels,
+            ) {
+                callbacks.emit_frame(FramePayload {
+                    samples: FrameSamples::Owned(mixed.samples),
+                    timestamp_us: mixed.timestamp_us,
+                });
+            }
         }
         for capture in &captures {
             capture.stop();
@@ -1679,10 +1936,14 @@ mod platform {
 
     fn refresh_session_mixer_captures(
         captures: &mut Vec<SessionCapture>,
+        activity: &mut session_mixer::SessionActivity,
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
         stop_event: HANDLE,
-    ) -> std::result::Result<(), String> {
-        let desired =
-            enumerate_shareable_audio_session_pids().map_err(|err| err.reason.to_string())?;
+    ) -> Result<()> {
+        let Some(desired) = session_mixer_capture_pids(enumerator, selector, activity)? else {
+            return Ok(());
+        };
         captures.retain(|capture| {
             let keep = desired.contains(&capture.pid);
             if !keep {
@@ -1705,27 +1966,158 @@ mod platform {
         Ok(())
     }
 
-    fn enumerate_shareable_audio_session_pids() -> std::result::Result<Vec<u32>, Error> {
-        let enumerator: IMMDeviceEnumerator = unsafe {
+    fn session_mixer_capture_pids(
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
+        activity: &mut session_mixer::SessionActivity,
+    ) -> Result<Option<Vec<u32>>> {
+        let devices = resolve_render_endpoints(enumerator, selector)?;
+        let Some(processes) = snapshot_processes_with_exe() else {
+            return Ok(None);
+        };
+        let process_entries = process_entries_from(&processes);
+        let self_pid = unsafe { GetCurrentProcessId() };
+        let sessions = collect_render_sessions(&devices, &processes, &process_entries, self_pid);
+        let candidates: Vec<session_mixer::SessionCandidate> = sessions
+            .iter()
+            .filter(|session| !session.excluded)
+            .map(|session| session_mixer::SessionCandidate {
+                root_pid: session.root_pid,
+                active: session.active,
+            })
+            .collect();
+        let mut excluded: Vec<u32> = sessions
+            .iter()
+            .filter(|session| session.excluded)
+            .map(|session| session.root_pid)
+            .collect();
+        excluded.sort_unstable();
+        excluded.dedup();
+        let selected = activity.select(&candidates, current_performance_timestamp_us());
+        Ok(Some(
+            process_tree::deduplicate_capture_roots(&process_entries, &selected, &excluded)
+                .into_iter()
+                .take(MAX_SESSION_MIXER_CAPTURES)
+                .collect(),
+        ))
+    }
+
+    fn create_device_enumerator() -> Result<IMMDeviceEnumerator> {
+        unsafe {
             CoCreateInstance(
                 &MMDeviceEnumerator,
                 None::<&windows::core::IUnknown>,
                 CLSCTX_ALL,
             )
         }
-        .map_err(|err| hresult_error("CoCreateInstance(MMDeviceEnumerator)", err.code().0))?;
-        let devices = unsafe { enumerator.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE) }
+        .map_err(|err| hresult_error("CoCreateInstance(MMDeviceEnumerator)", err.code().0))
+    }
+
+    fn active_render_devices(enumerator: &IMMDeviceEnumerator) -> Result<Vec<IMMDevice>> {
+        let collection = unsafe { enumerator.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE) }
             .map_err(|err| hresult_error("EnumAudioEndpoints", err.code().0))?;
-        let device_count = unsafe { devices.GetCount() }
+        let count = unsafe { collection.GetCount() }
             .map_err(|err| hresult_error("IMMDeviceCollection::GetCount", err.code().0))?;
-        let process_entries = snapshot_process_entries().unwrap_or_default();
-        let self_pid = unsafe { GetCurrentProcessId() };
-        let mut pids = BTreeSet::new();
-        let mut excluded_pids = BTreeSet::new();
-        for device_index in 0..device_count {
-            let Ok(device) = (unsafe { devices.Item(device_index) }) else {
+        Ok((0..count)
+            .filter_map(|index| unsafe { collection.Item(index) }.ok())
+            .collect())
+    }
+
+    fn default_render_device(enumerator: &IMMDeviceEnumerator) -> Option<IMMDevice> {
+        unsafe { enumerator.GetDefaultAudioEndpoint(eRender, eConsole) }.ok()
+    }
+
+    fn take_co_task_string(value: PWSTR) -> Option<String> {
+        if value.is_null() {
+            return None;
+        }
+        let text = unsafe { value.to_string() }.ok();
+        unsafe {
+            CoTaskMemFree(Some(value.0 as *const c_void));
+        }
+        text
+    }
+
+    fn device_id(device: &IMMDevice) -> Option<String> {
+        take_co_task_string(unsafe { device.GetId() }.ok()?)
+    }
+
+    fn device_friendly_name(device: &IMMDevice) -> Option<String> {
+        let store = unsafe { device.OpenPropertyStore(STGM_READ) }.ok()?;
+        let mut value = unsafe { store.GetValue(&PKEY_Device_FriendlyName) }.ok()?;
+        let text = unsafe { PropVariantToStringAlloc(&value) };
+        unsafe {
+            let _ = PropVariantClear(&mut value);
+        }
+        take_co_task_string(text.ok()?)
+    }
+
+    fn push_unique_device(devices: &mut Vec<IMMDevice>, seen: &mut Vec<String>, device: IMMDevice) {
+        let Some(id) = device_id(&device) else {
+            return;
+        };
+        if seen.contains(&id) {
+            return;
+        }
+        seen.push(id);
+        devices.push(device);
+    }
+
+    fn is_render_device(device: &IMMDevice) -> bool {
+        device
+            .cast::<IMMEndpoint>()
+            .and_then(|endpoint| unsafe { endpoint.GetDataFlow() })
+            .is_ok_and(|flow| flow == eRender)
+    }
+
+    fn resolve_render_endpoints(
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
+    ) -> Result<Vec<IMMDevice>> {
+        let (include_default, ids) = match selector {
+            EndpointSelector::All => return active_render_devices(enumerator),
+            EndpointSelector::Devices { default, ids } => (*default, ids),
+        };
+        let mut devices = Vec::new();
+        let mut seen = Vec::new();
+        if include_default && let Some(device) = default_render_device(enumerator) {
+            push_unique_device(&mut devices, &mut seen, device);
+        }
+        for id in ids {
+            let wide: Vec<u16> = id.encode_utf16().chain(std::iter::once(0)).collect();
+            let Ok(device) = (unsafe { enumerator.GetDevice(PCWSTR(wide.as_ptr())) }) else {
                 continue;
             };
+            if !matches!(unsafe { device.GetState() }, Ok(state) if state == DEVICE_STATE_ACTIVE)
+                || !is_render_device(&device)
+            {
+                continue;
+            }
+            push_unique_device(&mut devices, &mut seen, device);
+        }
+        if devices.is_empty()
+            && let Some(device) = default_render_device(enumerator)
+        {
+            devices.push(device);
+        }
+        Ok(devices)
+    }
+
+    struct RenderSession {
+        pid: u32,
+        root_pid: u32,
+        active: bool,
+        excluded: bool,
+    }
+
+    fn collect_render_sessions(
+        devices: &[IMMDevice],
+        processes: &[ResolveEntry],
+        process_entries: &[process_tree::ProcessEntry],
+        self_pid: u32,
+    ) -> Vec<RenderSession> {
+        let mut out = Vec::new();
+        for device in devices {
             let Ok(manager) =
                 (unsafe { device.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None) })
             else {
@@ -1743,10 +2135,11 @@ mod platform {
                 else {
                     continue;
                 };
-                if matches!(unsafe { session.GetState() }, Ok(state) if state == AudioSessionStateExpired)
-                {
+                let state = unsafe { session.GetState() }.unwrap_or(AudioSessionStateInactive);
+                if state == AudioSessionStateExpired {
                     continue;
                 }
+                let active = state == AudioSessionStateActive;
                 let Ok(session2) = session.cast::<IAudioSessionControl2>() else {
                     continue;
                 };
@@ -1756,33 +2149,89 @@ mod platform {
                 let Ok(pid) = (unsafe { session2.GetProcessId() }) else {
                     continue;
                 };
-                if pid == 0 {
+                if pid == 0 || !processes.iter().any(|entry| entry.pid == pid) {
                     continue;
                 }
-                if process_tree::pid_overlaps_our_process_tree(&process_entries, pid, self_pid) {
-                    excluded_pids.insert(pid);
+                if process_tree::pid_overlaps_our_process_tree(process_entries, pid, self_pid) {
+                    out.push(RenderSession {
+                        pid,
+                        root_pid: pid,
+                        active,
+                        excluded: true,
+                    });
                     continue;
                 }
-                let root_pid = resolve_audio_root_pid(pid);
+                let root_pid = resolve_audio_root_pid_in(processes, pid, self_pid);
                 if root_pid == 0 {
                     continue;
                 }
-                if process_tree::pid_overlaps_our_process_tree(&process_entries, root_pid, self_pid)
-                {
-                    excluded_pids.insert(root_pid);
-                    continue;
-                }
-                pids.insert(root_pid);
+                out.push(RenderSession {
+                    pid,
+                    root_pid,
+                    active,
+                    excluded: process_tree::pid_overlaps_our_process_tree(
+                        process_entries,
+                        root_pid,
+                        self_pid,
+                    ),
+                });
             }
         }
-        let capture_pids = pids.into_iter().collect::<Vec<_>>();
-        let exclude_pids = excluded_pids.into_iter().collect::<Vec<_>>();
-        Ok(
-            process_tree::deduplicate_capture_roots(&process_entries, &capture_pids, &exclude_pids)
-                .into_iter()
-                .take(MAX_SESSION_MIXER_CAPTURES)
-                .collect(),
-        )
+        out
+    }
+
+    pub(crate) fn list_playback_devices() -> Result<Vec<PlaybackDevice>> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        thread::Builder::new()
+            .name("fluxer-win-loopback-devices".to_owned())
+            .spawn(move || {
+                let _ = tx.send(list_playback_devices_on_thread());
+            })
+            .map_err(|err| generic(format!("failed to spawn playback device listing: {err}")))?;
+        rx.recv_timeout(PLAYBACK_DEVICE_LISTING_TIMEOUT)
+            .map_err(|_| generic("playback device listing timed out"))?
+    }
+
+    fn list_playback_devices_on_thread() -> Result<Vec<PlaybackDevice>> {
+        let _com = ComApartment::initialize()?;
+        let enumerator = create_device_enumerator()?;
+        let default_id = default_render_device(&enumerator).and_then(|device| device_id(&device));
+        let processes =
+            snapshot_processes_with_exe().ok_or_else(|| generic("process snapshot failed"))?;
+        let process_entries = process_entries_from(&processes);
+        let self_pid = unsafe { GetCurrentProcessId() };
+        let mut out = Vec::new();
+        for device in active_render_devices(&enumerator)? {
+            let Some(id) = device_id(&device) else {
+                continue;
+            };
+            let sessions = collect_render_sessions(
+                std::slice::from_ref(&device),
+                &processes,
+                &process_entries,
+                self_pid,
+            )
+            .into_iter()
+            .map(|session| PlaybackDeviceSession {
+                pid: session.pid,
+                root_pid: session.root_pid,
+                exe: processes
+                    .iter()
+                    .find(|entry| entry.pid == session.pid)
+                    .map(|entry| entry.exe.clone())
+                    .unwrap_or_default(),
+                state: if session.active { "active" } else { "inactive" }.to_owned(),
+                excluded: session.excluded,
+            })
+            .collect();
+            out.push(PlaybackDevice {
+                is_default: default_id.as_deref() == Some(id.as_str()),
+                name: device_friendly_name(&device).unwrap_or_default(),
+                id,
+                sessions,
+            });
+        }
+        Ok(out)
     }
 
     fn drain_packets_into(
@@ -1843,25 +2292,6 @@ mod platform {
             }
             release_result?;
         }
-    }
-
-    fn emit_mixed_packets(
-        packets: Vec<CapturedPacket>,
-        callbacks: &Callbacks,
-    ) -> Vec<CapturedPacket> {
-        let mut mixed = session_mixer::mix_packets(
-            packets,
-            audio_contract::TARGET_CHANNELS,
-            audio_contract::TARGET_SAMPLE_RATE,
-            MAX_SESSION_MIXER_EMIT_FRAMES,
-        );
-        for packet in mixed.drain(..) {
-            callbacks.emit_frame(FramePayload {
-                samples: FrameSamples::Owned(packet.samples),
-                timestamp_us: packet.timestamp_us,
-            });
-        }
-        mixed
     }
 
     fn pump_capture_loop(
@@ -2188,7 +2618,12 @@ mod platform {
     }
 
     pub(crate) fn resolve_audio_root_pid(pid: u32) -> u32 {
-        resolve_audio_root_pid_impl(pid).unwrap_or(pid)
+        match snapshot_processes_with_exe() {
+            Some(entries) => {
+                resolve_audio_root_pid_in(&entries, pid, unsafe { GetCurrentProcessId() })
+            }
+            None => pid,
+        }
     }
 
     struct ResolveEntry {
@@ -2197,9 +2632,7 @@ mod platform {
         exe: String,
     }
 
-    fn resolve_audio_root_pid_impl(start_pid: u32) -> Option<u32> {
-        let entries = snapshot_processes_with_exe()?;
-        let self_pid = unsafe { GetCurrentProcessId() };
+    fn resolve_audio_root_pid_in(entries: &[ResolveEntry], start_pid: u32, self_pid: u32) -> u32 {
         let mut current = start_pid;
         let mut last_browserlike: u32 = if start_pid == self_pid { 0 } else { start_pid };
         for _ in 0..16 {
@@ -2215,7 +2648,7 @@ mod platform {
             current = entry.parent;
         }
         if last_browserlike == 0 || last_browserlike == self_pid {
-            return Some(start_pid);
+            return start_pid;
         }
 
         let mut self_walk = self_pid;
@@ -2224,14 +2657,14 @@ mod platform {
                 break;
             };
             if self_walk == last_browserlike {
-                return Some(start_pid);
+                return start_pid;
             }
             if entry.parent == 0 || entry.parent == self_walk {
                 break;
             }
             self_walk = entry.parent;
         }
-        Some(last_browserlike)
+        last_browserlike
     }
 
     fn is_browser_like(exe: &str) -> bool {
@@ -2266,6 +2699,16 @@ mod platform {
             }
         }
         Some(entries)
+    }
+
+    fn process_entries_from(processes: &[ResolveEntry]) -> Vec<process_tree::ProcessEntry> {
+        processes
+            .iter()
+            .map(|entry| process_tree::ProcessEntry {
+                pid: entry.pid,
+                parent: entry.parent,
+            })
+            .collect()
     }
 
     fn snapshot_process_entries() -> Option<Vec<process_tree::ProcessEntry>> {
@@ -2346,7 +2789,7 @@ mod platform {
 
 #[cfg(not(target_os = "windows"))]
 mod platform {
-    use super::{Callbacks, LoopbackOptions, ProcessLoopbackRuntimeProbe};
+    use super::{Callbacks, LoopbackOptions, PlaybackDevice, ProcessLoopbackRuntimeProbe};
     use napi::bindgen_prelude::{Error, Result, Status};
 
     pub(crate) struct Inner;
@@ -2373,6 +2816,14 @@ mod platform {
         pub(crate) fn stop(&self) {}
 
         pub(crate) fn dispose(&self) {}
+
+        pub(crate) fn set_endpoints(&self, _endpoints: Vec<String>) -> Result<bool> {
+            Ok(false)
+        }
+    }
+
+    pub(crate) fn list_playback_devices() -> Result<Vec<PlaybackDevice>> {
+        Ok(Vec::new())
     }
 
     pub(crate) fn is_supported() -> bool {

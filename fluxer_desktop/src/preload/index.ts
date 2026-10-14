@@ -36,6 +36,7 @@ import type {
 	NativeAudioAvailability,
 	NativeAudioEndMessage,
 	NativeAudioFrameMessage,
+	NativeAudioPlaybackDevice,
 	NativeAudioStartOptions,
 	NativeAudioStartResult,
 	NativeScreenCaptureLifecycleEventKind,
@@ -779,6 +780,10 @@ const api: ElectronAPI = {
 			ipcRenderer.invoke('native-audio:start', options),
 		setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean> =>
 			ipcRenderer.invoke('native-audio:set-rule', captureId, linuxRule),
+		listPlaybackDevices: (): Promise<Array<NativeAudioPlaybackDevice>> =>
+			ipcRenderer.invoke('native-audio:list-playback-devices'),
+		setWinEndpoints: (captureId: string, endpoints: Array<string>): Promise<boolean> =>
+			ipcRenderer.invoke('native-audio:set-win-endpoints', captureId, endpoints),
 		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-audio:stop', captureId),
 		onFrame: (callback: (message: NativeAudioFrameMessage) => void): (() => void) => {
 			const handler = (_event: Electron.IpcRendererEvent, message: NativeAudioFrameMessage): void => {

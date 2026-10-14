@@ -57,6 +57,10 @@ export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
 const DEFAULT_SCREEN_SHARE_CONTENT_HINT: ScreenShareContentHint = 'text';
 const DEFAULT_SCREEN_SHARE_ENCODER_MODE: ScreenShareEncoderMode = 'auto';
 const DEFAULT_SCREEN_SHARE_SCALABILITY_MODE: ScreenShareScalabilityModePreference = 'auto';
+export const WINDOWS_DEFAULT_PLAYBACK_DEVICE = 'default';
+const DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES: ReadonlyArray<string> = [WINDOWS_DEFAULT_PLAYBACK_DEVICE];
+export const MAX_WINDOWS_DESKTOP_AUDIO_DEVICES = 16;
+const MAX_WINDOWS_DESKTOP_AUDIO_DEVICE_ID_LENGTH = 512;
 
 export type VoiceSettingsUpdate = Partial<{
 	inputDeviceId: string;
@@ -80,6 +84,8 @@ export type VoiceSettingsUpdate = Partial<{
 	shareDesktopAudio: boolean;
 	shareDeviceAudio: boolean;
 	screenShareAudioDeviceId: string;
+	windowsDesktopAudioAll: boolean;
+	windowsDesktopAudioDevices: Array<string>;
 	backgroundImageId: string;
 	backgroundImages: Array<BackgroundImage>;
 	backgroundBlurStrength: number;
@@ -440,6 +446,8 @@ class VoiceSettings {
 	shareDesktopAudio = true;
 	shareDeviceAudio = true;
 	screenShareAudioDeviceId = 'default';
+	windowsDesktopAudioAll = false;
+	windowsDesktopAudioDevices: Array<string> = [...DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES];
 	screenShareAudioConsentMigratedV1 = false;
 	screenShareAudioDefaultOnMigratedV1 = false;
 	outputVolumeRecalibratedV1 = false;
@@ -511,6 +519,8 @@ class VoiceSettings {
 				getShareDeviceAudio: false,
 				getScreenShareAudioDeviceId: false,
 				getEffectiveScreenShareAudioDeviceId: false,
+				getWindowsDesktopAudioAll: false,
+				getWindowsDesktopAudioDevices: false,
 				getBackgroundImageId: false,
 				getBackgroundImages: false,
 				getBackgroundBlurStrength: false,
@@ -614,6 +624,8 @@ class VoiceSettings {
 				'shareDesktopAudio',
 				'shareDeviceAudio',
 				'screenShareAudioDeviceId',
+				'windowsDesktopAudioAll',
+				'windowsDesktopAudioDevices',
 				'screenShareAudioConsentMigratedV1',
 				'screenShareAudioDefaultOnMigratedV1',
 				'outputVolumeRecalibratedV1',
@@ -827,6 +839,14 @@ class VoiceSettings {
 		return this.screenShareAudioDeviceId;
 	}
 
+	getWindowsDesktopAudioAll(): boolean {
+		return this.windowsDesktopAudioAll === true;
+	}
+
+	getWindowsDesktopAudioDevices(): Array<string> {
+		return validateWindowsDesktopAudioDevices(this.windowsDesktopAudioDevices);
+	}
+
 	getEffectiveScreenShareAudioDeviceId(): string {
 		if (this.screenShareAudioDeviceId && this.screenShareAudioDeviceId !== 'default') {
 			return this.screenShareAudioDeviceId;
@@ -993,6 +1013,9 @@ class VoiceSettings {
 		if (validated.shareDeviceAudio !== undefined) this.shareDeviceAudio = validated.shareDeviceAudio;
 		if (validated.screenShareAudioDeviceId !== undefined)
 			this.screenShareAudioDeviceId = validated.screenShareAudioDeviceId;
+		if (validated.windowsDesktopAudioAll !== undefined) this.windowsDesktopAudioAll = validated.windowsDesktopAudioAll;
+		if (validated.windowsDesktopAudioDevices !== undefined)
+			this.windowsDesktopAudioDevices = validated.windowsDesktopAudioDevices;
 		if (validated.backgroundImageId !== undefined) this.backgroundImageId = validated.backgroundImageId;
 		if (validated.backgroundImages !== undefined) this.backgroundImages = validated.backgroundImages;
 		if (validated.backgroundBlurStrength !== undefined) this.backgroundBlurStrength = validated.backgroundBlurStrength;
@@ -1117,6 +1140,11 @@ class VoiceSettings {
 			shareDesktopAudio: data.shareDesktopAudio ?? this.shareDesktopAudio,
 			shareDeviceAudio: data.shareDeviceAudio ?? this.shareDeviceAudio,
 			screenShareAudioDeviceId: data.screenShareAudioDeviceId ?? this.screenShareAudioDeviceId,
+			windowsDesktopAudioAll:
+				data.windowsDesktopAudioAll === undefined ? this.windowsDesktopAudioAll : data.windowsDesktopAudioAll === true,
+			windowsDesktopAudioDevices: validateWindowsDesktopAudioDevices(
+				data.windowsDesktopAudioDevices ?? this.windowsDesktopAudioDevices,
+			),
 			backgroundImageId,
 			backgroundImages,
 			backgroundBlurStrength: clampCameraEffectStrength(data.backgroundBlurStrength ?? this.backgroundBlurStrength),
@@ -1220,6 +1248,23 @@ function validateStreamingMode(mode: unknown): StreamingMode {
 
 function validateAudioSourceMode(mode: unknown): 'none' | 'system' | 'specific' {
 	return mode === 'none' || mode === 'system' || mode === 'specific' ? mode : 'system';
+}
+
+function isValidWindowsDesktopAudioDevice(entry: unknown): entry is string {
+	if (entry === WINDOWS_DEFAULT_PLAYBACK_DEVICE) return true;
+	return (
+		typeof entry === 'string' &&
+		entry.length <= MAX_WINDOWS_DESKTOP_AUDIO_DEVICE_ID_LENGTH &&
+		entry.startsWith('{') &&
+		!entry.includes('\0')
+	);
+}
+
+function validateWindowsDesktopAudioDevices(value: unknown): Array<string> {
+	const devices = Array.isArray(value)
+		? [...new Set(value.filter(isValidWindowsDesktopAudioDevice))].slice(0, MAX_WINDOWS_DESKTOP_AUDIO_DEVICES)
+		: [];
+	return devices.length > 0 ? devices : [...DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES];
 }
 
 function validateSourceList(value: unknown): Array<Record<string, string>> | undefined {

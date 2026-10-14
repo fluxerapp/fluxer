@@ -11546,6 +11546,10 @@ msgstr "Domyślne ustawienia powiadomień"
 msgid "Default notifications"
 msgstr "Domyślne powiadomienia"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Default output device"
+msgstr "Domyślne urządzenie wyjściowe"
+
 #. Label of the forum setting that picks the reaction button shown on every post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Default reaction"
@@ -12219,6 +12223,10 @@ msgstr "Tylko dźwięk z urządzenia"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Device details"
 msgstr "Szczegóły urządzenia"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Device not connected"
+msgstr "Urządzenie nie jest podłączone"
 
 #. Toast shown after a saved login session was signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
@@ -14376,6 +14384,7 @@ msgid "Entire system"
 msgstr "Cały system"
 
 #: src/features/voice/components/AudioSourcePickerLinux.tsx
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Entire system audio"
 msgstr "Dźwięk z całego systemu"
 
@@ -15601,6 +15610,10 @@ msgstr "Obserwuję"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx
 msgid "Following master • {effectiveValue}"
 msgstr "Jak głośność główna • {effectiveValue}"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Follows your Windows sound settings"
+msgstr "Zgodnie z ustawieniami dźwięku systemu Windows"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -20521,6 +20534,10 @@ msgstr "Maksymalna ochrona dla przestrzeni przyjaznych rodzinie"
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "Może powodować problemy z kompatybilnością u widzów. Pracujemy nad poprawą tej funkcji."
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "May include call audio from mixer apps"
+msgstr "Może zawierać dźwięk rozmowy z aplikacji miksujących"
+
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
@@ -25308,6 +25325,11 @@ msgstr "Odtwórz."
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Playback"
 msgstr "Odtwarzanie"
+
+#. Submenu label in the stream settings menu of a Windows screen share. Picks which playback devices the shared desktop audio comes from.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Playback devices"
+msgstr "Urządzenia odtwarzania"
 
 #. Section / menu header above the playback rate options in the media player.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

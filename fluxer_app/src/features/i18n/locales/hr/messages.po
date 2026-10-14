@@ -11546,6 +11546,10 @@ msgstr "Zadane postavke obavijesti"
 msgid "Default notifications"
 msgstr "Zadane obavijesti"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Default output device"
+msgstr "Zadani izlazni uređaj"
+
 #. Label of the forum setting that picks the reaction button shown on every post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Default reaction"
@@ -12219,6 +12223,10 @@ msgstr "Samo zvuk uređaja"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Device details"
 msgstr "Detalji uređaja"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Device not connected"
+msgstr "Uređaj nije povezan"
 
 #. Toast shown after a saved login session was signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
@@ -14376,6 +14384,7 @@ msgid "Entire system"
 msgstr "Cijeli sustav"
 
 #: src/features/voice/components/AudioSourcePickerLinux.tsx
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Entire system audio"
 msgstr "Zvuk cijelog sustava"
 
@@ -15601,6 +15610,10 @@ msgstr "Pratim"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx
 msgid "Following master • {effectiveValue}"
 msgstr "Prati glavnu glasnoću • {effectiveValue}"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Follows your Windows sound settings"
+msgstr "Prati postavke zvuka vašeg Windowsa"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -20521,6 +20534,10 @@ msgstr "Maksimalna zaštita za prostore prikladne za obitelj"
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "Može uzrokovati probleme s kompatibilnošću za gledatelje. Radimo na poboljšanju ovoga."
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "May include call audio from mixer apps"
+msgstr "Može uključivati zvuk poziva iz aplikacija miksera"
+
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
@@ -25308,6 +25325,11 @@ msgstr "Reproduciraj."
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Playback"
 msgstr "Reprodukcija"
+
+#. Submenu label in the stream settings menu of a Windows screen share. Picks which playback devices the shared desktop audio comes from.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Playback devices"
+msgstr "Reprodukcija zvuka"
 
 #. Section / menu header above the playback rate options in the media player.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

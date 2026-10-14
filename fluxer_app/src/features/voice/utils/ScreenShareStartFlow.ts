@@ -490,7 +490,14 @@ async function runConfiguredDisplayScreenShare(
 			}
 		} else if (requestedNativeDesktopAudio) {
 			try {
-				nativeAudioArmed = await armNativeSystemAudioForNextCapture();
+				nativeAudioArmed = await armNativeSystemAudioForNextCapture(
+					electronApi.platform === 'win32'
+						? {
+								all: VoiceSettings.getWindowsDesktopAudioAll(),
+								devices: VoiceSettings.getWindowsDesktopAudioDevices(),
+							}
+						: undefined,
+				);
 			} catch (error) {
 				logger.warn('Failed to arm native desktop audio capture', {
 					sourceId,

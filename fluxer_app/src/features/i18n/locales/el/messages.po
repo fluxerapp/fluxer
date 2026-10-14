@@ -11546,6 +11546,10 @@ msgstr "Προεπιλεγμένες ρυθμίσεις ειδοποιήσεων
 msgid "Default notifications"
 msgstr "Προεπιλεγμένες ειδοποιήσεις"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Default output device"
+msgstr "Προεπιλεγμένη συσκευή εξόδου"
+
 #. Label of the forum setting that picks the reaction button shown on every post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Default reaction"
@@ -12219,6 +12223,10 @@ msgstr "Μόνο ήχος συσκευής"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Device details"
 msgstr "Λεπτομέρειες συσκευής"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Device not connected"
+msgstr "Η συσκευή δεν είναι συνδεδεμένη"
 
 #. Toast shown after a saved login session was signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
@@ -14376,6 +14384,7 @@ msgid "Entire system"
 msgstr "Ολόκληρο το σύστημα"
 
 #: src/features/voice/components/AudioSourcePickerLinux.tsx
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Entire system audio"
 msgstr "Ήχος ολόκληρου του συστήματος"
 
@@ -15601,6 +15610,10 @@ msgstr "Παρακολούθηση"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx
 msgid "Following master • {effectiveValue}"
 msgstr "Ακολουθεί την κύρια ένταση • {effectiveValue}"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Follows your Windows sound settings"
+msgstr "Ακολουθεί τις ρυθμίσεις ήχου των Windows"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -20521,6 +20534,10 @@ msgstr "Μέγιστη προστασία για χώρους φιλικούς �
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "Μπορεί να προκαλέσει προβλήματα συμβατότητας στους θεατές. Εργαζόμαστε για να το βελτιώσουμε."
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "May include call audio from mixer apps"
+msgstr "Μπορεί να περιλαμβάνει ήχο κλήσης από εφαρμογές μίξης"
+
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx
@@ -25308,6 +25325,11 @@ msgstr "Αναπαραγωγή."
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Playback"
 msgstr "Αναπαραγωγή"
+
+#. Submenu label in the stream settings menu of a Windows screen share. Picks which playback devices the shared desktop audio comes from.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx
+msgid "Playback devices"
+msgstr "Συσκευές αναπαραγωγής"
 
 #. Section / menu header above the playback rate options in the media player.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

@@ -20,6 +20,7 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	canSelectManualAudioSources,
+	canSelectWindowsDesktopAudioSource,
 	manualAudioSourcesGovernShare,
 	resolveWindowShareAudioScope,
 	type ScreenShareAudioSourceMode,
@@ -76,6 +77,7 @@ interface StreamSettingsAudioControlViewState {
 export interface StreamSettingsAudioMenuViewState {
 	control: StreamSettingsAudioControlViewState;
 	showManualAudioSources: boolean;
+	showWindowsAudioSourceMenu: boolean;
 	showDeviceAudioMenu: boolean;
 }
 
@@ -202,6 +204,14 @@ export function selectStreamSettingsAudioMenuState(
 			manualAudioSourcesGovernShare(signals) &&
 			canSelectManualAudioSources({
 				platform: signals.platform,
+				nativeAudioAvailability: signals.nativeAudioAvailability,
+			}),
+		showWindowsAudioSourceMenu:
+			signals.supportsStreamAudio &&
+			signals.captureAudioEnabled &&
+			canSelectWindowsDesktopAudioSource({
+				platform: signals.platform,
+				shareContext: signals.shareContext,
 				nativeAudioAvailability: signals.nativeAudioAvailability,
 			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,

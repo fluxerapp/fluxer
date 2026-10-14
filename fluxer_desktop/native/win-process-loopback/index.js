@@ -121,6 +121,11 @@ function pidFromHwnd(hwnd) {
 	}
 }
 
+function listPlaybackDevices() {
+	if (!binding) return Promise.resolve([]);
+	return binding.listPlaybackDevices();
+}
+
 function resolveAudioRootPid(pid) {
 	if (!binding) return pid;
 	try {
@@ -148,7 +153,7 @@ class ProcessLoopback extends EventEmitter {
 		this._rejectStart = null;
 		this._native = new binding.ProcessLoopback(
 			pid,
-			{includeProcessTree, sampleRate, channels, captureScope},
+			{includeProcessTree, sampleRate, channels, captureScope, endpoints: opts.endpoints},
 			(frame) => this.emit('frame', frame),
 			(err) => {
 				if (!this._started && this._rejectStart) {
@@ -204,6 +209,10 @@ class ProcessLoopback extends EventEmitter {
 		return this._startPromise;
 	}
 
+	setEndpoints(endpoints) {
+		return this._stopped ? false : this._native.setEndpoints(endpoints);
+	}
+
 	stop() {
 		if (this._stopped) return;
 		this._stopped = true;
@@ -220,6 +229,7 @@ module.exports = {
 	getBackendInfo,
 	pidFromHwnd,
 	resolveAudioRootPid,
+	listPlaybackDevices,
 	ProcessLoopback,
 	get loadError() {
 		return loadError;

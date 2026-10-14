@@ -187,6 +187,7 @@ export interface NativeAudioAvailability {
 		processInclude?: boolean;
 		processExclude?: boolean;
 		sessionMixer?: boolean;
+		endpointSelect?: boolean;
 		systemLoopbackMode?: 'process-exclude' | 'session-mixer' | 'unavailable';
 	};
 	reason?:
@@ -213,12 +214,28 @@ export interface NativeAudioStartOptions {
 	macBackend?: 'sck' | 'coreaudio' | 'auto';
 	macCaptureScope?: 'process' | 'system';
 	winCaptureScope?: 'process' | 'system' | 'session-mixer';
+	winEndpoints?: Array<string>;
 	linuxRule?: VirtmicLinkOptions & {
 		include?: Array<VirtmicNode>;
 		exclude?: Array<VirtmicNode>;
 		onlySpeakers?: boolean;
 		onlyDefaultSpeakers?: boolean;
 	};
+}
+
+export interface NativeAudioPlaybackDeviceSession {
+	pid: number;
+	rootPid: number;
+	exe: string;
+	state: 'active' | 'inactive';
+	excluded: boolean;
+}
+
+export interface NativeAudioPlaybackDevice {
+	id: string;
+	name: string;
+	isDefault: boolean;
+	sessions: Array<NativeAudioPlaybackDeviceSession>;
 }
 
 export interface NativeAudioStartResult {

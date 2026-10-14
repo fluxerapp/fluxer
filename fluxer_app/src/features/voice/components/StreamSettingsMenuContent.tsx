@@ -26,11 +26,18 @@ import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import VoiceSettings, {type StreamingMode} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings, {
+	MAX_WINDOWS_DESKTOP_AUDIO_DEVICES,
+	type StreamingMode,
+	WINDOWS_DEFAULT_PLAYBACK_DEVICE,
+} from '@app/features/voice/state/VoiceSettings';
 import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {
+	getActiveWindowsDesktopAudioEndpoints,
 	getNativeAudioAvailabilityCached,
 	getNativeAudioAvailabilitySnapshot,
+	reconfigureWindowsDesktopAudioEndpoints,
+	refreshWindowsPlaybackDeviceListing,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {
 	canRestartDisplayShareWithoutPreselectedSource,
@@ -71,7 +78,7 @@ import {
 	SYSTEM_DEFAULT_DESCRIPTOR,
 	UNNAMED_INPUT_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
-import type {NativeAudioAvailability} from '@app/types/electron.d';
+import type {NativeAudioAvailability, NativeAudioPlaybackDevice} from '@app/types/electron.d';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -149,6 +156,11 @@ const CAPTURE_ENTIRE_SYSTEM_AUDIO_DESCRIPTOR = msg({
 	message: 'Capture entire system audio',
 	comment:
 		'Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.',
+});
+const PLAYBACK_DEVICES_DESCRIPTOR = msg({
+	message: 'Playback devices',
+	comment:
+		'Submenu label in the stream settings menu of a Windows screen share. Picks which playback devices the shared desktop audio comes from.',
 });
 const logger = new Logger('StreamSettingsMenuContent');
 const SCREEN_SHARE_AUDIO_SOURCE = VoiceTrackSource.ScreenShareAudio as Track.Source;
@@ -615,6 +627,7 @@ export const StreamSettingsMenuContent = observer(
 					/>
 					<StreamSettingsAudioGroup
 						audioMenuState={audioMenuState}
+						applyToLiveStream={applyToLiveStream}
 						shareContext={shareContext}
 						displayShareEnvironment={displayShareEnvironment}
 						windowAudioScope={windowAudioScope}
@@ -739,6 +752,7 @@ export const StreamSettingsMenuContent = observer(
 				<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--5">
 					<StreamSettingsAudioGroup
 						audioMenuState={audioMenuState}
+						applyToLiveStream={applyToLiveStream}
 						shareContext={shareContext}
 						displayShareEnvironment={displayShareEnvironment}
 						windowAudioScope={windowAudioScope}
@@ -768,6 +782,7 @@ StreamSettingsMenuContent.displayName = 'StreamSettingsMenuContent';
 
 interface StreamSettingsAudioGroupProps {
 	audioMenuState: StreamSettingsAudioMenuViewState;
+	applyToLiveStream: boolean;
 	shareContext: StreamSettingsShareContext;
 	displayShareEnvironment: DisplayShareEnvironment;
 	windowAudioScope: WindowShareAudioScope;
@@ -783,6 +798,7 @@ interface StreamSettingsAudioGroupProps {
 const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps) => {
 	const {
 		audioMenuState,
+		applyToLiveStream,
 		shareContext,
 		displayShareEnvironment,
 		windowAudioScope,
@@ -828,6 +844,12 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 						data-flx="voice.stream-settings-menu-content.audio-group.venmic-settings-submenu"
 					/>
 				</>
+			)}
+			{audioMenuState.showWindowsAudioSourceMenu && (
+				<WindowsDesktopAudioSubmenu
+					applyToLiveStream={applyToLiveStream}
+					data-flx="voice.stream-settings-menu-content.audio-group.windows-desktop-audio-submenu"
+				/>
 			)}
 			{audioMenuState.showDeviceAudioMenu && (
 				<MenuItemSubmenu
@@ -901,6 +923,156 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 });
 
 StreamSettingsAudioGroup.displayName = 'StreamSettingsAudioGroup';
+
+interface WindowsDesktopAudioSubmenuProps {
+	applyToLiveStream: boolean;
+}
+
+const WindowsDesktopAudioSubmenu = observer(({applyToLiveStream}: WindowsDesktopAudioSubmenuProps) => {
+	const {i18n} = useLingui();
+	if (applyToLiveStream && getActiveWindowsDesktopAudioEndpoints() === null) return null;
+	return (
+		<MenuItemSubmenu
+			label={i18n._(PLAYBACK_DEVICES_DESCRIPTOR)}
+			render={() => (
+				<WindowsDesktopAudioMenuGroup
+					applyToLiveStream={applyToLiveStream}
+					data-flx="voice.stream-settings-menu-content.windows-desktop-audio-submenu.menu-group"
+				/>
+			)}
+			data-flx="voice.stream-settings-menu-content.windows-desktop-audio-submenu.menu-item-submenu"
+		/>
+	);
+});
+
+WindowsDesktopAudioSubmenu.displayName = 'WindowsDesktopAudioSubmenu';
+
+interface WindowsPlaybackDeviceRow {
+	id: string;
+	name: string | null;
+}
+
+function selectWindowsPlaybackDeviceRows(
+	devices: Array<NativeAudioPlaybackDevice> | null,
+	selected: Array<string>,
+): Array<WindowsPlaybackDeviceRow> {
+	if (devices === null) return [];
+	const listedIds = new Set(devices.map((device) => device.id));
+	return [
+		...devices
+			.filter((device) => !device.isDefault || selected.includes(device.id))
+			.map((device) => ({id: device.id, name: device.name || device.id})),
+		...selected
+			.filter((id) => id !== WINDOWS_DEFAULT_PLAYBACK_DEVICE && !listedIds.has(id))
+			.map((id) => ({id, name: null})),
+	];
+}
+
+const WindowsDesktopAudioMenuGroup = observer(({applyToLiveStream}: WindowsDesktopAudioSubmenuProps) => {
+	const [devices, setDevices] = useState<Array<NativeAudioPlaybackDevice> | null>(null);
+	const [liveEndpoints, setLiveEndpoints] = useState(() =>
+		applyToLiveStream ? getActiveWindowsDesktopAudioEndpoints() : null,
+	);
+	useEffect(() => {
+		let cancelled = false;
+		void refreshWindowsPlaybackDeviceListing().then((listed) => {
+			if (!cancelled) setDevices(listed);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+	const all = !applyToLiveStream && VoiceSettings.getWindowsDesktopAudioAll();
+	const selected = liveEndpoints ?? VoiceSettings.getWindowsDesktopAudioDevices();
+	const rows = selectWindowsPlaybackDeviceRows(devices, selected);
+	const handleAllChange = (checked: boolean) => {
+		VoiceSettingsCommands.update({windowsDesktopAudioAll: checked});
+	};
+	const handleDeviceChange = (deviceId: string, checked: boolean) => {
+		const remaining = selected.filter((entry) => entry !== deviceId);
+		const next = checked ? [...remaining, deviceId] : remaining;
+		if (next.length === 0 || next.length > MAX_WINDOWS_DESKTOP_AUDIO_DEVICES) return;
+		if (!applyToLiveStream) {
+			VoiceSettingsCommands.update({windowsDesktopAudioDevices: next});
+			return;
+		}
+		void reconfigureWindowsDesktopAudioEndpoints(next).then((result) => {
+			if (result === 'unsupported') {
+				logger.warn('Playback device change not applied, the share keeps its previous devices', {next});
+				return;
+			}
+			VoiceSettingsCommands.update({windowsDesktopAudioDevices: next});
+			setLiveEndpoints(getActiveWindowsDesktopAudioEndpoints());
+		});
+	};
+	const atLimit = selected.length >= MAX_WINDOWS_DESKTOP_AUDIO_DEVICES;
+	return (
+		<MenuGroup data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.menu-group">
+			{!applyToLiveStream && (
+				<CheckboxItem
+					checked={all}
+					onCheckedChange={handleAllChange}
+					data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.entire-system"
+				>
+					<span
+						className={styles.audioDeviceLabel}
+						data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.entire-system-label"
+					>
+						<span
+							className={styles.audioDeviceName}
+							data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.entire-system-name"
+						>
+							<Trans>Entire system audio</Trans>
+						</span>
+						<span
+							className={styles.audioDeviceSubtext}
+							data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.entire-system-subtext"
+						>
+							<Trans>May include call audio from mixer apps</Trans>
+						</span>
+					</span>
+				</CheckboxItem>
+			)}
+			<CheckboxItem
+				checked={selected.includes(WINDOWS_DEFAULT_PLAYBACK_DEVICE)}
+				disabled={all || (atLimit && !selected.includes(WINDOWS_DEFAULT_PLAYBACK_DEVICE))}
+				onCheckedChange={(checked) => handleDeviceChange(WINDOWS_DEFAULT_PLAYBACK_DEVICE, checked)}
+				data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.default-device"
+			>
+				<span
+					className={styles.audioDeviceLabel}
+					data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.default-device-label"
+				>
+					<span
+						className={styles.audioDeviceName}
+						data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.default-device-name"
+					>
+						<Trans>Default output device</Trans>
+					</span>
+					<span
+						className={styles.audioDeviceSubtext}
+						data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.default-device-subtext"
+					>
+						<Trans>Follows your Windows sound settings</Trans>
+					</span>
+				</span>
+			</CheckboxItem>
+			{rows.map((row) => (
+				<CheckboxItem
+					key={row.id}
+					checked={selected.includes(row.id)}
+					disabled={all || (atLimit && !selected.includes(row.id))}
+					onCheckedChange={(checked) => handleDeviceChange(row.id, checked)}
+					data-flx="voice.stream-settings-menu-content.windows-desktop-audio-menu-group.device"
+				>
+					{row.name ?? <Trans>Device not connected</Trans>}
+				</CheckboxItem>
+			))}
+		</MenuGroup>
+	);
+});
+
+WindowsDesktopAudioMenuGroup.displayName = 'WindowsDesktopAudioMenuGroup';
 
 const VenmicSettingsSubmenu = observer(({onSettingsChange}: {onSettingsChange?: () => void}) => {
 	const {i18n} = useLingui();
