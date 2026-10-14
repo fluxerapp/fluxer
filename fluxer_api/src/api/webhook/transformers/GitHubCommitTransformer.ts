@@ -129,7 +129,7 @@ export async function transformPush(body: GitHubWebhook): Promise<RichEmbedReque
 				/This reverts commit (\w{40})\./g,
 				(_, hash) => `This reverts commit [\`${hash.substring(0, 7)}\`](${body.repository?.html_url}/commit/${hash}).`,
 			);
-			return `[\`${shortCommitId}\`](${commit.url}) ${commitMessage} - ${commit.author.name}`;
+			return `[\`${shortCommitId}\`](${body.repository?.html_url}/commit/${commit.id}) ${commitMessage} - ${commit.author.name}`;
 		})
 		.join('\n');
 	if (!body.compare) {
