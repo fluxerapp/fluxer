@@ -30767,6 +30767,11 @@ msgstr "시스템 트레이 아이콘 표시"
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
 msgstr "Windows 시스템 글꼴 대신 이전 기본 글꼴인 Fluxer Sans로 텍스트 표시"
 
+#. Desktop setting description under the colored tray icon toggle on Windows and Linux.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Show the full-color {productName} icon instead of a monochrome one that matches your taskbar."
+msgstr "작업 표시줄 색상과 일치하는 단색 아이콘 대신 전체 색상의 {productName} 아이콘을 표시합니다."
+
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 msgid "Show this role separately"
@@ -36998,6 +37003,11 @@ msgstr "채널 기본값 사용"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "석탄 테마 사용 (완전한 검정 화면)"
+
+#. Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use colored tray icon"
+msgstr "컬러 트레이 아이콘 사용"
 
 #. Plutonium page comparison row label for global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

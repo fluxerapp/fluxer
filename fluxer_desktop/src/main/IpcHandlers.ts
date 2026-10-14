@@ -26,6 +26,7 @@ import {
 	applyDesktopWindowBehaviorSettings,
 	desktopTrayChangePendingRestart,
 	hasActiveDesktopTray,
+	setDesktopTrayUnreadBadge,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
 import {getDesktopUpdateState, observeDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
@@ -57,6 +58,7 @@ import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
 import {
 	createPrivilegedRendererDocumentOwners,
+	isPrivilegedRendererDocumentSender,
 	requirePrivilegedRendererDocumentSender,
 } from '@electron/main/PrivilegedRendererDocuments';
 import {getDesktopSelectedInstanceClient} from '@electron/main/SelectedInstanceFetch';
@@ -72,6 +74,7 @@ import {
 	setHardwareAccelerationDisabled,
 	setHardwareAccelerationDisabledAndRestart,
 } from '@electron/main/Troubleshooting';
+import {parseUnreadBadge, UNREAD_BADGE_DOT} from '@electron/main/UnreadBadge';
 import {registerVoiceBackgroundMediaCacheHandlers} from '@electron/main/VoiceBackgroundMediaCache';
 import {
 	focusVoiceDebugEventSinkPopout,
@@ -119,6 +122,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	if (typeof value.showTrayIcon === 'boolean') {
 		update.showTrayIcon = value.showTrayIcon;
 	}
+	if (typeof value.coloredTrayIcon === 'boolean') {
+		update.coloredTrayIcon = value.coloredTrayIcon;
+	}
 	if (typeof value.minimizeToTray === 'boolean') {
 		update.minimizeToTray = value.minimizeToTray;
 	}
@@ -152,6 +158,17 @@ function getActiveSmoothScrolling(): boolean {
 
 function getActiveMiddleClickAutoscroll(): boolean {
 	return process.platform === 'linux' && hasEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
+}
+
+function applyUnreadBadge(badge: number): void {
+	if (process.platform === 'win32') {
+		setWindowsBadgeOverlay(getMainWindow(), badge);
+	} else if (process.platform === 'darwin' && badge === UNREAD_BADGE_DOT) {
+		app.dock?.setBadge('•');
+	} else {
+		app.setBadgeCount(Math.max(badge, 0));
+	}
+	setDesktopTrayUnreadBadge(badge);
 }
 
 export function registerIpcHandlers(): void {
@@ -467,14 +484,15 @@ export function registerIpcHandlers(): void {
 			if (surface === 'input-monitoring' && status === 'granted') retryBlockedGlobalShortcutHooks();
 		},
 	});
-	ipcMain.on('set-badge-count', (_event, count: number) => {
-		if (process.platform === 'darwin') {
-			app.setBadgeCount(count);
-		} else if (process.platform === 'win32') {
-			setWindowsBadgeOverlay(getMainWindow(), count);
-		} else {
-			app.setBadgeCount(count);
-		}
+	ipcMain.on('set-badge-count', (event, count: unknown) => {
+		const badge = parseUnreadBadge(count);
+		if (badge === null || !isPrivilegedRendererDocumentSender(event)) return;
+		applyUnreadBadge(Math.max(badge, 0));
+	});
+	ipcMain.on('set-unread-badge', (event, value: unknown) => {
+		const badge = parseUnreadBadge(value);
+		if (badge === null || !isPrivilegedRendererDocumentSender(event)) return;
+		applyUnreadBadge(badge);
 	});
 	ipcMain.on('set-zoom-factor', (event, factor: number) => {
 		const win = BrowserWindow.fromWebContents(event.sender);

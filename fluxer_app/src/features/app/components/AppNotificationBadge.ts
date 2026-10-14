@@ -58,10 +58,12 @@ const initFavico = (): Favico | null => {
 };
 const setElectronBadge = (badge: number): void => {
 	const electronApi = getElectronAPI();
-	if (!electronApi?.setBadgeCount) return;
-	const electronBadge = badge > 0 ? badge : 0;
 	try {
-		electronApi.setBadgeCount(electronBadge);
+		if (electronApi?.setUnreadBadge) {
+			electronApi.setUnreadBadge(badge);
+		} else {
+			electronApi?.setBadgeCount?.(badge > 0 ? badge : 0);
+		}
 	} catch (e) {
 		logger.warn('Failed to set Electron badge', e);
 	}

@@ -30767,6 +30767,11 @@ msgstr "Vis ikon i systembakken"
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
 msgstr "Vis tekst i Fluxer Sans, den tidligere standardfont, i stedet for Windows' systemskrifttype"
 
+#. Desktop setting description under the colored tray icon toggle on Windows and Linux.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Show the full-color {productName} icon instead of a monochrome one that matches your taskbar."
+msgstr "Vis ikonet i fuld farve fra {productName} i stedet for et monokromt ikon, der matcher din proceslinje."
+
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 msgid "Show this role separately"
@@ -36998,6 +37003,11 @@ msgstr "Brug kanalens standard"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "Brug kulsort tema (kulsorte overflader)"
+
+#. Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use colored tray icon"
+msgstr "Brug farvet systembakkeikon"
 
 #. Plutonium page comparison row label for global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

@@ -57,6 +57,7 @@ export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unk
 
 interface PersistedDesktopWindowBehaviorSettings {
 	showTrayIcon?: boolean;
+	coloredTrayIcon?: boolean;
 	useNativeTitleBar?: boolean;
 	minimizeToTrayV2?: boolean;
 	closeToTrayV2?: boolean;
@@ -87,6 +88,7 @@ function getDefaultDesktopTroubleshootingSettings(): DesktopTroubleshootingSetti
 function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSettings {
 	return {
 		showTrayIcon: true,
+		coloredTrayIcon: false,
 		minimizeToTray: false,
 		closeToTray: true,
 		startMinimized: false,
@@ -111,6 +113,9 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	const settings: PersistedDesktopWindowBehaviorSettings = {};
 	if (typeof value.showTrayIcon === 'boolean') {
 		settings.showTrayIcon = value.showTrayIcon;
+	}
+	if (typeof value.coloredTrayIcon === 'boolean') {
+		settings.coloredTrayIcon = value.coloredTrayIcon;
 	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		settings.useNativeTitleBar = value.useNativeTitleBar;
@@ -321,6 +326,10 @@ function normalizeDesktopWindowBehaviorSettings(
 	const normalized = {
 		showTrayIcon:
 			typeof normalizedSettings?.showTrayIcon === 'boolean' ? normalizedSettings.showTrayIcon : defaults.showTrayIcon,
+		coloredTrayIcon:
+			typeof normalizedSettings?.coloredTrayIcon === 'boolean'
+				? normalizedSettings.coloredTrayIcon
+				: defaults.coloredTrayIcon,
 		minimizeToTray:
 			typeof normalizedSettings?.minimizeToTray === 'boolean'
 				? normalizedSettings.minimizeToTray
@@ -395,6 +404,7 @@ function serializeDesktopWindowBehaviorSettings(
 ): PersistedDesktopWindowBehaviorSettings {
 	return {
 		showTrayIcon: settings.showTrayIcon,
+		coloredTrayIcon: settings.coloredTrayIcon,
 		useNativeTitleBar: settings.useNativeTitleBar,
 		rememberWindowState: settings.rememberWindowState,
 		allowTransparency: settings.allowTransparency,

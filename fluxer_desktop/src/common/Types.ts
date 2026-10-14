@@ -90,6 +90,7 @@ export interface DesktopInfo {
 
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
+	coloredTrayIcon: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
 	startMinimized: boolean;
@@ -303,6 +304,7 @@ export interface ElectronAPI {
 	closeNotifications: (ids: Array<string>) => void;
 	onNotificationClick: (callback: (id: string, url?: string) => void) => () => void;
 	setBadgeCount: (count: number) => void;
+	setUnreadBadge: (badge: number) => void;
 	setNativeLocale: (locale: string, strings: Record<string, string>) => void;
 	flashFrame: (persistent?: boolean) => void;
 	stopFlashFrame: () => void;

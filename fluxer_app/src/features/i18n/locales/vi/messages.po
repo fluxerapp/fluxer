@@ -30767,6 +30767,11 @@ msgstr "Hiện biểu tượng trên khay hệ thống"
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
 msgstr "Hiển thị văn bản bằng Fluxer Sans, phông chữ mặc định trước đây, thay vì phông chữ hệ thống của Windows"
 
+#. Desktop setting description under the colored tray icon toggle on Windows and Linux.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Show the full-color {productName} icon instead of a monochrome one that matches your taskbar."
+msgstr "Hiển thị biểu tượng {productName} đầy đủ màu sắc thay vì đơn sắc, phù hợp với thanh tác vụ của bạn."
+
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 msgid "Show this role separately"
@@ -36998,6 +37003,11 @@ msgstr "Sử dụng mặc định của kênh"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "Dùng giao diện Than (nền đen tuyền)"
+
+#. Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use colored tray icon"
+msgstr "Sử dụng biểu tượng màu trên khay hệ thống"
 
 #. Plutonium page comparison row label for global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

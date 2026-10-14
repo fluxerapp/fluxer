@@ -30768,6 +30768,11 @@ msgstr "Rodyti sistemos dėklo piktogramą"
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
 msgstr "Rodyti tekstą „Fluxer Sans“ (ankstesnis numatytasis šriftas), o ne „Windows“ sistemos šriftą"
 
+#. Desktop setting description under the colored tray icon toggle on Windows and Linux.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Show the full-color {productName} icon instead of a monochrome one that matches your taskbar."
+msgstr "Rodyti visos spalvos „{productName}“ piktogramą, o ne vienspalvę, atitinkančią užduočių juostą."
+
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 msgid "Show this role separately"
@@ -36999,6 +37004,11 @@ msgstr "Naudoti kanalo numatytuosius nustatymus"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "Naudoti anglies temą (visiškai juodi paviršiai)"
+
+#. Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use colored tray icon"
+msgstr "Naudoti spalvotą piktogramą sistemos dėkle"
 
 #. Plutonium page comparison row label for global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

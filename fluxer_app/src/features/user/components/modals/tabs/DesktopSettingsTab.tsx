@@ -40,6 +40,17 @@ const RESTART_PRODUCT_FOR_TRAY_CHANGE_DESCRIPTOR = msg({
 	comment: 'Desktop setting description shown when a tray-icon change on Linux requires restart.',
 });
 
+const USE_COLORED_TRAY_ICON_DESCRIPTOR = msg({
+	message: 'Use colored tray icon',
+	comment:
+		'Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.',
+});
+
+const USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Show the full-color {productName} icon instead of a monochrome one that matches your taskbar.',
+	comment: 'Desktop setting description under the colored tray icon toggle on Windows and Linux.',
+});
+
 const DesktopSettingsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const cachedAutostart = getCachedAutostartStatus();
@@ -188,6 +199,18 @@ const DesktopSettingsTab: React.FC = observer(() => {
 							onChange={handleShowTrayIconChange}
 							data-flx="user.desktop-settings-tab.switch.show-tray-icon-change"
 						/>
+						{!isMac && desktopWindowBehavior.coloredTrayIcon !== undefined && (
+							<Switch
+								label={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTOR)}
+								description={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.coloredTrayIcon}
+								disabled={desktopWindowBehaviorBusy || !desktopWindowBehavior.showTrayIcon}
+								onChange={(value) => handleDesktopWindowBehaviorChange({coloredTrayIcon: value})}
+								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
+							/>
+						)}
 						<Switch
 							label={isMac ? <Trans>Minimize to menu bar</Trans> : <Trans>Minimize to tray</Trans>}
 							value={desktopWindowBehavior.minimizeToTray}

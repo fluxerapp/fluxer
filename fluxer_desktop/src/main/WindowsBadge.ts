@@ -2,7 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {getNativeLocale, t} from '@electron/main/MainI18n';
+import {describeUnreadBadge, UNREAD_BADGE_DOT} from '@electron/main/UnreadBadge';
 import type {BrowserWindow, NativeImage} from 'electron';
 import {nativeImage} from 'electron';
 
@@ -34,35 +34,18 @@ function ensureInitialized(): void {
 	}
 }
 
-function formatBadgeCount(count: number): string {
-	try {
-		return count.toLocaleString(getNativeLocale());
-	} catch {
-		return String(count);
-	}
-}
-
 function getOverlayIconData(count: number): {
 	index: number | null;
 	description: string;
 } {
-	if (count === -1) {
-		return {
-			index: 10,
-			description: t('desktop.badge.unreadMessages'),
-		};
+	const description = describeUnreadBadge(count) ?? 'No Notifications';
+	if (count === UNREAD_BADGE_DOT) {
+		return {index: 10, description};
 	}
-	if (count === 0) {
-		return {
-			index: null,
-			description: 'No Notifications',
-		};
+	if (count <= 0) {
+		return {index: null, description};
 	}
-	const index = Math.max(1, Math.min(count, 10)) - 1;
-	return {
-		index,
-		description: t('desktop.badge.unreadMessagesCount', {count: formatBadgeCount(count)}),
-	};
+	return {index: Math.min(count, 10) - 1, description};
 }
 
 function applyOverlay(win: BrowserWindow | null, count: number, force: boolean): void {

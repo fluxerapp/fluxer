@@ -30767,6 +30767,11 @@ msgstr "सिस्टम ट्रे आइकॉन दिखाएं"
 msgid "Show text in Fluxer Sans, the previous default font, instead of the Windows system font"
 msgstr "विंडोज सिस्टम फ़ॉन्ट के बजाय, पिछले डिफ़ॉल्ट फ़ॉन्ट, Fluxer Sans में टेक्स्ट दिखाएं"
 
+#. Desktop setting description under the colored tray icon toggle on Windows and Linux.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Show the full-color {productName} icon instead of a monochrome one that matches your taskbar."
+msgstr "टास्कबार से मेल खाने वाले मोनोक्रोम के बजाय, पूरे रंग का {productName} आइकन दिखाएं।"
+
 #. Switch label in the role editor (hoist toggle). When on, members with this role appear in their own member-list section.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 msgid "Show this role separately"
@@ -36998,6 +37003,11 @@ msgstr "चैनल डिफ़ॉल्ट का उपयोग करे�
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "कोल थीम इस्तेमाल करें (पूरी तरह से काले रंग की सतहें)"
+
+#. Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use colored tray icon"
+msgstr "रंगीन ट्रे आइकन का उपयोग करें"
 
 #. Plutonium page comparison row label for global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts

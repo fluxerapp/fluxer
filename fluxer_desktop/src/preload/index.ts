@@ -587,6 +587,9 @@ const api: ElectronAPI = {
 	setBadgeCount: (count: number): void => {
 		ipcRenderer.send('set-badge-count', count);
 	},
+	setUnreadBadge: (badge: number): void => {
+		ipcRenderer.send('set-unread-badge', badge);
+	},
 	setNativeLocale: (locale: string, strings: Record<string, string>): void => {
 		ipcRenderer.send('native-locale-set', {locale, strings});
 	},
