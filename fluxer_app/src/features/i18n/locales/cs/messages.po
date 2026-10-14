@@ -26957,8 +26957,8 @@ msgstr "Znovu načíst pro použití změny nástroje"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Zůstat zticha, pokud někdo nespustí /tts ručně."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Zůstaň potichu, pokud někdo v kanálu, který sleduješ, nespustí příkaz /tts."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

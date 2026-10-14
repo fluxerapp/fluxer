@@ -26957,8 +26957,8 @@ msgstr "Tải lại để áp dụng thay đổi công cụ"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Giữ im lặng trừ khi có người chạy lệnh /tts thủ công."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Giữ im lặng trừ khi ai đó nhập `/tts` trong kênh bạn đang xem."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

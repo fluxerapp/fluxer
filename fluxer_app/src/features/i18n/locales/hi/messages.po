@@ -26957,8 +26957,8 @@ msgstr "इंजन में बदलाव लागू करने के 
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "जब तक कोई खुद /tts न चलाए, तब तक कुछ नहीं सुनाया जाता।"
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "जब तक कोई उस चैनल में /tts न चलाए जिसे आप देख रहे हैं, तब तक कुछ नहीं सुनाया जाता।"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

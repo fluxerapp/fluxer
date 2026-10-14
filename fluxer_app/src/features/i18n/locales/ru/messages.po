@@ -26957,8 +26957,8 @@ msgstr "Перезагрузите, чтобы применить смену д�
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Молчать, пока кто-нибудь не запустит /tts вручную."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Оставайся в тишине, если кто-то не введёт команду /tts в канале, который ты просматриваешь."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

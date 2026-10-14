@@ -26957,8 +26957,8 @@ msgstr "Ladda om för att tillämpa motorändring"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Förbli tyst om inte någon kör /tts manuellt."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Var tyst om ingen skriver /tts i kanalen du tittar på."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

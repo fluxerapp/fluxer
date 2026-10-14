@@ -26957,8 +26957,8 @@ msgstr "엔진 변경 사항을 적용하려면 다시 로드하세요"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "누군가 /tts를 직접 실행하지 않는 한 무음으로 유지됩니다."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "보고 있는 채널에서 누군가 /tts를 실행하지 않는 한 무음으로 유지됩니다."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

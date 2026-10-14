@@ -252,7 +252,7 @@ class NotificationState {
 		return Navigation.channelId ?? SelectedChannel.currentChannelId;
 	}
 
-	private isViewingChannel(channelId: string): boolean {
+	isViewingChannel(channelId: string): boolean {
 		return this.getVisibleChannelId() === channelId || Navigation.threadId === channelId;
 	}
 

@@ -26957,8 +26957,8 @@ msgstr "Reîncarcă pentru a aplica modificarea motorului"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Nu se aude nimic decât dacă cineva rulează manual /tts."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Rămâi tăcut, cu excepția cazului în care cineva rulează /tts în canalul pe care îl vizualizezi."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

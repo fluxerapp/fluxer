@@ -26957,8 +26957,8 @@ msgstr "โหลดใหม่เพื่อใช้เครื่องม
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "จะไม่มีเสียงพูดจนกว่าจะมีคนใช้คำสั่ง /tts ด้วยตัวเอง"
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "เงียบไว้ เว้นแต่จะมีคนพิมพ์ /tts ในแชทที่คุณกำลังดู"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

@@ -1317,6 +1317,7 @@
 		"Register an account",
 		"Registration",
 		"Relaunch to apply",
+		"Remain silent unless someone runs /tts in the channel you're viewing.",
 		"Remove from recent instances",
 		"Remove from thread",
 		"Remove members from the community. They can rejoin with a new invite.",

@@ -26957,8 +26957,8 @@ msgstr "Last inn på nytt for å ta den nye stavekontrollmotoren i bruk"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Forbli stille med mindre noen kjører /tts manuelt."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Vær stille med mindre noen skriver /tts i kanalen du ser på."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

@@ -13,6 +13,7 @@ import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import * as TtsSpeechUtils from '@app/features/voice/utils/TtsSpeechUtils';
 import {formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -365,22 +366,18 @@ function describeNonTextContent(message: Message, authorName: string, localI18n:
 }
 
 function shouldSpeakMessage(message: Message): boolean {
-	const mode = Notification.ttsNotificationMode;
-	const isExplicitTts = message.tts === true;
-	const isSelf = message.author.id === Authentication.currentUserId;
-	const isSystemMessage = !isUserMessageType(message.type);
-	if (isSelf && !isSystemMessage) {
+	if (LocalVoiceState.getSelfDeaf()) {
 		return false;
 	}
-	if (mode === TTSNotificationMode.NEVER) {
-		return isExplicitTts && Accessibility.enableTTSCommand;
+	const viewing = Notification.isViewingChannel(message.channel_id);
+	if (Accessibility.enableTTSCommand && message.tts === true && viewing) {
+		return true;
 	}
-	if (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL) {
-		if (message.channel_id !== SelectedChannel.currentChannelId) {
-			return false;
-		}
+	if (message.author.id === Authentication.currentUserId) {
+		return false;
 	}
-	return true;
+	const mode = Notification.ttsNotificationMode;
+	return mode === TTSNotificationMode.FOR_ALL_CHANNELS || (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL && viewing);
 }
 
 function handleIncomingTtsMessage(message: Message): void {

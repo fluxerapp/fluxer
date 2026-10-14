@@ -26957,8 +26957,8 @@ msgstr "Muat ulang untuk menerapkan perubahan mesin"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Tetap diam kecuali seseorang menjalankan /tts secara manual."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Tetap senyap kecuali seseorang mengetik /tts di kanal yang sedang Anda lihat."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

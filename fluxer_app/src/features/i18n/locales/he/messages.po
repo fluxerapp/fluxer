@@ -26957,8 +26957,8 @@ msgstr "יש לטעון מחדש כדי להחיל את שינוי המנוע"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "לא מקריא דבר אלא אם מישהו מפעיל /tts באופן ידני."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "הישאר שקט אלא אם מישהו מריץ /tts בערוץ שאתה צופה בו."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

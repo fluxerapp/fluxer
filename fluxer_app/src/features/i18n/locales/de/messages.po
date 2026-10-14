@@ -26957,8 +26957,8 @@ msgstr "Neu laden, um Engine-Änderung zu übernehmen"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Bleibe stumm, es sei denn, jemand führt /tts manuell aus."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Bleib stumm, es sei denn, jemand führt /tts in dem Kanal aus, den du gerade ansiehst."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

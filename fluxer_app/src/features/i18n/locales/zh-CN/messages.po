@@ -26957,8 +26957,8 @@ msgstr "重新加载以应用引擎更改"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "除非有人手动运行 /tts，否则保持静默。"
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "除非有人在你正在查看的频道中运行 /tts，否则保持静默。"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

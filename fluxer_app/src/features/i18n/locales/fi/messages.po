@@ -26957,8 +26957,8 @@ msgstr "Lataa uudelleen, jotta moottorin vaihdos tulee voimaan."
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Pysyy hiljaa, ellei joku käytä /tts-komentoa manuaalisesti."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Pysy hiljaa, ellei joku suorita komentoa /tts katsomassasi kanavassa."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

@@ -26957,8 +26957,8 @@ msgstr "Załaduj ponownie, aby zastosować zmianę silnika"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Pozostań w trybie cichym, chyba że ktoś ręcznie uruchomi /tts."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Pozostawaj cicho, chyba że ktoś wpisze `/tts` na kanale, który przeglądasz."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

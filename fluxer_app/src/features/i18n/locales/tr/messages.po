@@ -26957,8 +26957,8 @@ msgstr "Motor değişikliğini uygulamak için yeniden yükle"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Birisi /tts komutunu manuel olarak çalıştırmadıkça sessiz kalır."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Görüntülediğin kanalda biri /tts komutunu çalıştırmadığı sürece sessiz kal."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

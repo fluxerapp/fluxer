@@ -26957,8 +26957,8 @@ msgstr "Újratöltés a motorváltás érvényesítéséhez"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Maradjon csendben, hacsak valaki manuálisan nem futtatja a /tts parancsot."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Maradj csendben, hacsak valaki be nem írja a `/tts` parancsot a megtekintett csatornában."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

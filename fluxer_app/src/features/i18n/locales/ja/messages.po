@@ -26957,8 +26957,8 @@ msgstr "エンジン変更を適用するには再読み込みしてください
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "誰かが手動で /tts を実行しない限り、読み上げません。"
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "表示中のチャンネルで誰かが `/tts` を実行した場合にのみ、発言します。"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

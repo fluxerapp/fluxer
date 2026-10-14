@@ -26958,8 +26958,8 @@ msgstr "Įkelti iš naujo, kad būtų pritaikytas variklio pakeitimas"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Tylėti, nebent kas nors rankiniu būdu paleidžia /tts."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Pasilikite tyliai, nebent kas nors kanale, kurį žiūrite, parašo /tts."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts

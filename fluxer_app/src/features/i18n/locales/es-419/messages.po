@@ -26957,8 +26957,8 @@ msgstr "Recargar para aplicar el cambio de motor"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
-msgid "Remain silent unless someone runs /tts manually."
-msgstr "Permanecer en silencio a menos que alguien ejecute /tts manualmente."
+msgid "Remain silent unless someone runs /tts in the channel you're viewing."
+msgstr "Permanece en silencio a menos que alguien escriba /tts en el canal que estás viendo."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
