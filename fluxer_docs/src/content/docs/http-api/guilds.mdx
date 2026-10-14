@@ -246,25 +246,73 @@ A resolved everyone mask that has `SEND_MESSAGES` and no [thread permission bit]
 | id<sup>1</sup> | decimal string \| integer | Template-local channel ID |
 | type<sup>2</sup> | integer | Source channel type |
 | name? | ?string | Channel name, defaulting to the empty string |
-| topic? | ?string | Channel topic |
+| topic?<sup>6</sup> | ?string | Channel topic, or forum guidelines on a forum or media channel |
 | position | integer | The sort position of the channel |
 | parent_id?<sup>3</sup> | ?decimal string \| integer | Template-local parent category ID |
 | bitrate?<sup>4</sup> | ?integer | Voice bitrate, defaulting to 64000 for a voice channel and capped at 96000 |
 | user_limit?<sup>4</sup> | ?integer | Voice occupancy limit, defaulting to 0 for a voice channel |
 | voice_connection_limit?<sup>4</sup> | ?integer | Per-user voice connection limit, defaulting to 5 for a voice channel |
-| nsfw? | boolean | Whether the channel is age restricted (default false) |
-| rate_limit_per_user? | integer | Slowmode interval in seconds, defaulting to 0 |
-| permission_overwrites?<sup>5</sup> | array[[guild template role permission overwrite](#guild-template-role-permission-overwrite-object) object] | Role permission overwrites |
+| nsfw? | ?boolean | Whether the channel is age restricted (default false) |
+| rate_limit_per_user? | ?integer | Slowmode interval in seconds, defaulting to 0 |
+| permission_overwrites?<sup>5</sup> | ?array[[guild template role permission overwrite](#guild-template-role-permission-overwrite-object) object] | Role permission overwrites |
+| available_tags?<sup>7</sup> | ?array[[guild template forum tag](#guild-template-forum-tag-object) object] | Tags for a forum or media channel |
+| default_reaction_emoji?<sup>8</sup> | ?[guild template default reaction](#guild-template-default-reaction-object) object | Default reaction shown on posts in a forum or media channel |
+| default_sort_order?<sup>9</sup> | ?integer | Default [forum sort order](/http-api/forums/#forum-sort-orders) of a forum or media channel |
+| default_forum_layout?<sup>9</sup> | ?integer | Default [forum layout](/http-api/forums/#forum-layouts) of a forum channel |
+| default_tag_setting?<sup>9</sup> | ?string | Default [forum tag setting](/http-api/forums/#forum-tag-settings) of a forum or media channel |
+| default_thread_rate_limit_per_user?<sup>10</sup> | ?integer | Slowmode interval in seconds copied onto new threads |
+| default_auto_archive_duration?<sup>9</sup> | ?integer | Default [auto archive duration](/http-api/threads/#auto-archive-durations) in minutes for new threads |
+| flags?<sup>11</sup> | ?integer | [Channel flags](/http-api/forums/#channel-flags) of a forum or media channel |
 
 <sup>1</sup> A duplicate identifier in the same template rejects creation with 400 `GUILD_TEMPLATE_INVALID`
 
-<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, 4 a category, and 5 an announcement channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, a forum channel (15) and a media channel (16) included, and creates no channel for it
+<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, 4 a category, 5 an announcement channel, 15 a forum channel, and 16 a media channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value and creates no channel for it
 
-<sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
+<sup>3</sup> The identifier is applied only when it resolves to a category in the same template and the channel is not itself a category, and every other value leaves the channel at the guild root
 
 <sup>4</sup> These voice fields are stored only on a voice channel and are null on every other channel type
 
 <sup>5</sup> An entry is applied only when its resolved `type` is 0 and its `id` resolves to a role in the same template, and the identifier `0` resolves to the everyone role. Fluxer skips every other entry, and a channel whose entries are all skipped is created with no overwrites
+
+<sup>6</sup> A topic longer than 4096 characters on a forum or media channel, or 1024 characters on any other channel, is shortened to that limit
+
+<sup>7</sup> Applied only to a forum or media channel. Each tag gets a new ID, its name is trimmed and shortened to 50 characters, a tag with an empty or repeated name is skipped, and Fluxer keeps at most 20 tags
+
+<sup>8</sup> Applied only to a forum or media channel, and only when `emoji_name` is a single unicode emoji
+
+<sup>9</sup> An unknown value is ignored and the channel keeps the default. `default_sort_order` and `default_tag_setting` apply only to a forum or media channel, `default_forum_layout` only to a forum channel, and `default_auto_archive_duration` to a text, announcement, forum or media channel
+
+<sup>10</sup> Applied to a text, announcement, forum or media channel, capped at 21600, and a value of 0 or less is ignored
+
+<sup>11</sup> Only the flags a forum or media channel can carry are kept, and `REQUIRE_TAG` is dropped when no imported tag can be applied by members without moderator permissions
+
+### Guild template forum tag object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | Tag name |
+| moderated? | ?boolean | Whether only moderators can apply the tag |
+| emoji_id?<sup>1</sup> | ?string \| integer | Custom emoji of the tag |
+| emoji_name?<sup>2</sup> | ?string | Unicode emoji of the tag |
+
+<sup>1</sup> Ignored on import, because the custom emoji does not exist in the new guild
+
+<sup>2</sup> Kept only when the value is a single unicode emoji
+
+### Guild template default reaction object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id?<sup>1</sup> | ?string \| integer | Custom emoji of the reaction |
+| emoji_name?<sup>2</sup> | ?string | Unicode emoji of the reaction |
+
+<sup>1</sup> Ignored on import, because the custom emoji does not exist in the new guild
+
+<sup>2</sup> Kept only when the value is a single unicode emoji
 
 ### Guild template role permission overwrite object
 

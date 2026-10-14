@@ -297,7 +297,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/guild-members.mdx', {'table-identifier': 2}],
 	['http-api/guild-moderation.mdx', {'table-cell': 1}],
 	['http-api/guild-stickers.mdx', {'table-cell': 3}],
-	['http-api/guilds.mdx', {'table-fit': 1, 'table-identifier': 4}],
+	['http-api/guilds.mdx', {'table-fit': 1, 'table-identifier': 5}],
 	['http-api/instance.mdx', {'table-identifier': 8}],
 	['http-api/invites.mdx', {'table-cell': 6}],
 	['http-api/messages.mdx', {'table-fit': 2, 'table-cell': 20, 'table-identifier': 2}],
