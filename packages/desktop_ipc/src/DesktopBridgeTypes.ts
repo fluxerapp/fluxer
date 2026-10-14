@@ -122,11 +122,16 @@ export interface VoiceBackgroundMediaReadResult {
 
 export interface DesktopTroubleshootingSettings {
 	disableHardwareAcceleration: boolean;
+	disableModuleUpdates: boolean;
 }
 
 export interface SetDesktopTroubleshootingDisableHardwareAccelerationOptions {
 	disable: boolean;
 	restart?: boolean;
+}
+
+export interface SetDesktopTroubleshootingDisableModuleUpdatesOptions {
+	disable: boolean;
 }
 
 export interface DesktopVoiceDebugEventSinkEntry {

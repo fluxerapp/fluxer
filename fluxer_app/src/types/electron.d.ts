@@ -35,6 +35,7 @@ import type {
 	NativeAudioStartResult,
 	NativeScreenCaptureLifecycleMessage,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
+	SetDesktopTroubleshootingDisableModuleUpdatesOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckEngine,
 	SpellcheckResolvedEngineInfo,
@@ -269,6 +270,9 @@ export interface ElectronAPI {
 	getDesktopTroubleshootingSettings?(): Promise<DesktopTroubleshootingSettings>;
 	setDesktopDisableHardwareAcceleration?(
 		options: SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
+	): Promise<DesktopTroubleshootingSettings>;
+	setDesktopDisableModuleUpdates?(
+		options: SetDesktopTroubleshootingDisableModuleUpdatesOptions,
 	): Promise<DesktopTroubleshootingSettings>;
 	getStreamerModeCaptureAppStatus?(): Promise<StreamerModeCaptureAppStatus>;
 	getInitialDeepLink(): Promise<string | null>;

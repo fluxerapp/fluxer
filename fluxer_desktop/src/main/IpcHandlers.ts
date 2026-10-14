@@ -73,6 +73,7 @@ import {
 	relaunchAndExit,
 	setHardwareAccelerationDisabled,
 	setHardwareAccelerationDisabledAndRestart,
+	setModuleUpdatesDisabledAndRestart,
 } from '@electron/main/Troubleshooting';
 import {parseUnreadBadge, UNREAD_BADGE_DOT} from '@electron/main/UnreadBadge';
 import {registerVoiceBackgroundMediaCacheHandlers} from '@electron/main/VoiceBackgroundMediaCache';
@@ -240,6 +241,13 @@ export function registerIpcHandlers(): void {
 			} else {
 				setHardwareAccelerationDisabled(disable);
 			}
+			return getLaunchDesktopTroubleshootingSettings();
+		},
+	);
+	ipcMain.handle(
+		'desktop-troubleshooting-set-disable-module-updates',
+		(_event, payload: {disable: boolean}): DesktopTroubleshootingSettings => {
+			setModuleUpdatesDisabledAndRestart(Boolean(payload?.disable));
 			return getLaunchDesktopTroubleshootingSettings();
 		},
 	);

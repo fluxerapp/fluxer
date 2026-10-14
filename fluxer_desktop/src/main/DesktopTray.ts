@@ -11,9 +11,9 @@ import type {
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 } from '@electron/common/Types';
+import {areModuleUpdatesDisabled} from '@electron/main/DesktopDebugInfo';
 import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/DesktopUpdateGate';
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
-import {areModuleUpdatesDisabled} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {renderTrayIcon, resolveTrayIconAppearance} from '@electron/main/TrayIconImage';

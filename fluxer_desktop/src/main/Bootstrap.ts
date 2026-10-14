@@ -159,7 +159,8 @@ async function runModuleBootstrap(): Promise<void> {
 	const {configureUserDataPath} = await import('@electron/common/UserDataPath');
 	const {armNativeProbeCache} = await import('@electron/main/NativeProbeCache');
 	const {isStartMinimizedLaunch} = await import('@electron/main/AutostartLaunch');
-	const {areModuleUpdatesDisabled, isDesktopUpdateRequested} = await import('@electron/main/LaunchOptions');
+	const {areModuleUpdatesDisabled} = await import('@electron/main/DesktopDebugInfo');
+	const {isDesktopUpdateRequested, shouldDisableModuleUpdatesForLaunch} = await import('@electron/main/LaunchOptions');
 	const {relaunchStableLaunchPath} = await import('@electron/main/LinuxLaunchPath');
 	const {getDesktopLocalAppProtocol} = await import('@electron/main/LocalAppProtocol');
 	const {
@@ -410,9 +411,10 @@ async function runModuleBootstrap(): Promise<void> {
 				logger.warn('Failed to record whether an update is waiting', error);
 			}
 		};
+		const moduleUpdatesForcedOff = shouldDisableModuleUpdatesForLaunch();
 		const moduleUpdatesDisabled = areModuleUpdatesDisabled();
 		if (moduleUpdatesDisabled) {
-			logger.info('Module updates are disabled by FLUXER_DISABLE_MODULE_UPDATES');
+			logger.info('Module updates are disabled for this launch');
 		}
 		const updater = new ModuleUpdater({
 			store,
@@ -421,7 +423,8 @@ async function runModuleBootstrap(): Promise<void> {
 			bundledRendererVersion: BUNDLED_RENDERER_VERSION,
 			preferUnversionedBundle: app.isPackaged,
 			forceStartupUpdate: store.shellVersionChanged || updateWasPending || isDesktopUpdateRequested(),
-			moduleUpdatesDisabled,
+			moduleUpdatesDisabled: moduleUpdatesForcedOff,
+			moduleUpdatesDisabledBySetting: moduleUpdatesDisabled && !moduleUpdatesForcedOff,
 			selfUpdateShellFirst:
 				shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE
 					? async (latestVersion) => {

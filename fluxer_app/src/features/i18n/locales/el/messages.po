@@ -1802,6 +1802,14 @@ msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί για 
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί για να απενεργοποιηθεί η επιτάχυνση υλικού του Chromium. Χρησιμοποιήστε το μόνο αν αντιμετωπίζετε προβλήματα γραφικών ή υψηλή χρήση GPU."
 
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
+msgstr "Το {PRODUCT_NAME} χρειάζεται επανεκκίνηση για να συνεχίσει τη λήψη ενημερώσεων."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
+msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί για να σταματήσει η λήψη ενημερώσεων. Μπορεί να μείνει πίσω και να σταματήσει να λειτουργεί με την υπηρεσία μέχρι να ενεργοποιήσετε ξανά τις ενημερώσεις."
+
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} {version} is available. Update it from your software center."
@@ -2010,6 +2018,11 @@ msgstr "Το {productName} εντόπισε πιθανή επιδρομή εδώ
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Staff"
 msgstr "Προσωπικό {productName}"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
+msgstr "Το {productName} σταματά τη λήψη ενημερώσεων. Μπορεί να μείνει πίσω και να σταματήσει να λειτουργεί με την υπηρεσία μέχρι να ενεργοποιηθούν ξανά οι ενημερώσεις. Ισχύει την επόμενη φορά που θα ξεκινήσει το {productName}."
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
@@ -12427,6 +12440,16 @@ msgstr "Απενεργοποίηση κινήσεων και μεταβάσεω�
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Απενεργοποίηση κινήσεων και μεταβάσεων. Ελέγχεται αυτήν τη στιγμή από τη ρύθμιση του συστήματός σας."
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Disable automatic updates"
+msgstr "Απενεργοποίηση αυτόματων ενημερώσεων"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Disable automatic updates?"
+msgstr "Απενεργοποίηση αυτόματων ενημερώσεων;"
+
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Disable backend premium perks"
 msgstr "Απενεργοποίηση premium παροχών του backend"
@@ -13890,6 +13913,11 @@ msgstr "Ενεργοποίηση λήξης συνημμένων"
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Enable audio"
 msgstr "Ενεργοποίηση ήχου"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Enable automatic updates?"
+msgstr "Ενεργοποίηση αυτόματων ενημερώσεων;"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Enable beta feature"
@@ -36677,6 +36705,11 @@ msgstr "Ενημερωμένες πολιτικές"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx
 msgid "Updated saved media"
 msgstr "Ενημερώθηκαν τα αποθηκευμένα πολυμέσα"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "Updates"
+msgstr "Ενημερώσεις"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx

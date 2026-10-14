@@ -24,6 +24,7 @@ const SPELLCHECK_MODE_ARGS = new Set(['--fluxer-spellcheck']);
 const DISABLE_V8_CODE_CACHE_ARGS = new Set(['--fluxer-disable-v8-code-cache']);
 const DISABLE_NATIVE_GATEWAY_ARGS = new Set(['--fluxer-disable-native-gateway']);
 const DESKTOP_UPDATE_ARGS = new Set(['--fluxer-update']);
+const DISABLE_MODULE_UPDATES_ARGS = new Set(['--fluxer-disable-module-updates', '--disable-module-updates']);
 
 export function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
 	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
@@ -159,12 +160,12 @@ export function describeLaunchDiagnosticOptions(argv: ReadonlyArray<string> = pr
 		spellcheck: getSpellcheckLaunchMode(argv),
 		v8CodeCacheDisabled: shouldDisableV8CodeCache(argv),
 		nativeGatewayDisableReason: getNativeGatewayDisableReason(argv),
-		moduleUpdatesDisabled: areModuleUpdatesDisabled(),
+		moduleUpdatesDisabled: shouldDisableModuleUpdatesForLaunch(argv),
 	};
 }
 
-export function areModuleUpdatesDisabled(): boolean {
-	return truthyEnv('FLUXER_DISABLE_MODULE_UPDATES');
+export function shouldDisableModuleUpdatesForLaunch(argv: ReadonlyArray<string> = process.argv): boolean {
+	return hasFlag(argv, DISABLE_MODULE_UPDATES_ARGS) || truthyEnv('FLUXER_DISABLE_MODULE_UPDATES');
 }
 
 export function isDesktopUpdateRequested(argv: ReadonlyArray<string> = process.argv): boolean {

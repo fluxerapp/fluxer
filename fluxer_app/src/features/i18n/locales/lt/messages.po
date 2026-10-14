@@ -1802,6 +1802,14 @@ msgstr "Kad pavadinimo juostos pakeitimas įsigaliotų, {PRODUCT_NAME} reikia pa
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} reikia paleisti iš naujo, kad būtų išjungtas „Chromium“ aparatinės įrangos spartinimas. Naudokite tai tik tada, kai sprendžiate grafikos trikdžių arba didelio GPU naudojimo problemas."
 
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
+msgstr "{PRODUCT_NAME} turi iš naujo paleisti, kad vėl pradėtųsi naujinių siuntimas."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
+msgstr "{PRODUCT_NAME} turi persikrauti, kad nustotų siųstis naujinius. Jis gali atsilikti ir nustoti veikti su tarnyba, kol vėl įjungsite naujinius."
+
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} {version} is available. Update it from your software center."
@@ -2010,6 +2018,11 @@ msgstr "{productName} aptiko galimą ataką. Kvietimai pristabdyti, bandykite da
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Staff"
 msgstr "{productName} darbuotojas"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
+msgstr "{productName} nustos siųstis naujinius. Jis gali atsilikti ir nustoti veikti su tarnyba, kol naujiniai vėl bus įjungti. Įsigalios kitą kartą paleidus {productName}."
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
@@ -12427,6 +12440,16 @@ msgstr "Išjungti animacijas ir perėjimus visoje programėlėje."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Išjungti animacijas ir perėjimus. Šiuo metu valdoma jūsų sistemos nustatymų."
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Disable automatic updates"
+msgstr "Išjungti automatinį naujinimą"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Disable automatic updates?"
+msgstr "Išjungti automatinį naujinimą?"
+
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Disable backend premium perks"
 msgstr "Išjungti premium privilegijas serveryje"
@@ -13890,6 +13913,11 @@ msgstr "Įjungti priedų galiojimo pabaigą"
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Enable audio"
 msgstr "Įjungti garsą"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Enable automatic updates?"
+msgstr "Įjungti automatinį naujinimą?"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Enable beta feature"
@@ -36678,6 +36706,11 @@ msgstr "Atnaujintos taisyklės"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx
 msgid "Updated saved media"
 msgstr "Išsaugota medija atnaujinta"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "Updates"
+msgstr "Naujinimai"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx

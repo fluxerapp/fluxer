@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {areModuleUpdatesDisabled} from '@electron/main/DesktopDebugInfo';
 import {checkForUpdatesFromShell} from '@electron/main/DesktopUpdatePrompt';
-import {areModuleUpdatesDisabled} from '@electron/main/LaunchOptions';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {buildTroubleshootingMenuItems} from '@electron/main/Troubleshooting';

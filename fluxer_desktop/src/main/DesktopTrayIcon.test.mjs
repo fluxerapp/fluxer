@@ -19,7 +19,8 @@ globalThis.__fluxerDesktopTrayIconTestSettings__ = settings;
 
 installTestModuleStub(
 	'@electron/common/DesktopConfig',
-	'export const getDesktopWindowBehaviorSettings = () => ({...globalThis.__fluxerDesktopTrayIconTestSettings__});',
+	`export const getDesktopWindowBehaviorSettings = () => ({...globalThis.__fluxerDesktopTrayIconTestSettings__});
+export const getDesktopTroubleshootingSettings = () => ({disableHardwareAcceleration: false, disableModuleUpdates: false});`,
 );
 installTestModuleStub(
 	'@electron/main/DesktopUpdatePrompt',

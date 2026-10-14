@@ -1802,6 +1802,14 @@ msgstr "{PRODUCT_NAME} ต้องรีสตาร์ทเพื่อให
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} ต้องรีสตาร์ทเพื่อปิดการเร่งฮาร์ดแวร์ของ Chromium ใช้ตัวเลือกนี้เฉพาะเมื่อคุณกำลังแก้ปัญหาภาพกราฟิกผิดปกติหรือการใช้งาน GPU สูง"
 
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
+msgstr "{PRODUCT_NAME} ต้องรีสตาร์ทเพื่อเริ่มดาวน์โหลดอัปเดตอีกครั้ง"
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
+msgstr "{PRODUCT_NAME} ต้องรีสตาร์ทเพื่อหยุดดาวน์โหลดอัปเดต อาจทำให้ล้าหลังและหยุดทำงานกับบริการได้จนกว่าคุณจะเปิดอัปเดตอีกครั้ง"
+
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} {version} is available. Update it from your software center."
@@ -2010,6 +2018,11 @@ msgstr "{productName} ตรวจพบการโจมตีที่อา�
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Staff"
 msgstr "ทีมงาน {productName}"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
+msgstr "{productName} จะหยุดดาวน์โหลดอัปเดต อาจทำให้ล้าสมัยและหยุดทำงานร่วมกับบริการได้จนกว่าจะเปิดใช้งานอัปเดตอีกครั้ง จะมีผลในครั้งถัดไปที่ {productName} เริ่มทำงาน"
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
@@ -12427,6 +12440,16 @@ msgstr "ปิดภาพเคลื่อนไหวและเอฟเฟ
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "ปิดภาพเคลื่อนไหวและเอฟเฟกต์การเปลี่ยนภาพ ขณะนี้ควบคุมโดยการตั้งค่าระบบของคุณ"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Disable automatic updates"
+msgstr "ปิดการอัปเดตอัตโนมัติ"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Disable automatic updates?"
+msgstr "ปิดการอัปเดตอัตโนมัติหรือไม่"
+
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Disable backend premium perks"
 msgstr "ปิดสิทธิประโยชน์พรีเมียมของแบ็กเอนด์"
@@ -13890,6 +13913,11 @@ msgstr "เปิดใช้งานการหมดอายุไฟล์
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Enable audio"
 msgstr "เปิดเสียง"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Enable automatic updates?"
+msgstr "เปิดใช้งานการอัปเดตอัตโนมัติหรือไม่"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Enable beta feature"
@@ -36677,6 +36705,11 @@ msgstr "อัปเดตนโยบายแล้ว"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx
 msgid "Updated saved media"
 msgstr "อัปเดตสื่อที่บันทึกไว้แล้ว"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "Updates"
+msgstr "อัปเดต"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx

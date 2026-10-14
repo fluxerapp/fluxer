@@ -268,6 +268,7 @@ interface ModuleUpdaterOptions {
 	readonly preferUnversionedBundle?: boolean;
 	readonly forceStartupUpdate?: boolean;
 	readonly moduleUpdatesDisabled?: boolean;
+	readonly moduleUpdatesDisabledBySetting?: boolean;
 	readonly selfUpdateShellFirst?: (latestVersion: string) => Promise<{readonly reason: string}>;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
 	readonly report?: (report: ModuleUpdaterReport) => void;
@@ -288,6 +289,7 @@ export class ModuleUpdater {
 	private readonly hasOfflineRenderer: boolean;
 	private readonly forceStartupUpdate: boolean;
 	private readonly moduleUpdatesDisabled: boolean;
+	private readonly moduleUpdatesDisabledBySetting: boolean;
 	private readonly selfUpdateShellFirst: ((latestVersion: string) => Promise<{readonly reason: string}>) | null;
 	private readonly shellFirstAttempts = new Map<string, {readonly reason: string} | null>();
 	private readonly manifestFeed: ModuleManifestFeedIdentity;
@@ -317,6 +319,7 @@ export class ModuleUpdater {
 		this.hasOfflineRenderer = options.hasOfflineRenderer ?? false;
 		this.forceStartupUpdate = options.forceStartupUpdate ?? false;
 		this.moduleUpdatesDisabled = options.moduleUpdatesDisabled ?? false;
+		this.moduleUpdatesDisabledBySetting = options.moduleUpdatesDisabledBySetting ?? false;
 		this.selfUpdateShellFirst = options.selfUpdateShellFirst ?? null;
 		const releaseChannel = options.releaseChannel ?? BUILD_CHANNEL;
 		this.platform = options.platform ?? process.platform;
@@ -421,17 +424,16 @@ export class ModuleUpdater {
 				return reverted;
 			}
 		}
-		if (this.moduleUpdatesDisabled) {
+		if (this.moduleUpdatesDisabled || this.moduleUpdatesDisabledBySetting) {
 			const decision = await this.planner.evaluateUnreachableLaunch(this.startupUpdateEnforced);
 			if (decision.kind === ModuleUnreachableLaunchDecision.LAUNCH) {
 				return await this.launchUnreachable();
 			}
-			return this.blockUpdateRequired(
-				decision.reason,
-				[],
-				'module updates are disabled by FLUXER_DISABLE_MODULE_UPDATES',
-				{updateServerUnreachable: true},
-			);
+			if (this.moduleUpdatesDisabled) {
+				return this.blockUpdateRequired(decision.reason, [], 'module updates are disabled', {
+					updateServerUnreachable: true,
+				});
+			}
 		}
 		if (this.platform === 'linux' && !(await this.startupUpdateRequired())) {
 			return await this.launchIfAtFloor();

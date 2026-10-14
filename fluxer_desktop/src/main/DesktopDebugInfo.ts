@@ -12,7 +12,12 @@ import {
 	readDesktopAccountStoreTelemetry,
 } from '@electron/main/DesktopAccountStoreTelemetry';
 import {type DesktopAppStoreState, readDesktopAppStoreState} from '@electron/main/DesktopAppStoreHealth';
-import {getArgValue, hasFlag, isSafeModeLaunch} from '@electron/main/LaunchOptions';
+import {
+	getArgValue,
+	hasFlag,
+	isSafeModeLaunch,
+	shouldDisableModuleUpdatesForLaunch,
+} from '@electron/main/LaunchOptions';
 import {getDesktopInfo} from '@electron/main/PlatformInfo';
 import {
 	formatDesktopOsName,
@@ -86,6 +91,7 @@ export function resolveEffectiveDesktopTroubleshootingSettings(
 		disableHardwareAcceleration:
 			platform !== 'darwin' &&
 			(settings.disableHardwareAcceleration || shouldDisableHardwareAccelerationForLaunch(argv)),
+		disableModuleUpdates: settings.disableModuleUpdates || shouldDisableModuleUpdatesForLaunch(argv),
 	};
 }
 
@@ -98,6 +104,10 @@ export function getLaunchDesktopTroubleshootingSettings(): DesktopTroubleshootin
 		process.platform,
 	);
 	return launchTroubleshootingSettings;
+}
+
+export function areModuleUpdatesDisabled(): boolean {
+	return getLaunchDesktopTroubleshootingSettings().disableModuleUpdates;
 }
 
 export function shouldOpenDevToolsOnLaunch(argv: ReadonlyArray<string>): boolean {
@@ -265,7 +275,7 @@ export function formatDesktopDebugInfo(info: DesktopDebugInfo): string {
 		`Account store: ${formatAccountStoreState(info.accountStore)}`,
 		`Account store telemetry: ${formatDesktopAccountStoreTelemetry(info.accountStoreTelemetry)}`,
 		`Logs: ${info.logFilePath ?? info.logsPath ?? '(unavailable)'}`,
-		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}`,
+		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}, disableModuleUpdates=${info.troubleshooting.disableModuleUpdates}`,
 		`Window behavior: ${formatWindowBehavior(info.windowBehavior)}`,
 		`Runtime: packaged=${info.packaged}, portable=${info.portable}, pid=${info.pid}, cwd=${info.cwd}`,
 		`Sandbox: flatpak=${info.desktopInfo.flatpak}, flatpakAppId=${info.desktopInfo.flatpakAppId ?? '(none)'}`,

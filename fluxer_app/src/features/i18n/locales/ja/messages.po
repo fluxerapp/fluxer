@@ -1802,6 +1802,14 @@ msgstr "タイトルバーの変更を反映するには、{PRODUCT_NAME}を再�
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Chromiumのハードウェアアクセラレーションを無効にするには、{PRODUCT_NAME}を再起動する必要があります。この設定は、グラフィックの不具合やGPU使用率の高さをトラブルシューティングする場合にのみ使用してください。"
 
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
+msgstr "{PRODUCT_NAME} で再度アップデートのダウンロードを開始するには、再起動が必要です。"
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
+msgstr "{PRODUCT_NAME} はアップデートのダウンロードを停止するために再起動が必要です。遅延すると、サービスで動作しなくなる可能性があります。アップデートを再度有効にするまで、そのままになります。"
+
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} {version} is available. Update it from your software center."
@@ -2010,6 +2018,11 @@ msgstr "{productName}がここでレイドの可能性を検出しました。�
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Staff"
 msgstr "{productName}スタッフ"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
+msgstr "{productName} によるアップデートのダウンロードを停止します。これにより、バージョンが古くなり、アップデートが再度有効になるまでサービスで動作しなくなる可能性があります。次回 {productName} を起動したときに有効になります。"
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
@@ -12427,6 +12440,16 @@ msgstr "アプリ全体のアニメーションと画面遷移を無効にしま
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "アニメーションと画面遷移を無効にします。現在はシステム設定によって制御されています。"
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Disable automatic updates"
+msgstr "自動アップデートを無効にする"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Disable automatic updates?"
+msgstr "自動更新を無効にしますか？"
+
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Disable backend premium perks"
 msgstr "バックエンドのプレミアム特典を無効にする"
@@ -13890,6 +13913,11 @@ msgstr "添付ファイルの有効期限を有効にする"
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Enable audio"
 msgstr "音声の再生を許可"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Enable automatic updates?"
+msgstr "自動アップデートを有効にしますか？"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Enable beta feature"
@@ -36677,6 +36705,11 @@ msgstr "ポリシーを更新しました"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx
 msgid "Updated saved media"
 msgstr "保存済みメディアを更新しました"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "Updates"
+msgstr "アップデート"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx

@@ -14,6 +14,7 @@ import {
 	TITLE_BAR_DESCRIPTOR as TITLEBAR_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {
+	DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
 	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
 	LAUNCH_AT_LOGIN_DESCRIPTOR,
 	USE_NATIVE_TITLE_BAR_DESCRIPTOR,
@@ -67,6 +68,16 @@ const PERFORMANCE_DESCRIPTOR = msg({
 });
 const TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Toggle hardware acceleration',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+
+const UPDATES_DESCRIPTOR = msg({
+	message: 'Updates',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const STOP_DOWNLOADING_UPDATES_DESCRIPTOR = msg({
+	message:
+		'{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts.',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
@@ -246,6 +257,15 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR,
 		tags: ['desktop'],
 		isVisible: () => isDesktop() && getElectronAPI()?.platform !== 'darwin',
+	},
+	{
+		id: 'advanced-automatic-updates',
+		tabType: 'desktop_settings',
+		label: DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+		keywords: [UPDATES_DESCRIPTOR],
+		description: {...STOP_DOWNLOADING_UPDATES_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		tags: ['desktop'],
+		isVisible: () => isDesktop() && getElectronAPI()?.setDesktopDisableModuleUpdates != null,
 	},
 	{
 		id: 'advanced-autostart',

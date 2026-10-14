@@ -70,6 +70,7 @@ interface PersistedDesktopWindowBehaviorSettings {
 
 interface PersistedDesktopTroubleshootingSettings {
 	disableHardwareAcceleration?: boolean;
+	disableModuleUpdates?: boolean;
 }
 
 const INSTANCE_ENDPOINT_ARGS = ['--fluxer-instance'];
@@ -82,6 +83,7 @@ let configPath: string | null = null;
 function getDefaultDesktopTroubleshootingSettings(): DesktopTroubleshootingSettings {
 	return {
 		disableHardwareAcceleration: false,
+		disableModuleUpdates: false,
 	};
 }
 
@@ -155,6 +157,9 @@ function sanitizePersistedDesktopTroubleshootingSettings(
 	const settings: PersistedDesktopTroubleshootingSettings = {};
 	if (typeof value.disableHardwareAcceleration === 'boolean') {
 		settings.disableHardwareAcceleration = value.disableHardwareAcceleration;
+	}
+	if (typeof value.disableModuleUpdates === 'boolean') {
+		settings.disableModuleUpdates = value.disableModuleUpdates;
 	}
 	return Object.keys(settings).length > 0 ? settings : undefined;
 }
@@ -425,6 +430,10 @@ function normalizeDesktopTroubleshootingSettings(
 			typeof settings?.disableHardwareAcceleration === 'boolean'
 				? settings.disableHardwareAcceleration
 				: defaults.disableHardwareAcceleration,
+		disableModuleUpdates:
+			typeof settings?.disableModuleUpdates === 'boolean'
+				? settings.disableModuleUpdates
+				: defaults.disableModuleUpdates,
 	};
 }
 
@@ -433,6 +442,7 @@ function serializeDesktopTroubleshootingSettings(
 ): PersistedDesktopTroubleshootingSettings {
 	return {
 		disableHardwareAcceleration: settings.disableHardwareAcceleration,
+		disableModuleUpdates: settings.disableModuleUpdates,
 	};
 }
 

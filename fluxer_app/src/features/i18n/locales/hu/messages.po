@@ -1802,6 +1802,14 @@ msgstr "A címsor módosításának érvénybe lépéséhez újra kell indítani
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "A(z) {PRODUCT_NAME} újraindítása szükséges a Chromium hardveres gyorsításának kikapcsolásához. Ezt csak akkor használd, ha grafikai hibákat vagy magas GPU-használatot észlelsz."
 
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
+msgstr "A(z) {PRODUCT_NAME} újraindításra szorul, hogy újra elkezdhesse a frissítések letöltését."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
+msgstr "A(z) {PRODUCT_NAME} újraindításra szorul a frissítések letöltésének leállításához. Lehet, hogy lemarad, és leáll a szolgáltatással való együttműködés, amíg újra be nem kapcsolja a frissítéseket."
+
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} {version} is available. Update it from your software center."
@@ -2010,6 +2018,11 @@ msgstr "A(z) {productName} lehetséges összehangolt támadást észlelt itt. A 
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Staff"
 msgstr "{productName} munkatárs"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
+msgstr "A(z) {productName} leállítja a frissítések letöltését. Lehet, hogy elavul, és nem fog működni a szolgáltatással, amíg a frissítések újra engedélyezve nem lesznek. A következő indításkor lép életbe a(z) {productName} esetében."
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
@@ -12427,6 +12440,16 @@ msgstr "Animációk és átmenetek kikapcsolása az alkalmazásban."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Animációk és átmenetek letiltása. Jelenleg a rendszerbeállítások vezérlik."
 
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Disable automatic updates"
+msgstr "Automatikus frissítések letiltása"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Disable automatic updates?"
+msgstr "Automatikus frissítések letiltása?"
+
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Disable backend premium perks"
 msgstr "Prémiumelőnyök letiltása a szerveren"
@@ -13890,6 +13913,11 @@ msgstr "Mellékletek lejáratának engedélyezése"
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx
 msgid "Enable audio"
 msgstr "Hang engedélyezése"
+
+#. Confirmation prompt in advanced settings.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
+msgid "Enable automatic updates?"
+msgstr "Automatikus frissítések engedélyezése?"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "Enable beta feature"
@@ -36677,6 +36705,11 @@ msgstr "Frissített szabályzatok"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx
 msgid "Updated saved media"
 msgstr "Mentett média frissítve"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "Updates"
+msgstr "Frissítések"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx

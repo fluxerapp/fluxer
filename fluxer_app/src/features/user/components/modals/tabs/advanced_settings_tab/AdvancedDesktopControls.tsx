@@ -6,6 +6,7 @@ import {
 	getCachedDesktopTroubleshootingSettings,
 	getDesktopTroubleshootingSettings,
 	setDesktopDisableHardwareAcceleration,
+	setDesktopDisableModuleUpdates,
 } from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import SourceMaps from '@app/features/platform/state/SourceMaps';
@@ -21,6 +22,7 @@ import {
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {
+	DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
 	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
 	LATER_DESCRIPTOR,
 	RESTART_NOW_DESCRIPTOR,
@@ -59,6 +61,14 @@ const ENABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 });
 const DISABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Disable hardware acceleration?',
+	comment: 'Confirmation prompt in advanced settings.',
+});
+const ENABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR = msg({
+	message: 'Enable automatic updates?',
+	comment: 'Confirmation prompt in advanced settings.',
+});
+const DISABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR = msg({
+	message: 'Disable automatic updates?',
 	comment: 'Confirmation prompt in advanced settings.',
 });
 
@@ -235,6 +245,62 @@ export const HardwareAccelerationControl = observer(() => {
 			onChange={handleChange}
 			compact
 			data-flx="user.advanced-settings-tab.switch.hardware-acceleration"
+		/>
+	);
+});
+
+export const AutomaticUpdatesControl = observer(() => {
+	const {i18n} = useLingui();
+	const {desktopTroubleshooting, desktopTroubleshootingBusy, setDesktopTroubleshooting, setDesktopTroubleshootingBusy} =
+		useDesktopTroubleshootingSettings();
+	const handleChange = useCallback(
+		(value: boolean) => {
+			ModalCommands.push(
+				modal(() => (
+					<ConfirmModal
+						title={
+							value
+								? i18n._(DISABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR)
+								: i18n._(ENABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR)
+						}
+						description={
+							value ? (
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to stop downloading updates. It can
+									fall behind and stop working with the service until you turn updates back on.
+								</Trans>
+							) : (
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to start downloading updates again.
+								</Trans>
+							)
+						}
+						primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
+						primaryVariant="primary"
+						secondaryText={i18n._(CANCEL_DESCRIPTOR)}
+						onPrimary={async () => {
+							setDesktopTroubleshootingBusy(true);
+							const next = await setDesktopDisableModuleUpdates(value);
+							if (next) {
+								setDesktopTroubleshooting(next);
+							}
+							setDesktopTroubleshootingBusy(false);
+						}}
+						data-flx="user.advanced-settings-tab.automatic-updates.confirm-modal"
+					/>
+				)),
+			);
+		},
+		[i18n, setDesktopTroubleshooting, setDesktopTroubleshootingBusy],
+	);
+	return (
+		<Switch
+			ariaLabel={i18n._(DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR)}
+			value={desktopTroubleshooting?.disableModuleUpdates ?? false}
+			disabled={desktopTroubleshootingBusy || desktopTroubleshooting === null}
+			onChange={handleChange}
+			compact
+			data-flx="user.advanced-settings-tab.switch.automatic-updates"
 		/>
 	);
 });

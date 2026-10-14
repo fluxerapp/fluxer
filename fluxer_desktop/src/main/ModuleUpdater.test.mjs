@@ -128,6 +128,7 @@ function createUpdater(store, modules, options = {}) {
 		bundledRendererVersion: options.bundledRendererVersion ?? null,
 		forceStartupUpdate: options.forceStartupUpdate ?? false,
 		moduleUpdatesDisabled: options.moduleUpdatesDisabled ?? false,
+		moduleUpdatesDisabledBySetting: options.moduleUpdatesDisabledBySetting ?? false,
 		selfUpdateShellFirst: options.selfUpdateShellFirst,
 		onState: options.onState,
 		fetch: async (url, init) => {
@@ -573,6 +574,41 @@ describe('ModuleUpdater with module updates disabled', () => {
 		assert.equal(outcome.updateServerUnreachable, true);
 		assert.deepEqual(requests, []);
 		assert.deepEqual(sleeps, []);
+	});
+
+	test('the saved setting launches the verified set without fetching', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		installModuleOnDisk(getModuleStoreRoot(userDataPath), 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
+		await store.commit({fluxer_renderer: RENDERER_SHA});
+		assert.equal((await createUpdater(store, {fluxer_renderer: RENDERER_SHA}).updater.run()).status, 'launching');
+		const {updater, requests} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{moduleUpdatesDisabledBySetting: true},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'unreachable-launch');
+		assert.deepEqual(outcome.committed, {fluxer_renderer: RENDERER_SHA});
+		assert.deepEqual(requests, []);
+	});
+
+	test('the saved setting goes to the update server when nothing can launch', async () => {
+		const store = await openStore(createUserData());
+		const {updater, requests} = createUpdater(
+			store,
+			{fluxer_renderer: RENDERER_SHA},
+			{moduleUpdatesDisabledBySetting: true, respond: missingPackages()},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'blocked-update-required');
+		assert.equal(outcome.reason, 'required-module-unavailable');
+		assert.equal(outcome.updateServerUnreachable, false);
+		assert.ok(requests.some((url) => String(url).endsWith('/modules.json')));
 	});
 });
 

@@ -407,6 +407,11 @@ export const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 
+export const DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR = msg({
+	message: 'Disable automatic updates',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+
 export const LOOK_AND_FEEL_DESCRIPTOR = msg({
 	message: 'Appearance',
 	comment: 'User settings tab for app appearance and layout options.',
