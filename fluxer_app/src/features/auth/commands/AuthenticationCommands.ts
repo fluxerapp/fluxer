@@ -769,7 +769,7 @@ export async function fetchDesktopHandoffInfo({
 	return response.body;
 }
 
-export interface CompleteLoginOptions {
+interface CompleteLoginOptions {
 	redirectPath?: string | null;
 }
 

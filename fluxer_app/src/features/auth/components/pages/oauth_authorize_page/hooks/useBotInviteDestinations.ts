@@ -10,6 +10,8 @@ import {
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
 import Accounts from '@app/features/auth/state/Accounts';
 import {formatList} from '@app/features/i18n/utils/IntlCache';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -106,9 +108,14 @@ function getGroupDmLabel(channel: ChannelResponse, unknownGroupDmLabel: string, 
 	return unknownGroupDmLabel;
 }
 
-export function useBotInviteDestinations(enabled: boolean, rawPermissions: string | null): BotInviteDestinationsResult {
+export function useBotInviteDestinations(
+	enabled: boolean,
+	rawPermissions: string | null,
+	revalidate: boolean,
+): BotInviteDestinationsResult {
 	const {i18n} = useLingui();
 	const currentAccountKey = Accounts.currentAccountKey;
+	const accountWorkAdmitted = !AccountScopedWork.isSuspended;
 	const requestedPermissions = useMemo(() => parseRequestedBotPermissions(rawPermissions, false), [rawPermissions]);
 	const i18nRef = useRef(i18n);
 	i18nRef.current = i18n;
@@ -116,17 +123,32 @@ export function useBotInviteDestinations(enabled: boolean, rawPermissions: strin
 	const [rawGuilds, setRawGuilds] = useState<ReadonlyArray<GuildSummary>>([]);
 	const [rawChannels, setRawChannels] = useState<ReadonlyArray<ChannelResponse>>([]);
 	const [error, setError] = useState<string | null>(null);
+	const [revision, setRevision] = useState(0);
+	const loadedAccountKeyRef = useRef<string | null>(null);
+	useEffect(() => {
+		if (!revalidate) return;
+		const bumpRevision = () => setRevision((value) => value + 1);
+		bumpRevision();
+		window.addEventListener('focus', bumpRevision);
+		return () => {
+			window.removeEventListener('focus', bumpRevision);
+		};
+	}, [revalidate]);
 	useEffect(() => {
 		if (!enabled) {
+			loadedAccountKeyRef.current = null;
 			setStatus('idle');
 			setRawGuilds([]);
 			setRawChannels([]);
 			setError(null);
 			return;
 		}
+		if (loadedAccountKeyRef.current !== currentAccountKey) {
+			setStatus('loading');
+			setError(null);
+		}
+		if (!accountWorkAdmitted) return;
 		let cancelled = false;
-		setStatus('loading');
-		setError(null);
 		(async () => {
 			try {
 				const [guildsResp, channelsResp] = await Promise.all([
@@ -136,10 +158,13 @@ export function useBotInviteDestinations(enabled: boolean, rawPermissions: strin
 				if (cancelled) return;
 				setRawGuilds(guildsResp.body);
 				setRawChannels(channelsResp.body.filter((channel) => channel.type === ChannelTypes.GROUP_DM));
+				loadedAccountKeyRef.current = currentAccountKey;
+				setError(null);
 				setStatus('ready');
 			} catch (err) {
-				if (cancelled) return;
+				if (cancelled || isAccountTransitionAbortError(err)) return;
 				logger.error('Failed to fetch bot invite destinations', err);
+				loadedAccountKeyRef.current = null;
 				setError(failureMessage(err) ?? i18nRef.current._(FAILED_TO_LOAD_INVITE_DESTINATIONS_DESCRIPTOR));
 				setRawGuilds([]);
 				setRawChannels([]);
@@ -149,7 +174,7 @@ export function useBotInviteDestinations(enabled: boolean, rawPermissions: strin
 		return () => {
 			cancelled = true;
 		};
-	}, [enabled, currentAccountKey]);
+	}, [enabled, currentAccountKey, accountWorkAdmitted, revision]);
 	const guilds = useMemo<ReadonlyArray<GuildWithPermissions>>(
 		() => mapBotGuilds(rawGuilds, requestedPermissions, i18n._(UNKNOWN_COMMUNITY_DESCRIPTOR)),
 		[rawGuilds, requestedPermissions, i18n.locale],

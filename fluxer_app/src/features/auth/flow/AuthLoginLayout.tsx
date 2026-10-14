@@ -121,7 +121,7 @@ export interface AuthLoginLayoutProps {
 	readonly registerLink: ReactElement<Record<string, unknown>>;
 	readonly onLoginComplete?: ((payload: LoginSuccessPayload) => Promise<void> | void) | null;
 	readonly onBackActionChange?: ((action: (() => void) | null) => void) | null;
-	readonly completeLoginRedirectPath?: string | null;
+	readonly completeLoginRedirectPath: string | null;
 	readonly forceCredentials?: boolean;
 	readonly startWithAddAccount?: boolean;
 	readonly runtimeTarget: AuthRuntimeTarget;
@@ -343,15 +343,6 @@ function resolveMethodSsoAction({
 	return {isStarting, label, onStart};
 }
 
-function resolveCompleteLoginOptions(
-	completeLoginRedirectPath: string | null,
-): AuthenticationCommands.CompleteLoginOptions {
-	if (completeLoginRedirectPath == null) {
-		return {};
-	}
-	return {redirectPath: completeLoginRedirectPath};
-}
-
 function resolveAuthBackAction({
 	accountListBackAction,
 	authLoginStep,
@@ -400,7 +391,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	registerLink,
 	onLoginComplete = null,
 	onBackActionChange = null,
-	completeLoginRedirectPath = null,
+	completeLoginRedirectPath,
 	forceCredentials = false,
 	startWithAddAccount = false,
 	runtimeTarget,
@@ -509,7 +500,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 			}
 			await AuthenticationCommands.completeLogin(
 				{...payload, runtimeSnapshot: requireAuthInstanceSnapshot(resolvedAuthRuntimeSnapshot)},
-				resolveCompleteLoginOptions(completeLoginRedirectPath),
+				{redirectPath: completeLoginRedirectPath},
 			);
 			if (onLoginComplete != null) {
 				await onLoginComplete(payload);
@@ -572,7 +563,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	);
 	const handleStoredAccountLogin = useCallback(
 		async (payload: StoredAccountLoginPayload) => {
-			await AuthenticationCommands.completeLogin(payload, resolveCompleteLoginOptions(completeLoginRedirectPath));
+			await AuthenticationCommands.completeLogin(payload, {redirectPath: completeLoginRedirectPath});
 			if (onLoginComplete != null) {
 				await onLoginComplete(payload);
 			}

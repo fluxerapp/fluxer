@@ -185,7 +185,11 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	const initialMissingClientId = !params;
 	const publicAppState = useOAuthPublicApp(params?.clientId ?? null);
 	const scopeSelection = useScopeSelection(scopes);
-	const destinations = useBotInviteDestinations(hasBotScope, params?.permissions ?? null);
+	const destinations = useBotInviteDestinations(
+		hasBotScope,
+		params?.permissions ?? null,
+		phase.kind === 'review' && phase.step === 'community',
+	);
 	const selectedDestinationTarget = parseBotInviteDestinationKey(selectedDestinationKey);
 	const selectedGuildId = selectedDestinationTarget?.kind === 'guild' ? selectedDestinationTarget.id : null;
 	const permissionSelection = usePermissionSelection(
@@ -280,18 +284,15 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		});
 	}, [phase.kind]);
 	const currentAccountKey = Accounts.currentAccountKey;
-	const destinationInitRef = useRef(false);
 	useEffect(() => {
-		destinationInitRef.current = false;
 		setSelectedDestinationKey(null);
 	}, [currentAccountKey]);
 	useEffect(() => {
 		if (!hasBotScope) {
-			destinationInitRef.current = false;
 			setSelectedDestinationKey(null);
 			return;
 		}
-		if (destinationInitRef.current) return;
+		if (destinations.options.some((option) => option.value === selectedDestinationKey)) return;
 		const requestedDestinationKey = params?.channelId
 			? createBotInviteDestinationKey('group_dm', params.channelId)
 			: params?.guildId
@@ -304,23 +305,23 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 					? requestedDestinationKey
 					: null,
 			);
-			destinationInitRef.current = true;
 			return;
 		}
 		if (destinations.status !== 'ready') return;
 		const preferredDestinationKey = preferredDestinationKeyRef.current;
 		if (preferredDestinationKey && destinations.options.some((option) => option.value === preferredDestinationKey)) {
 			setSelectedDestinationKey(preferredDestinationKey);
-			destinationInitRef.current = true;
 			return;
 		}
-		if (destinations.options.length > 0) {
-			setSelectedDestinationKey(destinations.options[0].value);
-			destinationInitRef.current = true;
-			return;
-		}
-		destinationInitRef.current = true;
-	}, [hasBotScope, params?.guildId, params?.channelId, destinations.options, destinations.status]);
+		setSelectedDestinationKey(destinations.options[0]?.value ?? null);
+	}, [
+		hasBotScope,
+		params?.guildId,
+		params?.channelId,
+		destinations.options,
+		destinations.status,
+		selectedDestinationKey,
+	]);
 	const selectedDestination = useMemo(
 		() => destinations.options.find((option) => option.value === selectedDestinationKey) ?? null,
 		[destinations.options, selectedDestinationKey],

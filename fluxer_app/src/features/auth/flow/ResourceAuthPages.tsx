@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
@@ -141,7 +142,7 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 					showTitle={false}
 					title={null}
 					onBackActionChange={null}
-					completeLoginRedirectPath={null}
+					completeLoginRedirectPath={Routes.ME}
 					forceCredentials={false}
 					startWithAddAccount={false}
 					runtimeTarget={runtimeTarget}
