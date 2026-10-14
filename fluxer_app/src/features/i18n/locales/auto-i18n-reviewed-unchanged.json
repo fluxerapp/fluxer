@@ -1731,6 +1731,7 @@
 		"Your subscription can't move to the new price right now.",
 		"Your subscription moves to the new price on {effectiveDate}.",
 		"Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here.",
+		"Your system has no hardware video encoder that {productName} can use, so screen sharing uses software encoding.",
 		"Your {premiumProductName} perks have ended. Subscribe again to bring them back.",
 		"[Original message deleted]",
 		"deleted-category",

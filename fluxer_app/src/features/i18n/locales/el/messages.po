@@ -40580,6 +40580,11 @@ msgstr "Η συνδρομή σας θα αλλάξει σε μηνιαία χρ�
 msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "Η συνδρομή σας θα μεταβεί σε ετήσια χρέωση στην επόμενη ανανέωση."
 
+#. Inline informational note in the screen share picker on Linux systems where no hardware video encoder is available, for example NVIDIA-only machines. Not an error.
+#: src/features/voice/components/modals/screen_share_picker_modal/SoftwareEncodeNotice.tsx
+msgid "Your system has no hardware video encoder that {productName} can use, so screen sharing uses software encoding."
+msgstr "Το σύστημά σας δεν διαθέτει επιταχυντή υλικού για κωδικοποίηση βίντεο που μπορεί να χρησιμοποιήσει το {productName}, οπότε η κοινή χρήση οθόνης χρησιμοποιεί κωδικοποίηση λογισμικού."
+
 #. Body of the error modal shown when a theme CSS exceeds the maximum shareable size.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Your theme CSS is too large to share. Trim it down and try again."

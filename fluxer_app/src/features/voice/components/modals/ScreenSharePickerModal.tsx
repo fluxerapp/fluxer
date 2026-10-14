@@ -33,6 +33,7 @@ import {
 } from '@app/features/voice/components/modals/screen_share_picker_modal/PickerGrid';
 import {ScreenSharePickerDisplayPermissionPrompt} from '@app/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt';
 import {screenRecordingPermissionAllowsPickerSources} from '@app/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionStateMachine';
+import {SoftwareEncodeNotice} from '@app/features/voice/components/modals/screen_share_picker_modal/SoftwareEncodeNotice';
 import {
 	DESKTOP_SOURCE_LIST_POLL_INTERVAL_MS,
 	desktopSourceIdentitiesMatch,
@@ -1396,6 +1397,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 							data-flx="voice.screen-share-picker-modal.screen-share-picker-modal-loaded-content.per-window-audio-notice"
 						/>
 					)}
+					<SoftwareEncodeNotice data-flx="voice.screen-share-picker-modal.screen-share-picker-modal-loaded-content.software-encode-notice" />
 					{activeTab === 'devices' && devicePreviewPermissionStatus !== 'granted' ? (
 						<DevicePreviewPermissionState
 							status={devicePreviewPermissionStatus}

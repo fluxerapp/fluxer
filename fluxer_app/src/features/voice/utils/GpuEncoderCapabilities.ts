@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, guessPlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -441,16 +441,176 @@ export function reconcileHardwareEncodeReport(
 	};
 }
 
+export interface HardwareVideoEncodeProfile {
+	codec: VideoCodec;
+	profile: string;
+	maxWidth: number;
+	maxHeight: number;
+	maxFrameRate: number | null;
+}
+
+interface HardwareVideoEncodeProfileCandidate {
+	codec: VideoCodec;
+	profile: string;
+	codecString: string;
+}
+
+interface VideoEncoderSupportLike {
+	supported?: boolean;
+}
+
+export interface VideoEncoderLike {
+	isConfigSupported?: (config: unknown) => Promise<VideoEncoderSupportLike | undefined>;
+}
+
+const HARDWARE_VIDEO_ENCODE_PROFILE_CANDIDATES: ReadonlyArray<HardwareVideoEncodeProfileCandidate> = [
+	{codec: 'h264', profile: 'constrained-baseline', codecString: 'avc1.42e033'},
+	{codec: 'h264', profile: 'main', codecString: 'avc1.4d0033'},
+	{codec: 'h264', profile: 'high', codecString: 'avc1.640033'},
+	{codec: 'vp8', profile: 'any', codecString: 'vp8'},
+	{codec: 'vp9', profile: 'profile-0', codecString: 'vp09.00.51.08'},
+	{codec: 'h265', profile: 'main', codecString: 'hvc1.1.6.L153.B0'},
+	{codec: 'av1', profile: 'main', codecString: 'av01.0.13M.08'},
+];
+
+const HARDWARE_VIDEO_ENCODE_PROBE_SIZES: ReadonlyArray<{width: number; height: number}> = [
+	{width: 1280, height: 720},
+	{width: 1920, height: 1080},
+	{width: 2560, height: 1440},
+	{width: 3840, height: 2160},
+];
+
+const HARDWARE_VIDEO_ENCODE_PROBE_FRAME_RATES: ReadonlyArray<number> = [30, 60, 120];
+
+function getVideoEncoder(): VideoEncoderLike | null {
+	const encoder = (globalThis as {VideoEncoder?: VideoEncoderLike}).VideoEncoder;
+	return encoder?.isConfigSupported ? encoder : null;
+}
+
+async function isHardwareEncodeConfigSupported(
+	encoder: VideoEncoderLike,
+	codecString: string,
+	size: {width: number; height: number},
+	framerate?: number,
+): Promise<boolean> {
+	try {
+		const support = await encoder.isConfigSupported?.({
+			codec: codecString,
+			width: size.width,
+			height: size.height,
+			...(framerate === undefined ? {} : {framerate}),
+			hardwareAcceleration: 'prefer-hardware',
+		});
+		return support?.supported === true;
+	} catch {
+		return false;
+	}
+}
+
+async function probeHardwareVideoEncodeProfile(
+	encoder: VideoEncoderLike,
+	candidate: HardwareVideoEncodeProfileCandidate,
+): Promise<HardwareVideoEncodeProfile | null> {
+	let maxSize: {width: number; height: number} | null = null;
+	for (const size of HARDWARE_VIDEO_ENCODE_PROBE_SIZES) {
+		if (!(await isHardwareEncodeConfigSupported(encoder, candidate.codecString, size))) break;
+		maxSize = size;
+	}
+	if (maxSize === null) return null;
+	let maxFrameRate: number | null = null;
+	for (const framerate of HARDWARE_VIDEO_ENCODE_PROBE_FRAME_RATES) {
+		const supported = await isHardwareEncodeConfigSupported(
+			encoder,
+			candidate.codecString,
+			HARDWARE_VIDEO_ENCODE_PROBE_SIZES[0],
+			framerate,
+		);
+		if (!supported) break;
+		maxFrameRate = framerate;
+	}
+	return {
+		codec: candidate.codec,
+		profile: candidate.profile,
+		maxWidth: maxSize.width,
+		maxHeight: maxSize.height,
+		maxFrameRate,
+	};
+}
+
+export async function probeHardwareVideoEncodeProfiles(
+	encoder: VideoEncoderLike | null,
+): Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> {
+	if (!encoder) return null;
+	const probed = await Promise.all(
+		HARDWARE_VIDEO_ENCODE_PROFILE_CANDIDATES.map((candidate) => probeHardwareVideoEncodeProfile(encoder, candidate)),
+	);
+	return probed.filter((profile): profile is HardwareVideoEncodeProfile => profile !== null);
+}
+
+export function describeHardwareVideoEncodeProfiles(
+	profiles: ReadonlyArray<HardwareVideoEncodeProfile> | null,
+): string | Array<string> {
+	if (profiles === null) return 'unknown: WebCodecs hardware encode probe unavailable';
+	if (profiles.length === 0) return 'none: Chromium has no hardware video encoder for any probed profile';
+	return profiles.map((profile) => {
+		const frameRate = profile.maxFrameRate === null ? 'unknown fps' : `${profile.maxFrameRate} fps`;
+		return `${profile.codec} ${profile.profile} up to ${profile.maxWidth}x${profile.maxHeight} at ${frameRate}`;
+	});
+}
+
+let hardwareVideoEncodeProfiles: ReadonlyArray<HardwareVideoEncodeProfile> | null = null;
+let pendingHardwareVideoEncodeProfiles: Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> | null = null;
+
+export function loadHardwareVideoEncodeProfiles(): Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> {
+	if (hardwareVideoEncodeProfiles) return Promise.resolve(hardwareVideoEncodeProfiles);
+	if (pendingHardwareVideoEncodeProfiles) return pendingHardwareVideoEncodeProfiles;
+	pendingHardwareVideoEncodeProfiles = probeHardwareVideoEncodeProfiles(getVideoEncoder())
+		.then((profiles) => {
+			hardwareVideoEncodeProfiles = profiles;
+			logger.info('Probed hardware video encode profiles', {profiles: describeHardwareVideoEncodeProfiles(profiles)});
+			return profiles;
+		})
+		.finally(() => {
+			pendingHardwareVideoEncodeProfiles = null;
+		});
+	return pendingHardwareVideoEncodeProfiles;
+}
+
+export interface SoftwareVideoEncodeExpectationInput {
+	platform: NativePlatform;
+	h264HardwareProfileCount: number | null;
+	hardwareEncodeProfiles: ReadonlyArray<HardwareVideoEncodeProfile> | null;
+}
+
+export function isSoftwareVideoEncodeExpected(input: SoftwareVideoEncodeExpectationInput): boolean {
+	if (input.platform !== 'linux') return false;
+	if ((input.h264HardwareProfileCount ?? 0) > 0) return false;
+	if (input.hardwareEncodeProfiles !== null) return input.hardwareEncodeProfiles.length === 0;
+	return input.h264HardwareProfileCount === 0;
+}
+
+export function isSoftwareVideoEncodeExpectedSync(): boolean {
+	return isSoftwareVideoEncodeExpected({
+		platform: guessPlatform(),
+		h264HardwareProfileCount: getH264HardwareProfilesSync()?.profiles.size ?? null,
+		hardwareEncodeProfiles: hardwareVideoEncodeProfiles,
+	});
+}
+
 let cachedReport: HardwareEncodeReport | null = null;
 let pendingPromise: Promise<HardwareEncodeReport | null> | null = null;
 
 function fetchReport(): Promise<HardwareEncodeReport | null> {
 	if (!isDesktop()) {
-		return probeH264HardwareProfiles().then(() => null);
+		return Promise.all([probeH264HardwareProfiles(), loadHardwareVideoEncodeProfiles()]).then(() => null);
 	}
 	const electron = getElectronAPI();
-	if (!electron?.getGpuInfo) return Promise.resolve(null);
-	return Promise.allSettled([electron.getGpuInfo(), probeWebRtcEncodeEfficiency()]).then(([gpuResult, probeResult]) => {
+	if (!electron?.getGpuInfo) return loadHardwareVideoEncodeProfiles().then(() => null);
+	return Promise.allSettled([
+		electron.getGpuInfo(),
+		probeWebRtcEncodeEfficiency(),
+		loadHardwareVideoEncodeProfiles(),
+	]).then(([gpuResult, probeResult]) => {
 		if (gpuResult.status !== 'fulfilled') {
 			logger.warn('Failed to fetch GPU info from Electron main', {error: gpuResult.reason});
 			return null;

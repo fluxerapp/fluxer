@@ -27,7 +27,12 @@ import {
 	getLiveKitSupportedCodecs,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
-import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
+import {
+	describeHardwareVideoEncodeProfiles,
+	isSoftwareVideoEncodeExpectedSync,
+	loadGpuEncoderReport,
+	loadHardwareVideoEncodeProfiles,
+} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
 	getNativeAudioBridgeStats,
 	getNativeAudioCaptureDiagnosticState,
@@ -232,6 +237,10 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 	} catch (error) {
 		gpuReport = {error: safeError(error)};
 	}
+	const hardwareVideoEncodeProfiles = await withTimeout(
+		'hardware video encode profiles',
+		loadHardwareVideoEncodeProfiles(),
+	);
 	try {
 		report = getCodecCapabilityReport();
 	} catch {
@@ -259,6 +268,11 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 		},
 		support: report,
 		gpuHardwareEncode: gpuReport,
+		hardwareVideoEncodeProfiles:
+			hardwareVideoEncodeProfiles !== null && 'error' in hardwareVideoEncodeProfiles
+				? hardwareVideoEncodeProfiles
+				: describeHardwareVideoEncodeProfiles(hardwareVideoEncodeProfiles),
+		softwareVideoEncodeExpected: isSoftwareVideoEncodeExpectedSync(),
 	};
 }
 

@@ -40580,6 +40580,11 @@ msgstr "Tu suscripción cambiará a facturación mensual en la próxima renovaci
 msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "Tu suscripción cambiará a facturación anual en la próxima renovación."
 
+#. Inline informational note in the screen share picker on Linux systems where no hardware video encoder is available, for example NVIDIA-only machines. Not an error.
+#: src/features/voice/components/modals/screen_share_picker_modal/SoftwareEncodeNotice.tsx
+msgid "Your system has no hardware video encoder that {productName} can use, so screen sharing uses software encoding."
+msgstr "Tu sistema no tiene un codificador de vídeo por hardware que {productName} pueda usar, por lo que la función de compartir pantalla utilizará codificación por software."
+
 #. Body of the error modal shown when a theme CSS exceeds the maximum shareable size.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Your theme CSS is too large to share. Trim it down and try again."

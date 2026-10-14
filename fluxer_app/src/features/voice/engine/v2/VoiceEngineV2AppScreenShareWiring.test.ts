@@ -22,7 +22,8 @@ let selectedCodec: VideoCodec | null = 'vp9';
 let stallAction: ScreenShareEncoderVerificationAction = {kind: 'recover-stalled', codec: 'h264'};
 const gpuReport: {gpuLabel: string} | null = null;
 const gpuReportLoad: Promise<unknown> = Promise.resolve(null);
-const h264HardwareProfiles: {profiles: Set<string>} | null = null;
+let h264HardwareProfiles: {profiles: Set<string>} | null = null;
+let softwareVideoEncodeExpected = false;
 let displayShareEnvironment: 'web' | 'desktop-custom' | 'desktop-wayland' = 'web';
 const voiceConnectionContext: {guildId: string | null; channelId: string | null; connectionId: string | null} | null =
 	null;
@@ -31,6 +32,7 @@ const voiceStates: Record<string, Record<string, Record<string, unknown>>> = {};
 vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
 	getGpuEncoderReportSync: () => gpuReport,
 	getH264HardwareProfilesSync: () => h264HardwareProfiles,
+	isSoftwareVideoEncodeExpectedSync: () => softwareVideoEncodeExpected,
 	loadGpuEncoderReport: () => gpuReportLoad,
 }));
 
@@ -210,6 +212,7 @@ const {VoiceEngineV2AppScreenShareExecutionAdapter, shouldRestoreScreenShareAfte
 );
 const {default: ActiveScreenShareSource} = await import('@app/features/voice/state/ActiveScreenShareSource');
 const {default: VoiceSettings} = await import('@app/features/voice/state/VoiceSettings');
+const {default: SoftwareEncoderWarning} = await import('@app/features/voice/state/SoftwareEncoderWarning');
 const {recordScreenShareStarted, resetRecentScreenSharesForTests} = await import(
 	'@app/features/voice/utils/ScreenShareLifecycleLog'
 );
@@ -622,6 +625,34 @@ describe('the retired H.264 backup stream mode', () => {
 		const h264 = await getEffectivePublishOptions(true, {videoCodec: 'h264'});
 		expect(h264?.backupCodec).toBe(false);
 		expect(h264?.backupCodecPolicy).toBeUndefined();
+	});
+});
+
+describe('the software H.264 clamp warning', () => {
+	beforeEach(() => {
+		h264HardwareProfiles = {profiles: new Set()};
+		selectScreenShareCodec.mockImplementation(() => 'h264');
+		ActiveScreenShareSource.clear();
+		SoftwareEncoderWarning.reset();
+	});
+
+	afterEach(() => {
+		h264HardwareProfiles = null;
+		softwareVideoEncodeExpected = false;
+		selectScreenShareCodec.mockImplementation(() => 'vp8');
+		ActiveScreenShareSource.clear();
+		SoftwareEncoderWarning.reset();
+	});
+
+	it('warns when a clamped share runs on a system that should have a hardware encoder', async () => {
+		await getEffectivePublishOptions(true, {videoCodec: 'h264'});
+		expect(SoftwareEncoderWarning.showWarning).toBe(true);
+	});
+
+	it('stays quiet when the system has no hardware encoder to fall back from', async () => {
+		softwareVideoEncodeExpected = true;
+		await getEffectivePublishOptions(true, {videoCodec: 'h264'});
+		expect(SoftwareEncoderWarning.showWarning).toBe(false);
 	});
 });
 
