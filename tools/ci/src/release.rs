@@ -725,29 +725,35 @@ struct GitRef {
     name: String,
 }
 
-const PUBLISH_ATTEMPTS: u64 = 3;
+const GITHUB_ATTEMPTS: u64 = 3;
+
+fn wait_before_retry(attempt: u64) {
+    thread::sleep(Duration::from_secs(attempt * 15));
+}
 
 pub async fn run(args: ReleaseArgs) -> Result<()> {
     match args.command {
-        ReleaseCommand::Publish(args) => retry_publish(
-            PUBLISH_ATTEMPTS,
-            |attempt| thread::sleep(Duration::from_secs(attempt * 15)),
+        ReleaseCommand::Publish(args) => retry(
+            "Release publish",
+            GITHUB_ATTEMPTS,
+            wait_before_retry,
             || publish(args.clone()),
         ),
     }
 }
 
-fn retry_publish(
+fn retry<T>(
+    label: &str,
     attempts: u64,
     mut wait: impl FnMut(u64),
-    mut publish: impl FnMut() -> Result<()>,
-) -> Result<()> {
+    mut operation: impl FnMut() -> Result<T>,
+) -> Result<T> {
     let mut attempt = 1;
     loop {
-        match publish() {
-            Ok(()) => return Ok(()),
+        match operation() {
+            Ok(value) => return Ok(value),
             Err(error) if attempt < attempts => {
-                eprintln!("Release publish attempt {attempt} of {attempts} failed: {error:#}");
+                eprintln!("{label} attempt {attempt} of {attempts} failed: {error:#}");
                 wait(attempt);
                 attempt += 1;
             }
@@ -948,7 +954,13 @@ fn release_summaries() -> Result<Vec<ReleaseSummary>> {
 }
 
 pub(crate) fn desktop_releases(channel: &str) -> Result<Vec<DesktopPublishedRelease>> {
-    desktop_releases_from(&release_summaries()?, channel)
+    let summaries = retry(
+        "Release history read",
+        GITHUB_ATTEMPTS,
+        wait_before_retry,
+        release_summaries,
+    )?;
+    desktop_releases_from(&summaries, channel)
 }
 
 fn desktop_releases_from(
