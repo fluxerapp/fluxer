@@ -55,15 +55,15 @@ describe('Postgres KV unordered scan', () => {
 		expect(rows).toEqual([{user_id: '2'}, {user_id: '1'}]);
 	});
 
-	it('keeps the sorted full scan when order is asked for', async () => {
+	it('keeps the sorted full scan when the order cannot be walked by key', async () => {
 		const statements: Array<{text: string; values: Array<unknown> | undefined}> = [];
 		const executor = new PostgresKvQueryExecutor(recordingClient(statements));
 		const rows = await executor.executeQuery({
 			cql: '__ordered_probe',
 			params: {},
-			kvMeta: selectMeta({limit: 1}),
+			kvMeta: selectMeta({limit: 1, orderBy: {col: 'user_id', direction: 'DESC'}}),
 		});
 		expect(statements[0]!.text).not.toContain('LIMIT');
-		expect(rows).toEqual([{user_id: '1'}]);
+		expect(rows).toEqual([{user_id: '2'}]);
 	});
 });
