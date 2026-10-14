@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Lần chuyển đăng nhập này không khớp với lần bạn đã bắt đầu.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Không thể xác nhận yêu cầu khóa truy cập này. Hãy thử lại.",
 	"auth_and_oauth.registration_closed": "Đăng ký đã bị đóng trên phiên bản này.",
+	"auth_and_oauth.registration_credentials_required": "Phiên bản này xét duyệt tài khoản mới. Hãy đăng ký từ trang đăng ký với mật khẩu để có thể đăng nhập sau khi được phê duyệt.",
 	"auth_and_oauth.registration_pending_approval": "Đăng ký này đang chờ quản trị viên phê duyệt.",
 	"auth_and_oauth.registration_rejected": "Yêu cầu đăng ký này đã bị từ chối.",
 	"auth_and_oauth.registration_url_invalid": "Liên kết đăng ký này không hợp lệ hoặc đã hết hạn.",

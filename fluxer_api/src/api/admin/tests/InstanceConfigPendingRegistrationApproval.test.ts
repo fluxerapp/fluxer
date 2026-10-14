@@ -6,7 +6,8 @@ import {
 	createUniqueUsername,
 	setUserACLs,
 } from '@app/api/auth/tests/AuthTestUtils';
-import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {Config} from '@app/api/Config';
+import {createChannelInvite, createGuild, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -19,6 +20,18 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface PendingRegistrationResponse {
 	user_id: string;
+}
+
+function invitedRegistrationBody(prefix: string, inviteCode?: string): Record<string, unknown> {
+	return {
+		email: createUniqueEmail(prefix),
+		username: createUniqueUsername(prefix),
+		global_name: 'Invited person',
+		password: 'invited-since-1999',
+		date_of_birth: '2000-01-01',
+		consent: true,
+		invite_code: inviteCode,
+	};
 }
 
 describe('pending registration approval and the stock community', () => {
@@ -98,6 +111,198 @@ describe('pending registration approval and the stock community', () => {
 
 		await createBuilder(harness, owner.token)
 			.get(`/guilds/${guild.id}/members/${outsider.userId}`)
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.execute();
+	});
+
+	it('joins the invited community on approval', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body(invitedRegistrationBody('invitedapproval', invite.code))
+			.execute();
+
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${guild.id}/members/${pending.user_id}`)
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.execute();
+
+		await createBuilder(harness, admin.token)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'approved'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${guild.id}/members/${pending.user_id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+	});
+
+	it('lists the invite code on a pending registration', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body(invitedRegistrationBody('invitedlisted', invite.code))
+			.execute();
+
+		const listed = await createBuilder<PendingRegistrationListResponse>(harness, admin.token)
+			.get('/admin/instance/pending-registrations')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(listed.pending_registrations).toEqual([
+			expect.objectContaining({user_id: pending.user_id, invite_code: invite.code}),
+		]);
+	});
+
+	it('does not join the invited community on rejection', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body(invitedRegistrationBody('invitedrejected', invite.code))
+			.execute();
+
+		await createBuilder(harness, admin.token)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'rejected'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${guild.id}/members/${pending.user_id}`)
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.execute();
+	});
+
+	it('joins the auto-join community on approval of a registration without an invite', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+		Config.instance.autoJoinInviteCode = invite.code;
+		try {
+			const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+				.post('/auth/register')
+				.body(invitedRegistrationBody('autojoinapproval'))
+				.execute();
+
+			const listed = await createBuilder<PendingRegistrationListResponse>(harness, admin.token)
+				.get('/admin/instance/pending-registrations')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(listed.pending_registrations).toEqual([
+				expect.objectContaining({user_id: pending.user_id, invite_code: invite.code}),
+			]);
+
+			await createBuilder(harness, admin.token)
+				.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+				.body({status: 'approved'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+
+			await createBuilder(harness, owner.token)
+				.get(`/guilds/${guild.id}/members/${pending.user_id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+		} finally {
+			Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+		}
+	});
+
+	it('does not join the auto-join community when the pending entry has no invite', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body(invitedRegistrationBody('noinviteapproval'))
+			.execute();
+
+		const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+		Config.instance.autoJoinInviteCode = invite.code;
+		try {
+			await createBuilder(harness, admin.token)
+				.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+				.body({status: 'approved'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+		} finally {
+			Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+		}
+
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${guild.id}/members/${pending.user_id}`)
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.execute();
+	});
+
+	it('approves and joins the single community when the invite is gone', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const {owner, guild: stockGuild} = await setupTestGuildWithMembers(harness, 0);
+		const invitedGuild = await createGuild(harness, owner.token, 'Invited Guild');
+		const invite = await createChannelInvite(harness, owner.token, invitedGuild.system_channel_id!);
+		await getInstanceConfigRepository().setInstancePolicyConfig({
+			single_community_enabled: true,
+			single_community_guild_id: stockGuild.id,
+		});
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body(invitedRegistrationBody('invitegone', invite.code))
+			.execute();
+
+		await createBuilder(harness, owner.token)
+			.delete(`/invites/${invite.code}`)
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+
+		await createBuilder(harness, admin.token)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'approved'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${stockGuild.id}/members/${pending.user_id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder(harness, owner.token)
+			.get(`/guilds/${invitedGuild.id}/members/${pending.user_id}`)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();
 	});

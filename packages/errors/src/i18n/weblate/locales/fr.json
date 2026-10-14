@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Ce transfert de connexion ne correspond pas à celui que vous avez lancé.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Cette demande de clé d'accès n'a pas pu être confirmée. Réessayez.",
 	"auth_and_oauth.registration_closed": "L'inscription est fermée sur cette instance.",
+	"auth_and_oauth.registration_credentials_required": "Cette instance vérifie les nouveaux comptes. Inscrivez-vous depuis la page d'inscription avec un mot de passe pour pouvoir vous connecter une fois le compte approuvé.",
 	"auth_and_oauth.registration_pending_approval": "Cette inscription est en attente d'approbation par un administrateur.",
 	"auth_and_oauth.registration_rejected": "Cette demande d'inscription a été rejetée.",
 	"auth_and_oauth.registration_url_invalid": "Ce lien d'inscription est invalide ou a expiré.",

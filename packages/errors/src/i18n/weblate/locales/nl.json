@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Deze aanmeldoverdracht komt niet overeen met de overdracht die je hebt gestart.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Dit passkey-verzoek kon niet worden bevestigd. Probeer het opnieuw.",
 	"auth_and_oauth.registration_closed": "Registratie is gesloten op deze instantie.",
+	"auth_and_oauth.registration_credentials_required": "Deze instantie beoordeelt nieuwe accounts. Registreer je via de registratiepagina met een wachtwoord, zodat je kunt inloggen zodra je account is goedgekeurd.",
 	"auth_and_oauth.registration_pending_approval": "Deze registratie wacht op goedkeuring van de beheerder.",
 	"auth_and_oauth.registration_rejected": "Dit registratieverzoek is afgewezen.",
 	"auth_and_oauth.registration_url_invalid": "Deze registratielink is ongeldig of verlopen.",

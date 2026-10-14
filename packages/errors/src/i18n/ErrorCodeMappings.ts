@@ -232,6 +232,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.PROCESSING_FAILED]: 'admin_and_system.processing_failed',
 	[APIErrorCodes.RATE_LIMITED]: 'rate_limits.rate_limited',
 	[APIErrorCodes.REGISTRATION_CLOSED]: 'auth_and_oauth.registration_closed',
+	[APIErrorCodes.REGISTRATION_CREDENTIALS_REQUIRED]: 'auth_and_oauth.registration_credentials_required',
 	[APIErrorCodes.REGISTRATION_PENDING_APPROVAL]: 'auth_and_oauth.registration_pending_approval',
 	[APIErrorCodes.REGISTRATION_REJECTED]: 'auth_and_oauth.registration_rejected',
 	[APIErrorCodes.REGISTRATION_URL_INVALID]: 'auth_and_oauth.registration_url_invalid',

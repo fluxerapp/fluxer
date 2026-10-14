@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Acest transfer de autentificare nu corespunde celui pe care l-ai început.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Această cerere pentru cheia de acces nu a putut fi confirmată. Încearcă din nou.",
 	"auth_and_oauth.registration_closed": "Înregistrarea este închisă pe această instanță.",
+	"auth_and_oauth.registration_credentials_required": "Această instanță verifică conturile noi. Înregistrează-te din pagina de înregistrare cu o parolă, ca să te poți conecta după aprobare.",
 	"auth_and_oauth.registration_pending_approval": "Această înregistrare așteaptă aprobarea administratorului.",
 	"auth_and_oauth.registration_rejected": "Această cerere de înregistrare a fost respinsă.",
 	"auth_and_oauth.registration_url_invalid": "Acest link de înregistrare este invalid sau a expirat.",

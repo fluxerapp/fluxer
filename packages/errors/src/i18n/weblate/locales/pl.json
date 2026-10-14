@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "To przeniesienie logowania nie pasuje do tego, które zostało rozpoczęte.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Nie udało się potwierdzić tego żądania klucza dostępu. Spróbuj ponownie.",
 	"auth_and_oauth.registration_closed": "Rejestracja na tej instancji jest zamknięta.",
+	"auth_and_oauth.registration_credentials_required": "Ta instancja sprawdza nowe konta. Zarejestruj się na stronie rejestracji z hasłem, aby po zatwierdzeniu móc się zalogować.",
 	"auth_and_oauth.registration_pending_approval": "Ta rejestracja czeka na zatwierdzenie przez administratora.",
 	"auth_and_oauth.registration_rejected": "Ten wniosek o rejestrację został odrzucony.",
 	"auth_and_oauth.registration_url_invalid": "Ten link rejestracyjny jest nieprawidłowy lub wygasł.",

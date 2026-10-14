@@ -11,6 +11,7 @@ import {AUTH_LOGIN_METHOD_QUERY_PARAM} from '@app/features/auth/flow/auth_login_
 import {AuthClientPermissionStep} from '@app/features/auth/flow/client_intro/AuthClientPermissionStep';
 import {AuthClientPreferencesStep} from '@app/features/auth/flow/client_intro/AuthClientPreferencesStep';
 import {useDesktopClientIntroFlow} from '@app/features/auth/flow/client_intro/useDesktopClientIntroFlow';
+import {credentialRegisterFields} from '@app/features/auth/flow/RegisterFormFields';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
@@ -116,13 +117,7 @@ const RegisterPageContent = observer(function RegisterPageContent({runtimeSnapsh
 				</h1>
 				<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.div">
 					<AuthRegisterFormCore
-						fields={{
-							showEmail: !usernameSignIn,
-							showPassword: true,
-							showPasswordConfirmation: true,
-							showUsernameValidation: true,
-							requireUsername: usernameSignIn,
-						}}
+						fields={credentialRegisterFields(usernameSignIn)}
 						submitLabel={<Trans>Create account</Trans>}
 						redirectPath={redirectTo}
 						offerRecoveryKit={usernameSignIn}

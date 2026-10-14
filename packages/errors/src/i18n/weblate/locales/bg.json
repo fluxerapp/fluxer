@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Това прехвърляне на влизането не съвпада с започнатото от теб.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Тази заявка за ключ за достъп не можа да бъде потвърдена. Опитай отново.",
 	"auth_and_oauth.registration_closed": "Регистрацията е затворена на тази инстанция.",
+	"auth_and_oauth.registration_credentials_required": "Тази инстанция преглежда новите акаунти. Регистрирайте се от страницата за регистрация с парола, за да можете да влезете след одобрение.",
 	"auth_and_oauth.registration_pending_approval": "Тази регистрация чака одобрение от администратор.",
 	"auth_and_oauth.registration_rejected": "Тази заявка за регистрация беше отхвърлена.",
 	"auth_and_oauth.registration_url_invalid": "Този линк за регистрация е невалиден или е изтекъл.",

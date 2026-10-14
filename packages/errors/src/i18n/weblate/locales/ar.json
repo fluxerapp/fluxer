@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "عملية نقل تسجيل الدخول هذه لا تطابق العملية التي بدأتها.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "تعذّر تأكيد طلب مفتاح المرور هذا. حاول مرة أخرى.",
 	"auth_and_oauth.registration_closed": "التسجيل مغلق في هذا المثيل.",
+	"auth_and_oauth.registration_credentials_required": "يراجع هذا المثيل الحسابات الجديدة. أنشئ حسابك من صفحة التسجيل باستخدام كلمة مرور حتى تتمكن من تسجيل الدخول بعد الموافقة عليه.",
 	"auth_and_oauth.registration_pending_approval": "هذا التسجيل في انتظار موافقة المسؤول.",
 	"auth_and_oauth.registration_rejected": "تم رفض طلب التسجيل هذا.",
 	"auth_and_oauth.registration_url_invalid": "رابط التسجيل هذا غير صالح أو انتهت صلاحيته.",

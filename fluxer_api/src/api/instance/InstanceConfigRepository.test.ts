@@ -936,6 +936,7 @@ function pendingRegistration(userId: string) {
 		requested_at: `2026-09-01T00:00:${userId.slice(-2)}.000Z`,
 		registration_url_id: null,
 		client_ip: '127.0.0.1',
+		invite_code: null,
 	};
 }
 

@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "此登录转移与你发起的不一致。",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "无法确认此通行密钥请求。请重试。",
 	"auth_and_oauth.registration_closed": "此实例的注册已关闭。",
+	"auth_and_oauth.registration_credentials_required": "此实例会审核新帐户。请在注册页面使用密码注册，以便获批后登录。",
 	"auth_and_oauth.registration_pending_approval": "此注册正在等待管理员批准。",
 	"auth_and_oauth.registration_rejected": "此注册请求已被拒绝。",
 	"auth_and_oauth.registration_url_invalid": "此注册链接无效或已过期。",

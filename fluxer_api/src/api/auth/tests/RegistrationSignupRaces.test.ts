@@ -428,8 +428,11 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
 		const fresh = await register('pendingafter');
 
-		const listed = (await readPendingRegistrations()).map((entry) => entry.user_id);
-		expect(listed.toSorted()).toEqual([account.userId, fresh.json.user_id].toSorted());
+		const pendingRegistrations = await readPendingRegistrations();
+		expect(pendingRegistrations.map((entry) => entry.user_id).toSorted()).toEqual(
+			[account.userId, fresh.json.user_id].toSorted(),
+		);
+		expect(pendingRegistrations.find((entry) => entry.user_id === account.userId)?.invite_code).toBeNull();
 
 		const decided = await createBuilder<PendingRegistrationListResponse>(harness, admin.token)
 			.patch(`/admin/instance/pending-registrations/${account.userId}`)

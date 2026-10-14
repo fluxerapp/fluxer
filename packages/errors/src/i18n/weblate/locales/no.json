@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Denne overføringen av påloggingen samsvarer ikke med den du startet.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Denne forespørselen om passnøkkel kunne ikke bekreftes. Prøv igjen.",
 	"auth_and_oauth.registration_closed": "Registrering er stengt på denne instansen.",
+	"auth_and_oauth.registration_credentials_required": "Denne instansen går gjennom nye kontoer. Registrer deg fra registreringssiden med et passord, slik at du kan logge inn når kontoen er godkjent.",
 	"auth_and_oauth.registration_pending_approval": "Denne registreringen venter på administratorgodkjenning.",
 	"auth_and_oauth.registration_rejected": "Denne registreringsforespørselen ble avvist.",
 	"auth_and_oauth.registration_url_invalid": "Denne registreringslenken er ugyldig eller har utløpt.",

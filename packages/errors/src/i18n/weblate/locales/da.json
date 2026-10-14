@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Denne overførsel af login matcher ikke den, du startede.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Denne anmodning om adgangsnøgle kunne ikke bekræftes. Prøv igen.",
 	"auth_and_oauth.registration_closed": "Tilmelding er lukket på denne instans.",
+	"auth_and_oauth.registration_credentials_required": "Denne instans gennemgår nye konti. Tilmeld dig fra tilmeldingssiden med en adgangskode, så du kan logge ind, når kontoen er godkendt.",
 	"auth_and_oauth.registration_pending_approval": "Denne tilmelding afventer godkendelse fra administratoren.",
 	"auth_and_oauth.registration_rejected": "Denne anmodning om tilmelding blev afvist.",
 	"auth_and_oauth.registration_url_invalid": "Dette tilmeldingslink er ugyldigt eller er udløbet.",

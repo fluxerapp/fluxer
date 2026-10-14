@@ -890,6 +890,10 @@ Email verification is required for this action
 
 Registration is closed on this instance
 
+### `REGISTRATION_CREDENTIALS_REQUIRED`
+
+This instance reviews new accounts. Sign up from the sign-up page with a password so you can sign in once approved
+
 ### `REGISTRATION_PENDING_APPROVAL`
 
 This registration is waiting for admin approval

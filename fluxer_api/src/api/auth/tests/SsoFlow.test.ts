@@ -9,10 +9,13 @@ import {
 	setUserACLs,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
-import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {Config} from '@app/api/Config';
+import {createChannelInvite, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import type {PendingRegistrationListResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface SsoStartResponse {
@@ -502,6 +505,79 @@ describe('Auth SSO flow', () => {
 				.get(`/guilds/${guild.id}/members/${completeData.user_id}`)
 				.expect(200)
 				.execute();
+		});
+		it('joins a provisioned user to the auto-join invite community', async () => {
+			const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+			const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+			await enableSso(harness, admin.token);
+			const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+			Config.instance.autoJoinInviteCode = invite.code;
+			try {
+				const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+					.post('/auth/sso/start')
+					.body({})
+					.execute();
+				const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+					.post('/auth/sso/complete')
+					.body({
+						code: `sso-auto-join-${Date.now()}@example.com`,
+						state: startData.state,
+					})
+					.execute();
+				await createBuilder(harness, owner.token)
+					.get(`/guilds/${guild.id}/members/${completeData.user_id}`)
+					.expect(200)
+					.execute();
+			} finally {
+				Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+			}
+		});
+		it('replays the auto-join invite when an SSO registration is approved', async () => {
+			const reviewer = await setUserACLs(harness, await createTestAccount(harness), [
+				AdminACLs.AUTHENTICATE,
+				AdminACLs.REGISTRATION_REVIEW,
+			]);
+			const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+			const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
+			await enableSso(harness, admin.token);
+			await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+			const originalAutoJoinInviteCode = Config.instance.autoJoinInviteCode;
+			Config.instance.autoJoinInviteCode = invite.code;
+			try {
+				const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+					.post('/auth/sso/start')
+					.body({})
+					.execute();
+				await createBuilderWithoutAuth(harness)
+					.post('/auth/sso/complete')
+					.body({
+						code: `sso-auto-join-approval-${Date.now()}@example.com`,
+						state: startData.state,
+					})
+					.expect(403, 'REGISTRATION_PENDING_APPROVAL')
+					.execute();
+				const listed = await createBuilder<PendingRegistrationListResponse>(harness, reviewer.token)
+					.get('/admin/instance/pending-registrations')
+					.expect(200)
+					.execute();
+				expect(listed.pending_registrations).toEqual([expect.objectContaining({invite_code: invite.code})]);
+				const pendingUserId = listed.pending_registrations[0]!.user_id;
+				await createBuilder(harness, owner.token)
+					.get(`/guilds/${guild.id}/members/${pendingUserId}`)
+					.expect(404)
+					.execute();
+				await createBuilder(harness, reviewer.token)
+					.patch(`/admin/instance/pending-registrations/${pendingUserId}`)
+					.body({status: 'approved'})
+					.expect(200)
+					.execute();
+				await createBuilder(harness, owner.token)
+					.get(`/guilds/${guild.id}/members/${pendingUserId}`)
+					.expect(200)
+					.execute();
+			} finally {
+				Config.instance.autoJoinInviteCode = originalAutoJoinInviteCode;
+			}
 		});
 	});
 	describe('existing user login', () => {

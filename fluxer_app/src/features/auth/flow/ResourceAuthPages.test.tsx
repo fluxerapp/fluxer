@@ -13,7 +13,12 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-	snapshot: {apiEndpoint: 'https://instance.example/api', apiCodeVersion: 7, features: {}} as RuntimeConfigSnapshot,
+	snapshot: {
+		apiEndpoint: 'https://instance.example/api',
+		apiCodeVersion: 7,
+		features: {},
+		registration: {mode: 'open', admin_registration_urls_enabled: false},
+	} as RuntimeConfigSnapshot,
 	reset: vi.fn(),
 	completeLogin: vi.fn(),
 	search: '',
@@ -110,6 +115,7 @@ beforeEach(() => {
 	mocks.search = '';
 	mocks.loginProps = mocks.registerProps = mocks.ssoProps = mocks.carouselProps = null;
 	delete (mocks.snapshot as any).sso;
+	(mocks.snapshot as any).registration = {mode: 'open', admin_registration_urls_enabled: false};
 });
 describe('resource auth guards', () => {
 	it('blocks redeemed resources before login, registration or enforced SSO', () => {
@@ -206,5 +212,22 @@ describe('resource auth guards', () => {
 		expect(mocks.ssoProps.runtimeSnapshot).toBe(mocks.snapshot);
 		expect(mocks.ssoProps.redirectPath).toBe('/gift/code/register');
 		expect(mocks.registerProps).toBeNull();
+	});
+	it('asks for an email and password on an approval instance', () => {
+		(mocks.snapshot as any).registration = {mode: 'approval', admin_registration_urls_enabled: false};
+		renderToStaticMarkup(
+			<ResourceRegisterPage id="code" config={config()} data-flx="auth.flow.resource-auth-pages-test.code--8" />,
+		);
+		expect(mocks.registerProps.fields).toMatchObject({
+			showEmail: true,
+			showPassword: true,
+			showPasswordConfirmation: true,
+		});
+	});
+	it('keeps the minimal form on an open email instance', () => {
+		renderToStaticMarkup(
+			<ResourceRegisterPage id="code" config={config()} data-flx="auth.flow.resource-auth-pages-test.code--9" />,
+		);
+		expect(mocks.registerProps.fields).toEqual({showUsername: false});
 	});
 });

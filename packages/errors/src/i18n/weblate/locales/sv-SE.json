@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Den här inloggningsöverföringen matchar inte den du startade.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Den här begäran om lösennyckel kunde inte bekräftas. Försök igen.",
 	"auth_and_oauth.registration_closed": "Registrering är stängd på den här instansen.",
+	"auth_and_oauth.registration_credentials_required": "Den här instansen granskar nya konton. Registrera dig från registreringssidan med ett lösenord så att du kan logga in när kontot har godkänts.",
 	"auth_and_oauth.registration_pending_approval": "Den här registreringen väntar på administratörsgodkännande.",
 	"auth_and_oauth.registration_rejected": "Den här registreringsbegäran avslogs.",
 	"auth_and_oauth.registration_url_invalid": "Den här registreringslänken är ogiltig eller har gått ut.",

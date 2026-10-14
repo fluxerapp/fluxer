@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Esta transferencia de inicio de sesión no coincide con la que iniciaste.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "No se pudo confirmar esta solicitud de llave de acceso. Inténtalo de nuevo.",
 	"auth_and_oauth.registration_closed": "El registro está cerrado en esta instancia.",
+	"auth_and_oauth.registration_credentials_required": "Esta instancia revisa las cuentas nuevas. Regístrate desde la página de registro con una contraseña para poder iniciar sesión cuando se apruebe.",
 	"auth_and_oauth.registration_pending_approval": "Este registro está esperando la aprobación del administrador.",
 	"auth_and_oauth.registration_rejected": "Esta solicitud de registro fue rechazada.",
 	"auth_and_oauth.registration_url_invalid": "Este enlace de registro es inválido o ha expirado.",

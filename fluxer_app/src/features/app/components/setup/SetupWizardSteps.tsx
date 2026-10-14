@@ -5,6 +5,7 @@ import {SetupWelcomeGate} from '@app/features/app/components/setup/SetupWelcomeG
 import type {SetupBrandingAssetKind} from '@app/features/app/components/setup/SetupWizardClient';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
+import {credentialRegisterFields} from '@app/features/auth/flow/RegisterFormFields';
 import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -751,13 +752,7 @@ export const AdminAccountStep = observer(
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
 				<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
 					<AuthRegisterFormCore
-						fields={{
-							showEmail: !usernameSignIn,
-							showPassword: true,
-							showPasswordConfirmation: true,
-							showUsernameValidation: true,
-							requireUsername: usernameSignIn,
-						}}
+						fields={credentialRegisterFields(usernameSignIn)}
 						submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
 						redirectPath=""
 						runtimeSnapshot={RuntimeConfig.getSnapshot()}

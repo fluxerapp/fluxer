@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Bu oturum açma aktarımı başlattığınız aktarımla eşleşmiyor.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Bu geçiş anahtarı isteği doğrulanamadı. Tekrar dene.",
 	"auth_and_oauth.registration_closed": "Bu kurulumda kayıt kapalı.",
+	"auth_and_oauth.registration_credentials_required": "Bu örnek yeni hesapları inceliyor. Onaylandıktan sonra giriş yapabilmek için kayıt sayfasından bir parolayla kaydolun.",
 	"auth_and_oauth.registration_pending_approval": "Bu kayıt yönetici onayını bekliyor.",
 	"auth_and_oauth.registration_rejected": "Bu kayıt isteği reddedildi.",
 	"auth_and_oauth.registration_url_invalid": "Bu kayıt bağlantısı geçersiz veya süresi dolmuş.",

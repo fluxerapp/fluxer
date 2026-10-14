@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "此登入轉移與您發起的不一致。",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "無法確認此通行金鑰要求。請再試一次。",
 	"auth_and_oauth.registration_closed": "此實例已關閉註冊。",
+	"auth_and_oauth.registration_credentials_required": "此執行個體會審核新帳號。請在註冊頁面使用密碼註冊，以便核准後登入。",
 	"auth_and_oauth.registration_pending_approval": "此註冊正在等待管理員核准。",
 	"auth_and_oauth.registration_rejected": "此註冊要求已被拒絕。",
 	"auth_and_oauth.registration_url_invalid": "此註冊連結無效或已過期。",

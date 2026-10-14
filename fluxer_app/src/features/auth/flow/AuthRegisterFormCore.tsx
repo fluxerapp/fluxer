@@ -7,6 +7,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import FormField from '@app/features/auth/flow/AuthFormField';
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {DateOfBirthField} from '@app/features/auth/flow/DateOfBirthField';
+import {type RegisterFormFields, readRegistrationUrlCode} from '@app/features/auth/flow/RegisterFormFields';
 import {
 	getRegistrationLegalConsentConfig,
 	RegistrationLegalConsent,
@@ -83,17 +84,8 @@ const USERNAME_AVAILABLE_DESCRIPTOR = msg({
 const MAX_USERNAME_LENGTH = 32;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
 
-interface FieldConfig {
-	showEmail?: boolean;
-	showPassword?: boolean;
-	showPasswordConfirmation?: boolean;
-	showUsername?: boolean;
-	showUsernameValidation?: boolean;
-	requireUsername?: boolean;
-}
-
 interface AuthRegisterFormCoreProps {
-	fields?: FieldConfig;
+	fields?: RegisterFormFields;
 	submitLabel: React.ReactNode;
 	redirectPath: string;
 	runtimeSnapshot: RuntimeConfigSnapshot;
@@ -136,10 +128,10 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const firstFieldName = showEmail ? 'email' : requireUsername ? 'username' : 'global_name';
 	const location = useLocation();
 	const draftKey = `register:${location.pathname}${location.search}`;
-	const registrationUrlCode = useMemo(() => {
-		const value = new URLSearchParams(location.search).get('registration_url')?.trim();
-		return value || undefined;
-	}, [location.search]);
+	const registrationUrlCode = useMemo(
+		() => readRegistrationUrlCode(new URLSearchParams(location.search)),
+		[location.search],
+	);
 	const registrationTarget = useMemo(() => instanceTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
 	const isPublicRegistrationClosed = runtimeSnapshot.registration.mode === 'closed' && !registrationUrlCode;
 	const collectDateOfBirth = runtimeSnapshot.appPublic.registration.collect_date_of_birth;

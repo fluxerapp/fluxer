@@ -2,6 +2,7 @@
 
 import {createHash, randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
+import {maybeAutoJoinInvite} from '@app/api/auth/AuthRegistration';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
@@ -28,6 +29,7 @@ import {
 	isTestSsoProvider,
 	validateSsoPublicOutboundUrl,
 } from '@app/api/instance/SsoConfigValidation';
+import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -265,6 +267,7 @@ export class SsoService {
 		private readonly discriminatorService: DiscriminatorService,
 		private readonly kvActivityTracker: KVActivityTracker,
 		private readonly singleCommunityService: SingleCommunityService,
+		private readonly inviteService: InviteService,
 	) {}
 
 	async getPublicStatus(): Promise<PublicSsoStatus> {
@@ -406,10 +409,16 @@ export class SsoService {
 		}
 		await assertEmailNotBlocklisted(emailLower, 'email');
 		const pendingApproval = registrationConfig.mode === 'approval';
-		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
+		const autoJoinInviteCode = this.apiContext.services.config.instance.autoJoinInviteCode?.trim() || null;
+		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval, autoJoinInviteCode});
 		if (pendingApproval) {
 			throw new RegistrationPendingApprovalError();
 		}
+		await maybeAutoJoinInvite(this.inviteService, {
+			userId: user.id,
+			inviteCode: autoJoinInviteCode,
+			requestCache,
+		});
 		await this.singleCommunityService.joinStockCommunity(user.id, requestCache);
 		return user;
 	}
@@ -468,6 +477,7 @@ export class SsoService {
 		config: ResolvedSsoConfig,
 		options?: {
 			pendingApproval?: boolean;
+			autoJoinInviteCode?: string | null;
 		},
 	): Promise<User> {
 		const {users, snowflake, cache} = this.apiContext.services;
@@ -535,6 +545,7 @@ export class SsoService {
 					requested_at: now.toISOString(),
 					registration_url_id: null,
 					client_ip: null,
+					invite_code: options.autoJoinInviteCode ?? null,
 				});
 			}
 			createAttempted = true;

@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Це перенесення входу не збігається з тим, яке ви розпочали.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Не вдалося підтвердити цей запит ключа доступу. Спробуй ще раз.",
 	"auth_and_oauth.registration_closed": "Реєстрацію на цьому екземплярі закрито.",
+	"auth_and_oauth.registration_credentials_required": "Цей екземпляр перевіряє нові облікові записи. Зареєструйтеся на сторінці реєстрації з паролем, щоб увійти після схвалення.",
 	"auth_and_oauth.registration_pending_approval": "Ця реєстрація очікує на схвалення адміністратором.",
 	"auth_and_oauth.registration_rejected": "Цей запит на реєстрацію було відхилено.",
 	"auth_and_oauth.registration_url_invalid": "Це посилання для реєстрації недійсне або термін його дії минув.",

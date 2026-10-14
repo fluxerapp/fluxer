@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Αυτή η μεταφορά σύνδεσης δεν αντιστοιχεί σε αυτήν που ξεκινήσατε.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Δεν ήταν δυνατή η επιβεβαίωση αυτού του αιτήματος κλειδιού πρόσβασης. Δοκίμασε ξανά.",
 	"auth_and_oauth.registration_closed": "Η εγγραφή είναι κλειστή σε αυτήν την εγκατάσταση.",
+	"auth_and_oauth.registration_credentials_required": "Αυτή η παρουσία ελέγχει τους νέους λογαριασμούς. Εγγραφείτε από τη σελίδα εγγραφής με κωδικό πρόσβασης, ώστε να μπορείτε να συνδεθείτε μετά την έγκριση.",
 	"auth_and_oauth.registration_pending_approval": "Αυτή η εγγραφή περιμένει έγκριση από τον διαχειριστή.",
 	"auth_and_oauth.registration_rejected": "Αυτό το αίτημα εγγραφής απορρίφθηκε.",
 	"auth_and_oauth.registration_url_invalid": "Αυτός ο σύνδεσμος εγγραφής είναι άκυρος ή έχει λήξει.",

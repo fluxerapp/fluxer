@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Tento přenos přihlášení neodpovídá tomu, který jste zahájili.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Tento požadavek na přístupový klíč se nepodařilo potvrdit. Zkuste to znovu.",
 	"auth_and_oauth.registration_closed": "Registrace na této instanci je uzavřena.",
+	"auth_and_oauth.registration_credentials_required": "Tato instance kontroluje nové účty. Zaregistrujte se na registrační stránce s heslem, abyste se po schválení mohli přihlásit.",
 	"auth_and_oauth.registration_pending_approval": "Tato registrace čeká na schválení administrátorem.",
 	"auth_and_oauth.registration_rejected": "Tato žádost o registraci byla zamítnuta.",
 	"auth_and_oauth.registration_url_invalid": "Tento odkaz k registraci je neplatný nebo vypršel.",

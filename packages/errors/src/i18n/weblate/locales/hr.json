@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Ovaj prijenos prijave ne odgovara onome koji ste započeli.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Ovaj zahtjev za pristupni ključ nije moguće potvrditi. Pokušaj ponovno.",
 	"auth_and_oauth.registration_closed": "Registracija je zatvorena na ovoj instanci.",
+	"auth_and_oauth.registration_credentials_required": "Ova instanca pregledava nove račune. Registrirajte se na stranici za registraciju s lozinkom kako biste se mogli prijaviti nakon odobrenja.",
 	"auth_and_oauth.registration_pending_approval": "Ova registracija čeka odobrenje administratora.",
 	"auth_and_oauth.registration_rejected": "Ovaj zahtjev za registraciju je odbijen.",
 	"auth_and_oauth.registration_url_invalid": "Ova poveznica za registraciju je nevažeća ili je istekla.",

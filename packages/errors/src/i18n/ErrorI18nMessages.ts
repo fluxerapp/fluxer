@@ -106,6 +106,8 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.origin_handoff_nonce_invalid': "This sign-in transfer doesn't match the one you started.",
 	'auth_and_oauth.passkey_bridge_nonce_invalid': 'This passkey request could not be confirmed. Try again.',
 	'auth_and_oauth.registration_closed': 'Registration is closed on this instance.',
+	'auth_and_oauth.registration_credentials_required':
+		'This instance reviews new accounts. Sign up from the sign-up page with a password so you can sign in once approved.',
 	'auth_and_oauth.registration_pending_approval': 'This registration is waiting for admin approval.',
 	'auth_and_oauth.registration_rejected': 'This registration request was rejected.',
 	'auth_and_oauth.registration_url_invalid': 'This registration link is invalid or has expired.',

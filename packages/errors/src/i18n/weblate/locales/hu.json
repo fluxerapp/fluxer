@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Ez a bejelentkezés-átvitel nem egyezik azzal, amelyet elindítottál.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Ezt a jelszókulcs-kérést nem sikerült megerősíteni. Próbáld újra.",
 	"auth_and_oauth.registration_closed": "Ezen a példányon a regisztráció le van zárva.",
+	"auth_and_oauth.registration_credentials_required": "Ez a példány ellenőrzi az új fiókokat. Regisztrálj a regisztrációs oldalon jelszóval, hogy jóváhagyás után be tudj jelentkezni.",
 	"auth_and_oauth.registration_pending_approval": "Ez a regisztráció rendszergazdai jóváhagyásra vár.",
 	"auth_and_oauth.registration_rejected": "Ez a regisztrációs kérelem el lett utasítva.",
 	"auth_and_oauth.registration_url_invalid": "Ez a regisztrációs link érvénytelen vagy lejárt.",

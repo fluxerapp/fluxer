@@ -309,8 +309,11 @@ One account that registered and is still waiting for an Admin decision.
 | requested_at | ISO8601 timestamp | Time the account registered |
 | registration_url_id | ?string | [Registration URL](#registration-url-object) the account signed up through (1-128 characters), or null when it registered directly |
 | client_ip<sup>1</sup> | ?string | IP address the account registered from, or null when none was recorded |
+| invite_code<sup>2</sup> | ?string | Invite the account joins on approval (0-256 characters), or null when it has none |
 
 <sup>1</sup> Stored at registration time and never refreshed, so it can be stale by the time an Admin reads it
+
+<sup>2</sup> The invite code sent with the registration, or the instance's configured auto-join invite when it sent none. An account that registered through SSO sends no invite code, so it stores the auto-join invite or null
 
 ## Pending registration list object
 
@@ -940,7 +943,7 @@ Both decisions remove the pending registration, but the endpoint does not requir
 
 ### Side effects
 
-Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait, and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
+Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait. When the account still had the `registration_pending_approval` trait, approval then accepts the stored `invite_code` when there is one and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails, such as one through an invite that was deleted, has expired or needs the account to be online, is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
 
 When the stored pending registration list fails validation, the request fails before Fluxer changes the account. A failure after Fluxer writes the account traits leaves those traits written and can leave the entry in the pending list. Check the account traits and the pending list before retrying.
 

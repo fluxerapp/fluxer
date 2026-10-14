@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "การโอนการลงชื่อเข้าใช้นี้ไม่ตรงกับรายการที่คุณเริ่มไว้",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "ไม่สามารถยืนยันคำขอพาสคีย์นี้ได้ ลองอีกครั้ง",
 	"auth_and_oauth.registration_closed": "การลงทะเบียนปิดให้บริการในอินสแตนซ์นี้",
+	"auth_and_oauth.registration_credentials_required": "อินสแตนซ์นี้ตรวจสอบบัญชีใหม่ โปรดลงทะเบียนจากหน้าลงทะเบียนพร้อมรหัสผ่าน เพื่อให้คุณเข้าสู่ระบบได้หลังจากได้รับการอนุมัติ",
 	"auth_and_oauth.registration_pending_approval": "การลงทะเบียนนี้กำลังรอการอนุมัติจากผู้ดูแลระบบ",
 	"auth_and_oauth.registration_rejected": "คำขอลงทะเบียนนี้ถูกปฏิเสธ",
 	"auth_and_oauth.registration_url_invalid": "ลิงก์ลงทะเบียนนี้ไม่ถูกต้องหรือหมดอายุแล้ว",

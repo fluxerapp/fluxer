@@ -590,7 +590,7 @@ Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per h
 
 Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless the region sets a different minimum, and the applied minimum appears only in the localised message.
 
-Registration returns 403 `REGISTRATION_CLOSED` when the instance is closed and no valid registration URL was supplied. A username whose discriminator space is exhausted returns the field code `TOO_MANY_USERS_WITH_THIS_USERNAME`. A username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
+Registration returns 403 `REGISTRATION_CLOSED` when the instance is closed and no valid registration URL was supplied. A registration that would wait for approval, through the approval mode or a registration URL that requires approval, returns 400 `REGISTRATION_CREDENTIALS_REQUIRED` unless it has a `password`, and on an `email` instance also an `email`, because an account without them could never sign in once approved. That refusal counts against no registration allowance and uses no registration URL seat. A username whose discriminator space is exhausted returns the field code `TOO_MANY_USERS_WITH_THIS_USERNAME`. A username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
 
 After the route rate limit, the CAPTCHA and schema validation, the setup token is checked before every other registration rule. A registration that presents the correct token is admitted whatever the registration mode is, is exempt from the registration allowances above, and receives the wildcard [Admin ACL](/admin-api/#acl-registry) when it creates a claimed account, which needs `email` on an `email` instance and `password` on a `username` instance. A client IP address is permitted 10 wrong tokens per 30 minutes, and further requests that present a token from that address return 429 until the window passes, the correct token included. A request with no token does not count.
 
@@ -607,7 +607,7 @@ There is no retry key. A repeated request with the same values creates a second 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [authentication token response](#authentication-token-response) \| [registration pending approval response](#registration-pending-approval-response-object) | Registration completed or entered the approval state |
-| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, registration URL code, or setup token is invalid |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, sign-in credentials, registration URL code, or setup token is invalid |
 | 403 | [error response](/http-api/#error-response) | SSO enforcement, registration policy, or content moderation rejects the registration |
 | 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a self-hosted instance with no account yet is still settling its [sign-in method](/http-api/instance/#set-the-setup-sign-in-method) after 15 seconds |
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request, or the address has used its wrong setup token allowance |
@@ -620,7 +620,7 @@ The operation applies the instance's registration, email-domain, breached-passwo
 
 Registration accepts the `invite_code` from the body, or the instance's configured auto-join invite when the body has none. On an instance with single-community mode enabled, the account also joins the community guild. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions.
 
-Approval mode registration creates no guild membership and no authentication session, and the account cannot sign in until an administrator approves it. Every other successful registration creates one session and returns its token.
+Approval mode registration creates no guild membership and no authentication session, and the account cannot sign in until an administrator approves it. The pending registration keeps that invite, and [approving it](/admin-api/instance/#update-pending-registration) joins the account to that guild and to the single community guild. Every other successful registration creates one session and returns its token.
 
 ### Rate limit
 

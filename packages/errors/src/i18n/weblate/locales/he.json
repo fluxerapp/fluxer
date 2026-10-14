@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "העברת ההתחברות הזו אינה תואמת לזו שהתחלת.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "לא הצלחנו לאשר את בקשת מפתח הגישה הזו. ניתן לנסות שוב.",
 	"auth_and_oauth.registration_closed": "ההרשמה סגורה במופע זה.",
+	"auth_and_oauth.registration_credentials_required": "מופע זה בודק חשבונות חדשים. הירשם מדף ההרשמה עם סיסמה כדי שתוכל להתחבר לאחר האישור.",
 	"auth_and_oauth.registration_pending_approval": "הרשמה זו ממתינה לאישור מנהל.",
 	"auth_and_oauth.registration_rejected": "בקשת הרשמה זו נדחתה.",
 	"auth_and_oauth.registration_url_invalid": "קישור ההרשמה הזה שגוי או שפג תוקפו.",

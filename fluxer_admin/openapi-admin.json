@@ -4258,7 +4258,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.",
+				"description": "Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -16526,7 +16526,8 @@
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
 					"registration_url_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 128},
-					"client_ip": {"nullable": true, "type": "string"}
+					"client_ip": {"nullable": true, "type": "string"},
+					"invite_code": {"nullable": true, "type": "string", "maxLength": 256}
 				},
 				"required": [
 					"user_id",
@@ -16536,7 +16537,8 @@
 					"email",
 					"requested_at",
 					"registration_url_id",
-					"client_ip"
+					"client_ip",
+					"invite_code"
 				],
 				"additionalProperties": false
 			},
@@ -17409,6 +17411,7 @@
 					"REACTION_EMAIL_VERIFICATION_REQUIRED",
 					"REPORT_EMAIL_VERIFICATION_REQUIRED",
 					"REGISTRATION_CLOSED",
+					"REGISTRATION_CREDENTIALS_REQUIRED",
 					"REGISTRATION_PENDING_APPROVAL",
 					"REGISTRATION_REJECTED",
 					"REGISTRATION_URL_INVALID",
@@ -17704,6 +17707,7 @@
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Registration is closed on this instance.",
+					"This instance reviews new accounts. Sign up from the sign-up page with a password so you can sign in once approved.",
 					"This registration is waiting for admin approval.",
 					"This registration request was rejected.",
 					"This registration link is invalid or has expired.",

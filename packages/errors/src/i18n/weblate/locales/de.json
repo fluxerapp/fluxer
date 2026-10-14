@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Diese Anmeldeübertragung stimmt nicht mit der von dir gestarteten überein.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Diese Passkey-Anfrage konnte nicht bestätigt werden. Versuche es erneut.",
 	"auth_and_oauth.registration_closed": "Die Registrierung ist auf dieser Instanz geschlossen.",
+	"auth_and_oauth.registration_credentials_required": "Diese Instanz prüft neue Konten. Registriere dich über die Registrierungsseite mit einem Passwort, damit du dich nach der Freigabe anmelden kannst.",
 	"auth_and_oauth.registration_pending_approval": "Diese Registrierung wartet auf die Genehmigung durch einen Administrator.",
 	"auth_and_oauth.registration_rejected": "Diese Registrierungsanfrage wurde abgelehnt.",
 	"auth_and_oauth.registration_url_invalid": "Dieser Registrierungslink ist ungültig oder abgelaufen.",

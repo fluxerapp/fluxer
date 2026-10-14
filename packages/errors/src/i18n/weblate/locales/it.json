@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Questo trasferimento di accesso non corrisponde a quello che hai avviato.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Non è stato possibile confermare questa richiesta di passkey. Riprova.",
 	"auth_and_oauth.registration_closed": "La registrazione è chiusa su questa istanza.",
+	"auth_and_oauth.registration_credentials_required": "Questa istanza verifica i nuovi account. Registrati dalla pagina di registrazione con una password per poter accedere dopo l'approvazione.",
 	"auth_and_oauth.registration_pending_approval": "Questa registrazione è in attesa dell'approvazione dell'amministratore.",
 	"auth_and_oauth.registration_rejected": "Questa richiesta di registrazione è stata rifiutata.",
 	"auth_and_oauth.registration_url_invalid": "Questo link di registrazione non è valido o è scaduto.",

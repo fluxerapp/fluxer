@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "यह साइन-इन ट्रांसफ़र आपके द्वारा शुरू किए गए ट्रांसफ़र से मेल नहीं खाता।",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "इस पासकी अनुरोध की पुष्टि नहीं हो सकी। फिर से कोशिश करें।",
 	"auth_and_oauth.registration_closed": "इस इंस्टेंस पर रजिस्ट्रेशन बंद है।",
+	"auth_and_oauth.registration_credentials_required": "यह इंस्टेंस नए खातों की समीक्षा करता है। साइन-अप पेज से पासवर्ड के साथ साइन अप करें ताकि अप्रूवल के बाद आप साइन इन कर सकें।",
 	"auth_and_oauth.registration_pending_approval": "यह रजिस्ट्रेशन एडमिन अप्रूवल का इंतज़ार कर रहा है।",
 	"auth_and_oauth.registration_rejected": "यह रजिस्ट्रेशन रिक्वेस्ट रिजेक्ट कर दी गई है।",
 	"auth_and_oauth.registration_url_invalid": "यह रजिस्ट्रेशन लिंक अमान्य है या एक्सपायर हो गया है।",

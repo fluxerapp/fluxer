@@ -7,6 +7,7 @@ import authStyles from '@app/features/auth/components/accounts/account_switcher_
 import pageStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthSsoPanel, isSsoLoginEnforced, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {credentialRegisterFields} from '@app/features/auth/flow/RegisterFormFields';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import Theme from '@app/features/theme/state/Theme';
 import {flxElementClassName} from '@app/lib/react';
@@ -50,13 +51,7 @@ export const AccountSwitcherRegisterStep = observer(function AccountSwitcherRegi
 				data-flx="auth.accounts.account-switcher-modal.account-switcher-register-step.container"
 			>
 				<AuthRegisterFormCore
-					fields={{
-						showEmail: !usernameSignIn,
-						showPassword: true,
-						showPasswordConfirmation: true,
-						showUsernameValidation: true,
-						requireUsername: usernameSignIn,
-					}}
+					fields={credentialRegisterFields(usernameSignIn)}
 					submitLabel={<Trans>Create account</Trans>}
 					redirectPath=""
 					offerRecoveryKit={usernameSignIn}

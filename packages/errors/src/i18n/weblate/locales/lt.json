@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Šis prisijungimo perkėlimas nesutampa su tuo, kurį pradėjote.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Nepavyko patvirtinti šios prieigos rakto užklausos. Bandyk dar kartą.",
 	"auth_and_oauth.registration_closed": "Registracija šioje instancijoje yra uždaryta.",
+	"auth_and_oauth.registration_credentials_required": "Ši instancija peržiūri naujas paskyras. Užsiregistruokite registracijos puslapyje su slaptažodžiu, kad po patvirtinimo galėtumėte prisijungti.",
 	"auth_and_oauth.registration_pending_approval": "Ši registracija laukia administratoriaus patvirtinimo.",
 	"auth_and_oauth.registration_rejected": "Šis registracijos prašymas buvo atmestas.",
 	"auth_and_oauth.registration_url_invalid": "Ši registracijos nuoroda yra neteisinga arba baigėsi jos galiojimas.",

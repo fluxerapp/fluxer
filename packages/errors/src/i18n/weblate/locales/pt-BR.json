@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Esta transferência de login não corresponde à que você iniciou.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Não foi possível confirmar esta solicitação de chave de acesso. Tente novamente.",
 	"auth_and_oauth.registration_closed": "O cadastro está fechado nesta instância.",
+	"auth_and_oauth.registration_credentials_required": "Esta instância analisa novas contas. Cadastre-se pela página de cadastro com uma senha para poder entrar depois da aprovação.",
 	"auth_and_oauth.registration_pending_approval": "Este cadastro está aguardando a aprovação de um administrador.",
 	"auth_and_oauth.registration_rejected": "Esta solicitação de cadastro foi rejeitada.",
 	"auth_and_oauth.registration_url_invalid": "Este link de cadastro é inválido ou expirou.",

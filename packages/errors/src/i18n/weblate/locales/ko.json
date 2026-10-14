@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "이 로그인 이전 요청이 시작하신 요청과 일치하지 않습니다.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "이 패스키 요청을 확인하지 못했어요. 다시 시도해 주세요.",
 	"auth_and_oauth.registration_closed": "이 인스턴스에서는 가입을 받고 있지 않아요.",
+	"auth_and_oauth.registration_credentials_required": "이 인스턴스는 새 계정을 검토해요. 승인 후 로그인할 수 있도록 가입 페이지에서 비밀번호를 설정해 가입하세요.",
 	"auth_and_oauth.registration_pending_approval": "이 가입 신청은 관리자 승인을 기다리고 있어요.",
 	"auth_and_oauth.registration_rejected": "이 가입 요청은 거부되었어요.",
 	"auth_and_oauth.registration_url_invalid": "이 가입 링크는 유효하지 않거나 만료되었어요.",

@@ -3,6 +3,7 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {startAttachmentDecayReconcile} from '@app/api/attachment/AttachmentDecayReconcileRun';
+import {maybeAutoJoinInvite} from '@app/api/auth/AuthRegistration';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
@@ -768,7 +769,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			operationId: 'update_admin_pending_registration',
 			summary: 'Approve or reject a pending registration',
 			description:
-				'Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.',
+				'Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait and joins the account to the community it was invited to and the single community, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.',
 			responseSchema: PendingRegistrationListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -777,7 +778,10 @@ export function InstanceConfigAdminController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.req.valid('param').user_id.toString();
 			const decision = ctx.req.valid('json').status === 'approved' ? 'approve' : 'reject';
-			await updatePendingRegistrationUser(ctx, userId, decision);
+			const pendingRegistration = (await instanceConfigRepository.getPendingRegistrations()).find(
+				(entry) => entry.user_id === userId,
+			);
+			await updatePendingRegistrationUser(ctx, userId, decision, pendingRegistration?.invite_code ?? null);
 			await instanceConfigRepository.removePendingRegistration(userId);
 			return ctx.json({pending_registrations: await instanceConfigRepository.getPendingRegistrations()});
 		},
@@ -875,6 +879,7 @@ async function updatePendingRegistrationUser(
 	ctx: Context<HonoEnv>,
 	userId: string,
 	decision: 'approve' | 'reject',
+	inviteCode: string | null,
 ): Promise<void> {
 	const userRepository = ctx.get('userRepository');
 	const user = await userRepository.findUnique(createUserID(BigInt(userId)));
@@ -896,6 +901,11 @@ async function updatePendingRegistrationUser(
 	}
 	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
 	if (decision === 'approve' && wasPendingApproval) {
+		await maybeAutoJoinInvite(ctx.get('inviteService'), {
+			userId: user.id,
+			inviteCode,
+			requestCache: ctx.get('requestCache'),
+		});
 		await ctx.get('singleCommunityService').joinStockCommunity(user.id, ctx.get('requestCache'));
 	}
 	await recordAdminWrite(ctx, {

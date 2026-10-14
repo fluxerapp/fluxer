@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Tämä kirjautumisen siirto ei vastaa aloittamaasi siirtoa.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Tätä pääsyavainpyyntöä ei voitu vahvistaa. Yritä uudelleen.",
 	"auth_and_oauth.registration_closed": "Rekisteröinti on suljettu tällä instanssilla.",
+	"auth_and_oauth.registration_credentials_required": "Tämä instanssi tarkistaa uudet tilit. Rekisteröidy rekisteröitymissivulla salasanan kanssa, jotta voit kirjautua sisään hyväksynnän jälkeen.",
 	"auth_and_oauth.registration_pending_approval": "Tämä rekisteröinti odottaa järjestelmänvalvojan hyväksyntää.",
 	"auth_and_oauth.registration_rejected": "Tämä rekisteröintipyyntö hylättiin.",
 	"auth_and_oauth.registration_url_invalid": "Tämä rekisteröintilinkki on virheellinen tai vanhentunut.",

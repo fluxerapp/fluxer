@@ -10,6 +10,7 @@ import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGa
 import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
+import {linkRegisterFields, readRegistrationUrlCode} from '@app/features/auth/flow/RegisterFormFields';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
@@ -104,16 +105,7 @@ const InviteRegisterPageContent = observer(function InviteRegisterPageContent({
 			<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header" />
 			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div--4">
 				<AuthRegisterFormCore
-					fields={
-						usernameSignIn
-							? {
-									showPassword: true,
-									showPasswordConfirmation: true,
-									showUsernameValidation: true,
-									requireUsername: true,
-								}
-							: {showUsername: false}
-					}
+					fields={linkRegisterFields(runtimeSnapshot, readRegistrationUrlCode(params))}
 					submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
 					redirectPath="/"
 					offerRecoveryKit={usernameSignIn}

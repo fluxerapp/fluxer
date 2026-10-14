@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "Transfer masuk ini tidak cocok dengan yang kamu mulai.",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "Permintaan passkey ini tidak dapat dikonfirmasi. Coba lagi.",
 	"auth_and_oauth.registration_closed": "Pendaftaran ditutup di instance ini.",
+	"auth_and_oauth.registration_credentials_required": "Instans ini meninjau akun baru. Daftar dari halaman pendaftaran dengan kata sandi agar kamu bisa masuk setelah disetujui.",
 	"auth_and_oauth.registration_pending_approval": "Pendaftaran ini menunggu persetujuan admin.",
 	"auth_and_oauth.registration_rejected": "Permintaan pendaftaran ini ditolak.",
 	"auth_and_oauth.registration_url_invalid": "Tautan pendaftaran ini tidak valid atau telah kedaluwarsa.",

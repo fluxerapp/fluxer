@@ -89,6 +89,7 @@
 	"auth_and_oauth.origin_handoff_nonce_invalid": "このサインインの引き継ぎは、開始したものと一致しません。",
 	"auth_and_oauth.passkey_bridge_nonce_invalid": "このパスキーのリクエストを確認できませんでした。もう一度お試しください。",
 	"auth_and_oauth.registration_closed": "このインスタンスでは新規登録を受け付けていません。",
+	"auth_and_oauth.registration_credentials_required": "このインスタンスでは新しいアカウントを審査しています。承認後にサインインできるよう、登録ページからパスワードを設定して登録してください。",
 	"auth_and_oauth.registration_pending_approval": "この登録は管理者による承認待ちです。",
 	"auth_and_oauth.registration_rejected": "この登録リクエストは拒否されました。",
 	"auth_and_oauth.registration_url_invalid": "この登録リンクは無効または期限切れです。",
