@@ -137,8 +137,7 @@
 	justify-content: center;
 	background-color: var(--background-modifier-accent);
 	color: var(--text-primary);
-	font-weight: 700;
-	font-size: 0.75rem;
+	overflow: hidden;
 }
 
 .optionLabel {

@@ -13,18 +13,13 @@ import {openAssetSourceModal} from '@app/features/expressions/components/modals/
 import {isAnimatedFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {formatImageUploadRecommendedHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import styles from '@app/features/guild/components/modals/AddGuildModal.module.css';
 import {
 	ANIMATED_ICONS_ARE_NOT_SUPPORTED_WHEN_CREATING_A_DESCRIPTOR,
 	COMMUNITY_NAME_DESCRIPTOR,
 	ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
-import * as StringUtils from '@app/features/guild/utils/GuildInitialsUtils';
-import {
-	getGuildIconDisplayInitials,
-	getGuildInitialsFitStyle,
-	getInitialsLength,
-} from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
@@ -45,7 +40,7 @@ import {ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {EnvelopeSimpleIcon} from '@phosphor-icons/react';
 import type React from 'react';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useState} from 'react';
 import type {UseFormReturn} from 'react-hook-form';
 
 interface GuildCreateFormValues {
@@ -72,12 +67,7 @@ export function useGuildCreateIconField({
 }: GuildCreateIconFieldOptions) {
 	const {i18n} = useLingui();
 	const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
-	const initials = useMemo(() => {
-		const raw = (nameValue || '').trim();
-		if (!raw) return '';
-		return getGuildIconDisplayInitials(StringUtils.getInitialsFromName(raw));
-	}, [nameValue]);
-	const initialsLength = initials ? getInitialsLength(initials) : null;
+	const iconName = (nameValue || '').trim();
 	const showIconUploadErrorModal = useCallback(
 		(message: string) => {
 			showGenericErrorModal({
@@ -156,7 +146,7 @@ export function useGuildCreateIconField({
 			showGifOption: false,
 		});
 	}, [handleIconUpload, i18n, messages]);
-	return {previewIconUrl, initials, initialsLength, handleOpenIconUpload, handleClearIcon};
+	return {previewIconUrl, iconName, handleOpenIconUpload, handleClearIcon};
 }
 
 export function renderGuildCreateAccountGate(i18n: I18n, dataFlx: string): React.ReactNode {
@@ -224,8 +214,7 @@ export function renderGuildCreateFields({
 	nameInputDataFlx,
 	showIconError,
 	previewIconUrl,
-	initials,
-	initialsLength,
+	iconName,
 	handleOpenIconUpload,
 	handleClearIcon,
 }: GuildCreateFieldsOptions): React.ReactNode {
@@ -244,20 +233,8 @@ export function renderGuildCreateFields({
 							data-flx={`${dataFlx}.icon-image`}
 						/>
 					) : (
-						<div
-							className={styles.iconPlaceholder}
-							data-initials-length={initialsLength}
-							data-flx={`${dataFlx}.icon-placeholder`}
-						>
-							{initials ? (
-								<span
-									className={styles.iconInitials}
-									style={getGuildInitialsFitStyle(initials)}
-									data-flx={`${dataFlx}.icon-initials`}
-								>
-									{initials}
-								</span>
-							) : null}
+						<div className={styles.iconPlaceholder} data-flx={`${dataFlx}.icon-placeholder`}>
+							{iconName ? <GuildAcronym name={iconName} data-flx={`${dataFlx}.icon-acronym`} /> : null}
 						</div>
 					)}
 					<div className={styles.iconActions} data-flx={`${dataFlx}.icon-actions`}>

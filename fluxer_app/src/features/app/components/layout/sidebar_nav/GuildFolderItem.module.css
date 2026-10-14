@@ -124,15 +124,7 @@
 
 .miniGuildIconWithInitials {
 	background-color: var(--folder-mini-surface);
-}
-
-.miniGuildInitials {
-	font-size: 0.5rem;
-	font-weight: 600;
 	color: var(--text-primary);
-	line-height: 1;
-	text-align: center;
-	white-space: nowrap;
 }
 
 .folderBadge {

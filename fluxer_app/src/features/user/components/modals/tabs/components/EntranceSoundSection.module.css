@@ -203,8 +203,7 @@
 	border: 0.0625rem solid var(--entrance-sound-border);
 	background: color-mix(in srgb, #0f1014 80%, var(--background-header-secondary) 20%);
 	color: white;
-	font-size: 0.75rem;
-	font-weight: 700;
+	overflow: hidden;
 }
 
 .scopeTileText {

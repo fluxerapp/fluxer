@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import Guilds from '@app/features/guild/state/Guilds';
 import {DIRECT_MESSAGES_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
@@ -186,7 +187,6 @@ interface ScopeArtworkProps {
 function ScopeArtwork({option, selected, compact}: ScopeArtworkProps): React.ReactElement {
 	if (option.guildId) {
 		const iconUrl = option.guildIcon ? AvatarUtils.getGuildIconURL({id: option.guildId, icon: option.guildIcon}) : null;
-		const initial = option.label.trim().charAt(0).toUpperCase() || '?';
 		return iconUrl ? (
 			<span
 				className={clsx(styles.scopeAvatar, compact && styles.scopeAvatarCompact)}
@@ -200,7 +200,10 @@ function ScopeArtwork({option, selected, compact}: ScopeArtworkProps): React.Rea
 				aria-hidden
 				data-flx="user.entrance-sound-section.scope-artwork.scope-avatar-placeholder"
 			>
-				{initial}
+				<GuildAcronym
+					name={option.label}
+					data-flx="user.entrance-sound-section.scope-artwork.scope-avatar-placeholder-acronym"
+				/>
 			</span>
 		);
 	}

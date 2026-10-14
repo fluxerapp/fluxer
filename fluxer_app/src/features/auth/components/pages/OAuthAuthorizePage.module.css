@@ -320,9 +320,7 @@
 	align-items: center;
 	justify-content: center;
 	color: white;
-	font-weight: 700;
-	font-size: 0.9rem;
-	line-height: 1.75rem;
+	overflow: hidden;
 	border: 0.0625rem solid var(--background-modifier-accent);
 }
 

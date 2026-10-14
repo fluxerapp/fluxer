@@ -2,13 +2,8 @@
 
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import styles from '@app/features/guild/components/popouts/GuildIcon.module.css';
-import * as StringUtils from '@app/features/guild/utils/GuildInitialsUtils';
-import {
-	getGuildIconDisplayInitials,
-	getGuildInitialsFitStyle,
-	getInitialsLength,
-} from '@app/features/guild/utils/GuildInitialsUtils';
 import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/useImageRecovery';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -16,7 +11,7 @@ import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useState} from 'react';
 
 interface GuildIconProps {
 	id: string;
@@ -43,8 +38,6 @@ export const GuildIcon = observer(function GuildIcon({
 	sizePx,
 	containerProps,
 }: GuildIconProps) {
-	const initials = useMemo(() => getGuildIconDisplayInitials(StringUtils.getInitialsFromName(name)), [name]);
-	const initialsLength = getInitialsLength(initials);
 	const [hoverRef, isHovering] = useHover();
 	const iconUrl = icon ? AvatarUtils.getGuildIconURL({id, icon}) : null;
 	const hoverIconUrl = icon ? AvatarUtils.getGuildIconURL({id, icon}, true) : null;
@@ -72,18 +65,9 @@ export const GuildIcon = observer(function GuildIcon({
 			className={clsx(styles.container, className, paintedUrl == null && styles.containerNoIcon)}
 			data-flx="guild.guild-icon.container"
 			{...containerProps}
-			data-initials-length={initialsLength}
 			style={styleVars}
 		>
-			{paintedUrl == null && (
-				<span
-					className={styles.initials}
-					style={getGuildInitialsFitStyle(initials)}
-					data-flx="guild.guild-icon.initials"
-				>
-					{initials}
-				</span>
-			)}
+			{paintedUrl == null && <GuildAcronym name={name} data-flx="guild.guild-icon.acronym" />}
 		</div>
 	);
 });

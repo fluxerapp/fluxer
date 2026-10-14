@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildComboboxOption} from '@app/features/app/components/dialogs/shared/GuildComboboxRenderers';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileTypeSelector.module.css';
@@ -31,7 +32,6 @@ export const ProfileTypeSelector = observer(({selectedGuildId, onChange, disable
 	const renderGuildRow = useCallback((option: GuildComboboxOption) => {
 		const isGlobal = !option.value;
 		const iconUrl = option.icon ? AvatarUtils.getGuildIconURL({id: option.value, icon: option.icon}) : null;
-		const initial = option.label.charAt(0).toUpperCase();
 		return (
 			<div
 				className={clsx(styles.guildOption, isGlobal && styles.guildOptionGlobal)}
@@ -51,7 +51,10 @@ export const ProfileTypeSelector = observer(({selectedGuildId, onChange, disable
 							aria-hidden
 							data-flx="user.my-profile-tab.profile-type-selector.render-guild-row.guild-avatar-placeholder"
 						>
-							{initial}
+							<GuildAcronym
+								name={option.label}
+								data-flx="user.my-profile-tab.profile-type-selector.render-guild-row.guild-avatar-placeholder-acronym"
+							/>
 						</div>
 					))}
 				<span
