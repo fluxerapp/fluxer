@@ -571,6 +571,12 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		showToast(failed ? 'error' : 'success', isLoginResponse(xhr) ? 'Session expired. Sign in again.' : failed ? 'Action failed.' : 'Done.');
 		markToastHandled(event.detail);
 	}, true);
+
+	document.addEventListener('htmx:sendError', function (event) {
+		if (requestVerb(event.detail) !== 'get') return;
+		var path = event.detail.pathInfo && event.detail.pathInfo.finalRequestPath;
+		if (path) window.location.assign(path);
+	}, true);
 })();
 "#;
 
