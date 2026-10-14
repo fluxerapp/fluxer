@@ -57,6 +57,7 @@ export interface DesktopModuleAPI {
 export interface DesktopUpdateState {
 	readonly available: boolean;
 	readonly updating?: boolean;
+	readonly replacesShell?: boolean;
 }
 
 export interface DesktopUpdateAPI {

@@ -8,7 +8,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowClockwiseIcon} from '@phosphor-icons/react';
+import {ArrowClockwiseIcon, DownloadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
@@ -67,6 +67,10 @@ export const UpdaterIcon = observer(() => {
 			? i18n._(CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR, {version, productName: RuntimeConfig.productName})
 			: i18n._(CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR, {productName: RuntimeConfig.productName});
 	}
+	const Icon =
+		affordance === 'manual' || (affordance === 'desktop' && Updater.desktopUpdateReplacesShell)
+			? DownloadSimpleIcon
+			: ArrowClockwiseIcon;
 	return (
 		<Tooltip text={tooltip} position="bottom" data-flx="channel.channel-header-components.updater-icon.tooltip">
 			<FocusRing offset={-2} data-flx="channel.channel-header-components.updater-icon.focus-ring">
@@ -79,7 +83,7 @@ export const UpdaterIcon = observer(() => {
 					aria-label={tooltip}
 					data-flx="channel.channel-header-components.updater-icon.button.click"
 				>
-					<ArrowClockwiseIcon
+					<Icon
 						weight="bold"
 						className={affordance === 'updating' ? styles.updateIconSpinning : styles.updateIcon}
 						data-flx="channel.channel-header-components.updater-icon.update-icon"

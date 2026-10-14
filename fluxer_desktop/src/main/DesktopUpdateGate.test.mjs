@@ -25,8 +25,8 @@ function deferred() {
 
 describe('DesktopUpdateGate', () => {
 	test('nothing is available and nothing starts before the bootstrap arms the gate', async () => {
-		assert.deepEqual(getDesktopUpdateState(), {available: false, updating: false});
-		assert.deepEqual(await checkDesktopUpdateNow(), {available: false, updating: false});
+		assert.deepEqual(getDesktopUpdateState(), {available: false, updating: false, replacesShell: false});
+		assert.deepEqual(await checkDesktopUpdateNow(), {available: false, updating: false, replacesShell: false});
 		assert.equal(startDesktopUpdate(), false);
 	});
 
@@ -44,17 +44,17 @@ describe('DesktopUpdateGate', () => {
 			},
 		});
 
-		assert.deepEqual(await checkDesktopUpdateNow(), {available: true, updating: false});
+		assert.deepEqual(await checkDesktopUpdateNow(), {available: true, updating: false, replacesShell: false});
 		assert.equal(startDesktopUpdate(), true);
 		assert.equal(startDesktopUpdate(), false, 'a second click while the update runs is a no-op');
 		assert.deepEqual(
 			getDesktopUpdateState(),
-			{available: false, updating: true},
+			{available: false, updating: true, replacesShell: false},
 			'the affordance hides the moment it is clicked',
 		);
 		assert.deepEqual(
 			await checkDesktopUpdateNow(),
-			{available: false, updating: true},
+			{available: false, updating: true, replacesShell: false},
 			'a poll during the update changes nothing',
 		);
 
@@ -62,11 +62,11 @@ describe('DesktopUpdateGate', () => {
 		await new Promise((resolve) => setImmediate(resolve));
 
 		assert.equal(starts, 1);
-		assert.deepEqual(getDesktopUpdateState(), {available: false, updating: false});
+		assert.deepEqual(getDesktopUpdateState(), {available: false, updating: false, replacesShell: false});
 		assert.deepEqual(states, [
-			{available: true, updating: false},
-			{available: false, updating: true},
-			{available: false, updating: false},
+			{available: true, updating: false, replacesShell: false},
+			{available: false, updating: true, replacesShell: false},
+			{available: false, updating: false, replacesShell: false},
 		]);
 		stop();
 	});
@@ -111,7 +111,7 @@ describe('DesktopUpdateGate', () => {
 		pending.resolve();
 		await background;
 
-		assert.deepEqual(await manual, {available: true, updating: false});
+		assert.deepEqual(await manual, {available: true, updating: false, replacesShell: true});
 		assert.deepEqual(calls, [false, true]);
 	});
 
@@ -127,7 +127,7 @@ describe('DesktopUpdateGate', () => {
 		assert.equal(startDesktopUpdate(), true);
 		await new Promise((resolve) => setImmediate(resolve));
 
-		assert.deepEqual(getDesktopUpdateState(), {available: true, updating: false});
+		assert.deepEqual(getDesktopUpdateState(), {available: true, updating: false, replacesShell: true});
 		assert.equal(startDesktopUpdate(), true);
 	});
 });

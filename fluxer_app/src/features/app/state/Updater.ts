@@ -155,6 +155,7 @@ class Updater {
 	private unsubscribeNativeEvents: (() => void) | null = null;
 	private unsubscribeDesktopUpdate: (() => void) | null = null;
 	private desktopUpdateReported = false;
+	private desktopUpdateReportedReplacesShell = false;
 	private desktopUpdateRunning = false;
 	private olderShellModuleUpdateReady = false;
 	private olderShellUpdateDownloaded = false;
@@ -201,6 +202,10 @@ class Updater {
 
 	get desktopUpdateAvailable(): boolean {
 		return this.desktopUpdateReported || this.olderShellModuleUpdateReady || this.olderShellUpdateAvailable;
+	}
+
+	get desktopUpdateReplacesShell(): boolean {
+		return (this.desktopUpdateReported && this.desktopUpdateReportedReplacesShell) || this.olderShellUpdateAvailable;
 	}
 
 	private get olderShellUpdateAvailable(): boolean {
@@ -281,6 +286,7 @@ class Updater {
 		this.unsubscribeDesktopUpdate = desktopUpdate.onStateChanged((state) => {
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateReportedReplacesShell = state.replacesShell === true;
 				this.desktopUpdateRunning = state.updating === true;
 			});
 		});
@@ -314,6 +320,7 @@ class Updater {
 			const state = await desktopUpdate.state();
 			runInAction(() => {
 				this.desktopUpdateReported = state.available;
+				this.desktopUpdateReportedReplacesShell = state.replacesShell === true;
 				this.desktopUpdateRunning = state.updating === true;
 			});
 		} catch (error) {
@@ -669,6 +676,7 @@ class Updater {
 			this.unsubscribeDesktopUpdate = null;
 		}
 		this.desktopUpdateReported = false;
+		this.desktopUpdateReportedReplacesShell = false;
 		this.desktopUpdateRunning = false;
 		this.olderShellModuleUpdateReady = false;
 		this.olderShellUpdateDownloaded = false;

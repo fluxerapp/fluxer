@@ -24,6 +24,7 @@ interface DesktopUpdateGateState {
 	checking: {readonly manual: boolean; readonly settled: Promise<void>} | null;
 	notifiedAvailable: boolean;
 	notifiedUpdating: boolean;
+	notifiedReplacesShell: boolean;
 	readonly listeners: Set<DesktopUpdateStateListener>;
 }
 
@@ -34,6 +35,7 @@ const gateState: DesktopUpdateGateState = {
 	checking: null,
 	notifiedAvailable: false,
 	notifiedUpdating: false,
+	notifiedReplacesShell: false,
 	listeners: new Set(),
 };
 
@@ -42,9 +44,11 @@ function isAvailable(check: DesktopUpdateCheck | null): boolean {
 }
 
 export function getDesktopUpdateState(): DesktopUpdateState {
+	const available = gateState.running == null && isAvailable(gateState.lastCheck);
 	return {
-		available: gateState.running == null && isAvailable(gateState.lastCheck),
+		available,
 		updating: gateState.running != null,
+		replacesShell: available && gateState.lastCheck?.shellNewer === true,
 	};
 }
 
@@ -55,11 +59,17 @@ export function desktopUpdateReplacesShell(): boolean {
 function notify(): void {
 	const state = getDesktopUpdateState();
 	const updating = state.updating === true;
-	if (state.available === gateState.notifiedAvailable && updating === gateState.notifiedUpdating) {
+	const replacesShell = state.replacesShell === true;
+	if (
+		state.available === gateState.notifiedAvailable &&
+		updating === gateState.notifiedUpdating &&
+		replacesShell === gateState.notifiedReplacesShell
+	) {
 		return;
 	}
 	gateState.notifiedAvailable = state.available;
 	gateState.notifiedUpdating = updating;
+	gateState.notifiedReplacesShell = replacesShell;
 	for (const listener of Array.from(gateState.listeners)) {
 		try {
 			listener(state);
