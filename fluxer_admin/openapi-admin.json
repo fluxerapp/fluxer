@@ -4152,15 +4152,17 @@
 				}
 			}
 		},
-		"/admin/instance/pending-registrations/{user_id}": {
-			"patch": {
-				"operationId": "update_admin_pending_registration",
-				"summary": "Approve or reject a pending registration",
+		"/admin/instance/pending-registrations": {
+			"get": {
+				"operationId": "list_admin_pending_registrations",
+				"summary": "List pending registrations",
 				"tags": ["Admin"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/InstanceConfigResponse"}}}
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PendingRegistrationListResponse"}}
+						}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -4201,7 +4203,62 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Decides a registration waiting for manual review. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires INSTANCE_CONFIG_UPDATE permission.",
+				"description": "Lists every registration waiting for manual review, oldest first. Requires REGISTRATION_REVIEW permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
+		"/admin/instance/pending-registrations/{user_id}": {
+			"patch": {
+				"operationId": "update_admin_pending_registration",
+				"summary": "Approve or reject a pending registration",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PendingRegistrationListResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5887,7 +5944,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Return the admin the request was authenticated as, with the admin permissions, roles, and metadata of the account. Requires AUTHENTICATE permission.",
+				"description": "Return the admin the request was authenticated as, with the admin permissions, roles, and metadata of the account, plus the number of pending registrations when the admin holds REGISTRATION_REVIEW. Requires AUTHENTICATE permission.",
 				"security": [{"adminApiKey": []}]
 			}
 		},
@@ -10281,7 +10338,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10297,8 +10354,11 @@
 			},
 			"AdminUsersMeResponse": {
 				"type": "object",
-				"properties": {"user": {"$ref": "#/components/schemas/UserAdminResponseSchema"}},
-				"required": ["user"],
+				"properties": {
+					"user": {"$ref": "#/components/schemas/UserAdminResponseSchema"},
+					"pending_registration_count": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]}
+				},
+				"required": ["user", "pending_registration_count"],
 				"additionalProperties": false
 			},
 			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
@@ -11331,40 +11391,9 @@
 									],
 									"additionalProperties": false
 								}
-							},
-							"pending_registrations": {
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"user_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
-										"username": {"type": "string"},
-										"discriminator": {"type": "integer", "minimum": 0, "maximum": 9999},
-										"global_name": {"nullable": true, "type": "string"},
-										"email": {"nullable": true, "type": "string"},
-										"requested_at": {
-											"type": "string",
-											"format": "date-time",
-											"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-										},
-										"registration_url_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 128},
-										"client_ip": {"nullable": true, "type": "string"}
-									},
-									"required": [
-										"user_id",
-										"username",
-										"discriminator",
-										"global_name",
-										"email",
-										"requested_at",
-										"registration_url_id",
-										"client_ip"
-									],
-									"additionalProperties": false
-								}
 							}
 						},
-						"required": ["mode", "admin_registration_urls_enabled", "urls", "pending_registrations"],
+						"required": ["mode", "admin_registration_urls_enabled", "urls"],
 						"additionalProperties": false
 					},
 					"self_hosted": {"type": "boolean"},
@@ -11810,6 +11839,17 @@
 					}
 				},
 				"required": ["status"]
+			},
+			"PendingRegistrationListResponse": {
+				"type": "object",
+				"properties": {
+					"pending_registrations": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/PendingRegistrationResponse"}
+					}
+				},
+				"required": ["pending_registrations"],
+				"additionalProperties": false
 			},
 			"InstanceEmailSmtpTestRequest": {
 				"type": "object",
@@ -13515,7 +13555,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -13533,7 +13573,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13563,7 +13603,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -13584,7 +13624,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13597,7 +13637,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 107,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13679,6 +13719,7 @@
 					"message:delete",
 					"message:lookup",
 					"message:shred",
+					"registration:review",
 					"report:delete",
 					"report:resolve",
 					"report:view",
@@ -16471,6 +16512,34 @@
 			},
 			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
 			"StripePriceIdSchema": {"type": "string", "maxLength": 255, "pattern": "^price_[A-Za-z0-9]+$"},
+			"PendingRegistrationResponse": {
+				"type": "object",
+				"properties": {
+					"user_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"username": {"type": "string"},
+					"discriminator": {"type": "integer", "minimum": 0, "maximum": 9999},
+					"global_name": {"nullable": true, "type": "string"},
+					"email": {"nullable": true, "type": "string"},
+					"requested_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"registration_url_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 128},
+					"client_ip": {"nullable": true, "type": "string"}
+				},
+				"required": [
+					"user_id",
+					"username",
+					"discriminator",
+					"global_name",
+					"email",
+					"requested_at",
+					"registration_url_id",
+					"client_ip"
+				],
+				"additionalProperties": false
+			},
 			"InstanceBillingResponse": {
 				"type": "object",
 				"properties": {
@@ -16839,7 +16908,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 106, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 107, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},

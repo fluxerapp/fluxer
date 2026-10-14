@@ -108,11 +108,14 @@ export const ListUserChangeLogResponseSchema = z.object({
 
 export const AdminUsersMeResponse = z.object({
 	user: UserAdminResponseSchema,
+	pending_registration_count: Int32Type.nullable(),
 });
 
 export type AdminUsersMeResponse = z.infer<typeof AdminUsersMeResponse>;
 
-export const UserMutationResponse = AdminUsersMeResponse;
+export const UserMutationResponse = z.object({
+	user: UserAdminResponseSchema,
+});
 
 export type UserMutationResponse = z.infer<typeof UserMutationResponse>;
 

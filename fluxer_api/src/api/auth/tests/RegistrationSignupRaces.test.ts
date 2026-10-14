@@ -23,7 +23,10 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {
+	InstanceConfigResponse,
+	PendingRegistrationListResponse,
+} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const REGISTRATION_URLS_KEY = 'registration_urls';
@@ -62,6 +65,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_VIEW,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
+			AdminACLs.REGISTRATION_REVIEW,
 		]);
 	});
 
@@ -81,6 +85,13 @@ describe('signups racing on registration URLs and pending approvals', () => {
 
 	const readAdminConfig = (): Promise<InstanceConfigResponse> =>
 		createBuilder<InstanceConfigResponse>(harness, admin.token).get('/admin/instance/config').execute();
+
+	const readPendingRegistrations = async (): Promise<PendingRegistrationListResponse['pending_registrations']> =>
+		(
+			await createBuilder<PendingRegistrationListResponse>(harness, admin.token)
+				.get('/admin/instance/pending-registrations')
+				.execute()
+		).pending_registrations;
 
 	const completeSso = async (prefix: string) => {
 		const start = await createBuilderWithoutAuth<{state: string}>(harness)
@@ -116,7 +127,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 	};
 
 	const expectOnePendingAccount = async () => {
-		const pending = (await readAdminConfig()).registration.pending_registrations;
+		const pending = await readPendingRegistrations();
 		expect(pending).toHaveLength(1);
 		const account = await new UserRepository().findUnique(createUserID(BigInt(pending[0]!.user_id)));
 		expect(account?.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)).toBe(true);
@@ -209,8 +220,8 @@ describe('signups racing on registration URLs and pending approvals', () => {
 
 		const failed = await register('seatreleased', code);
 		expect(failed.response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+		expect(await readPendingRegistrations()).toEqual([]);
 		const withdrawn = await readAdminConfig();
-		expect(withdrawn.registration.pending_registrations).toEqual([]);
 		expect(withdrawn.registration.urls.find((url) => url.id === registrationUrl.id)?.use_count).toBe(0);
 
 		const retried = await register('seatreleasedretry', code);
@@ -307,7 +318,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		const attempts = await Promise.all(Array.from({length: 5}, (_, index) => register(`pending${index}`)));
 
 		expect(attempts.map((attempt) => attempt.json.registration_pending_approval)).toEqual(Array(5).fill(true));
-		const pending = (await readAdminConfig()).registration.pending_registrations.map((entry) => entry.user_id);
+		const pending = (await readPendingRegistrations()).map((entry) => entry.user_id);
 		expect(pending.toSorted()).toEqual(attempts.map((attempt) => attempt.json.user_id).toSorted());
 	});
 
@@ -340,7 +351,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		const failed = await register('pendingkept');
 
 		expect(failed.response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-		expect((await readAdminConfig()).registration.pending_registrations).toHaveLength(1);
+		expect(await readPendingRegistrations()).toHaveLength(1);
 	});
 
 	it('lists no pending approval for an approval-mode signup that failed before the account was created', async () => {
@@ -350,7 +361,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		const failed = await register('pendingnever');
 
 		expect(failed.response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-		expect((await readAdminConfig()).registration.pending_registrations).toEqual([]);
+		expect(await readPendingRegistrations()).toEqual([]);
 	});
 
 	it('lists an SSO account provisioned in approval mode whose provisioning failed after the account was created', async () => {
@@ -383,7 +394,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		const failed = await completeSso('ssopendingkept');
 
 		expect(failed.response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-		expect((await readAdminConfig()).registration.pending_registrations).toHaveLength(1);
+		expect(await readPendingRegistrations()).toHaveLength(1);
 	});
 
 	it('lists no pending approval for an SSO signup in approval mode that failed before the account was created', async () => {
@@ -394,7 +405,7 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		const failed = await completeSso('ssopendingnever');
 
 		expect(failed.response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-		expect((await readAdminConfig()).registration.pending_registrations).toEqual([]);
+		expect(await readPendingRegistrations()).toEqual([]);
 	});
 
 	it('keeps a stored pending approval listed until an admin decides it', async () => {
@@ -417,16 +428,16 @@ describe('signups racing on registration URLs and pending approvals', () => {
 		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
 		const fresh = await register('pendingafter');
 
-		const listed = (await readAdminConfig()).registration.pending_registrations.map((entry) => entry.user_id);
+		const listed = (await readPendingRegistrations()).map((entry) => entry.user_id);
 		expect(listed.toSorted()).toEqual([account.userId, fresh.json.user_id].toSorted());
 
-		const decided = await createBuilder<InstanceConfigResponse>(harness, admin.token)
+		const decided = await createBuilder<PendingRegistrationListResponse>(harness, admin.token)
 			.patch(`/admin/instance/pending-registrations/${account.userId}`)
 			.body({status: 'approved'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 
-		expect(decided.registration.pending_registrations.map((entry) => entry.user_id)).toEqual([fresh.json.user_id]);
+		expect(decided.pending_registrations.map((entry) => entry.user_id)).toEqual([fresh.json.user_id]);
 		expect(
 			JSON.parse(
 				(await getInstanceConfigRepository().getConfig(REGISTRATION_PENDING_APPROVALS_KEY)) ?? 'null',

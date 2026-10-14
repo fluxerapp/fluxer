@@ -586,7 +586,7 @@ The `user_id` selector adds `user_id_count` for the number of IDs supplied, and 
 
 <RouteHeader method="GET" path="/v1/admin/users/@me" />
 
-Returns the account the request authenticated as, wrapped in a `user` member. Requires `admin:authenticate`.
+Returns the account the request authenticated as, wrapped in a `user` member, with the number of pending registrations. Requires `admin:authenticate`.
 
 Every Admin credential holds `admin:authenticate`, so every account that can reach the Admin API can read this route. `email`, `date_of_birth`, and the IP fields are returned unredacted whatever the acting credential holds. `acls` reports the ACL set stored on the account. For an Admin API key credential that set can be wider than what the key itself can use.
 
@@ -595,6 +595,9 @@ Every Admin credential holds `admin:authenticate`, so every account that can rea
 | Field | Type | Description |
 | --- | --- | --- |
 | user | [Admin user](#admin-user-object) object | The account the request authenticated as |
+| pending_registration_count<sup>1</sup> | ?integer | Number of [pending registrations](/admin-api/instance/#list-pending-registrations), or null when the credential does not hold `registration:review` |
+
+<sup>1</sup> Read from the same list as [List pending registrations](/admin-api/instance/#list-pending-registrations), without recording an audit entry
 
 ### Response
 

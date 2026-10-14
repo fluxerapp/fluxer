@@ -34,6 +34,7 @@ import {
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
 	PendingRegistrationActionRequest,
+	PendingRegistrationListResponse,
 	RegistrationUrlIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -98,7 +99,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
-		pendingRegistrations,
 	] = await Promise.all([
 		instanceConfigRepository.getSsoConfig(),
 		instanceConfigRepository.getGatewayRolloutConfig(),
@@ -109,7 +109,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
-		instanceConfigRepository.getPendingRegistrations(),
 	]);
 	const [appPublic, policy, resolvedServices, integrations, media, billing, accountIdentity, accountIdentityLocked] =
 		await Promise.all([
@@ -148,7 +147,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
-			pending_registrations: pendingRegistrations,
 		},
 		self_hosted: Config.instance.selfHosted,
 		account_identity: {
@@ -320,10 +318,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				targetType: 'instance_config',
 				targetId: 0n,
 				action: AdminAuditReadActions.GET_INSTANCE_CONFIG,
-				metadata: {
-					registration_url_count: response.registration.urls.length,
-					pending_registration_count: response.registration.pending_registrations.length,
-				},
+				metadata: {registration_url_count: response.registration.urls.length},
 			});
 			return ctx.json(response);
 		},
@@ -738,18 +733,43 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			return ctx.json(await buildInstanceConfigResponse());
 		},
 	);
+	app.get(
+		'/admin/instance/pending-registrations',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.REGISTRATION_REVIEW),
+		OpenAPI({
+			operationId: 'list_admin_pending_registrations',
+			summary: 'List pending registrations',
+			description:
+				'Lists every registration waiting for manual review, oldest first. Requires REGISTRATION_REVIEW permission.',
+			responseSchema: PendingRegistrationListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const pendingRegistrations = await instanceConfigRepository.getPendingRegistrations();
+			await recordAdminRead(ctx, {
+				targetType: 'instance_config',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_PENDING_REGISTRATIONS,
+				metadata: {pending_registration_count: pendingRegistrations.length},
+			});
+			return ctx.json({pending_registrations: pendingRegistrations});
+		},
+	);
 	app.patch(
 		'/admin/instance/pending-registrations/:user_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.REGISTRATION_REVIEW),
 		Validator('param', UserIdParam),
 		Validator('json', PendingRegistrationActionRequest),
 		OpenAPI({
 			operationId: 'update_admin_pending_registration',
 			summary: 'Approve or reject a pending registration',
 			description:
-				'Decides a registration waiting for manual review. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires INSTANCE_CONFIG_UPDATE permission.',
-			responseSchema: InstanceConfigResponse,
+				'Decides a registration waiting for manual review and returns the registrations still waiting. Approving removes its pending registration trait, rejecting also prevents the account from logging in. Requires REGISTRATION_REVIEW permission.',
+			responseSchema: PendingRegistrationListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -759,7 +779,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			const decision = ctx.req.valid('json').status === 'approved' ? 'approve' : 'reject';
 			await updatePendingRegistrationUser(ctx, userId, decision);
 			await instanceConfigRepository.removePendingRegistration(userId);
-			return ctx.json(await buildInstanceConfigResponse());
+			return ctx.json({pending_registrations: await instanceConfigRepository.getPendingRegistrations()});
 		},
 	);
 }

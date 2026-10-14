@@ -4,13 +4,14 @@ use crate::{acl, config::AdminConfig};
 use maud::{Markup, PreEscaped, html};
 
 use super::layout_scripts::SIDEBAR_ACTIVE_SCROLL_SCRIPT;
-use super::layout_sidebar_nav::NAV_SECTIONS;
+use super::layout_sidebar_nav::{NAV_SECTIONS, PENDING_REGISTRATIONS_KEY};
 
 pub fn render_sidebar(
     config: &AdminConfig,
     admin_acls: &[String],
     active_page: &str,
     inspected_voice_region_id: Option<&str>,
+    pending_registration_count: Option<u32>,
 ) -> Markup {
     let base = &config.base_path;
     html! {
@@ -40,7 +41,7 @@ pub fn render_sidebar(
                             div class="space-y-1" {
                                 @for item in &visible_items {
                                     @let active = active_page == item.active_key;
-                                    @let base_classes = "block min-h-[44px] px-3 py-2.5 rounded text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900";
+                                    @let base_classes = "flex min-h-[44px] items-center justify-between gap-3 px-3 py-2.5 rounded text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900";
                                     @let item_path = if item.active_key == "voice-servers" {
                                         if let Some(region_id) = inspected_voice_region_id {
                                             let encoded = urlencoding::encode(region_id);
@@ -58,6 +59,9 @@ pub fn render_sidebar(
                                     };
                                     a href={(base) (item_path)} class=(classes) aria-current=[active.then_some("page")] data-active=[active.then_some("")] {
                                         (item.title)
+                                        @if item.active_key == PENDING_REGISTRATIONS_KEY {
+                                            (pending_registration_count_markup(pending_registration_count, false))
+                                        }
                                     }
                                 }
                             }
@@ -66,6 +70,16 @@ pub fn render_sidebar(
                 }
             }
             script defer { (PreEscaped(SIDEBAR_ACTIVE_SCROLL_SCRIPT)) }
+        }
+    }
+}
+
+pub fn pending_registration_count_markup(count: Option<u32>, out_of_band: bool) -> Markup {
+    html! {
+        span id="pending-registration-count" class="tabular-nums text-neutral-400" hx-swap-oob=[out_of_band.then_some("true")] {
+            @if let Some(count) = count.filter(|count| *count > 0) {
+                (count)
+            }
         }
     }
 }

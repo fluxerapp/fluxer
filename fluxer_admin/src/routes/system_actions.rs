@@ -304,48 +304,6 @@ pub async fn instance_config_post(
             },
             None => FlashData::error("Registration URL ID is required"),
         },
-        "approve_pending_registration" => match form.clean("user_id") {
-            Some(user_id) => match client.approve_pending_registration(&user_id).await {
-                Ok(instance_config) => {
-                    let flash = FlashData::success("Registration approved");
-                    if htmx::targets(&headers, "pending-registration-list") {
-                        return render_pending_registration_list_response(
-                            config,
-                            &csrf.0.0,
-                            &instance_config,
-                            &flash,
-                        );
-                    }
-                    flash
-                }
-                Err(error) => {
-                    tracing::warn!(%error, "admin API request failed: approve pending registration");
-                    FlashData::error("Failed to approve registration")
-                }
-            },
-            None => FlashData::error("User ID is required"),
-        },
-        "reject_pending_registration" => match form.clean("user_id") {
-            Some(user_id) => match client.reject_pending_registration(&user_id).await {
-                Ok(instance_config) => {
-                    let flash = FlashData::success("Registration rejected");
-                    if htmx::targets(&headers, "pending-registration-list") {
-                        return render_pending_registration_list_response(
-                            config,
-                            &csrf.0.0,
-                            &instance_config,
-                            &flash,
-                        );
-                    }
-                    flash
-                }
-                Err(error) => {
-                    tracing::warn!(%error, "admin API request failed: reject pending registration");
-                    FlashData::error("Failed to reject registration")
-                }
-            },
-            None => FlashData::error("User ID is required"),
-        },
         _ => FlashData::error("Unknown instance config action"),
     };
     if htmx::is_htmx_request(&headers) {
@@ -376,22 +334,6 @@ fn render_registration_url_list_response(
             config,
             csrf_token,
             &instance_config.registration.urls,
-        ),
-        flash,
-    )
-}
-
-fn render_pending_registration_list_response(
-    config: &AdminConfig,
-    csrf_token: &str,
-    instance_config: &crate::api::types::InstanceConfigResponse,
-    flash: &FlashData,
-) -> Response {
-    render_fragment_with_toast(
-        templates::pages::instance_config::pending_registration_list(
-            config,
-            csrf_token,
-            &instance_config.registration.pending_registrations,
         ),
         flash,
     )

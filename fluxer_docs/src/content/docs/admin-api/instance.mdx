@@ -10,7 +10,7 @@ Instance configuration is everything an operator can change at runtime. It cover
 
 Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception and replaces the stored document.
 
-Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`.
+Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`. Pending registrations are read and decided with `registration:review` alone.
 
 :::caution[No read returns a stored secret]
 A secret is reported by a companion boolean such as `client_secret_set`. Except for the single sign-on client secret, that boolean is true whether the value is stored here or supplied by deployment configuration.
@@ -33,7 +33,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | voice_p2p | [peer-to-peer voice configuration](#peer-to-peer-voice-configuration-object) object | Peer-to-peer voice rollout |
 | captcha | [captcha configuration](#captcha-configuration-object) object | ALTCHA proof-of-work captcha settings |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
-| registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
+| registration | [registration configuration](#registration-configuration-object) object | Registration policy and issued URLs |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
 | account_identity | [account identity configuration](#account-identity-configuration-object) object | How members sign in, and whether that can still change |
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, legal, setup, and registration field policy |
@@ -223,7 +223,7 @@ Both fields are served to every account, whether or not any experiment targets t
 
 ## Registration configuration object
 
-Registration policy in force, plus every issued registration URL and every account awaiting a decision.
+Registration policy in force, plus every issued registration URL. Accounts awaiting a decision are read through [List pending registrations](#list-pending-registrations).
 
 ### Structure
 
@@ -232,15 +232,12 @@ Registration policy in force, plus every issued registration URL and every accou
 | mode | string | [Registration mode](#registration-modes) |
 | admin_registration_urls_enabled<sup>1</sup> | boolean | Whether Admin-issued registration URLs are accepted |
 | urls<sup>2</sup> | array[[registration URL](#registration-url-object) object] | Every issued registration URL, including revoked and exhausted records |
-| pending_registrations<sup>3</sup> | array[[pending registration](#pending-registration-object) object] | Accounts awaiting a decision |
 
 <sup>1</sup> While the value is false, registration refuses every supplied registration URL code, so an issued URL stops working without being revoked
 
 <sup>2</sup> Ordered by creation time, newest first
 
-<sup>3</sup> Ordered by request time, oldest first
-
-Both collections are embedded in the configuration response. There is no separate listing operation and no pagination, so every configuration read returns every issued URL.
+The URLs are embedded in the configuration response. There is no separate listing operation and no pagination, so every configuration read returns every issued URL.
 
 ## Registration modes
 
@@ -314,6 +311,18 @@ One account that registered and is still waiting for an Admin decision.
 | client_ip<sup>1</sup> | ?string | IP address the account registered from, or null when none was recorded |
 
 <sup>1</sup> Stored at registration time and never refreshed, so it can be stale by the time an Admin reads it
+
+## Pending registration list object
+
+Every account still waiting for an Admin decision.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| pending_registrations<sup>1</sup> | array[[pending registration](#pending-registration-object) object] | Accounts awaiting a decision |
+
+<sup>1</sup> Ordered by request time, oldest first. There is no pagination
 
 ## Public application configuration object
 
@@ -631,7 +640,7 @@ Returns the [instance configuration](#instance-configuration-object) object. Req
 
 ### Side effects
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_instance_config`, target type `instance_config`, target ID `0`, and metadata keys `registration_url_count` and `pending_registration_count`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_instance_config`, target type `instance_config`, target ID `0`, and metadata key `registration_url_count`.
 
 ### Rate limit
 
@@ -879,11 +888,31 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
+## List pending registrations
+
+<RouteHeader method="GET" path="/v1/admin/instance/pending-registrations" auditReason />
+
+Returns the [pending registration list](#pending-registration-list-object) object. Requires `registration:review`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [pending registration list](#pending-registration-list-object) object | Pending registrations were returned |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_pending_registrations`, target type `instance_config`, target ID `0`, and metadata key `pending_registration_count`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
 ## Update pending registration
 
 <RouteHeader method="PATCH" path="/v1/admin/instance/pending-registrations/{user_id}" auditReason />
 
-Approves or rejects one pending registration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
+Approves or rejects one pending registration and returns the resulting [pending registration list](#pending-registration-list-object) object. Requires `registration:review`.
 
 ### Path parameters
 
@@ -901,7 +930,7 @@ Approves or rejects one pending registration and returns the resulting [instance
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | [instance configuration](#instance-configuration-object) object | The decision was applied |
+| 200<sup>1</sup> | [pending registration list](#pending-registration-list-object) object | The decision was applied |
 
 <sup>1</sup> An account that no longer exists still answers 200. The pending registration is removed and no trait is written
 

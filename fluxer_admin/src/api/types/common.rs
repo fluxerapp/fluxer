@@ -32,6 +32,7 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
 #[derive(Clone, Debug, Deserialize)]
 pub struct AdminUserMeResponse {
     pub user: AdminUser,
+    pub pending_registration_count: Option<u32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

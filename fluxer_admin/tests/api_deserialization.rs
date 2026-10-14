@@ -261,8 +261,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
         "registration": {
             "mode": "open",
             "admin_registration_urls_enabled": false,
-            "urls": [],
-            "pending_registrations": []
+            "urls": []
         },
         "self_hosted": false,
         "account_identity": {"mode": "username", "locked": true, "tag_style": "none"},

@@ -701,8 +701,6 @@ pub struct InstanceRegistrationResponse {
     pub admin_registration_urls_enabled: bool,
     #[serde(default)]
     pub urls: Vec<RegistrationUrlResponse>,
-    #[serde(default)]
-    pub pending_registrations: Vec<PendingRegistrationResponse>,
 }
 
 impl Default for InstanceRegistrationResponse {
@@ -711,7 +709,6 @@ impl Default for InstanceRegistrationResponse {
             mode: RegistrationMode::Open,
             admin_registration_urls_enabled: true,
             urls: Vec::new(),
-            pending_registrations: Vec::new(),
         }
     }
 }
@@ -765,6 +762,26 @@ pub struct PendingRegistrationResponse {
     pub requested_at: String,
     pub registration_url_id: Option<String>,
     pub client_ip: Option<String>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PendingRegistrationStatus {
+    Approved,
+    Rejected,
+}
+
+impl PendingRegistrationStatus {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Approved => "approved",
+            Self::Rejected => "rejected",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct PendingRegistrationListResponse {
+    pub pending_registrations: Vec<PendingRegistrationResponse>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

@@ -13,7 +13,9 @@ import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
+import type {PendingRegistrationListResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {AdminUsersMeResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface PendingRegistrationResponse {
 	user_id: string;
@@ -37,7 +39,7 @@ describe('pending registration approval and the stock community', () => {
 	it('keeps a banned user out of the stock community on approval', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
+			AdminACLs.REGISTRATION_REVIEW,
 		]);
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
 		await getInstanceConfigRepository().setInstancePolicyConfig({
@@ -79,7 +81,7 @@ describe('pending registration approval and the stock community', () => {
 	it('does not add a user who was never pending to the stock community', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
+			AdminACLs.REGISTRATION_REVIEW,
 		]);
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
 		const outsider = await createTestAccount(harness);
@@ -98,5 +100,60 @@ describe('pending registration approval and the stock community', () => {
 			.get(`/guilds/${guild.id}/members/${outsider.userId}`)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();
+	});
+
+	it('lets the review ACL alone list and decide registrations', async () => {
+		const reviewer = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.REGISTRATION_REVIEW,
+		]);
+		const configAdmin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.INSTANCE_CONFIG_VIEW,
+			AdminACLs.INSTANCE_CONFIG_UPDATE,
+		]);
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body({
+				email: createUniqueEmail('reviewonly'),
+				username: createUniqueUsername('reviewonly'),
+				global_name: 'Review only',
+				password: 'reviewing-since-1999',
+				date_of_birth: '2000-01-01',
+				consent: true,
+			})
+			.execute();
+
+		const listed = await createBuilder<PendingRegistrationListResponse>(harness, reviewer.token)
+			.get('/admin/instance/pending-registrations')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(listed.pending_registrations.map((entry) => entry.user_id)).toEqual([pending.user_id]);
+		const reviewerMe = await createBuilder<AdminUsersMeResponse>(harness, reviewer.token)
+			.get('/admin/users/@me')
+			.execute();
+		expect(reviewerMe.pending_registration_count).toBe(1);
+		const configAdminMe = await createBuilder<AdminUsersMeResponse>(harness, configAdmin.token)
+			.get('/admin/users/@me')
+			.execute();
+		expect(configAdminMe.pending_registration_count).toBeNull();
+
+		await createBuilder(harness, configAdmin.token)
+			.get('/admin/instance/pending-registrations')
+			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
+			.execute();
+		await createBuilder(harness, configAdmin.token)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'approved'})
+			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
+			.execute();
+
+		const decided = await createBuilder<PendingRegistrationListResponse>(harness, reviewer.token)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'rejected'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(decided.pending_registrations).toEqual([]);
 	});
 });

@@ -5,6 +5,7 @@
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
+    extract::Path,
     http::{HeaderMap, Method, Request, StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing,
@@ -272,6 +273,91 @@ async fn report_delete_form_confirms_sends_the_reason_and_toasts_a_held_report()
     );
 }
 
+#[tokio::test]
+async fn pending_registration_decision_refreshes_the_list_and_sidebar_count() {
+    let received = Arc::new(Mutex::new(Vec::<(String, Value)>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/users/@me",
+            routing::get(|| async {
+                json_response(json!({"user": admin_user(), "pending_registration_count": 2}))
+            }),
+        )
+        .route(
+            "/admin/instance/pending-registrations",
+            routing::get(|| async {
+                json_response(json!({"pending_registrations": [
+                    pending_registration("1500000000000000002"),
+                    pending_registration("1500000000000000003"),
+                ]}))
+            }),
+        )
+        .route(
+            "/admin/instance/pending-registrations/{user_id}",
+            routing::patch(
+                move |Path(user_id): Path<String>, Json(body): Json<Value>| {
+                    let sink = sink.clone();
+                    async move {
+                        sink.lock().unwrap().push((user_id, body));
+                        json_response(json!({"pending_registrations": [
+                            pending_registration("1500000000000000003"),
+                        ]}))
+                    }
+                },
+            ),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/pending-registrations", &[]).await;
+    assert!(
+        page.contains(r#"<span id="pending-registration-count" class="tabular-nums text-neutral-400">2</span>"#),
+        "{page}"
+    );
+    assert!(page.contains("ID: 1500000000000000002"), "{page}");
+    let csrf_token = csrf_cookie(&headers).unwrap_or_else(|| {
+        panic!("pending registrations page did not set csrf_token cookie\n{page}")
+    });
+    assert_form_has_csrf(&page, "/pending-registrations/approve", &csrf_token);
+    assert_form_has_csrf(&page, "/pending-registrations/reject", &csrf_token);
+
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let (status, headers, fragment) = post_form_with_headers(
+        &app,
+        "/pending-registrations/approve",
+        &[
+            ("HX-Request", "true"),
+            ("HX-Target", "pending-registration-list"),
+            ("Cookie", &cookie),
+        ],
+        &format!("_csrf={csrf_token}&user_id=1500000000000000002"),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{fragment}");
+    assert!(
+        fragment.contains(r#"id="pending-registration-list""#),
+        "{fragment}"
+    );
+    assert!(!fragment.contains("ID: 1500000000000000002"), "{fragment}");
+    assert!(fragment.contains("ID: 1500000000000000003"), "{fragment}");
+    assert!(
+        fragment.contains(r#"hx-swap-oob="true">1</span>"#),
+        "{fragment}"
+    );
+    let toast = headers
+        .get("X-Fluxer-Admin-Toast")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+    assert!(toast.contains("Registration approved"), "{toast}");
+    assert_eq!(
+        *received.lock().unwrap(),
+        vec![(
+            "1500000000000000002".to_owned(),
+            json!({"status": "approved"})
+        )]
+    );
+}
+
 async fn setup_with_api(api: Router) -> TestApp {
     let api_endpoint = spawn_mock_api(api).await;
     let router = build_router(test_config(api_endpoint));
@@ -437,6 +523,19 @@ fn user(id: &str, username: &str) -> Value {
         "last_active_ip": null,
         "last_active_ip_reverse": null,
         "last_active_location": null
+    })
+}
+
+fn pending_registration(user_id: &str) -> Value {
+    json!({
+        "user_id": user_id,
+        "username": "applicant",
+        "discriminator": 0,
+        "global_name": null,
+        "email": "applicant@example.com",
+        "requested_at": "2026-10-14T12:00:00.000Z",
+        "registration_url_id": null,
+        "client_ip": "203.0.113.7"
     })
 }
 

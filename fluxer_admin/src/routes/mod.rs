@@ -13,6 +13,7 @@ pub mod guilds;
 pub mod jobs;
 mod message_actions;
 pub mod messages;
+pub mod registrations;
 pub mod reports;
 pub mod system;
 mod system_actions;
@@ -63,6 +64,7 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(applications::router())
         .merge(codes::router())
         .merge(discovery::router())
+        .merge(registrations::router())
         .merge(jobs::router())
         .merge(messages::router())
         .merge(system::router())

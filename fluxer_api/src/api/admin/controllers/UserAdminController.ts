@@ -8,9 +8,10 @@ import {
 	RequireEmailAccountIdentity,
 	RequireUsernameAccountIdentity,
 } from '@app/api/middleware/AccountIdentityMiddleware';
-import {requireAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
+import {hasAdminACL, requireAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
@@ -94,14 +95,15 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Return the admin the request was authenticated as, with the admin permissions, roles, and metadata of the account. Requires AUTHENTICATE permission.',
+				'Return the admin the request was authenticated as, with the admin permissions, roles, and metadata of the account, plus the number of pending registrations when the admin holds REGISTRATION_REVIEW. Requires AUTHENTICATE permission.',
 		}),
 		async (ctx) => {
-			const adminUser = ctx.get('user');
-			const cacheService = ctx.get('cacheService');
-			return ctx.json({
-				user: await mapUserToAdminResponse(adminUser, cacheService),
-			});
+			const canReviewRegistrations = hasAdminACL(ctx.get('adminUserAcls'), AdminACLs.REGISTRATION_REVIEW);
+			const [user, pendingRegistrations] = await Promise.all([
+				mapUserToAdminResponse(ctx.get('user'), ctx.get('cacheService')),
+				canReviewRegistrations ? getInstanceConfigRepository().getPendingRegistrations() : null,
+			]);
+			return ctx.json({user, pending_registration_count: pendingRegistrations?.length ?? null});
 		},
 	);
 	app.get(

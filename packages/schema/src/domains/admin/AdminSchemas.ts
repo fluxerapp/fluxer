@@ -512,7 +512,7 @@ const RegistrationUrlResponse = z.object({
 });
 export type RegistrationUrlResponse = z.infer<typeof RegistrationUrlResponse>;
 
-const PendingRegistrationResponse = z.object({
+export const PendingRegistrationResponse = z.object({
 	user_id: SnowflakeStringType,
 	username: z.string(),
 	discriminator: z.number().int().min(0).max(9999),
@@ -524,9 +524,13 @@ const PendingRegistrationResponse = z.object({
 });
 export type PendingRegistrationResponse = z.infer<typeof PendingRegistrationResponse>;
 
+export const PendingRegistrationListResponse = z.object({
+	pending_registrations: z.array(PendingRegistrationResponse),
+});
+export type PendingRegistrationListResponse = z.infer<typeof PendingRegistrationListResponse>;
+
 const InstanceRegistrationResponse = InstanceRegistrationConfigResponse.extend({
 	urls: z.array(RegistrationUrlResponse),
-	pending_registrations: z.array(PendingRegistrationResponse),
 });
 
 const AppPublicConfigResponse = z.object({
