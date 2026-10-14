@@ -43,9 +43,17 @@
 }
 
 .embedLink {
-	text-decoration: var(--link-decoration);
+	text-decoration: var(--link-decoration, none);
 	cursor: pointer;
 	color: var(--text-link);
+}
+
+@media (hover: none) {
+	.embedLink,
+	.embedLink:hover,
+	.embedLink:active {
+		text-decoration: var(--link-decoration, none) !important;
+	}
 }
 
 .embedLink code {

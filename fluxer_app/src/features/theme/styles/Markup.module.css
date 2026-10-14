@@ -133,6 +133,14 @@
 	text-decoration: underline;
 }
 
+@media (hover: none) {
+	.markup .link,
+	.markup .link:hover,
+	.markup .link:active {
+		text-decoration: var(--link-decoration, none) !important;
+	}
+}
+
 .markup ul,
 .markup ol {
 	margin-block: 0.25rem 0;
