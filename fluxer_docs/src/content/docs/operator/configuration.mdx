@@ -1150,7 +1150,7 @@ Set by Docker. Node identity in metrics and logs.
 
 #### `FLUXER_ENV`
 
-Default `development`. The runtime mode. `development`, `production`, or `test`. Compose pins `production`, which gates Postgres validation and the admin cookie flags. On a self-hosted instance, `production` also enforces the [setup token](#setup-token).
+Default `production` when `FLUXER_SELF_HOSTED` is `true`, otherwise `development`. The runtime mode. `development`, `production`, or `test`. Compose pins `production`, which gates Postgres validation and the admin cookie flags. On a self-hosted instance, `production` also enforces the [setup token](#setup-token).
 
 #### `FLUXER_SELF_HOSTED`
 

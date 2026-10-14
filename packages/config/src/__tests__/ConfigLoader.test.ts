@@ -80,6 +80,29 @@ describe('ConfigLoader', () => {
 		expect((await loadConfig()).domain.base_domain).toBe('localhost');
 	});
 
+	test('a self-hosted instance without FLUXER_ENV runs in production', async () => {
+		stubMinimalEnv({
+			FLUXER_SELF_HOSTED: 'true',
+			FLUXER_PROFILE_PSEUDONYM_SECRET: 'self-hosted-secret',
+			FLUXER_POSTGRES_HOST: 'postgres',
+			FLUXER_POSTGRES_DATABASE: 'fluxer',
+			FLUXER_POSTGRES_PASSWORD: 'self-hosted-password',
+		});
+		vi.stubEnv('FLUXER_ENV', undefined);
+		expect((await loadConfig()).env).toBe('production');
+	});
+
+	test('a self-hosted instance keeps an explicit FLUXER_ENV', async () => {
+		stubMinimalEnv({FLUXER_SELF_HOSTED: 'true', FLUXER_ENV: 'development'});
+		expect((await loadConfig()).env).toBe('development');
+	});
+
+	test('an instance that is not self-hosted still defaults to development', async () => {
+		stubMinimalEnv();
+		vi.stubEnv('FLUXER_ENV', undefined);
+		expect((await loadConfig()).env).toBe('development');
+	});
+
 	test('endpoint overrides take precedence over derived endpoints', async () => {
 		stubMinimalEnv({
 			FLUXER_API_ENDPOINT: 'https://custom-api.example.com',

@@ -665,6 +665,13 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	return config;
 }
 
+function applySelfHostedEnvDefault(config: MasterConfig, explicitEnv: string | undefined): MasterConfig {
+	if (explicitEnv !== undefined || !config.instance.self_hosted) {
+		return config;
+	}
+	return {...config, env: 'production'};
+}
+
 function applyPublicOrigin(config: MasterConfig): MasterConfig {
 	const raw = config.domain.public_origin;
 	if (raw.trim().length === 0 && !/\p{Cc}/u.test(raw)) {
@@ -787,7 +794,10 @@ export async function loadConfig(): Promise<MasterConfig> {
 		return cachedConfig;
 	}
 	const overrides = buildNamedFluxerEnvOverrides(process.env);
-	const merged = applyPublicOrigin(mergeConfig(defaultConfig(), overrides));
+	const merged = applySelfHostedEnvDefault(
+		applyPublicOrigin(mergeConfig(defaultConfig(), overrides)),
+		readEnvValue(process.env, 'FLUXER_ENV'),
+	);
 	const normalized = normalizeConfig(merged);
 	const derived = deriveEndpointsFromDomain(normalized.domain);
 	const endpoints = {...derived, ...(normalized.endpoint_overrides ?? {})};
