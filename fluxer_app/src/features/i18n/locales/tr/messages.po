@@ -17982,10 +17982,6 @@ msgstr "Kanalda"
 msgid "In channels I moderate"
 msgstr "Yönettiğim kanallarda"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "Başlangıçta hiçbir şey yoktu. Sonra {channelDisplayName} geldi. Ve bu iyiydi."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "Sesli sohbette"
@@ -34405,6 +34401,10 @@ msgstr "Bu, ilk seçenek açıklamasıdır"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "Bu, ikinci seçenek açıklamasıdır"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "Bu, {channelDisplayName} sohbetinin başlangıcı."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"

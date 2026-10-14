@@ -17982,10 +17982,6 @@ msgstr "בערוץ"
 msgid "In channels I moderate"
 msgstr "בערוצים שאני מנהל"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "בראשית לא היה כלום. ואז הגיע {channelDisplayName}. וזה היה טוב."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "בשיחה קולית"
@@ -34405,6 +34401,10 @@ msgstr "זהו התיאור של האפשרות הראשונה"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "זהו התיאור של האפשרות השנייה"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "זה ההתחלה של {channelDisplayName}."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"

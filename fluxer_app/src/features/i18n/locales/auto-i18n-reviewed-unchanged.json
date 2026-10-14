@@ -1559,6 +1559,7 @@
 		"This is an age-restricted channel. Updates can only go to age-restricted channels.",
 		"This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves.",
 		"This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves.",
+		"This is the start of {channelDisplayName}.",
 		"This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working.",
 		"This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor.",
 		"This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}.",

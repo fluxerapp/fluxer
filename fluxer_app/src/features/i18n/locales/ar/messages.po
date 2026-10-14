@@ -17982,10 +17982,6 @@ msgstr "في القناة"
 msgid "In channels I moderate"
 msgstr "في القنوات التي أشرف عليها"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "في البداية، لم يكن هناك شيء. ثم ظهرت {channelDisplayName}. وكان ذلك جيدًا."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "في محادثة صوتية"
@@ -34405,6 +34401,10 @@ msgstr "هذا هو وصف الخيار الأول"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "هذا هو وصف الخيار الثاني"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "هذه بداية {channelDisplayName}."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"

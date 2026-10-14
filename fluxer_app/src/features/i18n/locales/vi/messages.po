@@ -17982,10 +17982,6 @@ msgstr "Trong kênh"
 msgid "In channels I moderate"
 msgstr "Trong các kênh tôi kiểm duyệt"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "Ban đầu không có gì cả. Sau đó, có {channelDisplayName}. Và mọi thứ thật tốt đẹp."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "Đang trong cuộc gọi thoại"
@@ -34405,6 +34401,10 @@ msgstr "Đây là mô tả của lựa chọn đầu tiên"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "Đây là mô tả của lựa chọn thứ hai"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "Đây là phần bắt đầu của {channelDisplayName}."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"

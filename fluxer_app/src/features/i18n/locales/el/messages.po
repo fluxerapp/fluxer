@@ -17982,10 +17982,6 @@ msgstr "Στο κανάλι"
 msgid "In channels I moderate"
 msgstr "Στα κανάλια που συντονίζω"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "Στην αρχή δεν υπήρχε τίποτα. Μετά ήρθε το {channelDisplayName}. Και ήταν καλό."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "Σε φωνητική συνομιλία"
@@ -34405,6 +34401,10 @@ msgstr "Αυτή είναι η περιγραφή της πρώτης επιλο
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "Αυτή είναι η περιγραφή της δεύτερης επιλογής"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "Αυτή είναι η αρχή του {channelDisplayName}."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"

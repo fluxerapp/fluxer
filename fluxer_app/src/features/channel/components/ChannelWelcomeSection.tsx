@@ -57,7 +57,7 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 				<Trans>Welcome to {channelDisplayName}</Trans>
 			</h1>
 			<p className={styles.description} data-flx="channel.channel-welcome-section.description">
-				<Trans>In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good.</Trans>
+				<Trans>This is the start of {channelDisplayName}.</Trans>
 			</p>
 		</div>
 	);

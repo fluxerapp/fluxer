@@ -17982,10 +17982,6 @@ msgstr "Im Kanal"
 msgid "In channels I moderate"
 msgstr "In Kanälen, die ich moderiere"
 
-#: src/features/channel/components/ChannelWelcomeSection.tsx
-msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
-msgstr "Am Anfang war nichts. Dann kam {channelDisplayName}. Und es war gut."
-
 #: src/features/user/components/profile/VoiceActivityCard.tsx
 msgid "In voice"
 msgstr "Im Sprachchat"
@@ -34405,6 +34401,10 @@ msgstr "Dies ist die Beschreibung der ersten Option"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the second option description"
 msgstr "Dies ist die Beschreibung der zweiten Option"
+
+#: src/features/channel/components/ChannelWelcomeSection.tsx
+msgid "This is the start of {channelDisplayName}."
+msgstr "Das ist der Anfang von {channelDisplayName}."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
 msgid "This is the third option description"
