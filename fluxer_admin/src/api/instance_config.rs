@@ -4,10 +4,11 @@ use reqwest::Method;
 
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
-    AccountIdentitySettings, CreateRegistrationUrlRequest, CreateRegistrationUrlResponse,
-    InstanceAccountIdentityDiscovery, InstanceConfigResponse, InstanceConfigUpdateRequest,
-    InstanceEmailSmtpTestResponse, InstancePremiumDiscovery, PendingRegistrationListResponse,
-    PendingRegistrationResponse, PendingRegistrationStatus,
+    AccountIdentitySettings, BrandingAssetKind, BrandingAssetUploadRequest,
+    CreateRegistrationUrlRequest, CreateRegistrationUrlResponse, InstanceAccountIdentityDiscovery,
+    InstanceConfigResponse, InstanceConfigUpdateRequest, InstanceEmailSmtpTestResponse,
+    InstancePremiumDiscovery, PendingRegistrationListResponse, PendingRegistrationResponse,
+    PendingRegistrationStatus,
 };
 
 impl AdminApiClient {
@@ -35,6 +36,20 @@ impl AdminApiClient {
     ) -> ApiResult<InstanceConfigResponse> {
         self.send(Method::PATCH, "/admin/instance/config", Some(update), None)
             .await
+    }
+
+    pub async fn upload_branding_asset(
+        &self,
+        kind: BrandingAssetKind,
+        image: Option<String>,
+    ) -> ApiResult<InstanceConfigResponse> {
+        self.send(
+            Method::POST,
+            "/admin/instance/config/branding-assets",
+            Some(&BrandingAssetUploadRequest { kind, image }),
+            None,
+        )
+        .await
     }
 
     pub async fn test_saved_instance_smtp_config(

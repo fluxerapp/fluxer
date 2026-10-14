@@ -784,6 +784,72 @@ pub struct PendingRegistrationListResponse {
     pub pending_registrations: Vec<PendingRegistrationResponse>,
 }
 
+pub const BRANDING_ASSET_MAX_IMAGE_CHARS: usize = 16_000_000;
+
+pub const BRANDING_ASSET_ACCEPT: &str = ".png,.jpeg,.webp,.gif,.apng,.avif,.heic,.heif,.jxl,.svg,\
+     image/png,image/jpeg,image/webp,image/gif,image/apng,image/avif,image/heic,image/heif,\
+     image/jxl,image/svg+xml";
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BrandingAssetKind {
+    Icon,
+    Symbol,
+    Logo,
+    Wordmark,
+    Favicon,
+}
+
+impl BrandingAssetKind {
+    pub const ALL: [Self; 5] = [
+        Self::Icon,
+        Self::Symbol,
+        Self::Logo,
+        Self::Wordmark,
+        Self::Favicon,
+    ];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Icon => "icon",
+            Self::Symbol => "symbol",
+            Self::Logo => "logo",
+            Self::Wordmark => "wordmark",
+            Self::Favicon => "favicon",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.as_str() == value)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Icon => "Icon",
+            Self::Symbol => "Symbol",
+            Self::Logo => "Logo",
+            Self::Wordmark => "Wordmark",
+            Self::Favicon => "Favicon",
+        }
+    }
+
+    pub fn url(self, branding: &AppBrandingConfigResponse) -> Option<&str> {
+        match self {
+            Self::Icon => branding.icon_url.as_deref(),
+            Self::Symbol => branding.symbol_url.as_deref(),
+            Self::Logo => branding.logo_url.as_deref(),
+            Self::Wordmark => branding.wordmark_url.as_deref(),
+            Self::Favicon => branding.favicon_url.as_deref(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BrandingAssetUploadRequest {
+    pub kind: BrandingAssetKind,
+    pub image: Option<String>,
+}
+
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct InstanceConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -3,6 +3,7 @@
 use crate::{
     api::types::{
         AccountIdentityConfigResponse, AccountIdentityMode, AppPublicConfigResponse,
+        BRANDING_ASSET_ACCEPT, BRANDING_ASSET_MAX_IMAGE_CHARS, BrandingAssetKind,
         CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CaptchaConfigResponse,
         DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
         EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES, EXPERIMENT_MAX_TARGETED_USERS,
@@ -30,7 +31,7 @@ use crate::{
     },
     utils::timestamps::format_admin_timestamp,
 };
-use maud::{Markup, html};
+use maud::{Markup, PreEscaped, html};
 
 fn format_percent(value: f64) -> String {
     if value.fract() == 0.0 {
@@ -956,36 +957,9 @@ fn app_public_config_section(
                             ))
                         }
                         div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "app_icon_url",
-                                "Icon URL",
-                                app_public.branding.icon_url.as_deref().unwrap_or(""),
-                                "https://example.com/icon.png",
-                            ))
-                            (text_input(
-                                "app_symbol_url",
-                                "Symbol URL",
-                                app_public.branding.symbol_url.as_deref().unwrap_or(""),
-                                "https://example.com/symbol.png",
-                            ))
-                            (text_input(
-                                "app_logo_url",
-                                "Logo URL",
-                                app_public.branding.logo_url.as_deref().unwrap_or(""),
-                                "https://example.com/logo.png",
-                            ))
-                            (text_input(
-                                "app_wordmark_url",
-                                "Wordmark URL",
-                                app_public.branding.wordmark_url.as_deref().unwrap_or(""),
-                                "https://example.com/wordmark.png",
-                            ))
-                            (text_input(
-                                "app_favicon_url",
-                                "Favicon URL",
-                                app_public.branding.favicon_url.as_deref().unwrap_or(""),
-                                "https://example.com/favicon.ico",
-                            ))
+                            @for kind in BrandingAssetKind::ALL {
+                                (branding_asset_field(kind, kind.url(&app_public.branding)))
+                            }
                             (text_input(
                                 "app_status_page_url",
                                 "Status page URL",
@@ -1014,6 +988,7 @@ fn app_public_config_section(
                         }))
                     }
                 }
+                script { (PreEscaped(BRANDING_ASSET_SCRIPT)) }
                 div class="space-y-4 border-t border-neutral-200 pt-6" {
                     h3 class="text-sm font-semibold text-neutral-900" { "Legal Documents" }
                     form method="post" action={(base) "/instance-config?action=update_app_legal"} {
@@ -1055,6 +1030,173 @@ fn app_public_config_section(
         },
     )
 }
+
+pub fn branding_asset_field_id(kind: BrandingAssetKind) -> String {
+    format!("branding-asset-{}", kind.as_str())
+}
+
+pub fn branding_asset_field(kind: BrandingAssetKind, url: Option<&str>) -> Markup {
+    let name = format!("app_{}_url", kind.as_str());
+    let placeholder = match kind {
+        BrandingAssetKind::Favicon => "https://example.com/favicon.ico".to_owned(),
+        _ => format!("https://example.com/{}.png", kind.as_str()),
+    };
+    html! {
+        div id=(branding_asset_field_id(kind)) class="flex flex-col gap-2"
+            data-branding-asset=(kind.as_str())
+            data-branding-asset-max-chars=(BRANDING_ASSET_MAX_IMAGE_CHARS) {
+            (text_input(&name, &format!("{} URL", kind.label()), url.unwrap_or(""), &placeholder))
+            div class="flex items-center gap-2" {
+                @if let Some(url) = url {
+                    img src=(url) alt={(kind.label()) " preview"}
+                        onerror="this.hidden=true"
+                        class="h-8 w-8 shrink-0 rounded-md border border-neutral-200 bg-neutral-50 object-contain";
+                }
+                input type="file" accept=(BRANDING_ASSET_ACCEPT) class="hidden"
+                    data-branding-asset-file
+                    aria-label={"Upload " (kind.as_str())};
+                button type="button" data-branding-asset-upload
+                    class=(BRANDING_ASSET_BUTTON_CLASS) {
+                    "Upload"
+                }
+                @if url.is_some() {
+                    button type="button" data-branding-asset-remove
+                        class=(BRANDING_ASSET_BUTTON_CLASS) {
+                        "Remove"
+                    }
+                }
+            }
+        }
+    }
+}
+
+const BRANDING_ASSET_BUTTON_CLASS: &str = "inline-flex h-8 shrink-0 items-center justify-center \
+     rounded-lg border border-neutral-300 bg-neutral-50 px-3 text-xs font-medium \
+     text-neutral-700 transition-all hover:border-neutral-400 hover:text-neutral-900 \
+     focus:outline-none focus:ring-2 focus:ring-brand-primary/20 \
+     disabled:cursor-not-allowed disabled:opacity-50";
+
+const BRANDING_ASSET_SCRIPT: &str = r#"
+(function () {
+	if (window.__adminBrandingAssetBound) return;
+	window.__adminBrandingAssetBound = true;
+	function toast(level, message) {
+		document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
+	}
+	function toastFromResponse(response) {
+		var raw = response.headers.get('X-Fluxer-Admin-Toast');
+		if (!raw) return null;
+		try {
+			var parsed = JSON.parse(raw);
+			return {
+				level: parsed && parsed.level ? String(parsed.level) : 'info',
+				message: parsed && parsed.message ? String(parsed.message) : ''
+			};
+		} catch (error) {
+			return null;
+		}
+	}
+	function fieldOf(element) {
+		return element.closest('[data-branding-asset]');
+	}
+	function setBusy(field, busy) {
+		field.setAttribute('aria-busy', busy ? 'true' : 'false');
+		field.querySelectorAll('button').forEach(function (button) {
+			button.disabled = busy;
+		});
+	}
+	function send(field, action, image, failure) {
+		var form = field.closest('form');
+		var csrfInput = form ? form.querySelector('input[name="_csrf"]') : null;
+		var token = csrfInput ? csrfInput.value || '' : '';
+		var url = new URL(form ? form.getAttribute('action') || window.location.href : window.location.href, window.location.href);
+		url.searchParams.set('action', action);
+		var body = new URLSearchParams();
+		body.set('_csrf', token);
+		body.set('kind', field.getAttribute('data-branding-asset') || '');
+		if (image !== null) body.set('image', image);
+		setBusy(field, true);
+		fetch(url.toString(), {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'HX-Request': 'true',
+				'HX-Target': field.id,
+				'X-CSRF-Token': token
+			},
+			body: body.toString()
+		}).then(function (response) {
+			var parsed = toastFromResponse(response);
+			if (response.status !== 200) {
+				setBusy(field, false);
+				toast(parsed ? parsed.level : 'error', parsed ? parsed.message : failure);
+				return;
+			}
+			return response.text().then(function (html) {
+				var template = document.createElement('template');
+				template.innerHTML = html.trim();
+				var replacement = template.content.firstElementChild;
+				if (replacement && replacement.id === field.id) {
+					field.replaceWith(replacement);
+				} else {
+					setBusy(field, false);
+				}
+				if (parsed) toast(parsed.level, parsed.message);
+			});
+		}).catch(function () {
+			setBusy(field, false);
+			toast('error', failure);
+		});
+	}
+	document.addEventListener('click', function (event) {
+		var target = event.target;
+		if (!(target instanceof Element)) return;
+		var upload = target.closest('[data-branding-asset-upload]');
+		if (upload) {
+			var uploadField = fieldOf(upload);
+			var file = uploadField ? uploadField.querySelector('[data-branding-asset-file]') : null;
+			if (file) file.click();
+			return;
+		}
+		var remove = target.closest('[data-branding-asset-remove]');
+		if (remove) {
+			var removeField = fieldOf(remove);
+			if (removeField) send(removeField, 'remove_branding_asset', null, 'Failed to remove the image');
+		}
+	});
+	document.addEventListener('change', function (event) {
+		var input = event.target;
+		if (!(input instanceof HTMLInputElement) || !input.hasAttribute('data-branding-asset-file')) return;
+		var field = fieldOf(input);
+		var selected = input.files && input.files[0];
+		input.value = '';
+		if (!field || !selected) return;
+		var maxChars = Number(field.getAttribute('data-branding-asset-max-chars')) || 0;
+		setBusy(field, true);
+		var reader = new FileReader();
+		reader.onload = function () {
+			var dataUrl = typeof reader.result === 'string' ? reader.result : '';
+			if (!dataUrl) {
+				setBusy(field, false);
+				toast('error', 'Failed to read the image');
+				return;
+			}
+			if (maxChars > 0 && dataUrl.length > maxChars) {
+				setBusy(field, false);
+				toast('error', 'This image is too large to upload');
+				return;
+			}
+			send(field, 'upload_branding_asset', dataUrl, 'Failed to upload the image');
+		};
+		reader.onerror = function () {
+			setBusy(field, false);
+			toast('error', 'Failed to read the image');
+		};
+		reader.readAsDataURL(selected);
+	});
+})();
+"#;
 
 fn gateway_rollout_section(
     base: &str,

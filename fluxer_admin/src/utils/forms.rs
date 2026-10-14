@@ -33,9 +33,11 @@ pub struct MultiValueForm {
 
 impl MultiValueForm {
     pub async fn from_request(request: Request) -> Option<Self> {
-        let bytes = body::to_bytes(request.into_body(), MAX_FORM_BYTES)
-            .await
-            .ok()?;
+        Self::from_request_with_limit(request, MAX_FORM_BYTES).await
+    }
+
+    pub async fn from_request_with_limit(request: Request, max_bytes: usize) -> Option<Self> {
+        let bytes = body::to_bytes(request.into_body(), max_bytes).await.ok()?;
         Some(Self::parse(bytes.as_ref()))
     }
 

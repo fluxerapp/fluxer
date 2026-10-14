@@ -5,7 +5,7 @@
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
-    extract::Path,
+    extract::{DefaultBodyLimit, Path},
     http::{HeaderMap, Method, Request, StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing,
@@ -356,6 +356,198 @@ async fn pending_registration_decision_refreshes_the_list_and_sidebar_count() {
             json!({"status": "approved"})
         )]
     );
+}
+
+#[tokio::test]
+async fn branding_asset_upload_takes_a_large_image_and_swaps_the_field() {
+    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/instance/config",
+            routing::get(|| async {
+                json_response(instance_config(Some(
+                    "https://media.example.test/branding/0/old.png",
+                )))
+            }),
+        )
+        .route(
+            "/admin/instance/config/branding-assets",
+            routing::post(move |Json(body): Json<Value>| {
+                let sink = sink.clone();
+                async move {
+                    sink.lock().unwrap().push(body.clone());
+                    if body["image"] == "data:image/png;base64,bad" {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "code": "INVALID_FORM_BODY",
+                                "message": "Input form validation failed",
+                                "errors": [{"path": "image", "message": "Unsupported image format"}]
+                            })),
+                        )
+                            .into_response();
+                    }
+                    let logo_url = body["image"]
+                        .is_string()
+                        .then_some("https://media.example.test/branding/0/new.png");
+                    json_response(instance_config(logo_url))
+                }
+            }),
+        )
+        .layer(DefaultBodyLimit::disable())
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/instance-config", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("instance config page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(
+        &page,
+        "/instance-config?action=update_app_public",
+        &csrf_token,
+    );
+    assert!(page.contains(r#"id="branding-asset-logo""#), "{page}");
+    assert!(page.contains(r#"id="branding-asset-favicon""#), "{page}");
+    assert!(
+        page.contains(r#"src="https://media.example.test/branding/0/old.png""#),
+        "{page}"
+    );
+    assert!(page.contains(r#"accept=".png,.jpeg,.webp"#), "{page}");
+
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |action: &'static str, fields: Vec<(&'static str, String)>| {
+        let app = &app;
+        let cookie = cookie.clone();
+        let csrf_token = csrf_token.clone();
+        async move {
+            let mut body = url::form_urlencoded::Serializer::new(String::new());
+            body.append_pair("_csrf", &csrf_token);
+            for (name, value) in &fields {
+                body.append_pair(name, value);
+            }
+            post_form_with_headers(
+                app,
+                &format!("/instance-config?action={action}"),
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "branding-asset-logo"),
+                    ("X-CSRF-Token", &csrf_token),
+                    ("Cookie", &cookie),
+                ],
+                &body.finish(),
+            )
+            .await
+        }
+    };
+    let toast_of = |headers: &HeaderMap| {
+        headers
+            .get("X-Fluxer-Admin-Toast")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default()
+            .to_owned()
+    };
+
+    let image = format!(
+        "data:image/png;base64,{}",
+        "iVBO+w/A".repeat(2 * 1024 * 1024 / 8)
+    );
+    let (status, headers, fragment) = post(
+        "upload_branding_asset",
+        vec![("kind", "logo".to_owned()), ("image", image.clone())],
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{fragment}");
+    assert!(
+        fragment.starts_with(r#"<div id="branding-asset-logo""#),
+        "{fragment}"
+    );
+    assert!(
+        fragment.contains(r#"value="https://media.example.test/branding/0/new.png""#),
+        "{fragment}"
+    );
+    assert!(
+        fragment.contains("data-branding-asset-remove"),
+        "{fragment}"
+    );
+    assert!(toast_of(&headers).contains("Logo uploaded"));
+
+    let (status, headers, fragment) =
+        post("remove_branding_asset", vec![("kind", "logo".to_owned())]).await;
+    assert_eq!(status, StatusCode::OK, "{fragment}");
+    assert!(
+        fragment.contains(r#"name="app_logo_url" value="""#),
+        "{fragment}"
+    );
+    assert!(!fragment.contains("<img"), "{fragment}");
+    assert!(
+        !fragment.contains("data-branding-asset-remove"),
+        "{fragment}"
+    );
+    assert!(toast_of(&headers).contains("Logo removed"));
+
+    let (status, headers, _) = post(
+        "upload_branding_asset",
+        vec![
+            ("kind", "logo".to_owned()),
+            ("image", "data:image/png;base64,bad".to_owned()),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let toast = toast_of(&headers);
+    assert!(toast.contains("error"), "{toast}");
+    assert!(
+        toast.contains("Failed to upload the logo: image: Unsupported image format"),
+        "{toast}"
+    );
+
+    let (_, headers, _) = post(
+        "upload_branding_asset",
+        vec![("kind", "logo".to_owned()), ("image", " ".to_owned())],
+    )
+    .await;
+    assert!(toast_of(&headers).contains("Choose an image to upload"));
+    let (_, headers, _) = post(
+        "upload_branding_asset",
+        vec![("kind", "banner".to_owned()), ("image", image.clone())],
+    )
+    .await;
+    assert!(toast_of(&headers).contains("Unknown branding asset"));
+    let (_, headers, _) = post(
+        "update_app_public",
+        vec![
+            ("app_product_name", "Fluxer".to_owned()),
+            ("app_logo_url", image.clone()),
+        ],
+    )
+    .await;
+    assert!(toast_of(&headers).contains("Invalid form data"));
+
+    assert_eq!(
+        *received.lock().unwrap(),
+        vec![
+            json!({"kind": "logo", "image": image}),
+            json!({"kind": "logo", "image": null}),
+            json!({"kind": "logo", "image": "data:image/png;base64,bad"}),
+        ]
+    );
+}
+
+fn instance_config(logo_url: Option<&str>) -> Value {
+    json!({
+        "sso": {},
+        "gateway_rollout": {
+            "session_rollout_percentage": 100,
+            "session_rollout_mode": "modulo",
+            "guild_rollout_percentage": 100,
+            "rpc_request_timeout_ms": 10000,
+            "max_concurrent_session_starts": 512,
+            "max_concurrent_guild_starts": 256,
+            "voice_e2ee_scope": "guild_feature_only"
+        },
+        "self_hosted": true,
+        "app_public": {"branding": {"product_name": "Fluxer", "logo_url": logo_url}}
+    })
 }
 
 async fn setup_with_api(api: Router) -> TestApp {

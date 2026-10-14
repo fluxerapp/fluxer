@@ -6,25 +6,27 @@ use crate::{
         types::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
-            AppSetupConfigUpdateRequest, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
-            CaptchaConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES,
-            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
-            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
-            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
-            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceConfigUpdateRequest,
-            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
-            InstanceEmailSmtpTestResponse, InstanceGifIntegrationUpdateRequest,
-            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
-            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
-            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
-            LimitConfigUpdateRequest, LimitKeyMetadata, LimitRule, LimitRuleFilters, PremiumMode,
-            PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
-            VOICE_P2P_MAX_PARTICIPANTS_RANGE, VoiceE2eeScope, VoiceP2pConfigUpdateRequest,
+            AppSetupConfigUpdateRequest, BRANDING_ASSET_MAX_IMAGE_CHARS, BrandingAssetKind,
+            CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CaptchaConfigUpdateRequest,
+            CreateRegistrationUrlRequest, DomainMigrationConfigUpdateRequest,
+            EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES, EXPERIMENT_MAX_TARGETED_USERS,
+            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
+            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
+            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
+            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
+            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestResponse,
+            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
+            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
+            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
+            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitKeyMetadata,
+            LimitRule, LimitRuleFilters, PremiumMode, PushRelayConfigUpdateRequest,
+            RegistrationMode, SsoConfigUpdateRequest, VOICE_P2P_MAX_PARTICIPANTS_RANGE,
+            VoiceE2eeScope, VoiceP2pConfigUpdateRequest,
         },
     },
     config::AdminConfig,
     middleware::{
+        auth::AuthContext,
         csrf::CsrfToken,
         flash::{self, FlashData},
         htmx,
@@ -40,6 +42,8 @@ use axum::{
 };
 use maud::Markup;
 use serde::Deserialize;
+
+const BRANDING_ASSET_FORM_BYTES: usize = BRANDING_ASSET_MAX_IMAGE_CHARS * 3 + 64 * 1024;
 
 #[derive(Deserialize)]
 pub struct ActionQuery {
@@ -147,6 +151,15 @@ pub async fn instance_config_post(
     Query(aq): Query<ActionQuery>,
     request: Request,
 ) -> Response {
+    match aq.action.as_deref() {
+        Some("upload_branding_asset") => {
+            return branding_asset_post(&state, &headers, &auth.0, true, request).await;
+        }
+        Some("remove_branding_asset") => {
+            return branding_asset_post(&state, &headers, &auth.0, false, request).await;
+        }
+        _ => {}
+    }
     let config = state.config();
     let base = &config.base_path;
     let form = match MultiValueForm::from_request(request).await {
@@ -310,6 +323,88 @@ pub async fn instance_config_post(
         return htmx::toast_response(&flash);
     }
     redirect_back_with_flash(base, "/instance-config", flash, config.secure_cookies())
+}
+
+async fn branding_asset_post(
+    state: &AppState,
+    headers: &HeaderMap,
+    auth: &AuthContext,
+    upload: bool,
+    request: Request,
+) -> Response {
+    let config = state.config();
+    let form = MultiValueForm::from_request_with_limit(request, BRANDING_ASSET_FORM_BYTES).await;
+    let flash = match build_branding_asset_change(form.as_ref(), upload) {
+        Err(message) => FlashData::error(message),
+        Ok((kind, image)) => {
+            let client = AdminApiClient::new(state.http_client(), config, &auth.session);
+            let result = client.upload_branding_asset(kind, image).await;
+            remember_premium_branding(state, &result);
+            match result {
+                Ok(instance_config) => {
+                    let flash = branding_asset_success(kind, upload);
+                    if htmx::targets(
+                        headers,
+                        &templates::pages::instance_config::branding_asset_field_id(kind),
+                    ) {
+                        return render_fragment_with_toast(
+                            templates::pages::instance_config::branding_asset_field(
+                                kind,
+                                kind.url(&instance_config.app_public.branding),
+                            ),
+                            &flash,
+                        );
+                    }
+                    flash
+                }
+                Err(error) => branding_asset_failure(kind, upload, &error),
+            }
+        }
+    };
+    if htmx::is_htmx_request(headers) {
+        return htmx::toast_response(&flash);
+    }
+    redirect_back_with_flash(
+        &config.base_path,
+        "/instance-config",
+        flash,
+        config.secure_cookies(),
+    )
+}
+
+fn build_branding_asset_change(
+    form: Option<&MultiValueForm>,
+    upload: bool,
+) -> Result<(BrandingAssetKind, Option<String>), &'static str> {
+    let form = form.ok_or("Invalid form data")?;
+    let kind = form
+        .first("kind")
+        .and_then(BrandingAssetKind::parse)
+        .ok_or("Unknown branding asset")?;
+    if !upload {
+        return Ok((kind, None));
+    }
+    let image = form.clean("image").ok_or("Choose an image to upload")?;
+    Ok((kind, Some(image)))
+}
+
+fn branding_asset_success(kind: BrandingAssetKind, upload: bool) -> FlashData {
+    let verb = if upload { "uploaded" } else { "removed" };
+    FlashData::success(format!("{} {verb}", kind.label()))
+}
+
+fn branding_asset_failure(
+    kind: BrandingAssetKind,
+    upload: bool,
+    error: &crate::api::client::ApiError,
+) -> FlashData {
+    let verb = if upload { "upload" } else { "remove" };
+    let label = kind.as_str();
+    tracing::warn!(%error, kind = label, "admin API request failed: {verb} branding asset");
+    match super::billing_actions::validation_message(error) {
+        Some(message) => FlashData::error(format!("Failed to {verb} the {label}: {message}")),
+        None => FlashData::error(format!("Failed to {verb} the {label}")),
+    }
 }
 
 fn remember_premium_branding(
