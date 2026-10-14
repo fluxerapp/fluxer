@@ -211,7 +211,6 @@ x-fluxer-app-healthcheck: &fluxer-app-healthcheck
   timeout: ${FLUXER_HEALTHCHECK_TIMEOUT:-5s}
   retries: ${FLUXER_APP_HEALTHCHECK_RETRIES:-30}
   start_period: ${FLUXER_APP_HEALTHCHECK_START_PERIOD:-90s}
-  start_interval: 1s
 
 x-fluxer-svc-healthcheck: &fluxer-svc-healthcheck
   <<: *fluxer-app-healthcheck
