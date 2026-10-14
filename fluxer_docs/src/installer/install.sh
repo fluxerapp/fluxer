@@ -1686,6 +1686,11 @@ fluxer_free_kb() {
 	df -Pk "$1" 2>/dev/null | awk 'NR==2 {print $4}'
 }
 
+fluxer_start_stopped() {
+	[ -s "$fluxer_scratch/stopped" ] || return 0
+	xargs $fluxer_engine start < "$fluxer_scratch/stopped" > /dev/null
+}
+
 # Step 2 continued: the volume copy.
 #
 # A live copy can catch a file mid-write, so the stack stops for it. The stack
@@ -1693,9 +1698,10 @@ fluxer_free_kb() {
 # happens, so a failure here leaves a working instance rather than a stopped one.
 #
 # By hand:
+#   docker compose ps -q > running
 #   docker compose stop
 #   docker run --rm -v fluxer_seaweedfs-data:/data -v "$PWD/backups:/backup" alpine tar czf /backup/seaweedfs-data.tgz -C /data .
-#   docker compose up -d
+#   xargs docker start < running
 fluxer_copy_volumes() {
 	if ! fluxer_stack_defines_service seaweedfs; then
 		fluxer_say 'Skipping the uploads copy. This stack defines no seaweedfs service, so its objects are outside the stack and only the operator of that store can copy them.'
@@ -1738,6 +1744,9 @@ $(fluxer_volume_error '  ')" ;;
 		fluxer_tar_ext='tgz'
 	fi
 	fluxer_say 'Stopping the stack for a consistent copy of the uploads.'
+	if ! $fluxer_engine compose ps -q > "$fluxer_scratch/stopped"; then
+		fluxer_fail 7 "$fluxer_engine compose ps failed in $opt_dir, so the containers to start again after the copy cannot be read."
+	fi
 	if ! $fluxer_engine compose stop; then
 		fluxer_fail 7 "$fluxer_engine compose stop failed in $opt_dir."
 	fi
@@ -1746,13 +1755,13 @@ $(fluxer_volume_error '  ')" ;;
 		fluxer_full="${fluxer_project}_${fluxer_volume}"
 		fluxer_say "Copying $fluxer_full."
 		if ! $fluxer_engine run --rm -v "$fluxer_full:/data:ro" -v "$fluxer_record:/backup" "$FLUXER_HELPER_IMAGE" tar "$fluxer_tar_flags" "/backup/$fluxer_volume.$fluxer_tar_ext" -C /data .; then
-			$fluxer_engine compose up -d --remove-orphans || true
+			fluxer_start_stopped || true
 			fluxer_fail 7 "Copying $fluxer_full failed. The stack is started again on the images it was running."
 		fi
 	done < "$fluxer_scratch/copy-volumes"
 	fluxer_say 'Starting the stack again before the upgrade continues.'
-	if ! $fluxer_engine compose up -d --remove-orphans; then
-		fluxer_fail 7 "$fluxer_engine compose up -d failed in $opt_dir after the copy. Read $fluxer_engine compose logs there."
+	if ! fluxer_start_stopped; then
+		fluxer_fail 7 "$fluxer_engine start failed in $opt_dir after the copy. Read $fluxer_engine compose logs there."
 	fi
 }
 

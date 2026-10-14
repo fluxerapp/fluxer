@@ -215,7 +215,7 @@ x-fluxer-app-healthcheck: &fluxer-app-healthcheck
 x-fluxer-svc-healthcheck: &fluxer-svc-healthcheck
   <<: *fluxer-app-healthcheck
   start_period: ${FLUXER_SVC_HEALTHCHECK_START_PERIOD:-60s}
-  test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8090 && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+  test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8090 && printf \"GET /_health HTTP/1.0\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
 
 services:
   edge:
@@ -469,7 +469,7 @@ services:
       <<: *fluxer-env
       FLUXER_API_PORT: "8080"
       FLUXER_SETUP_TOKEN: ${FLUXER_SETUP_TOKEN:-}
-      NODE_OPTIONS: --enable-source-maps${FLUXER_API_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_API_NODE_HEAP_MB}${FLUXER_API_NODE_OPTIONS:+ $FLUXER_API_NODE_OPTIONS}
+      NODE_OPTIONS: --enable-source-maps${FLUXER_API_NODE_HEAP_MB:+ --max-old-space-size=${FLUXER_API_NODE_HEAP_MB:-}}${FLUXER_API_NODE_OPTIONS:+ ${FLUXER_API_NODE_OPTIONS:-}}
       NODE_EXTRA_CA_CERTS: ${FLUXER_NODE_EXTRA_CA_CERTS:-/etc/ssl/certs/ca-certificates.crt}
       FLUXER_POSTGRES_MAX_CONNECTIONS: "${FLUXER_API_POSTGRES_MAX_CONNECTIONS:-25}"
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "${FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED:-true}"
@@ -503,13 +503,13 @@ services:
     command: ["node", "dist/WorkerEntrypoint.js"]
     environment:
       <<: *fluxer-env
-      NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_WORKER_NODE_HEAP_MB}${FLUXER_WORKER_NODE_OPTIONS:+ $FLUXER_WORKER_NODE_OPTIONS}
+      NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=${FLUXER_WORKER_NODE_HEAP_MB:-}}${FLUXER_WORKER_NODE_OPTIONS:+ ${FLUXER_WORKER_NODE_OPTIONS:-}}
       NODE_EXTRA_CA_CERTS: ${FLUXER_NODE_EXTRA_CA_CERTS:-/etc/ssl/certs/ca-certificates.crt}
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "${FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS:-25}"
     healthcheck:
-      test: ["CMD", "node", "-e", "const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}"]
+      test: ["CMD-SHELL", "node -e \"const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}\""]
       <<: *fluxer-app-healthcheck
       retries: ${FLUXER_WORKER_HEALTHCHECK_RETRIES:-3}
     depends_on:
@@ -867,7 +867,7 @@ services:
       FLUXER_API_ENDPOINT: http://api:8080
       FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health HTTP/1.0\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck
       start_period: ${FLUXER_SVC_HEALTHCHECK_START_PERIOD:-60s}
     depends_on:
