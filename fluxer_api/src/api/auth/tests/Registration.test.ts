@@ -23,6 +23,7 @@ import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import {ms} from 'itty-time';
@@ -125,6 +126,19 @@ describe('Auth registration', () => {
 		expect(reg.token.length).toBeGreaterThan(0);
 		expect(reg.user_id.length).toBeGreaterThan(0);
 		expect(Object.keys(reg).sort()).toEqual(['token', 'user', 'user_id']);
+	});
+	it('does not flag accounts registered on a development instance as staff', async () => {
+		expect(getConfig().nodeEnv).toBe('development');
+		const reg = await registerUser(harness, {
+			email: createUniqueEmail('devnotstaff'),
+			username: createUniqueUsername('devnotstaff'),
+			global_name: 'Dev User',
+			password: 'a-strong-password',
+			date_of_birth: '2000-01-01',
+			consent: true,
+		});
+		const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(reg.user_id)));
+		expect(user.flags & UserFlags.STAFF).toBe(0n);
 	});
 	it('grants wildcard admin ACL to first accepted local dev registration', async () => {
 		await getInstanceConfigRepository().updateCaptchaConfig({enabled: false});

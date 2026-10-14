@@ -52,7 +52,7 @@ import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {getRegionalMinimumAge} from '@fluxer/constants/src/RegionalMinimumAge';
-import {ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/RegistrationClosedError';
 import {RegistrationCredentialsRequiredError} from '@fluxer/errors/src/domains/auth/RegistrationCredentialsRequiredError';
@@ -257,7 +257,6 @@ async function registerAccount(
 	const acceptLanguage = request.headers.get('accept-language');
 	const userLocale = parseAcceptLanguage(acceptLanguage);
 	const passwordHash = data.password ? await hashPassword(data.password) : null;
-	const flags = config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
 	const userRow: UserRow = {
 		...EMPTY_USER_ROW,
 		user_id: userId,
@@ -275,7 +274,7 @@ async function registerAccount(
 		timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
 		date_of_birth: dateOfBirth,
 		locale: userLocale,
-		flags,
+		flags: 0n,
 		terms_agreed_at: requiresTermsConsent ? now : null,
 		privacy_agreed_at: requiresPrivacyConsent ? now : null,
 		last_active_at: now,
