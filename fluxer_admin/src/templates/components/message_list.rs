@@ -110,6 +110,48 @@ fn render_missing_attachments(msg: &Message) -> Markup {
     }
 }
 
+fn copy_button(value: &str, label: &str) -> Markup {
+    html! {
+        button type="button"
+            class="cursor-pointer text-blue-600 hover:underline"
+            data-copy-value=(value)
+            onclick="window.__adminCopyToClipboard && window.__adminCopyToClipboard(this.dataset.copyValue, this, 'Copied')" {
+            (label)
+        }
+    }
+}
+
+fn message_meta(msg: &Message, jump_link: Option<&str>, take_action: Option<&str>) -> Markup {
+    html! {
+        div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-neutral-400 text-xs" {
+            span class="select-all" { (msg.id) }
+            @if let Some(href) = take_action {
+                a href=(href) class="text-blue-600 hover:underline" { "Take action" }
+            }
+            @if let Some(link) = jump_link {
+                (copy_button(link, "Copy link"))
+            }
+            (copy_button(&msg.id, "Copy message ID"))
+            @if !msg.channel_id.is_empty() {
+                (copy_button(&msg.channel_id, "Copy channel ID"))
+            }
+        }
+    }
+}
+
+fn message_jump_link(web_app_endpoint: &str, msg: &Message) -> Option<String> {
+    if msg.channel_id.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "{}/channels/{}/{}/{}",
+        web_app_endpoint.trim_end_matches('/'),
+        msg.guild_id.as_deref().unwrap_or("@me"),
+        msg.channel_id,
+        msg.id
+    ))
+}
+
 fn message_row(
     base_path: &str,
     avatar_url: &str,
@@ -117,7 +159,7 @@ fn message_row(
     include_delete: bool,
     is_highlighted: bool,
     is_grouped: bool,
-    take_action: Option<&str>,
+    meta: &Markup,
 ) -> Markup {
     let hover = if is_highlighted {
         " hover:bg-amber-100"
@@ -151,12 +193,7 @@ fn message_row(
                         (render_other_attachments(msg, has_content_or_images))
                     }
                     (render_missing_attachments(msg))
-                    div class="mt-1 text-neutral-400 text-xs" {
-                        span class="" { (msg.id) }
-                        @if let Some(href) = take_action {
-                            a href=(href) class="ml-2 text-blue-600 hover:underline" { "Take action" }
-                        }
-                    }
+                    (meta)
                     @if include_delete && !has_images {
                         div class="absolute top-0 right-2 hidden group-hover:block" {
                             button type="button"
@@ -237,12 +274,7 @@ fn message_row(
                     (render_other_attachments(msg, has_content_or_images))
                 }
                 (render_missing_attachments(msg))
-                div class="mt-1 text-neutral-400 text-xs" {
-                    span class="" { (msg.id) }
-                    @if let Some(href) = take_action {
-                        a href=(href) class="ml-2 text-blue-600 hover:underline" { "Take action" }
-                    }
-                }
+                (meta)
             }
             @if include_delete && !has_images {
                 div class="absolute top-1 right-2 hidden group-hover:block" {
@@ -287,10 +319,12 @@ pub fn message_list(
                         action.report_id,
                         Some((&msg.channel_id, &msg.id)),
                     ));
+                @let jump_link = message_jump_link(&config.web_app_endpoint, msg);
+                @let meta = message_meta(msg, jump_link.as_deref(), take_action_href.as_deref());
                 (message_row(
                     base_path, &avatar_url, msg,
                     include_delete, is_highlighted, is_grouped,
-                    take_action_href.as_deref(),
+                    &meta,
                 ))
             }
         }
@@ -319,3 +353,50 @@ const MESSAGE_DELETE_PREFILL_SCRIPT: &str = r#"(function() {
         form.querySelector('[name="basis"]').focus({preventScroll: true});
     });
 })();"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::templates::components::message_data::ordered_messages;
+    use serde_json::json;
+
+    fn message(guild_id: serde_json::Value, channel_id: serde_json::Value) -> Message {
+        ordered_messages(&[json!({
+            "id": "1560373081531219968",
+            "channel_id": channel_id,
+            "guild_id": guild_id,
+            "author_id": "1",
+            "author_username": "someone",
+        })])
+        .remove(0)
+    }
+
+    #[test]
+    fn jump_link_uses_guild_id_and_web_app_endpoint() {
+        let msg = message(json!("42"), json!("7"));
+        assert_eq!(
+            message_jump_link("https://web.fluxer.example/", &msg).as_deref(),
+            Some("https://web.fluxer.example/channels/42/7/1560373081531219968")
+        );
+    }
+
+    #[test]
+    fn jump_link_falls_back_to_me_for_dms() {
+        let msg = message(json!(null), json!("7"));
+        assert_eq!(
+            message_jump_link("https://web.fluxer.example", &msg).as_deref(),
+            Some("https://web.fluxer.example/channels/@me/7/1560373081531219968")
+        );
+    }
+
+    #[test]
+    fn meta_without_channel_skips_link_and_channel_copy() {
+        let msg = message(json!(null), json!(null));
+        assert_eq!(message_jump_link("https://web.fluxer.example", &msg), None);
+        let html = message_meta(&msg, None, None).into_string();
+        assert!(html.contains(r#"data-copy-value="1560373081531219968""#));
+        assert!(html.contains("Copy message ID"));
+        assert!(!html.contains("Copy link"));
+        assert!(!html.contains("Copy channel ID"));
+    }
+}

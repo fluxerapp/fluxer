@@ -38,6 +38,7 @@ pub struct Message {
     pub channel_nsfw: Option<bool>,
     pub channel_content_warning_level: Option<i32>,
     pub channel_content_warning_text: Option<String>,
+    pub guild_id: Option<String>,
     pub guild_nsfw: Option<bool>,
     pub attachments: Vec<Attachment>,
     pub missing_attachments: Vec<MissingAttachment>,
@@ -85,6 +86,7 @@ fn message_from_value(value: &Value) -> Message {
         channel_content_warning_text: value["channel_content_warning_text"]
             .as_str()
             .map(ToOwned::to_owned),
+        guild_id: value_id(&value["guild_id"]),
         guild_nsfw: value["guild_nsfw"].as_bool(),
         attachments,
         missing_attachments,
