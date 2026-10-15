@@ -7,7 +7,7 @@ import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
 import Notification from '@app/features/ui/state/Notification';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {updateDocumentTitleBadge} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import Favico from 'favico.js';
@@ -87,7 +87,7 @@ const setFaviconBadge = (badge: number, source: string | null): void => {
 	}
 };
 const setPwaBadge = (badge: number): void => {
-	if (!navigator.setAppBadge || !navigator.clearAppBadge) {
+	if (isDesktop() || !navigator.setAppBadge || !navigator.clearAppBadge) {
 		return;
 	}
 	try {

@@ -188,6 +188,9 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 });
 
 const updateAppBadge = async (count: number | null): Promise<void> => {
+	if (isNativeDesktopUserAgent(workerNavigator.userAgent)) {
+		return;
+	}
 	if (typeof navigator.setAppBadge !== 'function' && typeof navigator.clearAppBadge !== 'function') {
 		return;
 	}
@@ -355,7 +358,6 @@ self.addEventListener('push', (event: PushEvent) => {
 				return;
 			}
 			if (isNativeDesktopUserAgent(workerNavigator.userAgent)) {
-				await updateAppBadge(badgeCount);
 				await log('warn', 'push ignored in native desktop service worker', {badgeCount});
 				return;
 			}
