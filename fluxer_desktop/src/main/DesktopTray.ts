@@ -15,6 +15,7 @@ import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/D
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
 import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
+import {getLinuxDesktop} from '@electron/main/LinuxSession';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {renderTrayIcon, resolveTrayIconAppearance} from '@electron/main/TrayIconImage';
 import {describeUnreadBadge} from '@electron/main/UnreadBadge';
@@ -258,7 +259,8 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	const key = `${appearance}:${indicator}`;
 	let image = trayIconCache.get(key);
 	if (!image) {
-		image = renderTrayIcon(trayBaseIcon, appearance, indicator);
+		const padded = process.platform === 'linux' && getLinuxDesktop() === 'kde';
+		image = renderTrayIcon(trayBaseIcon, appearance, indicator, padded);
 		trayIconCache.set(key, image);
 	}
 	return {key, image};
