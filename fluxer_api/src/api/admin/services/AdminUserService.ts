@@ -4,14 +4,15 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse, resolveAdminUsers} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
-import {AdminUserBanService} from '@app/api/admin/services/AdminUserBanService';
 import {AdminUserDeletionService} from '@app/api/admin/services/AdminUserDeletionService';
 import {AdminUserLookupService} from '@app/api/admin/services/AdminUserLookupService';
 import {AdminUserProfileService} from '@app/api/admin/services/AdminUserProfileService';
 import {AdminUserSecurityService} from '@app/api/admin/services/AdminUserSecurityService';
-import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
+import type {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
+import type {EnforcementNoticeDelivery} from '@app/api/enforcement/EnforcementNoticeDelivery';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
@@ -50,14 +51,15 @@ interface AdminUserServiceDeps {
 	stripe: Stripe | null;
 	reportService: ReportService;
 	storeEntitlementService: StoreEntitlementService;
-	reporterResolutionNotifier?: ReporterResolutionNotifier;
+	reporterResolutionNotifier: ReporterResolutionNotifier;
+	enforcement: EnforcementDecisionService;
+	delivery: EnforcementNoticeDelivery;
 }
 
 export class AdminUserService {
 	readonly lookupService: AdminUserLookupService;
 	readonly profileService: AdminUserProfileService;
 	readonly securityService: AdminUserSecurityService;
-	readonly banService: AdminUserBanService;
 	readonly deletionService: AdminUserDeletionService;
 	private readonly userUpdateDeps: PartialUserChangePropagationDeps;
 	private readonly contactChangeLogService: UserContactChangeLogService;
@@ -92,13 +94,9 @@ export class AdminUserService {
 			auditService: deps.auditService,
 			userUpdateDeps: this.userUpdateDeps,
 			guildRepository: deps.guildRepository,
+			enforcement: deps.enforcement,
 		});
 		this.securityService = new AdminUserSecurityService({
-			apiContext: deps.apiContext,
-			auditService: deps.auditService,
-			userUpdateDeps: this.userUpdateDeps,
-		});
-		this.banService = new AdminUserBanService({
 			apiContext: deps.apiContext,
 			auditService: deps.auditService,
 			userUpdateDeps: this.userUpdateDeps,
@@ -114,9 +112,9 @@ export class AdminUserService {
 			billingRepository: getBillingRepository(),
 			oauth2Tokens: new OAuth2TokenRepository(),
 			storeEntitlementService: deps.storeEntitlementService,
-			reporterResolutionNotifier:
-				deps.reporterResolutionNotifier ??
-				new ReporterResolutionNotifier({apiContext: deps.apiContext, systemDm: null}),
+			reporterResolutionNotifier: deps.reporterResolutionNotifier,
+			enforcement: deps.enforcement,
+			delivery: deps.delivery,
 		});
 		this.contactChangeLogService = contactChangeLog;
 	}

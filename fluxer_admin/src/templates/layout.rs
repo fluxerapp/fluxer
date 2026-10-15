@@ -10,8 +10,8 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 use super::components::drawer::drawer_controller_script;
 use super::layout_header::render_header;
 use super::layout_scripts::{
-    ADMIN_ACTION_FORM_SCRIPT, COPY_TO_CLIPBOARD_SCRIPT, HTMX_FLASH_SCRIPT,
-    HTMX_SCROLL_PRESERVER_SCRIPT, SH_LINK_REWRITE_SCRIPT, SIDEBAR_SCRIPT,
+    ADMIN_ACTION_FORM_SCRIPT, COPY_TO_CLIPBOARD_SCRIPT, ENFORCEMENT_FIELDS_SCRIPT,
+    HTMX_FLASH_SCRIPT, HTMX_SCROLL_PRESERVER_SCRIPT, SH_LINK_REWRITE_SCRIPT, SIDEBAR_SCRIPT,
 };
 use super::layout_sidebar::render_sidebar;
 
@@ -128,6 +128,7 @@ pub fn admin_layout_ext(
                 script defer { (PreEscaped(HTMX_SCROLL_PRESERVER_SCRIPT)) }
                 script defer { (PreEscaped(HTMX_FLASH_SCRIPT)) }
                 script defer { (PreEscaped(COPY_TO_CLIPBOARD_SCRIPT)) }
+                script defer { (PreEscaped(ENFORCEMENT_FIELDS_SCRIPT)) }
                 (drawer_controller_script())
                 @if let Some(extra) = options.extra_scripts {
                     script defer { (PreEscaped(extra)) }

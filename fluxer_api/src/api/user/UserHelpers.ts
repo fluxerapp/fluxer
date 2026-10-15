@@ -34,6 +34,12 @@ function isAccountDisabled(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = 
 	return user.tempBannedUntil == null || user.tempBannedUntil.getTime() > now;
 }
 
+export function isHeldByDecision(
+	user: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil' | 'enforcementDecisionId'>,
+): boolean {
+	return user.enforcementDecisionId !== null && isSignInRefused(user);
+}
+
 export function isSignInRefused(user: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>): boolean {
 	return isAccountClosed(user) || isTemporarilyBanned(user);
 }

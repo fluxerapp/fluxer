@@ -233,12 +233,20 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 Permanently deletes one message and purges the attachments it owned. Requires `message:delete`.
 
+This route is for removals that involve nobody's conduct, such as cleanup of webhook or system messages, or a holder's request. To remove a message for breaking a rule, [shred it](/admin-api/users/#shred-user-messages) with the `enforcement` basis, so a decision records the removal and the author is told.
+
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the channel |
 | message_id | snowflake | The ID of the message |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| basis | [basis](/admin-api/enforcement/#basis) object | `holder_request` or `housekeeping`. The `enforcement` basis fails body validation |
 
 ### Response body
 
@@ -266,7 +274,7 @@ The message and its attachments are permanently removed, including from search r
 
 A deleted message in a thread no longer counts towards `message_count` of the [thread object](/http-api/threads/#thread-object). Fluxer emits no [Thread Update](/gateway/threads/#thread-update) for the change.
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_message` and the target type `message`, targeting the message ID. Its metadata is `channel_id` and `message_id`. The entry is written whether or not a message was found.
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_message` and the target type `message`, targeting the message ID. Its metadata is `channel_id`, `message_id` and `basis`. The entry is written whether or not a message was found.
 
 ### Rate limit
 

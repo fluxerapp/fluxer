@@ -3,6 +3,7 @@
 import type {ApplicationID, ChannelID, GuildID, MessageID, ReportID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '@app/api/database/types/MessageTypes';
 import type {ReportFlowStepRecord} from '@app/api/report/flows/ReportFlowRegistry';
+import type {ReportItemOutcome} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {ReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 
 export type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
@@ -109,4 +110,5 @@ export interface IARSubmission {
 	reportedProfileSnapshot: ReportProfileSnapshot | null;
 	legalHoldUntil: Date | null;
 	legalHoldReason: string | null;
+	reporterOutcome: ReportItemOutcome | null;
 }

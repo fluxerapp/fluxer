@@ -159,7 +159,7 @@ export async function recoverAccount(
 	if (!user || !kit || normalizedKey === null || !keyMatches) {
 		throw invalidRecoveryKeyError();
 	}
-	const currentUser = await AuthUtility.handleBanStatus(ctx, user);
+	const currentUser = await AuthUtility.assertSignInAllowed(ctx, user);
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {
 		throw new RegistrationPendingApprovalError();
 	}

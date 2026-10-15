@@ -173,6 +173,7 @@ describe('thread message lifecycle', () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.WILDCARD]);
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/channels/${thread.id}/messages/${first.id}`)
+			.body({basis: {type: 'housekeeping'}})
 			.expect(200)
 			.execute();
 		expect(await messageCount(s.member.token, thread.id)).toBe(1);

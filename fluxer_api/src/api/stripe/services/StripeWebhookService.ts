@@ -4,13 +4,13 @@ import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
+import type {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
-import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
@@ -62,6 +62,7 @@ export class StripeWebhookService {
 		snowflakeService: ISnowflakeService,
 		private billingRepository: BillingRepository,
 		private refundService: StripeRefundService,
+		enforcementService: EnforcementDecisionService,
 		storeEntitlementService: StoreEntitlementService | null = null,
 	) {
 		this.checkoutHandler = new StripeCheckoutWebhookHandler(
@@ -86,14 +87,11 @@ export class StripeWebhookService {
 		this.paymentFraudService = new StripePaymentFraudService({
 			stripe,
 			userRepository,
-			userCacheService,
-			emailService,
 			gatewayService,
 			donationRepository,
 			cacheService,
 			auditService,
-			kvDeletionQueue,
-			oauth2Tokens: new OAuth2TokenRepository(),
+			enforcement: enforcementService,
 		});
 		this.subscriptionHandler = new StripeSubscriptionWebhookHandler(
 			userRepository,
@@ -114,6 +112,7 @@ export class StripeWebhookService {
 			kvDeletionQueue,
 			giftReversalHandler,
 			this.paymentFraudService,
+			enforcementService,
 		);
 	}
 

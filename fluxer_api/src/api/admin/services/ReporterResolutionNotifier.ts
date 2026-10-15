@@ -3,29 +3,21 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import type {UserID} from '@app/api/BrandedTypes';
-import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {listActiveFeatureLimits} from '@app/api/enforcement/FeatureLimitState';
 import {resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
-import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getEnforcementDecisionRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import type {IARSubmission} from '@app/api/report/ReportModels';
-import {sendSystemDmMessage} from '@app/api/user/services/SystemDmMessage';
-import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {type SystemDmDeps, systemDmBody, trySendSystemDm} from '@app/api/user/services/SystemDmMessage';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {ReportItemOutcome} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
-
-interface ReporterSystemDmDeps {
-	channelService: ChannelService;
-	userChannelService: UserChannelService;
-	userCacheService: UserCacheService;
-}
 
 interface ReporterResolutionNotifierDeps {
 	apiContext: ApiContext;
-	systemDm: ReporterSystemDmDeps | null;
+	systemDm: SystemDmDeps | null;
 }
 
 type ReporterNoticeSkipReason =
@@ -61,18 +53,23 @@ export function describeReporterNotice(result: ReporterNoticeResult): Array<[str
 export class ReporterResolutionNotifier {
 	constructor(private readonly deps: ReporterResolutionNotifierDeps) {}
 
-	async notifyReporterOfResolution(report: IARSubmission, publicComment: string | null): Promise<ReporterNoticeResult> {
+	async notifyReporterOfResolution(
+		report: IARSubmission,
+		publicComment: string | null,
+		outcome: ReportItemOutcome,
+	): Promise<ReporterNoticeResult> {
 		const comment = publicComment ?? '';
 		if (report.reporterId) {
-			return this.notifyAccountReporter(report, report.reporterId, comment);
+			return this.notifyAccountReporter(report, report.reporterId, comment, outcome);
 		}
-		return this.notifyDsaReporter(report, comment);
+		return this.notifyDsaReporter(report, comment, outcome);
 	}
 
 	private async notifyAccountReporter(
 		report: IARSubmission,
 		reporterId: UserID,
 		comment: string,
+		outcome: ReportItemOutcome,
 	): Promise<ReporterNoticeResult> {
 		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
 		const reportId = report.reportId.toString();
@@ -89,21 +86,37 @@ export class ReporterResolutionNotifier {
 		if (!reporter || (reporter.flags & UserFlags.DELETED) !== 0n) {
 			return skippedNotice('reporter_account_deleted');
 		}
-		if ((reporter.flags & UserFlags.REPORT_BANNED) !== 0n) {
+		if (await this.isReportBannedWhenFiled(reporter, report)) {
 			return skippedNotice('reporter_report_banned');
 		}
-		const dmSent = await this.sendSystemDm(reporter, reportId, comment);
+		const dmSent = await this.sendSystemDm(reporter, reportId, comment, outcome);
 		const email = reporter.email;
 		const emailSent = email
 			? await trySendAdminNotification(
-					() => emailService.sendReportResolvedEmail(email, reporter.username, reportId, comment, reporter.locale),
+					() =>
+						emailService.sendReportResolvedEmail(email, reporter.username, reportId, comment, outcome, reporter.locale),
 					{action: 'resolve_report', targetId: reportId},
 				)
 			: false;
 		return {dmSent, emailSent, dsaEmailSent: false, skipped: null};
 	}
 
-	private async notifyDsaReporter(report: IARSubmission, comment: string): Promise<ReporterNoticeResult> {
+	private async isReportBannedWhenFiled(reporter: User, report: IARSubmission): Promise<boolean> {
+		if ((reporter.flags & UserFlags.REPORT_BANNED) === 0n) {
+			return false;
+		}
+		const limits = await listActiveFeatureLimits(getEnforcementDecisionRepository(), reporter.id, 'reports');
+		if (limits.length === 0) {
+			return true;
+		}
+		return limits.some((decision) => decision.created_at.getTime() < report.reportedAt.getTime());
+	}
+
+	private async notifyDsaReporter(
+		report: IARSubmission,
+		comment: string,
+		outcome: ReportItemOutcome,
+	): Promise<ReporterNoticeResult> {
 		const email = report.reporterEmail;
 		if (!email) {
 			return skippedNotice('no_reporter_email');
@@ -111,13 +124,18 @@ export class ReporterResolutionNotifier {
 		const {email: emailService} = this.deps.apiContext.services;
 		const reportId = report.reportId.toString();
 		const dsaEmailSent = await trySendAdminNotification(
-			() => emailService.sendDsaReportResolvedEmail(email, reportId, comment, report.flowLocale),
+			() => emailService.sendDsaReportResolvedEmail(email, reportId, comment, outcome, report.flowLocale),
 			{action: 'resolve_report', targetId: reportId},
 		);
 		return {dmSent: false, emailSent: false, dsaEmailSent, skipped: null};
 	}
 
-	private async sendSystemDm(reporter: User, reportId: string, comment: string): Promise<boolean> {
+	private async sendSystemDm(
+		reporter: User,
+		reportId: string,
+		comment: string,
+		outcome: ReportItemOutcome,
+	): Promise<boolean> {
 		const systemDm = this.deps.systemDm;
 		if (!systemDm) {
 			return false;
@@ -130,7 +148,8 @@ export class ReporterResolutionNotifier {
 				reportId,
 				publicComment: comment,
 				hasComment: comment ? 'yes' : 'no',
-				safety_email: resolveContactEmails().safetyEmail,
+				outcome,
+				appeals_email: resolveContactEmails().appealsEmail,
 			},
 			getInstanceProductName(),
 		);
@@ -141,25 +160,11 @@ export class ReporterResolutionNotifier {
 			);
 			return false;
 		}
-		const {users: userRepository} = this.deps.apiContext.services;
-		const requestCache = createRequestCache();
-		try {
-			const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
-			await sendSystemDmMessage({
-				systemUser,
-				recipientId: reporter.id,
-				content: template.value.body,
-				userChannelService: systemDm.userChannelService,
-				channelService: systemDm.channelService,
-				userCacheService: systemDm.userCacheService,
-				requestCache,
-			});
-			return true;
-		} catch (error) {
-			Logger.warn({reportId, reporterId: reporter.id.toString(), error}, 'Failed to send report review system DM');
-			return false;
-		} finally {
-			requestCache.clear();
-		}
+		return trySendSystemDm(
+			systemDm,
+			this.deps.apiContext.services.users,
+			reporter.id,
+			systemDmBody(template.value.body),
+		);
 	}
 }

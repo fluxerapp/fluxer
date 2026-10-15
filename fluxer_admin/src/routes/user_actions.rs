@@ -3,8 +3,19 @@
 use crate::utils::plural::count_noun;
 use crate::{
     admin_flags,
-    api::client::{AdminApiClient, ApiError},
+    api::{
+        client::{AdminApiClient, ApiError},
+        enforcement::{ClosureRequest, api_error_message},
+        generated::{
+            snowflake,
+            types::{AdminUserFeatureLimitRequestLimit, AdminUserMessageShredRequestEntriesItem},
+        },
+    },
     middleware::flash::FlashData,
+    templates::components::enforcement_fields::{
+        BasisSubmission, basis_from_form, decision_from_form, network_blocks_from_form,
+        skipped_networks_summary,
+    },
     utils::forms::MultiValueForm,
 };
 use std::collections::HashSet;
@@ -74,16 +85,21 @@ pub async fn dispatch(
                     return DispatchOutcome::error("User not found");
                 }
             };
+            let suspended = user.temp_banned_until.is_some();
+            let editable =
+                |flag: &u64| admin_flags::user_flag_is_editable(*flag, user.flags, suspended);
             let add = submitted
                 .iter()
                 .copied()
-                .filter(|flag| user.flags & *flag == 0)
+                .filter(|flag| user.flags & *flag == 0 && editable(flag))
                 .map(|flag| flag.to_string())
                 .collect::<Vec<_>>();
             let remove = admin_flags::USER_FLAGS
                 .iter()
                 .map(|flag| flag.value)
-                .filter(|flag| user.flags & *flag != 0 && !selected.contains(flag))
+                .filter(|flag| {
+                    user.flags & *flag != 0 && !selected.contains(flag) && editable(flag)
+                })
                 .map(|flag| flag.to_string())
                 .collect::<Vec<_>>();
             DispatchOutcome::from_result(
@@ -122,12 +138,18 @@ pub async fn dispatch(
             let add = submitted
                 .iter()
                 .copied()
-                .filter(|flag| current & *flag != *flag)
+                .filter(|flag| {
+                    current & *flag != *flag && admin_flags::premium_flag_is_editable(*flag)
+                })
                 .collect::<Vec<_>>();
             let remove = admin_flags::PREMIUM_FLAGS
                 .iter()
                 .map(|flag| flag.value)
-                .filter(|flag| current & *flag == *flag && !selected.contains(flag))
+                .filter(|flag| {
+                    current & *flag == *flag
+                        && !selected.contains(flag)
+                        && admin_flags::premium_flag_is_editable(*flag)
+                })
                 .collect::<Vec<_>>();
             DispatchOutcome::from_result(
                 client.update_premium_flags(user_id, &add, &remove).await,
@@ -172,12 +194,20 @@ pub async fn dispatch(
             "Failed to terminate user sessions",
         ),
         "clear_fields" => {
-            let f = form.list_values_any(&["fields[]", "fields"]);
-            DispatchOutcome::from_result(
-                client.clear_user_fields(user_id, &f).await,
-                "User fields cleared successfully",
-                "Failed to clear user fields",
-            )
+            let fields = form.list_values_any(&["fields[]", "fields"]);
+            if fields.is_empty() {
+                return DispatchOutcome::error("Choose at least one field");
+            }
+            let basis = match basis_from_form(form) {
+                Ok(basis) => basis,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            match client.clear_user_fields(user_id, &fields, &basis).await {
+                Ok(_) => DispatchOutcome::success("Profile fields cleared"),
+                Err(error) => {
+                    decision_failure("Failed to clear the profile fields", user_id, &error)
+                }
+            }
         }
         "set_bot_status" => {
             let val = form.bool_value("bot");
@@ -218,43 +248,61 @@ pub async fn dispatch(
                 "Failed to change email",
             )
         }
-        "temp_ban" => {
-            let Ok(duration) = form.parse_value_any::<u32>(&["duration_hours", "duration"]) else {
-                return DispatchOutcome::error("Invalid ban duration");
+        "suspend" => {
+            let Ok(Some(duration_hours)) = form.parse_value::<u32>("duration_hours") else {
+                return DispatchOutcome::error("Choose a duration");
             };
-            let reason = get("reason");
-            let private = get("private_reason");
-            let notify_user = form.opt_out_value("notify_user");
-            DispatchOutcome::from_result(
-                client
-                    .temp_ban_user(
-                        user_id,
-                        duration.unwrap_or(24),
-                        reason.as_deref(),
-                        notify_user,
-                        private.as_deref(),
-                    )
-                    .await,
-                "User temporarily banned successfully",
-                "Failed to temporarily ban user",
-            )
+            let submission = match decision_from_form(form) {
+                Ok(submission) => submission,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            let block_networks = match network_blocks_from_form(form) {
+                Ok(block_networks) => block_networks,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            let remove_evidence = form.bool_value("remove_evidence");
+            match client
+                .suspend_user(
+                    user_id,
+                    duration_hours,
+                    remove_evidence,
+                    block_networks,
+                    &submission,
+                )
+                .await
+            {
+                Ok(response) => {
+                    let done = if duration_hours == 0 {
+                        "Account banned."
+                    } else {
+                        "Account suspended."
+                    };
+                    DispatchOutcome::success(with_skipped(done, &response.skipped_ips))
+                }
+                Err(error) => decision_failure("Failed to suspend the account", user_id, &error),
+            }
+        }
+        "warn" => {
+            let submission = match decision_from_form(form) {
+                Ok(submission) => submission,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            match client.warn_user(user_id, &submission).await {
+                Ok(response) => DispatchOutcome::success(format!(
+                    "Warning sent as decision {}",
+                    response.decision_id.as_str()
+                )),
+                Err(error) => decision_failure("Failed to send the warning", user_id, &error),
+            }
         }
         "unban" => {
-            let public_reason = get("public_reason");
-            let private_reason = get("private_reason");
-            let notify_user = form.opt_out_value("notify_user");
-            DispatchOutcome::from_result(
-                client
-                    .unban_user(
-                        user_id,
-                        public_reason.as_deref(),
-                        notify_user,
-                        private_reason.as_deref(),
-                    )
-                    .await,
-                "User unbanned successfully",
-                "Failed to unban user",
-            )
+            let Some(internal_note) = get("internal_note") else {
+                return DispatchOutcome::error("Add an internal note");
+            };
+            match client.unban_user(user_id, Some(&internal_note)).await {
+                Ok(_) => DispatchOutcome::success("Suspension lifted"),
+                Err(error) => decision_failure("Failed to lift the suspension", user_id, &error),
+            }
         }
         "ban_ip" => {
             let Some(ip) = get("ip") else {
@@ -279,30 +327,33 @@ pub async fn dispatch(
                 "Failed to ban avatar hash",
             )
         }
-        "schedule_deletion" => {
-            let Ok(reason_code) = form.parse_value::<i32>("reason_code") else {
-                return DispatchOutcome::error("Invalid deletion reason code");
+        "close" => close_account(client, user_id, form).await,
+        "limit_features" => {
+            let Some(limit) = form
+                .first("limit")
+                .and_then(|value| AdminUserFeatureLimitRequestLimit::try_from(value).ok())
+            else {
+                return DispatchOutcome::error("Choose a limit");
             };
-            let public_reason = get("public_reason");
-            let private_reason = get("private_reason");
-            let Ok(days) = form.parse_value_any::<u32>(&["days_until_deletion", "days"]) else {
-                return DispatchOutcome::error("Invalid deletion delay");
+            let ends_at = match (limit, form.first("ends_on")) {
+                (AdminUserFeatureLimitRequestLimit::Reports, Some(value)) => match parse_day(value)
+                {
+                    Some(ends_at) => Some(ends_at),
+                    None => return DispatchOutcome::error("Enter the end date as a date"),
+                },
+                _ => None,
             };
-            let notify_user = form.opt_out_value("notify_user");
-            DispatchOutcome::from_result(
-                client
-                    .schedule_deletion(
-                        user_id,
-                        reason_code.unwrap_or(0),
-                        public_reason.as_deref(),
-                        days.unwrap_or(60),
-                        notify_user,
-                        private_reason.as_deref(),
-                    )
-                    .await,
-                "User deletion scheduled successfully",
-                "Failed to schedule user deletion",
-            )
+            let submission = match decision_from_form(form) {
+                Ok(submission) => submission,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            match client
+                .limit_features(user_id, limit, ends_at, &submission)
+                .await
+            {
+                Ok(_) => DispatchOutcome::success("Feature limited"),
+                Err(error) => decision_failure("Failed to limit the feature", user_id, &error),
+            }
         }
         "cancel_deletion" => {
             let Some(expected) = get("expected_pending_deletion_at") else {
@@ -315,40 +366,15 @@ pub async fn dispatch(
                     "Confirm whose deletion you are canceling before submitting",
                 );
             }
-            let Some(private_reason) = get("private_reason") else {
-                return DispatchOutcome::error("A private reason is required to cancel a deletion");
+            let Some(internal_note) = get("internal_note") else {
+                return DispatchOutcome::error("Add an internal note");
             };
-            let notify_user = form.bool_value("notify_user");
             match client
-                .cancel_deletion(user_id, &expected, notify_user, Some(&private_reason))
+                .cancel_deletion(user_id, &expected, Some(&internal_note))
                 .await
             {
-                Ok(_) => DispatchOutcome::success("User deletion canceled successfully"),
-                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
-                    "The pending deletion changed since this page loaded. Reload and review.",
-                ),
-                Err(error) => {
-                    tracing::warn!(%error, user_id, "admin API request failed: cancel user deletion");
-                    DispatchOutcome::error("Failed to cancel user deletion")
-                }
-            }
-        }
-        "annotate_ban" => {
-            let Some(ban_audit_log_id) = get("ban_audit_log_id") else {
-                return DispatchOutcome::error("The ban audit log entry is missing from the form");
-            };
-            let Some(note) = get("note") else {
-                return DispatchOutcome::error("Note is required");
-            };
-            match client.annotate_ban(user_id, &ban_audit_log_id, &note).await {
-                Ok(()) => DispatchOutcome::success("Note added to the ban"),
-                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
-                    "The ban changed since this page loaded. Reload and review.",
-                ),
-                Err(error) => {
-                    tracing::warn!(%error, user_id, "admin API request failed: annotate ban");
-                    DispatchOutcome::error("Failed to add the note to the ban")
-                }
+                Ok(_) => DispatchOutcome::success("Deletion cancelled"),
+                Err(error) => decision_failure("Failed to cancel the deletion", user_id, &error),
             }
         }
         "change_dob" => {
@@ -431,76 +457,169 @@ pub async fn dispatch(
                 }
             }
         }
-        "delete_all_messages" => {
-            let dry_run = parse_dry_run(form.first("dry_run"));
-            match client.delete_all_user_messages(user_id, dry_run).await {
-                Ok(response) if dry_run => DispatchOutcome {
-                    flash: FlashData::success(format!(
-                        "Dry run found {} across {}. Confirm to delete them permanently.",
-                        count_noun(response.message_count, "message", "messages"),
-                        count_noun(response.channel_count, "channel", "channels")
-                    )),
-                    redirect_params: vec![
-                        ("delete_all_messages_dry_run".to_owned(), "true".to_owned()),
-                        (
-                            "delete_all_messages_channel_count".to_owned(),
-                            response.channel_count.to_string(),
-                        ),
-                        (
-                            "delete_all_messages_message_count".to_owned(),
-                            response.message_count.to_string(),
-                        ),
-                    ],
-                },
-                Ok(response) => {
-                    if let Some(job_id) = response.job_id {
-                        DispatchOutcome {
-                            flash: FlashData::success(
-                                "Delete job queued. Monitor progress in the status panel.",
-                            ),
-                            redirect_params: vec![("message_shred_job_id".to_owned(), job_id)],
-                        }
-                    } else {
-                        DispatchOutcome::success("No messages found for deletion.")
-                    }
-                }
-                Err(error) => {
-                    tracing::warn!(%error, user_id, "admin API request failed: delete all user messages");
-                    DispatchOutcome::error("Failed to delete all user messages")
-                }
-            }
-        }
+        "delete_all_messages" => delete_all_messages(client, user_id, form).await,
         "cancel_bulk_message_deletion" => DispatchOutcome::from_result(
             client.cancel_bulk_message_deletion(user_id).await,
             "Bulk message deletion canceled successfully",
             "Failed to cancel bulk message deletion",
         ),
         "message_shred" => {
-            let csv = form.first("csv_data").unwrap_or_default();
-            match parse_message_shred_csv(csv) {
-                Ok(entries) if entries.is_empty() => DispatchOutcome::error(
-                    "CSV did not contain any valid channel_id,message_id pairs.",
-                ),
-                Ok(entries) => match client.queue_message_shred(user_id, &entries).await {
-                    Ok(response) => {
-                        if let Some(job_id) = response.job_id {
-                            DispatchOutcome {
-                                flash: FlashData::success("Message shred job queued"),
-                                redirect_params: vec![("message_shred_job_id".to_owned(), job_id)],
-                            }
-                        } else {
-                            DispatchOutcome::success("Message shred job queued")
-                        }
-                    }
-                    Err(error) => {
-                        tracing::warn!(%error, user_id, "admin API request failed: queue message shred job");
-                        DispatchOutcome::error("Failed to queue message shred job")
-                    }
+            let entries = match parse_message_shred_csv(form.first("csv_data").unwrap_or_default())
+            {
+                Ok(entries) if entries.is_empty() => {
+                    return DispatchOutcome::error("The CSV has no channel_id,message_id rows.");
+                }
+                Ok(entries) => entries,
+                Err(error) => return DispatchOutcome::error(error),
+            };
+            let basis = match basis_from_form(form) {
+                Ok(basis) => basis,
+                Err(message) => return DispatchOutcome::error(message),
+            };
+            match client.queue_message_shred(user_id, entries, &basis).await {
+                Ok(response) => DispatchOutcome {
+                    flash: FlashData::success(removal_message(
+                        "Message shred queued",
+                        response.decision_id.as_ref().map(|id| id.as_str()),
+                    )),
+                    redirect_params: vec![("message_shred_job_id".to_owned(), response.job_id)],
                 },
-                Err(error) => DispatchOutcome::error(error),
+                Err(error) => {
+                    decision_failure("Failed to queue the message shred", user_id, &error)
+                }
             }
         }
         _ => DispatchOutcome::error(format!("Unknown user action: {action}")),
+    }
+}
+
+fn with_skipped(
+    done: &str,
+    skipped: &[crate::api::generated::types::SkippedNetworkBlock],
+) -> String {
+    match skipped_networks_summary(skipped) {
+        Some(summary) => format!("{done} {summary}"),
+        None => done.to_owned(),
+    }
+}
+
+async fn close_account(
+    client: &AdminApiClient,
+    user_id: &str,
+    form: &MultiValueForm,
+) -> DispatchOutcome {
+    let Ok(Some(days_until_deletion)) = form.parse_value::<u32>("days_until_deletion") else {
+        return DispatchOutcome::error("Enter the days until deletion");
+    };
+    let replace_pending_deletion_at = match form.clean("replace_pending_deletion_at") {
+        Some(value) => match chrono::DateTime::parse_from_rfc3339(&value) {
+            Ok(at) => Some(at.with_timezone(&chrono::Utc)),
+            Err(_) => {
+                return DispatchOutcome::error(
+                    "The pending deletion is missing from the form. Reload and review.",
+                );
+            }
+        },
+        None => None,
+    };
+    let basis = match basis_from_form(form) {
+        Ok(basis) => basis,
+        Err(message) => return DispatchOutcome::error(message),
+    };
+    let enforcement = matches!(basis, BasisSubmission::Enforcement(_));
+    let block_networks = match network_blocks_from_form(form) {
+        Ok(block_networks) => block_networks.filter(|_| enforcement),
+        Err(message) => return DispatchOutcome::error(message),
+    };
+    let request = ClosureRequest {
+        basis: basis.moderation_basis(),
+        days_until_deletion,
+        remove_evidence: enforcement && form.bool_value("remove_evidence"),
+        block_networks,
+        replace_pending_deletion_at,
+        internal_note: basis.internal_note().map(str::to_owned),
+    };
+    match client.close_account(user_id, &request).await {
+        Ok(response) => {
+            DispatchOutcome::success(with_skipped("Account closed.", &response.skipped_ips))
+        }
+        Err(error) => decision_failure("Failed to close the account", user_id, &error),
+    }
+}
+
+async fn delete_all_messages(
+    client: &AdminApiClient,
+    user_id: &str,
+    form: &MultiValueForm,
+) -> DispatchOutcome {
+    let basis = if parse_dry_run(form.first("dry_run")) {
+        None
+    } else {
+        match basis_from_form(form) {
+            Ok(basis) => Some(basis),
+            Err(message) => return DispatchOutcome::error(message),
+        }
+    };
+    let response = match client
+        .delete_all_user_messages(user_id, basis.as_ref())
+        .await
+    {
+        Ok(response) => response,
+        Err(error) => return decision_failure("Failed to delete the messages", user_id, &error),
+    };
+    let message_count = u64::try_from(*response.message_count).unwrap_or_default();
+    let channel_count = u64::try_from(*response.channel_count).unwrap_or_default();
+    if basis.is_none() {
+        return DispatchOutcome {
+            flash: FlashData::success(format!(
+                "Found {} in {}. Choose a basis to delete them.",
+                count_noun(message_count, "message", "messages"),
+                count_noun(channel_count, "channel", "channels")
+            )),
+            redirect_params: vec![
+                ("delete_all_messages_dry_run".to_owned(), "true".to_owned()),
+                (
+                    "delete_all_messages_channel_count".to_owned(),
+                    channel_count.to_string(),
+                ),
+                (
+                    "delete_all_messages_message_count".to_owned(),
+                    message_count.to_string(),
+                ),
+            ],
+        };
+    }
+    match response.job_id {
+        Some(job_id) => DispatchOutcome {
+            flash: FlashData::success(removal_message(
+                "Delete job queued",
+                response.decision_id.as_ref().map(|id| id.as_str()),
+            )),
+            redirect_params: vec![("message_shred_job_id".to_owned(), job_id)],
+        },
+        None => DispatchOutcome::success("No messages to delete"),
+    }
+}
+
+fn removal_message(queued: &str, decision_id: Option<&str>) -> String {
+    match decision_id {
+        Some(decision_id) => format!("{queued} as decision {decision_id}"),
+        None => queued.to_owned(),
+    }
+}
+
+fn parse_day(value: &str) -> Option<chrono::DateTime<chrono::Utc>> {
+    chrono::NaiveDate::parse_from_str(value.trim(), "%Y-%m-%d")
+        .ok()?
+        .and_hms_opt(0, 0, 0)
+        .map(|at| at.and_utc())
+}
+
+fn decision_failure(context: &str, user_id: &str, error: &ApiError) -> DispatchOutcome {
+    tracing::warn!(%error, user_id, "admin API request failed: {context}");
+    match api_error_message(error) {
+        Some(message) => DispatchOutcome::error(format!("{context}: {message}")),
+        None => DispatchOutcome::error(context.to_owned()),
     }
 }
 
@@ -521,7 +640,9 @@ fn parse_dry_run(value: Option<&str>) -> bool {
     !matches!(value.map(|value| value.trim().to_ascii_lowercase()), Some(value) if value == "false" || value == "0")
 }
 
-fn parse_message_shred_csv(csv: &str) -> Result<Vec<serde_json::Value>, String> {
+fn parse_message_shred_csv(
+    csv: &str,
+) -> Result<Vec<AdminUserMessageShredRequestEntriesItem>, String> {
     let mut entries = Vec::new();
     for line in csv.trim().lines() {
         let trimmed = line.trim();
@@ -534,12 +655,10 @@ fn parse_message_shred_csv(csv: &str) -> Result<Vec<serde_json::Value>, String> 
                 "Each row must contain channel_id and message_id separated by a comma".to_owned(),
             );
         }
-        let channel_id = parse_csv_snowflake(parts[0], "channel_id", trimmed)?;
-        let message_id = parse_csv_snowflake(parts[1], "message_id", trimmed)?;
-        entries.push(serde_json::json!({
-            "channel_id": channel_id,
-            "message_id": message_id,
-        }));
+        entries.push(AdminUserMessageShredRequestEntriesItem {
+            channel_id: snowflake(&parse_csv_snowflake(parts[0], "channel_id", trimmed)?),
+            message_id: snowflake(&parse_csv_snowflake(parts[1], "message_id", trimmed)?),
+        });
     }
     Ok(entries)
 }
@@ -572,8 +691,10 @@ mod tests {
         let entries = parse_message_shred_csv("channel_id,message_id\n123,456\n789,101112")
             .expect("valid csv");
         assert_eq!(entries.len(), 2);
-        assert_eq!(entries[0]["channel_id"], "123");
-        assert_eq!(entries[0]["message_id"], "456");
+        assert_eq!(
+            serde_json::to_value(&entries[0]).expect("serializable entry"),
+            serde_json::json!({"channel_id": "123", "message_id": "456"})
+        );
     }
 
     #[test]

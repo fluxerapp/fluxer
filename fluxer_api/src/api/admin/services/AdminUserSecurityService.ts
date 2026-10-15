@@ -11,10 +11,15 @@ import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingP
 import {RecoveryKitRepository} from '@app/api/auth/services/RecoveryKitRepository';
 import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {
+	FEATURE_LIMIT_PREMIUM_FLAGS,
+	FEATURE_LIMIT_USER_FLAGS,
+	findHoldingFeatureLimit,
+} from '@app/api/enforcement/FeatureLimitState';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {Logger} from '@app/api/Logger';
 import {requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getEnforcementDecisionRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {User} from '@app/api/models/User';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {PASSWORD_RESET_TOKEN_TTL_SECONDS} from '@app/api/user/repositories/auth/TokenRepository';
@@ -29,11 +34,13 @@ import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {EnforcementLimit} from '@fluxer/constants/src/EnforcementReasons';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {EnforcementDecisionOwnsStateError} from '@fluxer/errors/src/domains/moderation/EnforcementDecisionOwnsStateError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	AdminPasswordResetLinkResponse,
@@ -47,6 +54,70 @@ import type {
 	TerminateSessionsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+
+const RESTRICTION_USER_FLAGS = UserFlags.DISABLED | UserFlags.DELETED | UserFlags.SPAMMER | UserFlags.REPORT_BANNED;
+
+function combineUserFlags(flags: ReadonlyArray<bigint>): bigint {
+	return flags.reduce((combined, flag) => combined | flag, 0n);
+}
+
+function combinePremiumFlags(flags: ReadonlyArray<number>): number {
+	return flags.reduce((combined, flag) => combined | flag, 0);
+}
+
+function refuseFlag(field: 'add_flags' | 'remove_flags'): never {
+	throw InputValidationError.fromCode(field, ValidationErrorCodes.FLAG_REQUIRES_ENFORCEMENT_ROUTE);
+}
+
+export function assertNoRestrictionFlagsAdded(addFlags: ReadonlyArray<bigint>): void {
+	if ((combineUserFlags(addFlags) & RESTRICTION_USER_FLAGS) !== 0n) {
+		refuseFlag('add_flags');
+	}
+}
+
+async function assertNoFeatureLimitHeld(user: User, limits: ReadonlyArray<EnforcementLimit>): Promise<void> {
+	for (const limit of limits) {
+		const holding = await findHoldingFeatureLimit(getEnforcementDecisionRepository(), user.id, limit);
+		if (holding) {
+			throw new EnforcementDecisionOwnsStateError(holding.decision_id);
+		}
+	}
+}
+
+async function assertUserFlagUpdateAllowed(
+	user: User,
+	addFlags: ReadonlyArray<bigint>,
+	removeFlags: ReadonlyArray<bigint>,
+): Promise<void> {
+	assertNoRestrictionFlagsAdded(addFlags);
+	const removing = combineUserFlags(removeFlags) & user.flags;
+	if ((removing & UserFlags.DELETED) !== 0n || ((removing & UserFlags.DISABLED) !== 0n && user.tempBannedUntil)) {
+		refuseFlag('remove_flags');
+	}
+	await assertNoFeatureLimitHeld(
+		user,
+		(Object.keys(FEATURE_LIMIT_USER_FLAGS) as Array<EnforcementLimit>).filter(
+			(limit) => (removing & FEATURE_LIMIT_USER_FLAGS[limit]!) !== 0n,
+		),
+	);
+}
+
+async function assertPremiumFlagUpdateAllowed(
+	user: User,
+	addFlags: ReadonlyArray<number>,
+	removeFlags: ReadonlyArray<number>,
+): Promise<void> {
+	if ((combinePremiumFlags(addFlags) & PremiumFlags.PURCHASE_DISABLED) !== 0) {
+		refuseFlag('add_flags');
+	}
+	const removing = combinePremiumFlags(removeFlags) & user.premiumFlags;
+	await assertNoFeatureLimitHeld(
+		user,
+		(Object.keys(FEATURE_LIMIT_PREMIUM_FLAGS) as Array<EnforcementLimit>).filter(
+			(limit) => (removing & FEATURE_LIMIT_PREMIUM_FLAGS[limit]!) !== 0,
+		),
+	);
+}
 
 interface AdminUserSecurityServiceDeps {
 	apiContext: ApiContext;
@@ -130,6 +201,11 @@ export class AdminUserSecurityService {
 	}) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		const {auditService, userUpdateDeps} = this.deps;
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		await assertUserFlagUpdateAllowed(user, data.addFlags, data.removeFlags);
 		let previousFlags = 0n;
 		const updatedUser = await userRepository.updateFlags(userId, (flags) => {
 			previousFlags = flags;
@@ -185,6 +261,7 @@ export class AdminUserSecurityService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
+		await assertPremiumFlagUpdateAllowed(user, data.addFlags, data.removeFlags);
 		const newPremiumFlags = applyNumberFlagUpdates(user.premiumFlags, data.addFlags, data.removeFlags);
 		const updatedUser = await userRepository.patchUpsert(
 			userId,

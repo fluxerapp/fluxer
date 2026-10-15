@@ -6,9 +6,17 @@ import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
 import {AdminACLs, filterKnownAdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {AdminResolvedUser, UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
+
+const DELETION_REASON_CODES: ReadonlySet<number> = new Set(Object.values(DeletionReasons));
+
+function deletionReasonCode(code: number | null): ValueOf<typeof DeletionReasons> | null {
+	return code !== null && DELETION_REASON_CODES.has(code) ? (code as ValueOf<typeof DeletionReasons>) : null;
+}
 
 export async function mapUserToAdminResponse(
 	user: User,
@@ -59,11 +67,12 @@ export async function mapUserToAdminResponse(
 			user.tempBannedUntil && user.tempBannedUntil.getTime() > Date.now() ? user.tempBannedUntil.toISOString() : null,
 		pending_deletion_at: user.pendingDeletionAt?.toISOString() ?? null,
 		pending_bulk_message_deletion_at: user.pendingBulkMessageDeletionAt?.toISOString() ?? null,
-		deletion_reason_code: user.deletionReasonCode,
+		deletion_reason_code: deletionReasonCode(user.deletionReasonCode),
 		deletion_public_reason: user.deletionPublicReason,
 		deletion_audit_log_reason: canViewAuditLog ? user.deletionAuditLogReason : null,
 		deletion_scheduled_by: user.deletionScheduledBy?.toString() ?? null,
 		deletion_scheduled_at: user.deletionScheduledAt?.toISOString() ?? null,
+		enforcement_decision_id: user.enforcementDecisionId?.toString() ?? null,
 		acls: user.acls ? filterKnownAdminACLs(user.acls) : [],
 		traits: Array.from(user.traits).sort(),
 		has_totp: user.totpSecret !== null,

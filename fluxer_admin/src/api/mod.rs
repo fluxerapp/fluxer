@@ -12,6 +12,7 @@ pub mod bulk;
 pub mod client;
 pub mod codes;
 pub mod discovery;
+pub mod enforcement;
 pub mod guild_assets;
 pub mod guild_threads;
 pub mod guilds;

@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {parseAccountRestriction} from '@app/features/auth/state/AccountRestriction';
 import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
@@ -866,4 +867,17 @@ export function setMfaTicket({ticket, totp, webauthn, backupCodes, runtimeSnapsh
 export function clearMfaTicket(): void {
 	logger.debug('Clearing MFA ticket');
 	Authentication.handleMfaTicketClear();
+}
+
+export function showAccountRestriction(error: unknown): boolean {
+	const restriction = parseAccountRestriction(error);
+	if (restriction == null) {
+		return false;
+	}
+	Authentication.handleAccountRestriction(restriction);
+	return true;
+}
+
+export function clearAccountRestriction(): void {
+	Authentication.handleAccountRestrictionClear();
 }

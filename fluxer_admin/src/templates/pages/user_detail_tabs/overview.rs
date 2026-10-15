@@ -9,6 +9,7 @@ use crate::{
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
     },
+    templates::pages::enforcement_decision::suspension_label,
     utils::{
         bigint::format_discriminator,
         timestamps::{format_admin_timestamp, snowflake_creation_date},
@@ -64,12 +65,8 @@ fn render_overview_tab(
 ) -> Markup {
     html! {
         div class="space-y-6" {
-            @if let Some(until) = &user.temp_banned_until {
-                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" {
-                    "Temporarily banned until " (format_admin_timestamp(until))
-                }
-            }
-            @if user.temp_banned_until.is_none() {
+            (restriction_banner(config, user))
+            @if user.temp_banned_until.is_none() && user.enforcement_decision_id.is_none() {
                 @if let Some(pending) = &user.pending_deletion_at {
                     div class="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900" {
                         div class="font-medium" { "Scheduled for deletion: " (format_admin_timestamp(pending)) }
@@ -262,6 +259,30 @@ fn render_overview_tab(
     }
 }
 
+fn restriction_banner(config: &AdminConfig, user: &AdminUser) -> Markup {
+    let base = &config.base_path;
+    html! {
+        @match (&user.enforcement_decision_id, &user.temp_banned_until) {
+            (Some(decision_id), until) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    @match (until, &user.pending_deletion_at) {
+                        (Some(until), _) => { (suspension_label(until)) ". " }
+                        (None, Some(pending)) => { "Scheduled for deletion on " (format_admin_timestamp(pending)) ". " }
+                        (None, None) => { "Restricted by a decision. " }
+                    }
+                    a href={(base) "/decisions/" (decision_id)} class="underline" { "Decision " (decision_id) }
+                }
+            }
+            (None, Some(until)) => {
+                div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" data-restriction-banner="" {
+                    (suspension_label(until)) ". Recorded before decisions, so it has no decision."
+                }
+            }
+            (None, None) => {}
+        }
+    }
+}
+
 fn flags_card(
     config: &AdminConfig,
     user: &AdminUser,
@@ -269,118 +290,58 @@ fn flags_card(
     csrf_token: &str,
 ) -> Markup {
     let can_update_flags = acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
+    let suspended = user.temp_banned_until.is_some();
     html! {
         div class="space-y-6" {
-            (u64_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "User Flags",
+                "User flags",
                 "update_flags",
-                "flags[]",
-                user.flags,
-                admin_flags::USER_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
+                html! {
+                    @for flag in admin_flags::USER_FLAGS {
+                        (checkbox(
+                            "flags[]",
+                            &flag.value.to_string(),
+                            flag.name,
+                            user.flags & flag.value != 0,
+                            can_update_flags && admin_flags::user_flag_is_editable(flag.value, user.flags, suspended),
+                        ))
+                    }
+                },
             ))
-            (i32_flag_form(
+            (flag_form_shell(
                 config,
                 &user.id,
-                "Premium Flags",
+                "Premium flags",
                 "update_premium_flags",
-                "flags[]",
-                user.premium_flags,
-                admin_flags::PREMIUM_FLAGS,
                 csrf_token,
                 can_update_flags,
-                Some(acl::USER_UPDATE_FLAGS),
+                html! {
+                    @for flag in admin_flags::PREMIUM_FLAGS {
+                        (checkbox(
+                            "flags[]",
+                            &flag.value.to_string(),
+                            flag.name,
+                            user.premium_flags & flag.value != 0,
+                            can_update_flags && admin_flags::premium_flag_is_editable(flag.value),
+                        ))
+                    }
+                },
             ))
         }
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn u64_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: u64,
-    flags: &[admin_flags::U64Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-fn i32_flag_form(
-    config: &AdminConfig,
-    user_id: &str,
-    title: &str,
-    action: &str,
-    input_name: &str,
-    value: i32,
-    flags: &[admin_flags::I32Flag],
-    csrf_token: &str,
-    can_edit: bool,
-    required_acl: Option<&str>,
-) -> Markup {
-    flag_form_shell(
-        config,
-        user_id,
-        title,
-        action,
-        value.to_string(),
-        csrf_token,
-        can_edit,
-        required_acl,
-        html! {
-            @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
-            }
-        },
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
 fn flag_form_shell(
     config: &AdminConfig,
     user_id: &str,
     title: &str,
     action: &str,
-    _raw_value: String,
     csrf_token: &str,
     can_edit: bool,
-    required_acl: Option<&str>,
     checkboxes: Markup,
 ) -> Markup {
     card_with_header(
@@ -392,14 +353,15 @@ fn flag_form_shell(
                     (checkboxes)
                 }
                 @if can_edit {
+                    p class="text-xs text-neutral-500" {
+                        "Restriction flags are read-only. Use the moderation tab."
+                    }
                     (form_actions(html! {
                         (submit_button("Save"))
                     }))
                 } @else {
-                    @if let Some(required) = required_acl {
-                        p class="text-xs text-neutral-500" {
-                            "Read-only \u{2014} " (required) " permission required."
-                        }
+                    p class="text-xs text-neutral-500" {
+                        "Read-only. Needs the " (acl::USER_UPDATE_FLAGS) " permission."
                     }
                 }
             }

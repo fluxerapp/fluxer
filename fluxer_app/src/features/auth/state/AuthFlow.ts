@@ -34,8 +34,7 @@ export interface IpAuthorizationChallenge {
 export type LoginResult =
 	| {type: 'success'; payload: LoginSuccessPayload}
 	| {type: 'mfa'; challenge: MfaChallenge}
-	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge}
-	| {type: 'suspended'; banViewToken: string};
+	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge};
 
 function mfaChallengeFromResponse(response: AuthenticationCommands.MfaLoginResponse): MfaChallenge {
 	return {
@@ -75,12 +74,6 @@ export async function loginWithPassword({
 				email: response.email,
 				resendAvailableIn: response.resend_available_in ?? 30,
 			},
-		};
-	}
-	if ('ban_view_token' in response) {
-		return {
-			type: 'suspended',
-			banViewToken: (response as {ban_view_token: string}).ban_view_token,
 		};
 	}
 	if (response.mfa) {

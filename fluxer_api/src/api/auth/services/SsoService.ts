@@ -4,6 +4,7 @@ import {createHash, randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {maybeAutoJoinInvite} from '@app/api/auth/AuthRegistration';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {
@@ -400,6 +401,7 @@ export class SsoService {
 		if (existingUser) {
 			return this.bindSsoIdentity(existingUser, claims.sub, config);
 		}
+		AuthUtility.assertNetworkAllowed(this.apiContext);
 		if (!config.autoProvision) {
 			throw new SsoRequiredError();
 		}

@@ -34,7 +34,7 @@ import type {
 	SearchChannelMessagesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageBrowseSchemas';
 import type {
-	DeleteMessageRequest,
+	AdminMessageDeleteRequest,
 	LookupMessageByAttachmentRequest,
 	LookupMessageRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
@@ -106,11 +106,15 @@ export class AdminMessageService {
 		};
 	}
 
-	async deleteMessage(data: DeleteMessageRequest, adminUserId: UserID, auditLogReason: string | null) {
+	async deleteMessage(
+		channelId: ChannelID,
+		messageId: MessageID,
+		{basis}: AdminMessageDeleteRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
 		const {channelRepository, auditService} = this.deps;
 		const {gateway: gatewayService, worker: workerService} = this.deps.apiContext.services;
-		const channelId = createChannelID(data.channel_id);
-		const messageId = createMessageID(data.message_id);
 		const channel = await channelRepository.channelData.findUnique(channelId);
 		const message = await channelRepository.messages.getMessage(channelId, messageId);
 		if (message) {
@@ -158,6 +162,7 @@ export class AdminMessageService {
 			metadata: new Map([
 				['channel_id', channelId.toString()],
 				['message_id', messageId.toString()],
+				['basis', basis.type],
 			]),
 		});
 		return {

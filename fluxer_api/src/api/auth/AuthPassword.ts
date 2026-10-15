@@ -280,7 +280,7 @@ export async function resetPassword(
 	if (user.flags & UserFlags.DELETED || !(await resetTokenMatchesUser(user, tokenData.email))) {
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
-	const currentUser = await AuthUtility.handleBanStatus(ctx, user);
+	const currentUser = await AuthUtility.assertSignInAllowed(ctx, user);
 	if (await isPasswordPwned(ctx, data.password)) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}

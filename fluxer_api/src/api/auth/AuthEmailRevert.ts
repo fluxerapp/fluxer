@@ -59,7 +59,7 @@ export async function revertEmailChange(
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_REVERT_TOKEN);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	await AuthUtility.handleBanStatus(ctx, user);
+	await AuthUtility.assertSignInAllowed(ctx, user);
 	if (await AuthPassword.isPasswordPwned(ctx, password)) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}

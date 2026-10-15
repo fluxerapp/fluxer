@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "您的 {product_name} 帳號將因長期未使用而刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已長期未使用，因此已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n{safety_email, select, null {如果您想保留帳號，請在該日期前聯絡此實例的管理員。} other {如果您想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。}}\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已長期未使用，因此我們已排定在 {deletion_date} 刪除該帳號。\n\n如果想保留帳號，請在該日期前登入。{support_email, select, null {如有疑問，請聯絡此實例的管理員。} other {如有疑問，請聯絡 {support_email}。}}\n\n{product_name} 團隊"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "您的 {product_name} 帳號已排定刪除",
-		"body": "哈囉 {username}，\n\n依照您的要求，您的 {product_name} 帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，您的帳號將被鎖定。{safety_email, select, null {如果您沒有提出此要求，或想保留帳號，請在該日期前聯絡此實例的管理員。} other {如果您沒有提出此要求，或想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。}}\n\n– {product_name} 團隊"
-	},
-	"account_scheduled_deletion": {
-		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
-	},
-	"account_temp_banned": {
-		"subject": "您的 {product_name} 帳號已暫時停權",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已暫時停權。\n\n持續時間：{durationHours, plural,\n  =1 {1 小時}\n  other {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}在此期間，您將無法存取您的帳號。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}如果您認為此處分不正確或不合理，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，並清楚說明您認為此處分不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，並清楚說明您認為此處分不正確的原因。}}我們會審查您的申訴，並回覆我們的決定。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n依照您的要求，我們已排定在 {deletion_date} 刪除您的 {product_name} 帳號。\n\n如果想保留帳號，請在 {deletion_date} 前登入。{safety_email, select, null {如果您沒有提出此要求，請聯絡此實例的管理員。} other {如果您沒有提出此要求，請聯絡 {safety_email}。}}\n\n{product_name} 團隊"
 	},
 	"donation_confirmation": {
 		"subject": "感謝您對 {product_name} 的捐款",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "我們已對您的 {product_name} 檢舉做出決定",
-		"body": "哈囉，\n\n我們的安全團隊已審核您依據數位服務法提出的檢舉（ID：{reportId}）並做出決定。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n我們不會透露對他人帳號所採取措施的細節，因為這屬於對方的個人資料。\n\n如果您不同意此決定，可以在 60 天內免費提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，註明您的檢舉 ID，並說明您認為此決定不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，註明您的檢舉 ID，並說明您認為此決定不正確的原因。}}如果您身在歐盟，也可以將爭議提交給經認證的訴訟外爭議解決機構。以上內容均不影響您向法院提起訴訟的權利。\n\n– {product_name} 安全團隊"
+		"body": "哈囉，\n\n我們已審核您的檢舉（ID：{reportId}）。\n\n{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {我們確認您檢舉的帳號違反了我們的規則，並已對其施加限制。我們不會透露對其他帳號採取了什麼措施，因為這屬於對方的個人資料。} action_taken {我們確認您檢舉的對象違反了我們的規則，並已採取措施。我們不會透露對其他帳號採取了什麼措施，因為這屬於對方的個人資料。} no_violation {我們確認您檢舉的內容或帳號沒有違反我們的規則，因此維持原狀。} other {我們已結束處理您的檢舉。}}{hasComment, select, yes {\n\n團隊留言：{publicComment}} other {}}{appeals_email, select, null {} other {\n\n如果您不同意，請在 60 天內寄信至 {appeals_email}，並附上檢舉 ID。如果您身在歐盟，也可以將此事提交給經認證的訴訟外爭議解決機構，或向您所在國家的數位服務協調官提出申訴。}}\n\n{product_name} 團隊"
 	},
 	"dsa_report_verification": {
 		"subject": "驗證您的電子郵件以送出 DSA 檢舉",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "驗證您的 {product_name} 電子郵件地址",
 		"body": "哈囉 {username}，\n\n請點擊下方連結以驗證您的 {product_name} 帳號電子郵件地址：\n\n{verifyUrl}\n\n如果您沒有建立 {product_name} 帳號，可以直接忽略這封電子郵件。\n\n此連結在 24 小時內有效。\n\n– {product_name} 團隊"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {我們撤銷了一項關於您 {product_name} 帳號的決定} other {您 {product_name} 帳號的限制已結束}}",
+		"body": "哈囉 {username}，\n\n{outcome, select, reversed {{decision_id, select, null {我們重新審視了一項關於您帳號的決定，並已將其撤銷。} other {我們重新審視了決定 {decision_id}，並已將其撤銷。}}造成您的困擾，我們深感抱歉。} other {{decision_id, select, null {我們已解除您帳號的限制。} other {我們已解除決定 {decision_id} 的限制。}}}}{restores_access, select, yes {您可以重新登入並使用 {product_name}。} other {}}{statement, select, null {} other {\n\n團隊留言：{statement}}}{content_removed, select, yes {\n\n我們移除的內容無法復原。} other {}}\n\n{product_name} 團隊"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {關於您 {product_name} 帳號的通知} other {{kind_label, select, warning {關於您 {product_name} 帳號的警告} suspension {您的 {product_name} 帳號已遭暫時停權} ban {您的 {product_name} 帳號已遭永久停權} closure {您的 {product_name} 帳號已關閉} feature_limit {您 {product_name} 帳號的部分功能已受到限制} content_removal {我們移除了您在 {product_name} 上傳送的訊息} profile_reset {我們重設了您 {product_name} 個人檔案的部分內容} community_removal {我們移除了您在 {product_name} 上的社群} bot {關於您在 {product_name} 上的機器人的通知} other {關於您 {product_name} 帳號的通知}}}}",
+		"body": "哈囉 {username}，\n\n{summary}\n\n{effects}\n\n原因\n規則：{rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\n團隊留言：{statement}}}\n\n我們如何做出決定\n{how_we_decided}{appeals_email, select, null {} other {\n\n如何申訴\n如果您認為我們判斷有誤，請最遲於 {appeal_deadline} 寄信至 {appeals_email}。可以的話，請使用您帳號的電子郵件地址寄信，並附上決定 ID。申訴不收取任何費用，且每件申訴都會由專人審核。{redress, select, null {} other {\n\n{redress}}}}}\n\n決定 ID：{decision_id}\n\n{product_name} 團隊"
 	},
 	"gift_chargeback_notification": {
 		"subject": "您兌換禮物取得的福利已移除",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "您的 {product_name} 檢舉已審核完成",
-		"body": "哈囉 {username}，\n\n您的檢舉（ID：{reportId}）已由我們的安全團隊審核。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n感謝您協助維護 {product_name} 的安全。我們會認真看待每一則檢舉，並感謝您對社群的貢獻。\n\n{safety_email, select, null {如果您對此結果有任何疑問或疑慮，請聯絡此實例的管理員。} other {如果您對此結果有任何疑問或疑慮，請聯絡 {safety_email}。}}\n\n– {product_name} 安全團隊"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n如果您認為此處分不正確，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n我們已審核您的檢舉（ID：{reportId}）。\n\n{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {我們確認您檢舉的帳號違反了我們的規則，並已對其施加限制。我們不會透露對其他帳號採取了什麼措施，因為這屬於對方的個人資料。} action_taken {我們確認您檢舉的對象違反了我們的規則，並已採取措施。我們不會透露對其他帳號採取了什麼措施，因為這屬於對方的個人資料。} no_violation {我們確認您檢舉的內容或帳號沒有違反我們的規則，因此維持原狀。} other {我們已結束處理您的檢舉。}}{hasComment, select, yes {\n\n團隊留言：{publicComment}} other {}}{appeals_email, select, null {} other {\n\n如果您不同意，請在 60 天內寄信至 {appeals_email}，並附上檢舉 ID。如果您身在歐盟，也可以將此事提交給經認證的訴訟外爭議解決機構，或向您所在國家的數位服務協調官提出申訴。}}\n\n{product_name} 團隊"
 	},
 	"self_deletion_scheduled": {
 		"subject": "您的 {product_name} 帳號已排定刪除",
 		"body": "哈囉 {username}，\n\n您已要求刪除您的 {product_name} 帳號。您的帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}\n\n如果您沒有提出此要求，請登入您的帳號以取消刪除。我們也建議您變更密碼以保護您的帳號安全。\n\n– {product_name} 團隊"
-	},
-	"unban_notification": {
-		"subject": "您的 {product_name} 帳號停權已解除",
-		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 帳號停權已解除。\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}您現在可以重新登入並繼續正常使用 {product_name}。\n\n– {product_name} 安全團隊"
 	}
 }

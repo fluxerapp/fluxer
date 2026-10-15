@@ -70,7 +70,7 @@ describe('bulkUpdateUserFlags task', () => {
 		const result = (await bulkUpdateUserFlags(
 			{
 				user_ids: [first.userId, MISSING_USER_ID.toString(), second.userId],
-				add_flags: [UserFlags.SPAMMER.toString()],
+				add_flags: [UserFlags.PARTNER.toString()],
 				remove_flags: [UserFlags.HAS_SESSION_STARTED.toString()],
 				admin_user_id: ADMIN_USER_ID.toString(),
 				audit_log_reason: 'Lilith spam sweep',
@@ -84,7 +84,7 @@ describe('bulkUpdateUserFlags task', () => {
 
 		const userRepository = getUserRepository();
 		const updatedFirst = await userRepository.findUnique(createUserID(BigInt(first.userId)));
-		expect(updatedFirst!.flags & UserFlags.SPAMMER).toBe(UserFlags.SPAMMER);
+		expect(updatedFirst!.flags & UserFlags.PARTNER).toBe(UserFlags.PARTNER);
 		expect(updatedFirst!.flags & UserFlags.HAS_SESSION_STARTED).toBe(0n);
 
 		const auditLogs = await new AdminRepository().listAllAuditLogsPaginated(50);
@@ -94,9 +94,9 @@ describe('bulkUpdateUserFlags task', () => {
 			expect(log.targetType).toBe('user');
 			expect(log.adminUserId.toString()).toBe(ADMIN_USER_ID.toString());
 			expect(log.auditLogReason).toBe('Lilith spam sweep');
-			expect(log.metadata.get('add_flags')).toBe(UserFlags.SPAMMER.toString());
+			expect(log.metadata.get('add_flags')).toBe(UserFlags.PARTNER.toString());
 			expect(log.metadata.get('remove_flags')).toBe(UserFlags.HAS_SESSION_STARTED.toString());
-			expect(log.metadata.get('new_flags')).toBe(UserFlags.SPAMMER.toString());
+			expect(log.metadata.get('new_flags')).toBe(UserFlags.PARTNER.toString());
 		}
 		expect(auditLogs.some((log) => log.action === 'update_flags' && log.targetId === MISSING_USER_ID)).toBe(false);
 	});

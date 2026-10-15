@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {AdminRepository} from '@app/api/admin/AdminRepository';
+import type {AdminRepository, BannedIpEntry} from '@app/api/admin/AdminRepository';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
@@ -32,6 +32,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
+import {IpBanLinkedToDecisionError} from '@fluxer/errors/src/domains/moderation/IpBanLinkedToDecisionError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
 
@@ -128,7 +129,6 @@ export class AdminBanManagementService {
 		auditLogReason: string | null,
 	) {
 		const {adminRepository, auditService} = this.deps;
-		const {cache: cacheService} = this.deps.apiContext.services;
 		if (isIpBanExempt(data.ip)) {
 			await auditService.createAuditLog({
 				adminUserId,
@@ -143,6 +143,7 @@ export class AdminBanManagementService {
 				message: 'This IP address is on the instance exemption list',
 			});
 		}
+		await this.assertIpBanNotLinked(data.ip);
 		const durationHours = data.duration_hours ?? 0;
 		const metadata = new Map([['ip', data.ip]]);
 		if (durationHours > 0) {
@@ -153,8 +154,7 @@ export class AdminBanManagementService {
 		} else {
 			await adminRepository.banIp(data.ip);
 		}
-		await ipBanCache.refresh();
-		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
+		await this.refreshIpBans();
 		await this.deps.auditService.createAuditLog({
 			targetId: 0n,
 			adminUserId,
@@ -174,6 +174,7 @@ export class AdminBanManagementService {
 	) {
 		const {adminRepository} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
+		await this.assertIpBanNotLinked(data.ip);
 		await adminRepository.unbanIp(data.ip);
 		ipBanCache.unban(data.ip);
 		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
@@ -190,9 +191,67 @@ export class AdminBanManagementService {
 	async checkIpBan(data: {ip: string}): Promise<{
 		banned: boolean;
 		expires_at: string | null;
+		decision_id: string | null;
 	}> {
 		const match = ipBanCache.getMatch(data.ip);
-		return {banned: match !== null, expires_at: toIsoString(match?.expiresAt)};
+		return {
+			banned: match !== null,
+			expires_at: toIsoString(match?.expiresAt),
+			decision_id: toSnowflakeString(match?.decision?.decisionId),
+		};
+	}
+
+	async blockNetworksForDecision(
+		ips: ReadonlyArray<string>,
+		decisionId: bigint,
+		expiresAt: Date,
+	): Promise<{blocked: Array<BannedIpEntry>; alreadyBlocked: Array<string>}> {
+		const blocked: Array<BannedIpEntry> = [];
+		const alreadyBlocked: Array<string> = [];
+		for (const ip of ips) {
+			const entry = await this.deps.adminRepository.banIpForDecision(ip, decisionId, expiresAt);
+			if (entry) {
+				blocked.push(entry);
+			} else {
+				alreadyBlocked.push(ip);
+			}
+		}
+		if (blocked.length > 0) {
+			await this.refreshIpBans();
+		}
+		return {blocked, alreadyBlocked};
+	}
+
+	async listDecisionNetworkBlocks(decisionId: bigint): Promise<Array<BannedIpEntry>> {
+		return this.deps.adminRepository.listDecisionIpBans(decisionId);
+	}
+
+	async removeDecisionNetworkBlocks(decisionIds: ReadonlyArray<bigint>): Promise<Array<BannedIpEntry>> {
+		const removed = await this.deps.adminRepository.removeDecisionIpBans(decisionIds);
+		if (removed.length > 0) {
+			await this.refreshIpBans();
+		}
+		return removed;
+	}
+
+	async relinkDecisionNetworkBlocks(fromDecisionId: bigint, toDecisionId: bigint): Promise<Array<BannedIpEntry>> {
+		const relinked = await this.deps.adminRepository.relinkDecisionIpBans(fromDecisionId, toDecisionId);
+		if (relinked.length > 0) {
+			await this.refreshIpBans();
+		}
+		return relinked;
+	}
+
+	private async refreshIpBans(): Promise<void> {
+		await ipBanCache.refresh();
+		await this.deps.apiContext.services.cache.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
+	}
+
+	private async assertIpBanNotLinked(ip: string): Promise<void> {
+		const decisionId = await this.deps.adminRepository.findIpBanDecision(ip);
+		if (decisionId !== null) {
+			throw new IpBanLinkedToDecisionError(decisionId);
+		}
 	}
 
 	async banEmail(

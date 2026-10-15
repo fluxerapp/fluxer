@@ -214,6 +214,7 @@ An entry has no request method, request path, status, duration, IP address, or f
 | bulk_job | Background job |
 | admin_api_key | Admin API key |
 | audit_log | Admin audit entry |
+| enforcement_decision | Enforcement decision |
 | archive<sup>2</sup> | Archive list |
 | admin_acl<sup>2</sup> | Admin ACL registry |
 | blocklist<sup>2</sup> | Blocklist catalogue |
@@ -280,6 +281,8 @@ An entry with one of these actions has `access` set to `read`.
 | list_discovery_categories | The discovery categories were read |
 | list_discovery_category_listings | A page of the discovery listings in one category was read |
 | list_discovery_listings | Approved discovery listings were read |
+| list_enforcement_decisions | The enforcement decisions about an account or community, or the review queue, were listed |
+| list_network_block_candidates | The networks an account used in the last 30 days were listed, with how many other accounts share each |
 | list_guild_applications | The applications whose bots are members of a guild were read |
 | list_guild_audit_logs | The audit log of a guild was read |
 | list_guild_emojis | The custom emojis of a guild were listed |
@@ -304,6 +307,7 @@ An entry with one of these actions has `access` set to `read`.
 | search_messages | The messages of a channel were searched, or one message was looked up |
 | search_reports | Reports were listed or searched |
 | search_users | Accounts were listed or searched |
+| view_enforcement_decision | An enforcement decision was read |
 
 #### Write actions
 
@@ -311,7 +315,7 @@ An entry with any other action has `access` set to `write`.
 
 | Value | Description |
 | --- | --- |
-| annotate_ban | A note was appended to the current ban of an account |
+| annotate_enforcement_decision | A note was added to an enforcement decision |
 | approve_discovery_application | A discovery application was approved |
 | approve_registration | A pending registration was approved |
 | auto_resolve_reports_on_deletion | The pending reports against an account were processed as part of its deletion |
@@ -354,9 +358,11 @@ An entry with any other action has `access` set to `write`.
 | delete_voice_server | A registered voice server was deleted |
 | delete_webauthn_credential | A WebAuthn credential was removed from an account |
 | disable_mfa | Multi-factor authentication was disabled on an account |
+| end_enforcement_decision | An enforcement decision was ended as lifted or reversed |
 | force_add_to_guild | An account was added to a guild while bypassing the ban check |
 | generate_gift_codes | Gift codes were generated |
 | kick_member | A member was removed from a guild |
+| limit_features | A feature limit decision was recorded for an account, by staff or by Fluxer after a payment fraud signal |
 | purge_asset | A stored media asset was purged |
 | purge_guild_emoji_asset | A guild emoji asset was purged |
 | purge_guild_sticker_asset | A guild sticker asset was purged |
@@ -385,13 +391,13 @@ An entry with any other action has `access` set to `write`.
 | set_traits | Account traits were replaced |
 | shutdown_guild | One guild was stopped on the main Gateway |
 | system_dm.send | A system DM broadcast was created |
-| temp_ban | A temporary or permanent account ban was applied |
+| temp_ban | An account was suspended for a time or permanently |
 | terminate_sessions | Every login session of an account was revoked |
 | test_smtp_connection | An SMTP connection test was run |
 | transfer_ownership<sup>1</sup> | Guild ownership or OAuth2 application ownership was transferred |
 | trigger_guild_archive | A guild archive was created |
 | trigger_user_archive | A user archive was created |
-| unban | An account ban was lifted |
+| unban | A suspension without an enforcement decision was lifted |
 | unban_avatar_hash | An avatar hash was removed from the avatar blocklist |
 | unban_email | An address was removed from the email blocklist |
 | unban_file_sha | A file hash was removed from the attachment blocklist |
@@ -416,6 +422,7 @@ An entry with any other action has `access` set to `write`.
 | update_voice_server | A registered voice server was updated |
 | upload_branding_asset | An instance branding asset was uploaded or cleared |
 | verify_email | An email address was marked verified |
+| warn_user | A warning decision was recorded for an account |
 
 <sup>1</sup> The same action name is recorded for two different resources, so `target_type` tells them apart
 
@@ -553,6 +560,8 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | bulk:update:user_flags | Queues the bulk account flag task |
 | discovery:remove | Removes a guild from [discovery](/admin-api/discovery/) |
 | discovery:review | Reads, reviews, and edits discovery applications, categories, and listings |
+| enforcement:annotate | Adds notes to [enforcement decisions](/admin-api/enforcement/) |
+| enforcement:view | Reads [enforcement decisions](/admin-api/enforcement/), and is needed with the kind's own ACL to end one |
 | gateway:memory_stats | Reads main [Gateway](/admin-api/gateway/) statistics, memory statistics, and voice state counts |
 | gateway:reload_all | Reloads guilds across the main Gateway |
 | gift_codes:generate | Generates [gift codes](/admin-api/gift-codes/) |
@@ -598,7 +607,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | user:view:dob<sup>6</sup> | Unredacts user dates of birth |
 | user:view:email<sup>6</sup> | Unredacts user email addresses and email verification state |
 | user:view:ip<sup>6</sup> | Unredacts the last active IP address and the location derived from it |
-| user:temp_ban | Applies and removes an account ban |
+| user:temp_ban | Suspends accounts and lifts suspensions |
 | user:update:bot_status | Updates bot and system account state |
 | user:update:dob | Updates dates of birth |
 | user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |

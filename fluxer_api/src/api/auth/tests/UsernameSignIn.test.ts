@@ -1038,7 +1038,7 @@ describe('Username sign-in', () => {
 			const target = await registerUsernameAccount('PendingGone');
 			await createBuilder(harness, admin.token)
 				.put(`/admin/users/${target.userId}/deletion`)
-				.body({reason_code: 2, days_until_deletion: 30})
+				.body({days_until_deletion: 30, basis: {type: 'holder_request'}})
 				.execute();
 			await expectFieldErrors({path: '/auth/register', body: {username: 'pendinggone', password: PASSWORD}}, [
 				{path: 'username', code: ValidationErrorCodes.USERNAME_ALREADY_TAKEN},

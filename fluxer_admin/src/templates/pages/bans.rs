@@ -22,6 +22,8 @@ pub struct BanConfig {
     pub active_page: &'static str,
     pub show_bulk_tools: bool,
     pub show_duration: bool,
+    pub add_title: Option<&'static str>,
+    pub add_help: Option<&'static str>,
 }
 
 const IP_BAN_DURATIONS: &[(u32, &str)] = &[
@@ -53,6 +55,10 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "ip-bans",
         show_bulk_tools: false,
         show_duration: true,
+        add_title: Some("Block a network"),
+        add_help: Some(
+            "For accounts, block networks from the account's suspension or closure instead.",
+        ),
     },
     BanConfig {
         title: "Email Bans",
@@ -65,6 +71,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "email-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "Phrase Bans",
@@ -77,6 +85,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "phrase-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "URL Blocklist",
@@ -89,6 +99,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "url-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "File SHA Blocklist",
@@ -101,6 +113,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "file-sha-bans",
         show_bulk_tools: true,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "Avatar Hash Blocklist",
@@ -113,6 +127,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "avatar-hash-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "URL Domain Blocklist",
@@ -125,6 +141,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "url-domain-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
     BanConfig {
         title: "Profile Substring Blocklist",
@@ -137,6 +155,8 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         active_page: "profile-substring-bans",
         show_bulk_tools: false,
         show_duration: false,
+        add_title: None,
+        add_help: None,
     },
 ];
 
@@ -187,7 +207,14 @@ fn ban_card(base: &str, cfg: &BanConfig, csrf_token: &str) -> Markup {
     html! {
         div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm sm:p-6" {
             h3 class="text-base font-medium text-neutral-900 mb-4" {
-                "Ban " (cfg.input_label)
+                @if let Some(title) = cfg.add_title {
+                    (title)
+                } @else {
+                    "Ban " (cfg.input_label)
+                }
+            }
+            @if let Some(help) = cfg.add_help {
+                p class="text-sm text-neutral-500 mb-4" { (help) }
             }
             form method="post" action={(base) (cfg.route) "?action=ban&_csrf=" (csrf_token)}
                 hx-post={(base) (cfg.route) "?action=ban&_csrf=" (csrf_token)}

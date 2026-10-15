@@ -3,12 +3,12 @@
 use maud::{Markup, PreEscaped, html};
 
 use super::badge::{BadgeVariant, badge};
+use super::enforcement_fields::{TakeAction, take_action_href};
 use super::icons::paperclip_icon;
 use super::media::user_avatar_url;
 use super::nsfw_indicators::{attachment_nsfw_badge, channel_nsfw_state_badge};
 use super::user_display::format_user_display;
 use crate::config::AdminConfig;
-use crate::routes::auth::json_string;
 use crate::utils::timestamps::format_admin_timestamp;
 
 use super::message_data::{Attachment, Message};
@@ -117,6 +117,7 @@ fn message_row(
     include_delete: bool,
     is_highlighted: bool,
     is_grouped: bool,
+    take_action: Option<&str>,
 ) -> Markup {
     let hover = if is_highlighted {
         " hover:bg-amber-100"
@@ -152,6 +153,9 @@ fn message_row(
                     (render_missing_attachments(msg))
                     div class="mt-1 text-neutral-400 text-xs" {
                         span class="" { (msg.id) }
+                        @if let Some(href) = take_action {
+                            a href=(href) class="ml-2 text-blue-600 hover:underline" { "Take action" }
+                        }
                     }
                     @if include_delete && !has_images {
                         div class="absolute top-0 right-2 hidden group-hover:block" {
@@ -235,6 +239,9 @@ fn message_row(
                 (render_missing_attachments(msg))
                 div class="mt-1 text-neutral-400 text-xs" {
                     span class="" { (msg.id) }
+                    @if let Some(href) = take_action {
+                        a href=(href) class="ml-2 text-blue-600 hover:underline" { "Take action" }
+                    }
                 }
             }
             @if include_delete && !has_images {
@@ -257,6 +264,7 @@ pub fn message_list(
     messages: &[Message],
     include_delete: bool,
     highlight_message_id: Option<&str>,
+    take_action: Option<&TakeAction<'_>>,
 ) -> Markup {
     html! {
         div class="divide-y-0" {
@@ -268,68 +276,46 @@ pub fn message_list(
                 @let avatar_url = user_avatar_url(
                     config, &msg.author_id, msg.author_avatar.as_deref(), 160, true,
                 );
+                @let take_action_href = take_action
+                    .filter(|action| {
+                        msg.webhook_id.is_none()
+                            && action.author_id.is_none_or(|author_id| author_id == msg.author_id)
+                    })
+                    .map(|action| take_action_href(
+                        base_path,
+                        &msg.author_id,
+                        action.report_id,
+                        Some((&msg.channel_id, &msg.id)),
+                    ));
                 (message_row(
                     base_path, &avatar_url, msg,
                     include_delete, is_highlighted, is_grouped,
+                    take_action_href.as_deref(),
                 ))
             }
         }
     }
 }
 
-pub fn message_deletion_script(csrf_token: &str) -> Markup {
-    let csrf = json_string(csrf_token);
-    let script = r#"(function() {
-    var csrf = __CSRF__;
-    function bp() {
-        return document.documentElement.dataset.basePath || '';
+pub fn message_delete_prefill_script() -> Markup {
+    html! {
+        script defer { (PreEscaped(MESSAGE_DELETE_PREFILL_SCRIPT)) }
     }
-    function toast(level, message) {
-        document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
-    }
-    function post(action, fields) {
-        fields.append('_csrf', csrf);
-        return fetch(bp() + '/messages?action=' + action, {
-            method: 'POST',
-            body: fields,
-            credentials: 'same-origin',
-            headers: {'x-csrf-token': csrf}
-        });
-    }
-    function deleteMessage(b) {
-        var fields = new URLSearchParams();
-        fields.append('channel_id', b.dataset.channelId || '');
-        fields.append('message_id', b.dataset.messageId || '');
-        b.disabled = true;
-        b.textContent = 'Deleting...';
-        toast('info', 'Deleting message...');
-        post('delete', fields).then(function(r) {
-            if (!r.ok) throw new Error('Failed');
-            var row = b.closest('[data-message-id]');
-            if (row) {
-                row.style.opacity = '0.5';
-                row.style.pointerEvents = 'none';
-            }
-            b.textContent = 'Deleted';
-            toast('success', 'Message deleted.');
-        }).catch(function() {
-            b.disabled = false;
-            b.textContent = 'Delete';
-            toast('error', 'Failed to delete message.');
-        });
-    }
+}
+
+const MESSAGE_DELETE_PREFILL_SCRIPT: &str = r#"(function() {
+    if (window.__fluxerMessageDeletePrefill) return;
+    window.__fluxerMessageDeletePrefill = true;
     document.addEventListener('click', function(e) {
         var t = e.target;
         if (!(t instanceof HTMLElement)) return;
-        var d = t.closest('.delete-message-btn');
-        if (d instanceof HTMLButtonElement) {
-            e.preventDefault();
-            deleteMessage(d);
-        }
+        var button = t.closest('.delete-message-btn');
+        var form = document.getElementById('delete-message-form');
+        if (!(button instanceof HTMLButtonElement) || !form) return;
+        e.preventDefault();
+        form.querySelector('[name="channel_id"]').value = button.dataset.channelId || '';
+        form.querySelector('[name="message_id"]').value = button.dataset.messageId || '';
+        form.scrollIntoView({behavior: 'smooth', block: 'center'});
+        form.querySelector('[name="basis"]').focus({preventScroll: true});
     });
-})();"#
-    .replace("__CSRF__", &csrf);
-    html! {
-        script defer { (PreEscaped(script)) }
-    }
-}
+})();"#;

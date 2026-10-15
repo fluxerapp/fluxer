@@ -132,6 +132,18 @@ import {
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
+	ENFORCEMENT_DECISION_BY_SUBJECT_COLUMNS,
+	ENFORCEMENT_DECISION_COLUMNS,
+	ENFORCEMENT_DECISION_EVIDENCE_COLUMNS,
+	ENFORCEMENT_DECISION_NOTE_COLUMNS,
+	ENFORCEMENT_REVIEW_QUEUE_COLUMNS,
+	type EnforcementDecisionBySubjectRow,
+	type EnforcementDecisionEvidenceRow,
+	type EnforcementDecisionNoteRow,
+	type EnforcementDecisionRow,
+	type EnforcementReviewQueueRow,
+} from '@app/api/database/types/EnforcementTypes';
+import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
@@ -845,6 +857,44 @@ export const AdminApiKeysByCreator = defineTable<AdminApiKeyByCreatorRow, 'creat
 	columns: ADMIN_API_KEY_BY_CREATOR_COLUMNS,
 	primaryKey: ['created_by_user_id', 'key_id'],
 	partitionKey: ['created_by_user_id'],
+});
+export const EnforcementDecisions = defineTable<EnforcementDecisionRow, 'decision_id'>({
+	name: 'enforcement_decisions',
+	columns: ENFORCEMENT_DECISION_COLUMNS,
+	primaryKey: ['decision_id'],
+});
+export const EnforcementDecisionsBySubject = defineTable<
+	EnforcementDecisionBySubjectRow,
+	'subject_type' | 'subject_id' | 'decision_id',
+	'subject_type' | 'subject_id'
+>({
+	name: 'enforcement_decisions_by_subject',
+	columns: ENFORCEMENT_DECISION_BY_SUBJECT_COLUMNS,
+	primaryKey: ['subject_type', 'subject_id', 'decision_id'],
+	partitionKey: ['subject_type', 'subject_id'],
+});
+export const EnforcementDecisionEvidence = defineTable<EnforcementDecisionEvidenceRow, 'decision_id'>({
+	name: 'enforcement_decision_evidence',
+	columns: ENFORCEMENT_DECISION_EVIDENCE_COLUMNS,
+	primaryKey: ['decision_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const EnforcementDecisionNotes = defineTable<
+	EnforcementDecisionNoteRow,
+	'decision_id' | 'note_id',
+	'decision_id'
+>({
+	name: 'enforcement_decision_notes',
+	columns: ENFORCEMENT_DECISION_NOTE_COLUMNS,
+	primaryKey: ['decision_id', 'note_id'],
+	partitionKey: ['decision_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const EnforcementReviewQueue = defineTable<EnforcementReviewQueueRow, 'bucket' | 'decision_id', 'bucket'>({
+	name: 'enforcement_review_queue',
+	columns: ENFORCEMENT_REVIEW_QUEUE_COLUMNS,
+	primaryKey: ['bucket', 'decision_id'],
+	partitionKey: ['bucket'],
 });
 export const BannedIps = defineTable<BannedIpRow, 'ip'>({
 	name: 'banned_ips',

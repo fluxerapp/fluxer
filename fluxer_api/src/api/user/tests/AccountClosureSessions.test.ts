@@ -6,6 +6,7 @@ import {createTestAccount, loginAccount, setUserACLs} from '@app/api/auth/tests/
 import {createApplicationID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {AuthSessionRow} from '@app/api/database/types/AuthTypes';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
 import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {getUserActivityBuffer, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
@@ -15,7 +16,6 @@ import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQue
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
@@ -226,7 +226,14 @@ describe('Account closure and credentials', () => {
 		}
 		await createBuilder(harness, admin.token)
 			.put(`/admin/users/${target.userId}/deletion`)
-			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
+			.header('X-Audit-Log-Reason', 'Spam review')
+			.body({
+				days_until_deletion: 74,
+				basis: {
+					type: 'enforcement',
+					decision: decisionBody(),
+				},
+			})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(await new AuthSessionRepository().listAuthSessions(userId)).toHaveLength(0);

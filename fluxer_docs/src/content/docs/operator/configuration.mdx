@@ -790,7 +790,7 @@ While email is on, registration checks the address domain. It has to publish an 
 
 #### `FLUXER_EMAIL_FROM_NAME`
 
-`.env.example` empty. The sender name. Default empty. An empty value sends mail under the instance product name, which is the name saved in the admin dashboard or else `FLUXER_APP_PRODUCT_NAME`, and a rename in the dashboard applies to the next email. A set value always wins.
+`.env.example` empty. The sender name. Default empty. An empty value sends mail under the instance product name, which is the name saved in the admin dashboard or else `FLUXER_APP_PRODUCT_NAME`, with the [self-hosted host name rule](#instance-identity-and-branding) applied, and a rename in the dashboard applies to the next email. A set value always wins.
 
 #### `FLUXER_EMAIL_REPLY_TO_EMAIL`
 
@@ -1154,7 +1154,7 @@ Default `production` when `FLUXER_SELF_HOSTED` is `true`, otherwise `development
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, turns blocklist feeds off, and keeps hosted-only artwork from `fluxer.app` out of the app, webhook avatars and link embeds.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, turns blocklist feeds off, keeps an account closed for a broken rule for at least 14 days instead of 74 because there is no appeal route, and keeps hosted-only artwork from `fluxer.app` out of the app, webhook avatars and link embeds.
 
 ## Feature flags and development switches
 
@@ -1259,6 +1259,8 @@ A brand asset on another origin than the instance needs no CSP setting. `app-pro
 #### `FLUXER_APP_PRODUCT_NAME`
 
 Default `Fluxer`. The product name clients display and the API writes in its emails and report flows.
+
+On a self-hosted instance, a name that is empty or `Fluxer` is replaced by the host name of the web app endpoint in everything the server writes: emails and their sender name, system messages and the name of the system user, report flows, enforcement notices, IP block errors, the name of the built-in admin application and donation checkout. Clients keep showing the saved name, except on the network blocked screen, which takes the name from the error. Set a name of your own to use it everywhere.
 
 #### `FLUXER_APP_ICON_URL`
 
@@ -1790,7 +1792,7 @@ The admin dashboard at `FLUXER_ADMIN_BASE_PATH` stores these in the database. Th
 
 #### Instance Config, Public App Identity
 
-Product name, client-visible brand assets, the terms, privacy, and community guidelines links, and the setup state in the instance discovery document. No environment variable sets a legal link. On a self-hosted instance, the enforcement emails list only the terms and guidelines links set here, and the clients and report flows show no guidelines link until one is set. Its emails and its IP block errors name no contact address. They tell the reader to contact the administrators of the instance, and no setting adds an address. The emails, the report flows, the IP block errors, the title of an APNs alert that has none, and the built-in admin application use the product name set here, and a rename applies without a restart.
+Product name, client-visible brand assets, the terms, privacy, and community guidelines links, and the setup state in the instance discovery document. No environment variable sets a legal link. On a self-hosted instance, enforcement notices link a rule to the terms or guidelines page set here, without an anchor, and show the rule title alone when no page is set. The clients and report flows show no guidelines link until one is set. Self-hosted emails, enforcement notices and IP block errors name no contact address and no appeal route, and no setting adds one. The emails, the report flows, the IP block errors, the title of an APNs alert that has none, and the built-in admin application use the product name set here, with the [self-hosted host name rule](#instance-identity-and-branding), and a rename applies without a restart.
 
 #### Instance Config, Registration Controls
 

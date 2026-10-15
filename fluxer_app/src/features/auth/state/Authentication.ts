@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import type {AccountRestriction} from '@app/features/auth/state/AccountRestriction';
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -32,6 +33,7 @@ class Authentication {
 	currentMfaTicket: string | null = null;
 	availableMfaMethods: MfaMethods | null = null;
 	currentMfaRuntimeSnapshot: RuntimeConfigSnapshot | null = null;
+	accountRestriction: AccountRestriction | null = null;
 
 	constructor() {
 		makeAutoObservable(
@@ -67,10 +69,8 @@ class Authentication {
 
 	handleSessionStart({token}: {token: string | null | undefined}): void {
 		persistToken(token ?? null);
-		this.loginState = LoginState.DEFAULT;
-		this.currentMfaTicket = null;
-		this.availableMfaMethods = null;
-		this.currentMfaRuntimeSnapshot = null;
+		this.handleMfaTicketClear();
+		this.handleAccountRestrictionClear();
 	}
 
 	handleMfaTicketSet({
@@ -96,12 +96,19 @@ class Authentication {
 		this.currentMfaRuntimeSnapshot = null;
 	}
 
+	handleAccountRestriction(restriction: AccountRestriction): void {
+		this.handleMfaTicketClear();
+		this.accountRestriction = restriction;
+	}
+
+	handleAccountRestrictionClear(): void {
+		this.accountRestriction = null;
+	}
+
 	handleLogout(options?: {skipRedirect?: boolean}): void {
 		ExperimentAssignments.reset();
-		this.loginState = LoginState.DEFAULT;
-		this.currentMfaTicket = null;
-		this.availableMfaMethods = null;
-		this.currentMfaRuntimeSnapshot = null;
+		this.handleMfaTicketClear();
+		this.handleAccountRestrictionClear();
 		if (!options?.skipRedirect) {
 			void import('@app/features/navigation/utils/RouterUtils').then((module) => {
 				module.replaceWith('/login');

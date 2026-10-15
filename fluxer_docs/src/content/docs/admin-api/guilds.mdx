@@ -413,6 +413,14 @@ Permanently deletes a guild and every record it owns. Requires `guild:delete`. T
 | --- | --- | --- |
 | guild_id | snowflake | The ID of the guild |
 
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| basis<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | `enforcement` when a rule was broken, `holder_request` when the owner asked. `housekeeping` fails body validation |
+
+<sup>1</sup> The `enforcement` basis records a community removal [decision](/admin-api/enforcement/) before the guild is deleted and sends its notice to the owner by email and system DM. Its evidence must be posted in the guild, and its linked reports must name it. Restricted reasons are refused with `ENFORCEMENT_KIND_NOT_ALLOWED`, because the deletion destroys the content
+
 ### Response body
 
 | Field | Type | Description |
@@ -424,6 +432,7 @@ Permanently deletes a guild and every record it owns. Requires `guild:delete`. T
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Guild was deleted |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because the basis or the [decision](/admin-api/enforcement/#validation) is invalid |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
 
 :::danger[Archive content before deleting the guild]
@@ -434,7 +443,7 @@ The guild, its channels, roles, memberships, messages, and attachments are destr
 
 Members receive [Guild Delete](/gateway/events/#guild-delete). The guild disappears from their [settings and folders](/http-api/users/settings/) and from search. Its invites, webhooks, messages, attachments and discovery application are also deleted.
 
-One Admin audit entry is recorded with the action `delete_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
+One Admin audit entry is recorded with the action `delete_guild`, the target type `guild`, the guild ID in both the target and the metadata, and the `basis` metadata key. The `enforcement` basis adds `decision_id`, `reason_code`, `kind` and `notice_status`.
 
 ### Rate limit
 

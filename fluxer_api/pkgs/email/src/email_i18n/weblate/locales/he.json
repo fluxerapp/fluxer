@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק עקב חוסר פעילות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם לא היה פעיל זמן רב, ולכן הוא מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\n{safety_email, select, null {אם ברצונכם לשמור על החשבון, צרו קשר עם מנהלי המערכת של המופע הזה לפני תאריך זה.} other {אם ברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.}}\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם לא היה פעיל זמן רב, ולכן תזמנו את מחיקתו ל-{deletion_date}.\n\nכדי לשמור על החשבון, התחברו לפני התאריך הזה. {support_email, select, null {אם יש לכם שאלות, צרו קשר עם מנהלי המערכת של המופע הזה.} other {אם יש לכם שאלות, צרו קשר עם {support_email}.}}\n\nצוות {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "מחיקת חשבון ה-{product_name} שלכם מתוזמנת",
-		"body": "שלום {username},\n\nבהתאם לבקשתכם, חשבון ה-{product_name} שלכם מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nעד אז החשבון שלכם נעול. {safety_email, select, null {אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם מנהלי המערכת של המופע הזה לפני תאריך זה.} other {אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.}}\n\nצוות {product_name}"
-	},
-	"account_scheduled_deletion": {
-		"subject": "חשבון ה-{product_name} שלכם יימחק לצמיתות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות עקב הפרות של תנאי השירות או הנחיות הקהילה שלנו.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}\n\n}\n}זוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\n{legalLinks, select,\n  both {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  terms {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n\n}\n  guidelines {אנא עיינו במסמכים הבאים:\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  other {}\n}תהליך ערעור:\nאם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, יש לכם 60 יום להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.}}\n\nבערעור:\n- הסבירו בבירור מדוע לדעתכם החלטת האכיפה שגויה או בלתי מוצדקת\n- צרפו כל ראיה או הקשר רלוונטיים\n\nחבר בצוות הבטיחות של {product_name} יבדוק את הערעור שלכם ועשוי להשהות את המחיקה הממתינה עד לקבלת החלטה סופית.\n\nצוות הבטיחות של {product_name}"
-	},
-	"account_temp_banned": {
-		"subject": "חשבון ה-{product_name} שלכם הושעה זמנית",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם הושעה זמנית עקב הפרה של תנאי השירות או הנחיות הקהילה שלנו.\n\nמשך ההשעיה: {durationHours, plural,\n  =1 {שעה אחת}\n  other {# שעות}\n}\nמושעה עד: {bannedUntil, date, full} בשעה {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}\n\n}\n}במהלך תקופה זו לא תהיה לכם גישה לחשבון.\n\n{legalLinks, select,\n  both {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  terms {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n\n}\n  guidelines {אנא עיינו במסמכים הבאים:\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  other {}\n}אם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, תוכלו להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה והסבירו בבירור מדוע לדעתכם ההחלטה שגויה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו והסבירו בבירור מדוע לדעתכם ההחלטה שגויה.}} נבדוק את הערעור ונעדכן אתכם בהחלטה שלנו.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nכפי שביקשתם, תזמנו את מחיקת חשבון ה-{product_name} שלכם ל-{deletion_date}.\n\nכדי לשמור על החשבון, התחברו לפני {deletion_date}. {safety_email, select, null {אם לא ביקשתם את זה, צרו קשר עם מנהלי המערכת של המופע הזה.} other {אם לא ביקשתם את זה, צרו קשר עם {safety_email}.}}\n\nצוות {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "תודה על תרומתכם ל-{product_name}",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "קיבלנו החלטה בנוגע לדיווח שלכם ב-{product_name}",
-		"body": "שלום,\n\nצוות הבטיחות שלנו בדק את הדיווח שלכם לפי חוק השירותים הדיגיטליים (מזהה: {reportId}) וקיבל החלטה.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nאיננו משתפים פרטים על פעולות שננקטו נגד חשבון של אדם אחר, מכיוון שאלה נתונים אישיים שלו.\n\nאם אינכם מסכימים עם ההחלטה, תוכלו להגיש ערעור ללא תשלום בתוך 60 יום. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה.}} אם אתם נמצאים באיחוד האירופי, תוכלו גם להפנות את המחלוקת לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט. אין בכך כדי לפגוע בזכותכם לפנות לבית המשפט.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום,\n\nבדקנו את הדיווח שלכם (מזהה: {reportId}).\n\n{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {מצאנו שהחשבון שדיווחתם עליו הפר את הכללים שלנו, והגבלנו אותו. אנחנו לא משתפים איזו פעולה נקטנו נגד חשבון אחר, כי זה מידע אישי של בעליו.} action_taken {מצאנו שמה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו נגד חשבון אחר, כי זה מידע אישי של בעליו.} no_violation {מצאנו שהתוכן או החשבון שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}{hasComment, select, yes {\n\nהערה מהצוות שלנו: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nאם אתם לא מסכימים, שלחו אימייל אל {appeals_email} תוך 60 יום וציינו את מזהה הדיווח. אם אתם באיחוד האירופי, אפשר גם להפנות את העניין לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט או להגיש תלונה לרכז השירותים הדיגיטליים במדינה שלכם.}}\n\nצוות {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "אימות האימייל שלכם לדיווח DSA",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "אימות האימייל שלכם ב-{product_name}",
 		"body": "שלום {username},\n\nאנא אמתו את כתובת האימייל של חשבון ה-{product_name} שלכם באמצעות לחיצה על הקישור למטה:\n\n{verifyUrl}\n\nאם לא יצרתם חשבון {product_name}, אתם יכולים להתעלם בבטחה מאימייל זה.\n\nקישור זה תקף למשך 24 שעות.\n\nצוות {product_name}"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {ביטלנו החלטה לגבי חשבון ה-{product_name} שלכם} other {הגבלה על חשבון ה-{product_name} שלכם הסתיימה}}",
+		"body": "שלום {username},\n\n{outcome, select, reversed {{decision_id, select, null {בדקנו שוב החלטה לגבי החשבון שלכם וביטלנו אותה.} other {בדקנו שוב את החלטה {decision_id} וביטלנו אותה.}} אנחנו מתנצלים על אי הנוחות.} other {{decision_id, select, null {הסרנו את ההגבלה מהחשבון שלכם.} other {הסרנו את ההגבלה של החלטה {decision_id}.}}}}{restores_access, select, yes { אפשר שוב להתחבר ולהשתמש ב-{product_name}.} other {}}{statement, select, null {} other {\n\nהערה מהצוות שלנו: {statement}}}{content_removed, select, yes {\n\nאי אפשר לשחזר תוכן שהסרנו.} other {}}\n\nצוות {product_name}"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {עדכון לגבי חשבון ה-{product_name} שלכם} other {{kind_label, select, warning {אזהרה לגבי חשבון ה-{product_name} שלכם} suspension {חשבון ה-{product_name} שלכם הושעה} ban {חשבון ה-{product_name} שלכם נחסם} closure {חשבון ה-{product_name} שלכם נסגר} feature_limit {חלק מהתכונות בחשבון ה-{product_name} שלכם הוגבלו} content_removal {הסרנו הודעות ששלחתם ב-{product_name}} profile_reset {איפסנו חלקים מפרופיל ה-{product_name} שלכם} community_removal {הסרנו את הקהילה שלכם ב-{product_name}} bot {עדכון לגבי הבוט שלכם ב-{product_name}} other {עדכון לגבי חשבון ה-{product_name} שלכם}}}}",
+		"body": "שלום {username},\n\n{summary}\n\n{effects}\n\nלמה\nכלל: {rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\nהערה מהצוות שלנו: {statement}}}\n\nאיך החלטנו\n{how_we_decided}{appeals_email, select, null {} other {\n\nאיך לערער\nאם לדעתכם טעינו, שלחו אימייל אל {appeals_email} עד {appeal_deadline}. אם אפשר, כתבו מכתובת האימייל של החשבון שלכם, וציינו את מזהה ההחלטה. הערעור ללא תשלום, ואדם בודק כל ערעור.{redress, select, null {} other {\n\n{redress}}}}}\n\nמזהה החלטה: {decision_id}\n\nצוות {product_name}"
 	},
 	"gift_chargeback_notification": {
 		"subject": "ההטבות מהמתנה שמימשתם הוסרו",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "הדיווח שלכם ב-{product_name} נבדק",
-		"body": "שלום {username},\n\nהדיווח שלכם (מזהה: {reportId}) נבדק על ידי צוות הבטיחות שלנו.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nתודה שעזרתם לשמור על {product_name} כמקום בטוח לכולם. אנו מתייחסים לכל הדיווחים ברצינות ומעריכים את תרומתכם לקהילה.\n\n{safety_email, select, null {אם יש לכם שאלות או חששות לגבי תוצאה זו, אנא צרו קשר עם מנהלי המערכת של המופע הזה.} other {אם יש לכם שאלות או חששות לגבי תוצאה זו, אנא צרו קשר עם {safety_email}.}}\n\nצוות הבטיחות של {product_name}"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "חשבון ה-{product_name} שלכם יימחק לצמיתות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}\n\n}\n}זוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\nאם אתם חושבים שהחלטת אכיפה זו שגויה, אתם יכולים להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.}}\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nבדקנו את הדיווח שלכם (מזהה: {reportId}).\n\n{outcome, select, removed {הסרנו את התוכן שדיווחתם עליו כי הוא הפר את הכללים שלנו.} restricted {מצאנו שהחשבון שדיווחתם עליו הפר את הכללים שלנו, והגבלנו אותו. אנחנו לא משתפים איזו פעולה נקטנו נגד חשבון אחר, כי זה מידע אישי של בעליו.} action_taken {מצאנו שמה שדיווחתם עליו הפר את הכללים שלנו, ונקטנו פעולה. אנחנו לא משתפים איזו פעולה נקטנו נגד חשבון אחר, כי זה מידע אישי של בעליו.} no_violation {מצאנו שהתוכן או החשבון שדיווחתם עליו לא מפר את הכללים שלנו, ולכן השארנו אותו כמו שהוא.} other {סגרנו את הדיווח שלכם.}}{hasComment, select, yes {\n\nהערה מהצוות שלנו: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nאם אתם לא מסכימים, שלחו אימייל אל {appeals_email} תוך 60 יום וציינו את מזהה הדיווח. אם אתם באיחוד האירופי, אפשר גם להפנות את העניין לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט או להגיש תלונה לרכז השירותים הדיגיטליים במדינה שלכם.}}\n\nצוות {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "מחיקת חשבון ה-{product_name} שלכם מתוזמנת",
 		"body": "שלום {username},\n\nביקשתם למחוק את חשבון ה-{product_name} שלכם. החשבון שלכם מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}\n\nאם לא ביקשתם זאת, התחברו לחשבונכם כדי לבטל את המחיקה. אנו ממליצים גם לשנות את הסיסמה שלכם כדי לאבטח את החשבון.\n\nצוות {product_name}"
-	},
-	"unban_notification": {
-		"subject": "השעיית חשבון ה-{product_name} שלכם בוטלה",
-		"body": "שלום {username},\n\nחדשות טובות: השעיית חשבון ה-{product_name} שלכם בוטלה.\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}\n\n}\n}כעת אתם יכולים להתחבר שוב ולהמשיך להשתמש ב-{product_name} כרגיל.\n\nצוות הבטיחות של {product_name}"
 	}
 }

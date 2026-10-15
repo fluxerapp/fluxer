@@ -74,9 +74,11 @@ impl AdminApiClient {
     pub async fn bulk_delete_user_messages(
         &self,
         user_ids: &[String],
+        basis: generated_types::BulkModerationBasis,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
         let body = generated_types::AdminBulkJobCreateRequest::DeleteUserMessages {
+            basis,
             user_ids: snowflakes(user_ids),
         };
         self.send(
@@ -91,26 +93,18 @@ impl AdminApiClient {
     pub async fn bulk_schedule_user_deletion(
         &self,
         user_ids: &[String],
-        reason_code: u32,
         days_until_deletion: u32,
-        public_reason: Option<&str>,
-        notify_user: bool,
+        basis: generated_types::BulkModerationBasis,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
         let body = generated_types::AdminBulkJobCreateRequest::ScheduleUserDeletion {
+            basis,
             days_until_deletion: crate::api::generated::nonzero_u32(
                 days_until_deletion,
                 "days_until_deletion",
             )
             .map_err(ApiError::Parse)?
             .into(),
-            notify_user,
-            public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
-            reason_code: crate::api::generated::deletion_reason_code(
-                i32::try_from(reason_code).map_err(|e| ApiError::Parse(e.to_string()))?,
-                "reason_code",
-            )
-            .map_err(ApiError::Parse)?,
             user_ids: snowflakes(user_ids),
         };
         self.send(

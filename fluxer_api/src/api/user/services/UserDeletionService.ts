@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import {deleteRecoveryKit} from '@app/api/auth/AuthRecoveryKit';
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
@@ -9,6 +10,7 @@ import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
@@ -20,6 +22,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {getEnforcementDecisionRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -35,6 +38,7 @@ import {
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
@@ -58,6 +62,17 @@ interface UserDeletionDependencies {
 	workerService: IWorkerService<WorkerTaskName>;
 	connectionRepository: ConnectionRepository;
 	storeEntitlementService: StoreEntitlementService;
+	adminRepository: AdminRepository;
+	cacheService: ICacheService;
+}
+
+async function removeNetworkBlocksOf(userId: UserID, deps: UserDeletionDependencies): Promise<void> {
+	const decisions = await getEnforcementDecisionRepository().listBySubject('user', userId);
+	if (decisions.length === 0) return;
+	const removed = await deps.adminRepository.removeDecisionIpBans(decisions.map((decision) => decision.decision_id));
+	if (removed.length > 0) {
+		await deps.cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
+	}
 }
 
 export async function processUserDeletion(
@@ -159,6 +174,7 @@ export async function processUserDeletion(
 		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
 		return;
 	}
+	await removeNetworkBlocksOf(userId, deps);
 	await storeEntitlementService.stopBillingForDeletedUser(userId);
 	await connectionRepository.sealAndDeleteForUser(userId);
 	const deletedUserId = createUserID(await snowflakeService.generate());

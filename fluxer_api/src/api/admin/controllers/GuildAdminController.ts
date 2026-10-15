@@ -3,6 +3,7 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
+import {enforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {requireAdminACL, requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -12,6 +13,7 @@ import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {
+	AdminGuildDeleteRequest,
 	BanGuildMemberBody,
 	ListGuildAuditLogsResponse,
 	ListGuildMembersQuery,
@@ -249,26 +251,26 @@ export function GuildAdminController(app: HonoApp) {
 		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.GUILD_DELETE),
 		Validator('param', GuildIdParam),
+		Validator('json', AdminGuildDeleteRequest),
 		OpenAPI({
 			operationId: 'delete_admin_guild',
 			summary: 'Delete guild',
 			description:
-				'Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.',
+				'Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. The basis is enforcement or holder_request. An enforcement basis records a community removal decision and sends its notice to the owner, and is refused for child safety and violent extremism reasons. Logged to audit log. Requires GUILD_DELETE permission.',
 			responseSchema: SuccessResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
 			return ctx.json(
-				await adminService.guildServiceAggregate.managementService.deleteGuild(
-					ctx.req.valid('param').guild_id,
-					adminUserId,
-					auditLogReason,
-				),
+				await ctx
+					.get('adminService')
+					.guildServiceAggregate.managementService.deleteGuild(
+						createGuildID(ctx.req.valid('param').guild_id),
+						ctx.req.valid('json'),
+						enforcementActor(ctx),
+					),
 			);
 		},
 	);

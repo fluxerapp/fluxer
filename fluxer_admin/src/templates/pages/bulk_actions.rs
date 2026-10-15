@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::admin_flags::{DELETION_REASONS, DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
+use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES};
 use crate::{
     acl,
+    api::generated::types::EnforcementKindType,
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
         components::{
+            enforcement_fields::{
+                FIELD_HELP_CLASS, FIELD_INPUT_CLASS, deletion_days_field, field_label,
+                internal_note_field, radio_group, reason_select,
+            },
             form::{
-                FORM_SELECT_CLASS, checkbox, csrf_input, danger_button, form_actions,
-                form_field_group, opt_out_checkbox, select_chevron, submit_button, text_input,
-                textarea_input,
+                checkbox, csrf_input, danger_button, form_actions, form_field_group, submit_button,
+                text_input, textarea_input,
             },
             page_container::page_header,
             section_card::section_card_simple,
@@ -28,12 +32,7 @@ fn guild_feature_label(feature: &str) -> String {
     }
 }
 
-pub fn bulk_actions_page(
-    config: &AdminConfig,
-    auth: &AuthContext,
-    csrf_token: &str,
-    username_sign_in: bool,
-) -> Markup {
+pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &str) -> Markup {
     let base = &config.base_path;
     let admin_acls = auth
         .admin_user
@@ -54,7 +53,7 @@ pub fn bulk_actions_page(
                 (bulk_add_guild_members_section(base, csrf_token))
             }
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USERS) {
-                (bulk_schedule_deletion_section(base, csrf_token, username_sign_in))
+                (bulk_close_accounts_section(base, config.self_hosted, csrf_token))
             }
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USER_MESSAGES) {
                 (bulk_delete_user_messages_section(base, csrf_token))
@@ -187,53 +186,53 @@ fn bulk_add_guild_members_section(base: &str, csrf_token: &str) -> Markup {
     )
 }
 
-fn bulk_schedule_deletion_section(base: &str, csrf_token: &str, username_sign_in: bool) -> Markup {
+fn bulk_decision_fields(
+    id_prefix: &str,
+    kind: EnforcementKindType,
+    statement_help: &str,
+) -> Markup {
+    let statement_id = format!("{id_prefix}-statement");
+    html! {
+        fieldset class="space-y-4" data-show-for-basis="enforcement" hidden disabled {
+            (reason_select(id_prefix, kind, false))
+            (radio_group("Automated tools", "automation", id_prefix, &[
+                ("none", "Not involved"),
+                ("flagged", "Flagged this for review"),
+            ]))
+            div class="space-y-1" {
+                (field_label(&statement_id, "Note to the user"))
+                textarea id=(statement_id) name="statement" rows="2" maxlength="500" required
+                    class=(FIELD_INPUT_CLASS) {}
+                p class=(FIELD_HELP_CLASS) { (statement_help) }
+            }
+        }
+    }
+}
+
+fn bulk_close_accounts_section(base: &str, self_hosted: bool, csrf_token: &str) -> Markup {
     section_card_simple(
-        "Bulk Schedule User Deletion",
+        "Close accounts",
         html! {
             form method="post" action={(base) "/bulk-actions?action=bulk-schedule-user-deletion"} {
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
-                    (form_field_group("Deletion Reason", "reason_code", true, None,
-                        Some("User requested skips identifier bans and pending report resolution. Every other reason applies them."),
-                        html! {
-                            div class="relative" {
-                                select id="reason_code" name="reason_code" required
-                                    class=(FORM_SELECT_CLASS) {
-                                    option value="" selected { "Select a reason" }
-                                    @for &(value, label) in DELETION_REASONS {
-                                        option value=(value) { (label) }
-                                    }
-                                }
-                                (select_chevron())
-                            }
-                        },
+                    (radio_group("Basis", "basis", "bulk-close", &[
+                        ("enforcement", "A rule was broken"),
+                        ("holder_request", "The account holders asked"),
+                        ("housekeeping", "Inactivity"),
+                    ]))
+                    (deletion_days_field("bulk-close-days", self_hosted))
+                    (bulk_decision_fields(
+                        "bulk-close",
+                        EnforcementKindType::Closure,
+                        "Shown to every account in the job. It is the only fact a bulk closure can give, because messages and reports cannot be attached in bulk. Never name or describe other people.",
                     ))
-                    p class="text-neutral-500 text-sm" {
-                        "Users that already have a pending deletion are skipped and listed as failed with the reason already scheduled. Cancel those from the user page first to schedule them again."
+                    (internal_note_field("bulk-close", "Staff only. Saved as the first note on each decision and in the audit log."))
+                    p class=(FIELD_HELP_CLASS) {
+                        "Accounts that already have a pending deletion are skipped and listed as failed. Each account closed for a broken rule gets its own decision and notice."
                     }
-                    (text_input("public_reason", "Public Reason (optional)", "", "Terms of service violation"))
-                    (form_field_group("Days Until Deletion", "days_until_deletion", true, None,
-                        Some("Moderation reasons are held for at least 60 days. Only User requested allows 14."),
-                        html! {
-                            input type="number" id="days_until_deletion" name="days_until_deletion"
-                                value="60" min="14" max="365" required
-                                class="w-full rounded-lg border border-neutral-300 bg-white \
-                                       text-neutral-900 text-sm h-8 px-3 py-1.5 \
-                                       focus:border-brand-primary focus:outline-none \
-                                       focus:ring-2 focus:ring-brand-primary/20";
-                        },
-                    ))
-                    (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
-                    @if username_sign_in {
-                        input type="hidden" name="notify_user_present" value="1";
-                    } @else {
-                        (opt_out_checkbox("notify_user", "Email each user about the scheduled deletion"))
-                    }
-                    (form_actions(html! {
-                        (danger_button("Schedule Deletion"))
-                    }))
+                    (form_actions(danger_button("Close accounts")))
                 }
             }
         },
@@ -242,19 +241,30 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str, username_sign_in
 
 fn bulk_delete_user_messages_section(base: &str, csrf_token: &str) -> Markup {
     section_card_simple(
-        "Bulk Delete User Messages",
+        "Delete all messages",
         html! {
             form method="post" action={(base) "/bulk-actions?action=bulk-delete-user-messages"} {
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     p class="text-neutral-500 text-sm" {
-                        "Deletes every message authored by each user across all channels. This cannot be undone."
+                        "Deletes every message each account wrote, in every channel. This cannot be undone."
                     }
                     (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
-                    (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
-                    (form_actions(html! {
-                        (danger_button("Delete All Messages"))
-                    }))
+                    (radio_group("Basis", "basis", "bulk-delete-messages", &[
+                        ("enforcement", "A rule was broken"),
+                        ("holder_request", "The account holders asked"),
+                        ("housekeeping", "Housekeeping"),
+                    ]))
+                    (bulk_decision_fields(
+                        "bulk-delete-messages",
+                        EnforcementKindType::ContentRemoval,
+                        "Shown to every account in the job. It is the only fact a bulk removal can give, because messages and reports cannot be attached in bulk. Never name or describe other people.",
+                    ))
+                    (internal_note_field("bulk-delete-messages", "Staff only. Saved as the first note on each decision and in the audit log."))
+                    p class=(FIELD_HELP_CLASS) {
+                        "Each account whose messages are removed for a broken rule gets its own decision and notice."
+                    }
+                    (form_actions(danger_button("Delete all messages")))
                 }
             }
         },

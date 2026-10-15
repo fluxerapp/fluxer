@@ -332,7 +332,7 @@ describe('Announcement channel conversion', () => {
 		const announcement = await createChannel(harness, admin.token, guild.id, 'news', ChannelTypes.GUILD_ANNOUNCEMENT);
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/guilds/${guild.id}`)
-			.body(null)
+			.body({basis: {type: 'holder_request'}})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		await processRecordedGuildDeletions(worker);

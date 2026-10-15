@@ -38,6 +38,7 @@ import {
 } from '@app/api/Tables';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
+import {type ReportItemOutcome, UpdateReportRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {parseReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 
 const GET_REPORT_QUERY = IARSubmissions.select({
@@ -69,6 +70,7 @@ export class ReportRepository {
 			reported_profile_snapshot: data.reported_profile_snapshot ?? null,
 			legal_hold_until: data.legal_hold_until ?? null,
 			legal_hold_reason: data.legal_hold_reason ?? null,
+			reporter_outcome: data.reporter_outcome ?? null,
 		};
 		await upsertOne(IARSubmissions.insert(row));
 		return this.mapRowToSubmission(row);
@@ -123,6 +125,7 @@ export class ReportRepository {
 		resolvedByAdminId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		reporterOutcome: ReportItemOutcome | null,
 	): Promise<IARSubmission> {
 		const report = await this.getReport(reportId);
 		if (!report) {
@@ -142,6 +145,7 @@ export class ReportRepository {
 					public_comment: Db.set(publicComment),
 					audit_log_reason: Db.set(auditLogReason),
 					status: Db.set(newStatus),
+					reporter_outcome: Db.set(reporterOutcome),
 				},
 				{status: ReportStatus.PENDING},
 			),
@@ -156,6 +160,7 @@ export class ReportRepository {
 			publicComment,
 			auditLogReason,
 			status: newStatus,
+			reporterOutcome,
 		};
 	}
 
@@ -285,6 +290,7 @@ export class ReportRepository {
 			reportedProfileSnapshot: parseReportProfileSnapshot(row.reported_profile_snapshot),
 			legalHoldUntil: row.legal_hold_until ?? null,
 			legalHoldReason: row.legal_hold_reason ?? null,
+			reporterOutcome: UpdateReportRequest.shape.outcome.safeParse(row.reporter_outcome ?? undefined).data ?? null,
 		};
 	}
 

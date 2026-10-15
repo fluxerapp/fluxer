@@ -16,7 +16,6 @@ import {
 } from '@app/api/BrandedTypes';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
-import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 	REGISTRATION_REJECTED_TRAIT,
@@ -75,7 +74,6 @@ interface LoginMfaWebAuthnParams {
 
 export interface LoginDependencies {
 	inviteService: InviteService;
-	kvDeletionQueue: KVAccountDeletionQueueService;
 }
 
 interface LoginTokenResult {
@@ -224,7 +222,7 @@ export async function login(
 	{data, request, captchaVerified = false}: LoginParams,
 ): Promise<LoginResult> {
 	const {users, cache, rateLimit, email, config} = ctx.services;
-	const {inviteService, kvDeletionQueue} = deps;
+	const {inviteService} = deps;
 	const skipRateLimits = config.dev.testModeEnabled || config.dev.disableRateLimits;
 	const identifier = await resolveLoginIdentifier(ctx, data);
 	const invalidCredentials = () =>
@@ -257,6 +255,9 @@ export async function login(
 					retryAfter: Math.ceil(failureLimit.windowMs / failureLimit.maxAttempts / 1000),
 				}
 			: null;
+	if (failureLockout && ctx.request.blockedNetworkSignIn) {
+		throw createRateLimitError(failureLockout);
+	}
 	const rejectCredentials = async (): Promise<never> => {
 		if (failureLimit) {
 			await rateLimit.checkLimit(failureLimit);
@@ -264,6 +265,7 @@ export async function login(
 		if (failureLockout) {
 			throw createRateLimitError(failureLockout);
 		}
+		AuthUtility.assertNetworkAllowed(ctx);
 		throw invalidCredentials();
 	};
 	const user = await identifier.lookup();
@@ -290,20 +292,19 @@ export async function login(
 	if (failureLockout && !captchaVerified && !(await users.checkIpAuthorized(user.id, clientIp))) {
 		throw createRateLimitError(failureLockout);
 	}
-	const currentUser = await AuthUtility.reactivateOnSignIn(
-		ctx,
-		await AuthUtility.handleBanStatus(ctx, user),
-		kvDeletionQueue,
-	);
+	const hasMfa =
+		user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) ||
+		user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
+	if (hasMfa) {
+		AuthUtility.assertMfaTicketAllowed(ctx, user);
+	}
+	const currentUser = hasMfa ? user : await AuthUtility.assertSignInAllowed(ctx, user);
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {
 		throw new RegistrationPendingApprovalError();
 	}
 	if (currentUser.traits.has(REGISTRATION_REJECTED_TRAIT)) {
 		throw new RegistrationRejectedError();
 	}
-	const hasMfa =
-		currentUser.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) ||
-		currentUser.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
 	const isAppStoreReviewer = (currentUser.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
 	let newIp = false;
 	if (!hasMfa && !isAppStoreReviewer) {

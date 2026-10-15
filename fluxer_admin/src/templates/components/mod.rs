@@ -9,6 +9,7 @@ pub mod data_field;
 pub mod detail_tabs;
 pub mod drawer;
 pub mod empty_state;
+pub mod enforcement_fields;
 pub mod error_display;
 pub mod form;
 pub mod icons;

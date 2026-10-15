@@ -1551,6 +1551,9 @@ importers:
       '@babel/parser':
         specifier: 8.0.5
         version: 8.0.5
+      '@fluxer/errors':
+        specifier: workspace:*
+        version: link:../packages/errors
       '@lingui/cli':
         specifier: 'catalog:'
         version: 6.7.0(esbuild@0.28.2)(rolldown@1.2.9)(supports-color@7.2.0)

@@ -25,10 +25,34 @@ The error code determines which supplementary members a failure has, and most co
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
 - `ip_address` is the normalised client address.
-- `appeal_email` is the address an appeal is sent to. It is `null` on a self-hosted instance, where `message` points at the administrators of the instance and names no address.
-- `appeals_supported` is `true` for both kinds of ban.
+- `appeal_email` is the address to write to about the block. It is the appeals address when `reason` is present and the support address otherwise. It is `null` on a self-hosted instance, where `message` names no address.
+- `appeals_supported` is `true` on the hosted service and `false` on a self-hosted instance.
 - `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
+- `reason` is the rule behind the block, as `title` and `url`, or `null`. It is present only when an account decision placed the block and its rule is one Fluxer names on this screen, such as spam or service abuse. Every other block, including a decision whose rule is withheld, returns a response identical to a plain block of the same kind, so `null` says nothing about why the network was blocked. `url` is `null` when the instance has no policy page for the rule.
+- `product_name` is the instance name the server uses in `message`. On a self-hosted instance with no name, or one still named Fluxer, it is the web app host name.
+
+`message` starts with the block and its end date, then tells someone on a shared network, such as a school, a workplace, public Wi-Fi, a mobile carrier or a VPN, that the block may have nothing to do with them and that switching networks is the quickest fix. `GET /.well-known/fluxer` is never blocked, so a client can still discover the instance and show this screen.
+
+A blocked network still reaches the sign-in operations: [log in with a password](/http-api/authentication/#log-in-with-a-password), the second factor operations, passkey sign-in and SSO. There the holder of a suspended or closed account gets its suspension error with the notice, and every other outcome gets this same block.
+
+`ACCOUNT_SUSPENDED_TEMPORARILY` and `ACCOUNT_SUSPENDED_PERMANENTLY` have `notice`, the enforcement notice for the account, in the request locale. It is `null` only for an account its holder deleted. Its members are:
+
+- `decision_id` is the decision reference, or `null` for a restriction from before decisions.
+- `kind` is what the decision did, `suspension` or `closure` on these codes.
+- `permanent` is `true` for a suspension with no end date.
+- `issued_at`, `ends_at` and `deletion_at` are ISO 8601 timestamps or `null`.
+- `summary` is one sentence saying what happened, and `effects` lists what the decision means for the holder.
+- `rule` is the rule broken, as `title` and `url`, or `null`.
+- `facts` is the finding first, then where and when it happened.
+- `statement` is a note from the team, or `null`.
+- `how_we_decided` lists how the case reached the team and who decided it.
+- `appeal` is `email`, `deadline` and `account_has_email`, or `null` on an instance with no appeal route. `deadline` is already formatted for the reader.
+- `redress` lists other ways to challenge the decision.
+
+A line in `effects`, `facts` or `redress` can hold a link written as a Markdown link, `[text](url)`. A client shows the text as a link to the address.
+
+An account with no email address receives its notice here. The first sign-in that shows it records it as received, and the appeal deadline counts from then.
 
 ## Validation failure codes
 
@@ -306,6 +330,26 @@ Channels with threads can't be converted to announcement channels
 
 Only text and announcement channels can be converted into each other
 
+### `ENFORCEMENT_ACCOUNT_CLOSED`
+
+This account is closed, so it can't be suspended
+
+### `ENFORCEMENT_DECISION_ENDED`
+
+This decision has already ended
+
+### `ENFORCEMENT_DECISION_OWNS_STATE`
+
+An enforcement decision owns this restriction
+
+### `ENFORCEMENT_DECISION_REPLACED`
+
+A later decision replaced this one, so it can no longer be ended
+
+### `ENFORCEMENT_DELETION_STARTED`
+
+The deletion of this account has already started, so the decision can no longer be ended
+
 ### `NEW_CONVERSATIONS_LIMITED`
 
 You can't start new conversations right now. Please try again later
@@ -472,11 +516,11 @@ Gift code is already redeemed
 
 ### `GLOBAL_IP_BANNED`
 
-Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators
+{product_name} blocked access from this network
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the {product_name} API
+{product_name} blocked access from this network
 
 ### `GONE`
 
@@ -677,6 +721,10 @@ IP authorization resend limit exceeded
 ### `IP_BAN_DECLINED`
 
 This IP address cannot be added to the blocklist
+
+### `IP_BAN_LINKED_TO_DECISION`
+
+This network block belongs to an enforcement decision
 
 ### `MAX_ACTIVE_THREADS`
 
@@ -1158,6 +1206,10 @@ Channel wasn't found
 
 Unknown emoji
 
+### `UNKNOWN_ENFORCEMENT_DECISION`
+
+Unknown enforcement decision
+
 ### `UNKNOWN_FAVORITE_MEME`
 
 Unknown favorite meme
@@ -1346,10 +1398,6 @@ Attachment with ID {attachmentId} wasn't found in the message
 ### `ATTACHMENT_MUST_BE_IMAGE`
 
 Attachment "{filename}" must be an image file (png, jpg, jpeg, webp, or gif)
-
-### `AT_LEAST_ONE_ENTRY_IS_REQUIRED`
-
-At least one entry is required
 
 ### `AT_LEAST_ONE_RECIPIENT_REQUIRED`
 
@@ -1563,6 +1611,90 @@ Embed index {embedIndex} is out of bounds (message has {embedCount, plural, one 
 
 Embed splash requires INVITE_SPLASH feature
 
+### `ENFORCEMENT_CONFIRMATIONS_REQUIRED`
+
+Confirm that the evidence is preserved and that any required report is filed
+
+### `ENFORCEMENT_EVIDENCE_DM_UNREPORTED`
+
+Messages in direct messages can only be used as evidence when a linked report covers that conversation
+
+### `ENFORCEMENT_EVIDENCE_NOT_ALLOWED`
+
+The messages being removed are saved as evidence, so leave out separate evidence messages
+
+### `ENFORCEMENT_EVIDENCE_NOT_FOUND`
+
+One of the evidence messages wasn't found
+
+### `ENFORCEMENT_EVIDENCE_NOT_SUBJECT`
+
+Every evidence message must be from the account or community this decision is about
+
+### `ENFORCEMENT_EVIDENCE_REQUIRED`
+
+This decision needs at least one evidence message
+
+### `ENFORCEMENT_FACTS_REQUIRED`
+
+Add an evidence message or a note to the user
+
+### `ENFORCEMENT_INTERNAL_NOTE_REQUIRED`
+
+Add an internal note in the X-Audit-Log-Reason header
+
+### `ENFORCEMENT_KIND_NOT_ALLOWED`
+
+This reason can't be used for this action
+
+### `ENFORCEMENT_LIMIT_END_INVALID`
+
+Only a reports limit has an end date, and it must be within the next 365 days
+
+### `ENFORCEMENT_LIMIT_NOT_ALLOWED`
+
+This reason can't be used for this limit
+
+### `ENFORCEMENT_NETWORK_BLOCK_NOT_ALLOWED`
+
+Only a permanent suspension or a closure for a broken rule can block networks
+
+### `ENFORCEMENT_NETWORK_SHARED`
+
+Other accounts that aren't restricted were last active on this network, so it can't be blocked
+
+### `ENFORCEMENT_NETWORK_UNKNOWN`
+
+This account hasn't used this network in the last 30 days
+
+### `ENFORCEMENT_OUTCOME_NOT_ALLOWED`
+
+Only a reversal can end this kind of decision, because there is nothing to lift
+
+### `ENFORCEMENT_PERMANENT_REQUIRED`
+
+Suspensions for this reason must be permanent
+
+### `ENFORCEMENT_REPORT_MISMATCH`
+
+Every linked report must exist and be about the account or community this decision is about
+
+### `ENFORCEMENT_REPORT_REQUIRED`
+
+Link at least one report when the source is a report
+
+### `ENFORCEMENT_RIGHTS_HOLDER_NOT_ALLOWED`
+
+A rights holder can only be given for copyright decisions
+
+### `ENFORCEMENT_RIGHTS_HOLDER_REQUIRED`
+
+Copyright decisions need the rights holder or the right concerned
+
+### `ENFORCEMENT_STATEMENT_NOT_ALLOWED`
+
+Decisions for this reason can't include a note to the user
+
 ### `ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT`
 
 Entrance sounds can be at most {max_ms, number}ms long
@@ -1626,6 +1758,10 @@ File index {index} exceeds the maximum allowed index of {maxIndex}
 ### `FILE_NOT_FOUND`
 
 File not found
+
+### `FLAG_REQUIRES_ENFORCEMENT_ROUTE`
+
+This flag is part of a restriction. Change it through the suspension, deletion or feature limit routes
 
 ### `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`
 
@@ -1879,6 +2015,10 @@ Message history cutoff can't be in the future
 
 `message_ids` can't be empty
 
+### `MODERATION_BASIS_REQUIRED`
+
+Give a basis to delete the messages
+
 ### `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED`
 
 Multiple files for index {index} aren't allowed
@@ -2002,6 +2142,10 @@ Recipient IDs must be valid snowflakes
 ### `REFERENCED_ATTACHMENT_NOT_FOUND`
 
 Referenced attachment "{filename}" wasn't found in message attachments
+
+### `REPORT_OUTCOME_INVALID`
+
+An actioned resolution needs an outcome other than no violation. A duplicate needs the report it repeats and takes no outcome. A no violation resolution takes no other outcome
 
 ### `SESSION_TIMEOUT`
 

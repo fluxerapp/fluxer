@@ -32,6 +32,7 @@ export const AdminAuditReadActions = {
 	LIST_DISCOVERY_CATEGORIES: 'list_discovery_categories',
 	LIST_DISCOVERY_CATEGORY_LISTINGS: 'list_discovery_category_listings',
 	LIST_DISCOVERY_LISTINGS: 'list_discovery_listings',
+	LIST_ENFORCEMENT_DECISIONS: 'list_enforcement_decisions',
 	LIST_GUILD_APPLICATIONS: 'list_guild_applications',
 	LIST_GUILD_AUDIT_LOGS: 'list_guild_audit_logs',
 	LIST_GUILD_EMOJIS: 'list_guild_emojis',
@@ -39,6 +40,7 @@ export const AdminAuditReadActions = {
 	LIST_GUILD_MEMORY_STATS: 'list_guild_memory_stats',
 	LIST_GUILD_STICKERS: 'list_guild_stickers',
 	LIST_GUILD_THREADS: 'list_guild_threads',
+	LIST_NETWORK_BLOCK_CANDIDATES: 'list_network_block_candidates',
 	LIST_PENDING_REGISTRATIONS: 'list_pending_registrations',
 	LIST_REPORT_REASONS: 'list_report_reasons',
 	LIST_USER_APPLICATIONS: 'list_user_applications',
@@ -56,6 +58,7 @@ export const AdminAuditReadActions = {
 	SEARCH_MESSAGES: 'search_messages',
 	SEARCH_REPORTS: 'search_reports',
 	SEARCH_USERS: 'search_users',
+	VIEW_ENFORCEMENT_DECISION: 'view_enforcement_decision',
 } as const;
 
 export type AdminAuditReadAction = ValueOf<typeof AdminAuditReadActions>;

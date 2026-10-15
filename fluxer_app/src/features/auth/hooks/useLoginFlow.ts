@@ -3,6 +3,7 @@
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {resolveSnapshotInstanceDomain} from '@app/features/auth/AccountDisplayUtils';
+import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {
 	CONNECTING_TO_INSTANCE_DESCRIPTOR,
 	INSTANCE_CONNECT_FAILED_DESCRIPTOR,
@@ -268,6 +269,9 @@ export function useLoginFormController({
 			}
 		} catch (err) {
 			logger.error('Passkey login failed', err);
+			if (AuthenticationCommands.showAccountRestriction(err)) {
+				return;
+			}
 			const userCancelled =
 				err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'AbortError');
 			if (isDesktop() && !userCancelled) {
@@ -457,6 +461,9 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 			await onLoginSuccess?.(response);
 		} catch (error) {
 			logger.error('WebAuthn MFA failed', error);
+			if (AuthenticationCommands.showAccountRestriction(error)) {
+				return;
+			}
 			const userCancelled =
 				error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'AbortError');
 			if (!userCancelled) {

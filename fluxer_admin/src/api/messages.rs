@@ -4,10 +4,12 @@ use reqwest::Method;
 
 use crate::api::generated::{snowflake, types as generated_types};
 
+use crate::templates::components::enforcement_fields::BasisSubmission;
+
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
-    BrowseChannelResponse, DeleteAllUserMessagesResponse, LookupMessageResponse,
-    MessageShredResponse, MessageShredStatusResponse, SearchChannelMessagesResponse,
+    BrowseChannelResponse, LookupMessageResponse, MessageShredStatusResponse,
+    SearchChannelMessagesResponse,
 };
 
 impl AdminApiClient {
@@ -15,8 +17,10 @@ impl AdminApiClient {
         &self,
         channel_id: &str,
         message_id: &str,
+        basis: generated_types::MessageDeletionBasis,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
+        let body = generated_types::AdminMessageDeleteRequest { basis };
         let _: serde_json::Value = self
             .send(
                 Method::DELETE,
@@ -25,7 +29,7 @@ impl AdminApiClient {
                     urlencoding::encode(channel_id),
                     urlencoding::encode(message_id)
                 ),
-                None::<&serde_json::Value>,
+                Some(&body),
                 audit_log_reason,
             )
             .await?;
@@ -54,35 +58,44 @@ impl AdminApiClient {
     pub async fn queue_message_shred(
         &self,
         user_id: &str,
-        entries: &[serde_json::Value],
-    ) -> ApiResult<MessageShredResponse> {
-        let entries = entries
-            .iter()
-            .cloned()
-            .map(serde_json::from_value::<generated_types::AdminUserMessageShredRequestEntriesItem>)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| ApiError::Parse(e.to_string()))?;
-        let body = generated_types::AdminUserMessageShredRequest { entries };
-        let response = self
-            .generated()
-            .shred_admin_user_messages(&snowflake(user_id), &body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        entries: Vec<generated_types::AdminUserMessageShredRequestEntriesItem>,
+        basis: &BasisSubmission,
+    ) -> ApiResult<generated_types::MessageShredResponse> {
+        let body = generated_types::AdminUserMessageShredRequest {
+            basis: basis.moderation_basis(),
+            entries,
+        };
+        self.send(
+            Method::POST,
+            &format!(
+                "/admin/users/{}/message-shreds",
+                urlencoding::encode(user_id)
+            ),
+            Some(&body),
+            basis.internal_note(),
+        )
+        .await
     }
 
     pub async fn delete_all_user_messages(
         &self,
         user_id: &str,
-        dry_run: bool,
-    ) -> ApiResult<DeleteAllUserMessagesResponse> {
-        let dry_run = if dry_run { "true" } else { "false" };
-        let response = self
-            .generated()
-            .delete_admin_user_messages(&snowflake(user_id), Some(dry_run))
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        basis: Option<&BasisSubmission>,
+    ) -> ApiResult<generated_types::DeleteAllUserMessagesResponse> {
+        let body = generated_types::AdminUserMessageDeleteRequest {
+            basis: basis.map(BasisSubmission::moderation_basis),
+        };
+        let dry_run = if basis.is_some() { "false" } else { "true" };
+        self.send(
+            Method::DELETE,
+            &format!(
+                "/admin/users/{}/messages?dry_run={dry_run}",
+                urlencoding::encode(user_id)
+            ),
+            Some(&body),
+            basis.and_then(BasisSubmission::internal_note),
+        )
+        .await
     }
 
     pub async fn get_message_shred_status(

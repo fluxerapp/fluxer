@@ -86,6 +86,7 @@ export interface IARSubmissionRow {
 	reported_profile_snapshot?: string | null;
 	legal_hold_until?: Date | null;
 	legal_hold_reason?: string | null;
+	reporter_outcome?: string | null;
 }
 
 export interface DSAReportEmailVerificationRow {
@@ -183,6 +184,7 @@ export const IAR_SUBMISSION_COLUMNS = [
 	'reported_profile_snapshot',
 	'legal_hold_until',
 	'legal_hold_reason',
+	'reporter_outcome',
 ] as const satisfies ReadonlyArray<keyof IARSubmissionRow>;
 export const DSA_REPORT_EMAIL_VERIFICATION_COLUMNS = [
 	'email_lower',

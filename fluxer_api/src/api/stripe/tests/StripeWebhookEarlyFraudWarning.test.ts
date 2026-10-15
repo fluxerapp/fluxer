@@ -15,8 +15,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {createStripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Stripe Webhook Early Fraud Warning', () => {
@@ -60,7 +59,7 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		});
 		return account;
 	}
-	test('refunds, reports, blocks, cancels subscription, and schedules deletion for actionable fraud warnings', async () => {
+	test('refunds, reports, blocks, cancels subscription, and limits purchases pending review for actionable fraud warnings', async () => {
 		const chargeId = 'ch_test_efw_full';
 		const customerId = 'cus_test_efw_full';
 		const paymentIntentId = 'pi_test_efw_full';
@@ -120,15 +119,13 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		const userRepository = new UserRepository();
 		const updatedUser = await userRepository.findUnique(createUserID(BigInt(account.userId)));
 		expect(updatedUser).not.toBeNull();
-		expect(updatedUser!.flags & UserFlags.DELETED).toBe(UserFlags.DELETED);
-		expect(updatedUser!.deletionReasonCode).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
+		expect(updatedUser!.flags & UserFlags.DELETED).toBe(0n);
+		expect(updatedUser!.flags & UserFlags.DISABLED).toBe(0n);
+		expect(updatedUser!.pendingDeletionAt).toBeNull();
+		expect(updatedUser!.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
 		expect(updatedUser!.stripeSubscriptionId).toBeNull();
-		expect(updatedUser!.pendingDeletionAt).not.toBeNull();
-		expect(await oauthTokens.getAccessToken(`access-${account.userId}`)).toBeNull();
-		expect(await oauthTokens.listRefreshTokensForUser(accountUserId)).toHaveLength(0);
-		const daysDifference = (updatedUser!.pendingDeletionAt!.getTime() - Date.now()) / (24 * 60 * 60 * 1000);
-		expect(daysDifference).toBeGreaterThan(58);
-		expect(daysDifference).toBeLessThan(62);
+		expect(await oauthTokens.getAccessToken(`access-${account.userId}`)).not.toBeNull();
+		expect(await oauthTokens.listRefreshTokensForUser(accountUserId)).toHaveLength(1);
 		expect(stripeHandlers.spies.retrievedCharges).toEqual([chargeId]);
 		expect(stripeHandlers.spies.updatedCharges).toHaveLength(1);
 		expect(stripeHandlers.spies.createdRefunds).toHaveLength(1);
@@ -144,19 +141,22 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		const auditRepository = new AdminRepository();
 		const auditLogs = await auditRepository.listAllAuditLogsPaginated(50);
 		const matchingLogs = auditLogs.filter((log) => {
-			return log.action === 'schedule_deletion' && log.targetId === BigInt(account.userId);
+			return log.action === 'limit_features' && log.targetId === BigInt(account.userId);
 		});
 		expect(matchingLogs).toHaveLength(1);
 		expect(matchingLogs[0]!.adminUserId.toString()).toBe('0');
 		expect(matchingLogs[0]!.auditLogReason).toContain('Stripe early fraud warning');
-		expect(matchingLogs[0]!.metadata.get('days')).toBe('60');
+		expect(matchingLogs[0]!.metadata.get('limit')).toBe('purchases');
+		expect(matchingLogs[0]!.metadata.get('kind')).toBe('feature_limit');
 		expect(matchingLogs[0]!.metadata.get('charge_id')).toBe(chargeId);
-		const email = findLastTestEmail(
-			await listTestEmails(harness, {recipient: account.email}),
-			'scheduled_deletion_notification',
-		);
-		expect(email?.metadata.reason).toBe('Payment fraud');
+		expect(await auditRepository.isEmailBanned(account.email)).toBe(false);
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		expect(findLastTestEmail(emails, 'account_deletion_scheduled_requested')).toBeNull();
+		const email = findLastTestEmail(emails, 'enforcement_notice');
+		expect(email?.metadata).toMatchObject({kind_label: 'feature_limit', rule_title: 'Payments'});
+		expect(email?.metadata.effects).toContain('until a person on our team reviews this');
 		expect(JSON.stringify(email)).not.toContain('made_with_stolen_card');
+		expect(JSON.stringify(email)).not.toContain(chargeId);
 	});
 	test('does nothing for non-actionable early fraud warnings', async () => {
 		const chargeId = 'ch_test_efw_noop';
@@ -202,7 +202,7 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		expect(stripeHandlers.spies.cancelledSubscriptions).toHaveLength(0);
 		expect(stripeHandlers.spies.createdValueLists).toHaveLength(0);
 	});
-	test('does not duplicate account enforcement when a chargeback follows the same fraud warning', async () => {
+	test('does not record a second limit when a chargeback follows the same fraud warning', async () => {
 		const chargeId = 'ch_test_efw_duplicate';
 		const customerId = 'cus_test_efw_duplicate';
 		const paymentIntentId = 'pi_test_efw_duplicate';
@@ -238,8 +238,7 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		});
 		const userRepository = new UserRepository();
 		const userAfterEarlyWarning = await userRepository.findUnique(createUserID(BigInt(account.userId)));
-		expect(userAfterEarlyWarning?.pendingDeletionAt).not.toBeNull();
-		const firstPendingDeletionAt = userAfterEarlyWarning!.pendingDeletionAt!.toISOString();
+		expect(userAfterEarlyWarning!.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
 		await sendStripeWebhook(harness, {
 			type: 'charge.dispute.created',
 			data: {
@@ -252,12 +251,12 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 			},
 		});
 		const userAfterChargeback = await userRepository.findUnique(createUserID(BigInt(account.userId)));
-		expect(userAfterChargeback!.pendingDeletionAt!.toISOString()).toBe(firstPendingDeletionAt);
+		expect(userAfterChargeback!.pendingDeletionAt).toBeNull();
 		expect(stripeHandlers.spies.cancelledSubscriptions).toEqual([subscriptionId]);
 		const auditRepository = new AdminRepository();
 		const auditLogs = await auditRepository.listAllAuditLogsPaginated(50);
 		const matchingLogs = auditLogs.filter((log) => {
-			return log.action === 'schedule_deletion' && log.targetId === BigInt(account.userId);
+			return log.action === 'limit_features' && log.targetId === BigInt(account.userId);
 		});
 		expect(matchingLogs).toHaveLength(1);
 	});

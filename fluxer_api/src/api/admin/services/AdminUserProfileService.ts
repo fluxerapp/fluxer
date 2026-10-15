@@ -4,6 +4,9 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {EnforcementDecisionRow} from '@app/api/database/types/EnforcementTypes';
+import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
+import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
@@ -24,12 +27,13 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {TagAlreadyTakenError} from '@fluxer/errors/src/domains/user/TagAlreadyTakenError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
+	AdminUserClearFieldsRequest,
 	ChangeDobRequest,
 	ChangeEmailRequest,
 	ChangeUsernameRequest,
-	ClearUserFieldsRequest,
 	SetUserBotStatusRequest,
 	SetUserSystemStatusRequest,
+	UserProfileField,
 	VerifyUserEmailRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {types} from 'cassandra-driver';
@@ -41,6 +45,18 @@ interface AdminUserProfileServiceDeps {
 	auditService: AdminAuditService;
 	userUpdateDeps: PartialUserChangePropagationDeps;
 	guildRepository: GuildRepository;
+	enforcement: EnforcementDecisionService;
+}
+
+function profileValues(user: User, fields: ReadonlyArray<UserProfileField>): Map<UserProfileField, string> {
+	const current: Record<UserProfileField, string | null> = {
+		avatar: user.avatarHash,
+		banner: user.bannerHash,
+		bio: user.bio,
+		pronouns: user.pronouns,
+		global_name: user.globalName,
+	};
+	return new Map(fields.flatMap((field) => (current[field] ? [[field, current[field]] as const] : [])));
 }
 
 export class AdminUserProfileService {
@@ -50,66 +66,73 @@ export class AdminUserProfileService {
 		this.searchIndexService = new GuildMemberSearchIndexService();
 	}
 
-	async clearUserFields(
-		data: ClearUserFieldsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
+	async clearUserFields(userId: UserID, {fields, basis}: AdminUserClearFieldsRequest, actor: EnforcementActor) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
-		const {entityAssetService, auditService, userUpdateDeps} = this.deps;
-		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const updates: Record<string, null | string> = {};
-		const preparedAssets: Array<PreparedAssetUpload> = [];
-		for (const field of data.fields) {
-			if (field === 'avatar') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'avatar',
-					entityType: 'user',
-					entityId: userId,
-					previousHash: user.avatarHash,
-					base64Image: null,
-					errorPath: 'avatar',
-				});
-				preparedAssets.push(prepared);
-				updates['avatar_hash'] = prepared.newHash;
-			} else if (field === 'banner') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'banner',
-					entityType: 'user',
-					entityId: userId,
-					previousHash: user.bannerHash,
-					base64Image: null,
-					errorPath: 'banner',
-				});
-				preparedAssets.push(prepared);
-				updates['banner_hash'] = prepared.newHash;
-			} else if (field === 'bio') {
-				updates['bio'] = null;
-			} else if (field === 'pronouns') {
-				updates['pronouns'] = null;
-			} else if (field === 'global_name') {
-				updates['global_name'] = null;
-			}
+		const resetFields = [...new Set(fields)];
+		let updatedUser = user;
+		const clear = async () => {
+			updatedUser = await this.clearFields(user, resetFields);
+		};
+		let decision: EnforcementDecisionRow | null = null;
+		if (basis.type === 'enforcement') {
+			({decision} = await this.deps.enforcement.record(
+				{
+					subject: {type: 'user', user},
+					kind: 'profile_reset',
+					input: basis.decision,
+					profileReset: {fields: resetFields, values: profileValues(user, resetFields)},
+					actor,
+				},
+				clear,
+			));
+		} else {
+			await clear();
 		}
-		const updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
-		await entityAssetService.commitAssetChanges(preparedAssets);
-		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
-		await auditService.createAuditLog({
-			adminUserId,
+		await this.deps.auditService.createAuditLog({
+			adminUserId: actor.adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
 			action: 'clear_fields',
-			auditLogReason,
-			metadata: new Map([['fields', data.fields.join(',')]]),
+			auditLogReason: actor.internalNote,
+			metadata: new Map([
+				['fields', resetFields.join(',')],
+				['basis', basis.type],
+				...(decision ? decisionAuditMetadata(decision) : []),
+			]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, actor.acls),
 		};
+	}
+
+	private async clearFields(user: User, fields: ReadonlyArray<UserProfileField>): Promise<User> {
+		const {entityAssetService, userUpdateDeps} = this.deps;
+		const updates: Record<string, null | string> = {};
+		const preparedAssets: Array<PreparedAssetUpload> = [];
+		for (const field of fields) {
+			if (field === 'avatar' || field === 'banner') {
+				const prepared = await entityAssetService.prepareAssetUpload({
+					assetType: field,
+					entityType: 'user',
+					entityId: user.id,
+					previousHash: field === 'avatar' ? user.avatarHash : user.bannerHash,
+					base64Image: null,
+					errorPath: field,
+				});
+				preparedAssets.push(prepared);
+				updates[`${field}_hash`] = prepared.newHash;
+			} else {
+				updates[field] = null;
+			}
+		}
+		const updatedUser = await this.deps.apiContext.services.users.patchUpsert(user.id, updates, user.toRow());
+		await entityAssetService.commitAssetChanges(preparedAssets);
+		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
+		return updatedUser;
 	}
 
 	async setUserBotStatus(

@@ -1830,6 +1830,16 @@ msgstr "Ikona aplikacji {productName}"
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
 msgstr "{productName} zapobiega wysyłaniu powiadomień push na urządzenia mobilne, gdy pracujesz na komputerze. Wybierz, jak długo musisz być nieaktywny na komputerze, zanim zaczniesz otrzymywać powiadomienia push."
 
+#. First sentence of the network blocked screen when a rule is shown. productName is the app name. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "{productName} blocked access from this network because of activity that broke its rules."
+msgstr "{productName} zablokował dostęp z tej sieci z powodu aktywności naruszającej jego zasady."
+
+#. First sentence of the network blocked screen when no rule is shown. productName is the app name. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "{productName} blocked access from this network."
+msgstr "{productName} zablokował dostęp z tej sieci."
+
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Bug Hunter"
@@ -2889,10 +2899,20 @@ msgstr "Wymuszanie stanu konta i premium"
 msgid "Account and security details are hidden"
 msgstr "Dane konta i zabezpieczeń są ukryte"
 
+#. Title of the sign-in screen for an account suspended with no end date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account banned"
+msgstr "Konto zablokowane"
+
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 msgid "Account claimed successfully"
 msgstr "Rejestracja konta została pomyślnie ukończona"
+
+#. Title of the sign-in screen for an account the team closed and will delete.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account closed"
+msgstr "Konto zamknięte"
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx
 msgid "Account connected"
@@ -2927,6 +2947,11 @@ msgstr "Usuwanie konta"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Account state"
 msgstr "Stan konta"
+
+#. Title of the sign-in screen for an account suspended until a set date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account suspended"
+msgstr "Konto zawieszone"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts
@@ -11541,6 +11566,11 @@ msgstr "Zdecyduj, jak limity premium mają zastosowanie do osób w tej instancji
 msgid "Decide whether replies @mention you by default"
 msgstr "Zdecyduj, czy odpowiedzi mają domyślnie zawierać wzmiankę o Tobie"
 
+#. Reference line on the account restriction screen. People quote this ID when they appeal.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Decision ID: {decisionId}"
+msgstr "Identyfikator decyzji: {decisionId}"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Decline the incoming call"
@@ -17539,10 +17569,20 @@ msgstr "Z jakiego okresu usunąć ostatnie wiadomości tego członka."
 msgid "How this works"
 msgstr "Jak to działa"
 
+#. Heading on the account restriction screen above the appeal instructions.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "How to appeal"
+msgstr "Jak się odwołać"
+
 #. Heading above the recovery steps in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "How to recover your account"
 msgstr "Jak odzyskać konto"
+
+#. Heading on the account restriction screen above how the case reached the team and who decided it.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "How we decided"
+msgstr "Jak podjęliśmy decyzję"
 
 #. Accessible label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts
@@ -17737,6 +17777,31 @@ msgstr "Jeśli zapiszesz tę nazwę użytkownika, Twój tag zostanie ponownie wy
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "Jeśli zapiszesz tę nazwę użytkownika, Twój tag zostanie ponownie wylosowany po wygaśnięciu {PREMIUM_PRODUCT_NAME}, chyba że przedłużysz dostęp."
+
+#. Paragraph on the network blocked screen for people who share a network with others. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off."
+msgstr "Jeśli korzystasz z tej sieci razem z innymi, na przykład w szkole, w pracy, w publicznej sieci Wi-Fi, przez operatora komórkowego lub VPN, ta blokada może nie mieć z Tobą nic wspólnego. Najszybciej pomoże zmiana sieci, na przykład przejście z Wi-Fi na dane komórkowe, albo włączenie lub wyłączenie VPN."
+
+#. Line on the network blocked screen. The link is the contact email address and ip is the blocked IP address.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think this block is a mistake, email <0>{email}</0> and include your IP address, {ip}."
+msgstr "Jeśli uważasz, że ta blokada to pomyłka, napisz na adres <0>{email}</0> i podaj swój adres IP: {ip}."
+
+#. Appeal line for a restriction from before the team recorded decisions, with no appeal deadline. The link is the appeals email address.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> and include your username."
+msgstr "Jeśli uważasz, że popełniliśmy błąd, napisz na adres <0>{email}</0> i podaj swoją nazwę użytkownika."
+
+#. Appeal line for an account with no email address. The link is the appeals email address and deadline is a date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> by {deadline}. Include the decision ID and your username. Appeals are free, and a person reviews each one."
+msgstr "Jeśli uważasz, że popełniliśmy błąd, napisz na adres <0>{email}</0> do {deadline}. Podaj identyfikator decyzji i swoją nazwę użytkownika. Odwołania są bezpłatne, a każde z nich rozpatruje człowiek."
+
+#. Appeal line on the account restriction screen. The link is the appeals email address and deadline is a date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> by {deadline}. Write from the email address on your account if you can, and include the decision ID. Appeals are free, and a person reviews each one."
+msgstr "Jeśli uważasz, że popełniliśmy błąd, napisz na adres <0>{email}</0> do {deadline}. Jeśli możesz, napisz z adresu e-mail przypisanego do Twojego konta i podaj identyfikator decyzji. Odwołania są bezpłatne, a każde z nich rozpatruje człowiek."
 
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "If you want to export your data or delete your messages first, please visit {privacyDashboardPath} before proceeding."
@@ -22302,6 +22367,11 @@ msgstr "Niderlandy"
 msgid "Network"
 msgstr "Sieć"
 
+#. Title of the screen and dialog shown when the instance blocks the network a request came from.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Network blocked"
+msgstr "Sieć zablokowana"
+
 #. Error message in the devices tab.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Network error"
@@ -23368,6 +23438,11 @@ msgstr "Notatka"
 #: src/features/user/components/modals/NoteEditSheet.tsx
 msgid "Note (only visible to you)"
 msgstr "Notatka (widoczna tylko dla Ciebie)"
+
+#. Line on the account restriction screen with a note the team wrote to the account holder.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Note from our team: {statement}"
+msgstr "Komentarz naszego zespołu: {statement}"
 
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -28537,6 +28612,16 @@ msgstr "Okrągłe pole wyboru"
 msgid "Rows per page"
 msgstr "Wiersze na stronę"
 
+#. Names the rule behind a restriction when the instance publishes no link for it. title is the rule title.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Rule: {title}"
+msgstr "Zasada: {title}"
+
+#. Names the rule behind a restriction, with the rule title linked to the rule. title is the rule title.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Rule: <0>{title}</0>"
+msgstr "Zasada: <0>{title}</0>"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -33528,6 +33613,11 @@ msgstr "Ban wygasł już {date}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "The ban was scheduled to expire on {date}"
 msgstr "Ban miał wygasnąć {date}"
+
+#. Line on the network blocked screen for a block with an end. date is a date and time.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "The block ends on {date}."
+msgstr "Blokada obowiązuje do {date}."
 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx
 msgid "The bot has been added to <0>{destinationName}</0>."
@@ -38945,6 +39035,11 @@ msgctxt "us-state"
 msgid "West Virginia"
 msgstr "Wirginia Zachodnia"
 
+#. Heading on the account restriction screen above what the team did and what it means.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "What happened"
+msgstr "Co się stało"
+
 #. Display-name field placeholder in account registration forms.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "What should people call you?"
@@ -39107,6 +39202,11 @@ msgstr "Kto pisze"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "Ojej, to jest za dużo"
+
+#. Heading on the account restriction screen above the rule that was broken and the findings.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Why"
+msgstr "Dlaczego"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts

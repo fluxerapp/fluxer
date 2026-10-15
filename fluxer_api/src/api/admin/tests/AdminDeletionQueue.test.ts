@@ -43,7 +43,7 @@ describe('Admin Deletion Queue', () => {
 		}>(harness, `${admin.token}`)
 			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({reason_code: 2, days_until_deletion: 60})
+			.body({days_until_deletion: 60, basis: {type: 'holder_request'}})
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
 		await createBuilder<{
@@ -54,8 +54,8 @@ describe('Admin Deletion Queue', () => {
 			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
 			.body({
-				reason_code: 2,
 				days_until_deletion: 62,
+				basis: {type: 'holder_request'},
 				replace_pending_deletion_at: firstSchedule.user.pending_deletion_at,
 			})
 			.execute();
@@ -75,7 +75,7 @@ describe('Admin Deletion Queue', () => {
 		}>(harness, `${admin.token}`)
 			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({reason_code: 1, days_until_deletion: 60})
+			.body({days_until_deletion: 60, basis: {type: 'holder_request'}})
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
 		await createBuilder<{
@@ -89,47 +89,7 @@ describe('Admin Deletion Queue', () => {
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(0);
 	});
-	test('user-requested scheduled deletion does not ban user identifiers', async () => {
-		const adminIp = createUniqueTestIp();
-		const targetIp = createUniqueTestIp();
-		const admin = await createTestAccount(harness, {ipAddress: adminIp});
-		const targetUser = await createTestAccount(harness, {ipAddress: targetIp});
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
-		await createBuilder(harness, `${admin.token}`)
-			.put(`/admin/users/${targetUser.userId}/deletion`)
-			.header('x-forwarded-for', adminIp)
-			.body({reason_code: DeletionReasons.USER_REQUESTED, days_until_deletion: 14})
-			.execute();
-		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
-			.execute();
-		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
-			.execute();
-		expect(ipBan.banned).toBe(false);
-		expect(emailBan.banned).toBe(false);
-	});
-	test('moderation scheduled deletion bans email without banning the IP', async () => {
-		const adminIp = createUniqueTestIp();
-		const targetIp = createUniqueTestIp();
-		const admin = await createTestAccount(harness, {ipAddress: adminIp});
-		const targetUser = await createTestAccount(harness, {ipAddress: targetIp});
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
-		await createBuilder(harness, `${admin.token}`)
-			.put(`/admin/users/${targetUser.userId}/deletion`)
-			.header('x-forwarded-for', adminIp)
-			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
-			.execute();
-		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
-			.execute();
-		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
-			.execute();
-		expect(ipBan.banned).toBe(false);
-		expect(emailBan.banned).toBe(true);
-	});
-	test('rejects a scheduled deletion reason code outside the registry', async () => {
+	test('rejects a closure without a basis', async () => {
 		const admin = await createTestAccount(harness);
 		const targetUser = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
@@ -141,24 +101,13 @@ describe('Admin Deletion Queue', () => {
 			}>;
 		}>(harness, `${admin.token}`)
 			.put(`/admin/users/${targetUser.userId}/deletion`)
-			.body({reason_code: 999, days_until_deletion: 60})
+			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
 			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 			.executeWithResponse();
-		expect(json.errors.some((entry) => entry.path === 'reason_code')).toBe(true);
+		expect(json.errors.some((entry) => entry.path === 'basis')).toBe(true);
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(0);
 	});
-	test('accepts the highest scheduled deletion reason code of the registry', async () => {
-		const admin = await createTestAccount(harness);
-		const targetUser = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
-		await createBuilder(harness, `${admin.token}`)
-			.put(`/admin/users/${targetUser.userId}/deletion`)
-			.body({reason_code: DeletionReasons.IMPERSONATION_OR_FAKE_IDENTITY, days_until_deletion: 60})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
-	});
-	test('rejects a bulk schedule_user_deletion job with a reason code outside the registry', async () => {
+	test('rejects a bulk schedule_user_deletion job in the old shape', async () => {
 		const admin = await createTestAccount(harness);
 		const targetUser = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
@@ -170,10 +119,15 @@ describe('Admin Deletion Queue', () => {
 			}>;
 		}>(harness, `${admin.token}`)
 			.post('/admin/bulk-jobs')
-			.body({task: 'schedule_user_deletion', user_ids: [targetUser.userId], reason_code: 0})
+			.body({
+				task: 'schedule_user_deletion',
+				user_ids: [targetUser.userId],
+				reason_code: DeletionReasons.SPAM,
+				days_until_deletion: 60,
+			})
 			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 			.executeWithResponse();
-		expect(json.errors.some((entry) => entry.path === 'reason_code')).toBe(true);
+		expect(json.errors.some((entry) => entry.path === 'basis')).toBe(true);
 	});
 
 	describe('naming the deletion', () => {
@@ -186,11 +140,11 @@ describe('Admin Deletion Queue', () => {
 			};
 		}
 
-		async function scheduleAs(admin: TestAccount, target: TestAccount, reasonCode: number, reason: string) {
+		async function scheduleAs(admin: TestAccount, target: TestAccount, reason: string) {
 			return createBuilder<ScheduledUser>(harness, admin.token)
 				.put(`/admin/users/${target.userId}/deletion`)
 				.header('X-Audit-Log-Reason', reason)
-				.body({reason_code: reasonCode, days_until_deletion: 60})
+				.body({days_until_deletion: 60, basis: {type: 'holder_request'}})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		}
@@ -199,13 +153,13 @@ describe('Admin Deletion Queue', () => {
 			return setUserACLs(harness, await createTestAccount(harness), ['admin:authenticate', 'user:delete', ...acls]);
 		}
 
-		test('records who scheduled the deletion and shows the private reason to audit log viewers', async () => {
+		test('records who scheduled the deletion and no longer stores the internal note on the account', async () => {
 			const admin = await createAdmin(['audit_log:view']);
 			const target = await createTestAccount(harness);
-			const scheduled = await scheduleAs(admin, target, DeletionReasons.SPAM, 'Batch review');
+			const scheduled = await scheduleAs(admin, target, 'Batch review');
 			expect(scheduled.user.deletion_scheduled_by).toBe(admin.userId);
 			expect(scheduled.user.deletion_scheduled_at).not.toBeNull();
-			expect(scheduled.user.deletion_audit_log_reason).toBe('Batch review');
+			expect(scheduled.user.deletion_audit_log_reason).toBeNull();
 			const other = await createAdmin(['user:lookup']);
 			const viewed = await createBuilder<{users: Array<ScheduledUser['user']>}>(harness, other.token)
 				.get(`/admin/users/${target.userId}`)
@@ -219,15 +173,15 @@ describe('Admin Deletion Queue', () => {
 			const first = await createAdmin();
 			const second = await createAdmin();
 			const target = await createTestAccount(harness);
-			const scheduled = await scheduleAs(first, target, DeletionReasons.SPAM, 'First review');
+			const scheduled = await scheduleAs(first, target, 'First review');
 			await createBuilder(harness, second.token)
 				.put(`/admin/users/${target.userId}/deletion`)
-				.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
+				.body({days_until_deletion: 60, basis: {type: 'holder_request'}})
 				.expect(HTTP_STATUS.CONFLICT)
 				.execute();
 			await createBuilder(harness, first.token)
 				.put(`/admin/users/${target.userId}/deletion`)
-				.body({reason_code: DeletionReasons.OTHER, days_until_deletion: 60})
+				.body({days_until_deletion: 60, basis: {type: 'housekeeping'}})
 				.expect(HTTP_STATUS.CONFLICT)
 				.execute();
 			const user = await new UserRepository().findUnique(createUserID(BigInt(target.userId)));
@@ -239,12 +193,12 @@ describe('Admin Deletion Queue', () => {
 			const first = await createAdmin();
 			const second = await createAdmin();
 			const target = await createTestAccount(harness);
-			const scheduled = await scheduleAs(first, target, DeletionReasons.SPAM, 'First review');
+			const scheduled = await scheduleAs(first, target, 'First review');
 			const replaced = await createBuilder<ScheduledUser>(harness, second.token)
 				.put(`/admin/users/${target.userId}/deletion`)
 				.body({
-					reason_code: DeletionReasons.OTHER,
 					days_until_deletion: 90,
+					basis: {type: 'housekeeping'},
 					replace_pending_deletion_at: scheduled.user.pending_deletion_at,
 				})
 				.expect(HTTP_STATUS.OK)
@@ -259,14 +213,15 @@ describe('Admin Deletion Queue', () => {
 			);
 			expect(log?.metadata.get('replaced_pending_deletion_at')).toBe(scheduled.user.pending_deletion_at);
 			expect(log?.metadata.get('replaced_scheduled_by')).toBe(first.userId);
-			expect(log?.metadata.get('replaced_reason_code')).toBe(DeletionReasons.SPAM.toString());
+			expect(log?.metadata.get('replaced_reason_code')).toBe(DeletionReasons.USER_REQUESTED.toString());
+			expect(log?.metadata.get('reason_code')).toBe(DeletionReasons.INACTIVITY.toString());
 			expect(log?.metadata.get('pending_deletion_at')).toBe(replaced.user.pending_deletion_at);
 		});
 
 		test('cancel requires the pending deletion it cancels', async () => {
 			const admin = await createAdmin();
 			const target = await createTestAccount(harness);
-			await scheduleAs(admin, target, DeletionReasons.SPAM, 'Review');
+			await scheduleAs(admin, target, 'Review');
 			await createBuilder(harness, admin.token)
 				.delete(`/admin/users/${target.userId}/deletion`)
 				.expect(HTTP_STATUS.BAD_REQUEST)
@@ -291,11 +246,11 @@ describe('Admin Deletion Queue', () => {
 				.execute();
 		});
 
-		test('cancel records whose deletion it cancelled and emails only on request', async () => {
+		test('cancel records whose deletion it cancelled and always tells the holder', async () => {
 			const scheduler = await createAdmin();
 			const canceller = await createAdmin();
 			const target = await createTestAccount(harness);
-			const scheduled = await scheduleAs(scheduler, target, DeletionReasons.SPAM, 'Review');
+			const scheduled = await scheduleAs(scheduler, target, 'Review');
 			await clearTestEmails(harness);
 			await createBuilder(harness, canceller.token)
 				.delete(`/admin/users/${target.userId}/deletion`)
@@ -303,30 +258,19 @@ describe('Admin Deletion Queue', () => {
 				.body({expected_pending_deletion_at: scheduled.user.pending_deletion_at})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(
-				findLastTestEmail(await listTestEmails(harness, {recipient: target.email}), 'account_deletion_cancelled'),
-			).toBeNull();
+			const emails = await listTestEmails(harness, {recipient: target.email});
+			const email = findLastTestEmail(emails, 'account_deletion_cancelled');
+			expect(email).not.toBeNull();
+			expect(JSON.stringify(email)).not.toContain('Private cancel note');
+			expect(findLastTestEmail(emails, 'enforcement_ended')).toBeNull();
 			const logs = await getAdminRepository().listAllAuditLogsPaginated(1000);
 			const log = logs.find(
 				(entry) => entry.action === 'cancel_deletion' && entry.targetId.toString() === target.userId,
 			);
 			expect(log?.metadata.get('cancelled_pending_deletion_at')).toBe(scheduled.user.pending_deletion_at);
 			expect(log?.metadata.get('cancelled_scheduled_by')).toBe(scheduler.userId);
-			expect(log?.metadata.get('cancelled_reason_code')).toBe(DeletionReasons.SPAM.toString());
-			expect(log?.metadata.get('notify_user')).toBe('false');
-			expect(log?.metadata.get('notification_sent')).toBe('false');
-			const rescheduled = await scheduleAs(scheduler, target, DeletionReasons.SPAM, 'Review again');
-			await createBuilder(harness, canceller.token)
-				.delete(`/admin/users/${target.userId}/deletion`)
-				.header('X-Audit-Log-Reason', 'Private cancel note')
-				.body({expected_pending_deletion_at: rescheduled.user.pending_deletion_at, notify_user: true})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const emails = await listTestEmails(harness, {recipient: target.email});
-			const email = findLastTestEmail(emails, 'account_deletion_cancelled');
-			expect(email).not.toBeNull();
-			expect(JSON.stringify(email)).not.toContain('Private cancel note');
-			expect(findLastTestEmail(emails, 'unban_notification')).toBeNull();
+			expect(log?.metadata.get('cancelled_reason_code')).toBe(DeletionReasons.USER_REQUESTED.toString());
+			expect(log?.metadata.get('notice')).toBe('account_deletion_cancelled');
 		});
 	});
 });

@@ -2,16 +2,23 @@
 
 use crate::{
     acl,
-    api::client::AdminApiClient,
+    api::{
+        client::AdminApiClient,
+        enforcement::api_error_message,
+        generated::types::{BulkModerationBasis, MessageDeletionBasis},
+    },
     middleware::{
         auth::AuthContext,
         flash::{self, FlashData},
     },
     state::AppState,
+    templates::{
+        components::enforcement_fields::{bulk_decision_from_form, can_take_action},
+        pages::messages_page::MessageActions,
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
-    Json,
     extract::{Query, Request, State},
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
@@ -93,17 +100,31 @@ pub(crate) async fn messages_post(
             .into_response()
         }
         "delete" => {
-            let (Some(cid), Some(mid)) = (&channel_id, &message_id) else {
-                return json_error(StatusCode::BAD_REQUEST, "Missing channel_id or message_id");
+            let back = format!("{base}/messages?channel_id={}", encode_opt(&channel_id));
+            let basis = form
+                .first("basis")
+                .and_then(|value| MessageDeletionBasis::try_from(value).ok());
+            let flash = match (&channel_id, &message_id, basis) {
+                (Some(cid), Some(mid), Some(basis)) => {
+                    let internal_note = form.clean("internal_note");
+                    match client
+                        .delete_message(cid, mid, basis, internal_note.as_deref())
+                        .await
+                    {
+                        Ok(()) => FlashData::success("Message deleted"),
+                        Err(error) => {
+                            tracing::warn!(%error, "admin API request failed: delete message");
+                            FlashData::error(api_error_message(&error).map_or_else(
+                                || "Failed to delete the message".to_owned(),
+                                |message| format!("Failed to delete the message: {message}"),
+                            ))
+                        }
+                    }
+                }
+                (Some(_), Some(_), None) => FlashData::error("Choose a basis"),
+                _ => FlashData::error("Enter the channel ID and message ID"),
             };
-            let audit_log_reason = form.clean("audit_log_reason");
-            match client
-                .delete_message(cid, mid, audit_log_reason.as_deref())
-                .await
-            {
-                Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
-                Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            }
+            flash::redirect_with_flash(&back, flash, config.secure_cookies())
         }
         _ => Redirect::to(&format!("{base}/messages")).into_response(),
     }
@@ -148,6 +169,15 @@ pub(crate) async fn system_dms_post(
         flash,
         config.secure_cookies(),
     )
+}
+
+fn bulk_basis(form: &MultiValueForm) -> Result<BulkModerationBasis, String> {
+    match form.first("basis") {
+        Some("enforcement") => bulk_decision_from_form(form).map(BulkModerationBasis::Enforcement),
+        Some("holder_request") => Ok(BulkModerationBasis::HolderRequest),
+        Some("housekeeping") => Ok(BulkModerationBasis::Housekeeping),
+        _ => Err("Choose a basis".to_owned()),
+    }
 }
 
 pub(crate) async fn bulk_actions_post(
@@ -197,35 +227,48 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_add_guild_members(&guild_id, &user_ids, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-schedule-user-deletion" | "bulk_delete_users" => {
+        "bulk-schedule-user-deletion" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let (Ok(reason_code), Ok(days)) = (
-                form.parse_value::<u32>("reason_code"),
-                form.parse_value::<u32>("days_until_deletion"),
-            ) else {
+            let basis = match bulk_basis(&form) {
+                Ok(basis) => basis,
+                Err(message) => {
+                    return flash::redirect_with_flash(
+                        &format!("{base}/bulk-actions"),
+                        FlashData::error(message),
+                        config.secure_cookies(),
+                    );
+                }
+            };
+            let Ok(Some(days)) = form.parse_value::<u32>("days_until_deletion") else {
                 return flash::redirect_with_flash(
                     &format!("{base}/bulk-actions"),
-                    FlashData::error("Invalid deletion reason code or delay"),
+                    FlashData::error("Enter the days until deletion"),
                     config.secure_cookies(),
                 );
             };
-            let public_reason = form.clean("public_reason");
-            let notify_user = form.opt_out_value("notify_user");
             client
                 .bulk_schedule_user_deletion(
                     &user_ids,
-                    reason_code.unwrap_or(2),
-                    days.unwrap_or(14),
-                    public_reason.as_deref(),
-                    notify_user,
-                    audit_log_reason.as_deref(),
+                    days,
+                    basis,
+                    form.clean("internal_note").as_deref(),
                 )
                 .await
         }
         "bulk-delete-user-messages" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
+            let basis = match bulk_basis(&form) {
+                Ok(basis) => basis,
+                Err(message) => {
+                    return flash::redirect_with_flash(
+                        &format!("{base}/bulk-actions"),
+                        FlashData::error(message),
+                        config.secure_cookies(),
+                    );
+                }
+            };
             client
-                .bulk_delete_user_messages(&user_ids, audit_log_reason.as_deref())
+                .bulk_delete_user_messages(&user_ids, basis, form.clean("internal_note").as_deref())
                 .await
         }
         _ => {
@@ -295,7 +338,13 @@ pub(crate) async fn messages_browse_fragment(
     match result {
         Ok(resp) => {
             let markup = crate::templates::pages::messages_page::browse_messages_fragment(
-                config, &resp.data, can_delete, None,
+                config,
+                &resp.data,
+                MessageActions {
+                    delete: can_delete,
+                    take_action: can_take_action(admin_acls),
+                },
+                None,
             );
             Html(markup.into_string()).into_response()
         }
@@ -323,14 +372,6 @@ pub(super) fn parse_context_limit(value: Option<&str>) -> u32 {
 
 fn encode_opt(value: &Option<String>) -> String {
     urlencoding::encode(value.as_deref().unwrap_or("")).into_owned()
-}
-
-fn json_error(status: StatusCode, message: &str) -> Response {
-    (
-        status,
-        Json(serde_json::json!({"success": false, "error": message})),
-    )
-        .into_response()
 }
 
 pub(crate) async fn archives_download(

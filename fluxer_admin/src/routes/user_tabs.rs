@@ -25,6 +25,8 @@ pub struct TabQuery {
     pub delete_all_messages_dry_run: Option<String>,
     pub delete_all_messages_channel_count: Option<u64>,
     pub delete_all_messages_message_count: Option<u64>,
+    pub report_id: Option<String>,
+    pub message: Option<String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -114,7 +116,8 @@ pub async fn render(
                 }
                 _ => None,
             };
-            let ban_logs = if u.temp_banned_until.is_some()
+            let legacy_logs = if u.temp_banned_until.is_some()
+                && u.enforcement_decision_id.is_none()
                 && acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW)
             {
                 client
@@ -130,16 +133,41 @@ pub async fn render(
                         offset: 0,
                     })
                     .await
-                    .log_error("load ban audit logs")
+                    .log_error("load suspension audit logs")
                     .map(|response| response.logs)
                     .unwrap_or_default()
             } else {
                 Vec::new()
             };
+            let decisions = if acl::has_permission(admin_acls, acl::ENFORCEMENT_VIEW) {
+                Some(client.list_user_decisions(user_id).await)
+            } else {
+                None
+            };
+            if let Some(Err(error)) = &decisions {
+                tracing::warn!(%error, user_id, "admin API request failed: list user decisions");
+            }
+            let can_block_networks = acl::has_permission(admin_acls, acl::USER_VIEW_IP)
+                && acl::has_permission(admin_acls, acl::BAN_IP_ADD)
+                && (acl::has_permission(admin_acls, acl::USER_TEMP_BAN)
+                    || acl::has_permission(admin_acls, acl::USER_DELETE));
+            let network_candidates = if can_block_networks {
+                Some(client.list_network_block_candidates(user_id).await)
+            } else {
+                None
+            };
+            if let Some(Err(error)) = &network_candidates {
+                tracing::warn!(%error, user_id, "admin API request failed: list network block candidates");
+            }
             let context = tabs::moderation::ModerationContext {
                 deletion_scheduler: deletion_scheduler.as_ref(),
-                current_ban: tabs::moderation::find_current_ban(&u, &ban_logs),
-                username_sign_in: account_identity.is_username(),
+                legacy_suspension: tabs::moderation::find_legacy_suspension(&u, &legacy_logs),
+                decisions: decisions.as_ref(),
+                network_candidates: network_candidates.as_ref(),
+                prefill: tabs::moderation::DecisionPrefill {
+                    report_ids: query.report_id.iter().cloned().collect(),
+                    messages: query.message.iter().cloned().collect(),
+                },
             };
             Some(tabs::moderation::moderation_tab(
                 config,

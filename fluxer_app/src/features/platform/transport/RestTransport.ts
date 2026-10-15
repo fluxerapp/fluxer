@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {accountRestrictionFromBody} from '@app/features/auth/state/AccountRestriction';
 import {isDesktopLocalAppDocument, isDesktopLocalAppOrigin} from '@app/features/platform/DesktopLocalAppRuntime';
 import {
 	AccountScopedWork,
@@ -868,6 +869,15 @@ async function reactToOutcome(
 	}
 	if (reply.status === 403 && hasContentBlockedCode(reply.body) && !plan.suppressContentBlockedModal) {
 		void import('@app/features/auth/components/ContentBlockedHandler').then((m) => m.showContentBlockedModal());
+	}
+	const restriction =
+		reply.status === 403 && plan.headers[Headers.AUTHORIZATION] !== undefined
+			? accountRestrictionFromBody(reply.body)
+			: null;
+	if (restriction?.type === 'network_blocked') {
+		void import('@app/features/auth/components/NetworkBlockedHandler').then((m) =>
+			m.showNetworkBlockedModal(restriction.block),
+		);
 	}
 	if (plan.mode === 'silent') {
 		propagateSudoToken(state, receivedSudoToken);

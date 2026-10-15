@@ -2,10 +2,13 @@
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
+import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import type {AdminGuildDeleteRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 interface AdminGuildManagementServiceDeps {
@@ -13,6 +16,7 @@ interface AdminGuildManagementServiceDeps {
 	gatewayService: IGatewayService;
 	guildService: GuildService;
 	auditService: AdminAuditService;
+	enforcement: EnforcementDecisionService;
 }
 
 export class AdminGuildManagementService {
@@ -60,17 +64,37 @@ export class AdminGuildManagementService {
 		return {success: true};
 	}
 
-	async deleteGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null): Promise<SuccessResponse> {
-		const {guildService, auditService} = this.deps;
-		const guildId = createGuildID(guildIdRaw);
-		await guildService.data.operations.deleteGuildById(guildId);
+	async deleteGuild(
+		guildId: GuildID,
+		{basis}: AdminGuildDeleteRequest,
+		actor: EnforcementActor,
+	): Promise<SuccessResponse> {
+		const {guildRepository, guildService, auditService, enforcement} = this.deps;
+		const guild = await guildRepository.findUnique(guildId);
+		if (!guild) {
+			throw new UnknownGuildError();
+		}
+		const remove = () => guildService.data.operations.deleteGuildById(guildId);
+		const decision =
+			basis.type === 'enforcement'
+				? (
+						await enforcement.record(
+							{subject: {type: 'guild', guild}, kind: 'community_removal', input: basis.decision, actor},
+							remove,
+						)
+					).decision
+				: await remove().then(() => null);
 		await auditService.createAuditLog({
-			adminUserId,
+			adminUserId: actor.adminUserId,
 			targetType: 'guild',
-			targetId: guildIdRaw,
+			targetId: guildId,
 			action: 'delete_guild',
-			auditLogReason,
-			metadata: new Map([['guild_id', guildIdRaw.toString()]]),
+			auditLogReason: actor.internalNote,
+			metadata: new Map([
+				['guild_id', guildId.toString()],
+				['basis', basis.type],
+				...(decision ? decisionAuditMetadata(decision) : []),
+			]),
 		});
 		return {success: true};
 	}

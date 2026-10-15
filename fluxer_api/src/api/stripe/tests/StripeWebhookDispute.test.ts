@@ -16,7 +16,7 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface UserDataExistsResponse {
@@ -46,7 +46,7 @@ describe('Stripe Webhook Dispute Events', () => {
 		server.resetHandlers();
 	});
 	describe('charge.dispute.created', () => {
-		test('schedules account deletion on chargeback for direct purchase', async () => {
+		test('limits purchases on chargeback for direct purchase and never closes the account', async () => {
 			const purchaser = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_chargeback_123';
 			const paymentRepo = new PaymentRepository();
@@ -77,14 +77,12 @@ describe('Stripe Webhook Dispute Events', () => {
 			const updatedUser = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
-			expect(updatedUser.has_deleted_flag).toBe(true);
-			expect(updatedUser.deletion_reason_code).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
-			expect(updatedUser.pending_deletion_at).not.toBeNull();
-			const deletionDate = new Date(updatedUser.pending_deletion_at!);
-			const now = new Date();
-			const daysDifference = (deletionDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000);
-			expect(daysDifference).toBeGreaterThan(58);
-			expect(daysDifference).toBeLessThan(62);
+			expect(updatedUser.has_deleted_flag).toBe(false);
+			expect(updatedUser.pending_deletion_at).toBeNull();
+			const user = await new UserRepository().findUniqueAssert(createUserID(BigInt(purchaser.userId)));
+			expect(user.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
+			expect(user.flags & UserFlags.DISABLED).toBe(0n);
+			expect(user.tempBannedUntil).toBeNull();
 		});
 		test('reports fraudulent disputes to Stripe and populates active default blocklists', async () => {
 			const purchaser = await createTestAccount(harness);
@@ -157,7 +155,7 @@ describe('Stripe Webhook Dispute Events', () => {
 				]),
 			);
 		});
-		test('revokes premium and schedules deletion for gift chargeback', async () => {
+		test('revokes premium and limits the purchaser for gift chargeback', async () => {
 			const purchaser = await createTestAccount(harness);
 			const redeemer = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_gift_chargeback_123';
@@ -225,9 +223,10 @@ describe('Stripe Webhook Dispute Events', () => {
 			const purchaserAfterDispute = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
-			expect(purchaserAfterDispute.has_deleted_flag).toBe(true);
-			expect(purchaserAfterDispute.deletion_reason_code).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
-			expect(purchaserAfterDispute.pending_deletion_at).not.toBeNull();
+			expect(purchaserAfterDispute.has_deleted_flag).toBe(false);
+			expect(purchaserAfterDispute.pending_deletion_at).toBeNull();
+			const purchaserUser = await userRepository.findUniqueAssert(createUserID(BigInt(purchaser.userId)));
+			expect(purchaserUser.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(PremiumFlags.PURCHASE_DISABLED);
 		});
 		test('preserves remaining premium when other redeemed gifts still cover the user', async () => {
 			const purchaser = await createTestAccount(harness);
@@ -306,7 +305,7 @@ describe('Stripe Webhook Dispute Events', () => {
 		});
 	});
 	describe('charge.dispute.closed', () => {
-		test('unsuspends account when chargeback is won', async () => {
+		test('cancels a payment closure from before decisions when the chargeback is won', async () => {
 			const purchaser = await createTestAccount(harness);
 			const paymentIntentId = 'pi_test_dispute_won_123';
 			const paymentRepo = new PaymentRepository();
@@ -355,7 +354,7 @@ describe('Stripe Webhook Dispute Events', () => {
 			expect(userAfterWin.pending_deletion_at).toBeNull();
 			const emails = await listTestEmails(harness, {recipient: purchaser.email});
 			expect(findLastTestEmail(emails, 'account_deletion_cancelled')).not.toBeNull();
-			expect(findLastTestEmail(emails, 'unban_notification')).toBeNull();
+			expect(findLastTestEmail(emails, 'enforcement_ended')).toBeNull();
 		});
 		test('does not unsuspend when chargeback is lost', async () => {
 			const purchaser = await createTestAccount(harness);

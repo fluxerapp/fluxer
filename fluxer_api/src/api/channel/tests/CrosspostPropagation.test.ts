@@ -479,6 +479,7 @@ describe('Crosspost propagation', () => {
 			const admin = await setUserACLs(harness, world.a.member, [AdminACLs.AUTHENTICATE, AdminACLs.MESSAGE_DELETE]);
 			await createBuilder(harness, admin.token)
 				.delete(`/admin/channels/${world.a.ann.id}/messages/${source.id}`)
+				.body({basis: {type: 'housekeeping'}})
 				.expect(200)
 				.execute();
 			await world.worker.drain();

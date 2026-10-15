@@ -9,6 +9,7 @@ import {BanAdminController} from '@app/api/admin/controllers/BanAdminController'
 import {BulkAdminController} from '@app/api/admin/controllers/BulkAdminController';
 import {CodesAdminController} from '@app/api/admin/controllers/CodesAdminController';
 import {DiscoveryAdminController} from '@app/api/admin/controllers/DiscoveryAdminController';
+import {EnforcementAdminController} from '@app/api/admin/controllers/EnforcementAdminController';
 import {GatewayAdminController} from '@app/api/admin/controllers/GatewayAdminController';
 import {GuildAdminController} from '@app/api/admin/controllers/GuildAdminController';
 import {InstanceConfigAdminController} from '@app/api/admin/controllers/InstanceConfigAdminController';
@@ -28,6 +29,7 @@ export function registerAdminControllers(app: HonoApp) {
 	AdminApiKeyAdminController(app);
 	ApplicationAdminController(app);
 	UserAdminController(app);
+	EnforcementAdminController(app);
 	StoreBillingAdminController(app);
 	CodesAdminController(app);
 	GuildAdminController(app);

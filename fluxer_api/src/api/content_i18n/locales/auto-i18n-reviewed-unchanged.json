@@ -1,5 +1,6 @@
 {
 	"en-GB": [
+		["enforcement.effect.scope","This decision applies everywhere {product_name} is available."],
 		["report_flow.label.abuse","Abusive or harmful content"],
 		["report_flow.label.age_no_message","No, it doesn't mention it"],
 		["report_flow.label.age_no_profile","No, it doesn't mention it"],

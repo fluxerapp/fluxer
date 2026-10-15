@@ -105,10 +105,6 @@ impl MultiValueForm {
         })
     }
 
-    pub fn opt_out_value(&self, key: &str) -> bool {
-        !self.contains_key(&format!("{key}_present")) || self.bool_value(key)
-    }
-
     pub fn list_values(&self, key: &str) -> Vec<String> {
         self.fields
             .get(key)

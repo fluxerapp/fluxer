@@ -2,7 +2,13 @@
 
 use reqwest::Method;
 
-use crate::api::generated::{snowflake, types::UpdateReportRequestResolution};
+use crate::api::generated::{
+    snowflake,
+    types::{
+        UpdateReportRequest, UpdateReportRequestOutcome, UpdateReportRequestResolution,
+        UpdateReportRequestStatus,
+    },
+};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -44,20 +50,24 @@ impl AdminApiClient {
         &self,
         report_id: &str,
         resolution: UpdateReportRequestResolution,
+        outcome: Option<UpdateReportRequestOutcome>,
+        duplicate_of: Option<&str>,
         public_comment: Option<&str>,
         notify_reporter: bool,
-        audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let mut body = serde_json::json!({"status": "resolved", "resolution": resolution});
-        if let Some(public_comment) = public_comment {
-            body["public_comment"] = serde_json::Value::from(public_comment);
-        }
-        body["notify_reporter"] = serde_json::Value::from(notify_reporter);
+        let body = UpdateReportRequest {
+            duplicate_of: duplicate_of.map(snowflake),
+            notify_reporter,
+            outcome,
+            public_comment: public_comment.map(str::to_owned),
+            resolution,
+            status: UpdateReportRequestStatus::Resolved,
+        };
         self.send(
             Method::PATCH,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),
-            audit_log_reason,
+            None,
         )
         .await
     }

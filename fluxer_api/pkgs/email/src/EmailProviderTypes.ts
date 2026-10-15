@@ -6,8 +6,6 @@ export interface EmailConfig {
 	fromName: string;
 	replyTo?: string | null;
 	appBaseUrl: string;
-	termsUrl: string | null;
-	guidelinesUrl: string | null;
 	appealsEmail: string | null;
 	safetyEmail: string | null;
 	supportEmail: string | null;

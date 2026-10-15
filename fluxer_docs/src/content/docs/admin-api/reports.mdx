@@ -676,15 +676,23 @@ Resolves one report and returns a [report resolution](#report-resolution-object)
 | status | resolved | The status to move the report to |
 | public_comment?<sup>1</sup> | string | The comment shown to the reporter (0-512 characters) |
 | notify_reporter?<sup>2</sup> | boolean | Whether the notice to the reporter includes `public_comment` (default true) |
-| resolution?<sup>3</sup> | string | How the report was resolved, one of `actioned`, `no_violation`, or `duplicate` |
+| resolution<sup>3</sup> | string | How the report was resolved, one of `actioned`, `no_violation`, or `duplicate` |
+| outcome?<sup>4</sup> | string | What happened to the reported item, `removed`, `restricted`, `action_taken`, or `no_violation` |
+| duplicate_of?<sup>5</sup> | snowflake | The report this one repeats |
 
 <sup>1</sup> Stored as null when it is omitted or empty. Otherwise it is stored, and the resolution notice shows it to the reporter unless `notify_reporter` is false
 
-<sup>2</sup> The reporter is notified either way. False sends the generic notice without the comment, and the comment is still stored on the report
+<sup>2</sup> The reporter is notified either way. False sends the notice without the comment, and the comment is still stored on the report
 
-<sup>3</sup> Optional, so older admin clients that send none still work. It is not stored on the report, not returned by any report route, and not shown to the reporter. It is recorded in the audit entry
+<sup>3</sup> Not stored on the report and not returned by any report route. It is recorded in the audit entry
 
-The admin panel always sends `resolution`. Its resolve form has a required Resolution select with three choices: Action taken (`actioned`), No violation (`no_violation`), and Duplicate (`duplicate`). The browser refuses to submit the form without a choice, and the panel checks again on the server: a submission with no choice, or with any other value, is refused with the error "Choose a resolution" and the report stays pending. After a resolve, the panel confirms the choice in its message, such as "Report resolved: No violation". The report page itself does not show the choice, because no report route returns it. Staff find it in the `resolution` metadata of the `resolve_report` entry in the audit log.
+<sup>4</sup> Required for `actioned`, which refuses `no_violation`. Optional for `no_violation`, which sets `no_violation` and refuses any other value. Refused for `duplicate`. A mistake fails with `REPORT_OUTCOME_INVALID`. `removed` means the reported content, profile field or community was removed. `restricted` means the reported account was restricted and the item was left up. `action_taken` means Fluxer acted under its rules in another way, such as a warning, and the reporter is not told how. `no_violation` means the item breaks no rule and was left as it is. The outcome is stored on the report and the reporter is told it
+
+<sup>5</sup> Required for `duplicate` and refused otherwise, as is a report naming itself, with `REPORT_OUTCOME_INVALID`. The duplicate takes the outcome stored on that report and the reporter is told it. While that report has no outcome, because it is still pending or was resolved before outcomes were stored, the duplicate is resolved without a notice to its reporter. An unknown report returns 404 `UNKNOWN_REPORT`
+
+The admin panel's resolve form has a required Resolution select with three choices: Action taken (`actioned`), No violation (`no_violation`), and Duplicate (`duplicate`). Action taken also shows a required Outcome select: Content removed (`removed`), Account restricted (`restricted`), and Other action taken (`action_taken`). No violation sends the outcome `no_violation`. Duplicate shows a required Duplicate of field for the report ID. The panel refuses a submission without a resolution, without an outcome for Action taken, or without a report ID for Duplicate, and the report stays pending. After a resolve, the panel confirms the choice in its message, such as "Report resolved: No violation". Staff find the choice in the `resolution` and `outcome` metadata of the `resolve_report` entry in the audit log.
+
+A [decision](/admin-api/enforcement/) that links pending reports resolves them as `actioned` itself, with the outcome its kind implies, so no separate update is needed.
 
 :::caution[Resolution is terminal]
 Resolving a report notifies the reporter whatever `notify_reporter` says, as the side effects below describe. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
@@ -696,15 +704,16 @@ Resolving a report notifies the reporter whatever `notify_reporter` says, as the
 | --- | --- | --- |
 | 200 | [report resolution](#report-resolution-object) object | Report was resolved |
 | 400 | [error response](/admin-api/#error-response) | The report is already resolved and the request returns `REPORT_ALREADY_RESOLVED` |
-| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `resolution` is missing or the outcome or `duplicate_of` does not match it |
+| 404 | [error response](/admin-api/#error-response) | The report or the `duplicate_of` report does not exist and the request returns `UNKNOWN_REPORT` |
 
 ### Side effects
 
-The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
+The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, the public comment and the outcome.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, `reporter_email_sent`, and `reporter_dsa_email_sent`, plus `resolution` when the request sets one. When Fluxer does not attempt a notice, `reporter_notice_skipped` names the reason: `reporter_account_deleted`, `reporter_report_banned`, `reporter_lookup_failed`, or `no_reporter_email`.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, `reporter_email_sent`, `reporter_dsa_email_sent`, `resolution`, `duplicate_of` for a duplicate, and `outcome`, which a duplicate of a report with no outcome leaves out. When Fluxer does not attempt a notice, `reporter_notice_skipped` names the reason: `reporter_account_deleted`, `reporter_report_banned`, `reporter_lookup_failed`, `no_reporter_email`, or `duplicate_outcome_unknown`.
 
-Fluxer notifies the reporter of every resolution. A reporter with an account receives a system direct message, and an email when the account has an address. A Digital Services Act notice has no reporter account, so its verified address receives a decision email with the report ID, the comment when one is shared, and how to appeal. Nothing is sent when the reporter account is deleted or barred from reporting.
+Fluxer tells the reporter the decision about the item they reported: that the content was removed, that the account was restricted without saying how, that action was taken without saying what, or that it broke no rule and was left as it is. A reporter with an account receives a system direct message, and an email when the account has an address. A Digital Services Act notice has no reporter account, so its verified address receives the same decision by email. Each notice gives the report ID, the comment when one is shared, and on hosted instances how to appeal within 60 days and the EU redress routes. It never names a decision, a sanction or the other account's history. Nothing is sent when the reporter account is deleted, or was barred from reporting when the report was filed.
 
 A reporter who does not already have the system channel open receives [Channel Create](/gateway/events/#channel-create), and every session of the reporter receives [Message Create](/gateway/events/#message-create). Fluxer logs a delivery failure, and the request still succeeds.
 

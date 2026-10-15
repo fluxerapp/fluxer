@@ -2,12 +2,17 @@
 
 use crate::{
     acl,
-    api::types::{
-        AccountIdentityMode, AdminUser, PasswordResetLinkResponse, UserSession, WebAuthnCredential,
+    api::{
+        generated::types::EnforcementKindType,
+        types::{
+            AccountIdentityMode, AdminUser, PasswordResetLinkResponse, UserSession,
+            WebAuthnCredential,
+        },
     },
     config::AdminConfig,
     templates::components::{
         alert::{AlertVariant, alert},
+        enforcement_fields::{BasisFields, DecisionFields, FIELD_HELP_CLASS, basis_fields},
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::card_with_header,
     },
@@ -286,7 +291,7 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
     }
     let action_url = format!("{base}/users/{}?action=clear_fields&tab=account", user.id);
     html! {
-        (card_with_header("Clear Profile Fields", html! {
+        (card_with_header("Clear profile fields", html! {
             form method="post"
                 action=(&action_url)
                 hx-post=(&action_url)
@@ -300,10 +305,31 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                         @if user.banner.is_some() { (checkbox("fields[]", "banner", "Banner", false, true)) }
                         @if user.bio.is_some() { (checkbox("fields[]", "bio", "Bio", false, true)) }
                         @if user.pronouns.is_some() { (checkbox("fields[]", "pronouns", "Pronouns", false, true)) }
-                        @if user.global_name.is_some() { (checkbox("fields[]", "global_name", "Display Name", false, true)) }
+                        @if user.global_name.is_some() { (checkbox("fields[]", "global_name", "Display name", false, true)) }
                     }
+                    (basis_fields(&BasisFields {
+                        decision: DecisionFields {
+                            id_prefix: "clear-fields",
+                            kind: EnforcementKindType::ProfileReset,
+                            report_ids: &[],
+                            messages: Some(&[]),
+                            user_flags: Some(user.flags),
+                            allow_restricted: true,
+                        },
+                        choices: &[
+                            ("enforcement", "A rule was broken"),
+                            ("holder_request", "The account holder asked"),
+                            ("housekeeping", "Housekeeping"),
+                        ],
+                        plain_note_help: "Staff only. Saved in the audit log.",
+                        enforcement_extra: html! {
+                            p class=(FIELD_HELP_CLASS) {
+                                "The current values are saved as evidence before they are cleared. The cleared fields are the facts, so evidence and a note to the user are optional."
+                            }
+                        },
+                    }))
                     (form_actions(html! {
-                        (submit_button("Clear Selected Fields"))
+                        (submit_button("Clear selected fields"))
                     }))
                 }
             }

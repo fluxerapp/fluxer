@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
+import type {
+	EmailTemplateVariables,
+	ReporterOutcome,
+	ReportReceivedTargetKind,
+} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 
 export interface IEmailService {
 	sendPasswordResetEmail(email: string, username: string, resetToken: string, locale?: string | null): Promise<boolean>;
@@ -18,21 +22,6 @@ export interface IEmailService {
 		location: string,
 		locale?: string | null,
 	): Promise<boolean>;
-	sendAccountTempBannedEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		durationHours: number,
-		bannedUntil: Date,
-		locale?: string | null,
-	): Promise<boolean>;
-	sendAccountScheduledForDeletionEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		deletionDate: Date,
-		locale?: string | null,
-	): Promise<boolean>;
 	sendSelfDeletionScheduledEmail(
 		email: string,
 		username: string,
@@ -42,29 +31,24 @@ export interface IEmailService {
 	sendAccountDeletionRequestedEmail(
 		email: string,
 		username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendAccountDeletionInactivityEmail(
 		email: string,
 		username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendAccountDeletionCancelledEmail(email: string, username: string, locale?: string | null): Promise<boolean>;
-	sendUnbanNotification(
+	sendEnforcementNoticeEmail(
 		email: string,
-		username: string,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_notice'],
 		locale?: string | null,
 	): Promise<boolean>;
-	sendScheduledDeletionNotification(
+	sendEnforcementEndedEmail(
 		email: string,
-		username: string,
-		deletionDate: Date,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_ended'],
 		locale?: string | null,
 	): Promise<boolean>;
 	sendInactivityWarningEmail(
@@ -89,12 +73,14 @@ export interface IEmailService {
 		username: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendDsaReportResolvedEmail(
 		email: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendReportReceivedEmail(

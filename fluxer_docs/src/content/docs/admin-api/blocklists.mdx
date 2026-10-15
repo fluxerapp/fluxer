@@ -14,7 +14,18 @@ Fluxer builds each permission name from `ban:`, the list name with each hyphen w
 
 ## Blocklist types
 
-`ip` and `email` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` stores nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time. An `ip` row with an expiry stops applying when it expires, and Fluxer then deletes it.
+`ip` and `email` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` stores nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, its creation time, and the enforcement decision it belongs to, if any. An `ip` row with an expiry stops applying when it expires, and Fluxer then deletes it.
+
+## Network blocks from decisions
+
+A permanent suspension or a closure for a broken rule can block networks the account used in the last 30 days, through `block_networks` on [Suspend user](/admin-api/users/#suspend-user) and [Schedule user deletion](/admin-api/users/#schedule-user-deletion). Each such `ip` row belongs to that [enforcement decision](/admin-api/enforcement/) and expires after 90 days unless the request set another length. These rows are only ever created by a decision:
+
+- Adding or removing the address through this resource returns 409 `IP_BAN_LINKED_TO_DECISION` with the `decision_id`.
+- A plain write, including a temporary block from Fluxer's own abuse defences, never replaces a decision's row.
+- A plain row with an expiry becomes the decision's row and keeps the later of the two expiries. A permanent plain row or another decision's row is left as it is, and the request reports the address in `skipped_ips` as `already_blocked`.
+- Ending the decision removes its rows. So does executing the account's deletion, for the rows of every decision on that account.
+
+Ending a decision removes its rows even if a plain block existed before the decision took the row over. Add the plain block again if it is still wanted.
 
 | Value | Description |
 | --- | --- |
@@ -186,7 +197,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 
 <sup>6</sup> Non-null only on `url-domain`
 
-<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) reads back with the reason `platform_admin_enforcement`. Its `expires_at` is null unless it was added with a positive `duration_hours`. A row past its `expires_at` is not listed
+<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) reads back with the reason `platform_admin_enforcement`. Its `expires_at` is null unless it was added with a positive `duration_hours`. A row a decision created reads back with the reason `enforcement_decision` and always has an `expires_at`. A row past its `expires_at` is not listed
 
 <sup>8</sup> Both null on `email` and `phrase`, which store nothing but the value. `created_by_user_id` is also null on `ip`
 
@@ -224,10 +235,13 @@ The decision [Check blocklist entry](#check-blocklist-entry) returns for one val
 | --- | --- | --- |
 | banned<sup>1</sup> | boolean | Whether the value is currently blocked by the named blocklist |
 | expires_at<sup>2</sup> | ?ISO8601 timestamp | When the matching ban expires |
+| decision_id<sup>3</sup> | ?snowflake | The [enforcement decision](/admin-api/enforcement/) the matching block belongs to |
 
 <sup>1</sup> Reports the decision the enforcement path would make for this value
 
 <sup>2</sup> Non-null only on `ip` when the matching ban has an expiry. Null when the ban is permanent, when nothing matches, and on every other blocklist
+
+<sup>3</sup> Non-null only on `ip` when the matching block belongs to a decision. Read from the same cache the enforcement path uses, so a block written in the last few moments on another node can read as null
 
 :::note[A block and a row are different things]
 A value can be blocked with no row of its own, as a single address covered by a stored CIDR range is. A row can exist while the value reads as not blocked, as an exempt address or an exempt email domain does.
@@ -393,6 +407,7 @@ Every write is an upsert on the canonical value. An omitted optional field is wr
 | --- | --- | --- |
 | 204 | empty | Values were written |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the value is not valid for the list, or a field the blocklist does not accept was supplied |
+| 409 | [error response](/admin-api/#error-response) | `IP_BAN_LINKED_TO_DECISION` with `decision_id`, because the address is blocked by an enforcement decision |
 
 A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array. A `url-domain` value that is not a valid domain or [domain pattern](#domain-patterns) returns the same 400 naming `domain`.
 
@@ -675,6 +690,7 @@ Removes one row from the selected blocklist. Returns 204 with an empty body. Req
 | --- | --- | --- |
 | 204 | empty | Value was processed |
 | 400 | [error response](/admin-api/#error-response) | `scope` is supplied on an unscoped blocklist or omitted on `profile-substring`, and the request returns `INVALID_FORM_BODY` |
+| 409 | [error response](/admin-api/#error-response) | `IP_BAN_LINKED_TO_DECISION` with `decision_id`, because an enforcement decision owns the `ip` row |
 
 On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
 

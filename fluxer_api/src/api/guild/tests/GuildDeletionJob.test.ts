@@ -84,7 +84,7 @@ describe('Guild deletion job', () => {
 		const guild = await createGuild(harness, admin.token, 'Admin Deletion Guild');
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/guilds/${guild.id}`)
-			.body(null)
+			.body({basis: {type: 'holder_request'}})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(worker.byTask('guildProcessDeletion').map((job) => job.payload)).toEqual([

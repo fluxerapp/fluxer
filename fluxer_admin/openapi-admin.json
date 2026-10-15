@@ -1251,7 +1251,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list is refused with 400 IP_BAN_DECLINED and recorded in the audit log.",
+				"description": "Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list is refused with 400 IP_BAN_DECLINED and recorded in the audit log. An IP address blocked by an enforcement decision returns 409 IP_BAN_LINKED_TO_DECISION with the decision ID, because only an account decision creates or changes such a block.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1600,7 +1600,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Remove an entry from a blocklist. The value is percent-encoded in the path and is canonicalized the same way it was on add, so an IP covered only by a broader CIDR entry cannot be removed through the narrower address. The profile-substring blocklist requires a scope.",
+				"description": "Remove an entry from a blocklist. The value is percent-encoded in the path and is canonicalized the same way it was on add, so an IP covered only by a broader CIDR entry cannot be removed through the narrower address. An IP block that belongs to an enforcement decision returns 409 IP_BAN_LINKED_TO_DECISION with the decision ID, and is removed by ending that decision. The profile-substring blocklist requires a scope.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1983,7 +1983,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Deletes a single message permanently and purges its attachments. Used for removing inappropriate or harmful content. Logged to audit log. Requires MESSAGE_DELETE permission.",
+				"description": "Deletes a single message permanently and purges its attachments. The basis is holder_request or housekeeping, such as cleanup of webhook or system messages. To remove a message for breaking a rule, shred it with an enforcement basis so a decision records it. Logged to audit log with the basis. Requires MESSAGE_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -2006,7 +2006,11 @@
 						},
 						"description": "The ID of the message"
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminMessageDeleteRequest"}}}
+				}
 			}
 		},
 		"/admin/discovery/applications": {
@@ -2523,6 +2527,317 @@
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DiscoveryAdminRemoveRequest"}}}
+				}
+			}
+		},
+		"/admin/enforcement-decisions": {
+			"get": {
+				"operationId": "list_admin_enforcement_decisions",
+				"summary": "List enforcement decisions",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionListResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the enforcement decisions about one user or community, newest first, without notes or evidence. With review_queue=true it lists the automated decisions waiting for a person instead, such as purchase limits after a chargeback. A person takes one out of the queue by ending it or by recording a warning, suspension or closure on the same account. Report IDs are empty without REPORT_VIEW. Requires ENFORCEMENT_VIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "review_queue",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "List the automated decisions waiting for a person to review them instead of one subject",
+							"default": "false",
+							"type": "string"
+						},
+						"description": "List the automated decisions waiting for a person to review them instead of one subject"
+					},
+					{
+						"name": "subject_type",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Kind of subject whose decisions to list",
+							"type": "string",
+							"enum": ["user", "guild"]
+						},
+						"description": "Kind of subject whose decisions to list"
+					},
+					{
+						"name": "subject_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "ID of the user or community whose decisions to list",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "ID of the user or community whose decisions to list"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Maximum number of decisions to return", "default": "50", "type": "string"},
+						"description": "Maximum number of decisions to return"
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Return decisions with IDs lower than this decision ID",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "Return decisions with IDs lower than this decision ID"
+					}
+				]
+			}
+		},
+		"/admin/enforcement-decisions/{decision_id}": {
+			"get": {
+				"operationId": "get_admin_enforcement_decision",
+				"summary": "Get enforcement decision",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns one enforcement decision with its notes, evidence and the notice the holder sees now. Evidence content and profile values are null without MESSAGE_LOOKUP, and report IDs are empty without REPORT_VIEW. Requires ENFORCEMENT_VIEW permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "decision_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the enforcement decision",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the enforcement decision"
+					}
+				]
+			}
+		},
+		"/admin/enforcement-decisions/{decision_id}/end": {
+			"post": {
+				"operationId": "end_admin_enforcement_decision",
+				"summary": "End an enforcement decision",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Ends an active decision as lifted or reversed, undoes what can be undone and emails the holder. Ending a suspension lifts it, and returns 409 when a later decision replaced it. Warnings, removals and suspensions that ended as expired can only be reversed. Creates audit log entry. Requires ENFORCEMENT_VIEW permission plus the permission of the route that made the decision, such as USER_TEMP_BAN for a suspension or USER_UPDATE_FLAGS for a warning.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "decision_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the enforcement decision",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the enforcement decision"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionEndRequest"}}}
+				}
+			}
+		},
+		"/admin/enforcement-decisions/{decision_id}/notes": {
+			"post": {
+				"operationId": "annotate_admin_enforcement_decision",
+				"summary": "Add a note to an enforcement decision",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionNoteResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Appends an internal note to an enforcement decision. Notes are staff only, never change and expire with the evidence after a year. Creates audit log entry. Requires ENFORCEMENT_ANNOTATE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "decision_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the enforcement decision",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the enforcement decision"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EnforcementDecisionNoteRequest"}}}
 				}
 			}
 		},
@@ -3074,7 +3389,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.",
+				"description": "Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. The basis is enforcement or holder_request. An enforcement basis records a community removal decision and sends its notice to the owner, and is refused for child safety and violent extremism reasons. Logged to audit log. Requires GUILD_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -3084,7 +3399,11 @@
 						"schema": {"description": "The ID of the guild", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
 						"description": "The ID of the guild"
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminGuildDeleteRequest"}}}
+				}
 			}
 		},
 		"/admin/guilds/{guild_id}/archives": {
@@ -5399,7 +5718,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Moves a report to the resolved status. The reporter is always told the report was reviewed: an account reporter by system DM and email, a Digital Services Act notifier by email. notify_reporter false leaves the public comment out of that notice. Nothing is sent when the reporter account is deleted or barred from reporting. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
+				"description": "Moves a report to the resolved status. resolution is required. actioned also needs the outcome for the reported item, and no_violation sets the outcome no_violation. duplicate needs duplicate_of and takes the outcome stored on that report. The reporter is told the outcome: an account reporter by system DM and email, a Digital Services Act notifier by email. A duplicate of a report with no outcome yet is resolved without telling the reporter. notify_reporter false leaves the public comment out of that notice. Nothing is sent when the reporter account is deleted, or barred from reporting when the report was filed. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6273,12 +6592,12 @@
 		"/admin/users/{user_id}/ban": {
 			"put": {
 				"operationId": "ban_admin_user",
-				"summary": "Ban user",
+				"summary": "Suspend user",
 				"tags": ["Admin"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserRestrictionResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -6319,7 +6638,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission. Emails the user for temporary bans unless notify_user is false. Permanent bans are never emailed.",
+				"description": "Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the evidence messages after they are snapshotted. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6337,7 +6656,7 @@
 			},
 			"delete": {
 				"operationId": "unban_admin_user",
-				"summary": "Unban user",
+				"summary": "Lift a suspension without a decision",
 				"tags": ["Admin"],
 				"responses": {
 					"200": {
@@ -6383,7 +6702,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Immediately remove the ban from the user account. Emails the user only when notify_user is true, the ban was still in force and the account is not closed or pending deletion. The email shows public_reason and never the audit log reason. Creates audit log entry. Requires USER_TEMP_BAN permission.",
+				"description": "Lift a suspension that no enforcement decision owns, such as one from before decisions existed. Returns 409 with the decision ID when a decision owns the suspension, which is then ended through its end route. Emails the user that the restriction ended when the suspension was still in force. Creates audit log entry. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6393,74 +6712,7 @@
 						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
 						"description": "The ID of the user"
 					}
-				],
-				"requestBody": {
-					"required": false,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserUnbanRequest"}}}
-				}
-			}
-		},
-		"/admin/users/{user_id}/ban/notes": {
-			"post": {
-				"operationId": "annotate_admin_user_ban",
-				"summary": "Add a note to a user ban",
-				"tags": ["Admin"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Append a note to the current ban of a user. The note is recorded as the reason of a new annotate_ban audit log entry whose metadata names the ban audit log entry. Earlier entries are never changed. Requires USER_TEMP_BAN permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserBanNoteRequest"}}}
-				}
+				]
 			}
 		},
 		"/admin/users/{user_id}/bot-status": {
@@ -6681,7 +6933,7 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserRestrictionResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -6722,7 +6974,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission. Emails the user unless notify_user is false. The email depends on reason_code: user requested and inactivity get neutral wording, other codes get enforcement wording with an appeal path.",
+				"description": "Close the account and schedule its deletion. The basis says why. A broken rule records an enforcement decision kind closure, keeps the account for at least 74 days so an appeal can be reviewed first (14 days on a self-hosted instance, which has no appeals), sends the notice and, when the rule bars new accounts, bans the account email. The X-Audit-Log-Reason header is then required and becomes the first note. A holder request or housekeeping keeps the account for at least 14 days, sends a neutral email, and is cancelled when the holder signs in. Those two return 409 while an enforcement decision owns the account state. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. block_networks works as on the suspend route and is refused for the other bases. Executing the deletion removes the blocks. Creates audit log entry. Requires USER_DELETE permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6786,7 +7038,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Cancel the scheduled account deletion named by expected_pending_deletion_at. Returns 409 when a different deletion is pending and 400 when none is. The user is emailed only when notify_user is true, and the email never includes the audit log reason. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.",
+				"description": "Cancel a scheduled deletion that no enforcement decision owns, named by expected_pending_deletion_at, such as one the holder asked for, an inactivity deletion or a closure from before decisions existed. Returns 409 with the decision ID when a decision owns the deletion, which is then ended through its end route, 409 when a different deletion is pending and 400 when none is. Emails the user that the deletion was cancelled, or that the restriction ended for a closure from before decisions existed. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7031,6 +7283,72 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/feature-limits": {
+			"put": {
+				"operationId": "limit_admin_user_features",
+				"summary": "Limit user features",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Record an enforcement decision that limits one feature and send its notice by email and system DM. Direct messages set SPAMMER and are allowed for spam, automation, fraud and malware reasons only. Reports set REPORT_BANNED until ends_at, 90 days by default and at most 365, and expire on their own. Purchases set PURCHASE_DISABLED for payment reasons. The X-Audit-Log-Reason header is required and becomes the first note. Requires USER_UPDATE_FLAGS permission, plus MESSAGE_LOOKUP for evidence and REPORT_VIEW and REPORT_RESOLVE for reports.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserFeatureLimitRequest"}}}
+				}
+			}
+		},
 		"/admin/users/{user_id}/flags": {
 			"patch": {
 				"operationId": "update_admin_user_flags",
@@ -7080,7 +7398,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Add or remove user flags to control account features and restrictions. Flags determine verification status and special properties. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.",
+				"description": "Add or remove user flags. Flags that record a restriction go through their own routes: adding DISABLED, DELETED, SPAMMER or REPORT_BANNED and removing DELETED return 400, removing DISABLED while a suspension is set returns 400, and removing SPAMMER or REPORT_BANNED while an enforcement decision holds it returns 409 with the decision ID. A self-disabled account can still have DISABLED removed. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7308,7 +7626,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Queues bulk shredding of the given messages of a user, with attachment deletion. Returns a job ID to track progress asynchronously. Used for large-scale content removal. Requires MESSAGE_SHRED permission.",
+				"description": "Queues bulk shredding of the given messages of a user, with attachment deletion. Returns a job ID to track progress asynchronously. With an enforcement basis the first 50 entries are snapshotted as the evidence of a content removal decision before the job is queued, every entry for child safety and violent extremism reasons, and the user is sent its notice. Requires MESSAGE_SHRED permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7374,7 +7692,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Deletes all messages from a specific user across all channels. Permanent operation used for account suspension or policy violation. Pass dry_run=false to delete; the default counts without deleting. Requires MESSAGE_DELETE_ALL permission.",
+				"description": "Deletes all messages from a specific user across all channels. Pass dry_run=false to delete, with a basis in the body. The default counts without deleting and records nothing. An enforcement basis records a content removal decision and sends its notice, and is refused for child safety and violent extremism reasons, which must shred explicit entries instead. Requires MESSAGE_DELETE_ALL permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7395,7 +7713,11 @@
 						},
 						"description": "Count the messages that would be deleted without deleting anything (default true)"
 					}
-				]
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserMessageDeleteRequest"}}}
+				}
 			}
 		},
 		"/admin/users/{user_id}/mfa": {
@@ -7445,6 +7767,68 @@
 					}
 				},
 				"description": "Disable two-factor authentication for user account. Removes all authenticators. Creates audit log entry. Requires USER_UPDATE_MFA permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
+		"/admin/users/{user_id}/network-block-candidates": {
+			"get": {
+				"operationId": "list_admin_user_network_block_candidates",
+				"summary": "List networks a suspension or closure can block",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/NetworkBlockCandidatesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the addresses the account used in the last 30 days, most recent first, with how many other accounts that are not suspended or closed were last active on each. These are the addresses block_networks accepts on the suspend and close routes. Requires USER_VIEW_IP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7627,7 +8011,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Add or remove premium-related flags on a user account (badge visibility, override, purchase block, etc). Creates audit log entry. Requires USER_UPDATE_FLAGS permission.",
+				"description": "Add or remove premium-related flags on a user account (badge visibility, override, purchase block, etc). Adding PURCHASE_DISABLED returns 400, because a purchase limit is recorded through the feature limits route, and removing it while an enforcement decision holds it returns 409 with the decision ID. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7695,7 +8079,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Clear or reset user profile fields such as bio, avatar, or status. Creates audit log entry. Requires USER_UPDATE_PROFILE permission.",
+				"description": "Clears profile fields such as the bio, avatar or display name. An enforcement basis saves the old values as evidence, records a profile reset decision and sends its notice by system DM and email. Creates audit log entry. Requires USER_UPDATE_PROFILE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -8485,6 +8869,72 @@
 						"description": "The ID of the user"
 					}
 				]
+			}
+		},
+		"/admin/users/{user_id}/warnings": {
+			"post": {
+				"operationId": "warn_admin_user",
+				"summary": "Warn user",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserWarningResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Record a warning decision and send its notice by email and system DM. Nothing about the account changes. The X-Audit-Log-Reason header is required and becomes the first note. Refused for reasons that only allow a suspension or content removal. Requires USER_UPDATE_FLAGS permission, plus MESSAGE_LOOKUP for evidence and REPORT_VIEW and REPORT_RESOLVE for reports.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserWarningRequest"}}}
+				}
 			}
 		},
 		"/admin/users/{user_id}/webauthn-credentials": {
@@ -9716,6 +10166,22 @@
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/WebAuthnCredentialResponse"}
 			},
+			"AdminUserWarningRequest": {
+				"type": "object",
+				"properties": {"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]}},
+				"required": ["decision"]
+			},
+			"AdminUserWarningResponse": {
+				"type": "object",
+				"properties": {
+					"decision_id": {
+						"description": "The warning decision",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					}
+				},
+				"required": ["decision_id"],
+				"additionalProperties": false
+			},
 			"AdminUserUsernameUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -9864,6 +10330,7 @@
 				"type": "object",
 				"properties": {
 					"fields": {
+						"minItems": 1,
 						"maxItems": 10,
 						"type": "array",
 						"items": {
@@ -9880,9 +10347,10 @@
 							"type": "string"
 						},
 						"description": "List of profile fields to clear"
-					}
+					},
+					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]}
 				},
-				"required": ["fields"]
+				"required": ["fields", "basis"]
 			},
 			"AdminUserPremiumFlagsUpdateRequest": {
 				"type": "object",
@@ -9923,6 +10391,45 @@
 				"required": ["url", "expires_at"],
 				"additionalProperties": false
 			},
+			"NetworkBlockCandidatesResponse": {
+				"type": "object",
+				"properties": {
+					"networks": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"ip": {"type": "string"},
+								"last_seen_at": {"type": "string", "description": "When the account last used this address"},
+								"skip_reason": {
+									"nullable": true,
+									"description": "Why this address would be skipped. Null when it can be blocked",
+									"type": "string",
+									"enum": ["exempt", "special_purpose"]
+								},
+								"other_unrestricted_accounts": {
+									"description": "Other accounts that are not suspended or closed and were last active on this address. Blocking is refused when this is above zero",
+									"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+								}
+							},
+							"required": ["ip", "last_seen_at", "skip_reason", "other_unrestricted_accounts"],
+							"additionalProperties": false
+						},
+						"description": "Addresses the account used in the last 30 days, most recent first"
+					}
+				},
+				"required": ["networks"],
+				"additionalProperties": false
+			},
+			"AdminUserMessageDeleteRequest": {
+				"type": "object",
+				"properties": {
+					"basis": {
+						"description": "Why the messages are removed. Required unless dry_run is true. An enforcement basis refuses child safety and violent extremism reasons",
+						"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]
+					}
+				}
+			},
 			"DeleteAllUserMessagesResponse": {
 				"type": "object",
 				"properties": {
@@ -9930,7 +10437,11 @@
 					"dry_run": {"type": "boolean"},
 					"channel_count": {"$ref": "#/components/schemas/Int32Type"},
 					"message_count": {"$ref": "#/components/schemas/Int32Type"},
-					"job_id": {"type": "string"}
+					"job_id": {"type": "string"},
+					"decision_id": {
+						"description": "The content removal decision, for an enforcement basis",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					}
 				},
 				"required": ["success", "dry_run", "channel_count", "message_count"],
 				"additionalProperties": false
@@ -9950,16 +10461,21 @@
 							},
 							"required": ["channel_id", "message_id"]
 						}
-					}
+					},
+					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]}
 				},
-				"required": ["entries"]
+				"required": ["entries", "basis"]
 			},
 			"MessageShredResponse": {
 				"type": "object",
 				"properties": {
 					"success": {"type": "boolean", "enum": [true]},
 					"job_id": {"type": "string"},
-					"requested": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+					"requested": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"decision_id": {
+						"description": "The content removal decision, for an enforcement basis",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					}
 				},
 				"required": ["success", "job_id"],
 				"additionalProperties": false
@@ -9994,6 +10510,24 @@
 						}
 					}
 				}
+			},
+			"AdminUserFeatureLimitRequest": {
+				"type": "object",
+				"properties": {
+					"limit": {
+						"type": "string",
+						"enum": ["direct_messages", "reports", "purchases"],
+						"description": "The one feature this decision limits. Direct messages are for spam, automation, fraud and malware reasons only, reports for misuse of reporting, purchases for payment reasons"
+					},
+					"ends_at": {
+						"description": "When a reports limit ends, at most 365 days away. Defaults to 90 days. Refused for other limits",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]}
+				},
+				"required": ["limit", "decision"]
 			},
 			"AdminUserEmailUpdateRequest": {
 				"type": "object",
@@ -10150,11 +10684,6 @@
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "pending_deletion_at of the deletion being cancelled, as shown on the account"
-					},
-					"notify_user": {
-						"default": false,
-						"description": "Whether to email the user that the deletion was cancelled",
-						"type": "boolean"
 					}
 				},
 				"required": ["expected_pending_deletion_at"]
@@ -10162,17 +10691,11 @@
 			"AdminUserDeletionScheduleRequest": {
 				"type": "object",
 				"properties": {
-					"reason_code": {
-						"description": "Code indicating the reason for deletion",
-						"allOf": [{"$ref": "#/components/schemas/DeletionReasonCode"}]
-					},
-					"public_reason": {"description": "Public-facing reason for the deletion", "type": "string"},
 					"days_until_deletion": {
-						"default": 60,
-						"description": "Number of days until the account is deleted",
 						"type": "integer",
 						"minimum": 1,
-						"maximum": 365
+						"maximum": 365,
+						"description": "Days until the account is deleted. Raised to 14, or to 74 when a rule was broken so an appeal can be reviewed first. Self-hosted instances have no appeals and raise every basis to 14"
 					},
 					"replace_pending_deletion_at": {
 						"description": "pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account",
@@ -10180,13 +10703,27 @@
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
-					"notify_user": {
-						"default": true,
-						"description": "Whether to email the user about the scheduled deletion",
+					"basis": {"allOf": [{"$ref": "#/components/schemas/ModerationBasis"}]},
+					"remove_evidence": {
+						"description": "Remove the evidence messages after they are snapshotted into the decision. Enforcement basis only",
 						"type": "boolean"
+					},
+					"block_networks": {"allOf": [{"$ref": "#/components/schemas/NetworkBlockRequest"}]}
+				},
+				"required": ["days_until_deletion", "basis"]
+			},
+			"UserRestrictionResponse": {
+				"type": "object",
+				"properties": {
+					"user": {"$ref": "#/components/schemas/UserAdminResponseSchema"},
+					"skipped_ips": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SkippedNetworkBlock"},
+						"description": "Requested network blocks that were not written, with the reason"
 					}
 				},
-				"required": ["reason_code"]
+				"required": ["user", "skipped_ips"],
+				"additionalProperties": false
 			},
 			"AdminUserDobUpdateRequest": {
 				"type": "object",
@@ -10224,34 +10761,6 @@
 				"properties": {"bot": {"type": "boolean", "description": "Whether the user should be marked as a bot"}},
 				"required": ["bot"]
 			},
-			"AdminUserBanNoteRequest": {
-				"type": "object",
-				"properties": {
-					"ban_audit_log_id": {
-						"description": "Audit log entry of the current ban that the note refers to",
-						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
-					},
-					"note": {
-						"description": "Note to append to the ban. Recorded as the reason of a new audit log entry",
-						"type": "string"
-					}
-				},
-				"required": ["ban_audit_log_id", "note"]
-			},
-			"AdminUserUnbanRequest": {
-				"type": "object",
-				"properties": {
-					"notify_user": {
-						"default": true,
-						"description": "Whether to email the user that the suspension was lifted",
-						"type": "boolean"
-					},
-					"public_reason": {
-						"description": "Reason shown to the user in the unban email. The audit log reason is never emailed",
-						"type": "string"
-					}
-				}
-			},
 			"AdminUserBanRequest": {
 				"type": "object",
 				"properties": {
@@ -10259,16 +10768,16 @@
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 8760,
-						"description": "Duration of the ban in hours. Use 0 for a permanent ban (until manually unbanned)."
+						"description": "Duration of the suspension in hours. Use 0 for a permanent suspension"
 					},
-					"reason": {"description": "Reason shown to the user in the ban email", "type": "string"},
-					"notify_user": {
-						"default": true,
-						"description": "Whether to email the user about a temporary ban. Permanent bans (duration_hours 0) are never emailed",
+					"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]},
+					"remove_evidence": {
+						"description": "Remove the evidence messages after they are snapshotted into the decision",
 						"type": "boolean"
-					}
+					},
+					"block_networks": {"allOf": [{"$ref": "#/components/schemas/NetworkBlockRequest"}]}
 				},
-				"required": ["duration_hours"]
+				"required": ["duration_hours", "decision"]
 			},
 			"BanUserAvatarRequest": {
 				"type": "object",
@@ -10338,7 +10847,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10515,9 +11024,25 @@
 						],
 						"enum": ["actioned", "no_violation", "duplicate"],
 						"type": "string"
+					},
+					"outcome": {
+						"description": "What happened to the reported content or account. Required for actioned, where no_violation is refused. Optional for no_violation, where it can only be no_violation. Refused for duplicate. The reporter is told it",
+						"x-enumNames": ["removed", "restricted", "action_taken", "no_violation"],
+						"x-enumDescriptions": [
+							"The reported content, profile field or community was removed",
+							"The reported account was restricted and the content was left up",
+							"Action was taken under the rules, and the reporter is not told which",
+							"The reported content or account does not break the rules and was left as it is"
+						],
+						"enum": ["removed", "restricted", "action_taken", "no_violation"],
+						"type": "string"
+					},
+					"duplicate_of": {
+						"description": "The report this one repeats. Required for duplicate and refused otherwise. The reporter is told the outcome of that report, or nothing while it has none",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 					}
 				},
-				"required": ["status"]
+				"required": ["status", "resolution"]
 			},
 			"ResolveReportResponse": {
 				"type": "object",
@@ -12354,6 +12879,11 @@
 				"required": ["processed", "errors"],
 				"additionalProperties": false
 			},
+			"AdminGuildDeleteRequest": {
+				"type": "object",
+				"properties": {"basis": {"allOf": [{"$ref": "#/components/schemas/CommunityRemovalBasis"}]}},
+				"required": ["basis"]
+			},
 			"UpdateGuildRequest": {
 				"type": "object",
 				"properties": {
@@ -12827,6 +13357,382 @@
 				"required": ["guilds"],
 				"additionalProperties": false
 			},
+			"EnforcementDecisionNoteRequest": {
+				"type": "object",
+				"properties": {"body": {"description": "The internal note. Staff only", "type": "string"}},
+				"required": ["body"]
+			},
+			"EnforcementDecisionNoteResponse": {
+				"type": "object",
+				"properties": {
+					"note_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"author_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"body": {"type": "string"},
+					"created_at": {"type": "string"}
+				},
+				"required": ["note_id", "author_id", "body", "created_at"],
+				"additionalProperties": false
+			},
+			"EnforcementDecisionEndRequest": {
+				"type": "object",
+				"properties": {
+					"outcome": {
+						"type": "string",
+						"enum": ["lifted", "reversed"],
+						"description": "Lifted ends a restriction that was correct. Reversed says the decision was wrong"
+					},
+					"statement": {"description": "Note to the user, shown in the email", "type": "string"}
+				},
+				"required": ["outcome"]
+			},
+			"EnforcementDecisionResponse": {
+				"type": "object",
+				"properties": {
+					"decision_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"subject_type": {"type": "string", "enum": ["user", "guild"]},
+					"subject_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"subject_name": {
+						"nullable": true,
+						"description": "Community name or bot username when the decision was made",
+						"type": "string"
+					},
+					"recipient_user_id": {
+						"nullable": true,
+						"description": "Who receives the notice",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"kind": {"allOf": [{"$ref": "#/components/schemas/EnforcementKindType"}]},
+					"reason_code": {"$ref": "#/components/schemas/Int32Type"},
+					"source": {"type": "string", "enum": ["report", "own_review"]},
+					"automation": {"type": "string", "enum": ["none", "flagged", "automated"]},
+					"statement": {"nullable": true, "type": "string"},
+					"rights_holder": {"nullable": true, "type": "string"},
+					"ends_at": {"nullable": true, "type": "string"},
+					"deletion_at": {"nullable": true, "type": "string"},
+					"limit": {"nullable": true, "type": "string", "enum": ["direct_messages", "reports", "purchases"]},
+					"profile_fields": {"type": "array", "items": {"type": "string"}},
+					"removed_message_count": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+					"removed_all_messages": {"type": "boolean"},
+					"payment_at": {"nullable": true, "type": "string"},
+					"report_ids": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
+						"description": "Empty without the report view permission"
+					},
+					"decided_by": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"created_at": {"type": "string"},
+					"status": {"type": "string", "enum": ["active", "ended"]},
+					"end_outcome": {
+						"nullable": true,
+						"description": "Expired is recorded by Fluxer when a temporary suspension runs out",
+						"type": "string",
+						"enum": ["lifted", "reversed", "expired"]
+					},
+					"ended_at": {"nullable": true, "type": "string"},
+					"ended_by": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+					"end_statement": {"nullable": true, "type": "string"},
+					"notice_status": {"type": "string", "enum": ["pending", "sent", "undelivered"]},
+					"notice_channels": {"type": "array", "items": {"type": "string", "enum": ["email", "system_dm", "sign_in"]}},
+					"notice_locale": {"nullable": true, "type": "string"},
+					"notice_text": {"nullable": true, "description": "The plain text that was sent", "type": "string"},
+					"notice_sent_at": {"nullable": true, "type": "string"},
+					"expired": {"type": "boolean", "description": "An active suspension or feature limit whose end has passed"},
+					"replaced": {
+						"type": "boolean",
+						"description": "An active suspension or closure that a later decision replaced"
+					},
+					"notes": {"type": "array", "items": {"$ref": "#/components/schemas/EnforcementDecisionNoteResponse"}},
+					"evidence": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"message_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"channel_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+								"timestamp": {"type": "string"},
+								"content": {
+									"nullable": true,
+									"description": "Null without the message lookup permission, and for restricted decisions",
+									"type": "string"
+								},
+								"attachments": {
+									"nullable": true,
+									"description": "Attachment details without the files. Null without the message lookup permission",
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"filename": {"type": "string"},
+											"size": {"nullable": true, "type": "string"},
+											"content_type": {"nullable": true, "type": "string"}
+										},
+										"required": ["filename", "size", "content_type"],
+										"additionalProperties": false
+									}
+								},
+								"attachment_count": {"$ref": "#/components/schemas/Int32Type"}
+							},
+							"required": ["message_id", "channel_id", "timestamp", "content", "attachments", "attachment_count"],
+							"additionalProperties": false
+						},
+						"description": "Empty once the evidence has expired"
+					},
+					"profile_values": {
+						"nullable": true,
+						"description": "Profile values before a reset. Null without the message lookup permission",
+						"type": "object",
+						"additionalProperties": {"type": "string"}
+					},
+					"network_blocks": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"ip": {"type": "string", "description": "Masked without the IP view permission"},
+								"expires_at": {"nullable": true, "type": "string"}
+							},
+							"required": ["ip", "expires_at"],
+							"additionalProperties": false
+						},
+						"description": "Network blocks that belong to this decision and have not expired"
+					},
+					"notice": {
+						"properties": {
+							"decision_id": {
+								"nullable": true,
+								"description": "The decision reference. Null for restrictions from before decisions",
+								"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+							},
+							"kind": {"allOf": [{"$ref": "#/components/schemas/EnforcementKindType"}]},
+							"permanent": {"type": "boolean", "description": "Whether this is a suspension with no end"},
+							"issued_at": {
+								"nullable": true,
+								"description": "When the decision was made, as an ISO 8601 timestamp",
+								"type": "string"
+							},
+							"ends_at": {
+								"nullable": true,
+								"description": "When a suspension or feature limit ends, as an ISO 8601 timestamp",
+								"type": "string"
+							},
+							"deletion_at": {
+								"nullable": true,
+								"description": "When a closed account or bot is deleted, as an ISO 8601 timestamp",
+								"type": "string"
+							},
+							"summary": {"type": "string", "description": "One sentence saying what happened"},
+							"effects": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "What the decision means for the holder, one sentence each"
+							},
+							"rule": {
+								"nullable": true,
+								"description": "The rule the decision relies on, null when none was recorded",
+								"type": "object",
+								"properties": {
+									"title": {"type": "string", "description": "Title of the rule that was broken"},
+									"url": {
+										"nullable": true,
+										"description": "Link to the rule, null when the instance publishes none",
+										"type": "string"
+									}
+								},
+								"required": ["title", "url"],
+								"additionalProperties": false
+							},
+							"facts": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "The finding first, then where and when it happened"
+							},
+							"statement": {"nullable": true, "description": "Note to the holder from the team", "type": "string"},
+							"how_we_decided": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "How the case reached the team and who decided it"
+							},
+							"appeal": {
+								"nullable": true,
+								"description": "How to appeal, null when the instance offers no appeal route",
+								"type": "object",
+								"properties": {
+									"email": {"type": "string", "description": "Address that takes appeals"},
+									"deadline": {
+										"nullable": true,
+										"description": "Last day to appeal, already formatted for the reader",
+										"type": "string"
+									},
+									"account_has_email": {
+										"type": "boolean",
+										"description": "Whether the account has an email address to write from"
+									}
+								},
+								"required": ["email", "deadline", "account_has_email"],
+								"additionalProperties": false
+							},
+							"redress": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "Other ways to challenge the decision"
+							}
+						},
+						"description": "What the holder sees now, rendered in English",
+						"allOf": [{"$ref": "#/components/schemas/EnforcementNotice"}]
+					}
+				},
+				"required": [
+					"decision_id",
+					"subject_type",
+					"subject_id",
+					"subject_name",
+					"recipient_user_id",
+					"kind",
+					"reason_code",
+					"source",
+					"automation",
+					"statement",
+					"rights_holder",
+					"ends_at",
+					"deletion_at",
+					"limit",
+					"profile_fields",
+					"removed_message_count",
+					"removed_all_messages",
+					"payment_at",
+					"report_ids",
+					"decided_by",
+					"created_at",
+					"status",
+					"end_outcome",
+					"ended_at",
+					"ended_by",
+					"end_statement",
+					"notice_status",
+					"notice_channels",
+					"notice_locale",
+					"notice_text",
+					"notice_sent_at",
+					"expired",
+					"replaced",
+					"notes",
+					"evidence",
+					"profile_values",
+					"network_blocks",
+					"notice"
+				],
+				"additionalProperties": false
+			},
+			"EnforcementDecisionListResponse": {
+				"type": "object",
+				"properties": {
+					"decisions": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"decision_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"subject_type": {"type": "string", "enum": ["user", "guild"]},
+								"subject_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"subject_name": {
+									"nullable": true,
+									"description": "Community name or bot username when the decision was made",
+									"type": "string"
+								},
+								"recipient_user_id": {
+									"nullable": true,
+									"description": "Who receives the notice",
+									"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+								},
+								"kind": {"allOf": [{"$ref": "#/components/schemas/EnforcementKindType"}]},
+								"reason_code": {"$ref": "#/components/schemas/Int32Type"},
+								"source": {"type": "string", "enum": ["report", "own_review"]},
+								"automation": {"type": "string", "enum": ["none", "flagged", "automated"]},
+								"statement": {"nullable": true, "type": "string"},
+								"rights_holder": {"nullable": true, "type": "string"},
+								"ends_at": {"nullable": true, "type": "string"},
+								"deletion_at": {"nullable": true, "type": "string"},
+								"limit": {"nullable": true, "type": "string", "enum": ["direct_messages", "reports", "purchases"]},
+								"profile_fields": {"type": "array", "items": {"type": "string"}},
+								"removed_message_count": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+								"removed_all_messages": {"type": "boolean"},
+								"payment_at": {"nullable": true, "type": "string"},
+								"report_ids": {
+									"type": "array",
+									"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
+									"description": "Empty without the report view permission"
+								},
+								"decided_by": {"$ref": "#/components/schemas/SnowflakeStringType"},
+								"created_at": {"type": "string"},
+								"status": {"type": "string", "enum": ["active", "ended"]},
+								"end_outcome": {
+									"nullable": true,
+									"description": "Expired is recorded by Fluxer when a temporary suspension runs out",
+									"type": "string",
+									"enum": ["lifted", "reversed", "expired"]
+								},
+								"ended_at": {"nullable": true, "type": "string"},
+								"ended_by": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+								"end_statement": {"nullable": true, "type": "string"},
+								"notice_status": {"type": "string", "enum": ["pending", "sent", "undelivered"]},
+								"notice_channels": {
+									"type": "array",
+									"items": {"type": "string", "enum": ["email", "system_dm", "sign_in"]}
+								},
+								"notice_locale": {"nullable": true, "type": "string"},
+								"notice_text": {"nullable": true, "description": "The plain text that was sent", "type": "string"},
+								"notice_sent_at": {"nullable": true, "type": "string"},
+								"expired": {
+									"type": "boolean",
+									"description": "An active suspension or feature limit whose end has passed"
+								},
+								"replaced": {
+									"type": "boolean",
+									"description": "An active suspension or closure that a later decision replaced"
+								}
+							},
+							"required": [
+								"decision_id",
+								"subject_type",
+								"subject_id",
+								"subject_name",
+								"recipient_user_id",
+								"kind",
+								"reason_code",
+								"source",
+								"automation",
+								"statement",
+								"rights_holder",
+								"ends_at",
+								"deletion_at",
+								"limit",
+								"profile_fields",
+								"removed_message_count",
+								"removed_all_messages",
+								"payment_at",
+								"report_ids",
+								"decided_by",
+								"created_at",
+								"status",
+								"end_outcome",
+								"ended_at",
+								"ended_by",
+								"end_statement",
+								"notice_status",
+								"notice_channels",
+								"notice_locale",
+								"notice_text",
+								"notice_sent_at",
+								"expired",
+								"replaced"
+							],
+							"additionalProperties": false
+						}
+					}
+				},
+				"required": ["decisions"],
+				"additionalProperties": false
+			},
 			"DiscoveryAdminRemoveRequest": {
 				"type": "object",
 				"properties": {"reason": {"type": "string", "minLength": 1, "maxLength": 500, "description": "Removal reason"}},
@@ -12942,6 +13848,11 @@
 			"DiscoveryAdminPendingApplicationListResponse": {
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/DiscoveryAdminPendingApplicationResponse"}
+			},
+			"AdminMessageDeleteRequest": {
+				"type": "object",
+				"properties": {"basis": {"allOf": [{"$ref": "#/components/schemas/MessageDeletionBasis"}]}},
+				"required": ["basis"]
 			},
 			"DeleteMessageResponse": {
 				"type": "object",
@@ -13071,36 +13982,26 @@
 					{
 						"type": "object",
 						"properties": {
-							"reason_code": {
-								"description": "Code indicating the reason for deletion",
-								"allOf": [{"$ref": "#/components/schemas/DeletionReasonCode"}]
-							},
-							"public_reason": {"description": "Public-facing reason for the deletion", "type": "string"},
-							"days_until_deletion": {
-								"default": 60,
-								"description": "Number of days until the accounts are deleted",
-								"type": "integer",
-								"minimum": 1,
-								"maximum": 365
-							},
-							"notify_user": {
-								"default": true,
-								"description": "Whether to email the user about the scheduled deletion",
-								"type": "boolean"
-							},
 							"user_ids": {
 								"maxItems": 1000,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/SnowflakeType"},
 								"description": "List of user IDs to schedule deletion for"
 							},
+							"days_until_deletion": {
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 365,
+								"description": "Days until the account is deleted. Raised to 14, or to 74 when a rule was broken so an appeal can be reviewed first. Self-hosted instances have no appeals and raise every basis to 14"
+							},
+							"basis": {"allOf": [{"$ref": "#/components/schemas/BulkModerationBasis"}]},
 							"task": {
 								"type": "string",
 								"enum": ["schedule_user_deletion"],
 								"description": "Schedules account deletion for every targeted user"
 							}
 						},
-						"required": ["reason_code", "user_ids", "task"]
+						"required": ["user_ids", "days_until_deletion", "basis", "task"]
 					},
 					{
 						"type": "object",
@@ -13111,13 +14012,14 @@
 								"items": {"$ref": "#/components/schemas/SnowflakeType"},
 								"description": "List of user IDs whose messages will be deleted"
 							},
+							"basis": {"allOf": [{"$ref": "#/components/schemas/BulkModerationBasis"}]},
 							"task": {
 								"type": "string",
 								"enum": ["delete_user_messages"],
 								"description": "Deletes every message authored by each targeted user, across all channels"
 							}
 						},
-						"required": ["user_ids", "task"]
+						"required": ["user_ids", "basis", "task"]
 					}
 				]
 			},
@@ -13150,9 +14052,14 @@
 						"nullable": true,
 						"description": "ISO 8601 timestamp when the matching ban expires. Null when the ban is permanent, when nothing matches, and on every blocklist other than ip.",
 						"type": "string"
+					},
+					"decision_id": {
+						"nullable": true,
+						"description": "Enforcement decision the matching ip block belongs to. Null for a block added through the blocklist, when nothing matches, and on every blocklist other than ip.",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 					}
 				},
-				"required": ["banned", "expires_at"],
+				"required": ["banned", "expires_at", "decision_id"],
 				"additionalProperties": false
 			},
 			"AdminBlocklistBulkDeleteRequest": {
@@ -13555,7 +14462,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -13573,7 +14480,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13603,7 +14510,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -13624,7 +14531,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13637,7 +14544,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 107,
+						"maxItems": 109,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13694,6 +14601,8 @@
 					"bulk:update:user_flags",
 					"discovery:remove",
 					"discovery:review",
+					"enforcement:annotate",
+					"enforcement:view",
 					"gateway:memory_stats",
 					"gateway:reload_all",
 					"gift_codes:generate",
@@ -14103,37 +15012,31 @@
 					"notes": {"description": "Internal notes for audit trail", "type": "string"}
 				}
 			},
-			"DeletionReasonCode": {
-				"description": "Reason the account was scheduled for deletion",
-				"type": "integer",
-				"minimum": 0,
-				"maximum": 2147483647,
-				"format": "int32",
-				"x-enumNames": [
-					"USER_REQUESTED",
-					"OTHER",
-					"SPAM",
-					"CHEATING_OR_EXPLOITATION",
-					"COORDINATED_RAIDING",
-					"AUTOMATION_OR_SELFBOT",
-					"NONCONSENSUAL_SEXUAL_CONTENT",
-					"SCAM_OR_SOCIAL_ENGINEERING",
-					"CHILD_SEXUAL_CONTENT",
-					"PRIVACY_VIOLATION_OR_DOXXING",
-					"HARASSMENT_OR_BULLYING",
-					"PAYMENT_FRAUD",
-					"CHILD_SAFETY_VIOLATION",
-					"BILLING_DISPUTE_OR_ABUSE",
-					"UNSOLICITED_EXPLICIT_CONTENT",
-					"GRAPHIC_VIOLENCE",
-					"BAN_EVASION",
-					"TOKEN_OR_CREDENTIAL_SCAM",
-					"INACTIVITY",
-					"HATE_SPEECH_OR_EXTREMIST_CONTENT",
-					"MALICIOUS_LINKS_OR_MALWARE",
-					"IMPERSONATION_OR_FAKE_IDENTITY"
+			"BulkModerationBasis": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"type": {"type": "string", "enum": ["enforcement"]},
+							"decision": {"allOf": [{"$ref": "#/components/schemas/BulkEnforcementDecisionInput"}]}
+						},
+						"required": ["type", "decision"],
+						"description": "A rule was broken. Records an enforcement decision and sends its notice"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["holder_request"]}},
+						"required": ["type"],
+						"description": "The account holder or community owner asked"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["housekeeping"]}},
+						"required": ["type"],
+						"description": "Nobody's conduct is involved, such as inactivity or cleanup"
+					}
 				],
-				"enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+				"description": "Why the action is taken"
 			},
 			"GuildFeatureSchema": {
 				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED (other values allowed)",
@@ -14266,6 +15169,69 @@
 						"value": "4611686018427387904",
 						"description": "User is permanently exempt from account limitation"
 					}
+				]
+			},
+			"BulkEnforcementDecisionInput": {
+				"type": "object",
+				"properties": {
+					"reason_code": {"allOf": [{"$ref": "#/components/schemas/EnforcementReasonCodeType"}]},
+					"source": {
+						"type": "string",
+						"enum": ["own_review"],
+						"description": "Bulk decisions cannot link reports, so the team always found them in its own review"
+					},
+					"automation": {
+						"type": "string",
+						"enum": ["none", "flagged"],
+						"description": "Whether automated tools flagged this before a person on the team decided"
+					},
+					"statement": {
+						"description": "Note to the user, shown in every notice. It is the only fact a bulk decision can give",
+						"type": "string"
+					}
+				},
+				"required": ["reason_code", "source", "automation", "statement"],
+				"additionalProperties": false,
+				"description": "Why every account in the job is restricted. Reports and evidence messages are refused in bulk"
+			},
+			"EnforcementReasonCodeType": {
+				"description": "Reason code of an enforcement decision",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": [
+					"SPAM",
+					"CHEATING_OR_EXPLOITATION",
+					"COORDINATED_RAIDING",
+					"AUTOMATION_OR_SELFBOT",
+					"NONCONSENSUAL_SEXUAL_CONTENT",
+					"SCAM_OR_SOCIAL_ENGINEERING",
+					"CHILD_SEXUAL_CONTENT",
+					"PRIVACY_VIOLATION_OR_DOXXING",
+					"HARASSMENT_OR_BULLYING",
+					"PAYMENT_FRAUD",
+					"CHILD_SAFETY_VIOLATION",
+					"BILLING_DISPUTE_OR_ABUSE",
+					"UNSOLICITED_EXPLICIT_CONTENT",
+					"GRAPHIC_VIOLENCE",
+					"BAN_EVASION",
+					"TOKEN_OR_CREDENTIAL_SCAM",
+					"HATE_SPEECH_OR_EXTREMIST_CONTENT",
+					"MALICIOUS_LINKS_OR_MALWARE",
+					"IMPERSONATION_OR_FAKE_IDENTITY",
+					"THREATS_OR_VIOLENT_SPEECH",
+					"VIOLENT_EXTREMISM",
+					"SELF_HARM_PROMOTION",
+					"SEXUAL_CONTENT_PLACEMENT",
+					"ILLEGAL_GOODS_OR_ACTIVITY",
+					"HARMFUL_DECEPTION",
+					"REPORTING_ABUSE",
+					"UNDERAGE_ACCOUNT",
+					"COPYRIGHT"
+				],
+				"enum": [
+					3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
 				]
 			},
 			"MessageResponseSchema": {
@@ -15765,6 +16731,23 @@
 					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
 				]
 			},
+			"MessageDeletionBasis": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["holder_request"]}},
+						"required": ["type"],
+						"description": "The account holder or community owner asked"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["housekeeping"]}},
+						"required": ["type"],
+						"description": "Nobody's conduct is involved, such as inactivity or cleanup"
+					}
+				],
+				"description": "Why the message is deleted. To remove a message for breaking a rule, shred it with an enforcement basis instead"
+			},
 			"DiscoveryAdminPendingApplicationResponse": {
 				"type": "object",
 				"properties": {
@@ -15870,6 +16853,119 @@
 					"custom_tags",
 					"applied_at",
 					"approved_at"
+				],
+				"additionalProperties": false
+			},
+			"EnforcementKindType": {
+				"type": "string",
+				"enum": [
+					"warning",
+					"suspension",
+					"closure",
+					"feature_limit",
+					"content_removal",
+					"profile_reset",
+					"community_removal"
+				],
+				"description": "What the decision did"
+			},
+			"EnforcementNotice": {
+				"type": "object",
+				"properties": {
+					"decision_id": {
+						"nullable": true,
+						"description": "The decision reference. Null for restrictions from before decisions",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"kind": {"allOf": [{"$ref": "#/components/schemas/EnforcementKindType"}]},
+					"permanent": {"type": "boolean", "description": "Whether this is a suspension with no end"},
+					"issued_at": {
+						"nullable": true,
+						"description": "When the decision was made, as an ISO 8601 timestamp",
+						"type": "string"
+					},
+					"ends_at": {
+						"nullable": true,
+						"description": "When a suspension or feature limit ends, as an ISO 8601 timestamp",
+						"type": "string"
+					},
+					"deletion_at": {
+						"nullable": true,
+						"description": "When a closed account or bot is deleted, as an ISO 8601 timestamp",
+						"type": "string"
+					},
+					"summary": {"type": "string", "description": "One sentence saying what happened"},
+					"effects": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "What the decision means for the holder, one sentence each"
+					},
+					"rule": {
+						"nullable": true,
+						"description": "The rule the decision relies on, null when none was recorded",
+						"type": "object",
+						"properties": {
+							"title": {"type": "string", "description": "Title of the rule that was broken"},
+							"url": {
+								"nullable": true,
+								"description": "Link to the rule, null when the instance publishes none",
+								"type": "string"
+							}
+						},
+						"required": ["title", "url"],
+						"additionalProperties": false
+					},
+					"facts": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "The finding first, then where and when it happened"
+					},
+					"statement": {"nullable": true, "description": "Note to the holder from the team", "type": "string"},
+					"how_we_decided": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "How the case reached the team and who decided it"
+					},
+					"appeal": {
+						"nullable": true,
+						"description": "How to appeal, null when the instance offers no appeal route",
+						"type": "object",
+						"properties": {
+							"email": {"type": "string", "description": "Address that takes appeals"},
+							"deadline": {
+								"nullable": true,
+								"description": "Last day to appeal, already formatted for the reader",
+								"type": "string"
+							},
+							"account_has_email": {
+								"type": "boolean",
+								"description": "Whether the account has an email address to write from"
+							}
+						},
+						"required": ["email", "deadline", "account_has_email"],
+						"additionalProperties": false
+					},
+					"redress": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Other ways to challenge the decision"
+					}
+				},
+				"required": [
+					"decision_id",
+					"kind",
+					"permanent",
+					"issued_at",
+					"ends_at",
+					"deletion_at",
+					"summary",
+					"effects",
+					"rule",
+					"facts",
+					"statement",
+					"how_we_decided",
+					"appeal",
+					"redress"
 				],
 				"additionalProperties": false
 			},
@@ -16098,6 +17194,77 @@
 					"Member of the server for more than 10 minutes"
 				],
 				"enum": [0, 1, 2, 3]
+			},
+			"CommunityRemovalBasis": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"type": {"type": "string", "enum": ["enforcement"]},
+							"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]}
+						},
+						"required": ["type", "decision"],
+						"description": "A rule was broken. Records an enforcement decision and sends its notice"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["holder_request"]}},
+						"required": ["type"],
+						"description": "The account holder or community owner asked"
+					}
+				],
+				"description": "Why the community is removed"
+			},
+			"EnforcementDecisionInput": {
+				"type": "object",
+				"properties": {
+					"reason_code": {"allOf": [{"$ref": "#/components/schemas/EnforcementReasonCodeType"}]},
+					"source": {
+						"type": "string",
+						"enum": ["report", "own_review"],
+						"description": "Whether the team reviewed this after a report or found it in its own review"
+					},
+					"automation": {
+						"type": "string",
+						"enum": ["none", "flagged"],
+						"description": "Whether automated tools flagged this before a person on the team decided"
+					},
+					"report_ids": {
+						"description": "Reports about the subject that this decision resolves. Required when the source is a report",
+						"maxItems": 20,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"}
+					},
+					"evidence": {
+						"description": "Messages from the subject that the decision relies on. They are snapshotted when the decision is made",
+						"maxItems": 50,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
+								"message_id": {"$ref": "#/components/schemas/SnowflakeType"}
+							},
+							"required": ["channel_id", "message_id"]
+						}
+					},
+					"statement": {
+						"description": "Note to the user, shown in the notice. Never name or describe other people",
+						"type": "string"
+					},
+					"rights_holder": {
+						"description": "The rights holder or the right concerned. Required for copyright decisions and refused otherwise",
+						"type": "string"
+					},
+					"confirmations": {
+						"description": "Required for child safety and violent extremism decisions",
+						"maxItems": 2,
+						"type": "array",
+						"items": {"type": "string", "enum": ["evidence_preserved", "reports_filed_or_not_required"]}
+					}
+				},
+				"required": ["reason_code", "source", "automation"],
+				"description": "Why the restriction is applied. The X-Audit-Log-Reason header is required and becomes the first note"
 			},
 			"PurgeGuildAssetErrorSchema": {
 				"type": "object",
@@ -16893,8 +18060,12 @@
 					"temp_banned_until": {"nullable": true, "type": "string"},
 					"pending_deletion_at": {"nullable": true, "type": "string"},
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
-					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-					"deletion_public_reason": {"nullable": true, "type": "string"},
+					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/DeletionReasonCode"}]},
+					"deletion_public_reason": {
+						"nullable": true,
+						"description": "Public reason of a deletion scheduled before enforcement decisions existed. No longer written",
+						"type": "string"
+					},
 					"deletion_audit_log_reason": {
 						"nullable": true,
 						"description": "Private reason recorded with the pending deletion, null without the audit log view permission",
@@ -16910,7 +18081,12 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 107, "type": "array", "items": {"type": "string"}},
+					"enforcement_decision_id": {
+						"nullable": true,
+						"description": "The enforcement decision behind the current suspension or closure, null when none owns it",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"acls": {"maxItems": 109, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},
@@ -16951,6 +18127,7 @@
 					"deletion_audit_log_reason",
 					"deletion_scheduled_by",
 					"deletion_scheduled_at",
+					"enforcement_decision_id",
 					"acls",
 					"traits",
 					"has_totp",
@@ -16961,6 +18138,48 @@
 					"last_active_location"
 				],
 				"additionalProperties": false
+			},
+			"DeletionReasonCode": {
+				"description": "Reason the account was scheduled for deletion",
+				"type": "integer",
+				"enum": [
+					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+					31
+				],
+				"format": "int32",
+				"x-enumNames": [
+					"USER_REQUESTED",
+					"OTHER",
+					"SPAM",
+					"CHEATING_OR_EXPLOITATION",
+					"COORDINATED_RAIDING",
+					"AUTOMATION_OR_SELFBOT",
+					"NONCONSENSUAL_SEXUAL_CONTENT",
+					"SCAM_OR_SOCIAL_ENGINEERING",
+					"CHILD_SEXUAL_CONTENT",
+					"PRIVACY_VIOLATION_OR_DOXXING",
+					"HARASSMENT_OR_BULLYING",
+					"PAYMENT_FRAUD",
+					"CHILD_SAFETY_VIOLATION",
+					"BILLING_DISPUTE_OR_ABUSE",
+					"UNSOLICITED_EXPLICIT_CONTENT",
+					"GRAPHIC_VIOLENCE",
+					"BAN_EVASION",
+					"TOKEN_OR_CREDENTIAL_SCAM",
+					"INACTIVITY",
+					"HATE_SPEECH_OR_EXTREMIST_CONTENT",
+					"MALICIOUS_LINKS_OR_MALWARE",
+					"IMPERSONATION_OR_FAKE_IDENTITY",
+					"THREATS_OR_VIOLENT_SPEECH",
+					"VIOLENT_EXTREMISM",
+					"SELF_HARM_PROMOTION",
+					"SEXUAL_CONTENT_PLACEMENT",
+					"ILLEGAL_GOODS_OR_ACTIVITY",
+					"HARMFUL_DECEPTION",
+					"REPORTING_ABUSE",
+					"UNDERAGE_ACCOUNT",
+					"COPYRIGHT"
+				]
 			},
 			"PremiumFlags": {
 				"type": "integer",
@@ -16987,6 +18206,66 @@
 					{"name": "ENABLED_OVERRIDE", "value": "128", "description": "Premium status is enabled via override"},
 					{"name": "PERKS_DISABLED", "value": "256", "description": "User has temporarily disabled premium perks"}
 				]
+			},
+			"NetworkBlockRequest": {
+				"type": "object",
+				"properties": {
+					"ips": {
+						"minItems": 1,
+						"maxItems": 20,
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Addresses the account used in the last 30 days. An address on which another account that is not suspended or closed was last active is refused"
+					},
+					"days": {
+						"default": 90,
+						"description": "How many days the blocks last. Ending the decision or deleting the account removes them sooner. Defaults to 90",
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 365
+					}
+				},
+				"required": ["ips"],
+				"description": "Block networks the account used. Only with a permanent suspension or a closure for a broken rule. Requires BAN_IP_ADD and USER_VIEW_IP"
+			},
+			"SkippedNetworkBlock": {
+				"type": "object",
+				"properties": {
+					"ip": {"type": "string"},
+					"reason": {
+						"type": "string",
+						"enum": ["exempt", "special_purpose", "already_blocked"],
+						"description": "Exempt addresses and special-purpose ranges such as private, shared carrier and documentation ranges are never blocked. An address that is already blocked permanently or by another decision is left as it is"
+					}
+				},
+				"required": ["ip", "reason"],
+				"additionalProperties": false
+			},
+			"ModerationBasis": {
+				"oneOf": [
+					{
+						"type": "object",
+						"properties": {
+							"type": {"type": "string", "enum": ["enforcement"]},
+							"decision": {"allOf": [{"$ref": "#/components/schemas/EnforcementDecisionInput"}]}
+						},
+						"required": ["type", "decision"],
+						"description": "A rule was broken. Records an enforcement decision and sends its notice"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["holder_request"]}},
+						"required": ["type"],
+						"description": "The account holder or community owner asked"
+					},
+					{
+						"type": "object",
+						"properties": {"type": {"type": "string", "enum": ["housekeeping"]}},
+						"required": ["type"],
+						"description": "Nobody's conduct is involved, such as inactivity or cleanup"
+					}
+				],
+				"description": "Why the action is taken"
 			},
 			"EmailType": {"type": "string"},
 			"AdminRelationshipEntrySchema": {
@@ -17394,6 +18673,11 @@
 					"EMAIL_UNAVAILABLE_ON_INSTANCE",
 					"EMAIL_VERIFICATION_REQUIRED",
 					"DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED",
+					"ENFORCEMENT_ACCOUNT_CLOSED",
+					"ENFORCEMENT_DECISION_ENDED",
+					"ENFORCEMENT_DECISION_OWNS_STATE",
+					"ENFORCEMENT_DECISION_REPLACED",
+					"ENFORCEMENT_DELETION_STARTED",
 					"FOLLOW_TARGET_CONTENT_WARNING_REQUIRED",
 					"FOLLOW_TARGET_NOT_AGE_RESTRICTED",
 					"FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED",
@@ -17471,6 +18755,7 @@
 					"GLOBAL_IP_BANNED",
 					"GLOBAL_IP_TEMPORARILY_BANNED",
 					"IP_BAN_DECLINED",
+					"IP_BAN_LINKED_TO_DECISION",
 					"MAX_APPLICATIONS",
 					"MAX_BOOKMARKS",
 					"MAX_ACTIVE_THREADS",
@@ -17585,6 +18870,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_CHANNEL",
 					"UNKNOWN_EMOJI",
+					"UNKNOWN_ENFORCEMENT_DECISION",
 					"UNKNOWN_FAVORITE_MEME",
 					"UNKNOWN_FORUM_TAG",
 					"UNKNOWN_GIFT_CODE",
@@ -17690,6 +18976,11 @@
 					"This instance doesn't use email.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
+					"This account is closed, so it can't be suspended.",
+					"This decision has already ended.",
+					"An enforcement decision owns this restriction. End the decision instead.",
+					"A later decision replaced this one, so it can no longer be ended.",
+					"The deletion of this account has already started, so the decision can no longer be ended.",
 					"Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.",
 					"Updates from an age-restricted channel can only go to an age-restricted channel.",
 					"Email verification is required for this action.",
@@ -17764,9 +19055,10 @@
 					"IP authorization is required.",
 					"IP authorization resend is on cooldown.",
 					"IP authorization resend limit exceeded.",
-					"Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators. {appealEmail, select, null {If you believe this is a mistake, contact the administrators of this instance to appeal.} other {If you believe this is a mistake, contact {appealEmail} to appeal.}} Include this IP address in your appeal.",
-					"Your IP address {ipAddress} has been temporarily blocked from the {product_name} API. The block lifts on its own when it expires. {appealEmail, select, null {If you think this is a mistake, contact the administrators of this instance and include this IP address.} other {If you think this is a mistake, contact {appealEmail} and include this IP address.}}",
+					"{reason, select, shown {{product_name} blocked access from this network because of activity that broke its rules.} other {{product_name} blocked access from this network.}} If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off.{appealEmail, select, null {} other { If you think this block is a mistake, email {appealEmail} and include your IP address, {ipAddress}.}}",
+					"{reason, select, shown {{product_name} blocked access from this network because of activity that broke its rules.} other {{product_name} blocked access from this network.}} The block ends on {expiresAt}. If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off.{appealEmail, select, null {} other { If you think this block is a mistake, email {appealEmail} and include your IP address, {ipAddress}.}}",
 					"This IP address cannot be added to the blocklist.",
+					"This network block belongs to an enforcement decision. End the decision to remove it.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 					"This community has reached its active thread limit of {count}.",
@@ -17881,6 +19173,7 @@
 					"You need to complete your account setup before you can submit reports.",
 					"Channel wasn't found.",
 					"Unknown emoji.",
+					"Unknown enforcement decision.",
 					"Unknown saved media.",
 					"Tag wasn't found.",
 					"Unknown gift code.",

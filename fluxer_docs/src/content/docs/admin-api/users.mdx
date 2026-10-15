@@ -55,10 +55,11 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | pending_deletion_at | ?ISO8601 timestamp | The time the scheduled deletion runs, or null when none is scheduled |
 | pending_bulk_message_deletion_at<sup>6</sup> | ?ISO8601 timestamp | The time the account's own scheduled bulk message deletion runs |
 | deletion_reason_code | ?integer | [Deletion reason](#deletion-reasons) |
-| deletion_public_reason | ?string | The reason shown to the account holder, or null when none was supplied |
+| deletion_public_reason | ?string | The reason shown to the holder of a deletion scheduled before enforcement decisions existed. No longer written |
 | deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
 | deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
 | deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
+| enforcement_decision_id | ?snowflake | The [enforcement decision](/admin-api/enforcement/) behind the current suspension, or null when none owns it |
 | acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 106 entries |
 | traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
@@ -76,7 +77,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 
 <sup>4</sup> Requires `user:view:dob`, and without it the field is null
 
-<sup>5</sup> Set by [Ban user](#ban-user) for both ban modes. An expiry that has already passed is reported as null, so an elapsed temporary ban reads the same as no ban
+<sup>5</sup> Set by [Suspend user](#suspend-user) for both modes. An expiry that has already passed is reported as null, so an elapsed temporary ban reads the same as no ban
 
 <sup>6</sup> Written when the account holder schedules its own bulk message deletion, and cleared by [Cancel scheduled message deletion](#cancel-scheduled-message-deletion)
 
@@ -182,7 +183,7 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 3 | SPAM | Spam |
 | 4 | CHEATING_OR_EXPLOITATION | Cheating or exploitation |
 | 5 | COORDINATED_RAIDING | Coordinated raiding |
-| 6 | AUTOMATION_OR_SELFBOT | Automation or selfbot use |
+| 6 | AUTOMATION_OR_SELFBOT | Disruptive automation |
 | 7 | NONCONSENSUAL_SEXUAL_CONTENT | Non-consensual sexual content |
 | 8 | SCAM_OR_SOCIAL_ENGINEERING | Scam or social engineering |
 | 9 | CHILD_SEXUAL_CONTENT | Child sexual content |
@@ -199,10 +200,19 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 20 | HATE_SPEECH_OR_EXTREMIST_CONTENT | Hate speech or extremist content |
 | 21 | MALICIOUS_LINKS_OR_MALWARE | Malicious links or malware |
 | 22 | IMPERSONATION_OR_FAKE_IDENTITY | Impersonation or fake identity |
+| 23 | THREATS_OR_VIOLENT_SPEECH | Threats or violent speech |
+| 24 | VIOLENT_EXTREMISM | Terrorism or violent extremism |
+| 25 | SELF_HARM_PROMOTION | Promoting self-harm |
+| 26 | SEXUAL_CONTENT_PLACEMENT | Sexual content outside 18+ spaces |
+| 27 | ILLEGAL_GOODS_OR_ACTIVITY | Illegal goods or activity |
+| 28 | HARMFUL_DECEPTION | Harmful deception |
+| 29 | REPORTING_ABUSE | Misuse of reporting |
+| 30 | UNDERAGE_ACCOUNT | Account holder under the minimum age |
+| 31 | COPYRIGHT | Copyright |
 
-<sup>1</sup> The one value that lowers the minimum scheduling delay to 14 days and suppresses the identifier blocklisting and report auto-resolution described under [Schedule user deletion](#schedule-user-deletion)
+<sup>1</sup> Written by self-deletion and by [Schedule user deletion](#schedule-user-deletion) with the `holder_request` basis. Signing in cancels such a deletion
 
-A `reason_code` request value outside this registry fails body validation with 400 `INVALID_FORM_BODY`.
+Values 1 (`USER_REQUESTED`), 2 (`OTHER`) and 19 (`INACTIVITY`) are not enforcement reasons. Every other value is an enforcement reason, and only enforcement reasons are accepted in an [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input). A `reason_code` outside them fails body validation with 400 `INVALID_FORM_BODY`.
 
 ## Profile fields
 
@@ -1005,9 +1015,12 @@ Clearing is the only profile change on this resource. No route sets a biography,
 
 | Field | Type | Description |
 | --- | --- | --- |
-| fields<sup>1</sup> | array[string] | [Profile fields](#profile-fields) to clear, with at most 10 entries |
+| fields<sup>1</sup> | array[string] | [Profile fields](#profile-fields) to clear, with 1 to 10 entries |
+| basis<sup>2</sup> | [basis](/admin-api/enforcement/#basis) object | Why the fields are cleared |
 
-<sup>1</sup> Required. An empty array is accepted, clears nothing, and still records an audit entry. A value outside the registry fails body validation
+<sup>1</sup> Required. A value outside the registry fails body validation
+
+<sup>2</sup> The `enforcement` basis saves the current values of the fields as the evidence's `profile_values`, records a profile reset [decision](/admin-api/enforcement/) and sends its notice by email and system DM. The cleared fields are its facts, so it needs neither evidence nor a statement
 
 ### Response body
 
@@ -1020,6 +1033,7 @@ Clearing is the only profile change on this resource. No route sets a biography,
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The named fields were cleared |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because the body or the [decision](/admin-api/enforcement/#validation) is invalid |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
 ### Side effects
@@ -1028,7 +1042,7 @@ Clearing `avatar` or `banner` schedules the previous asset for deletion.
 
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the operation changes `avatar` or `global_name`.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `clear_fields`, target type `user`, and a metadata key `fields` with the submitted names joined by commas.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `clear_fields`, target type `user`, a metadata key `fields` with the submitted names joined by commas, and `basis`. The `enforcement` basis adds `decision_id`, `reason_code`, `kind` and `notice_status`.
 
 ### Rate limit
 
@@ -1235,6 +1249,8 @@ Adds and removes [account flags](#account-flags) and returns the resulting accou
 
 Additions are applied before removals, so a flag named in both arrays ends up cleared. A bit outside the [account flag](#account-flags) registry is applied unchanged.
 
+Flags that record a restriction change only through their own routes. Adding `DISABLED`, `DELETED`, `SPAMMER` or `REPORT_BANNED`, removing `DELETED`, and removing `DISABLED` while the account is suspended are refused. Removing `SPAMMER` or `REPORT_BANNED` while an active [feature limit](#limit-user-features) holds it is refused with the decision ID. A self-disabled account, which has `DISABLED` without a suspension, can still have it removed.
+
 ### Path parameters
 
 | Field | Type | Description |
@@ -1261,7 +1277,9 @@ Additions are applied before removals, so a flag named in both arrays ends up cl
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Flags were updated |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `FLAG_REQUIRES_ENFORCEMENT_ROUTE`, because the change touches a restriction flag |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` with the `decision_id`, because a feature limit holds the flag |
 
 [Bulk jobs](/admin-api/bulk-jobs/) applies the same change to up to 1,000 accounts as a queued `update_user_flags` task.
 
@@ -1284,6 +1302,8 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 Adds and removes [premium flags](#premium-flags) and returns the resulting account. Requires `user:update:flags`, the same ACL as [Update user flags](#update-user-flags).
 
 Premium flags control badge display, the premium override, the purchase block, and perk sanitisation. They do not grant or revoke a subscription.
+
+Adding `PURCHASE_DISABLED` is refused, because a purchase block is recorded through [Limit user features](#limit-user-features). Removing it while an active feature limit holds it is refused with the decision ID. A purchase block Fluxer set after repeated refunds has no decision and can be removed.
 
 ### Path parameters
 
@@ -1311,7 +1331,9 @@ Premium flags control badge display, the premium override, the purchase block, a
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Premium flags were updated |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `FLAG_REQUIRES_ENFORCEMENT_ROUTE`, because `PURCHASE_DISABLED` was added |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` with the `decision_id`, because a feature limit holds the purchase block |
 
 ### Side effects
 
@@ -1392,14 +1414,14 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
-## Ban user
+## Suspend user
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/ban" auditReason />
 
-Disables an account temporarily or permanently and returns the resulting account. Requires `user:temp_ban`.
+Suspends an account for a number of hours or permanently, records the [enforcement decision](/admin-api/enforcement/) behind it, and returns the resulting account. Requires `user:temp_ban`. The `X-Audit-Log-Reason` header is required and becomes the first note on the decision.
 
-:::note[A permanent ban is a distant expiry]
-Both modes add the `DISABLED` [account flag](#account-flags) and set `temp_banned_until`, a permanent ban to 100 years out. The field cannot tell the modes apart, and [Unban user](#unban-user) clears either one.
+:::note[A permanent suspension is a distant expiry]
+Both modes add the `DISABLED` [account flag](#account-flags) and set `temp_banned_until`, a permanent suspension to 100 years out. The decision's `ends_at` is null for a permanent suspension, which is how the two are told apart.
 :::
 
 ### Path parameters
@@ -1412,69 +1434,108 @@ Both modes add the `DISABLED` [account flag](#account-flags) and set `temp_banne
 
 | Field | Type | Description |
 | --- | --- | --- |
-| duration_hours<sup>1</sup> | integer | Whole-hour ban length, where `0` bans permanently (0-8760) |
-| reason?<sup>2</sup> | string | Statement of reasons sent to the banned account holder (at most 512 characters) |
-| notify_user?<sup>3</sup> | boolean | Whether to email the account holder about a temporary ban (default true) |
+| duration_hours<sup>1</sup> | integer | Whole-hour suspension length, where `0` suspends permanently (0-8760) |
+| decision | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the account is suspended |
+| remove_evidence?<sup>2</sup> | boolean | Whether to remove the evidence messages after they are snapshotted |
+| block_networks?<sup>3</sup> | [network block request](#network-block-request) object | Networks the account used to block with the decision |
 
-<sup>1</sup> Required. The expiry is computed from the moment the ban is applied, so no absolute-expiry field is accepted. The 8760 ceiling is one year
+<sup>1</sup> Required. The expiry is computed from the moment the suspension is applied. The 8760 ceiling is one year
 
-<sup>2</sup> Included in the temporary ban email and in the audit entry, but not stored on the account, so no read operation returns it
+<sup>2</sup> Requires `message:shred`. Queues a [message shred job](#shred-user-messages) for the evidence messages and sets the decision's `removed_message_count`
 
-<sup>3</sup> A permanent ban sends no email whatever this field says
+<sup>3</sup> Permanent suspensions only. Requires `ban:ip:add` and `user:view:ip`
+
+### Network block request
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ips<sup>1</sup> | array[string] | IPv4 or IPv6 addresses to block (1-20 items) |
+| days? | integer | How many days the blocks last (1-365, default 90) |
+
+<sup>1</sup> Each address must be one the account used in the last 30 days, as [List network block candidates](#list-network-block-candidates) shows. An address on which another account that is not suspended or closed was last active fails with `ENFORCEMENT_NETWORK_SHARED`. Exempt addresses and special-purpose ranges are skipped, not refused
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The resulting account, with `enforcement_decision_id` set |
+| skipped_ips | array[object] | Requested addresses that were not blocked, each with `ip` and `reason` |
+
+`reason` is `exempt`, `special_purpose`, or `already_blocked` when a permanent plain block or another decision already covers the address. [Network blocks](/admin-api/enforcement/#network-blocks) describes the rules.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The account was banned |
+| 200 | response body | The account was suspended |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, with one of the [validation codes](/admin-api/enforcement/#validation) |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_ACCOUNT_CLOSED`, because the account is closed |
 
-:::caution[The ban signs the account out everywhere]
-Every authentication session of the account is deleted. [Unban user](#unban-user) restores account access, but it does not restore any deleted session.
+:::caution[The suspension signs the account out everywhere]
+Every authentication session of the account is deleted. Ending the decision restores account access, but it does not restore any deleted session.
 :::
 
 ### Side effects
 
-`DISABLED` is added to the account flags and `temp_banned_until` is set to the resolved expiry. Every authentication session is then deleted, so the account is signed out on every device.
+The decision is stored first. `DISABLED` is then added to the account flags, and `temp_banned_until` and `enforcement_decision_id` are set in the same write. Every authentication session is deleted, the requested networks are blocked, linked reports are resolved, and the notice is emailed. A suspension of an account that is already suspended replaces it, and the earlier decision reads as `replaced`.
 
-An authentication attempt while the ban stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. An attempt after the expiry has passed clears the `DISABLED` flag and `temp_banned_until` in the same request, so a temporary ban ends without an Admin operation.
+An authentication attempt while the suspension stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or `ACCOUNT_SUSPENDED_PERMANENTLY` for a suspension with no end date, and shows the notice. The notice of an account with no email address counts as received at its first such attempt. After the expiry, Fluxer clears `DISABLED`, `temp_banned_until` and `enforcement_decision_id` and ends the decision as `expired`. This happens at the next authentication attempt or in a scheduled task that runs every six hours, whichever comes first, and sends no email.
 
-When `notify_user` is true, the account has an email address, and `duration_hours` is greater than zero, the account holder is emailed the duration, the expiry, and the supplied `reason`. A permanent ban sends no email. A failed email is logged and the ban still applies.
+[User Update](/gateway/events/#user-update) is emitted after the sessions are deleted, so no connection of the account remains to receive it.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions are deleted, so no connection of the account remains to receive it. `DISABLED` is not a public account flag, and no other account observes the change.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `temp_ban`, target type `user`, and the metadata keys `duration_hours`, `reason`, `banned_until`, `notify_user`, and `notification_sent`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `temp_ban`, target type `user`, and the metadata keys `duration_hours`, `banned_until`, `decision_id`, `reason_code`, `kind` and `notice_status`. When networks were blocked it adds `blocked_ips` and `network_blocks_until`.
 
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
-## Unban user
+## List network block candidates
+
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/network-block-candidates" />
+
+Lists the addresses the account used in the last 30 days, most recent first, which are the addresses `block_networks` accepts on [Suspend user](#suspend-user) and [Schedule user deletion](#schedule-user-deletion). Requires `user:view:ip`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| networks | array[object] | One entry per address, each with `ip`, `last_seen_at`, `skip_reason` and `other_unrestricted_accounts` |
+
+`last_seen_at` comes from the account's last activity and its current and ended sessions. `skip_reason` is `exempt` or `special_purpose` for an address Fluxer never blocks, and null otherwise. `other_unrestricted_accounts` counts the other accounts that are not suspended or closed and were last active on the address, matching IPv6 by its /64. An address with a count above zero cannot be blocked.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The addresses were listed |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_network_block_candidates`, target type `user`, and the metadata key `result_count`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Lift a suspension without a decision
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/ban" auditReason />
 
-Clears the account ban and returns the resulting account. Requires `user:temp_ban`.
+Lifts a suspension that no enforcement decision owns, such as one applied before decisions existed, and returns the resulting account. Requires `user:temp_ban`. A suspension with a decision is lifted by [ending the decision](/admin-api/enforcement/#end-an-enforcement-decision).
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| notify_user? | boolean | Whether to email the account holder that the ban was lifted (default true) |
-| public_reason?<sup>1</sup> | string | Statement shown to the account holder in the email (at most 512 characters) |
-
-<sup>1</sup> Also recorded in the audit entry. The `X-Audit-Log-Reason` value is never emailed
 
 ### Response body
 
@@ -1486,28 +1547,27 @@ Clears the account ban and returns the resulting account. Requires `user:temp_ba
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The ban was cleared |
+| 200<sup>1</sup> | response body | The suspension was lifted |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` with the `decision_id`, because a decision owns the suspension |
 
-<sup>1</sup> The operation checks no precondition. On an account that was never banned it writes `temp_banned_until` as null, clears `DISABLED`, and sends no email
+<sup>1</sup> On an account that was never suspended it writes `temp_banned_until` as null, clears `DISABLED`, and sends no email
 
 ### Side effects
 
-`temp_banned_until` is cleared and `DISABLED` is removed from the account flags.
+`temp_banned_until` is cleared and `DISABLED` is removed from the account flags. Deleted sessions are not restored. When the suspension was still in force and the account is not closed, the holder is emailed that the restriction ended. The `X-Audit-Log-Reason` value is never emailed. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
-Deleted sessions are not restored. Fluxer emails the account holder, with `public_reason` when one is supplied, only when `notify_user` is true, the ban was still in force, the account has an email address, and the account is neither closed nor pending deletion. A failed email is logged and the ban is still cleared. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `unban`, target type `user`, and the metadata keys `notify_user`, `notification_sent`, and `public_reason`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `unban`, target type `user`, and the metadata key `ended_notice`.
 
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
-## Add a note to a user ban
+## Warn user
 
-<RouteHeader method="POST" path="/v1/admin/users/{user_id}/ban/notes" />
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/warnings" auditReason />
 
-Appends a note to the ban that currently stands on the account. Requires `user:temp_ban`. The ban entry and earlier notes are never changed.
+Records a warning decision and sends its notice by email and system DM. Requires `user:update:flags`. Nothing about the account changes. The `X-Audit-Log-Reason` header is required and becomes the first note on the decision.
 
 ### Path parameters
 
@@ -1519,23 +1579,75 @@ Appends a note to the ban that currently stands on the account. Requires `user:t
 
 | Field | Type | Description |
 | --- | --- | --- |
-| ban_audit_log_id<sup>1</sup> | snowflake | The ID of the `temp_ban` audit entry of the current ban |
-| note | string | The note (1-512 characters) |
+| decision<sup>1</sup> | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the account is warned |
 
-<sup>1</sup> The entry must target this account, and its `banned_until` metadata must equal the current `temp_banned_until`
+<sup>1</sup> Reasons that allow only a suspension or content removal, such as child safety, refuse a warning with `ENFORCEMENT_KIND_NOT_ALLOWED`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| decision_id | snowflake | The ID of the warning decision |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | none | The note was recorded |
-| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `ban_audit_log_id` does not name a ban of this account |
+| 200 | response body | The warning was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, with one of the [validation codes](/admin-api/enforcement/#validation) |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because the named ban is no longer the current ban |
 
 ### Side effects
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `annotate_ban`, target type `user`, the note as `audit_log_reason`, and a metadata key `ban_audit_log_id`. The `X-Audit-Log-Reason` header is not read.
+Linked reports are resolved and the notice is sent. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `warn_user`, target type `user`, and the metadata keys `decision_id`, `reason_code`, `kind` and `notice_status`.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Limit user features
+
+<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/feature-limits" auditReason />
+
+Records an enforcement decision that limits one feature, applies its account flag and returns the resulting account. Requires `user:update:flags`. The `X-Audit-Log-Reason` header is required and becomes the first note on the decision. The [feature limits](/admin-api/enforcement/#feature-limits) table lists the flag and the reason codes of each limit.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit | string | `direct_messages`, `reports` or `purchases` |
+| ends_at?<sup>1</sup> | ISO8601 timestamp | When a reports limit ends |
+| decision<sup>2</sup> | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the feature is limited |
+
+<sup>1</sup> Reports only, at most 365 days away, and 90 days from now when omitted. Any other limit refuses it with `ENFORCEMENT_LIMIT_END_INVALID`
+
+<sup>2</sup> A reason code that does not allow the limit fails with `ENFORCEMENT_LIMIT_NOT_ALLOWED`, and one that allows no feature limit at all with `ENFORCEMENT_KIND_NOT_ALLOWED`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The resulting account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The limit was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, with one of the [validation codes](/admin-api/enforcement/#validation) |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+The decision is stored first and the flag is then added. Linked reports are resolved, and the notice is sent by email and system DM.
+
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `limit_features`, target type `user`, and the metadata keys `limit`, `decision_id`, `reason_code`, `kind` and `notice_status`, plus `ends_at` for a reports limit.
 
 ### Rate limit
 
@@ -1545,11 +1657,13 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Creates an account deletion schedule and returns the resulting account. Requires `user:delete`. A pending schedule is replaced only when the request names it in `replace_pending_deletion_at`, and a schedule cannot be changed once erasure starts.
+Closes the account, schedules its deletion and returns the resulting account. Requires `user:delete`. The `basis` says why, and the [basis](/admin-api/enforcement/#basis) decides everything else. A pending schedule is replaced only when the request names it in `replace_pending_deletion_at`, and a schedule cannot be changed once erasure starts.
 
-Fluxer raises the submitted delay to the minimum for the [deletion reason](#deletion-reasons), so a request for one day under any reason other than `USER_REQUESTED` is stored as 60 days.
+- `enforcement` writes the decision's reason code and `DELETED`, keeps the account for at least 74 days (14 on a self-hosted instance), and sends the enforcement notice.
+- `holder_request` writes `USER_REQUESTED` and `SELF_DELETED`, keeps the account for at least 14 days, and emails that the deletion is scheduled as asked.
+- `housekeeping` writes `INACTIVITY` and `SELF_DELETED`, keeps the account for at least 14 days, and emails that the account is deleted for inactivity.
 
-The `X-Audit-Log-Reason` value is also stored on the account as the private deletion reason and reused as the blocklist reason for the identifier bans below.
+The 74 days of an enforcement closure outlast the 60-day appeal window, so an appeal sent on its last day can be reviewed before the account is gone. A self-hosted instance has no appeal route, so its enforcement closures keep the account for at least 14 days, as the other bases do. A deletion with `SELF_DELETED` is cancelled when the holder signs in, as a self-deletion is.
 
 ### Path parameters
 
@@ -1561,47 +1675,50 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 
 | Field | Type | Description |
 | --- | --- | --- |
-| reason_code<sup>1</sup> | integer | [Deletion reason](#deletion-reasons) |
-| public_reason?<sup>2</sup> | string | Statement of reasons shown to the account holder (at most 512 characters) |
-| days_until_deletion?<sup>3</sup> | integer | Requested whole-day delay (1-365, default 60) |
-| replace_pending_deletion_at?<sup>4</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
-| notify_user? | boolean | Whether to email the account holder about the scheduled deletion (default true) |
+| days_until_deletion<sup>1</sup> | integer | Requested whole-day delay (1-365) |
+| basis | [basis](/admin-api/enforcement/#basis) object | Why the account is closed. The `enforcement` basis includes a `decision` |
+| replace_pending_deletion_at?<sup>2</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
+| remove_evidence?<sup>3</sup> | boolean | Remove the evidence messages after they are snapshotted |
+| block_networks?<sup>4</sup> | [network block request](#network-block-request) object | Networks the account used to block with the decision |
 
-<sup>1</sup> Required, and validated against the [deletion reason](#deletion-reasons) registry. `USER_REQUESTED` selects the 14-day minimum, and every other value selects the 60-day minimum
+<sup>1</sup> Raised to the minimum of the basis. There is no absolute-timestamp field
 
-<sup>2</sup> Stored on the account and included in the deletion email. Omitting it stores null
+<sup>2</sup> Required when the account already has a pending deletion, including one the caller scheduled. It must equal the current `pending_deletion_at`
 
-<sup>3</sup> The stored deadline is the request instant plus the greater of this value and the minimum for the reason code. There is no absolute-timestamp field
+<sup>3</sup> Enforcement basis only. Any other basis refuses it with `ENFORCEMENT_EVIDENCE_REQUIRED`
 
-<sup>4</sup> Required when the account already has a pending deletion, including one the caller scheduled. It must equal the current `pending_deletion_at`
+<sup>4</sup> Enforcement basis only. Any other basis refuses it with `ENFORCEMENT_NETWORK_BLOCK_NOT_ALLOWED`. Requires `ban:ip:add` and `user:view:ip`
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user | [Admin user](#admin-user-object) object | The resulting account |
+| skipped_ips | array[object] | Requested addresses that were not blocked, as on [Suspend user](#suspend-user) |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The deletion schedule was stored |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, with one of the [validation codes](/admin-api/enforcement/#validation) |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` with the `decision_id`, because a decision owns the account |
 | 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a pending deletion was not named, erasure has started, or the deletion state changed |
 
 `user:delete` also allows scheduling deletion of the acting Admin or an account with broader permissions.
 
 ### Side effects
 
-The account can no longer authenticate, and its existing authentication sessions and OAuth2 access and refresh tokens are deleted. The acting Admin and the time are stored as `deletion_scheduled_by` and `deletion_scheduled_at`. Erasure is scheduled for the resulting deadline.
+The account can no longer authenticate, and its existing authentication sessions and OAuth2 access and refresh tokens are deleted. The acting Admin and the time are stored as `deletion_scheduled_by` and `deletion_scheduled_at`. Erasure is scheduled for the resulting deadline. The `X-Audit-Log-Reason` value is not stored on the account.
+
+With the `enforcement` basis, the decision is recorded first and `enforcement_decision_id` is written in the same account write as the deadline. A suspension on the account is replaced and lifted in that write. When the rule of the reason code bars new accounts, which is every rule except the minimum age, Fluxer blocks the account's email address. For the reasons `SPAM`, `CHEATING_OR_EXPLOITATION`, `COORDINATED_RAIDING`, `AUTOMATION_OR_SELFBOT`, `SCAM_OR_SOCIAL_ENGINEERING`, `HARASSMENT_OR_BULLYING`, `BAN_EVASION`, `TOKEN_OR_CREDENTIAL_SCAM`, `HATE_SPEECH_OR_EXTREMIST_CONTENT`, `MALICIOUS_LINKS_OR_MALWARE`, and `IMPERSONATION_OR_FAKE_IDENTITY`, Fluxer also resolves the pending reports against the account. A pending report in the `child_safety`, `underage_user`, or `self_harm` category is left for a moderator and stays pending. These steps are best-effort and can fail without cancelling the deletion schedule. Restricted reasons cannot close an account.
+
+A holder request or housekeeping deletion blocks nothing and resolves no reports.
 
 Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
 
-The account holder is emailed the deadline and the supplied `public_reason` when `notify_user` is true and the account has an email address. The wording depends on `reason_code`: `USER_REQUESTED` and `INACTIVITY` get a neutral notice, and every other code gets an enforcement notice. A failed email is logged and the schedule is still stored.
-
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. For the reasons `SPAM`, `CHEATING_OR_EXPLOITATION`, `COORDINATED_RAIDING`, `AUTOMATION_OR_SELFBOT`, `SCAM_OR_SOCIAL_ENGINEERING`, `HARASSMENT_OR_BULLYING`, `BAN_EVASION`, `TOKEN_OR_CREDENTIAL_SCAM`, `HATE_SPEECH_OR_EXTREMIST_CONTENT`, `MALICIOUS_LINKS_OR_MALWARE`, and `IMPERSONATION_OR_FAKE_IDENTITY`, Fluxer also resolves the pending reports against the account. A pending report in the `child_safety`, `underage_user`, or `self_harm` category is left for a moderator and stays pending. Every other reason leaves all reports pending. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
-
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, `pending_deletion_at`, `notify_user`, and `notification_sent`. An attempted email adds `notification_template`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries. For each reason that resolves reports, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `found_count` leaves out the reports in the three categories that stay pending. No such entry is written for any other reason. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report sends its reporter the generic notice [Update report](/admin-api/reports/#update-report) describes, with no public comment.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `basis`, `days`, `reason_code` and `pending_deletion_at`. The enforcement basis adds `decision_id`, `kind` and `notice_status`, plus `blocked_ips` and `network_blocks_until` when networks were blocked, and the other bases add `notification_sent`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The email block records its own blocklist entry. For each reason that resolves reports, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `found_count` leaves out the reports in the three categories that stay pending. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report tells its reporter the `restricted` outcome [Update report](/admin-api/reports/#update-report) describes, with no public comment.
 
 ### Rate limit
 
@@ -1611,10 +1728,10 @@ For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's e
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Cancels the scheduled deletion named in the request and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
+Cancels a scheduled deletion that no enforcement decision owns, such as one the holder asked for, an inactivity deletion, or a closure from before decisions existed, and returns the resulting account. Requires `user:delete`. A closure with a decision is cancelled by [ending the decision](/admin-api/enforcement/#end-an-enforcement-decision). Erasure cannot be cancelled once it starts.
 
 :::caution[Cancellation does not undo enforcement]
-Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries the schedule wrote, or reopen the reports it resolved.
+Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries an older closure wrote, or reopen the reports it resolved.
 :::
 
 ### Path parameters
@@ -1628,7 +1745,6 @@ Clearing the deadline permits the account to authenticate again, but it does not
 | Field | Type | Description |
 | --- | --- | --- |
 | expected_pending_deletion_at<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the deletion being cancelled |
-| notify_user? | boolean | Whether to email the account holder (default false) |
 
 <sup>1</sup> Required. It must equal the current `pending_deletion_at`, so a cancel written against one schedule never clears a different one
 
@@ -1645,15 +1761,16 @@ Clearing the deadline permits the account to authenticate again, but it does not
 | 200 | response body | The deletion was cancelled |
 | 400 | [error response](/admin-api/#error-response) | `NO_PENDING_DELETION`, because no deletion is scheduled |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` with the `decision_id`, because a decision owns the deletion |
 | 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a different deletion is pending, erasure has started, or the deletion state changed |
 
 ### Side effects
 
 The deletion schedule, its reasons, and the recorded scheduler are cleared, allowing the account to authenticate again unless another restriction applies.
 
-When `notify_user` is true and the account has an email address, Fluxer emails the account holder. The email never includes the `X-Audit-Log-Reason` value.
+When the account has an email address, Fluxer always emails the holder. A deletion with an enforcement reason code, which only a closure from before decisions can have here, sends the notice that the restriction ended. Every other deletion sends the notice that the deletion was cancelled. The email never includes the `X-Audit-Log-Reason` value.
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, the metadata keys `cancelled_pending_deletion_at`, `cancelled_scheduled_by`, `cancelled_scheduled_at`, and `cancelled_reason_code` for the cancelled schedule, and `notify_user`.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, the metadata keys `cancelled_pending_deletion_at`, `cancelled_scheduled_by`, `cancelled_scheduled_at`, and `cancelled_reason_code` for the cancelled schedule, and `notice` naming the email that was sent.
 
 ### Rate limit
 
@@ -2132,13 +2249,21 @@ Counts every message attributed to the account, and queues their deletion when t
 
 The request counts messages before responding, so accounts with more messages take longer. A misspelled `dry_run` parameter leaves the request a dry run.
 
-The operation does not resolve the target account, so it never answers `UNKNOWN_USER`. An ID with no matching account is accepted and matches no message.
+Only the `enforcement` basis resolves the target account, so only it answers `UNKNOWN_USER`. With another basis, or in a dry run, an ID with no matching account is accepted and matches no message.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id | snowflake | The ID of the message author |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| basis?<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are removed |
+
+<sup>1</sup> Required unless the request is a dry run, which ignores it. Without it a deletion fails with `MODERATION_BASIS_REQUIRED`. The `enforcement` basis records a content removal [decision](/admin-api/enforcement/) with `removed_all_messages` and sends its notice. It refuses child safety and violent extremism reasons with `ENFORCEMENT_KIND_NOT_ALLOWED`, because the messages cannot all be snapshotted first. Use [Shred user messages](#shred-user-messages) with the messages instead
 
 ### Query parameters
 
@@ -2157,16 +2282,21 @@ The operation does not resolve the target account, so it never answers `UNKNOWN_
 | channel_count<sup>1</sup> | integer | The number of channels the account has messages in |
 | message_count | integer | The number of messages the walk matched |
 | job_id?<sup>2</sup> | string | The ID of the queued shred job |
+| decision_id?<sup>3</sup> | snowflake | The content removal decision |
 
 <sup>1</sup> Summed for each page of 200, so a channel spanning pages is counted once per page. Treat it as an upper bound
 
 <sup>2</sup> Present only when `dry_run` resolved to false and `message_count` is above zero
+
+<sup>3</sup> Present only when a job was queued with the `enforcement` basis
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The count completed, and the deletion job was queued when applicable |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because the basis is missing or the [decision](/admin-api/enforcement/#validation) is invalid |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the `enforcement` basis names an account that does not exist |
 
 :::danger[A non-dry run permanently deletes messages]
 The response only confirms that the job was queued. When `dry_run` resolves to false, the background job deletes every matching message, and no operation restores them.
@@ -2176,9 +2306,9 @@ The queued job is an ordinary shred job, so its progress, totals, skips, and fai
 
 ### Side effects
 
-A dry run reads and counts only. A deletion run also queues one shred job with every matched message identity, and the request returns before any message is processed.
+A dry run reads and counts only. A deletion run also queues one shred job with every matched message identity, and the request returns before any message is processed. With the `enforcement` basis the decision is stored before the job is queued.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `message_deletion`, the target account ID as its target ID, and the metadata keys `user_id`, `channel_count`, `message_count`, and `dry_run`. The action is `delete_all_user_messages_dry_run` for a dry run and `delete_all_user_messages` otherwise. A deletion run also records the `queue_message_shred` entry described under [Shred user messages](#shred-user-messages).
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `message_deletion`, the target account ID as its target ID, and the metadata keys `user_id`, `channel_count`, `message_count`, and `dry_run`. The action is `delete_all_user_messages_dry_run` for a dry run and `delete_all_user_messages` otherwise. A deletion run adds `basis`, `job_id` when a job was queued, and for the `enforcement` basis `decision_id`, `reason_code`, `kind` and `notice_status`.
 
 ### Rate limit
 
@@ -2190,7 +2320,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Queues irreversible deletion of an explicit list of message identities and returns a job ID read through [Get message shred job](/admin-api/messages/#get-message-shred-job). Requires `message:shred`.
 
-The operation does not resolve the target account, so it never answers `UNKNOWN_USER`.
+Only the `enforcement` basis resolves the target account, so only it answers `UNKNOWN_USER`.
 
 ### Path parameters
 
@@ -2203,8 +2333,11 @@ The operation does not resolve the target account, so it never answers `UNKNOWN_
 | Field | Type | Description |
 | --- | --- | --- |
 | entries<sup>1</sup> | array[[message shred entry](#message-shred-entry-object) object] | Explicit message identities, with 1 to 1000 values |
+| basis<sup>2</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are removed |
 
-<sup>1</sup> Required and non-empty. The entries are not checked against the target account at submission time
+<sup>1</sup> Required and non-empty. Without the `enforcement` basis, the entries are not checked against the target account at submission time
+
+<sup>2</sup> The `enforcement` basis records a content removal [decision](/admin-api/enforcement/) and sends its notice. The first 50 entries are its evidence, every entry for child safety and violent extremism reasons, and they are checked and snapshotted before the job is queued. Each one must exist and be the target account's own, and a message in a direct or group conversation needs a linked report that covers it. `decision.evidence` is refused with `ENFORCEMENT_EVIDENCE_NOT_ALLOWED`
 
 ### Response body
 
@@ -2213,14 +2346,19 @@ The operation does not resolve the target account, so it never answers `UNKNOWN_
 | success | boolean | Whether the request succeeded, always true |
 | job_id | string | The ID of the queued shred job |
 | requested<sup>1</sup> | integer | The number of submitted entries |
+| decision_id?<sup>2</sup> | snowflake | The content removal decision |
 
 <sup>1</sup> An upper bound on the messages the job shreds
+
+<sup>2</sup> Present only for the `enforcement` basis
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The shred job was queued |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because the basis or the [decision](/admin-api/enforcement/#validation) is invalid |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the `enforcement` basis names an account that does not exist |
 
 :::danger[Shredding deletes messages permanently]
 A shred deletes every matching message with its reactions, purges the attachments it owned, and removes it from search. Only a preceding [Create user archive](#create-user-archive) retains the original text.
@@ -2232,7 +2370,7 @@ A failed job is not retried automatically.
 
 The request returns before any message is processed. The job checks each referenced message again before it deletes it, and skips a missing message or one no longer authored by the target account.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `queue_message_shred`, target type `message_shred`, the target account ID as its target ID, and the metadata keys `user_id`, `job_id`, and `requested_entries`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `queue_message_shred`, target type `message_shred`, the target account ID as its target ID, and the metadata keys `user_id`, `job_id`, `requested_entries` and `basis`. The `enforcement` basis adds `decision_id`, `reason_code`, `kind` and `notice_status`.
 
 ### Rate limit
 

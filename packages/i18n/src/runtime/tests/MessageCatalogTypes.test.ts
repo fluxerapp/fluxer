@@ -43,4 +43,13 @@ describe('message catalog type helpers', () => {
 		expectTypeOf<Args>().toEqualTypeOf<[variables: {userName: string | number | boolean | Date}]>();
 		expectTypeOf<NoArgs>().toEqualTypeOf<[variables?: undefined]>();
 	});
+	it('types placeholders nested inside select and plural cases', () => {
+		type Variables =
+			MessageVariablesForTemplate<'{all, select, yes {All gone.} other {{count, plural, =1 {# item} other {# items}} until {ends_at}.}}'>;
+		expectTypeOf<Variables>().toEqualTypeOf<{
+			all: string | number | boolean | Date;
+			count: number;
+			ends_at: string | number | boolean | Date;
+		}>();
+	});
 });

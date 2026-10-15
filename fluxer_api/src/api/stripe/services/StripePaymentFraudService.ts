@@ -1,27 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {UserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
+import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
-import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
 import {extractId, isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms, seconds} from 'itty-time';
 import type Stripe from 'stripe';
 
@@ -31,17 +25,14 @@ type RadarValueListItemType = RadarValueListCreateParams['item_type'];
 interface StripePaymentFraudServiceDeps {
 	stripe: Stripe | null;
 	userRepository: UserRepository;
-	userCacheService: UserCacheService;
-	emailService: IEmailService;
 	gatewayService: IGatewayService;
 	donationRepository: DonationRepository;
 	cacheService: ICacheService;
 	auditService: AdminAuditService;
-	kvDeletionQueue: KVAccountDeletionQueueService;
-	oauth2Tokens: Pick<OAuth2TokenRepository, 'deleteAllAccessTokensForUser' | 'deleteAllRefreshTokensForUser'>;
+	enforcement: EnforcementDecisionService;
 }
 
-interface FraudAccountActionParams {
+interface FraudSignalParams {
 	userId: UserID;
 	source: 'chargeback' | 'early_fraud_warning';
 	signalId: string;
@@ -49,6 +40,7 @@ interface FraudAccountActionParams {
 	paymentIntentId: string | null;
 	customerId: string | null;
 	fraudType: string | null;
+	paymentAt: Date;
 	extraMetadata?: Map<string, string>;
 }
 
@@ -56,6 +48,7 @@ interface ResolvedFraudUserTarget {
 	customerId: string | null;
 	kind: 'direct_purchase' | 'donation' | 'gift_purchase' | 'unknown';
 	paymentIntentId: string | null;
+	paymentAt: Date;
 	userId: UserID | null;
 }
 
@@ -65,7 +58,6 @@ interface RadarValueListConfig {
 	name: string;
 }
 
-const FRAUD_DELETION_DELAY_MS = ms('60 days');
 const OPERATION_COMPLETION_TTL_SECONDS = seconds('30 days');
 const OPERATION_LOCK_TTL_SECONDS = seconds('2 minutes');
 const OPERATION_LOCK_MAX_WAIT_MS = ms('20 seconds');
@@ -94,6 +86,10 @@ const RADAR_VALUE_LISTS: Record<'cardFingerprint' | 'customerId' | 'email' | 'ip
 		name: 'Client IP address block list',
 	},
 };
+
+function chargeTime(charge: Stripe.Charge): Date {
+	return new Date(charge.created * 1000);
+}
 
 export class StripePaymentFraudService {
 	constructor(private readonly deps: StripePaymentFraudServiceDeps) {}
@@ -151,7 +147,7 @@ export class StripePaymentFraudService {
 			);
 			return;
 		}
-		await this.enforceAccountFraudAction({
+		await this.limitPurchasesForFraudSignal({
 			userId: userTarget.userId,
 			source: 'early_fraud_warning',
 			signalId: warning.id,
@@ -159,11 +155,18 @@ export class StripePaymentFraudService {
 			paymentIntentId: userTarget.paymentIntentId,
 			customerId: userTarget.customerId,
 			fraudType: warning.fraud_type,
+			paymentAt: userTarget.paymentAt,
 			extraMetadata: new Map([['target_kind', userTarget.kind]]),
 		});
 	}
 
-	async enforceAccountFraudAction({
+	async resolvePaymentTime(paymentIntentId: string | null, fallback: Date): Promise<Date> {
+		if (!paymentIntentId) return fallback;
+		const payment = await this.deps.userRepository.getPaymentByPaymentIntent(paymentIntentId);
+		return payment?.createdAt ?? fallback;
+	}
+
+	async limitPurchasesForFraudSignal({
 		userId,
 		source,
 		signalId,
@@ -171,8 +174,9 @@ export class StripePaymentFraudService {
 		paymentIntentId,
 		customerId,
 		fraudType,
+		paymentAt,
 		extraMetadata,
-	}: FraudAccountActionParams): Promise<void> {
+	}: FraudSignalParams): Promise<void> {
 		const actionId = paymentIntentId ?? chargeId ?? `${source}:${signalId}`;
 		await this.runOnce(
 			'stripe:payment_fraud:account_action',
@@ -192,37 +196,11 @@ export class StripePaymentFraudService {
 				if (!user) {
 					throw new StripeError('User not found for payment fraud action');
 				}
-				const pendingDeletionAt = new Date(Date.now() + FRAUD_DELETION_DELAY_MS);
 				const cancelledUser = await this.cancelStripeSubscriptionImmediately(user);
-				const subscriptionCancelled = cancelledUser !== null;
-				const currentUser = cancelledUser ?? user;
 				const auditReason = this.getAuditReason({source, fraudType});
-				const updatedUser = await this.deps.userRepository.updateDeletionSchedule(currentUser, {
-					flags: (currentUser.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
-					pending_deletion_at: pendingDeletionAt,
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					deletion_public_reason: 'Payment fraud',
-					deletion_audit_log_reason: auditReason,
-					deletion_scheduled_by: SYSTEM_USER_ID,
-					deletion_scheduled_at: new Date(),
-				});
-				await reschedulePendingDeletion({
-					userId,
-					currentPendingDeletionAt: currentUser.pendingDeletionAt,
-					nextPendingDeletionAt: pendingDeletionAt,
-					deletionReasonCode: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					deletionQueue: this.deps.kvDeletionQueue,
-				});
-				await revokeAllAuthSessions({users: this.deps.userRepository, gateway: this.deps.gatewayService}, userId);
-				await this.deps.oauth2Tokens.deleteAllAccessTokensForUser(userId);
-				await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(userId);
-				await this.deps.userCacheService.setUserPartialResponseFromUser(updatedUser);
-				await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 				const metadata = new Map<string, string>([
-					['days', '60'],
 					['source', source],
-					['scheduled_for', pendingDeletionAt.toISOString()],
-					['subscription_cancelled', subscriptionCancelled ? 'true' : 'false'],
+					['subscription_cancelled', cancelledUser ? 'true' : 'false'],
 				]);
 				if (chargeId) {
 					metadata.set('charge_id', chargeId);
@@ -236,45 +214,26 @@ export class StripePaymentFraudService {
 				if (fraudType) {
 					metadata.set('fraud_type', fraudType);
 				}
-				if (extraMetadata) {
-					for (const [key, value] of extraMetadata) {
-						metadata.set(key, value);
-					}
+				for (const [key, value] of extraMetadata ?? []) {
+					metadata.set(key, value);
 				}
+				const decision = await this.deps.enforcement.recordAutomatedPurchaseLimit({
+					subject: cancelledUser ?? user,
+					reasonCode: DeletionReasons.PAYMENT_FRAUD,
+					paymentAt,
+					internalNote: [auditReason, ...[...metadata].map(([key, value]) => `${key}: ${value}`)].join('\n'),
+				});
 				await this.deps.auditService.createAuditLog({
 					adminUserId: SYSTEM_USER_ID,
 					targetType: 'user',
 					targetId: BigInt(userId),
-					action: 'schedule_deletion',
+					action: 'limit_features',
 					auditLogReason: auditReason,
-					metadata,
+					metadata: new Map([...metadata, ['limit', 'purchases'], ...decisionAuditMetadata(decision)]),
 				});
-				if (updatedUser.email) {
-					try {
-						await this.deps.emailService.sendScheduledDeletionNotification(
-							updatedUser.email,
-							updatedUser.username,
-							pendingDeletionAt,
-							updatedUser.deletionPublicReason ?? null,
-							updatedUser.locale,
-						);
-					} catch (error) {
-						Logger.warn({error, userId: userId.toString()}, 'Failed to send payment fraud deletion email');
-					}
-				}
 				Logger.info(
-					{
-						chargeId,
-						customerId,
-						fraudType,
-						paymentIntentId,
-						pendingDeletionAt,
-						signalId,
-						source,
-						subscriptionCancelled,
-						userId,
-					},
-					'Applied payment fraud account enforcement',
+					{chargeId, customerId, fraudType, paymentIntentId, signalId, source, userId},
+					'Limited purchases after a payment fraud signal pending review',
 				);
 			},
 		);
@@ -296,6 +255,7 @@ export class StripePaymentFraudService {
 					customerId,
 					kind: 'gift_purchase',
 					paymentIntentId,
+					paymentAt: await this.resolvePaymentTime(paymentIntentId, giftCode.createdAt),
 					userId: giftCode.createdByUserId,
 				};
 			}
@@ -305,6 +265,7 @@ export class StripePaymentFraudService {
 					customerId: customerId ?? payment.stripeCustomerId,
 					kind: 'direct_purchase',
 					paymentIntentId,
+					paymentAt: payment.createdAt,
 					userId: payment.userId,
 				};
 			}
@@ -316,6 +277,7 @@ export class StripePaymentFraudService {
 					customerId,
 					kind: 'donation',
 					paymentIntentId,
+					paymentAt: chargeTime(charge),
 					userId: null,
 				};
 			}
@@ -325,6 +287,7 @@ export class StripePaymentFraudService {
 					customerId,
 					kind: 'direct_purchase',
 					paymentIntentId,
+					paymentAt: chargeTime(charge),
 					userId: user.id,
 				};
 			}
@@ -342,6 +305,7 @@ export class StripePaymentFraudService {
 			customerId,
 			kind: 'unknown',
 			paymentIntentId,
+			paymentAt: chargeTime(charge),
 			userId: null,
 		};
 	}

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResultExt},
+        enforcement::api_error_message,
+        generated::types::CommunityRemovalBasis,
+    },
     middleware::{
         auth::AuthContext,
         csrf,
@@ -10,7 +14,10 @@ use crate::{
     },
     routes::guild_tabs,
     state::AppState,
-    templates,
+    templates::{
+        self,
+        components::enforcement_fields::{BasisSubmission, basis_from_form},
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -308,11 +315,7 @@ async fn dispatch_guild_action(
             "Guild shutdown requested",
             "Failed to shut down guild",
         ),
-        "delete_guild" => action_result(
-            client.delete_guild(guild_id).await,
-            "Guild deleted",
-            "Failed to delete guild",
-        ),
+        "delete_guild" => remove_community(client, guild_id, form).await,
         "update_settings" => {
             let mut settings = serde_json::Map::new();
             for key in &[
@@ -452,6 +455,37 @@ async fn dispatch_guild_action(
             )
         }
         _ => FlashData::error("Unknown guild action"),
+    }
+}
+
+async fn remove_community(
+    client: &AdminApiClient,
+    guild_id: &str,
+    form: &MultiValueForm,
+) -> FlashData {
+    let basis = match basis_from_form(form) {
+        Ok(basis) => basis,
+        Err(message) => return FlashData::error(message),
+    };
+    let community_basis = match &basis {
+        BasisSubmission::Enforcement(submission) => {
+            CommunityRemovalBasis::Enforcement(submission.decision.clone())
+        }
+        BasisSubmission::HolderRequest(_) => CommunityRemovalBasis::HolderRequest,
+        BasisSubmission::Housekeeping(_) => return FlashData::error("Choose a basis"),
+    };
+    match client
+        .delete_guild(guild_id, community_basis, basis.internal_note())
+        .await
+    {
+        Ok(_) => FlashData::success("Community removed"),
+        Err(error) => {
+            tracing::warn!(%error, guild_id, "admin API request failed: remove community");
+            FlashData::error(api_error_message(&error).map_or_else(
+                || "Failed to remove the community".to_owned(),
+                |message| format!("Failed to remove the community: {message}"),
+            ))
+        }
     }
 }
 

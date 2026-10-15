@@ -12,6 +12,141 @@ export const CONTENT_I18N_MESSAGES = {
 	'bulk_message_deletion.complete':
 		'We finished deleting your messages. We removed {message_count, plural, =0 {0 messages} one {# message} other {# messages}} from {channel_count, plural, =0 {0 places} one {# place} other {# places}}.',
 	'content.virus_detected': 'That file was flagged as potentially unsafe and has been removed.',
+	'enforcement.automation.automated':
+		'This is a temporary limit applied automatically while a person on our team reviews it.',
+	'enforcement.automation.flagged':
+		'Automated tools flagged this. A person on our team reviewed it and made the decision.',
+	'enforcement.automation.none': 'A person on our team reviewed this and made the decision.',
+	'enforcement.effect.account_not_restricted': 'Your account is not otherwise restricted.',
+	'enforcement.effect.closure':
+		"{target, select, bot {The bot can't connect or act anywhere. We'll delete it and its data on {deletion_at}. Your own account is not restricted.} other {You can't sign in or use {product_name} anywhere. We'll delete the account and its data on {deletion_at}, except data we have to keep by law.}}",
+	'enforcement.effect.community_removed':
+		'The community and its channels and messages are no longer available to anyone. Your own account is not restricted.',
+	'enforcement.effect.limit_direct_messages':
+		'Your one-to-one messages and friend requests are not delivered, and your profile is hidden. In communities and group conversations, people see your messages collapsed and marked as possible spam.',
+	'enforcement.effect.limit_purchases':
+		"{review, select, yes {You can't make purchases on {product_name} until a person on our team reviews this.} other {You can't make purchases on {product_name}.}}",
+	'enforcement.effect.limit_reports':
+		"{safety_route, select, yes {You can't send reports in the app until then. To report illegal content, use the safety route on our [company information page]({url}).} other {You can't send reports in the app until then.}}",
+	'enforcement.effect.messages_removed': 'We also removed {count, plural, =1 {# message} other {# messages}}.',
+	'enforcement.effect.networks_blocked': 'We also blocked access from networks this account used until {date}.',
+	'enforcement.effect.no_other_accounts': 'You may not create or use other accounts.',
+	'enforcement.effect.scope': 'This decision applies everywhere {product_name} is available.',
+	'enforcement.effect.suspension':
+		"{target, select, bot {The bot can't connect or act anywhere until then. Your own account is not restricted.} other {You can't sign in or use {product_name} anywhere until then. Your account, messages and communities are kept.}}",
+	'enforcement.effect.suspension_permanent':
+		"{target, select, bot {The bot can't connect or act anywhere. Your own account is not restricted.} other {You can't sign in or use {product_name} anywhere.}}",
+	'enforcement.effect.warning': 'Your account is not restricted. If this happens again, we may limit or suspend it.',
+	'enforcement.facts.channel':
+		'{count, plural, =1 {# message} other {# messages}} in #{channel} of {community}, {range, select, single {on {start}} other {between {start} and {end}}}.',
+	'enforcement.facts.community_channel':
+		'{count, plural, =1 {# message} other {# messages}} posted in #{channel}, {range, select, single {on {start}} other {between {start} and {end}}}.',
+	'enforcement.facts.copyright': 'Rights holder or right concerned: {rights_holder}.',
+	'enforcement.facts.direct_message':
+		'{count, plural, =1 {# message} other {# messages}} in a direct message conversation, {range, select, single {on {start}} other {between {start} and {end}}}.',
+	'enforcement.facts.direct_message_month':
+		'{count, plural, =1 {# message} other {# messages}} in a direct message conversation in {month}.',
+	'enforcement.facts.group_message':
+		'{count, plural, =1 {# message} other {# messages}} in a group conversation, {range, select, single {on {start}} other {between {start} and {end}}}.',
+	'enforcement.facts.group_message_month':
+		'{count, plural, =1 {# message} other {# messages}} in a group conversation in {month}.',
+	'enforcement.facts.payment': 'A payment on your account on {date}.',
+	'enforcement.facts.profile': 'Your profile: {fields}.',
+	'enforcement.facts.unknown_location':
+		'{count, plural, =1 {# message} other {# messages}} in a conversation that no longer exists, {range, select, single {on {start}} other {between {start} and {end}}}.',
+	'enforcement.lead.adult_content': 'We found sexual content from your account outside a space marked 18+.',
+	'enforcement.lead.age_requirement':
+		"You need to meet the minimum age in your country to use {product_name}. This isn't a punishment, and you're welcome back once you're old enough.",
+	'enforcement.lead.automation':
+		'We found automated activity from your account that disrupted normal use of the service.',
+	'enforcement.lead.ban_evasion': 'We found that this account was used to get around a restriction on another account.',
+	'enforcement.lead.bot': 'We found activity from your bot that breaks this rule.',
+	'enforcement.lead.child_safety':
+		'We found content or activity on your account that breaks our rules on protecting children.',
+	'enforcement.lead.community': 'We found content in this community that breaks this rule.',
+	'enforcement.lead.copyright': "We found content from your account that uses someone else's work without permission.",
+	'enforcement.lead.fraud':
+		'We found content from your account that tried to trick people out of money, accounts or personal information.',
+	'enforcement.lead.harassment': 'We found messages from your account that harassed or bullied someone.',
+	'enforcement.lead.harmful_deception':
+		'We found content from your account that spread false claims likely to cause serious harm.',
+	'enforcement.lead.hate': 'We found content from your account that attacks or demeans people for who they are.',
+	'enforcement.lead.illegal_activity':
+		'We found content from your account that offers or helps with illegal goods or activity.',
+	'enforcement.lead.impersonation':
+		'We found that your account pretended to be another person or organization, or used a fake identity to mislead people.',
+	'enforcement.lead.intimate_images':
+		'We found that your account shared intimate images of someone without their consent.',
+	'enforcement.lead.legacy': "We don't have more detail on record for this decision.",
+	'enforcement.lead.malware':
+		'We found links or files from your account that lead to malware or other harmful software.',
+	'enforcement.lead.payments': 'We found a payment issue on your account that breaks our payment terms.',
+	'enforcement.lead.privacy': "We found that your account shared someone's personal information without their consent.",
+	'enforcement.lead.raids': 'We found that your account took part in a coordinated attack on a community or a person.',
+	'enforcement.lead.report_abuse':
+		'We found that your account repeatedly sent reports that were false or made in bad faith.',
+	'enforcement.lead.self_harm':
+		'We found content from your account that encourages or gives instructions for self-harm.',
+	'enforcement.lead.service_abuse':
+		'We found that your account used {product_name} in a way that interferes with the service or gets around its limits.',
+	'enforcement.lead.spam': 'We found that your account sent unwanted messages in bulk.',
+	'enforcement.lead.threats': 'We found messages from your account that threatened or encouraged violence.',
+	'enforcement.lead.unwanted_sexual_content':
+		"We found that your account sent sexual content to someone who hadn't agreed to receive it.",
+	'enforcement.lead.violent_content': 'We found that your account shared graphic violence or gore.',
+	'enforcement.lead.violent_extremism':
+		'We found content or activity on your account that breaks our rules on terrorism and violent extremism.',
+	'enforcement.profile_field.avatar': 'avatar',
+	'enforcement.profile_field.banner': 'banner',
+	'enforcement.profile_field.bio': 'bio',
+	'enforcement.profile_field.global_name': 'display name',
+	'enforcement.profile_field.pronouns': 'pronouns',
+	'enforcement.redress.out_of_court':
+		"If you're in the EU, you can also refer this decision to a certified out-of-court dispute settlement body. The European Commission keeps a [list of these bodies]({url}).",
+	'enforcement.redress.regulator_and_court':
+		'You can also complain to the Digital Services Coordinator in your EU country, or go to court.',
+	'enforcement.rule.adult_content': 'Adult content outside 18+ spaces',
+	'enforcement.rule.age_requirement': 'Minimum age',
+	'enforcement.rule.automation': 'Disruptive automation',
+	'enforcement.rule.ban_evasion': 'Evading restrictions',
+	'enforcement.rule.child_safety': 'Child safety',
+	'enforcement.rule.copyright': 'Copyright',
+	'enforcement.rule.fraud': 'Scams and fraud',
+	'enforcement.rule.harassment': 'Harassment',
+	'enforcement.rule.harmful_deception': 'Harmful deception',
+	'enforcement.rule.hate': 'Hate and discrimination',
+	'enforcement.rule.illegal_activity': 'Illegal and dangerous activity',
+	'enforcement.rule.impersonation': 'Impersonation and fake accounts',
+	'enforcement.rule.intimate_images': 'Intimate images shared without consent',
+	'enforcement.rule.malware': 'Malicious links and malware',
+	'enforcement.rule.payments': 'Payments',
+	'enforcement.rule.privacy': 'Privacy and personal information',
+	'enforcement.rule.raids': 'Raids and coordinated attacks',
+	'enforcement.rule.report_abuse': 'Misuse of reporting',
+	'enforcement.rule.self_harm': 'Promoting self-harm',
+	'enforcement.rule.service_abuse': 'Service abuse',
+	'enforcement.rule.spam': 'Spam',
+	'enforcement.rule.threats': 'Threats of violence',
+	'enforcement.rule.unwanted_sexual_content': 'Unwanted sexual content',
+	'enforcement.rule.violent_content': 'Graphic violence',
+	'enforcement.rule.violent_extremism': 'Terrorism and violent extremism',
+	'enforcement.source.own_review': 'We found this in our own review.',
+	'enforcement.source.report': 'We reviewed this after a report.',
+	'enforcement.summary.closure':
+		'{target, select, bot {We closed your bot {bot_name}.} other {We closed your account.}}',
+	'enforcement.summary.community_removal': 'We removed your community {community_name}.',
+	'enforcement.summary.content_removal':
+		'{all, select, yes {We removed all messages you sent.} other {We removed {count, plural, =1 {# message} other {# messages}} you sent.}}',
+	'enforcement.summary.feature_limit':
+		'{ends, select, yes {We limited a feature on your account until {ends_at}.} other {We limited a feature on your account.}}',
+	'enforcement.summary.profile_reset': 'We reset parts of your profile: {fields}.',
+	'enforcement.summary.suspension':
+		'{target, select, bot {We suspended your bot {bot_name} until {ends_at}.} other {We suspended your account until {ends_at}.}}',
+	'enforcement.summary.suspension_permanent':
+		'{target, select, bot {We banned your bot {bot_name}.} other {We banned your account.}}',
+	'enforcement.summary.warning': "We're warning you about activity on your account.",
+	'enforcement.welfare.self_harm':
+		"If you're going through a hard time, you don't have to deal with it alone. [Section 3 of our community guidelines]({url}) lists support lines.",
 	'guild.bulk_create.emoji_limit': 'Maximum number of emojis reached ({limit}).',
 	'guild.bulk_create.sticker_limit': 'Maximum number of stickers reached ({limit}).',
 	'guild.bulk_create.unknown_error': 'Unknown error.',

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {assertNoRestrictionFlagsAdded} from '@app/api/admin/services/AdminUserSecurityService';
 import type {UserID} from '@app/api/BrandedTypes';
 import {requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -10,6 +11,8 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {AdminBulkJobCreateRequest, AdminBulkTaskType} from '@fluxer/schema/src/domains/admin/AdminBulkSchemas';
 import {BulkJobResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
@@ -69,10 +72,8 @@ async function queueBulkJob(
 				'bulkScheduleUserDeletion',
 				{
 					user_ids: body.user_ids.map((id) => id.toString()),
-					reason_code: body.reason_code,
 					days_until_deletion: body.days_until_deletion,
-					public_reason: body.public_reason ?? null,
-					notify_user: body.notify_user,
+					basis: body.basis,
 					admin_user_id: adminUserId.toString(),
 					audit_log_reason: auditLogReason,
 				},
@@ -83,6 +84,7 @@ async function queueBulkJob(
 				'bulkDeleteMessagesForUsers',
 				{
 					user_ids: body.user_ids.map((id) => id.toString()),
+					basis: body.basis,
 					admin_user_id: adminUserId.toString(),
 					audit_log_reason: auditLogReason,
 				},
@@ -120,6 +122,15 @@ export function BulkAdminController(app: HonoApp) {
 			const body = ctx.req.valid('json');
 			const requiredAcl = BULK_TASK_ACLS[body.task];
 			requireGrantedAdminACLs(adminAcls, [requiredAcl]);
+			if (body.task === AdminBulkTaskType.UPDATE_USER_FLAGS) {
+				assertNoRestrictionFlagsAdded(body.add_flags.map((flag) => BigInt(flag)));
+			}
+			if ('basis' in body && body.basis.type === 'enforcement' && !auditLogReason) {
+				throw InputValidationError.fromCode(
+					'X-Audit-Log-Reason',
+					ValidationErrorCodes.ENFORCEMENT_INTERNAL_NOTE_REQUIRED,
+				);
+			}
 			const jobId = await queueBulkJob(body, adminUserId, auditLogReason);
 			await recordAdminWrite(ctx, {
 				targetType: 'bulk_job',

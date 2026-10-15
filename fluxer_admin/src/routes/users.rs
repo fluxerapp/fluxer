@@ -53,6 +53,8 @@ struct UserDetailQuery {
     delete_all_messages_dry_run: Option<String>,
     delete_all_messages_channel_count: Option<u64>,
     delete_all_messages_message_count: Option<u64>,
+    report_id: Option<String>,
+    message: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -380,6 +382,8 @@ async fn user_tab(
         delete_all_messages_dry_run: None,
         delete_all_messages_channel_count: None,
         delete_all_messages_message_count: None,
+        report_id: None,
+        message: None,
     };
     let admin_acls = auth
         .0
@@ -458,6 +462,8 @@ fn to_tab_query(q: &UserDetailQuery) -> user_tabs::TabQuery {
         delete_all_messages_dry_run: q.delete_all_messages_dry_run.clone(),
         delete_all_messages_channel_count: q.delete_all_messages_channel_count,
         delete_all_messages_message_count: q.delete_all_messages_message_count,
+        report_id: q.report_id.clone(),
+        message: q.message.clone(),
     }
 }
 

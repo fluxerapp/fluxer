@@ -226,11 +226,11 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 		await repository.createReport(reportRow(112n));
 		const reportId = createReportID(112n);
 		const pending = await repository.getReport(reportId);
-		await repository.resolveReport(reportId, createUserID(1n), 'first', 'first reason');
+		await repository.resolveReport(reportId, createUserID(1n), 'first', 'first reason', null);
 		const staleRepository = new ReportRepository();
 		vi.spyOn(staleRepository, 'getReport').mockResolvedValueOnce(pending);
 		await expect(
-			staleRepository.resolveReport(reportId, createUserID(2n), 'second', 'second reason'),
+			staleRepository.resolveReport(reportId, createUserID(2n), 'second', 'second reason', null),
 		).rejects.toBeInstanceOf(ReportAlreadyResolvedError);
 		const stored = await repository.getReport(reportId);
 		expect(stored?.publicComment).toBe('first');
@@ -242,7 +242,7 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 		await repository.createReport(reportRow(110n));
 		const results = await Promise.allSettled(
 			['first', 'second', 'third', 'fourth', 'fifth'].map((comment) =>
-				repository.resolveReport(createReportID(110n), createUserID(1n), comment, null),
+				repository.resolveReport(createReportID(110n), createUserID(1n), comment, null, null),
 			),
 		);
 		const fulfilled = results.filter((result) => result.status === 'fulfilled');
@@ -257,11 +257,11 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 		expect(stored?.status).toBe(1);
 		expect(stored?.publicComment).toBe(winner.publicComment);
 		await expect(
-			repository.resolveReport(createReportID(110n), createUserID(1n), 'again', null),
+			repository.resolveReport(createReportID(110n), createUserID(1n), 'again', null, null),
 		).rejects.toBeInstanceOf(ReportAlreadyResolvedError);
-		await expect(repository.resolveReport(createReportID(111n), createUserID(1n), null, null)).rejects.toBeInstanceOf(
-			UnknownReportError,
-		);
+		await expect(
+			repository.resolveReport(createReportID(111n), createUserID(1n), null, null, null),
+		).rejects.toBeInstanceOf(UnknownReportError);
 	});
 
 	it('sets and clears a legal hold, and never creates a report', async () => {
@@ -309,7 +309,7 @@ describe.skipIf(!dockerAvailable)('ReportRepository on Postgres KV', () => {
 		expect((await repository.getReport(createReportID(141n)))?.reportId).toBe(141n);
 		const remaining = await repository.listAllReportsPaginated(10);
 		expect(remaining.map((report) => report.reportId)).toEqual([141n]);
-		await repository.resolveReport(createReportID(141n), createUserID(1n), 'done', null);
+		await repository.resolveReport(createReportID(141n), createUserID(1n), 'done', null, null);
 		await repository.deleteReport(createReportID(141n));
 		await repository.deleteReport(createReportID(142n));
 		expect(await storedRows(IARSubmissions.name)).toEqual([]);

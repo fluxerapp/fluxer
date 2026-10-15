@@ -246,6 +246,18 @@ const ReportResolutionEnum = createNamedStringLiteralUnion(
 	'How the report was resolved',
 );
 
+const ReportItemOutcomeEnum = createNamedStringLiteralUnion(
+	[
+		['removed', 'removed', 'The reported content, profile field or community was removed'],
+		['restricted', 'restricted', 'The reported account was restricted and the content was left up'],
+		['action_taken', 'action_taken', 'Action was taken under the rules, and the reporter is not told which'],
+		['no_violation', 'no_violation', 'The reported content or account does not break the rules and was left as it is'],
+	],
+	'What happened to the reported item',
+);
+
+export type ReportItemOutcome = z.infer<typeof ReportItemOutcomeEnum>;
+
 export const UpdateReportRequest = z.object({
 	status: z.literal('resolved').describe('The status to move the report to'),
 	public_comment: createStringType(0, 512).optional().describe('Public comment to include with the resolution'),
@@ -255,7 +267,13 @@ export const UpdateReportRequest = z.object({
 		.describe(
 			'Whether to include the public comment in the notice sent to the reporter. The reporter is notified either way',
 		),
-	resolution: ReportResolutionEnum.optional().describe('How the report was resolved'),
+	resolution: ReportResolutionEnum.describe('How the report was resolved'),
+	outcome: ReportItemOutcomeEnum.optional().describe(
+		'What happened to the reported content or account. Required for actioned, where no_violation is refused. Optional for no_violation, where it can only be no_violation. Refused for duplicate. The reporter is told it',
+	),
+	duplicate_of: SnowflakeType.optional().describe(
+		'The report this one repeats. Required for duplicate and refused otherwise. The reporter is told the outcome of that report, or nothing while it has none',
+	),
 });
 
 export type UpdateReportRequest = z.infer<typeof UpdateReportRequest>;
@@ -1173,6 +1191,9 @@ export const BanCheckResponseSchema = z.object({
 		.describe(
 			'ISO 8601 timestamp when the matching ban expires. Null when the ban is permanent, when nothing matches, and on every blocklist other than ip.',
 		),
+	decision_id: SnowflakeStringType.nullable().describe(
+		'Enforcement decision the matching ip block belongs to. Null for a block added through the blocklist, when nothing matches, and on every blocklist other than ip.',
+	),
 });
 export const BulkJobResponse = z.object({
 	job_id: SnowflakeStringType,

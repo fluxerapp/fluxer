@@ -43,87 +43,119 @@ async fn submit(uri: &str, fields: &str) -> CapturedRequest {
 }
 
 #[tokio::test]
-async fn temp_ban_sends_notify_user_from_the_checkbox() {
-    let uri = format!("/users/{USER_ID}?action=temp_ban&tab=moderation");
-    let checked = submit(
-        &uri,
-        "duration=24&reason=Spam&notify_user_present=1&notify_user=true",
-    )
-    .await;
-    assert_eq!(checked.route, format!("PUT /admin/users/{USER_ID}/ban"));
-    assert_eq!(checked.body["notify_user"], json!(true));
-    let unchecked = submit(&uri, "duration=24&reason=Spam&notify_user_present=1").await;
-    assert_eq!(unchecked.body["notify_user"], json!(false));
-    let stale_form = submit(&uri, "duration=24&reason=Spam").await;
-    assert_eq!(stale_form.body["notify_user"], json!(true));
-}
-
-#[tokio::test]
-async fn unban_sends_the_public_reason_in_the_body_and_the_private_reason_as_a_header() {
+async fn unban_sends_the_internal_note_as_a_header_and_no_body() {
     let uri = format!("/users/{USER_ID}?action=unban&tab=moderation");
-    let checked = submit(
-        &uri,
-        "public_reason=Appeal%20accepted&private_reason=Private%20staff%20note&notify_user_present=1&notify_user=true",
-    )
-    .await;
-    assert_eq!(checked.route, format!("DELETE /admin/users/{USER_ID}/ban"));
-    assert_eq!(checked.body["notify_user"], json!(true));
-    assert_eq!(checked.body["public_reason"], json!("Appeal accepted"));
+    let captured = submit(&uri, "internal_note=Private%20staff%20note").await;
+    assert_eq!(captured.route, format!("DELETE /admin/users/{USER_ID}/ban"));
     assert_eq!(
-        checked.audit_log_reason.as_deref(),
+        captured.audit_log_reason.as_deref(),
         Some("Private staff note")
     );
-    assert!(!checked.body.to_string().contains("Private staff note"));
-    let unchecked = submit(
+    assert!(!captured.body.to_string().contains("Private staff note"));
+}
+
+const DECISION_FIELDS: &str = "reason_code=3&source=own_review&automation=none&statement=You%20sent%20the%20same%20link%20to%20many%20people.";
+
+#[tokio::test]
+async fn close_sends_the_basis_and_never_a_notify_flag() {
+    let uri = format!("/users/{USER_ID}?action=close&tab=moderation");
+    let holder = submit(
         &uri,
-        "private_reason=Private%20staff%20note&notify_user_present=1",
+        "basis=holder_request&days_until_deletion=30&internal_note=Asked%20by%20email",
     )
     .await;
-    assert_eq!(unchecked.body["notify_user"], json!(false));
-    assert!(!unchecked.body.to_string().contains("Private staff note"));
-    let stale_form = submit(&uri, "").await;
-    assert_eq!(stale_form.body["notify_user"], json!(true));
+    assert_eq!(holder.route, format!("PUT /admin/users/{USER_ID}/deletion"));
+    assert_eq!(
+        holder.body,
+        json!({"basis": {"type": "holder_request"}, "days_until_deletion": 30})
+    );
+    assert_eq!(holder.audit_log_reason.as_deref(), Some("Asked by email"));
+    let enforcement = submit(
+        &uri,
+        &format!(
+            "basis=enforcement&days_until_deletion=74&{DECISION_FIELDS}&internal_note=Spam%20review&remove_evidence=true"
+        ),
+    )
+    .await;
+    assert_eq!(enforcement.body["basis"]["type"], json!("enforcement"));
+    assert_eq!(
+        enforcement.body["basis"]["decision"]["reason_code"],
+        json!(3)
+    );
+    assert_eq!(enforcement.body["remove_evidence"], json!(true));
+    assert_eq!(enforcement.audit_log_reason.as_deref(), Some("Spam review"));
+    assert!(enforcement.body.get("notify_user").is_none());
 }
 
 #[tokio::test]
-async fn schedule_deletion_sends_notify_user_from_the_checkbox() {
-    let uri = format!("/users/{USER_ID}?action=schedule_deletion&tab=moderation");
-    let checked = submit(
+async fn cancel_deletion_sends_only_the_pending_deletion() {
+    let uri = format!("/users/{USER_ID}?action=cancel_deletion&tab=moderation");
+    let captured = submit(
         &uri,
-        "reason_code=3&days_until_deletion=60&notify_user_present=1&notify_user=true",
+        "expected_pending_deletion_at=2026-12-01T00%3A00%3A00.000Z&confirm=true&internal_note=Asked%20to%20keep%20it",
     )
     .await;
     assert_eq!(
-        checked.route,
-        format!("PUT /admin/users/{USER_ID}/deletion")
+        captured.route,
+        format!("DELETE /admin/users/{USER_ID}/deletion")
     );
-    assert_eq!(checked.body["notify_user"], json!(true));
-    let unchecked = submit(
-        &uri,
-        "reason_code=3&days_until_deletion=60&notify_user_present=1",
-    )
-    .await;
-    assert_eq!(unchecked.body["notify_user"], json!(false));
-    let stale_form = submit(&uri, "reason_code=3&days_until_deletion=60").await;
-    assert_eq!(stale_form.body["notify_user"], json!(true));
+    assert_eq!(
+        captured.body,
+        json!({"expected_pending_deletion_at": "2026-12-01T00:00:00.000Z"})
+    );
+    assert_eq!(
+        captured.audit_log_reason.as_deref(),
+        Some("Asked to keep it")
+    );
 }
 
 #[tokio::test]
-async fn bulk_schedule_deletion_sends_notify_user_from_the_checkbox() {
-    let uri = "/bulk-actions?action=bulk-schedule-user-deletion";
-    let fields = format!("user_ids={USER_ID}&reason_code=3&days_until_deletion=60");
-    let checked = submit(
-        uri,
-        &format!("{fields}&notify_user_present=1&notify_user=true"),
+async fn limit_features_sends_one_limit_with_its_end() {
+    let uri = format!("/users/{USER_ID}?action=limit_features&tab=moderation");
+    let captured = submit(
+        &uri,
+        "limit=reports&ends_on=2026-12-01&reason_code=29&source=own_review&automation=none&statement=False%20reports&internal_note=Report%20review",
     )
     .await;
-    assert_eq!(checked.route, "POST /admin/bulk-jobs");
-    assert_eq!(checked.body["task"], json!("schedule_user_deletion"));
-    assert_eq!(checked.body["notify_user"], json!(true));
-    let unchecked = submit(uri, &format!("{fields}&notify_user_present=1")).await;
-    assert_eq!(unchecked.body["notify_user"], json!(false));
-    let stale_form = submit(uri, &fields).await;
-    assert_eq!(stale_form.body["notify_user"], json!(true));
+    assert_eq!(
+        captured.route,
+        format!("PUT /admin/users/{USER_ID}/feature-limits")
+    );
+    assert_eq!(captured.body["limit"], json!("reports"));
+    assert_eq!(captured.body["ends_at"], json!("2026-12-01T00:00:00Z"));
+    assert_eq!(captured.body["decision"]["reason_code"], json!(29));
+    let purchases = submit(
+        &uri,
+        "limit=purchases&ends_on=2026-12-01&reason_code=14&source=own_review&automation=none&statement=Disputes&internal_note=Billing",
+    )
+    .await;
+    assert!(purchases.body.get("ends_at").is_none());
+}
+
+#[tokio::test]
+async fn bulk_close_sends_one_bulk_decision() {
+    let captured = submit(
+        "/bulk-actions?action=bulk-schedule-user-deletion",
+        &format!(
+            "user_ids={USER_ID}&basis=enforcement&days_until_deletion=74&reason_code=3&automation=none&statement=Same%20invite%20link&internal_note=Spam%20sweep"
+        ),
+    )
+    .await;
+    assert_eq!(captured.route, "POST /admin/bulk-jobs");
+    assert_eq!(captured.body["task"], json!("schedule_user_deletion"));
+    assert_eq!(
+        captured.body["basis"],
+        json!({
+            "type": "enforcement",
+            "decision": {
+                "reason_code": 3,
+                "source": "own_review",
+                "automation": "none",
+                "statement": "Same invite link"
+            }
+        })
+    );
+    assert_eq!(captured.audit_log_reason.as_deref(), Some("Spam sweep"));
 }
 
 #[tokio::test]
@@ -131,12 +163,13 @@ async fn report_resolve_sends_notify_reporter_from_the_checkbox() {
     let uri = format!("/reports/{REPORT_ID}/resolve");
     let checked = submit(
         &uri,
-        "resolution=actioned&public_comment=Handled&notify_reporter_present=1&notify_reporter=true",
+        "resolution=actioned&outcome=removed&public_comment=Handled&notify_reporter_present=1&notify_reporter=true",
     )
     .await;
     assert_eq!(checked.route, format!("PATCH /admin/reports/{REPORT_ID}"));
     assert_eq!(checked.body["public_comment"], json!("Handled"));
     assert_eq!(checked.body["resolution"], json!("actioned"));
+    assert_eq!(checked.body["outcome"], json!("removed"));
     assert_eq!(checked.body["notify_reporter"], json!(true));
     let unchecked = submit(
         &uri,
@@ -144,8 +177,17 @@ async fn report_resolve_sends_notify_reporter_from_the_checkbox() {
     )
     .await;
     assert_eq!(unchecked.body["notify_reporter"], json!(false));
-    let stale_form = submit(&uri, "resolution=duplicate&public_comment=Handled").await;
-    assert_eq!(stale_form.body["notify_reporter"], json!(true));
+    assert_eq!(unchecked.body["outcome"], json!("no_violation"));
+    let duplicate = submit(
+        &uri,
+        "resolution=duplicate&outcome=restricted&duplicate_of=1400000000000000001&public_comment=Handled",
+    )
+    .await;
+    assert_eq!(duplicate.body["notify_reporter"], json!(true));
+    assert!(duplicate.body.get("outcome").is_none());
+    assert_eq!(duplicate.body["duplicate_of"], json!("1400000000000000001"));
+    let other_action = submit(&uri, "resolution=actioned&outcome=action_taken").await;
+    assert_eq!(other_action.body["outcome"], json!("action_taken"));
 }
 
 struct TestApp {

@@ -4,8 +4,8 @@ import {createLogger} from '@fluxer/logger/src/Logger';
 import type {EmailConfig, IEmailProvider, UserBouncedEmailChecker} from '@pkgs/email/src/EmailProviderTypes';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import type {
-	EmailLegalLinks,
 	EmailTemplateVariables,
+	ReporterOutcome,
 	ReportReceivedTargetKind,
 } from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
@@ -19,20 +19,6 @@ function formatMinorUnitAmount(amountMinor: number, currency: string, locale: st
 	const formatter = new Intl.NumberFormat(locale || DEFAULT_LOCALE, {style: 'currency', currency});
 	const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
 	return formatter.format(amountMinor / 10 ** fractionDigits);
-}
-
-function optionalReason(reason: string | null): string | null {
-	return reason?.trim() || null;
-}
-
-function legalLinkVariables(config: EmailConfig): {
-	termsUrl: string | null;
-	guidelinesUrl: string | null;
-	legalLinks: EmailLegalLinks;
-} {
-	const {termsUrl, guidelinesUrl} = config;
-	const legalLinks = termsUrl ? (guidelinesUrl ? 'both' : 'terms') : guidelinesUrl ? 'guidelines' : 'none';
-	return {termsUrl, guidelinesUrl, legalLinks};
 }
 
 export class EmailService implements IEmailService {
@@ -90,40 +76,6 @@ export class EmailService implements IEmailService {
 		});
 	}
 
-	async sendAccountTempBannedEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		durationHours: number,
-		bannedUntil: Date,
-		locale: string | null = null,
-	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'account_temp_banned', locale, {
-			username,
-			reason: optionalReason(reason),
-			durationHours,
-			bannedUntil,
-			...legalLinkVariables(this.config),
-			appeals_email: this.config.appealsEmail,
-		});
-	}
-
-	async sendAccountScheduledForDeletionEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		deletionDate: Date,
-		locale: string | null = null,
-	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'account_scheduled_deletion', locale, {
-			username,
-			reason: optionalReason(reason),
-			deletionDate,
-			...legalLinkVariables(this.config),
-			appeals_email: this.config.appealsEmail,
-		});
-	}
-
 	async sendSelfDeletionScheduledEmail(
 		email: string,
 		username: string,
@@ -136,14 +88,12 @@ export class EmailService implements IEmailService {
 	async sendAccountDeletionRequestedEmail(
 		email: string,
 		username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'account_deletion_scheduled_requested', locale, {
 			username,
-			reason: optionalReason(reason),
-			deletionDate,
+			deletion_date: deletionDate,
 			safety_email: this.config.safetyEmail,
 		});
 	}
@@ -151,15 +101,13 @@ export class EmailService implements IEmailService {
 	async sendAccountDeletionInactivityEmail(
 		email: string,
 		username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'account_deletion_scheduled_inactivity', locale, {
 			username,
-			reason: optionalReason(reason),
-			deletionDate,
-			safety_email: this.config.safetyEmail,
+			deletion_date: deletionDate,
+			support_email: this.config.supportEmail,
 		});
 	}
 
@@ -174,28 +122,20 @@ export class EmailService implements IEmailService {
 		});
 	}
 
-	async sendUnbanNotification(
+	async sendEnforcementNoticeEmail(
 		email: string,
-		username: string,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_notice'],
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'unban_notification', locale, {username, reason: optionalReason(reason)});
+		return this.sendTemplatedEmail(email, 'enforcement_notice', locale, variables);
 	}
 
-	async sendScheduledDeletionNotification(
+	async sendEnforcementEndedEmail(
 		email: string,
-		username: string,
-		deletionDate: Date,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_ended'],
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'scheduled_deletion_notification', locale, {
-			username,
-			deletionDate,
-			reason: optionalReason(reason),
-			appeals_email: this.config.appealsEmail,
-		});
+		return this.sendTemplatedEmail(email, 'enforcement_ended', locale, variables);
 	}
 
 	async sendInactivityWarningEmail(
@@ -250,6 +190,7 @@ export class EmailService implements IEmailService {
 		username: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'report_resolved', locale, {
@@ -257,7 +198,8 @@ export class EmailService implements IEmailService {
 			reportId,
 			publicComment,
 			hasComment: publicComment ? 'yes' : 'no',
-			safety_email: this.config.safetyEmail,
+			outcome,
+			appeals_email: this.config.appealsEmail,
 		});
 	}
 
@@ -265,12 +207,14 @@ export class EmailService implements IEmailService {
 		email: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'dsa_report_resolved', locale, {
 			reportId,
 			publicComment,
 			hasComment: publicComment ? 'yes' : 'no',
+			outcome,
 			appeals_email: this.config.appealsEmail,
 		});
 	}

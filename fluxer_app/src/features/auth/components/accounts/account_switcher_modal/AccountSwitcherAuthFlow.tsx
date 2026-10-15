@@ -14,6 +14,7 @@ import {AccountSwitcherLoginStep} from '@app/features/auth/components/accounts/a
 import {AccountSwitcherRegisterStep} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherRegisterStep';
 import forgotStyles from '@app/features/auth/components/pages/ForgotPasswordPage.module.css';
 import {RecoverAccountForm} from '@app/features/auth/components/pages/RecoverAccountPage';
+import {AccountRestrictionScreen} from '@app/features/auth/flow/AccountRestrictionScreen';
 import {shouldRenderInstanceStep} from '@app/features/auth/flow/auth_login_core/AuthLoginInstanceStep';
 import {ForgotPasswordForm} from '@app/features/auth/flow/ForgotPasswordForm';
 import MFAScreen from '@app/features/auth/flow/MfaScreen';
@@ -100,6 +101,7 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 		() => ({setSplashUrl, setCardVariant, setContentMode, setSplashCardAlignment}),
 		[setSplashUrl],
 	);
+	const accountRestriction = Authentication.accountRestriction;
 	const mfaTicket = Authentication.currentMfaTicket;
 	const mfaMethods = Authentication.availableMfaMethods;
 	const hasMfaChallenge = mfaChallengePurpose === purpose && mfaTicket != null && mfaMethods != null;
@@ -111,11 +113,13 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 	}
 	useLayoutEffect(() => {
 		AuthenticationCommands.clearMfaTicket();
+		AuthenticationCommands.clearAccountRestriction();
 		setMfaChallengePurpose(purpose);
 		setSelectedAuthStep(AccountSwitcherAuthStep.LOGIN);
 		setLoginBackAction(null);
 		return () => {
 			AuthenticationCommands.clearMfaTicket();
+			AuthenticationCommands.clearAccountRestriction();
 		};
 	}, [purpose]);
 	const showRegisterStep = useCallback(() => {
@@ -172,7 +176,15 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 		},
 		[authRuntimeTarget, onLoginComplete, redirectAfterLogin],
 	);
+	const handleBackToSignIn = useCallback(() => {
+		AuthenticationCommands.clearAccountRestriction();
+		showLoginStep();
+	}, [showLoginStep]);
 	const handleBack = useCallback(() => {
+		if (accountRestriction != null) {
+			handleBackToSignIn();
+			return;
+		}
 		switch (authStep) {
 			case AccountSwitcherAuthStep.MFA:
 				AuthenticationCommands.clearMfaTicket();
@@ -192,8 +204,18 @@ export const AccountSwitcherAuthFlow = observer(function AccountSwitcherAuthFlow
 			return;
 		}
 		onBackToAccounts();
-	}, [authStep, loginBackAction, onBackToAccounts, showLoginStep]);
+	}, [accountRestriction, authStep, handleBackToSignIn, loginBackAction, onBackToAccounts, showLoginStep]);
 	const renderAuthStep = (): React.ReactNode => {
+		if (accountRestriction != null) {
+			return (
+				<AccountRestrictionScreen
+					restriction={accountRestriction}
+					onBackToSignIn={handleBackToSignIn}
+					onTryAgain={AuthenticationCommands.clearAccountRestriction}
+					data-flx="auth.accounts.account-switcher-modal.account-switcher-auth-flow.account-restriction-screen"
+				/>
+			);
+		}
 		switch (authStep) {
 			case AccountSwitcherAuthStep.MFA:
 				if (mfaTicket == null || mfaMethods == null) {

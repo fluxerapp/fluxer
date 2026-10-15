@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::client::{AdminApiClient, ApiResult};
+use crate::api::client::{AdminApiClient, ApiError, ApiResult};
 use crate::api::types::{FlashLevel, FlashMessage};
 use crate::middleware::auth::AuthContext;
 use crate::templates;
@@ -201,6 +201,16 @@ async fn execute_check(
         _ => return ("error", "Unknown ban type".into()),
     };
     match result {
+        Ok(r) if r.banned && r.decision_id.is_some() => (
+            "info",
+            format!(
+                "{value} is blocked by decision {}{}. End that decision to remove the block.",
+                r.decision_id.unwrap_or_default(),
+                r.expires_at
+                    .map(|expires_at| format!(" until {}", format_admin_timestamp(&expires_at)))
+                    .unwrap_or_default()
+            ),
+        ),
         Ok(r) if r.banned => match r.expires_at {
             Some(expires_at) => (
                 "info",
@@ -226,6 +236,12 @@ fn ban_action_result(
 ) -> (&'static str, String) {
     match result {
         Ok(()) => ("success", success_message),
+        Err(ApiError::Http { status: 409, .. }) => (
+            "error",
+            format!(
+                "{error_message}. It belongs to an enforcement decision, so end that decision instead."
+            ),
+        ),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: ban action");
             ("error", error_message)

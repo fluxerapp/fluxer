@@ -79,9 +79,9 @@ export async function createAuthSession(
 ): Promise<[token: string, AuthSession]> {
 	const {users} = ctx.services;
 	if (user.isBot) throw new BotUserAuthSessionCreationDeniedError();
+	user = await AuthUtility.assertSignInAllowed(ctx, user);
 	if (user.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) throw new RegistrationPendingApprovalError();
 	if (user.traits.has(REGISTRATION_REJECTED_TRAIT)) throw new RegistrationRejectedError();
-	user = await AuthUtility.handleBanStatus(ctx, user);
 	user = await AuthUtility.reactivateOnSignIn(ctx, user, getKVAccountDeletionQueue());
 	const now = new Date();
 	const token = await AuthUtility.generateAuthToken(ctx);

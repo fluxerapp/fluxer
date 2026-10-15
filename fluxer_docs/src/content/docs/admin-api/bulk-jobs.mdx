@@ -50,7 +50,11 @@ ACL `bulk:add:guild_members`. Adds every targeted user to one guild. Runs as `bu
 
 ### `schedule_user_deletion`
 
-ACL `bulk:delete:users`. Schedules account deletion for every targeted user. Runs as `bulkScheduleUserDeletion`.
+ACL `bulk:delete:users`. Closes every targeted account and schedules its deletion. Runs as `bulkScheduleUserDeletion`. A job queued in the shape used before enforcement decisions, with `reason_code` and no `basis`, fails when the worker runs it instead of inventing a decision.
+
+### `delete_user_messages`
+
+ACL `bulk:delete:user_messages`. Deletes every message each targeted account wrote. Runs as `bulkDeleteMessagesForUsers`. A job queued without a `basis` fails when the worker runs it.
 
 Each worker task is recorded as `task_type` on the job and listed under [background job task types](/admin-api/jobs/#background-job-task-types). Every bulk task runs in the `lifecycle` [processing lane](/admin-api/jobs/#processing-lanes).
 
@@ -109,18 +113,29 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | --- | --- | --- |
 | task | string | The discriminator selecting this variant, `schedule_user_deletion` |
 | user_ids | array[snowflake] | The users to schedule for deletion (max 1000 entries) |
-| reason_code | integer | [Deletion reason](/admin-api/users/#deletion-reasons) recorded against every targeted account |
-| public_reason? | string | The reason shown to each account holder in the deletion notice (0-512 characters after normalisation) |
-| days_until_deletion?<sup>1</sup> | integer | The delay before deletion in whole days (1-365, default 60) |
-| notify_user? | boolean | Whether to email each account holder about the scheduled deletion (default true) |
+| days_until_deletion<sup>1</sup> | integer | The delay before deletion in whole days (1-365) |
+| basis<sup>2</sup> | [basis](/admin-api/enforcement/#basis) object | Why the accounts are closed |
 
-<sup>1</sup> Fluxer raises the value to the reason-specific minimum, 14 days for `USER_REQUESTED` and 60 days for every other code
+<sup>1</sup> Fluxer raises the value to the minimum of the basis, 74 days for a broken rule and 14 days otherwise. A self-hosted instance has no appeal route and raises every basis to 14 days
+
+<sup>2</sup> The `enforcement` basis takes a bulk decision with `reason_code`, `source` (always `own_review`), `automation` and a required `statement`. Reports, evidence messages and any other field are refused, because per-account facts cannot be given in bulk. The `X-Audit-Log-Reason` header is required with this basis, or the request fails with `ENFORCEMENT_INTERNAL_NOTE_REQUIRED`, and becomes the first note on every decision
+
+#### Delete user messages structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `delete_user_messages` |
+| user_ids | array[snowflake] | The users whose messages are deleted (max 1000 entries) |
+| basis<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are deleted |
+
+<sup>1</sup> Takes the same bulk decision and `X-Audit-Log-Reason` rule as the schedule user deletion structure. A reason with restricted handling is refused for each account, because it needs evidence messages
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [bulk job creation](#bulk-job-creation-object) object | The bulk job was queued |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, including for a restriction flag or a missing internal note |
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without the ACL selected by `task` |
 | 500<sup>1</sup> | [error response](/admin-api/#error-response) | The job could not be queued |
 
@@ -136,15 +151,15 @@ Every task updates its progress before work starts and at completion. Every task
 
 Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, `bulk_schedule_deletion`, `bulk_ban_file_shas`, or `bulk_delete_user_messages`. The summary has the audit reason, the entity count, the operation-specific parameters, the job identifier, and the processed, successful, and failed counts. Its `target_type` is `bulk_job` and its `target_id` is the job identifier, except for `add_guild_members`, which targets the guild. A failed job writes no summary entry. A cancelled job writes one, marked `cancelled`, covering the entities it processed before it stopped.
 
-`update_user_flags` writes one `update_flags` entry for each account and dispatches [User Update](/gateway/events/#user-update) to the account's sessions. A change to a publicly visible flag also dispatches [Guild Member Update](/gateway/events/#guild-member-update) to every guild the account is in.
+`update_user_flags` refuses the same restriction flag changes as [Update user flags](/admin-api/users/#update-user-flags). Adding one fails the request with `FLAG_REQUIRES_ENFORCEMENT_ROUTE`, and a removal an account refuses counts that account as failed. It writes one `update_flags` entry for each account and dispatches [User Update](/gateway/events/#user-update) to the account's sessions. A change to a publicly visible flag also dispatches [Guild Member Update](/gateway/events/#guild-member-update) to every guild the account is in.
 
 `update_guild_features` writes one `update_features` entry for each guild, dispatches [Guild Update](/gateway/events/#guild-update), and reindexes the guild for search. Fluxer reconciles a guild that already has a discovery application record against the new feature set, so gaining `DISCOVERABLE` approves the record and losing it marks the record removed. A guild with no discovery record is left alone.
 
 `add_guild_members` bypasses the ban check that a normal join runs. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
 
-`delete_user_messages` deletes every message each account wrote, across every channel. It writes one `delete_all_user_messages` entry for each account, with the audit reason, the account, and the deleted message count, and reports progress after every account.
+`delete_user_messages` runs the same steps as [Delete all user messages](/admin-api/users/#delete-all-user-messages) for each account, with the job's basis. With the `enforcement` basis each account that wrote any message gets its own content removal decision and notice. Each account writes one `delete_all_user_messages` entry with the audit reason, the basis and the message count, and the summary entry records `basis`, plus `reason_code` for the `enforcement` basis. Progress is reported after every account.
 
-`schedule_user_deletion` marks each account deleted. The task runs the same steps as [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one account. It stores the reason code, public reason, and audit reason on the account, reschedules its pending deletion, terminates its sessions, cancels and refunds its Stripe subscription when one is on file, dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account with the audit reason and the reason code, and emails the account holder when `notify_user` is true and an address is on file. A failed email is logged and does not fail the entity. The summary entry records `notify_user`. When the reason is not `USER_REQUESTED`, the task also bans the account's identifiers. When the reason is one that resolves reports under [Schedule user deletion](/admin-api/users/#schedule-user-deletion), the task also resolves the pending reports against the account, leaves the `child_safety`, `underage_user`, and `self_harm` categories pending, and sends each reporter of a resolved report the generic notice [Update report](/admin-api/reports/#update-report) describes. The skip cases of that notice apply.
+`schedule_user_deletion` runs the same steps as [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for each account, with the job's basis. With the `enforcement` basis each account gets its own decision and notice, its email is blocked when the rule bars new accounts, and the pending reports against it are resolved for the reasons that resolve reports, leaving the `child_safety`, `underage_user`, and `self_harm` categories pending. Each account writes one `schedule_deletion` entry with the audit reason, and the summary entry records `basis`, plus `reason_code` for the `enforcement` basis. A failed email is logged and does not fail the entity. An account that already has a pending deletion, or that a decision owns for a holder request or housekeeping deletion, counts as failed.
 
 ### Rate limit
 

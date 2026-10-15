@@ -669,11 +669,15 @@ When the instance has disabled new-IP authorisation or sends no email, Fluxer au
 
 Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION_REJECTED`, 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
-:::note[A verified password reactivates the account]
-On an account the user had disabled, a correct password clears the disabled state. It also cancels a self-scheduled deletion if erasure has not started. Both happen before any second factor is requested, without a separate confirmation step. Once erasure starts, login returns `ACCOUNT_SUSPENDED_PERMANENTLY`.
+A suspended or closed account gets its 403 after the last factor. Without a second factor that is the password, so login returns it. With a second factor, login returns the MFA ticket and the second factor returns the 403. Both suspension codes have the account's [enforcement notice](/http-api/errors/#supplementary-members). A suspension with no end date and a closed account return `ACCOUNT_SUSPENDED_PERMANENTLY`, and a suspension with an end date returns `ACCOUNT_SUSPENDED_TEMPORARILY`. An expired temporary suspension is cleared at the same point.
+
+:::note[Signing in reactivates the account]
+On an account the user had disabled, signing in clears the disabled state. It also cancels a self-scheduled deletion if erasure has not started. Both happen when the session is created, after any second factor, without a separate confirmation step. Once erasure starts, login returns `ACCOUNT_SUSPENDED_PERMANENTLY`.
 :::
 
-A correct password also clears an expired temporary suspension before any second factor is requested. A live temporary or permanent administrator suspension stays in place, and the login returns its 403.
+:::note[Signing in from a blocked network]
+A [blocked network](/http-api/errors/#supplementary-members) can still reach this operation, the second factor operations, passkey sign-in and SSO, so the holder of a suspended or closed account sees its notice. Every other outcome returns the same `GLOBAL_IP_BANNED` or `GLOBAL_IP_TEMPORARILY_BANNED` body any other request from that network gets. That covers an unknown account, a wrong password, and an account that is not suspended or closed, with or without a second factor. No session, MFA ticket or IP authorisation message is created, and SSO provisions no new account.
+:::
 
 ### Response
 

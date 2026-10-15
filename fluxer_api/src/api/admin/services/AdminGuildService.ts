@@ -9,6 +9,7 @@ import {AdminGuildUpdateService} from '@app/api/admin/services/guild/AdminGuildU
 import {AdminGuildVanityService} from '@app/api/admin/services/guild/AdminGuildVanityService';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
@@ -29,6 +30,7 @@ interface AdminGuildServiceDeps {
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
 	discoveryRepository: GuildDiscoveryRepository;
+	enforcement: EnforcementDecisionService;
 }
 
 export class AdminGuildService {
@@ -75,6 +77,7 @@ export class AdminGuildService {
 			gatewayService: deps.gatewayService,
 			guildService: deps.guildService,
 			auditService: deps.auditService,
+			enforcement: deps.enforcement,
 		});
 	}
 

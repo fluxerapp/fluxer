@@ -5,6 +5,7 @@ import {
 	GuildOperations,
 	GuildOperationsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
+import {CommunityRemovalBasis} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import {GuildAuditLogListResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import {GuildBanCreateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import {GuildFeatureSchema} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -138,6 +139,12 @@ export const ClearGuildFieldsRequest = z.object({
 });
 
 export type ClearGuildFieldsRequest = z.infer<typeof ClearGuildFieldsRequest>;
+
+export const AdminGuildDeleteRequest = z.object({
+	basis: CommunityRemovalBasis,
+});
+
+export type AdminGuildDeleteRequest = z.infer<typeof AdminGuildDeleteRequest>;
 
 export const UpdateGuildVanityRequest = z.object({
 	guild_id: SnowflakeType.describe('ID of the guild to update'),

@@ -4,6 +4,7 @@ import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import {createUserID} from '@app/api/BrandedTypes';
+import {enforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {
 	RequireEmailAccountIdentity,
 	RequireUsernameAccountIdentity,
@@ -22,8 +23,6 @@ import {
 	AdminAclListResponse,
 	AdminPasswordResetLinkResponse,
 	AdminUserAclsRequest,
-	AdminUserBanNoteRequest,
-	AdminUserBanRequest,
 	AdminUserBotStatusRequest,
 	AdminUserChangeLogQuery,
 	AdminUserClearFieldsRequest,
@@ -42,7 +41,6 @@ import {
 	AdminUserSystemStatusRequest,
 	AdminUsersMeResponse,
 	AdminUserTraitsRequest,
-	AdminUserUnbanRequest,
 	AdminUserUsernameUpdateRequest,
 	AdminUserWebAuthnCredentialParam,
 	ListUserChangeLogResponseSchema,
@@ -53,7 +51,14 @@ import {
 	RemoveUserRelationshipsResponse,
 	TerminateSessionsResponse,
 	UserMutationResponse,
+	UserRestrictionResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import {
+	AdminUserBanRequest,
+	AdminUserFeatureLimitRequest,
+	AdminUserWarningRequest,
+	AdminUserWarningResponse,
+} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
@@ -580,21 +585,18 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Clear or reset user profile fields such as bio, avatar, or status. Creates audit log entry. Requires USER_UPDATE_PROFILE permission.',
+				'Clears profile fields such as the bio, avatar or display name. An enforcement basis saves the old values as evidence, records a profile reset decision and sends its notice by system DM and email. Creates audit log entry. Requires USER_UPDATE_PROFILE permission.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.userService.profileService.clearUserFields(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
+				await ctx
+					.get('adminService')
+					.userService.profileService.clearUserFields(
+						createUserID(userId),
+						ctx.req.valid('json'),
+						enforcementActor(ctx),
+					),
 			);
 		},
 	);
@@ -880,27 +882,20 @@ export function UserAdminController(app: HonoApp) {
 		Validator('json', AdminUserBanRequest),
 		OpenAPI({
 			operationId: 'ban_admin_user',
-			summary: 'Ban user',
-			responseSchema: UserMutationResponse,
+			summary: 'Suspend user',
+			responseSchema: UserRestrictionResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission. Emails the user for temporary bans unless notify_user is false. Permanent bans are never emailed.',
+				'Suspend the account for duration_hours, or permanently with a duration of zero, and record the enforcement decision behind it. The decision is written first, then the suspension, then linked reports are resolved and the notice is sent. The X-Audit-Log-Reason header is required and becomes the first note. remove_evidence queues removal of the evidence messages after they are snapshotted. block_networks blocks addresses the account used in the last 30 days, for 90 days unless days says otherwise, and only with a permanent suspension. Exempt and special-purpose addresses, and addresses already blocked permanently or by another decision, are skipped and listed in skipped_ips. An address on which another account that is not suspended or closed was last active is refused with ENFORCEMENT_NETWORK_SHARED. Returns 409 when the account is closed. Requires USER_TEMP_BAN permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.userService.banService.tempBanUser(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
+				await ctx
+					.get('adminService')
+					.banService.tempBanUser(createUserID(userId), ctx.req.valid('json'), enforcementActor(ctx)),
 			);
 		},
 	);
@@ -909,55 +904,69 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_TEMP_BAN),
 		Validator('param', UserIdParam),
-		Validator('json', AdminUserUnbanRequest),
 		OpenAPI({
 			operationId: 'unban_admin_user',
-			summary: 'Unban user',
+			summary: 'Lift a suspension without a decision',
 			responseSchema: UserMutationResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Immediately remove the ban from the user account. Emails the user only when notify_user is true, the ban was still in force and the account is not closed or pending deletion. The email shows public_reason and never the audit log reason. Creates audit log entry. Requires USER_TEMP_BAN permission.',
+				'Lift a suspension that no enforcement decision owns, such as one from before decisions existed. Returns 409 with the decision ID when a decision owns the suspension, which is then ended through its end route. Emails the user that the restriction ended when the suspension was still in force. Creates audit log entry. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.banService.unbanUser(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
+			return ctx.json(await ctx.get('adminService').banService.unbanUser(createUserID(userId), enforcementActor(ctx)));
 		},
 	);
 	app.post(
-		'/admin/users/:user_id/ban/notes',
+		'/admin/users/:user_id/warnings',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_TEMP_BAN),
+		requireAdminACL(AdminACLs.USER_UPDATE_FLAGS),
 		Validator('param', UserIdParam),
-		Validator('json', AdminUserBanNoteRequest),
+		Validator('json', AdminUserWarningRequest),
 		OpenAPI({
-			operationId: 'annotate_admin_user_ban',
-			summary: 'Add a note to a user ban',
-			responseSchema: null,
-			statusCode: 204,
+			operationId: 'warn_admin_user',
+			summary: 'Warn user',
+			responseSchema: AdminUserWarningResponse,
+			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Append a note to the current ban of a user. The note is recorded as the reason of a new annotate_ban audit log entry whose metadata names the ban audit log entry. Earlier entries are never changed. Requires USER_TEMP_BAN permission.',
+				'Record a warning decision and send its notice by email and system DM. Nothing about the account changes. The X-Audit-Log-Reason header is required and becomes the first note. Refused for reasons that only allow a suspension or content removal. Requires USER_UPDATE_FLAGS permission, plus MESSAGE_LOOKUP for evidence and REPORT_VIEW and REPORT_RESOLVE for reports.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
 			const {user_id: userId} = ctx.req.valid('param');
-			await adminService.userService.banService.annotateBan({user_id: userId, ...ctx.req.valid('json')}, adminUserId);
-			return ctx.body(null, 204);
+			return ctx.json(
+				await ctx
+					.get('adminService')
+					.banService.warnUser(createUserID(userId), ctx.req.valid('json'), enforcementActor(ctx)),
+			);
+		},
+	);
+	app.put(
+		'/admin/users/:user_id/feature-limits',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_UPDATE_FLAGS),
+		Validator('param', UserIdParam),
+		Validator('json', AdminUserFeatureLimitRequest),
+		OpenAPI({
+			operationId: 'limit_admin_user_features',
+			summary: 'Limit user features',
+			responseSchema: UserMutationResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Record an enforcement decision that limits one feature and send its notice by email and system DM. Direct messages set SPAMMER and are allowed for spam, automation, fraud and malware reasons only. Reports set REPORT_BANNED until ends_at, 90 days by default and at most 365, and expire on their own. Purchases set PURCHASE_DISABLED for payment reasons. The X-Audit-Log-Reason header is required and becomes the first note. Requires USER_UPDATE_FLAGS permission, plus MESSAGE_LOOKUP for evidence and REPORT_VIEW and REPORT_RESOLVE for reports.',
+		}),
+		async (ctx) => {
+			const {user_id: userId} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx
+					.get('adminService')
+					.banService.limitFeatures(createUserID(userId), ctx.req.valid('json'), enforcementActor(ctx)),
+			);
 		},
 	);
 	app.put(
@@ -969,26 +978,23 @@ export function UserAdminController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'schedule_admin_user_deletion',
 			summary: 'Schedule user deletion',
-			responseSchema: UserMutationResponse,
+			responseSchema: UserRestrictionResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission. Emails the user unless notify_user is false. The email depends on reason_code: user requested and inactivity get neutral wording, other codes get enforcement wording with an appeal path.',
+				'Close the account and schedule its deletion. The basis says why. A broken rule records an enforcement decision kind closure, keeps the account for at least 74 days so an appeal can be reviewed first (14 days on a self-hosted instance, which has no appeals), sends the notice and, when the rule bars new accounts, bans the account email. The X-Audit-Log-Reason header is then required and becomes the first note. A holder request or housekeeping keeps the account for at least 14 days, sends a neutral email, and is cancelled when the holder signs in. Those two return 409 while an enforcement decision owns the account state. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. block_networks works as on the suspend route and is refused for the other bases. Executing the deletion removes the blocks. Creates audit log entry. Requires USER_DELETE permission, plus MESSAGE_LOOKUP for evidence, REPORT_VIEW and REPORT_RESOLVE for reports, MESSAGE_SHRED for remove_evidence, and BAN_IP_ADD and USER_VIEW_IP for block_networks.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.userService.deletionService.scheduleAccountDeletion(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
+				await ctx
+					.get('adminService')
+					.userService.deletionService.scheduleAccountDeletion(
+						createUserID(userId),
+						ctx.req.valid('json'),
+						enforcementActor(ctx),
+					),
 			);
 		},
 	);
@@ -1006,21 +1012,18 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Cancel the scheduled account deletion named by expected_pending_deletion_at. Returns 409 when a different deletion is pending and 400 when none is. The user is emailed only when notify_user is true, and the email never includes the audit log reason. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.',
+				'Cancel a scheduled deletion that no enforcement decision owns, named by expected_pending_deletion_at, such as one the holder asked for, an inactivity deletion or a closure from before decisions existed. Returns 409 with the decision ID when a decision owns the deletion, which is then ended through its end route, 409 when a different deletion is pending and 400 when none is. Emails the user that the deletion was cancelled, or that the restriction ended for a closure from before decisions existed. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.userService.deletionService.cancelAccountDeletion(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
+				await ctx
+					.get('adminService')
+					.userService.deletionService.cancelAccountDeletion(
+						createUserID(userId),
+						ctx.req.valid('json'),
+						enforcementActor(ctx),
+					),
 			);
 		},
 	);
@@ -1133,7 +1136,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Add or remove user flags to control account features and restrictions. Flags determine verification status and special properties. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.',
+				'Add or remove user flags. Flags that record a restriction go through their own routes: adding DISABLED, DELETED, SPAMMER or REPORT_BANNED and removing DELETED return 400, removing DISABLED while a suspension is set returns 400, and removing SPAMMER or REPORT_BANNED while an enforcement decision holds it returns 409 with the decision ID. A self-disabled account can still have DISABLED removed. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -1169,7 +1172,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Add or remove premium-related flags on a user account (badge visibility, override, purchase block, etc). Creates audit log entry. Requires USER_UPDATE_FLAGS permission.',
+				'Add or remove premium-related flags on a user account (badge visibility, override, purchase block, etc). Adding PURCHASE_DISABLED returns 400, because a purchase limit is recorded through the feature limits route, and removing it while an enforcement decision holds it returns 409 with the decision ID. Creates audit log entry. Requires USER_UPDATE_FLAGS permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

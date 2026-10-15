@@ -3,6 +3,7 @@
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {Donor} from '@app/api/donation/models/Donor';
+import type {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -35,6 +36,7 @@ export class StripeDisputeWebhookHandler {
 		private kvDeletionQueue: KVAccountDeletionQueueService,
 		private giftReversalHandler: StripeGiftReversalHandler,
 		private paymentFraudService: StripePaymentFraudService,
+		private enforcement: EnforcementDecisionService,
 	) {}
 
 	async handleChargebackCreated(dispute: Stripe.Dispute): Promise<void> {
@@ -62,7 +64,7 @@ export class StripeDisputeWebhookHandler {
 			Logger.error({paymentIntentId}, 'No payment found for chargeback');
 			throw new StripeError('No payment found for chargeback');
 		}
-		await this.paymentFraudService.enforceAccountFraudAction({
+		await this.paymentFraudService.limitPurchasesForFraudSignal({
 			userId: payment.userId,
 			source: 'chargeback',
 			signalId: dispute.id,
@@ -70,6 +72,7 @@ export class StripeDisputeWebhookHandler {
 			paymentIntentId,
 			customerId: null,
 			fraudType: null,
+			paymentAt: payment.createdAt,
 		});
 	}
 
@@ -97,7 +100,16 @@ export class StripeDisputeWebhookHandler {
 		if (!user) {
 			throw new StripeError('User not found for chargeback withdrawal');
 		}
-		if (user.flags & UserFlags.DELETED && user.deletionReasonCode === DeletionReasons.BILLING_DISPUTE_OR_ABUSE) {
+		await this.enforcement.reverseAutomatedPurchaseLimits(
+			user.id,
+			payment.createdAt,
+			`Stripe dispute ${dispute.id} was won`,
+		);
+		if (
+			user.flags & UserFlags.DELETED &&
+			user.deletionReasonCode === DeletionReasons.BILLING_DISPUTE_OR_ABUSE &&
+			user.enforcementDecisionId === null
+		) {
 			const updatedUser = await this.userRepository.updateDeletionSchedule(user, {
 				flags: user.flags & ~UserFlags.DELETED,
 				pending_deletion_at: null,
@@ -327,7 +339,7 @@ export class StripeDisputeWebhookHandler {
 				'Revoked unredeemed gift code after chargeback',
 			);
 		}
-		await this.paymentFraudService.enforceAccountFraudAction({
+		await this.paymentFraudService.limitPurchasesForFraudSignal({
 			userId: giftCode.createdByUserId,
 			source: 'chargeback',
 			signalId: extractId(dispute.charge) ?? dispute.id,
@@ -335,6 +347,7 @@ export class StripeDisputeWebhookHandler {
 			paymentIntentId: giftCode.stripePaymentIntentId,
 			customerId: null,
 			fraudType: null,
+			paymentAt: await this.paymentFraudService.resolvePaymentTime(giftCode.stripePaymentIntentId, giftCode.createdAt),
 		});
 	}
 }

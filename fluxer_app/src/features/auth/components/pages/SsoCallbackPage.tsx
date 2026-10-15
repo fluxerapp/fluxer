@@ -140,6 +140,11 @@ class SsoCallbackAttempt {
 	}
 
 	private handleFailure(error: unknown): void {
+		if (!this.settled && AuthenticationCommands.showAccountRestriction(error)) {
+			this.settled = true;
+			this.stopTimeout();
+			return;
+		}
 		const message =
 			error != null && typeof error === 'object' && 'body' in error
 				? FormUtils.extractErrorMessage(this.dependencies.i18n, error)

@@ -36,6 +36,7 @@ describe('AdminRepository IP ban canonicalization', () => {
 				reason: 'legacy_test_row',
 				expires_at: null,
 				created_at: new Date(),
+				decision_id: null,
 			}),
 		);
 	}

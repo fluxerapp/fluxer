@@ -31,6 +31,7 @@ export interface UserDeletionScheduleUpdate {
 	deletion_scheduled_by?: UserID | null;
 	deletion_scheduled_at?: Date | null;
 	temp_banned_until?: Date | null;
+	enforcement_decision_id?: bigint | null;
 	first_refund_at?: Date | null;
 }
 

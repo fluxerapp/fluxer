@@ -97,6 +97,7 @@ async function createAdmin(harness: ApiTestHarness): Promise<TestAccount> {
 async function adminDeleteMessage(harness: ApiTestHarness, admin: TestAccount, channelId: string, messageId: string) {
 	await createBuilder(harness, admin.token)
 		.delete(`/admin/channels/${channelId}/messages/${messageId}`)
+		.body({basis: {type: 'housekeeping'}})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 }

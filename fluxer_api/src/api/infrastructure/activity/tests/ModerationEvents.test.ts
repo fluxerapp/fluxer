@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
 import {addMemberRole, createGuild, createRole, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
@@ -152,27 +153,36 @@ describe('moderation activity events', () => {
 				const {reported, reportId} = await fileReport();
 				await createBuilder(harness, admin.token)
 					.put(`/admin/users/${reported.userId}/ban`)
-					.body({duration_hours: 24, notify_user: false})
+					.header('X-Audit-Log-Reason', 'Test suspension')
+					.body({
+						duration_hours: 24,
+						decision: decisionBody(),
+					})
 					.expect(HTTP_STATUS.OK)
 					.execute();
-				await resolve(reportId, {resolution});
+				const {reportId: originalId} = await fileReport();
+				await resolve(
+					reportId,
+					resolution === 'no_violation'
+						? {resolution}
+						: resolution === 'duplicate'
+							? {resolution, duplicate_of: originalId}
+							: {resolution, outcome: 'restricted'},
+				);
 				expect(publisher.of('report_resolved').map((event) => event.data)).toEqual([
 					expect.objectContaining({report_id: reportId, outcome: resolution, resolved_by: 'staff'}),
 				]);
 			},
 		);
 
-		test('without a chosen outcome the reported account state decides between actioned and unspecified', async () => {
-			const first = await fileReport();
-			await resolve(first.reportId, {});
-			const second = await fileReport();
+		test('a resolution is required', async () => {
+			const {reportId} = await fileReport();
 			await createBuilder(harness, admin.token)
-				.put(`/admin/users/${second.reported.userId}/ban`)
-				.body({duration_hours: 24, notify_user: false})
-				.expect(HTTP_STATUS.OK)
+				.patch(`/admin/reports/${reportId}`)
+				.body({status: 'resolved'})
+				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
-			await resolve(second.reportId, {});
-			expect(publisher.of('report_resolved').map((event) => event.data.outcome)).toEqual(['unspecified', 'actioned']);
+			expect(publisher.of('report_resolved')).toEqual([]);
 		});
 
 		test('an unknown resolution is rejected', async () => {

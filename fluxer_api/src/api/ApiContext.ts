@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Config} from '@app/api/Config';
+import type {NetworkBlock} from '@app/api/enforcement/NetworkBlockError';
 import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
@@ -37,6 +38,8 @@ export interface RequestScope {
 	requestId: string;
 	clientIp: string | null;
 	userAgent: string | null;
+	locale: string;
+	blockedNetworkSignIn: NetworkBlock | null;
 }
 
 export interface ApiContext {

@@ -209,7 +209,7 @@ export function ReportAdminController(app: HonoApp) {
 			operationId: 'update_admin_report',
 			summary: 'Update report',
 			description:
-				'Moves a report to the resolved status. The reporter is always told the report was reviewed: an account reporter by system DM and email, a Digital Services Act notifier by email. notify_reporter false leaves the public comment out of that notice. Nothing is sent when the reporter account is deleted or barred from reporting. Creates an audit log entry. Requires REPORT_RESOLVE permission.',
+				'Moves a report to the resolved status. resolution is required. actioned also needs the outcome for the reported item, and no_violation sets the outcome no_violation. duplicate needs duplicate_of and takes the outcome stored on that report. The reporter is told the outcome: an account reporter by system DM and email, a Digital Services Act notifier by email. A duplicate of a report with no outcome yet is resolved without telling the reporter. notify_reporter false leaves the public comment out of that notice. Nothing is sent when the reporter account is deleted, or barred from reporting when the report was filed. Creates an audit log entry. Requires REPORT_RESOLVE permission.',
 			responseSchema: ResolveReportResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -220,16 +220,17 @@ export function ReportAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
 			const {report_id} = ctx.req.valid('param');
-			const {public_comment, notify_reporter, resolution} = ctx.req.valid('json');
+			const {public_comment, notify_reporter, resolution, outcome, duplicate_of} = ctx.req.valid('json');
 			return ctx.json(
-				await adminService.reportServiceAggregate.resolveReport(
-					createReportID(report_id),
+				await adminService.reportServiceAggregate.resolveReport(createReportID(report_id), {
 					adminUserId,
-					public_comment || null,
+					publicComment: public_comment || null,
 					auditLogReason,
-					notify_reporter,
+					notifyReporter: notify_reporter,
 					resolution,
-				),
+					outcome,
+					duplicateOf: duplicate_of === undefined ? undefined : createReportID(duplicate_of),
+				}),
 			);
 		},
 	);

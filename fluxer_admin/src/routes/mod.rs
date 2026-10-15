@@ -8,6 +8,7 @@ mod bans_actions;
 mod billing_actions;
 pub mod codes;
 pub mod discovery;
+pub mod enforcement;
 mod guild_tabs;
 pub mod guilds;
 pub mod jobs;
@@ -64,6 +65,7 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(applications::router())
         .merge(codes::router())
         .merge(discovery::router())
+        .merge(enforcement::router())
         .merge(registrations::router())
         .merge(jobs::router())
         .merge(messages::router())

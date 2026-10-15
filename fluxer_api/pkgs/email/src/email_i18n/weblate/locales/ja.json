@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "{product_name}アカウントは非アクティブのため削除されます",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは長期間利用されていないため、以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n理由: {reason}}}\n\n{safety_email, select, null {アカウントを維持したい場合は、この日時までにこのインスタンスの管理者へご連絡ください。} other {アカウントを維持したい場合は、この日時までにこのメールアドレスから{safety_email}へご連絡ください。}}\n\n– {product_name}チーム"
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは長期間利用されていないため、{deletion_date}に削除するよう設定しました。\n\nアカウントを残したい場合は、その日より前にログインしてください。{support_email, select, null {ご質問がございましたら、このインスタンスの管理者にご連絡ください。} other {ご質問がございましたら、{support_email}までご連絡ください。}}\n\n{product_name}チーム"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "{product_name}アカウントの削除が予定されています",
-		"body": "こんにちは、{username}さん\n\nリクエストに基づき、{product_name}アカウントは以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n理由: {reason}}}\n\nそれまでアカウントはロックされます。{safety_email, select, null {ご自身でリクエストしていない場合、またはアカウントを維持したい場合は、この日時までにこのインスタンスの管理者へご連絡ください。} other {ご自身でリクエストしていない場合、またはアカウントを維持したい場合は、この日時までにこのメールアドレスから{safety_email}へご連絡ください。}}\n\n– {product_name}チーム"
-	},
-	"account_scheduled_deletion": {
-		"subject": "{product_name}アカウントは完全に削除されます",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは、利用規約またはコミュニティガイドラインへの違反のため、完全な削除が予定されています。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {理由: {reason}\n\n}\n}これは重大な措置です。アカウントデータは、予定日に完全に削除されます。\n\n{legalLinks, select,\n  both {以下をご確認ください。\n- 利用規約: {termsUrl}\n- コミュニティガイドライン: {guidelinesUrl}\n\n}\n  terms {以下をご確認ください。\n- 利用規約: {termsUrl}\n\n}\n  guidelines {以下をご確認ください。\n- コミュニティガイドライン: {guidelinesUrl}\n\n}\n  other {}\n}異議申し立て手続き:\nこの措置が不正確または不当であると思われる場合は、60日以内に異議申し立てを提出できます。{appeals_email, select, null {このインスタンスの管理者に連絡してください。} other {このメールアドレスから{appeals_email}までメールを送信してください。}}\n\n異議申し立てには、以下を記載してください。\n- 措置が不正確または不当であると考える理由の明確な説明\n- 関連する証拠や背景情報\n\n{product_name}安全チームのメンバーが異議申し立てを審査し、最終決定が下されるまで削除を一時停止する場合があります。\n\n– {product_name}安全チーム"
-	},
-	"account_temp_banned": {
-		"subject": "{product_name}アカウントが一時的に停止されました",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは、利用規約またはコミュニティガイドラインへの違反のため、一時的に停止されました。\n\n期間: {durationHours, plural,\n  =1 {1時間}\n  other {#時間}\n}\n停止解除日時: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {理由: {reason}\n\n}\n}この期間中、アカウントにアクセスすることはできません。\n\n{legalLinks, select,\n  both {以下をご確認ください。\n- 利用規約: {termsUrl}\n- コミュニティガイドライン: {guidelinesUrl}\n\n}\n  terms {以下をご確認ください。\n- 利用規約: {termsUrl}\n\n}\n  guidelines {以下をご確認ください。\n- コミュニティガイドライン: {guidelinesUrl}\n\n}\n  other {}\n}この措置が不正確または不当であると思われる場合は、異議申し立てを提出できます。{appeals_email, select, null {このインスタンスの管理者に連絡し、決定が不正確であると考える理由を明確に説明してください。} other {このメールアドレスから{appeals_email}までメールを送信し、決定が不正確であると考える理由を明確に説明してください。}}異議申し立てを審査し、決定をご連絡いたします。\n\n– {product_name}安全チーム"
+		"body": "こんにちは、{username}さん\n\nご依頼のとおり、{product_name}アカウントを{deletion_date}に削除するよう設定しました。\n\nアカウントを残したい場合は、{deletion_date}より前にログインしてください。{safety_email, select, null {ご自身で依頼していない場合は、このインスタンスの管理者にご連絡ください。} other {ご自身で依頼していない場合は、{safety_email}までご連絡ください。}}\n\n{product_name}チーム"
 	},
 	"donation_confirmation": {
 		"subject": "{product_name}へのご寄付ありがとうございます",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "{product_name}への報告について決定しました",
-		"body": "こんにちは。\n\nデジタルサービス法に基づくご報告（ID: {reportId}）を安全チームが審査し、決定を行いました。{hasComment, select, yes {\n\n安全チームからの回答:\n{publicComment}} other {}}\n\n他の方のアカウントに対して行った措置の詳細は、その方の個人データにあたるため、お伝えしていません。\n\nこの決定に同意できない場合は、60日以内に無料で異議申し立てを行えます。{appeals_email, select, null {このインスタンスの管理者に連絡し、報告IDを記載のうえ、決定が誤っていると考える理由を説明してください。} other {このメールアドレスから{appeals_email}までメールを送信し、報告IDを記載のうえ、決定が誤っていると考える理由を説明してください。}}EU域内にお住まいの場合は、認定を受けた裁判外紛争解決機関に紛争を付託することもできます。これらはいずれも、裁判所に訴える権利に影響しません。\n\n– {product_name}安全チーム"
+		"body": "こんにちは。\n\nご報告（ID: {reportId}）を確認しました。\n\n{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントがルールに違反していることを確認し、制限しました。他のアカウントに対してどのような措置をとったかは、その方の個人データにあたるため、お伝えしていません。} action_taken {報告された内容がルールに違反していることを確認し、措置をとりました。他のアカウントに対してどのような措置をとったかは、その方の個人データにあたるため、お伝えしていません。} no_violation {報告されたコンテンツまたはアカウントはルールに違反していないことを確認したため、そのままにしています。} other {ご報告の対応を終了しました。}}{hasComment, select, yes {\n\nチームからのコメント: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nこの結果に同意できない場合は、60日以内に報告IDを記載して{appeals_email}までメールでご連絡ください。EU域内の方は、認定を受けた裁判外紛争解決機関にこの件を付託すること、またはお住まいの国のデジタルサービス調整官（Digital Services Coordinator）に苦情を申し立てることもできます。}}\n\n{product_name}チーム"
 	},
 	"dsa_report_verification": {
 		"subject": "DSA報告のためのメールアドレスを確認",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "{product_name}のメールアドレスを確認",
 		"body": "こんにちは、{username}さん\n\n以下のリンクをクリックして、{product_name}アカウントのメールアドレスを確認してください。\n\n{verifyUrl}\n\n{product_name}アカウントを作成していない場合は、このメールを無視して問題ありません。\n\nこのリンクは24時間有効です。\n\n– {product_name}チーム"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {{product_name}アカウントに関する決定を取り消しました} other {{product_name}アカウントの制限が終了しました}}",
+		"body": "こんにちは、{username}さん\n\n{outcome, select, reversed {{decision_id, select, null {アカウントに関する決定を再検討し、取り消しました。} other {決定{decision_id}を再検討し、取り消しました。}}ご迷惑をおかけして申し訳ありません。} other {{decision_id, select, null {アカウントの制限を解除しました。} other {決定{decision_id}による制限を解除しました。}}}}{restores_access, select, yes {再びログインして{product_name}を利用できます。} other {}}{statement, select, null {} other {\n\nチームからのコメント: {statement}}}{content_removed, select, yes {\n\n削除したコンテンツは復元できません。} other {}}\n\n{product_name}チーム"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {{product_name}アカウントに関するお知らせ} other {{kind_label, select, warning {{product_name}アカウントに関する警告} suspension {{product_name}アカウントは一時停止されています} ban {{product_name}アカウントは永久停止されています} closure {{product_name}アカウントは閉鎖されています} feature_limit {{product_name}アカウントの一部の機能が制限されています} content_removal {{product_name}で送信したメッセージを削除しました} profile_reset {{product_name}プロフィールの一部をリセットしました} community_removal {{product_name}のあなたのコミュニティを削除しました} bot {{product_name}のボットに関するお知らせ} other {{product_name}アカウントに関するお知らせ}}}}",
+		"body": "こんにちは、{username}さん\n\n{summary}\n\n{effects}\n\n理由\nルール: {rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\nチームからのコメント: {statement}}}\n\n判断の経緯\n{how_we_decided}{appeals_email, select, null {} other {\n\n異議申し立ての方法\nこの判断が誤りだと思われる場合は、{appeal_deadline}までに{appeals_email}へメールでご連絡ください。可能であればアカウントに登録したメールアドレスから送信し、決定IDを記載してください。異議申し立ては無料で、一件ずつ担当者が審査します。{redress, select, null {} other {\n\n{redress}}}}}\n\n決定ID: {decision_id}\n\n{product_name}チーム"
 	},
 	"gift_chargeback_notification": {
 		"subject": "引き換えたギフトの特典が削除されました",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "{product_name}への報告の審査が完了しました",
-		"body": "こんにちは、{username}さん\n\nご報告いただいた内容（ID: {reportId}）を安全チームが審査しました。{hasComment, select, yes {\n\n安全チームからの回答:\n{publicComment}} other {}}\n\n{product_name}をすべての人にとって安全に保つためのご協力ありがとうございます。すべての報告を真剣に受け止め、コミュニティへのご貢献に感謝します。\n\n{safety_email, select, null {この結果についてご質問やご不明な点がございましたら、このインスタンスの管理者にお問い合わせください。} other {この結果についてご質問やご不明な点がございましたら、{safety_email}までお問い合わせください。}}\n\n– {product_name}安全チーム"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "{product_name}アカウントは完全に削除されます",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントの完全な削除が予定されています。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {理由: {reason}\n\n}\n}これは重大な措置です。アカウントデータは、予定日に完全に削除されます。\n\nこの措置が不正確であると思われる場合は、異議申し立てを提出できます。{appeals_email, select, null {このインスタンスの管理者に連絡してください。} other {このメールアドレスから{appeals_email}までメールを送信してください。}}\n\n– {product_name}安全チーム"
+		"body": "こんにちは、{username}さん\n\nご報告（ID: {reportId}）を確認しました。\n\n{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントがルールに違反していることを確認し、制限しました。他のアカウントに対してどのような措置をとったかは、その方の個人データにあたるため、お伝えしていません。} action_taken {報告された内容がルールに違反していることを確認し、措置をとりました。他のアカウントに対してどのような措置をとったかは、その方の個人データにあたるため、お伝えしていません。} no_violation {報告されたコンテンツまたはアカウントはルールに違反していないことを確認したため、そのままにしています。} other {ご報告の対応を終了しました。}}{hasComment, select, yes {\n\nチームからのコメント: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nこの結果に同意できない場合は、60日以内に報告IDを記載して{appeals_email}までメールでご連絡ください。EU域内の方は、認定を受けた裁判外紛争解決機関にこの件を付託すること、またはお住まいの国のデジタルサービス調整官（Digital Services Coordinator）に苦情を申し立てることもできます。}}\n\n{product_name}チーム"
 	},
 	"self_deletion_scheduled": {
 		"subject": "{product_name}アカウントの削除が予定されています",
 		"body": "こんにちは、{username}さん\n\n{product_name}アカウントの削除をリクエストされました。アカウントは以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}\n\nご自身でリクエストしていない場合は、アカウントにログインして削除をキャンセルしてください。また、アカウントを保護するためにパスワードの変更をお勧めします。\n\n– {product_name}チーム"
-	},
-	"unban_notification": {
-		"subject": "{product_name}アカウントの停止が解除されました",
-		"body": "こんにちは、{username}さん\n\n良いお知らせです。{product_name}アカウントの停止が解除されました。\n\n{reason, select,\n  null {}\n  other {理由: {reason}\n\n}\n}これで再度ログインして、通常通り{product_name}を利用できます。\n\n– {product_name}安全チーム"
 	}
 }

@@ -14,44 +14,53 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	account_deletion_cancelled: {username: 'testuser', safety_email: 'safety@fluxer.com'},
 	account_deletion_scheduled_inactivity: {
 		username: 'testuser',
-		reason: 'Inactive',
-		deletionDate: DATE,
-		safety_email: 'safety@fluxer.com',
+		deletion_date: 'Dec 1, 2026',
+		support_email: 'support@fluxer.com',
 	},
 	account_deletion_scheduled_requested: {
 		username: 'testuser',
-		reason: 'Requested',
-		deletionDate: DATE,
+		deletion_date: 'Dec 14, 2026',
 		safety_email: 'safety@fluxer.com',
-	},
-	account_scheduled_deletion: {
-		username: 'testuser',
-		reason: 'Spam',
-		deletionDate: DATE,
-		termsUrl: 'https://example.com/terms',
-		guidelinesUrl: 'https://example.com/guidelines',
-		legalLinks: 'both',
-		appeals_email: 'appeals@fluxer.com',
-	},
-	account_temp_banned: {
-		username: 'testuser',
-		reason: 'Spam',
-		durationHours: 24,
-		bannedUntil: DATE,
-		termsUrl: 'https://example.com/terms',
-		guidelinesUrl: 'https://example.com/guidelines',
-		legalLinks: 'both',
-		appeals_email: 'appeals@fluxer.com',
 	},
 	donation_confirmation: {amount: '$5.00', currency: 'USD', interval: 'month', manageUrl: 'https://example.com/m'},
 	donation_magic_link: {manageUrl: 'https://example.com/m', expiresAt: DATE},
-	dsa_report_resolved: {reportId: '1', publicComment: 'Thanks', hasComment: 'yes', appeals_email: 'appeals@fluxer.com'},
+	dsa_report_resolved: {
+		reportId: '1',
+		publicComment: 'Thanks',
+		hasComment: 'yes',
+		outcome: 'removed',
+		appeals_email: 'appeals@fluxer.com',
+	},
 	dsa_report_verification: {code: '123456', expiresAt: DATE},
 	email_change_new: {username: 'testuser', code: '123456', expiresAt: DATE},
 	email_change_original: {username: 'testuser', code: '123456', expiresAt: DATE},
 	email_change_revert: {username: 'testuser', newEmail: 'new@example.com', revertUrl: 'https://example.com/r'},
 	email_verification: {username: 'testuser', verifyUrl: 'https://example.com/verify'},
 	gift_chargeback_notification: {username: 'testuser', support_email: 'support@fluxer.com'},
+	enforcement_ended: {
+		username: 'testuser',
+		outcome: 'reversed',
+		decision_id: '123',
+		restores_access: 'yes',
+		statement: 'We checked again',
+		content_removed: 'no',
+	},
+	enforcement_notice: {
+		username: 'testuser',
+		kind_label: 'suspension',
+		neutral: 'no',
+		summary: 'We suspended your account.',
+		effects: 'You cannot sign in.',
+		rule_title: 'Spam',
+		rule_url: 'https://example.com/guidelines',
+		facts: 'We found spam.',
+		statement: null,
+		how_we_decided: 'A person decided.',
+		appeals_email: 'appeals@fluxer.com',
+		appeal_deadline: 'Dec 1, 2026',
+		redress: null,
+		decision_id: '123',
+	},
 	harvest_completed: {
 		username: 'testuser',
 		downloadUrl: 'https://example.com/d',
@@ -82,16 +91,10 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 		reportId: '1',
 		publicComment: 'Thanks',
 		hasComment: 'yes',
-		safety_email: 'safety@fluxer.com',
-	},
-	scheduled_deletion_notification: {
-		username: 'testuser',
-		deletionDate: DATE,
-		reason: 'Payment fraud',
+		outcome: 'restricted',
 		appeals_email: 'appeals@fluxer.com',
 	},
 	self_deletion_scheduled: {username: 'testuser', deletionDate: DATE},
-	unban_notification: {username: 'testuser', reason: 'Appeal accepted'},
 };
 
 describe('EmailI18n locale files', () => {
@@ -109,6 +112,16 @@ describe('EmailI18n locale files', () => {
 			expect(extractMessageTemplatePlaceholders(translated.body), `${key}.body`).toEqual(
 				extractMessageTemplatePlaceholders(source.body),
 			);
+		}
+	});
+	it.each(['en-US', ...LOCALES])('%s gives every reporter outcome its own wording', (locale) => {
+		for (const key of ['report_resolved', 'dsa_report_resolved'] as const) {
+			const bodies = (['removed', 'restricted', 'action_taken', 'no_violation'] as const).map((outcome) => {
+				const result = getEmailTemplate(key, locale, {...FIXTURE[key], outcome}, 'Fluxer');
+				return result.ok ? result.value.body : null;
+			});
+			expect(bodies, key).not.toContain(null);
+			expect(new Set(bodies).size, key).toBe(bodies.length);
 		}
 	});
 	it.each(['en-US', ...LOCALES])('%s renders every template with UTC times', (locale) => {

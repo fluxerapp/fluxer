@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Váš účet {product_name} bude smazán kvůli neaktivitě",
-		"body": "Dobrý den, {username},\n\nVáš účet {product_name} byl dlouho neaktivní, a proto je jeho trvalé smazání naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\n{safety_email, select, null {Pokud si chcete účet ponechat, kontaktujte před tímto datem správce této instance.} other {Pokud si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.}}\n\n– Tým {product_name}"
+		"body": "Dobrý den, {username},\n\nVáš účet {product_name} byl dlouho neaktivní, a proto jsme jeho smazání naplánovali na {deletion_date}.\n\nPokud si chcete účet ponechat, přihlaste se před tímto datem. {support_email, select, null {Pokud máte dotazy, kontaktujte správce této instance.} other {Pokud máte dotazy, kontaktujte {support_email}.}}\n\nTým {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Smazání vašeho účtu {product_name} je naplánováno",
-		"body": "Dobrý den, {username},\n\nNa vaši žádost je trvalé smazání vašeho účtu {product_name} naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\nDo té doby je váš účet uzamčen. {safety_email, select, null {Pokud jste o smazání nežádali nebo si chcete účet ponechat, kontaktujte před tímto datem správce této instance.} other {Pokud jste o smazání nežádali nebo si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.}}\n\n– Tým {product_name}"
-	},
-	"account_scheduled_deletion": {
-		"subject": "Váš účet {product_name} bude trvale smazán",
-		"body": "Dobrý den, {username},\n\nKvůli porušení našich podmínek služby nebo komunitních pravidel bylo naplánováno trvalé smazání vašeho účtu {product_name}.\n\nNaplánované smazání: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}\n\n}\n}Jedná se o závažné opatření. Data vašeho účtu budou v naplánovaný den trvale smazána.\n\n{legalLinks, select,\n  both {Přečtěte si:\n- Podmínky služby: {termsUrl}\n- Komunitní pravidla: {guidelinesUrl}\n\n}\n  terms {Přečtěte si:\n- Podmínky služby: {termsUrl}\n\n}\n  guidelines {Přečtěte si:\n- Komunitní pravidla: {guidelinesUrl}\n\n}\n  other {}\n}Postup odvolání:\nPokud se domníváte, že toto rozhodnutí bylo nesprávné nebo neopodstatněné, máte 60 dní na podání odvolání. {appeals_email, select, null {Kontaktujte správce této instance.} other {Pošlete e-mail na {appeals_email} z této e-mailové adresy.}}\n\nV odvolání:\n- Jasně vysvětlete, proč se domníváte, že rozhodnutí bylo nesprávné nebo neopodstatněné\n- Uveďte všechny relevantní důkazy a souvislosti\n\nČlen bezpečnostního týmu {product_name} vaše odvolání přezkoumá a může pozastavit plánované smazání, dokud nepadne konečné rozhodnutí.\n\n– Bezpečnostní tým {product_name}"
-	},
-	"account_temp_banned": {
-		"subject": "Váš účet {product_name} byl dočasně pozastaven",
-		"body": "Dobrý den, {username},\n\nVáš účet {product_name} byl dočasně pozastaven kvůli porušení našich podmínek služby nebo komunitních pravidel.\n\nDoba trvání: {durationHours, plural,\n  one {# hodina}\n  few {# hodiny}\n  many {# hodiny}\n  other {# hodin}\n}\nPozastaven do: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}\n\n}\n}Během této doby nebudete mít přístup ke svému účtu.\n\n{legalLinks, select,\n  both {Přečtěte si:\n- Podmínky služby: {termsUrl}\n- Komunitní pravidla: {guidelinesUrl}\n\n}\n  terms {Přečtěte si:\n- Podmínky služby: {termsUrl}\n\n}\n  guidelines {Přečtěte si:\n- Komunitní pravidla: {guidelinesUrl}\n\n}\n  other {}\n}Pokud se domníváte, že toto rozhodnutí bylo nesprávné nebo neopodstatněné, můžete podat odvolání. {appeals_email, select, null {Kontaktujte správce této instance a jasně vysvětlete, proč považujete rozhodnutí za nesprávné.} other {Pošlete e-mail na {appeals_email} z této e-mailové adresy a jasně vysvětlete, proč považujete rozhodnutí za nesprávné.}} Vaše odvolání přezkoumáme a sdělíme vám své rozhodnutí.\n\n– Bezpečnostní tým {product_name}"
+		"body": "Dobrý den, {username},\n\nNa vaši žádost jsme naplánovali smazání vašeho účtu {product_name} na {deletion_date}.\n\nPokud si chcete účet ponechat, přihlaste se před {deletion_date}. {safety_email, select, null {Pokud tato žádost nepochází od vás, kontaktujte správce této instance.} other {Pokud tato žádost nepochází od vás, kontaktujte {safety_email}.}}\n\nTým {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Děkujeme za váš dar pro {product_name}",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "Rozhodli jsme o vašem nahlášení na {product_name}",
-		"body": "Dobrý den,\n\nNáš bezpečnostní tým přezkoumal vaše nahlášení podle nařízení o digitálních službách (ID: {reportId}) a rozhodl o něm.{hasComment, select, yes {\n\nOdpověď bezpečnostního týmu:\n{publicComment}} other {}}\n\nPodrobnosti o opatřeních přijatých vůči účtu jiné osoby nesdělujeme, protože jde o její osobní údaje.\n\nPokud s tímto rozhodnutím nesouhlasíte, můžete se do 60 dnů bezplatně odvolat. {appeals_email, select, null {Kontaktujte správce této instance, uveďte ID svého nahlášení a vysvětlete, proč považujete rozhodnutí za nesprávné.} other {Pošlete e-mail na {appeals_email} z této e-mailové adresy, uveďte ID svého nahlášení a vysvětlete, proč považujete rozhodnutí za nesprávné.}} Pokud jste v EU, můžete spor také předložit certifikovanému subjektu pro mimosoudní řešení sporů. Nic z toho nemá vliv na vaše právo obrátit se na soud.\n\n– Bezpečnostní tým {product_name}"
+		"body": "Dobrý den,\n\nPosoudili jsme vaše nahlášení (ID: {reportId}).\n\n{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Zjistili jsme, že nahlášený účet porušil naše pravidla, a omezili jsme ho. Nesdělujeme, jaké opatření jsme vůči jinému účtu přijali, protože jde o osobní údaje jeho majitele.} action_taken {Zjistili jsme, že nahlášený obsah nebo účet porušil naše pravidla, a přijali jsme opatření. Nesdělujeme, jaké opatření jsme vůči jinému účtu přijali, protože jde o osobní údaje jeho majitele.} no_violation {Zjistili jsme, že nahlášený obsah nebo účet naše pravidla neporušuje, a proto jsme vše ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}{hasComment, select, yes {\n\nPoznámka od našeho týmu: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nPokud nesouhlasíte, napište do 60 dnů na {appeals_email} a uveďte ID nahlášení. Pokud se nacházíte v EU, můžete věc také předložit certifikovanému subjektu pro mimosoudní řešení sporů nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}\n\nTým {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Ověřte svůj e-mail pro nahlášení podle DSA",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "Ověřte svou e-mailovou adresu pro {product_name}",
 		"body": "Dobrý den, {username},\n\nKliknutím na odkaz níže ověřte e-mailovou adresu svého účtu {product_name}:\n\n{verifyUrl}\n\nPokud jste si účet {product_name} nevytvořili, můžete tento e-mail bez obav ignorovat.\n\nTento odkaz je platný 24 hodin.\n\n– Tým {product_name}"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {Zrušili jsme rozhodnutí týkající se vašeho účtu {product_name}} other {Omezení vašeho účtu {product_name} skončilo}}",
+		"body": "Dobrý den, {username},\n\n{outcome, select, reversed {{decision_id, select, null {Znovu jsme posoudili rozhodnutí týkající se vašeho účtu a zrušili ho.} other {Znovu jsme posoudili rozhodnutí {decision_id} a zrušili ho.}} Omlouváme se za potíže.} other {{decision_id, select, null {Ukončili jsme omezení vašeho účtu.} other {Ukončili jsme omezení uložené rozhodnutím {decision_id}.}}}}{restores_access, select, yes { Můžete se znovu přihlásit a používat {product_name}.} other {}}{statement, select, null {} other {\n\nPoznámka od našeho týmu: {statement}}}{content_removed, select, yes {\n\nOdstraněný obsah nelze obnovit.} other {}}\n\nTým {product_name}"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {Informace o vašem účtu {product_name}} other {{kind_label, select, warning {Varování týkající se vašeho účtu {product_name}} suspension {Váš účet {product_name} je pozastaven} ban {Váš účet {product_name} je zablokován} closure {Váš účet {product_name} je zrušen} feature_limit {Některé funkce vašeho účtu {product_name} jsou omezeny} content_removal {Odstranili jsme vaše zprávy na {product_name}} profile_reset {Resetovali jsme část vašeho profilu {product_name}} community_removal {Odstranili jsme vaši komunitu na {product_name}} bot {Informace o vašem botovi na {product_name}} other {Informace o vašem účtu {product_name}}}}}",
+		"body": "Dobrý den, {username},\n\n{summary}\n\n{effects}\n\nProč\nPravidlo: {rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\nPoznámka od našeho týmu: {statement}}}\n\nJak jsme rozhodli\n{how_we_decided}{appeals_email, select, null {} other {\n\nJak se odvolat\nPokud si myslíte, že jsme udělali chybu, napište na {appeals_email} do {appeal_deadline}. Pokud můžete, pište z e-mailové adresy svého účtu a uveďte ID rozhodnutí. Odvolání je zdarma a každé posoudí člověk.{redress, select, null {} other {\n\n{redress}}}}}\n\nID rozhodnutí: {decision_id}\n\nTým {product_name}"
 	},
 	"gift_chargeback_notification": {
 		"subject": "Výhody z uplatněného dárku byly odstraněny",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "Vaše nahlášení na {product_name} bylo přezkoumáno",
-		"body": "Dobrý den, {username},\n\nNáš bezpečnostní tým přezkoumal vaše nahlášení (ID: {reportId}).{hasComment, select, yes {\n\nOdpověď bezpečnostního týmu:\n{publicComment}} other {}}\n\nDěkujeme, že pomáháte udržovat {product_name} bezpečný pro všechny. Všechna nahlášení bereme vážně a vážíme si vašeho přínosu komunitě.\n\n{safety_email, select, null {Pokud máte k tomuto výsledku jakékoli dotazy nebo výhrady, kontaktujte správce této instance.} other {Pokud máte k tomuto výsledku jakékoli dotazy nebo výhrady, kontaktujte {safety_email}.}}\n\n– Bezpečnostní tým {product_name}"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "Váš účet {product_name} bude trvale smazán",
-		"body": "Dobrý den, {username},\n\nBylo naplánováno trvalé smazání vašeho účtu {product_name}.\n\nNaplánované smazání: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}\n\n}\n}Jedná se o závažné opatření. Data vašeho účtu budou v naplánovaný den trvale smazána.\n\nPokud se domníváte, že toto rozhodnutí bylo nesprávné, můžete podat odvolání. {appeals_email, select, null {Kontaktujte správce této instance.} other {Pošlete e-mail na {appeals_email} z této e-mailové adresy.}}\n\n– Bezpečnostní tým {product_name}"
+		"body": "Dobrý den, {username},\n\nPosoudili jsme vaše nahlášení (ID: {reportId}).\n\n{outcome, select, removed {Nahlášený obsah jsme odstranili, protože porušoval naše pravidla.} restricted {Zjistili jsme, že nahlášený účet porušil naše pravidla, a omezili jsme ho. Nesdělujeme, jaké opatření jsme vůči jinému účtu přijali, protože jde o osobní údaje jeho majitele.} action_taken {Zjistili jsme, že nahlášený obsah nebo účet porušil naše pravidla, a přijali jsme opatření. Nesdělujeme, jaké opatření jsme vůči jinému účtu přijali, protože jde o osobní údaje jeho majitele.} no_violation {Zjistili jsme, že nahlášený obsah nebo účet naše pravidla neporušuje, a proto jsme vše ponechali beze změny.} other {Vaše nahlášení jsme uzavřeli.}}{hasComment, select, yes {\n\nPoznámka od našeho týmu: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nPokud nesouhlasíte, napište do 60 dnů na {appeals_email} a uveďte ID nahlášení. Pokud se nacházíte v EU, můžete věc také předložit certifikovanému subjektu pro mimosoudní řešení sporů nebo podat stížnost koordinátorovi digitálních služeb ve své zemi.}}\n\nTým {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Smazání vašeho účtu {product_name} je naplánováno",
 		"body": "Dobrý den, {username},\n\nPožádali jste o smazání svého účtu {product_name}. Trvalé smazání je naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}\n\nPokud jste o smazání nežádali, přihlaste se ke svému účtu a smazání zrušte. Doporučujeme také změnit heslo, abyste svůj účet zabezpečili.\n\n– Tým {product_name}"
-	},
-	"unban_notification": {
-		"subject": "Pozastavení vašeho účtu {product_name} bylo zrušeno",
-		"body": "Dobrý den, {username},\n\nDobrá zpráva: pozastavení vašeho účtu {product_name} bylo zrušeno.\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}\n\n}\n}Nyní se můžete znovu přihlásit a používat {product_name} jako obvykle.\n\n– Bezpečnostní tým {product_name}"
 	}
 }

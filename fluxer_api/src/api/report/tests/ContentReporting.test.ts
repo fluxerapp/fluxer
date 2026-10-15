@@ -35,6 +35,7 @@ import {Users} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {systemDmBody} from '@app/api/user/services/SystemDmMessage';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
@@ -208,6 +209,8 @@ describe('Content Reporting', () => {
 				.patch(`/admin/reports/${report.report_id}`)
 				.body({
 					status: 'resolved',
+					resolution: 'actioned',
+					outcome: 'restricted',
 					public_comment: publicComment,
 				})
 				.expect(HTTP_STATUS.OK)
@@ -227,7 +230,8 @@ describe('Content Reporting', () => {
 					reportId: report.report_id,
 					publicComment,
 					hasComment: 'yes',
-					safety_email: resolveContactEmails().safetyEmail,
+					outcome: 'restricted',
+					appeals_email: resolveContactEmails().appealsEmail,
 				},
 				getInstanceProductName(),
 			);
@@ -235,7 +239,8 @@ describe('Content Reporting', () => {
 			if (!template.ok) {
 				throw new Error('Failed to resolve expected report_resolved email template');
 			}
-			expect(systemMessages[0]?.content).toBe(template.value.body);
+			expect(systemMessages[0]?.content).toBe(systemDmBody(template.value.body));
+			expect(systemMessages[0]?.content).not.toContain(reporter.username!);
 			const systemDmChannel = (await listSystemDmChannels(harness, reporter.token))[0];
 			expect(systemDmChannel?.id).toBeTruthy();
 			const readStateRepository = new ReadStateRepository();

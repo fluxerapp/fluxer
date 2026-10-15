@@ -1830,6 +1830,16 @@ msgstr "{productName} ऐप्लिकेशन आइकॉन"
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
 msgstr "जब आप अपने कंप्यूटर पर होते हैं, तब {productName} आपके मोबाइल डिवाइस पर पुश नोटिफ़िकेशन भेजने से बचता है। चुनें कि पुश नोटिफ़िकेशन मिलने से पहले आपको डेस्कटॉप पर कितनी देर निष्क्रिय रहना चाहिए।"
 
+#. First sentence of the network blocked screen when a rule is shown. productName is the app name. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "{productName} blocked access from this network because of activity that broke its rules."
+msgstr "{productName} ने अपने नियम तोड़ने वाली गतिविधि की वजह से इस नेटवर्क से एक्सेस ब्लॉक कर दिया है।"
+
+#. First sentence of the network blocked screen when no rule is shown. productName is the app name. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "{productName} blocked access from this network."
+msgstr "{productName} ने इस नेटवर्क से एक्सेस ब्लॉक कर दिया है।"
+
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Bug Hunter"
@@ -2889,10 +2899,20 @@ msgstr "अकाउंट और प्रीमियम ओवरराइड
 msgid "Account and security details are hidden"
 msgstr "अकाउंट और सुरक्षा विवरण छिपे हुए हैं"
 
+#. Title of the sign-in screen for an account suspended with no end date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account banned"
+msgstr "अकाउंट बैन किया गया"
+
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx
 msgid "Account claimed successfully"
 msgstr "अकाउंट सफलतापूर्वक क्लेम किया गया"
+
+#. Title of the sign-in screen for an account the team closed and will delete.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account closed"
+msgstr "अकाउंट बंद किया गया"
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx
 msgid "Account connected"
@@ -2927,6 +2947,11 @@ msgstr "अकाउंट हटाना"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 msgid "Account state"
 msgstr "अकाउंट स्थिति"
+
+#. Title of the sign-in screen for an account suspended until a set date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Account suspended"
+msgstr "अकाउंट सस्पेंड किया गया"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts
@@ -11541,6 +11566,11 @@ msgstr "तय करें कि प्रीमियम सीमाएँ �
 msgid "Decide whether replies @mention you by default"
 msgstr "तय करें कि जवाब डिफ़ॉल्ट रूप से आपको @मेंशन करें या नहीं"
 
+#. Reference line on the account restriction screen. People quote this ID when they appeal.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Decision ID: {decisionId}"
+msgstr "फैसला ID: {decisionId}"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Decline the incoming call"
@@ -17539,10 +17569,20 @@ msgstr "सदस्य की हालिया मैसेज हिस्�
 msgid "How this works"
 msgstr "यह कैसे काम करता है"
 
+#. Heading on the account restriction screen above the appeal instructions.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "How to appeal"
+msgstr "अपील कैसे करें"
+
 #. Heading above the recovery steps in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "How to recover your account"
 msgstr "अपना खाता कैसे रिकवर करें"
+
+#. Heading on the account restriction screen above how the case reached the team and who decided it.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "How we decided"
+msgstr "हमने फैसला कैसे लिया"
 
 #. Accessible label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts
@@ -17737,6 +17777,31 @@ msgstr "अगर आप यह यूज़रनेम सेव करते 
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "अगर आप यह यूज़रनेम सेव करते हैं, तो आपके {PREMIUM_PRODUCT_NAME} की अवधि खत्म होने पर आपका टैग रैंडमली रीरोल हो जाएगा, बशर्ते कि यह रिन्यू न हो।"
+
+#. Paragraph on the network blocked screen for people who share a network with others. Must read the same as the error message for this block.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "If you share this network, for example at school, at work, on public Wi-Fi, through your mobile carrier or a VPN, this block may have nothing to do with you. The quickest fix is to switch networks, for example to mobile data instead of Wi-Fi, or to turn your VPN on or off."
+msgstr "अगर आप यह नेटवर्क दूसरों के साथ शेयर करते हैं, जैसे स्कूल में, ऑफ़िस में, पब्लिक Wi-Fi पर, अपने मोबाइल कैरियर के ज़रिए या VPN से, तो हो सकता है कि इस ब्लॉक का आपसे कोई लेना-देना न हो। सबसे जल्दी हल है नेटवर्क बदलना, जैसे Wi-Fi की जगह मोबाइल डेटा इस्तेमाल करना, या अपना VPN चालू या बंद करना।"
+
+#. Line on the network blocked screen. The link is the contact email address and ip is the blocked IP address.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think this block is a mistake, email <0>{email}</0> and include your IP address, {ip}."
+msgstr "अगर आपको लगता है कि यह ब्लॉक गलती से हुआ है, तो <0>{email}</0> पर ईमेल करें और अपना IP एड्रेस, {ip}, लिखें।"
+
+#. Appeal line for a restriction from before the team recorded decisions, with no appeal deadline. The link is the appeals email address.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> and include your username."
+msgstr "अगर आपको लगता है कि हमसे गलती हुई है, तो <0>{email}</0> पर ईमेल करें और अपना यूज़रनेम लिखें।"
+
+#. Appeal line for an account with no email address. The link is the appeals email address and deadline is a date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> by {deadline}. Include the decision ID and your username. Appeals are free, and a person reviews each one."
+msgstr "अगर आपको लगता है कि हमसे गलती हुई है, तो {deadline} तक <0>{email}</0> पर ईमेल करें। फैसला ID और अपना यूज़रनेम लिखें। अपील मुफ़्त है, और हर अपील को एक इंसान रिव्यू करता है।"
+
+#. Appeal line on the account restriction screen. The link is the appeals email address and deadline is a date.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "If you think we got this wrong, email <0>{email}</0> by {deadline}. Write from the email address on your account if you can, and include the decision ID. Appeals are free, and a person reviews each one."
+msgstr "अगर आपको लगता है कि हमसे गलती हुई है, तो {deadline} तक <0>{email}</0> पर ईमेल करें। हो सके तो अपने अकाउंट वाले ईमेल एड्रेस से लिखें, और फैसला ID लिखें। अपील मुफ़्त है, और हर अपील को एक इंसान रिव्यू करता है।"
 
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "If you want to export your data or delete your messages first, please visit {privacyDashboardPath} before proceeding."
@@ -22302,6 +22367,11 @@ msgstr "नीदरलैंड"
 msgid "Network"
 msgstr "नेटवर्क"
 
+#. Title of the screen and dialog shown when the instance blocks the network a request came from.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Network blocked"
+msgstr "नेटवर्क ब्लॉक किया गया"
+
 #. Error message in the devices tab.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Network error"
@@ -23368,6 +23438,11 @@ msgstr "नोट"
 #: src/features/user/components/modals/NoteEditSheet.tsx
 msgid "Note (only visible to you)"
 msgstr "नोट (सिर्फ़ आपको दिखेगा)"
+
+#. Line on the account restriction screen with a note the team wrote to the account holder.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Note from our team: {statement}"
+msgstr "हमारी टीम का नोट: {statement}"
 
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -28537,6 +28612,16 @@ msgstr "गोल स्टाइल चेकबॉक्स"
 msgid "Rows per page"
 msgstr "प्रति पेज पंक्तियाँ"
 
+#. Names the rule behind a restriction when the instance publishes no link for it. title is the rule title.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Rule: {title}"
+msgstr "नियम: {title}"
+
+#. Names the rule behind a restriction, with the rule title linked to the rule. title is the rule title.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Rule: <0>{title}</0>"
+msgstr "नियम: <0>{title}</0>"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run {productName} automatically when your computer starts"
@@ -33528,6 +33613,11 @@ msgstr "बैन {date} को पहले ही खत्म हो चु�
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "The ban was scheduled to expire on {date}"
 msgstr "बैन {date} को समाप्त होने वाला था"
+
+#. Line on the network blocked screen for a block with an end. date is a date and time.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "The block ends on {date}."
+msgstr "यह ब्लॉक {date} को खत्म होगा।"
 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx
 msgid "The bot has been added to <0>{destinationName}</0>."
@@ -38945,6 +39035,11 @@ msgctxt "us-state"
 msgid "West Virginia"
 msgstr "वेस्ट वर्जीनिया"
 
+#. Heading on the account restriction screen above what the team did and what it means.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "What happened"
+msgstr "क्या हुआ"
+
 #. Display-name field placeholder in account registration forms.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "What should people call you?"
@@ -39107,6 +39202,11 @@ msgstr "कौन टाइप कर रहा है"
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "Whoa, this is heavy"
 msgstr "अरे, यह तो बहुत ज़्यादा है"
+
+#. Heading on the account restriction screen above the rule that was broken and the findings.
+#: src/features/auth/flow/AccountRestrictionScreen.tsx
+msgid "Why"
+msgstr "वजह"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts

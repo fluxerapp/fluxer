@@ -5,6 +5,7 @@ import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {StripeService} from '@app/api/stripe/StripeService';
 import {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import {StripeWebhookService} from '@app/api/stripe/services/StripeWebhookService';
+import {createWorkerEnforcementServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
@@ -60,6 +61,7 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 		deps.snowflakeService,
 		deps.billingRepository,
 		stripeService.refunds,
+		createWorkerEnforcementServices(deps).enforcementService,
 		deps.storeEntitlementService,
 	);
 	await webhookService.handleWebhook({body, signature});

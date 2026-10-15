@@ -74,6 +74,7 @@ export interface UserRow {
 	deletion_audit_log_reason: string | null;
 	deletion_scheduled_by?: UserID | null;
 	deletion_scheduled_at?: Date | null;
+	enforcement_decision_id?: bigint | null;
 	content_hidden_since?: Date | null;
 	acls: Set<string> | null;
 	traits: Set<string> | null;
@@ -139,6 +140,7 @@ export const USER_COLUMNS = [
 	'deletion_audit_log_reason',
 	'deletion_scheduled_by',
 	'deletion_scheduled_at',
+	'enforcement_decision_id',
 	'content_hidden_since',
 	'acls',
 	'traits',
@@ -203,6 +205,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	deletion_audit_log_reason: null,
 	deletion_scheduled_by: null,
 	deletion_scheduled_at: null,
+	enforcement_decision_id: null,
 	content_hidden_since: null,
 	acls: null,
 	traits: null,

@@ -3,6 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {User} from '@app/api/models/User';
+import {isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -25,6 +26,9 @@ export class UserDeletionEligibilityService {
 			return false;
 		}
 		if (user.pendingDeletionAt !== null) {
+			return false;
+		}
+		if (isTemporarilyBanned(user)) {
 			return false;
 		}
 		if (user.lastActiveAt === null) {

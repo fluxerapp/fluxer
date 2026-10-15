@@ -46,6 +46,8 @@ export const AdminACLs = {
 	BULK_UPDATE_USER_FLAGS: 'bulk:update:user_flags',
 	DISCOVERY_REMOVE: 'discovery:remove',
 	DISCOVERY_REVIEW: 'discovery:review',
+	ENFORCEMENT_ANNOTATE: 'enforcement:annotate',
+	ENFORCEMENT_VIEW: 'enforcement:view',
 	GATEWAY_MEMORY_STATS: 'gateway:memory_stats',
 	GATEWAY_RELOAD_ALL: 'gateway:reload_all',
 	GIFT_CODES_GENERATE: 'gift_codes:generate',

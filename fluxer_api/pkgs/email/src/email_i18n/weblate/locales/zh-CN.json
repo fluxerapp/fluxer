@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "你的 {product_name} 账号将因长期未活动而被删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号已长期未活动，因此将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n{safety_email, select, null {如果你想保留账号，请在该日期前联系此实例的管理员。} other {如果你想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。}}\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号已长期未活动，因此我们已安排在 {deletion_date} 删除该账号。\n\n如果想保留账号，请在该日期前登录。{support_email, select, null {如有疑问，请联系此实例的管理员。} other {如有疑问，请联系 {support_email}。}}\n\n{product_name} 团队"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "你的 {product_name} 账号已安排删除",
-		"body": "你好 {username}，\n\n根据你的请求，你的 {product_name} 账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，你的账号将被锁定。{safety_email, select, null {如果你未请求此操作，或者想保留账号，请在该日期前联系此实例的管理员。} other {如果你未请求此操作，或者想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。}}\n\n– {product_name} 团队"
-	},
-	"account_scheduled_deletion": {
-		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
-	},
-	"account_temp_banned": {
-		"subject": "你的 {product_name} 账号已被暂时封禁",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号因违反我们的《服务条款》或《社区准则》已被暂时封禁。\n\n封禁时长：{durationHours, plural,\n  =1 {1 小时}\n  other {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}在此期间，你将无法访问你的账号。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}如果你认为此处罚决定不正确或不合理，你可以提交申诉。{appeals_email, select, null {请联系此实例的管理员，并清楚说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，并清楚说明你认为该决定不正确的原因。}}我们会审核你的申诉，并将决定回复你。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n根据你的请求，我们已安排在 {deletion_date} 删除你的 {product_name} 账号。\n\n如果想保留账号，请在 {deletion_date} 前登录。{safety_email, select, null {如果你没有提出此请求，请联系此实例的管理员。} other {如果你没有提出此请求，请联系 {safety_email}。}}\n\n{product_name} 团队"
 	},
 	"donation_confirmation": {
 		"subject": "感谢你的 {product_name} 捐赠",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "我们已对你的 {product_name} 举报做出决定",
-		"body": "你好，\n\n我们的安全团队已审核你根据《数字服务法》提交的举报（ID：{reportId}）并做出决定。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n我们不会透露对他人账号所采取措施的详情，因为这属于对方的个人数据。\n\n如果你不同意此决定，可以在 60 天内免费提交申诉。{appeals_email, select, null {请联系此实例的管理员，注明你的举报 ID，并说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，注明你的举报 ID，并说明你认为该决定不正确的原因。}}如果你身在欧盟，还可以将争议提交给经认证的庭外争议解决机构。以上内容均不影响你向法院提起诉讼的权利。\n\n– {product_name} 安全团队"
+		"body": "你好，\n\n我们已审核你的举报（ID：{reportId}）。\n\n{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {我们确认你举报的账号违反了我们的规则，并已对其进行限制。我们不会透露对其他账号采取了什么措施，因为这属于对方的个人数据。} action_taken {我们确认你举报的对象违反了我们的规则，并已采取措施。我们不会透露对其他账号采取了什么措施，因为这属于对方的个人数据。} no_violation {我们确认你举报的内容或账号没有违反我们的规则，因此未做处理。} other {我们已结束处理你的举报。}}{hasComment, select, yes {\n\n团队留言：{publicComment}} other {}}{appeals_email, select, null {} other {\n\n如果你不同意，请在 60 天内发送邮件至 {appeals_email}，并附上举报 ID。如果你身在欧盟，还可以将此事提交给经认证的庭外争议解决机构，或向你所在国家的数字服务协调员投诉。}}\n\n{product_name} 团队"
 	},
 	"dsa_report_verification": {
 		"subject": "验证邮箱以提交 DSA 举报",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "验证你的 {product_name} 邮箱地址",
 		"body": "你好 {username}，\n\n请点击下方链接验证你的 {product_name} 账号邮箱地址：\n\n{verifyUrl}\n\n如果你未创建 {product_name} 账号，可以放心忽略此邮件。\n\n此链接 24 小时内有效。\n\n– {product_name} 团队"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {我们撤销了关于你的 {product_name} 账号的一项决定} other {你的 {product_name} 账号的限制已结束}}",
+		"body": "你好 {username}，\n\n{outcome, select, reversed {{decision_id, select, null {我们重新审视了关于你账号的一项决定，并已将其撤销。} other {我们重新审视了决定 {decision_id}，并已将其撤销。}}给你带来不便，我们深表歉意。} other {{decision_id, select, null {我们已解除你账号上的限制。} other {我们已解除决定 {decision_id} 中的限制。}}}}{restores_access, select, yes {你可以重新登录并使用 {product_name} 了。} other {}}{statement, select, null {} other {\n\n团队留言：{statement}}}{content_removed, select, yes {\n\n我们删除的内容无法恢复。} other {}}\n\n{product_name} 团队"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {关于你的 {product_name} 账号的通知} other {{kind_label, select, warning {关于你的 {product_name} 账号的警告} suspension {你的 {product_name} 账号已被暂时封禁} ban {你的 {product_name} 账号已被永久封禁} closure {你的 {product_name} 账号已关闭} feature_limit {你的 {product_name} 账号的部分功能已受限} content_removal {我们删除了你在 {product_name} 上发送的消息} profile_reset {我们重置了你的 {product_name} 个人资料的部分内容} community_removal {我们删除了你在 {product_name} 上的社区} bot {关于你在 {product_name} 上的机器人的通知} other {关于你的 {product_name} 账号的通知}}}}",
+		"body": "你好 {username}，\n\n{summary}\n\n{effects}\n\n原因\n规则：{rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\n团队留言：{statement}}}\n\n我们如何做出决定\n{how_we_decided}{appeals_email, select, null {} other {\n\n如何申诉\n如果你认为我们判断有误，请最迟于 {appeal_deadline} 发送邮件至 {appeals_email}。如果可以，请使用你账号绑定的邮箱地址发送，并附上决定 ID。申诉免费，每一项申诉都由专人审核。{redress, select, null {} other {\n\n{redress}}}}}\n\n决定 ID：{decision_id}\n\n{product_name} 团队"
 	},
 	"gift_chargeback_notification": {
 		"subject": "已移除你兑换礼品所获得的福利",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "你的 {product_name} 举报已完成审核",
-		"body": "你好 {username}，\n\n你的举报（ID：{reportId}）已由我们的安全团队完成审核。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n感谢你帮助维护 {product_name} 的安全环境。我们会认真对待每一份举报，也感谢你为社区做出的贡献。\n\n{safety_email, select, null {如果你对此结果有任何疑问或意见，请联系此实例的管理员。} other {如果你对此结果有任何疑问或意见，请联系 {safety_email}。}}\n\n– {product_name} 安全团队"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n如果你认为此处罚决定不正确，可以提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n我们已审核你的举报（ID：{reportId}）。\n\n{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {我们确认你举报的账号违反了我们的规则，并已对其进行限制。我们不会透露对其他账号采取了什么措施，因为这属于对方的个人数据。} action_taken {我们确认你举报的对象违反了我们的规则，并已采取措施。我们不会透露对其他账号采取了什么措施，因为这属于对方的个人数据。} no_violation {我们确认你举报的内容或账号没有违反我们的规则，因此未做处理。} other {我们已结束处理你的举报。}}{hasComment, select, yes {\n\n团队留言：{publicComment}} other {}}{appeals_email, select, null {} other {\n\n如果你不同意，请在 60 天内发送邮件至 {appeals_email}，并附上举报 ID。如果你身在欧盟，还可以将此事提交给经认证的庭外争议解决机构，或向你所在国家的数字服务协调员投诉。}}\n\n{product_name} 团队"
 	},
 	"self_deletion_scheduled": {
 		"subject": "你的 {product_name} 账号已安排删除",
 		"body": "你好 {username}，\n\n你已申请删除你的 {product_name} 账号。账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}\n\n如果你未请求此操作，请登录账号取消删除。建议同时更改密码以保护账号安全。\n\n– {product_name} 团队"
-	},
-	"unban_notification": {
-		"subject": "你的 {product_name} 账号已解除封禁",
-		"body": "你好 {username}，\n\n好消息：你的 {product_name} 账号已解除封禁。\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}你现在可以重新登录，继续正常使用 {product_name}。\n\n– {product_name} 安全团队"
 	}
 }

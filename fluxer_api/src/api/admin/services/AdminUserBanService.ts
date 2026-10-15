@@ -1,176 +1,178 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
-import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
-import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
-import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {ClosureStateDeps} from '@app/api/enforcement/ClosureState';
+import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
 import {
-	type PartialUserChangePropagationDeps,
-	propagateUserUpdate,
-} from '@app/api/user/services/PartialUserChangePropagation';
+	decisionAuditMetadata,
+	type EnforcementDecisionService,
+	networkBlockAuditMetadata,
+} from '@app/api/enforcement/EnforcementDecisionService';
+import type {EnforcementNoticeDelivery} from '@app/api/enforcement/EnforcementNoticeDelivery';
+import {setFeatureLimit} from '@app/api/enforcement/FeatureLimitState';
+import {permanentSuspensionEnd} from '@app/api/enforcement/NoticeDates';
+import {applySuspension, liftSuspension} from '@app/api/enforcement/SuspensionState';
+import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import type {User} from '@app/api/models/User';
 import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
-import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {EnforcementAccountClosedError} from '@fluxer/errors/src/domains/moderation/EnforcementAccountClosedError';
+import {EnforcementDecisionOwnsStateError} from '@fluxer/errors/src/domains/moderation/EnforcementDecisionOwnsStateError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
-	AdminUserBanNoteRequest,
-	AdminUserUnbanRequest,
-	TempBanUserRequest,
-} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+	AdminUserBanRequest,
+	AdminUserFeatureLimitRequest,
+	AdminUserWarningRequest,
+} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
+import {ms} from 'itty-time';
 
-interface AdminUserBanServiceDeps {
-	apiContext: ApiContext;
+interface AdminUserBanServiceDeps extends ClosureStateDeps {
 	auditService: AdminAuditService;
-	userUpdateDeps: PartialUserChangePropagationDeps;
+	enforcement: EnforcementDecisionService;
+	delivery: EnforcementNoticeDelivery;
+}
+
+const REPORTS_LIMIT_DEFAULT_DAYS = 90;
+const REPORTS_LIMIT_MAX_DAYS = 365;
+
+function featureLimitEnd(data: AdminUserFeatureLimitRequest, now: Date): Date | null {
+	if (data.limit !== 'reports') {
+		if (data.ends_at !== undefined) {
+			throw InputValidationError.fromCode('ends_at', ValidationErrorCodes.ENFORCEMENT_LIMIT_END_INVALID);
+		}
+		return null;
+	}
+	const endsAt = data.ends_at
+		? new Date(data.ends_at)
+		: new Date(now.getTime() + ms(`${REPORTS_LIMIT_DEFAULT_DAYS} days`));
+	if (endsAt <= now || endsAt.getTime() > now.getTime() + ms(`${REPORTS_LIMIT_MAX_DAYS} days`)) {
+		throw InputValidationError.fromCode('ends_at', ValidationErrorCodes.ENFORCEMENT_LIMIT_END_INVALID);
+	}
+	return endsAt;
 }
 
 export class AdminUserBanService {
 	constructor(private readonly deps: AdminUserBanServiceDeps) {}
 
-	async tempBanUser(
-		data: TempBanUserRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, userUpdateDeps} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
+	private async requireUser(userId: UserID): Promise<User> {
+		const user = await this.deps.apiContext.services.users.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const tempBannedUntil = new Date();
-		if (data.duration_hours <= 0) {
-			tempBannedUntil.setFullYear(tempBannedUntil.getFullYear() + 100);
-		} else {
-			tempBannedUntil.setHours(tempBannedUntil.getHours() + data.duration_hours);
+		return user;
+	}
+
+	async tempBanUser(userId: UserID, data: AdminUserBanRequest, actor: EnforcementActor) {
+		const {auditService, enforcement} = this.deps;
+		const user = await this.requireUser(userId);
+		if (isAccountClosed(user)) {
+			throw new EnforcementAccountClosedError();
 		}
-		const bannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: tempBannedUntil}, user.toRow());
-		const updatedUser = (await userRepository.updateFlags(userId, (flags) => flags | UserFlags.DISABLED)) ?? bannedUser;
-		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
-		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
-		const email = user.email;
-		const notificationSent =
-			data.notify_user && email && data.duration_hours > 0
-				? await trySendAdminNotification(
-						() =>
-							emailService.sendAccountTempBannedEmail(
-								email,
-								user.username,
-								data.reason ?? null,
-								data.duration_hours,
-								tempBannedUntil,
-								user.locale,
-							),
-						{action: 'temp_ban', targetId: userId.toString()},
-					)
-				: false;
+		const now = new Date();
+		const permanent = data.duration_hours === 0;
+		const bannedUntil = permanent
+			? permanentSuspensionEnd(now)
+			: new Date(now.getTime() + ms(`${data.duration_hours} hours`));
+		let suspended = user;
+		const recorded = await enforcement.record(
+			{
+				subject: {type: 'user', user},
+				kind: 'suspension',
+				input: data.decision,
+				endsAt: permanent ? null : bannedUntil,
+				removeEvidence: data.remove_evidence ?? false,
+				blockNetworks: data.block_networks,
+				actor,
+			},
+			async (decisionId) => {
+				suspended = await applySuspension(this.deps, user, bannedUntil, decisionId);
+			},
+		);
 		await auditService.createAuditLog({
-			adminUserId,
+			adminUserId: actor.adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
 			action: 'temp_ban',
-			auditLogReason,
+			auditLogReason: actor.internalNote,
 			metadata: new Map([
 				['duration_hours', data.duration_hours.toString()],
-				['reason', data.reason ?? 'null'],
-				['banned_until', tempBannedUntil.toISOString()],
-				['notify_user', data.notify_user ? 'true' : 'false'],
-				['notification_sent', notificationSent ? 'true' : 'false'],
+				['banned_until', bannedUntil.toISOString()],
+				...decisionAuditMetadata(recorded.decision),
+				...networkBlockAuditMetadata(recorded),
 			]),
 		});
-		await emitAdminAction(adminUserId, userId, 'temp_ban', {durationHours: data.duration_hours});
+		await emitAdminAction(actor.adminUserId, userId, 'temp_ban', {durationHours: data.duration_hours});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(suspended, this.deps.apiContext.services.cache, actor.acls),
+			skipped_ips: recorded.skippedNetworks,
 		};
 	}
 
-	async annotateBan(data: AdminUserBanNoteRequest & {user_id: bigint}, adminUserId: UserID): Promise<void> {
-		const {users: userRepository} = this.deps.apiContext.services;
-		const {auditService} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		const banLog = await auditService.findAuditLog(data.ban_audit_log_id);
-		if (banLog?.action !== 'temp_ban' || banLog.targetType !== 'user' || banLog.targetId !== BigInt(userId)) {
-			throw new BadRequestError({
-				code: APIErrorCodes.INVALID_FORM_BODY,
-				message: 'ban_audit_log_id does not name a ban of this user',
-			});
-		}
-		const bannedUntil = user.tempBannedUntil;
-		if (
-			(user.flags & UserFlags.DISABLED) === 0n ||
-			!bannedUntil ||
-			bannedUntil.getTime() <= Date.now() ||
-			banLog.metadata.get('banned_until') !== bannedUntil.toISOString()
-		) {
-			throw new ConflictError({
-				code: APIErrorCodes.CONFLICT,
-				message: 'ban_audit_log_id does not name the current ban of this user',
-			});
-		}
-		await auditService.createAuditLog({
-			adminUserId,
+	async warnUser(userId: UserID, data: AdminUserWarningRequest, actor: EnforcementActor) {
+		const user = await this.requireUser(userId);
+		const {decision} = await this.deps.enforcement.record(
+			{subject: {type: 'user', user}, kind: 'warning', input: data.decision, actor},
+			async () => {},
+		);
+		await this.deps.auditService.createAuditLog({
+			adminUserId: actor.adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
-			action: 'annotate_ban',
-			auditLogReason: data.note,
-			metadata: new Map([['ban_audit_log_id', data.ban_audit_log_id.toString()]]),
+			action: 'warn_user',
+			auditLogReason: actor.internalNote,
+			metadata: new Map(decisionAuditMetadata(decision)),
 		});
+		return {decision_id: decision.decision_id.toString()};
 	}
 
-	async unbanUser(
-		data: AdminUserUnbanRequest & {user_id: bigint},
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, userUpdateDeps} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
+	async limitFeatures(userId: UserID, data: AdminUserFeatureLimitRequest, actor: EnforcementActor) {
+		const user = await this.requireUser(userId);
+		const endsAt = featureLimitEnd(data, new Date());
+		let limited = user;
+		const {decision} = await this.deps.enforcement.record(
+			{subject: {type: 'user', user}, kind: 'feature_limit', input: data.decision, endsAt, limit: data.limit, actor},
+			async () => {
+				limited = await setFeatureLimit(this.deps, user, data.limit, true, actor.adminUserId);
+			},
+		);
+		await this.deps.auditService.createAuditLog({
+			adminUserId: actor.adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'limit_features',
+			auditLogReason: actor.internalNote,
+			metadata: new Map([
+				['limit', data.limit],
+				...(endsAt ? ([['ends_at', endsAt.toISOString()]] as Array<[string, string]>) : []),
+				...decisionAuditMetadata(decision),
+			]),
+		});
+		return {user: await mapUserToAdminResponse(limited, this.deps.apiContext.services.cache, actor.acls)};
+	}
+
+	async unbanUser(userId: UserID, actor: EnforcementActor) {
+		const {auditService, delivery} = this.deps;
+		const user = await this.requireUser(userId);
+		if (user.enforcementDecisionId !== null) {
+			throw new EnforcementDecisionOwnsStateError(user.enforcementDecisionId);
 		}
-		const wasTempBanned = isTemporarilyBanned(user) && !isAccountClosed(user);
-		const unbannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: null}, user.toRow());
-		const updatedUser =
-			(await userRepository.updateFlags(userId, (flags) => flags & ~UserFlags.DISABLED)) ?? unbannedUser;
-		await propagateUserUpdate(userUpdateDeps, user, updatedUser);
-		const email = user.email;
-		const notificationSent =
-			data.notify_user && email && wasTempBanned
-				? await trySendAdminNotification(
-						() => emailService.sendUnbanNotification(email, user.username, data.public_reason ?? null, user.locale),
-						{action: 'unban', targetId: userId.toString()},
-					)
-				: false;
+		const wasSuspended = isTemporarilyBanned(user) && !isAccountClosed(user);
+		const updated = await liftSuspension(this.deps, user);
+		if (wasSuspended) {
+			await delivery.sendLegacyEnded(user);
+		}
 		await auditService.createAuditLog({
-			adminUserId,
+			adminUserId: actor.adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
 			action: 'unban',
-			auditLogReason,
-			metadata: new Map([
-				['notify_user', data.notify_user ? 'true' : 'false'],
-				['notification_sent', notificationSent ? 'true' : 'false'],
-				['public_reason', data.public_reason ?? 'null'],
-			]),
+			auditLogReason: actor.internalNote,
+			metadata: new Map([['ended_notice', wasSuspended ? 'true' : 'false']]),
 		});
-		await clearNewConversationLimit(userId, {cache: cacheService});
-		await emitAdminAction(adminUserId, userId, 'unban');
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
+		await emitAdminAction(actor.adminUserId, userId, 'unban');
+		return {user: await mapUserToAdminResponse(updated, this.deps.apiContext.services.cache, actor.acls)};
 	}
 }

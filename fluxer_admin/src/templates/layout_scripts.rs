@@ -628,3 +628,44 @@ pub const SH_LINK_REWRITE_SCRIPT: &str = r#"
 })();
 
 "#;
+
+pub const ENFORCEMENT_FIELDS_SCRIPT: &str = r#"
+(function () {
+	if (window.__fluxerEnforcementFields) return;
+	window.__fluxerEnforcementFields = true;
+	function codes(section, name) {
+		var value = section.getAttribute(name);
+		return value === null ? null : value.split(' ');
+	}
+	function syncReason(form, code) {
+		form.querySelectorAll('[data-show-for-codes], [data-hide-for-codes]').forEach(function (section) {
+			var showFor = codes(section, 'data-show-for-codes');
+			var hideFor = codes(section, 'data-hide-for-codes');
+			var shown = showFor ? showFor.indexOf(code) >= 0 : hideFor.indexOf(code) < 0;
+			section.hidden = !shown;
+			section.querySelectorAll('input, textarea, select').forEach(function (control) {
+				control.disabled = !shown;
+			});
+		});
+	}
+	function syncChoice(form, name, value) {
+		form.querySelectorAll('[data-show-for-' + name + ']').forEach(function (section) {
+			var shown = codes(section, 'data-show-for-' + name).indexOf(value) >= 0;
+			section.hidden = !shown;
+			section.disabled = !shown;
+		});
+	}
+	document.addEventListener('change', function (event) {
+		var control = event.target;
+		var form = control instanceof Element ? control.closest('form') : null;
+		if (!form) return;
+		if (control instanceof HTMLSelectElement && control.name === 'reason_code') {
+			syncReason(form, control.value);
+		} else if (control instanceof HTMLSelectElement && (control.name === 'resolution' || control.name === 'duration_hours')) {
+			syncChoice(form, control.name, control.value);
+		} else if (control instanceof HTMLInputElement && control.type === 'radio' && (control.name === 'basis' || control.name === 'limit')) {
+			syncChoice(form, control.name, control.value);
+		}
+	});
+})();
+"#;

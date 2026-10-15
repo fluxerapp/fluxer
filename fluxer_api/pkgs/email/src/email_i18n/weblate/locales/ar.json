@@ -5,19 +5,11 @@
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "سيتم حذف حسابك في {product_name} بسبب عدم النشاط",
-		"body": "مرحبًا {username}،\n\nلم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا تمت جدولته للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\n{safety_email, select, null {إذا كنت ترغب في الاحتفاظ بحسابك، فتواصل مع مسؤولي هذا المثيل قبل ذلك التاريخ.} other {إذا كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.}}\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nلم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا جدولنا حذفه في {deletion_date}.\n\nللاحتفاظ بحسابك، سجّل الدخول قبل ذلك التاريخ. {support_email, select, null {إذا كانت لديك أسئلة، فتواصل مع مسؤولي هذا المثيل.} other {إذا كانت لديك أسئلة، فتواصل مع {support_email}.}}\n\nفريق {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "تمت جدولة حذف حسابك في {product_name}",
-		"body": "مرحبًا {username}،\n\nبناءً على طلبك، تمت جدولة حسابك في {product_name} للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nسيظل حسابك مقفلًا حتى ذلك الحين. {safety_email, select, null {إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فتواصل مع مسؤولي هذا المثيل قبل ذلك التاريخ.} other {إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.}}\n\n– فريق {product_name}"
-	},
-	"account_scheduled_deletion": {
-		"subject": "سيتم حذف حسابك في {product_name} نهائيًا",
-		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم بسبب انتهاكات لشروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}هذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\n{legalLinks, select,\n  both {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  terms {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n\n}\n  guidelines {يرجى مراجعة:\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  other {}\n}عملية الاستئناف:\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، لديك 60 يومًا لتقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.}}\n\nفي استئنافك:\n- اشرح بوضوح سبب اعتقادك أن قرار الإنفاذ كان غير صحيح أو غير مبرر\n- قدم أي دليل أو سياق ذي صلة\n\nسيقوم عضو من فريق أمان {product_name} بمراجعة استئنافك وقد يوقف الحذف المعلق مؤقتًا إلى حين التوصل إلى قرار نهائي.\n\n– فريق أمان {product_name}"
-	},
-	"account_temp_banned": {
-		"subject": "تم تعليق حسابك في {product_name} مؤقتًا",
-		"body": "مرحبًا {username}،\n\nتم تعليق حسابك في {product_name} مؤقتًا لانتهاك شروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالمدة: {durationHours, plural,\n  =1 {ساعة واحدة}\n  zero {# ساعة}\n  two {ساعتان}\n  few {# ساعات}\n  many {# ساعة}\n  other {# ساعة}\n}\nمعلق حتى: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}خلال هذه الفترة، لن تتمكن من الوصول إلى حسابك.\n\n{legalLinks, select,\n  both {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  terms {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n\n}\n  guidelines {يرجى مراجعة:\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  other {}\n}إذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، يمكنك تقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل واشرح بوضوح سبب اعتقادك أن القرار كان غير صحيح.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا واشرح بوضوح سبب اعتقادك أن القرار كان غير صحيح.}} سنراجع استئنافك ونرد بقرارنا.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nبناءً على طلبك، جدولنا حذف حسابك في {product_name} في {deletion_date}.\n\nللاحتفاظ بحسابك، سجّل الدخول قبل {deletion_date}. {safety_email, select, null {إذا لم تطلب ذلك، فتواصل مع مسؤولي هذا المثيل.} other {إذا لم تطلب ذلك، فتواصل مع {safety_email}.}}\n\nفريق {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "شكرًا لك على تبرعك لـ{product_name}",
@@ -29,7 +21,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "اتخذنا قرارًا بشأن بلاغك في {product_name}",
-		"body": "مرحبًا،\n\nراجع فريق الأمان لدينا بلاغك بموجب قانون الخدمات الرقمية (المعرف: {reportId}) واتخذ قرارًا.{hasComment, select, yes {\n\nرد فريق الأمان:\n{publicComment}} other {}}\n\nلا نشارك تفاصيل أي إجراء يُتخذ بحق حساب شخص آخر، لأنها بياناته الشخصية.\n\nإذا كنت لا توافق على هذا القرار، يمكنك تقديم استئناف مجانًا خلال 60 يومًا. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل، واذكر معرف بلاغك، واشرح سبب اعتقادك أن القرار غير صحيح.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا، واذكر معرف بلاغك، واشرح سبب اعتقادك أن القرار غير صحيح.}} إذا كنت في الاتحاد الأوروبي، يمكنك أيضًا إحالة النزاع إلى هيئة معتمدة لتسوية المنازعات خارج المحكمة. لا يؤثر أي من ذلك على حقك في اللجوء إلى القضاء.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا،\n\nراجعنا بلاغك (المعرّف: {reportId}).\n\n{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {وجدنا أن الحساب الذي أبلغت عنه خالف قواعدنا، وقيّدناه. لا نشارك الإجراء الذي اتخذناه ضد حساب آخر، لأن ذلك من بيانات صاحبه الشخصية.} action_taken {وجدنا أن ما أبلغت عنه خالف قواعدنا، واتخذنا إجراءً. لا نشارك الإجراء الذي اتخذناه ضد حساب آخر، لأن ذلك من بيانات صاحبه الشخصية.} no_violation {وجدنا أن المحتوى أو الحساب الذي أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}{hasComment, select, yes {\n\nملاحظة من فريقنا: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nإذا كنت لا توافق، فراسل {appeals_email} خلال 60 يومًا واذكر معرّف البلاغ. إذا كنت في الاتحاد الأوروبي، يمكنك أيضًا إحالة الأمر إلى هيئة معتمدة لتسوية النزاعات خارج المحاكم أو تقديم شكوى إلى منسق الخدمات الرقمية (Digital Services Coordinator) في بلدك.}}\n\nفريق {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "تحقق من بريدك الإلكتروني لتقديم بلاغ DSA",
@@ -50,6 +42,14 @@
 	"email_verification": {
 		"subject": "تحقق من بريدك الإلكتروني في {product_name}",
 		"body": "مرحبًا {username}،\n\nيرجى التحقق من عنوان البريد الإلكتروني لحسابك في {product_name} بالنقر على الرابط أدناه:\n\n{verifyUrl}\n\nإذا لم تقم بإنشاء حساب {product_name}، يمكنك تجاهل هذا البريد الإلكتروني بأمان.\n\nهذا الرابط صالح لمدة 24 ساعة.\n\n– فريق {product_name}"
+	},
+	"enforcement_ended": {
+		"subject": "{outcome, select, reversed {ألغينا قرارًا بشأن حسابك في {product_name}} other {انتهى تقييد على حسابك في {product_name}}}",
+		"body": "مرحبًا {username}،\n\n{outcome, select, reversed {{decision_id, select, null {راجعنا مجددًا قرارًا بشأن حسابك وألغيناه.} other {راجعنا مجددًا القرار {decision_id} وألغيناه.}} نعتذر عن الإزعاج.} other {{decision_id, select, null {رفعنا التقييد عن حسابك.} other {رفعنا التقييد الناتج عن القرار {decision_id}.}}}}{restores_access, select, yes { يمكنك تسجيل الدخول واستخدام {product_name} مجددًا.} other {}}{statement, select, null {} other {\n\nملاحظة من فريقنا: {statement}}}{content_removed, select, yes {\n\nلا يمكن استعادة المحتوى الذي أزلناه.} other {}}\n\nفريق {product_name}"
+	},
+	"enforcement_notice": {
+		"subject": "{neutral, select, yes {تحديث بشأن حسابك في {product_name}} other {{kind_label, select, warning {تحذير بشأن حسابك في {product_name}} suspension {تم تعليق حسابك في {product_name}} ban {تم حظر حسابك في {product_name}} closure {تم إغلاق حسابك في {product_name}} feature_limit {تم تقييد بعض الميزات في حسابك في {product_name}} content_removal {أزلنا رسائل أرسلتها في {product_name}} profile_reset {أعدنا تعيين أجزاء من ملفك الشخصي في {product_name}} community_removal {أزلنا مجتمعك في {product_name}} bot {تحديث بشأن البوت الخاص بك في {product_name}} other {تحديث بشأن حسابك في {product_name}}}}}",
+		"body": "مرحبًا {username}،\n\n{summary}\n\n{effects}\n\nالسبب\nالقاعدة: {rule_title}{rule_url, select, null {} other { ({rule_url})}}\n{facts}{statement, select, null {} other {\n\nملاحظة من فريقنا: {statement}}}\n\nكيف اتخذنا القرار\n{how_we_decided}{appeals_email, select, null {} other {\n\nكيفية الطعن\nإذا كنت تعتقد أننا أخطأنا، فراسل {appeals_email} في موعد أقصاه {appeal_deadline}. راسلنا من عنوان البريد الإلكتروني المرتبط بحسابك إن أمكن، واذكر معرّف القرار. الطعن مجاني، ويراجع كل طعن شخص من فريقنا.{redress, select, null {} other {\n\n{redress}}}}}\n\nمعرّف القرار: {decision_id}\n\nفريق {product_name}"
 	},
 	"gift_chargeback_notification": {
 		"subject": "تمت إزالة مزايا الهدية التي استرددتها",
@@ -85,18 +85,10 @@
 	},
 	"report_resolved": {
 		"subject": "تمت مراجعة بلاغك في {product_name}",
-		"body": "مرحبًا {username}،\n\nتمت مراجعة بلاغك (المعرف: {reportId}) من قبل فريق الأمان لدينا.{hasComment, select, yes {\n\nرد فريق الأمان:\n{publicComment}} other {}}\n\nشكرًا لمساعدتك في الحفاظ على {product_name} آمنًا للجميع. نحن نأخذ جميع البلاغات على محمل الجد ونقدر مساهمتك في المجتمع.\n\n{safety_email, select, null {إذا كان لديك أي أسئلة أو مخاوف بشأن هذه النتيجة، يرجى التواصل مع مسؤولي هذا المثيل.} other {إذا كان لديك أي أسئلة أو مخاوف بشأن هذه النتيجة، يرجى الاتصال بـ{safety_email}.}}\n\n– فريق أمان {product_name}"
-	},
-	"scheduled_deletion_notification": {
-		"subject": "سيتم حذف حسابك في {product_name} نهائيًا",
-		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}هذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح، يمكنك تقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.}}\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nراجعنا بلاغك (المعرّف: {reportId}).\n\n{outcome, select, removed {أزلنا المحتوى الذي أبلغت عنه لأنه خالف قواعدنا.} restricted {وجدنا أن الحساب الذي أبلغت عنه خالف قواعدنا، وقيّدناه. لا نشارك الإجراء الذي اتخذناه ضد حساب آخر، لأن ذلك من بيانات صاحبه الشخصية.} action_taken {وجدنا أن ما أبلغت عنه خالف قواعدنا، واتخذنا إجراءً. لا نشارك الإجراء الذي اتخذناه ضد حساب آخر، لأن ذلك من بيانات صاحبه الشخصية.} no_violation {وجدنا أن المحتوى أو الحساب الذي أبلغت عنه لا يخالف قواعدنا، لذا تركناه كما هو.} other {أغلقنا بلاغك.}}{hasComment, select, yes {\n\nملاحظة من فريقنا: {publicComment}} other {}}{appeals_email, select, null {} other {\n\nإذا كنت لا توافق، فراسل {appeals_email} خلال 60 يومًا واذكر معرّف البلاغ. إذا كنت في الاتحاد الأوروبي، يمكنك أيضًا إحالة الأمر إلى هيئة معتمدة لتسوية النزاعات خارج المحاكم أو تقديم شكوى إلى منسق الخدمات الرقمية (Digital Services Coordinator) في بلدك.}}\n\nفريق {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "تمت جدولة حذف حسابك في {product_name}",
 		"body": "مرحبًا {username}،\n\nلقد طلبت حذف حسابك في {product_name}. تمت جدولة حسابك للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}\n\nإذا لم تطلب هذا، سجل الدخول إلى حسابك لإلغاء الحذف. نوصي أيضًا بتغيير كلمة المرور الخاصة بك لتأمين حسابك.\n\n– فريق {product_name}"
-	},
-	"unban_notification": {
-		"subject": "تم رفع تعليق حسابك في {product_name}",
-		"body": "مرحبًا {username}،\n\nأخبار سارة: تم رفع تعليق حسابك في {product_name}.\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}يمكنك الآن تسجيل الدخول مرة أخرى ومواصلة استخدام {product_name} كالمعتاد.\n\n– فريق أمان {product_name}"
 	}
 }

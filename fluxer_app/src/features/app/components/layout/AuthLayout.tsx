@@ -8,6 +8,7 @@ import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar
 import {AuthShellHintKind, useAuthShellHintCapture} from '@app/features/app/components/skeleton/AuthShellHint';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {useSetLayoutVariant} from '@app/features/app/state/LayoutVariantContext';
+import {AccountRestrictionGate} from '@app/features/auth/flow/AccountRestrictionScreen';
 import {AuthBackground} from '@app/features/auth/flow/AuthBackground';
 import {AuthCardContainer} from '@app/features/auth/flow/AuthCardContainer';
 import {AuthRuntimeTargetBoundary} from '@app/features/auth/flow/AuthRuntimeTargetBoundary';
@@ -307,7 +308,9 @@ export const AuthLayout = observer(function AuthLayout({children}: {children?: R
 		<AppI18nProvider i18n={i18n}>
 			<AuthLayoutContent data-flx="app.auth-layout.auth-layout-content">
 				<AuthRuntimeTargetBoundary data-flx="app.auth-layout.auth-runtime-target-boundary">
-					{children}
+					<AccountRestrictionGate data-flx="app.auth-layout.account-restriction-gate">
+						{children}
+					</AccountRestrictionGate>
 				</AuthRuntimeTargetBoundary>
 			</AuthLayoutContent>
 		</AppI18nProvider>

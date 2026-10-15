@@ -69,13 +69,20 @@ impl AdminApiClient {
         Ok(())
     }
 
-    pub async fn delete_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
-        let response = self
-            .generated()
-            .delete_admin_guild(&snowflake(guild_id))
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+    pub async fn delete_guild(
+        &self,
+        guild_id: &str,
+        basis: generated_types::CommunityRemovalBasis,
+        internal_note: Option<&str>,
+    ) -> ApiResult<SuccessResponse> {
+        let body = generated_types::AdminGuildDeleteRequest { basis };
+        self.send(
+            Method::DELETE,
+            &format!("/admin/guilds/{}", urlencoding::encode(guild_id)),
+            Some(&body),
+            internal_note,
+        )
+        .await
     }
 
     pub async fn transfer_guild_ownership(

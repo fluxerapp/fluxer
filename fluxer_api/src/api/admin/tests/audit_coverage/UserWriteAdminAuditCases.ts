@@ -21,11 +21,7 @@ import {
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	getAdminRepository,
-	getInstanceConfigRepository,
-	getUserRepository,
-} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
@@ -54,6 +50,13 @@ async function enableTotp(context: AdminAuditCoverageContext, account: TestAccou
 		.execute();
 	return secret;
 }
+
+const COVERAGE_DECISION = {
+	reason_code: DeletionReasons.SPAM,
+	source: 'own_review',
+	automation: 'none',
+	statement: 'Coverage decision',
+};
 
 export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
@@ -180,13 +183,40 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/users/${target.userId}/profile-fields`,
-					body: {fields: ['bio', 'pronouns', 'global_name']},
+					body: {fields: ['bio', 'pronouns', 'global_name'], basis: {type: 'holder_request'}},
 				},
 				expected: {
 					action: 'clear_fields',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {fields: 'bio,pronouns,global_name'},
+					metadata: {fields: 'bio,pronouns,global_name', basis: 'holder_request'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/profile-fields',
+		name: 'enforcement',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/profile-fields`,
+					body: {fields: ['global_name'], basis: {type: 'enforcement', decision: COVERAGE_DECISION}},
+				},
+				expected: {
+					action: 'clear_fields',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						fields: 'global_name',
+						basis: 'enforcement',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'profile_reset',
+						notice_status: 'sent',
+					},
 				},
 			};
 		},
@@ -362,7 +392,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/users/${target.userId}/ban`,
-					body: {duration_hours: 24, reason: 'Coverage ban'},
+					body: {duration_hours: 24, decision: COVERAGE_DECISION},
 				},
 				expected: {
 					action: 'temp_ban',
@@ -370,10 +400,11 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetId: target.userId,
 					metadata: {
 						duration_hours: '24',
-						reason: 'Coverage ban',
 						banned_until: expect.any(String),
-						notify_user: 'true',
-						notification_sent: 'true',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'suspension',
+						notice_status: 'sent',
 					},
 				},
 			};
@@ -384,42 +415,63 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		route: '/admin/users/:user_id/ban',
 		async prepare(context) {
 			const target = await createTestAccount(context.harness);
-			await adminBuilder(context).put(`/admin/users/${target.userId}/ban`).body({duration_hours: 24}).execute();
+			const users = getUserRepository();
+			const user = await loadUser(target);
+			await users.patchUpsert(user.id, {temp_banned_until: new Date(Date.now() + 86_400_000)}, user.toRow());
+			await users.updateFlags(user.id, (flags) => flags | UserFlags.DISABLED);
 			return {
 				request: {path: `/admin/users/${target.userId}/ban`},
 				expected: {
 					action: 'unban',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {notify_user: 'true', notification_sent: 'true', public_reason: 'null'},
+					metadata: {ended_notice: 'true'},
 				},
 			};
 		},
 	},
 	{
 		method: 'POST',
-		route: '/admin/users/:user_id/ban/notes',
-		auditLogReason: 'Coverage ban note',
-		async prepare(context) {
-			const target = await createTestAccount(context.harness);
-			await adminBuilder(context)
-				.put(`/admin/users/${target.userId}/ban`)
-				.body({duration_hours: 24, reason: 'Coverage ban'})
-				.execute();
-			const banLog = (await getAdminRepository().listAllAuditLogsPaginated(1000)).find(
-				(log) => log.action === 'temp_ban' && log.targetId.toString() === target.userId,
-			);
+		route: '/admin/users/:user_id/warnings',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
 			return {
-				request: {
-					path: `/admin/users/${target.userId}/ban/notes`,
-					body: {ban_audit_log_id: banLog!.logId.toString(), note: 'Coverage ban note'},
-					expectStatus: 204,
-				},
+				request: {path: `/admin/users/${target.userId}/warnings`, body: {decision: COVERAGE_DECISION}},
 				expected: {
-					action: 'annotate_ban',
+					action: 'warn_user',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {ban_audit_log_id: banLog!.logId.toString()},
+					metadata: {
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'warning',
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'PUT',
+		route: '/admin/users/:user_id/feature-limits',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/feature-limits`,
+					body: {limit: 'direct_messages', decision: COVERAGE_DECISION},
+				},
+				expected: {
+					action: 'limit_features',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {
+						limit: 'direct_messages',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'feature_limit',
+						notice_status: 'sent',
+					},
 				},
 			};
 		},
@@ -432,19 +484,18 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			return {
 				request: {
 					path: `/admin/users/${target.userId}/deletion`,
-					body: {reason_code: DeletionReasons.USER_REQUESTED, days_until_deletion: 30},
+					body: {days_until_deletion: 30, basis: {type: 'holder_request'}},
 				},
 				expected: {
 					action: 'schedule_deletion',
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {
+						basis: 'holder_request',
 						days: '30',
 						reason_code: DeletionReasons.USER_REQUESTED.toString(),
 						pending_deletion_at: expect.any(String),
-						notify_user: 'true',
 						notification_sent: 'true',
-						notification_template: 'account_deletion_scheduled_requested',
 					},
 				},
 			};
@@ -457,7 +508,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			const target = await createTestAccount(context.harness);
 			await adminBuilder(context)
 				.put(`/admin/users/${target.userId}/deletion`)
-				.body({reason_code: DeletionReasons.USER_REQUESTED, days_until_deletion: 30})
+				.body({days_until_deletion: 30, basis: {type: 'holder_request'}})
 				.execute();
 			const pendingDeletionAt = (await loadUser(target)).pendingDeletionAt!.toISOString();
 			return {
@@ -474,8 +525,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						cancelled_scheduled_by: context.admin.userId,
 						cancelled_scheduled_at: expect.any(String),
 						cancelled_reason_code: DeletionReasons.USER_REQUESTED.toString(),
-						notify_user: 'false',
-						notification_sent: 'false',
+						notice: 'account_deletion_cancelled',
 					},
 				},
 			};

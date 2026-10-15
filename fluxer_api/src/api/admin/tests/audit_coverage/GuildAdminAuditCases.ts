@@ -6,6 +6,8 @@ import {createGuild} from '@app/api/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {expect} from 'vitest';
 
 const MISSING_GUILD_ID = '900000000000000001';
 
@@ -119,12 +121,49 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		async prepare({harness, admin}) {
 			const guild = await createGuild(harness, admin.token, 'Audit Deleted Guild');
 			return {
-				request: {path: `/admin/guilds/${guild.id}`},
+				request: {path: `/admin/guilds/${guild.id}`, body: {basis: {type: 'holder_request'}}},
 				expected: {
 					action: 'delete_guild',
 					targetType: 'guild',
 					targetId: guild.id,
-					metadata: {guild_id: guild.id},
+					metadata: {guild_id: guild.id, basis: 'holder_request'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id',
+		name: 'enforcement',
+		async prepare({harness, admin}) {
+			const guild = await createGuild(harness, admin.token, 'Audit Removed Guild');
+			return {
+				request: {
+					path: `/admin/guilds/${guild.id}`,
+					body: {
+						basis: {
+							type: 'enforcement',
+							decision: {
+								reason_code: DeletionReasons.SPAM,
+								source: 'own_review',
+								automation: 'none',
+								statement: 'Coverage decision',
+							},
+						},
+					},
+				},
+				expected: {
+					action: 'delete_guild',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {
+						guild_id: guild.id,
+						basis: 'enforcement',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'community_removal',
+						notice_status: 'sent',
+					},
 				},
 			};
 		},

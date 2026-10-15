@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
+import type {
+	EmailTemplateVariables,
+	ReporterOutcome,
+	ReportReceivedTargetKind,
+} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 
 export interface SentEmailRecord {
@@ -8,6 +12,10 @@ export interface SentEmailRecord {
 	type: string;
 	timestamp: Date;
 	metadata: Record<string, string>;
+}
+
+function stringMetadata(variables: Record<string, string | null>): Record<string, string> {
+	return Object.fromEntries(Object.entries(variables).map(([key, value]) => [key, value ?? '']));
 }
 
 export class TestEmailService implements IEmailService {
@@ -50,34 +58,6 @@ export class TestEmailService implements IEmailService {
 		return this.record(email, 'ip_authorization', {token: authorizationToken, ip: ipAddress, location});
 	}
 
-	async sendAccountTempBannedEmail(
-		email: string,
-		_username: string,
-		reason: string | null,
-		durationHours: number,
-		bannedUntil: Date,
-		_locale?: string | null,
-	): Promise<boolean> {
-		return this.record(email, 'account_temp_banned', {
-			reason: reason ?? '',
-			duration_hours: durationHours.toString(10),
-			banned_until: bannedUntil.toISOString(),
-		});
-	}
-
-	async sendAccountScheduledForDeletionEmail(
-		email: string,
-		_username: string,
-		reason: string | null,
-		deletionDate: Date,
-		_locale?: string | null,
-	): Promise<boolean> {
-		return this.record(email, 'account_scheduled_deletion', {
-			reason: reason ?? '',
-			deletion_date: deletionDate.toISOString(),
-		});
-	}
-
 	async sendSelfDeletionScheduledEmail(
 		email: string,
 		_username: string,
@@ -90,53 +70,39 @@ export class TestEmailService implements IEmailService {
 	async sendAccountDeletionRequestedEmail(
 		email: string,
 		_username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'account_deletion_scheduled_requested', {
-			reason: reason ?? '',
-			deletion_date: deletionDate.toISOString(),
-		});
+		return this.record(email, 'account_deletion_scheduled_requested', {deletion_date: deletionDate});
 	}
 
 	async sendAccountDeletionInactivityEmail(
 		email: string,
 		_username: string,
-		reason: string | null,
-		deletionDate: Date,
+		deletionDate: string,
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'account_deletion_scheduled_inactivity', {
-			reason: reason ?? '',
-			deletion_date: deletionDate.toISOString(),
-		});
+		return this.record(email, 'account_deletion_scheduled_inactivity', {deletion_date: deletionDate});
 	}
 
 	async sendAccountDeletionCancelledEmail(email: string, _username: string, _locale?: string | null): Promise<boolean> {
 		return this.record(email, 'account_deletion_cancelled');
 	}
 
-	async sendUnbanNotification(
+	async sendEnforcementNoticeEmail(
 		email: string,
-		_username: string,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_notice'],
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'unban_notification', {reason: reason ?? ''});
+		return this.record(email, 'enforcement_notice', stringMetadata(variables));
 	}
 
-	async sendScheduledDeletionNotification(
+	async sendEnforcementEndedEmail(
 		email: string,
-		_username: string,
-		deletionDate: Date,
-		reason: string | null,
+		variables: EmailTemplateVariables['enforcement_ended'],
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'scheduled_deletion_notification', {
-			deletion_date: deletionDate.toISOString(),
-			reason: reason ?? '',
-		});
+		return this.record(email, 'enforcement_ended', stringMetadata(variables));
 	}
 
 	async sendInactivityWarningEmail(
@@ -178,18 +144,20 @@ export class TestEmailService implements IEmailService {
 		_username: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'report_resolved', {report_id: reportId, public_comment: publicComment});
+		return this.record(email, 'report_resolved', {report_id: reportId, public_comment: publicComment, outcome});
 	}
 
 	async sendDsaReportResolvedEmail(
 		email: string,
 		reportId: string,
 		publicComment: string,
+		outcome: ReporterOutcome,
 		_locale?: string | null,
 	): Promise<boolean> {
-		return this.record(email, 'dsa_report_resolved', {report_id: reportId, public_comment: publicComment});
+		return this.record(email, 'dsa_report_resolved', {report_id: reportId, public_comment: publicComment, outcome});
 	}
 
 	async sendReportReceivedEmail(

@@ -4,6 +4,7 @@ use crate::{
     acl,
     api::{
         client::{AdminApiClient, ApiError, ApiResultExt},
+        generated::types::{UpdateReportRequestOutcome, UpdateReportRequestResolution},
         reports::SearchReportsParams,
         types::ReportEntry,
     },
@@ -15,7 +16,7 @@ use crate::{
         htmx,
     },
     state::AppState,
-    templates,
+    templates::{self, components::enforcement_fields::is_snowflake},
     utils::{forms::clean_string, timestamps::format_admin_timestamp},
 };
 use axum::{
@@ -77,6 +78,10 @@ struct ResolveForm {
     _csrf: Option<String>,
     #[serde(default)]
     resolution: Option<String>,
+    #[serde(default)]
+    outcome: Option<String>,
+    #[serde(default)]
+    duplicate_of: Option<String>,
     #[serde(default)]
     public_comment: Option<String>,
     #[serde(default)]
@@ -323,6 +328,35 @@ async fn report_resolve(
             config.secure_cookies(),
         );
     };
+    let outcome = match resolution {
+        UpdateReportRequestResolution::NoViolation => Some(UpdateReportRequestOutcome::NoViolation),
+        UpdateReportRequestResolution::Actioned => form
+            .outcome
+            .as_deref()
+            .and_then(|value| UpdateReportRequestOutcome::try_from(value).ok())
+            .filter(|outcome| *outcome != UpdateReportRequestOutcome::NoViolation),
+        UpdateReportRequestResolution::Duplicate => None,
+    };
+    let duplicate_of = form
+        .duplicate_of
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| is_snowflake(value))
+        .map(str::to_owned);
+    let missing = match resolution {
+        UpdateReportRequestResolution::Actioned if outcome.is_none() => Some(OUTCOME_REQUIRED),
+        UpdateReportRequestResolution::Duplicate if duplicate_of.is_none() => {
+            Some(DUPLICATE_OF_REQUIRED)
+        }
+        _ => None,
+    };
+    if let Some(message) = missing {
+        return flash::redirect_with_flash(
+            &back,
+            FlashData::error(message),
+            config.secure_cookies(),
+        );
+    }
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let public_comment = clean_string(form.public_comment.as_deref().unwrap_or(""));
     let notify_reporter =
@@ -331,9 +365,10 @@ async fn report_resolve(
         .resolve_report(
             &report_id,
             resolution,
+            outcome,
+            duplicate_of.as_deref(),
             public_comment.as_deref(),
             notify_reporter,
-            None,
         )
         .await
     {
@@ -347,6 +382,8 @@ async fn report_resolve(
 }
 
 const RESOLUTION_REQUIRED: &str = "Choose a resolution";
+const OUTCOME_REQUIRED: &str = "Choose what happened to the reported content or account";
+const DUPLICATE_OF_REQUIRED: &str = "Enter the ID of the report this one repeats";
 
 async fn report_legal_hold(
     State(state): State<AppState>,

@@ -4,8 +4,6 @@ export type EmailTemplateKey =
 	| 'account_deletion_cancelled'
 	| 'account_deletion_scheduled_inactivity'
 	| 'account_deletion_scheduled_requested'
-	| 'account_scheduled_deletion'
-	| 'account_temp_banned'
 	| 'donation_confirmation'
 	| 'donation_magic_link'
 	| 'dsa_report_resolved'
@@ -14,6 +12,8 @@ export type EmailTemplateKey =
 	| 'email_change_original'
 	| 'email_change_revert'
 	| 'email_verification'
+	| 'enforcement_ended'
+	| 'enforcement_notice'
 	| 'gift_chargeback_notification'
 	| 'harvest_completed'
 	| 'inactivity_warning'
@@ -23,9 +23,7 @@ export type EmailTemplateKey =
 	| 'password_reset'
 	| 'report_received'
 	| 'report_resolved'
-	| 'scheduled_deletion_notification'
-	| 'self_deletion_scheduled'
-	| 'unban_notification';
+	| 'self_deletion_scheduled';
 
 export interface EmailTemplate {
 	subject: string;

@@ -13,6 +13,7 @@ import {AdminMessageService} from '@app/api/admin/services/AdminMessageService';
 import {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
 import {AdminReportService} from '@app/api/admin/services/AdminReportService';
 import {AdminSearchService} from '@app/api/admin/services/AdminSearchService';
+import {AdminUserBanService} from '@app/api/admin/services/AdminUserBanService';
 import {AdminUserRelationshipService} from '@app/api/admin/services/AdminUserRelationshipService';
 import {AdminUserService} from '@app/api/admin/services/AdminUserService';
 import {AdminVoiceService} from '@app/api/admin/services/AdminVoiceService';
@@ -20,6 +21,8 @@ import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolu
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
+import {EnforcementNoticeDelivery} from '@app/api/enforcement/EnforcementNoticeDelivery';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
@@ -31,7 +34,11 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
 import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
-import {getGuildDiscoveryRepository, getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
+import {
+	getEnforcementDecisionRepository,
+	getGuildDiscoveryRepository,
+	getKVAccountDeletionQueue,
+} from '@app/api/middleware/ServiceSingletons';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -49,6 +56,8 @@ export class AdminService {
 	readonly messageShredService: AdminMessageShredService;
 	readonly messageDeletionService: AdminMessageDeletionService;
 	readonly reportServiceAggregate: AdminReportService;
+	readonly enforcementService: EnforcementDecisionService;
+	readonly banService: AdminUserBanService;
 	readonly voiceService: AdminVoiceService;
 	readonly searchService: AdminSearchService;
 	readonly codeGenerationService: AdminCodeGenerationService;
@@ -90,13 +99,80 @@ export class AdminService {
 			adminRepository: this.adminRepository,
 			auditService: this.auditService,
 		});
-		const reporterResolutionNotifier = new ReporterResolutionNotifier({
+		const systemDm = {
+			channelService: this.channelService,
+			userChannelService: this.runtimeUserService.channelService,
+			userCacheService: this.userCacheService,
+		};
+		const reporterResolutionNotifier = new ReporterResolutionNotifier({apiContext: this.apiContext, systemDm});
+		this.assetPurgeService = new AdminAssetPurgeService({
+			guildRepository: this.guildRepository,
+			gatewayService: gateway,
+			assetDeletionQueue: this.assetDeletionQueue,
+			auditService: this.auditService,
+		});
+		this.messageService = new AdminMessageService({
 			apiContext: this.apiContext,
-			systemDm: {
-				channelService: this.channelService,
-				userChannelService: this.runtimeUserService.channelService,
-				userCacheService: this.userCacheService,
-			},
+			channelRepository: this.channelRepository,
+			guildRepository: this.guildRepository,
+			auditService: this.auditService,
+		});
+		this.reportServiceAggregate = new AdminReportService({
+			apiContext: this.apiContext,
+			reportService: this.reportService,
+			guildRepository: this.guildRepository,
+			channelRepository: this.channelRepository,
+			storageService: this.storageService,
+			auditService: this.auditService,
+			userCacheService: this.userCacheService,
+			reporterResolutionNotifier,
+		});
+		const userUpdateDeps = {
+			userCacheService: this.userCacheService,
+			userRepository: users,
+			guildRepository: this.guildRepository,
+			gatewayService: gateway,
+		};
+		const delivery = new EnforcementNoticeDelivery({
+			apiContext: this.apiContext,
+			applicationRepository: this.applicationRepository,
+			systemDm,
+		});
+		this.enforcementService = new EnforcementDecisionService({
+			apiContext: this.apiContext,
+			userUpdateDeps,
+			kvDeletionQueue: getKVAccountDeletionQueue(),
+			repository: getEnforcementDecisionRepository(),
+			delivery,
+			auditService: this.auditService,
+			banManagementService: this.banManagementService,
+			channelRepository: this.channelRepository,
+			guildRepository: this.guildRepository,
+			reportService: this.reportService,
+			adminReportService: this.reportServiceAggregate,
+		});
+		this.guildServiceAggregate = new AdminGuildService({
+			guildRepository: this.guildRepository,
+			userRepository: users,
+			channelRepository: this.channelRepository,
+			inviteRepository: this.inviteRepository,
+			guildService: this.guildService,
+			gatewayService: gateway,
+			entityAssetService: this.entityAssetService,
+			auditService: this.auditService,
+			discoveryRepository: getGuildDiscoveryRepository(),
+			enforcement: this.enforcementService,
+		});
+		this.messageShredService = new AdminMessageShredService({
+			apiContext: this.apiContext,
+			auditService: this.auditService,
+			enforcement: this.enforcementService,
+		});
+		this.messageDeletionService = new AdminMessageDeletionService({
+			apiContext: this.apiContext,
+			channelRepository: this.channelRepository,
+			auditService: this.auditService,
+			enforcement: this.enforcementService,
 		});
 		this.userService = new AdminUserService({
 			apiContext: this.apiContext,
@@ -113,48 +189,16 @@ export class AdminService {
 			reportService: this.reportService,
 			storeEntitlementService: this.storeEntitlementService,
 			reporterResolutionNotifier,
+			enforcement: this.enforcementService,
+			delivery,
 		});
-		this.guildServiceAggregate = new AdminGuildService({
-			guildRepository: this.guildRepository,
-			userRepository: users,
-			channelRepository: this.channelRepository,
-			inviteRepository: this.inviteRepository,
-			guildService: this.guildService,
-			gatewayService: gateway,
-			entityAssetService: this.entityAssetService,
-			auditService: this.auditService,
-			discoveryRepository: getGuildDiscoveryRepository(),
-		});
-		this.assetPurgeService = new AdminAssetPurgeService({
-			guildRepository: this.guildRepository,
-			gatewayService: gateway,
-			assetDeletionQueue: this.assetDeletionQueue,
-			auditService: this.auditService,
-		});
-		this.messageService = new AdminMessageService({
+		this.banService = new AdminUserBanService({
 			apiContext: this.apiContext,
-			channelRepository: this.channelRepository,
-			guildRepository: this.guildRepository,
+			userUpdateDeps,
+			kvDeletionQueue: getKVAccountDeletionQueue(),
 			auditService: this.auditService,
-		});
-		this.messageShredService = new AdminMessageShredService({
-			apiContext: this.apiContext,
-			auditService: this.auditService,
-		});
-		this.messageDeletionService = new AdminMessageDeletionService({
-			channelRepository: this.channelRepository,
-			messageShredService: this.messageShredService,
-			auditService: this.auditService,
-		});
-		this.reportServiceAggregate = new AdminReportService({
-			apiContext: this.apiContext,
-			reportService: this.reportService,
-			guildRepository: this.guildRepository,
-			channelRepository: this.channelRepository,
-			storageService: this.storageService,
-			auditService: this.auditService,
-			userCacheService: this.userCacheService,
-			reporterResolutionNotifier,
+			enforcement: this.enforcementService,
+			delivery,
 		});
 		this.voiceService = new AdminVoiceService({
 			apiContext: this.apiContext,
