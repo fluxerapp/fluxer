@@ -75,9 +75,9 @@ const UPDATES_DESCRIPTOR = msg({
 	message: 'Updates',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const STOP_DOWNLOADING_UPDATES_DESCRIPTOR = msg({
+const INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR = msg({
 	message:
-		'{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts.',
+		"{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts.",
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
@@ -263,7 +263,7 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		tabType: 'desktop_settings',
 		label: DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
 		keywords: [UPDATES_DESCRIPTOR],
-		description: {...STOP_DOWNLOADING_UPDATES_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		description: {...INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
 		tags: ['desktop'],
 		isVisible: () => isDesktop() && getElectronAPI()?.setDesktopDisableModuleUpdates != null,
 	},

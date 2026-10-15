@@ -49,7 +49,6 @@ import {
 	recordDesktopAppStoreSuccess,
 } from '@electron/main/DesktopAppStoreHealth';
 import {
-	areModuleUpdatesDisabled,
 	formatDesktopDebugInfo,
 	getDesktopDebugInfo,
 	getLaunchNetLogPath,
@@ -74,7 +73,7 @@ import {
 	registerIpcHandlers,
 } from '@electron/main/IpcHandlers';
 import {initializeJumpList} from '@electron/main/JumpList';
-import {describeLaunchDiagnosticOptions} from '@electron/main/LaunchOptions';
+import {describeLaunchDiagnosticOptions, shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {cleanupLegacyHarvestHandlers, registerLegacyHarvestHandlers} from '@electron/main/LegacyHarvestIpc';
 import {initializeLegacyOriginHarvest} from '@electron/main/LegacyOriginHarvest';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
@@ -601,7 +600,7 @@ if (launchConfigurationError) {
 						showWindow,
 					});
 				});
-				if (process.env.FLUXER_OFFLINE !== '1' && !areModuleUpdatesDisabled()) {
+				if (process.env.FLUXER_OFFLINE !== '1' && !shouldDisableModuleUpdatesForLaunch()) {
 					const {registerUpdater} = await import('@electron/main/Updater');
 					registerUpdater(getMainWindow);
 				}

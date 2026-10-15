@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "Chromium의 하드웨어 가속을 비활성화하려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다. 그래픽 오류나 GPU 사용량이 높은 문제를 해결할 때만 사용하세요."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "{PRODUCT_NAME}에서 업데이트 다운로드를 다시 시작하려면 다시 시작해야 합니다."
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "{PRODUCT_NAME}에서 업데이트를 다시 자동으로 설치하려면 다시 시작해야 합니다."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "{PRODUCT_NAME}에서 업데이트 다운로드를 중지하려면 다시 시작해야 합니다. 업데이트가 뒤처지면 서비스 작동이 중지될 수 있습니다."
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "{PRODUCT_NAME}을(를) 다시 시작해야 시작 중 업데이트가 중지됩니다. 업데이트를 사용할 수 있을 때 앱에서 원할 때 언제든지 설치할 수 있습니다."
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "{productName}에서 잠재적인 레이드를 감지했습니다. 초대
 msgid "{productName} Staff"
 msgstr "{productName} 직원"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "{productName}에서 업데이트 다운로드를 중지합니다. 이렇게 하면 서비스와 호환되지 않을 수 있으며, 업데이트를 다시 켜기 전까지 작동이 중지될 수 있습니다. 이 설정은 다음에 {productName}을(를) 시작할 때 적용됩니다."
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "{productName} Visionary"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} Visionary ({premiumSinceFormatted}부터)"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "{productName}이(가) 시작 중에는 업데이트되지 않습니다. 업데이트를 사용할 수 있을 때 앱에서 원할 때 설치할 수 있습니다. 다음번 {productName}을(를) 시작할 때 적용됩니다."
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx

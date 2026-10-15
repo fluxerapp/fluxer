@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "A(z) {PRODUCT_NAME} újraindítása szükséges a Chromium hardveres gyorsításának kikapcsolásához. Ezt csak akkor használd, ha grafikai hibákat vagy magas GPU-használatot észlelsz."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "A(z) {PRODUCT_NAME} újraindításra szorul, hogy újra elkezdhesse a frissítések letöltését."
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "A(z) {PRODUCT_NAME} újraindításra szorul, hogy ismét automatikusan telepíthesse a frissítéseket."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "A(z) {PRODUCT_NAME} újraindításra szorul a frissítések letöltésének leállításához. Lehet, hogy lemarad, és leáll a szolgáltatással való együttműködés, amíg újra be nem kapcsolja a frissítéseket."
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "A(z) {PRODUCT_NAME} újraindításra szorul, hogy leállítsa az indulás közbeni frissítést. Ha elérhető egy frissítés, bármikor telepítheti az alkalmazásból."
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "A(z) {productName} lehetséges összehangolt támadást észlelt itt. A 
 msgid "{productName} Staff"
 msgstr "{productName} munkatárs"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "A(z) {productName} leállítja a frissítések letöltését. Lehet, hogy elavul, és nem fog működni a szolgáltatással, amíg a frissítések újra engedélyezve nem lesznek. A következő indításkor lép életbe a(z) {productName} esetében."
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "{productName} Visionary"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} Visionary {premiumSinceFormatted} óta"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "A(z) {productName} nem frissül indulás közben. Ha elérhető egy frissítés, bármikor telepítheted az alkalmazásban. A következő indításkor lép életbe a(z) {productName} esetén."
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx

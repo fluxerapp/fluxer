@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "O {PRODUCT_NAME} precisa reiniciar para desativar a aceleração de hardware do Chromium. Use isso apenas se você estiver solucionando problemas gráficos ou alto uso da GPU."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "O {PRODUCT_NAME} precisa reiniciar para voltar a baixar atualizações."
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "O {PRODUCT_NAME} precisa reiniciar para instalar atualizações automaticamente de novo."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "O {PRODUCT_NAME} precisa reiniciar para parar de baixar atualizações. Ele pode ficar desatualizado e parar de funcionar com o serviço até que você reative as atualizações."
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "O {PRODUCT_NAME} precisa reiniciar para parar de atualizar durante a inicialização. Quando uma atualização estiver disponível, você poderá instalá-la no app quando quiser."
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "O {productName} detectou um possível ataque aqui. Os convites estão pa
 msgid "{productName} Staff"
 msgstr "Equipe {productName}"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "O {productName} para de baixar atualizações. Ele pode ficar desatualizado e parar de funcionar com o serviço até que as atualizações sejam reativadas. Entra em vigor na próxima vez que o {productName} for iniciado."
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "{productName} Visionary"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} Visionary desde {premiumSinceFormatted}"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "O {productName} não será atualizado durante a inicialização. Quando uma atualização estiver disponível, você poderá instalá-la no app quando quiser. Entra em vigor na próxima vez que o {productName} for iniciado."
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx

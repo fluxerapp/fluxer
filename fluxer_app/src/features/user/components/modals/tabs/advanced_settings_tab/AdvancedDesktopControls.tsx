@@ -266,12 +266,13 @@ export const AutomaticUpdatesControl = observer(() => {
 						description={
 							value ? (
 								<Trans>
-									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to stop downloading updates. It can
-									fall behind and stop working with the service until you turn updates back on.
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to stop updating while starting. When
+									an update is available, you can install it from the app whenever you like.
 								</Trans>
 							) : (
 								<Trans>
-									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to start downloading updates again.
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to install updates automatically
+									again.
 								</Trans>
 							)
 						}

@@ -13,9 +13,7 @@ const {getDesktopTroubleshootingSettings, loadDesktopConfig, setDesktopTroublesh
 	'../common/DesktopConfig.ts'
 );
 const {shouldDisableModuleUpdatesForLaunch} = await import('./LaunchOptions.ts');
-const {areModuleUpdatesDisabled, resolveEffectiveDesktopTroubleshootingSettings} = await import(
-	'./DesktopDebugInfo.ts'
-);
+const {isUpdateOnDemandLaunch, resolveEffectiveDesktopTroubleshootingSettings} = await import('./DesktopDebugInfo.ts');
 
 function loadSettings(troubleshooting) {
 	const userDataPath = fs.mkdtempSync(path.join(os.tmpdir(), 'fluxer-desktop-module-updates-setting-test-'));
@@ -112,9 +110,25 @@ describe('disabling module updates', () => {
 	test('keeps the launch answer when the persisted setting changes without a restart', () => {
 		withModuleUpdatesEnv(undefined, () => {
 			loadSettings({disableModuleUpdates: true});
-			assert.equal(areModuleUpdatesDisabled(), true);
+			assert.equal(isUpdateOnDemandLaunch(), true);
 			setDesktopTroubleshootingSettings({disableModuleUpdates: false});
-			assert.equal(areModuleUpdatesDisabled(), true);
+			assert.equal(isUpdateOnDemandLaunch(), true);
+		});
+	});
+
+	test('the persisted setting moves updates on demand and leaves the in-app update check on', () => {
+		withModuleUpdatesEnv(undefined, () => {
+			loadSettings({disableModuleUpdates: true});
+			assert.equal(isUpdateOnDemandLaunch(), true);
+			assert.equal(shouldDisableModuleUpdatesForLaunch([]), false);
+		});
+	});
+
+	test('the environment variable turns updates off entirely, even with the setting on', () => {
+		withModuleUpdatesEnv('1', () => {
+			loadSettings({disableModuleUpdates: true});
+			assert.equal(isUpdateOnDemandLaunch(), false);
+			assert.equal(shouldDisableModuleUpdatesForLaunch([]), true);
 		});
 	});
 });

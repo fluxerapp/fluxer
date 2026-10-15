@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} trebuie să repornească pentru a dezactiva accelerarea hardware a Chromium. Folosește această opțiune doar dacă depanezi erori grafice sau o utilizare ridicată a GPU-ului."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "{PRODUCT_NAME} trebuie repornit pentru a începe din nou descărcarea actualizărilor."
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "{PRODUCT_NAME} trebuie repornit pentru a instala din nou automat actualizările."
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "{PRODUCT_NAME} trebuie repornit pentru a opri descărcarea actualizărilor. Poate rămâne în urmă și nu va mai funcționa cu serviciul până când nu vei reactiva actualizările."
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "{PRODUCT_NAME} trebuie repornit pentru a opri actualizările la pornire. Când o actualizare este disponibilă, o poți instala din aplicație oricând dorești."
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "{productName} a detectat un posibil raid aici. Invitațiile sunt întrer
 msgid "{productName} Staff"
 msgstr "Echipa {productName}"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "{productName} nu va mai descărca actualizări. Poate rămâne în urmă și nu va mai funcționa cu serviciul până când actualizările nu vor fi reactivate. Efectul se va aplica la următoarea pornire a {productName}."
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "Vizionar {productName}"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "Vizionar {productName} din {premiumSinceFormatted}"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "{productName} nu se va actualiza în timpul pornirii. Când o actualizare este disponibilă, o poți instala din aplicație oricând dorești. Va intra în vigoare la următoarea pornire a {productName}."
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx

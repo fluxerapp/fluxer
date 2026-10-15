@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "क्रोमियम का हार्डवेयर एक्सीलरेशन बंद करने के लिए {PRODUCT_NAME} को रीस्टार्ट करना होगा। इसे तभी इस्तेमाल करें जब आप ग्राफ़िक्स की गड़बड़ियों या ज़्यादा GPU इस्तेमाल की समस्या सुलझा रहे हों।"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "{PRODUCT_NAME} को अपडेट फिर से डाउनलोड करना शुरू करने के लिए पुनरारंभ करने की आवश्यकता है।"
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "{PRODUCT_NAME} को स्वचालित रूप से अपडेट फिर से इंस्टॉल करने के लिए पुनरारंभ करने की आवश्यकता है।"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "{PRODUCT_NAME} को अपडेट डाउनलोड करना बंद करने के लिए पुनरारंभ करने की आवश्यकता है। यह पीछे रह सकता है और तब तक सेवा के साथ काम करना बंद कर सकता है जब तक आप अपडेट को वापस चालू नहीं कर देते।"
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "{PRODUCT_NAME} को रीस्टार्ट करने की आवश्यकता है ताकि वह शुरू होने पर अपडेट होना बंद कर दे। जब कोई अपडेट उपलब्ध हो, तो आप उसे ऐप से अपनी सुविधानुसार इंस्टॉल कर सकते हैं।"
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "{productName} को यहाँ संभावित रेड का
 msgid "{productName} Staff"
 msgstr "{productName} स्टाफ़"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "{productName} अपडेट डाउनलोड करना बंद कर देगा। यह पीछे रह सकता है और अपडेट चालू होने तक सेवा के साथ काम करना बंद कर सकता है। यह अगली बार {productName} शुरू होने पर प्रभावी होगा।"
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "{productName} विजनरी"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} विजनरी, {premiumSinceFormatted} से"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "{productName} शुरू होने पर अपडेट नहीं होगा। जब कोई अपडेट उपलब्ध होगा, तो आप उसे अपनी इच्छानुसार ऐप से इंस्टॉल कर सकते हैं। यह अगली बार {productName} शुरू होने पर प्रभावी होगा।"
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx

@@ -106,8 +106,8 @@ export function getLaunchDesktopTroubleshootingSettings(): DesktopTroubleshootin
 	return launchTroubleshootingSettings;
 }
 
-export function areModuleUpdatesDisabled(): boolean {
-	return getLaunchDesktopTroubleshootingSettings().disableModuleUpdates;
+export function isUpdateOnDemandLaunch(): boolean {
+	return getLaunchDesktopTroubleshootingSettings().disableModuleUpdates && !shouldDisableModuleUpdatesForLaunch();
 }
 
 export function shouldOpenDevToolsOnLaunch(argv: ReadonlyArray<string>): boolean {

@@ -1803,12 +1803,12 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "Chromiumのハードウェアアクセラレーションを無効にするには、{PRODUCT_NAME}を再起動する必要があります。この設定は、グラフィックの不具合やGPU使用率の高さをトラブルシューティングする場合にのみ使用してください。"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to start downloading updates again."
-msgstr "{PRODUCT_NAME} で再度アップデートのダウンロードを開始するには、再起動が必要です。"
+msgid "{PRODUCT_NAME} needs to restart to install updates automatically again."
+msgstr "{PRODUCT_NAME} で自動的にアップデートを再度インストールするには、再起動が必要です。"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx
-msgid "{PRODUCT_NAME} needs to restart to stop downloading updates. It can fall behind and stop working with the service until you turn updates back on."
-msgstr "{PRODUCT_NAME} はアップデートのダウンロードを停止するために再起動が必要です。遅延すると、サービスで動作しなくなる可能性があります。アップデートを再度有効にするまで、そのままになります。"
+msgid "{PRODUCT_NAME} needs to restart to stop updating while starting. When an update is available, you can install it from the app whenever you like."
+msgstr "{PRODUCT_NAME} を再起動すると、起動中のアップデートが停止します。アップデートが利用可能な場合は、いつでもアプリからインストールできます。"
 
 #. Desktop updater modal body for a Flatpak install when a newer desktop version exists. The version placeholder is the new app version and productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -2019,11 +2019,6 @@ msgstr "{productName}がここでレイドの可能性を検出しました。�
 msgid "{productName} Staff"
 msgstr "{productName}スタッフ"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
-msgid "{productName} stops downloading updates. It can fall behind and stop working with the service until updates are turned back on. Takes effect the next time {productName} starts."
-msgstr "{productName} によるアップデートのダウンロードを停止します。これにより、バージョンが古くなり、アップデートが再度有効になるまでサービスで動作しなくなる可能性があります。次回 {productName} を起動したときに有効になります。"
-
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded."
@@ -2038,6 +2033,11 @@ msgstr "{productName}ビジョナリー"
 #: src/features/user/components/popouts/UserProfileBadges.tsx
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName}ビジョナリー（{premiumSinceFormatted}から）"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
+msgid "{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts."
+msgstr "{productName}は起動中はアップデートされません。アップデートが利用可能な場合は、いつでもアプリからインストールできます。次回 {productName} を起動したときに適用されます。"
 
 #. Accessible label for the application wordmark.
 #: src/features/ui/components/icons/FluxerWordmark.tsx
