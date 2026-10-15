@@ -17,7 +17,6 @@ export interface VoiceInputLevel {
 	rms: number;
 	floorRms: number;
 	thresholdRms: number;
-	speaking: boolean;
 	nonFinite: boolean;
 	frame: number;
 	contextTime: number;

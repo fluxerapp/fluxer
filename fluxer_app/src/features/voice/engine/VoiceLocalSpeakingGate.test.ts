@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	type LocalSpeakingOverrideInput,
-	resolveLocalSpeakingOverrideState,
+	isLocalSpeakingSuppressed,
+	type LocalSpeakingSuppressionInput,
 } from '@app/features/voice/engine/VoiceLocalSpeakingGate';
 import {describe, expect, it} from 'vitest';
 
-function input(overrides: Partial<LocalSpeakingOverrideInput>): LocalSpeakingOverrideInput {
+function input(overrides: Partial<LocalSpeakingSuppressionInput>): LocalSpeakingSuppressionInput {
 	return {
-		pushToTalkActive: true,
-		pushToMuteActive: false,
-		pushToMuteHeld: false,
 		selfDeaf: false,
 		effectiveSelfMute: false,
 		hasMicrophonePublication: true,
@@ -19,15 +16,15 @@ function input(overrides: Partial<LocalSpeakingOverrideInput>): LocalSpeakingOve
 	};
 }
 
-describe('resolveLocalSpeakingOverrideState in push to talk', () => {
-	it('never lights the speaking indicator for a self-muted user holding the key', () => {
-		expect(resolveLocalSpeakingOverrideState(input({effectiveSelfMute: true}))).toBe(false);
-		expect(resolveLocalSpeakingOverrideState(input({effectiveSelfMute: true, microphonePublicationMuted: true}))).toBe(
-			false,
-		);
+describe('isLocalSpeakingSuppressed', () => {
+	it('lets the measured outgoing audio decide for a live, unmuted microphone', () => {
+		expect(isLocalSpeakingSuppressed(input({}))).toBe(false);
 	});
 
-	it('lights the speaking indicator for an unmuted user holding the key', () => {
-		expect(resolveLocalSpeakingOverrideState(input({}))).toBe(true);
+	it('suppresses the indicator whenever nothing is sent', () => {
+		expect(isLocalSpeakingSuppressed(input({effectiveSelfMute: true}))).toBe(true);
+		expect(isLocalSpeakingSuppressed(input({selfDeaf: true}))).toBe(true);
+		expect(isLocalSpeakingSuppressed(input({hasMicrophonePublication: false}))).toBe(true);
+		expect(isLocalSpeakingSuppressed(input({microphonePublicationMuted: true}))).toBe(true);
 	});
 });

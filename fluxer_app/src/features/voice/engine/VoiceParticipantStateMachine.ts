@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SPEAKING_REMOTE_ATTACK_MS, SPEAKING_REMOTE_RELEASE_MS} from '@app/features/voice/engine/VoiceSpeakingThreshold';
+import {advanceSpeakingHysteresis, type SpeakingHysteresis} from '@app/features/voice/engine/VoiceSpeakingThreshold';
 import type {VoiceConnectionQuality} from '@app/features/voice/engine/VoiceTrackSource';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
@@ -25,12 +25,9 @@ export type LivekitParticipantSnapshot = Readonly<{
 	lastSpokeAt: number | null;
 }>;
 
-interface RemoteSpeakingAnalyserState {
+interface RemoteSpeakingAnalyserState extends SpeakingHysteresis {
 	identity: string;
 	track: unknown;
-	speaking: boolean;
-	belowSinceMs: number | null;
-	aboveSinceMs: number | null;
 	playbackBoost: number;
 	appliedBoost: number;
 }
@@ -172,29 +169,12 @@ function tickRemoteAnalyser(
 	if (event.trackEnded) return detachRemoteAnalyser(context, event.identity);
 
 	const commands: Array<VoiceRemoteSpeakingCommand> = [];
-	let entry = existing;
-	if (event.rms >= event.threshold) {
-		const aboveSinceMs = entry.aboveSinceMs ?? event.nowMs;
-		entry = {
-			...entry,
-			belowSinceMs: null,
-			aboveSinceMs,
-		};
-		if (!entry.speaking && event.nowMs - aboveSinceMs >= SPEAKING_REMOTE_ATTACK_MS) {
-			entry = {...entry, speaking: true};
-			commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: true});
-		}
-	} else {
-		const belowSinceMs = entry.belowSinceMs ?? event.nowMs;
-		entry = {
-			...entry,
-			aboveSinceMs: null,
-			belowSinceMs,
-		};
-		if (entry.speaking && event.nowMs - belowSinceMs >= SPEAKING_REMOTE_RELEASE_MS) {
-			entry = {...entry, speaking: false};
-			commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: false});
-		}
+	let entry: RemoteSpeakingAnalyserState = {
+		...existing,
+		...advanceSpeakingHysteresis(existing, event.rms, event.threshold, event.nowMs),
+	};
+	if (entry.speaking !== existing.speaking) {
+		commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: entry.speaking});
 	}
 	const boostUpdate = updateRemotePlaybackBoost(entry, event.rms, event.threshold, event.nowMs);
 	entry = boostUpdate.entry;

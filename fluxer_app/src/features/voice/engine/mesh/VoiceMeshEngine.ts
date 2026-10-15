@@ -29,14 +29,7 @@ import {
 } from '@app/features/voice/engine/mesh/VoiceMeshSignal';
 import {VoiceMeshSignalClient} from '@app/features/voice/engine/mesh/VoiceMeshSignalClient';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
-import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import {
-	getRemoteSpeakingThresholdRms,
-	SPEAKING_REMOTE_RELEASE_MS,
-} from '@app/features/voice/engine/VoiceSpeakingThreshold';
-import {computeTimeDomainRms} from '@app/features/voice/engine/v2/VoiceEngineV2AppRemoteSpeakingAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {
@@ -56,7 +49,6 @@ import {
 	type Room,
 	RTCEngine,
 	type SignalOptions,
-	SpeakerInfo,
 	Track,
 	TrackInfo,
 	TrackInvalidError,
@@ -68,7 +60,6 @@ const logger = new Logger('VoiceMeshEngine');
 
 const INBOX_LIMIT = 64;
 const CONVERSION_GRACE_MS = 10_000;
-const SPEAKING_TICK_MS = 50;
 const SCREEN_SHARE_BUDGET_BPS = 12_000_000;
 const CAMERA_BUDGET_BPS = 4_000_000;
 const MESH_VIDEO_CODEC_MIME_TYPES = ['video/H264', 'video/VP8'];
@@ -79,16 +70,6 @@ export interface VoiceMeshTarget {
 	channelId: string;
 	connectionId: string;
 	userId: string;
-}
-
-interface SpeakingAnalyser {
-	track: MediaStreamTrack;
-	source: MediaStreamAudioSourceNode;
-	analyser: AnalyserNode;
-	samples: Float32Array<ArrayBuffer>;
-	timer: ReturnType<typeof setInterval>;
-	lastLoudAt: number | null;
-	active: boolean;
 }
 
 let activeEngine: VoiceMeshEngine | null = null;
@@ -156,7 +137,6 @@ export class VoiceMeshEngine extends RTCEngine {
 	private tracks: {v: number; tracks: Array<VoiceMeshTrackInfo>} = {v: this.version, tracks: []};
 	private conversionTimer: ReturnType<typeof setTimeout> | null = null;
 	private conversionHeld = false;
-	private speaking: SpeakingAnalyser | null = null;
 
 	constructor(options: InternalRoomOptions, target: VoiceMeshTarget) {
 		super(options);
@@ -237,7 +217,6 @@ export class VoiceMeshEngine extends RTCEngine {
 			),
 		];
 		this.syncRoster();
-		this.syncSpeaking();
 	}
 
 	override async createSender(
@@ -296,7 +275,6 @@ export class VoiceMeshEngine extends RTCEngine {
 
 	syncSender(src: VoiceMeshSource): Promise<void> {
 		this.refreshTracks();
-		if (src === 'microphone') this.syncSpeaking();
 		return Promise.all(Array.from(this.peers.values(), (peer) => peer.requestSenderSync(src))).then(() => undefined);
 	}
 
@@ -584,55 +562,6 @@ export class VoiceMeshEngine extends RTCEngine {
 		this.conversionTimer = null;
 	}
 
-	private syncSpeaking(): void {
-		const microphone = this.senders.microphone;
-		const track = this.room && microphone.sid !== null ? microphone.track : null;
-		if ((this.speaking?.track ?? null) === track) return;
-		this.stopSpeaking();
-		if (!track) return;
-		const context = getSharedVoiceAudioContext();
-		if (!context) return;
-		const source = context.createMediaStreamSource(new MediaStream([track]));
-		const analyser = context.createAnalyser();
-		analyser.fftSize = 512;
-		source.connect(analyser);
-		const speaking: SpeakingAnalyser = {
-			track,
-			source,
-			analyser,
-			samples: new Float32Array(analyser.fftSize),
-			timer: setInterval(() => this.tickSpeaking(speaking), SPEAKING_TICK_MS),
-			lastLoudAt: null,
-			active: false,
-		};
-		this.speaking = speaking;
-	}
-
-	private tickSpeaking(speaking: SpeakingAnalyser): void {
-		speaking.analyser.getFloatTimeDomainData(speaking.samples);
-		const level = computeTimeDomainRms(speaking.samples);
-		const now = performance.now();
-		if (level >= getRemoteSpeakingThresholdRms(VoiceSettings.getVadThreshold())) speaking.lastLoudAt = now;
-		const active = speaking.lastLoudAt !== null && now - speaking.lastLoudAt < SPEAKING_REMOTE_RELEASE_MS;
-		if (active === speaking.active) return;
-		speaking.active = active;
-		this.emitLocalSpeaking(level, active);
-	}
-
-	private stopSpeaking(): void {
-		const speaking = this.speaking;
-		if (!speaking) return;
-		this.speaking = null;
-		clearInterval(speaking.timer);
-		speaking.source.disconnect();
-		speaking.analyser.disconnect();
-		if (speaking.active) this.emitLocalSpeaking(0, false);
-	}
-
-	private emitLocalSpeaking(level: number, active: boolean): void {
-		this.emit(EngineEvent.SpeakersChanged, [new SpeakerInfo({sid: this.localParticipantSid, level, active})]);
-	}
-
 	private stopMesh(): void {
 		if (!this.room) return;
 		this.room = null;
@@ -646,7 +575,6 @@ export class VoiceMeshEngine extends RTCEngine {
 		}
 		this.peers.clear();
 		this.inbox.clear();
-		this.stopSpeaking();
 		flushVoiceMeshConnectionReports();
 	}
 

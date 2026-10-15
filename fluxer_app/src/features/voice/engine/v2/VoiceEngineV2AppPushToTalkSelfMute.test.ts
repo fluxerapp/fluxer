@@ -3,10 +3,11 @@
 
 import type {Room} from 'livekit-client';
 import {Track} from 'livekit-client';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const syncLocalVoiceStateWithServer = vi.fn();
 const setVoiceEngineV2ParticipantAudioLevelSpeaking = vi.fn(() => true);
+const outgoingAudio = vi.hoisted(() => ({rms: 0}));
 
 const keybind = {
 	pushToTalkEnabled: true,
@@ -63,6 +64,18 @@ vi.mock('@app/features/voice/state/LocalVoiceState', () => ({default: localVoice
 
 vi.mock('@app/features/voice/engine/MediaEngineFacade', () => ({default: {}, useMediaEngineVersion: () => 0}));
 
+vi.mock('@app/features/voice/engine/VoiceSharedAudioContext', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@app/features/voice/engine/VoiceSharedAudioContext')>()),
+	getSharedVoiceAudioContext: () => ({
+		state: 'running',
+		createMediaStreamSource: () => ({connect: () => undefined, disconnect: () => undefined}),
+		createAnalyser: () => ({
+			disconnect: () => undefined,
+			getFloatTimeDomainData: (target: Float32Array) => target.fill(outgoingAudio.rms),
+		}),
+	}),
+}));
+
 vi.mock('@app/features/voice/engine/VoiceMediaEngineBridge', () => ({
 	getRoomFromMediaEngine: () => null,
 	getVoiceConnectionContextFromMediaEngine: () => null,
@@ -82,7 +95,12 @@ const {default: adapter} = await import('@app/features/voice/engine/v2/VoiceEngi
 interface FakeMicrophonePublication {
 	source: Track.Source;
 	isMuted: boolean;
-	track: {mediaStreamTrack: {readyState: string}};
+	track: {
+		mediaStreamTrack: {readyState: string; getSettings(): MediaTrackSettings; getConstraints(): MediaTrackConstraints};
+		getProcessor(): undefined;
+		on(): void;
+		off(): void;
+	};
 	mute: ReturnType<typeof vi.fn>;
 	unmute: ReturnType<typeof vi.fn>;
 }
@@ -91,7 +109,12 @@ function createMicrophonePublication(): FakeMicrophonePublication {
 	const publication: FakeMicrophonePublication = {
 		source: Track.Source.Microphone,
 		isMuted: true,
-		track: {mediaStreamTrack: {readyState: 'live'}},
+		track: {
+			mediaStreamTrack: {readyState: 'live', getSettings: () => ({}), getConstraints: () => ({})},
+			getProcessor: () => undefined,
+			on: () => undefined,
+			off: () => undefined,
+		},
 		mute: vi.fn(async () => {
 			publication.isMuted = true;
 		}),
@@ -120,7 +143,7 @@ function lastSyncedSelfMute(): unknown {
 	return (call?.[0] as {self_mute?: boolean} | undefined)?.self_mute;
 }
 
-function lastSpeakingOverride(): unknown {
+function lastSpeaking(): unknown {
 	return setVoiceEngineV2ParticipantAudioLevelSpeaking.mock.calls.at(-1)?.[1 as never];
 }
 
@@ -147,7 +170,7 @@ describe('push to talk with self-mute', () => {
 		expect(publication.mute).toHaveBeenCalled();
 		expect(publication.isMuted).toBe(true);
 		expect(lastSyncedSelfMute()).toBe(true);
-		expect(lastSpeakingOverride()).toBe(false);
+		expect(lastSpeaking()).toBe(false);
 		adapter.applyPushToTalkHold(false, room, noServerVoiceState);
 		expect(publication.unmute).not.toHaveBeenCalled();
 		expect(lastSyncedSelfMute()).toBe(true);
@@ -160,11 +183,11 @@ describe('push to talk with self-mute', () => {
 		adapter.applyPushToTalkHold(true, room, noServerVoiceState);
 		expect(publication.unmute).toHaveBeenCalledTimes(1);
 		expect(lastSyncedSelfMute()).toBe(false);
-		expect(lastSpeakingOverride()).toBe(true);
+		expect(lastSpeaking()).toBe(false);
 		adapter.applyPushToTalkHold(false, room, noServerVoiceState);
 		expect(publication.isMuted).toBe(true);
 		expect(lastSyncedSelfMute()).toBe(true);
-		expect(lastSpeakingOverride()).toBe(false);
+		expect(lastSpeaking()).toBe(false);
 	});
 
 	it('transmits when the user unmutes while the key is still held', () => {
@@ -226,5 +249,73 @@ describe('push to talk with self-mute', () => {
 		expect(publication?.isMuted).toBe(false);
 		expect(lastSyncedSelfMute()).toBe(false);
 		enableMicrophone.mockRestore();
+	});
+});
+
+interface LocalSpeakingMeterProbe {
+	startLocalSpeakingDetector(room: Room): void;
+	stopLocalSpeakingDetector(room?: Room | null): void;
+	localSpeakingMeter: {tick(nowMs: number): void} | null;
+}
+
+describe('local speaking indicator in push to talk', () => {
+	const probe = adapter as unknown as LocalSpeakingMeterProbe;
+	let nowMs = 0;
+
+	function tick(rms: number, ticks = 1): void {
+		outgoingAudio.rms = rms;
+		for (let index = 0; index < ticks; index++) {
+			nowMs += 50;
+			probe.localSpeakingMeter?.tick(nowMs);
+		}
+	}
+
+	beforeEach(() => {
+		vi.stubGlobal('MediaStream', class {});
+		keybind.pushToTalkEnabled = true;
+		keybind.pushToTalkHeld = false;
+		localVoiceState.selfMute = false;
+		localVoiceState.selfDeaf = false;
+		outgoingAudio.rms = 0;
+		setVoiceEngineV2ParticipantAudioLevelSpeaking.mockClear();
+	});
+
+	afterEach(() => {
+		probe.stopLocalSpeakingDetector();
+		vi.unstubAllGlobals();
+	});
+
+	function startWithMicrophone(): {room: Room; publication: FakeMicrophonePublication} {
+		const {room, publications} = createRoom();
+		const publication = createMicrophonePublication();
+		publications.set('mic', publication);
+		probe.startLocalSpeakingDetector(room);
+		return {room, publication};
+	}
+
+	it('stays dark while the key is held and nothing audible is sent', () => {
+		const {room} = startWithMicrophone();
+		adapter.applyPushToTalkHold(true, room, noServerVoiceState);
+		tick(0.001, 10);
+		expect(setVoiceEngineV2ParticipantAudioLevelSpeaking).not.toHaveBeenCalledWith(expect.anything(), true);
+	});
+
+	it('lights for speech sent while the key is held and goes dark the moment it is released', () => {
+		const {room} = startWithMicrophone();
+		adapter.applyPushToTalkHold(true, room, noServerVoiceState);
+		tick(0.05, 2);
+		expect(lastSpeaking()).toBe(true);
+		adapter.applyPushToTalkHold(false, room, noServerVoiceState);
+		expect(lastSpeaking()).toBe(false);
+		tick(0.05, 4);
+		expect(setVoiceEngineV2ParticipantAudioLevelSpeaking).toHaveBeenLastCalledWith(expect.anything(), false);
+	});
+
+	it('never lights for a self-muted user, however loud the microphone is', () => {
+		const {room} = startWithMicrophone();
+		localVoiceState.selfMute = true;
+		adapter.applyPushToTalkHold(true, room, noServerVoiceState);
+		tick(0.2, 10);
+		expect(setVoiceEngineV2ParticipantAudioLevelSpeaking).not.toHaveBeenCalledWith(expect.anything(), true);
 	});
 });

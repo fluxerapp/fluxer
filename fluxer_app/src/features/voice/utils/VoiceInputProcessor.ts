@@ -461,8 +461,6 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 	readonly name = 'fluxer-voice-input-processor';
 	processedTrack?: MediaStreamTrack;
 	private state: 'idle' | 'live' | 'destroyed' = 'idle';
-	private readonly levelListeners = new Set<(level: VoiceInputLevel) => void>();
-	private latestLevel: VoiceInputLevel | null = null;
 	private hasRunningLevel = false;
 	private lease: VoiceInputContextLease | null = null;
 	private graph: VoiceInputGraph | null = null;
@@ -485,7 +483,7 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 			context,
 			this.channelCount,
 			resolveVoiceInputConfig,
-			(level) => this.emitLevel(level, true),
+			() => this.noteLevel(),
 			() => this.events.onGraphFailed(this),
 			() => this.reportRuntime(),
 		);
@@ -528,22 +526,10 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 		if (this.state === 'live') this.graph?.reportRuntime(this);
 	}
 
-	onLevel(listener: (level: VoiceInputLevel) => void): () => void {
-		this.levelListeners.add(listener);
-		if (this.latestLevel) listener(this.latestLevel);
-		return () => {
-			this.levelListeners.delete(listener);
-		};
-	}
-
-	private emitLevel(level: VoiceInputLevel, fromWorklet = false): void {
-		if (this.state !== 'live') return;
-		if (fromWorklet && !this.hasRunningLevel && this.lease?.context.state === 'running') {
-			this.hasRunningLevel = true;
-			NoiseSuppressionAvailability.setVoiceInputGraphUnavailable(false);
-		}
-		this.latestLevel = level;
-		for (const listener of this.levelListeners) listener(level);
+	private noteLevel(): void {
+		if (this.state !== 'live' || this.hasRunningLevel || this.lease?.context.state !== 'running') return;
+		this.hasRunningLevel = true;
+		NoiseSuppressionAvailability.setVoiceInputGraphUnavailable(false);
 	}
 
 	private watchContextState(): void {
@@ -553,7 +539,6 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 			this.clearStallTimer();
 			return;
 		}
-		if (this.latestLevel) this.emitLevel({...this.latestLevel, rms: 0, speaking: false});
 		this.stallTimer ??= setTimeout(() => {
 			this.stallTimer = null;
 			if (this.state === 'live' && context.state !== 'running') this.events.onGraphStalled(this);
@@ -568,8 +553,6 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 
 	async destroy(): Promise<void> {
 		if (this.state === 'destroyed') return;
-		if (this.latestLevel) this.emitLevel({...this.latestLevel, rms: 0, speaking: false});
-		this.levelListeners.clear();
 		this.state = 'destroyed';
 		NoiseSuppressionAvailability.clearVoiceInputRuntime(this);
 		this.clearStallTimer();
