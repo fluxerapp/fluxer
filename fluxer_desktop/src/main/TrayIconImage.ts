@@ -12,7 +12,6 @@ const SUBSAMPLES = 4;
 const MIN_GLYPH_CONTRAST = 32;
 const GLYPH_CUTOUT_START = 0.1;
 const GLYPH_CUTOUT_END = 0.5;
-const KDE_TRAY_CANVAS_RATIO = 22 / 16;
 const DOT_BGR: Bgr = [0x00, 0x00, 0xdd];
 const TEMPLATE_DOT_BGR: Bgr = [0x00, 0x00, 0x00];
 const GLYPH_BGR: Readonly<Record<'white' | 'black', Bgr>> = {
@@ -115,30 +114,9 @@ export function paintTrayIndicatorDot(bitmap: Buffer, width: number, height: num
 	}
 }
 
-export function padTrayIconBitmap(
-	bitmap: Buffer,
-	width: number,
-	height: number,
-): {buffer: Buffer; width: number; height: number} {
-	const paddedWidth = Math.round(width * KDE_TRAY_CANVAS_RATIO);
-	const paddedHeight = Math.round(height * KDE_TRAY_CANVAS_RATIO);
-	const left = Math.floor((paddedWidth - width) / 2);
-	const top = Math.floor((paddedHeight - height) / 2);
-	const buffer = Buffer.alloc(paddedWidth * paddedHeight * 4);
-	for (let y = 0; y < height; y++) {
-		bitmap.copy(buffer, ((top + y) * paddedWidth + left) * 4, y * width * 4, (y + 1) * width * 4);
-	}
-	return {buffer, width: paddedWidth, height: paddedHeight};
-}
-
-export function renderTrayIcon(
-	base: NativeImage,
-	appearance: TrayIconAppearance,
-	indicator: boolean,
-	padded: boolean,
-): NativeImage {
+export function renderTrayIcon(base: NativeImage, appearance: TrayIconAppearance, indicator: boolean): NativeImage {
 	const monochrome = appearance === 'white' || appearance === 'black';
-	if (!monochrome && !indicator && !padded) {
+	if (!monochrome && !indicator) {
 		return base;
 	}
 	const result = nativeImage.createEmpty();
@@ -155,10 +133,7 @@ export function renderTrayIcon(
 		if (indicator) {
 			paintTrayIndicatorDot(bitmap, width, height, appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR);
 		}
-		result.addRepresentation({
-			scaleFactor,
-			...(padded ? padTrayIconBitmap(bitmap, width, height) : {width, height, buffer: bitmap}),
-		});
+		result.addRepresentation({scaleFactor, width, height, buffer: bitmap});
 	}
 	if (result.isEmpty()) {
 		return base;
