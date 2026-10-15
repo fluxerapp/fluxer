@@ -270,6 +270,21 @@ describe('runtimeSnapshotFromDiscovery', () => {
 		).toThrow(/appPublic\.branding\.icon_url/u);
 	});
 
+	test('treats a black or malformed theme colour as unset and normalises the rest', () => {
+		const snapshot = runtimeSnapshotFromDiscovery(parsedDocument('t.test'));
+		const themeColorOf = (theme_color: unknown) =>
+			requireRuntimeConfigSnapshot({
+				...snapshot,
+				appPublic: {...snapshot.appPublic, branding: {...snapshot.appPublic.branding, theme_color}},
+			}).appPublic.branding.theme_color;
+		for (const unset of ['#000000', '#000', '000000', '', 'rgb(1, 2, 3)', 'rebeccapurple', 0, null]) {
+			expect(themeColorOf(unset)).toBeNull();
+		}
+		expect(themeColorOf('#FF0000')).toBe('#ff0000');
+		expect(themeColorOf(' f00 ')).toBe('#ff0000');
+		expect(themeColorOf('#000001')).toBe('#000001');
+	});
+
 	test('carries the advertised domain migration', () => {
 		const domainMigration = {
 			enabled: true,

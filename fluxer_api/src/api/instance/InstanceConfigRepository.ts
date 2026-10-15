@@ -57,6 +57,7 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {resolveSmtpTlsMode, type SmtpTlsMode, smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
 import {
 	InstanceConfigResponse,
 	InstanceConfigUpdateRequest,
@@ -412,14 +413,6 @@ function normalizeOptionalString(value: unknown): string | null {
 
 function normalizeOptionalPublicString(value: string | null | undefined, fallback: string | null): string | null {
 	return value === undefined ? fallback : normalizeOptionalString(value);
-}
-
-function normalizeThemeColor(value: unknown): string | null {
-	const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(normalizeOptionalString(value) ?? '');
-	if (match === null) return null;
-	const digits = match[1].toLowerCase();
-	const color = `#${digits.length === 3 ? digits.replace(/./g, '$&$&') : digits}`;
-	return color === '#000000' ? null : color;
 }
 
 function getDefaultPremiumProductName(): string {

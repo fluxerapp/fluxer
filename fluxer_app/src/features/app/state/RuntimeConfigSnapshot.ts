@@ -14,6 +14,7 @@ import {
 } from '@fluxer/instance_bootstrap/src/Discovery';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {CanonicalNetworkProtocol} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
+import {normalizeThemeColor} from '@fluxer/instance_bootstrap/src/ThemeColor';
 import {
 	AGE_POLICY_ACTIONS,
 	type InstanceAgePolicy,
@@ -413,7 +414,7 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 			logo_url: readNullableAbsoluteHttpUrl(branding, 'logo_url', 'appPublic.branding.logo_url'),
 			wordmark_url: readNullableAbsoluteHttpUrl(branding, 'wordmark_url', 'appPublic.branding.wordmark_url'),
 			favicon_url: readNullableAbsoluteHttpUrl(branding, 'favicon_url', 'appPublic.branding.favicon_url'),
-			theme_color: readNullableNonEmptyString(branding, 'theme_color', 'appPublic.branding.theme_color'),
+			theme_color: normalizeThemeColor(branding.theme_color),
 			status_page_url: readOptionalText(branding, 'status_page_url'),
 			status_page_incident_history_url: readOptionalText(branding, 'status_page_incident_history_url'),
 			premium_product_name: readOptionalText(branding, 'premium_product_name') ?? DEFAULT_PREMIUM_PRODUCT_NAME,

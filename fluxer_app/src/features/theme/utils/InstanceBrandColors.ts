@@ -10,19 +10,11 @@ export const INSTANCE_BRAND_VARIABLES = [
 
 type InstanceBrandVariable = (typeof INSTANCE_BRAND_VARIABLES)[number];
 
-const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
 
 function parseHexColor(value: string): [number, number, number] | null {
-	const trimmed = value.trim();
-	if (!HEX_COLOR_PATTERN.test(trimmed)) return null;
-	const digits =
-		trimmed.length === 4
-			? trimmed
-					.slice(1)
-					.split('')
-					.map((digit) => digit + digit)
-					.join('')
-			: trimmed.slice(1);
+	if (!HEX_COLOR_PATTERN.test(value)) return null;
+	const digits = value.slice(1);
 	return [
 		Number.parseInt(digits.slice(0, 2), 16),
 		Number.parseInt(digits.slice(2, 4), 16),
