@@ -22857,6 +22857,82 @@
 				}
 			}
 		},
+		"/webhooks/{webhook_id}/{token}/libredesk": {
+			"post": {
+				"operationId": "execute_libredesk_webhook",
+				"summary": "Execute Libredesk webhook",
+				"tags": ["Webhooks"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Receives and processes Libredesk help desk webhook events, formatting them as messages in the configured channel.",
+				"parameters": [
+					{
+						"name": "webhook_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the webhook", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the webhook"
+					},
+					{
+						"name": "token",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The webhook token", "type": "string"},
+						"description": "The webhook token"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/LibredeskWebhook"}}}
+				}
+			}
+		},
 		"/webhooks/{webhook_id}/{token}/messages/{message_id}": {
 			"get": {
 				"operationId": "get_webhook_message",
@@ -23674,6 +23750,93 @@
 					"mention_roles"
 				],
 				"additionalProperties": false
+			},
+			"LibredeskWebhook": {
+				"type": "object",
+				"properties": {
+					"event": {"type": "string"},
+					"payload": {
+						"type": "object",
+						"properties": {
+							"uuid": {"type": ["string", "null"]},
+							"reference_number": {"type": ["string", "null"]},
+							"subject": {"type": ["string", "null"]},
+							"inbox_name": {"type": ["string", "null"]},
+							"contact": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"first_name": {"type": ["string", "null"]},
+											"last_name": {"type": ["string", "null"]}
+										}
+									},
+									{"type": "null"}
+								]
+							},
+							"conversation_uuid": {"type": ["string", "null"]},
+							"conversation": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"uuid": {"type": ["string", "null"]},
+											"reference_number": {"type": ["string", "null"]},
+											"subject": {"type": ["string", "null"]},
+											"inbox_name": {"type": ["string", "null"]},
+											"status_category": {"type": ["string", "null"]}
+										}
+									},
+									{"type": "null"}
+								]
+							},
+							"previous_status": {"type": ["string", "null"]},
+							"new_status": {"type": ["string", "null"]},
+							"snooze_until": {"type": ["string", "null"]},
+							"previous_tags": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]},
+							"new_tags": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]},
+							"assigned_to": {"anyOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}, {"type": "null"}]},
+							"type": {"type": ["string", "null"]},
+							"status": {"type": ["string", "null"]},
+							"text_content": {"type": ["string", "null"]},
+							"private": {"type": ["boolean", "null"]},
+							"sender_type": {"type": ["string", "null"]},
+							"meta": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"is_automated": {"type": ["boolean", "null"]},
+											"is_csat": {"type": ["boolean", "null"]},
+											"continuity_email": {"type": ["boolean", "null"]}
+										}
+									},
+									{"type": "null"}
+								]
+							},
+							"attachments": {
+								"anyOf": [
+									{"type": "array", "items": {"type": "object", "properties": {"name": {"type": ["string", "null"]}}}},
+									{"type": "null"}
+								]
+							},
+							"author": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"first_name": {"type": ["string", "null"]},
+											"last_name": {"type": ["string", "null"]}
+										}
+									},
+									{"type": "null"}
+								]
+							},
+							"name": {"type": ["string", "null"]}
+						}
+					}
+				},
+				"required": ["event", "payload"]
 			},
 			"InstatusWebhook": {
 				"type": "object",

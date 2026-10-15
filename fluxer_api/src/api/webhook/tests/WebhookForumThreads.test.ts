@@ -137,6 +137,11 @@ describe('webhooks on forum and media channels', () => {
 			.body({text: 'hi'})
 			.expect(400, APIErrorCodes.WEBHOOK_SERVICE_FORUM_UNSUPPORTED)
 			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post(`/webhooks/${s.webhook.id}/${s.webhook.token}/libredesk`)
+			.body({event: 'webhook.test', payload: {id: 1, name: 'x'}})
+			.expect(400, APIErrorCodes.WEBHOOK_SERVICE_FORUM_UNSUPPORTED)
+			.execute();
 		const text = await createChannel(harness, s.owner.token, s.guildId, 'text');
 		const textHook = await threadsRequest<WebhookResponse>(harness, s.owner.token)
 			.post(`/channels/${text.id}/webhooks`)

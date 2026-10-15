@@ -92,6 +92,7 @@ describe('Follower webhook management', () => {
 			{method: 'post', path: `${base}?wait=true`, body: {content: 'hello'}},
 			{method: 'post', path: `${base}/slack`, body: {text: 'hello'}},
 			{method: 'post', path: `${base}/instatus`, body: {meta: {unsubscribe: '', documentation: ''}, page: {id: 'x'}}},
+			{method: 'post', path: `${base}/libredesk`, body: {event: 'webhook.test', payload: {id: 1, name: 'x'}}},
 			{method: 'get', path: `${base}/messages/${messageId}`},
 			{method: 'patch', path: `${base}/messages/${messageId}`, body: {content: 'edited'}},
 			{method: 'delete', path: `${base}/messages/${messageId}`},

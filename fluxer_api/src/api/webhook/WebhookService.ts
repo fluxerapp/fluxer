@@ -45,6 +45,7 @@ import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
 import {instatusDeliveryKey, transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
+import {transformLibredeskWebhook} from '@app/api/webhook/transformers/LibredeskTransformer';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
@@ -74,6 +75,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
+import type {LibredeskWebhook} from '@fluxer/schema/src/domains/webhook/LibredeskWebhookSchemas';
 import {
 	type WebhookCreateRequest,
 	WebhookForumPostRequestFields,
@@ -144,6 +146,11 @@ interface WebhookExecuteGitHubParams extends WebhookTokenParams, WebhookThreadPa
 
 interface WebhookExecuteInstatusParams extends WebhookTokenParams {
 	data: InstatusWebhook;
+	requestCache: RequestCache;
+}
+
+interface WebhookExecuteLibredeskParams extends WebhookTokenParams, WebhookThreadParams {
+	data: LibredeskWebhook;
 	requestCache: RequestCache;
 }
 
@@ -601,6 +608,22 @@ export class WebhookService {
 			requestCache,
 		});
 		if (delivery) await this.cacheService.set(`instatus:${webhookId}:${delivery}`, 1, seconds('1 day'));
+	}
+
+	async executeLibredeskWebhook(params: WebhookExecuteLibredeskParams): Promise<void> {
+		const {webhookId, token, threadId, data, requestCache} = params;
+		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		if (channel.isThreadOnly() && threadId === undefined) throw new WebhookServiceForumUnsupportedError();
+		const thread = await this.resolveWebhookThread(webhook, threadId);
+		const embed = transformLibredeskWebhook(data);
+		if (!embed) return;
+		await this.channelService.messages.send.sendWebhookMessage({
+			webhook,
+			thread,
+			data: {embeds: [embed], allowed_mentions: WebhookService.NO_ALLOWED_MENTIONS},
+			username: 'Libredesk',
+			requestCache,
+		});
 	}
 
 	async dispatchWebhooksUpdate({

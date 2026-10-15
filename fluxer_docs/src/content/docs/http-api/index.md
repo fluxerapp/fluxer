@@ -305,7 +305,7 @@ Fluxer produces at most one entry for each distinct pair of `path` and `code`, s
 | [Roles and permissions](/http-api/permissions/) | Permission flags, computation order, role objects and lifecycle |
 | [Discovery](/http-api/discovery/) | Public guild listings, categories, the listing application lifecycle, joining without an invite |
 | [Invites](/http-api/invites/) | Invite lookup, creation, acceptance, deletion, code generation |
-| [Webhooks](/http-api/webhooks/) | Webhook management, message execution, GitHub, Slack, and Instatus callbacks |
+| [Webhooks](/http-api/webhooks/) | Webhook management, message execution, GitHub, Slack, Instatus, and Libredesk callbacks |
 | [Search](/http-api/search/) | Authenticated global message search |
 | [Unfurl](/http-api/unfurl/) | Authenticated external URL metadata resolution |
 | [Billing](/http-api/billing/) | Stripe checkout, gift purchase, age verification, refunds, the Stripe webhook |

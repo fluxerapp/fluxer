@@ -2177,6 +2177,7 @@ console.log('unauthenticated capability flag (from the middleware chain)');
 		['POST /webhooks/{}/{}/github', {docs: false, why: WEBHOOK_TOKEN_CREDENTIAL}],
 		['POST /webhooks/{}/{}/slack', {docs: false, why: WEBHOOK_TOKEN_CREDENTIAL}],
 		['POST /webhooks/{}/{}/instatus', {docs: false, why: WEBHOOK_TOKEN_CREDENTIAL}],
+		['POST /webhooks/{}/{}/libredesk', {docs: false, why: WEBHOOK_TOKEN_CREDENTIAL}],
 	]);
 	const problems: Array<string> = [];
 	let compared = 0;

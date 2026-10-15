@@ -37,6 +37,7 @@ import {MessageRequestSchema} from '@fluxer/schema/src/domains/message/MessageRe
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
+import {LibredeskWebhook} from '@fluxer/schema/src/domains/webhook/LibredeskWebhookSchemas';
 import {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -573,6 +574,34 @@ export function WebhookController(app: HonoApp) {
 			await ctx.get('webhookRequestService').executeInstatusWebhook({
 				webhookId: createWebhookID(webhookId),
 				token: createWebhookToken(token),
+				data: ctx.req.valid('json'),
+				requestCache: ctx.get('requestCache'),
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/webhooks/:webhook_id/:token/libredesk',
+		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_LIBREDESK),
+		BlockAppOriginMiddleware,
+		OpenAPI({
+			operationId: 'execute_libredesk_webhook',
+			summary: 'Execute Libredesk webhook',
+			description:
+				'Receives and processes Libredesk help desk webhook events, formatting them as messages in the configured channel.',
+			responseSchema: null,
+			statusCode: 204,
+			tags: ['Webhooks'],
+		}),
+		Validator('param', WebhookIdTokenParam),
+		Validator('query', WebhookMessageQueryRequest),
+		Validator('json', LibredeskWebhook),
+		async (ctx) => {
+			const {webhook_id: webhookId, token} = ctx.req.valid('param');
+			await ctx.get('webhookRequestService').executeLibredeskWebhook({
+				webhookId: createWebhookID(webhookId),
+				token: createWebhookToken(token),
+				threadId: ctx.req.query('thread_id'),
 				data: ctx.req.valid('json'),
 				requestCache: ctx.get('requestCache'),
 			});

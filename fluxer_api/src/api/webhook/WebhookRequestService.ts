@@ -26,6 +26,7 @@ import type {WebhookExecuteMessageData, WebhookService} from '@app/api/webhook/W
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
+import type {LibredeskWebhook} from '@fluxer/schema/src/domains/webhook/LibredeskWebhookSchemas';
 import type {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -162,6 +163,14 @@ interface WebhookExecuteInstatusParams {
 	webhookId: WebhookID;
 	token: WebhookToken;
 	data: InstatusWebhook;
+	requestCache: RequestCache;
+}
+
+interface WebhookExecuteLibredeskParams {
+	webhookId: WebhookID;
+	token: WebhookToken;
+	threadId?: string;
+	data: LibredeskWebhook;
 	requestCache: RequestCache;
 }
 
@@ -349,6 +358,10 @@ export class WebhookRequestService {
 
 	async executeInstatusWebhook(params: WebhookExecuteInstatusParams): Promise<void> {
 		await this.webhookService.executeInstatusWebhook(params);
+	}
+
+	async executeLibredeskWebhook(params: WebhookExecuteLibredeskParams): Promise<void> {
+		await this.webhookService.executeLibredeskWebhook(params);
 	}
 
 	async executeSlackWebhook(params: WebhookExecuteSlackParams): Promise<void> {

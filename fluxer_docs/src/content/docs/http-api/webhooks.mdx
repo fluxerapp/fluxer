@@ -745,6 +745,136 @@ Fluxer normalises an incident, maintenance, or component status by uppercasing i
 | INPROGRESS | Rendered as `In progress`, with the maintenance colour |
 | COMPLETED | Rendered as `Completed`, with the operational colour |
 
+## Libredesk callback objects
+
+These objects define the body [Execute Libredesk webhook](#execute-libredesk-webhook) accepts. Libredesk sends more members than these tables list, and Fluxer ignores every member they do not list.
+
+### Libredesk callback object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| event | string | [Libredesk event type](#libredesk-event-types) |
+| payload | [Libredesk payload](#libredesk-payload-object) object | Event data |
+
+### Libredesk payload object
+
+Libredesk sends a conversation, a message, or a conversation wrapped with change details, depending on the event. Every member is optional, and each event reads only the members it renders.
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| uuid?<sup>1</sup> | ?string | Conversation UUID on `conversation.created`, or null |
+| reference_number? | ?string | Conversation reference number on `conversation.created`, or null |
+| subject? | ?string | Conversation subject on `conversation.created`, or null |
+| inbox_name? | ?string | Inbox name on `conversation.created`, or null |
+| contact?<sup>2</sup> | ?[Libredesk person](#libredesk-person-object) object | Contact on `conversation.created`, or null |
+| conversation_uuid?<sup>1</sup> | ?string | Conversation UUID on the other built-in events, or null |
+| conversation? | ?[Libredesk conversation](#libredesk-conversation-object) object | Conversation after the change, or null |
+| previous_status? | ?string | Status before a status change, or null |
+| new_status?<sup>3</sup> | ?string | Status after a status change, or null |
+| snooze_until?<sup>4</sup> | ?string | End of a snooze, or null |
+| previous_tags?<sup>5</sup> | ?array[string] | Tags before a tag change, or null |
+| new_tags?<sup>5</sup> | ?array[string] | Tags after a tag change, or null |
+| assigned_to? | ?integer | Libredesk user ID of the new assignee, or null |
+| type?<sup>6</sup> | ?string | Message type, or null |
+| status?<sup>7</sup> | ?string | Message delivery status, or the conversation status on `conversation.created`, or null |
+| text_content?<sup>8</sup> | ?string | Plain text of the message, or null |
+| private? | ?boolean | Whether the message is a private note, or null |
+| sender_type? | ?string | `contact` or `agent`, or null |
+| meta? | ?[Libredesk message metadata](#libredesk-message-metadata-object) object | Message metadata, or null |
+| attachments? | ?array[[Libredesk attachment](#libredesk-attachment-object) object] | Message attachments, or null |
+| author?<sup>2</sup> | ?[Libredesk person](#libredesk-person-object) object | Message author, or null |
+| name? | ?string | Libredesk webhook name on `webhook.test`, or null |
+
+<sup>1</sup> The embed footer is `Conversation` followed by this value, truncated to 128 characters, and is omitted when the value is empty
+
+<sup>2</sup> The person's name becomes the embed author name. Fluxer never renders an email address, phone number, or custom attribute
+
+<sup>3</sup> A status change with an empty `new_status` renders nothing
+
+<sup>4</sup> A date after 1970 renders as a timestamp after the new status. Any other value is left out
+
+<sup>5</sup> Only the difference renders, as an Added field and a Removed field. A tag change that adds and removes nothing renders nothing
+
+<sup>6</sup> A message of type `activity` renders nothing
+
+<sup>7</sup> A `message.updated` event renders only when the status is `failed`
+
+<sup>8</sup> Whitespace collapses to single spaces, and the excerpt is truncated to 1,000 characters. Fluxer never reads the HTML `content` member
+
+### Libredesk conversation object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| uuid?<sup>1</sup> | ?string | Conversation UUID, or null |
+| reference_number?<sup>2</sup> | ?string | Reference number, or null |
+| subject?<sup>2</sup> | ?string | Subject, or null |
+| inbox_name?<sup>2</sup> | ?string | Inbox name, or null |
+| status_category?<sup>3</sup> | ?string | `open`, `waiting`, or `resolved`, or null |
+
+<sup>1</sup> Only an automation event takes its embed footer from this value
+
+<sup>2</sup> A conversation event title is the inbox name in square brackets, the event label, then `#` with the reference number and the subject. The inbox name is truncated to 48 characters, the reference number to 32, and the subject to 128. An empty part is left out
+
+<sup>3</sup> The value selects the colour of a status change embed
+
+### Libredesk person object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| first_name? | ?string | First name, or null |
+| last_name? | ?string | Last name, or null |
+
+The non-empty names, joined by a space and truncated to 128 characters, form the rendered name. A message whose author has no name renders `Contact` or `Agent` instead.
+
+### Libredesk message metadata object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| is_automated?<sup>1</sup> | ?boolean | Whether an automation rule sent the message, or null |
+| is_csat?<sup>2</sup> | ?boolean | Whether the message is a satisfaction survey request, or null |
+| continuity_email?<sup>2</sup> | ?boolean | Whether the message is a continuity email digest, or null |
+
+<sup>1</sup> A true value titles an agent message `Automated reply`
+
+<sup>2</sup> A true value renders nothing, so a survey link or a digest of earlier messages never reaches the channel
+
+### Libredesk attachment object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | ?string | File name, or null |
+
+The non-empty names form an Attachments field, truncated to 256 characters. Attachment URLs are never rendered.
+
+## Libredesk event types
+
+The `event` member selects the rendering. A built-in event renders as below only when its payload has that event's shape: `uuid` for `conversation.created`, `name` for `webhook.test`, and `conversation_uuid` for the others. Any other payload renders as an automation event.
+
+- `conversation.created`: new conversation, with the contact name as the embed author
+- `conversation.status_changed`: status change, rendered as the previous and new status
+- `conversation.tags_changed`: tag change, rendered as the added and removed tags
+- `conversation.assigned`: agent assignment, rendered with the agent's Libredesk user ID
+- `conversation.unassigned`: agent removal
+- `message.created`: new contact message, agent reply, private note, or automated reply, with the sender as the embed author
+- `message.updated`: outgoing message that failed to send
+- `webhook.test`: test delivery from the Libredesk webhook settings, rendered with the Libredesk webhook name
+
+A contact message is titled `New message`, a private note `New private note`, an automated agent message `Automated reply`, and any other agent message `New reply`. Activity lines, satisfaction survey requests, and continuity digests render nothing.
+
+A Libredesk automation rule can send any event name. Such an event renders the event name, truncated to 32 characters, as the title label when its payload carries a conversation, and renders nothing otherwise.
+
 ## List guild webhooks
 
 <RouteHeader method="GET" path="/v1/guilds/{guild_id}/webhooks" bot />
@@ -1578,3 +1708,60 @@ Mention parsing is disabled for the created message, so no mention in a provider
 ### Rate limit
 
 200 requests per minute for each caller identity and webhook ID, on the `webhook:instatus::webhook_id` bucket, which is exempt from the global limit.
+
+## Execute Libredesk webhook
+
+<RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/libredesk" />
+
+Accepts a Libredesk callback and creates one formatted message when the event renders. The route always returns 204 with an empty body, whether or not a message was created.
+
+A rendered event emits a [Message Create](/gateway/events/#message-create).
+
+To connect a Libredesk help desk, add a webhook in its admin settings with this route's full URL and choose the events to send. Libredesk posts to the URL unchanged, so a `thread_id` query parameter in it applies to every delivery. The Libredesk secret is optional. Fluxer ignores the `X-Libredesk-Signature` header, because the token in the path is the credential.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to execute |
+| token | string | Webhook execution token (1-256 characters) |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The ID of a thread of the webhook's channel to post into |
+
+<sup>1</sup> A value that names no thread of the webhook's channel returns 404 `UNKNOWN_CHANNEL`. A webhook whose channel is a forum or media channel needs it, and returns 400 `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` without it
+
+### JSON body
+
+The body is a [Libredesk callback](#libredesk-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
+
+:::note[No deduplication]
+Libredesk sends each event once and includes no delivery identifier, so Fluxer processes every callback. Two identical callbacks create two messages.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Callback was accepted or was not renderable |
+| 400 | [error response](/http-api/#error-response) | The webhook's channel is a forum or media channel and `thread_id` is absent, returning `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` |
+| 400 | [error response](/http-api/#error-response) | `thread_id` names a locked thread, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | The guild has 1,000 active threads and `thread_id` names an archived thread, returning `MAX_ACTIVE_THREADS` |
+| 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or cannot hold a webhook, or `thread_id` names no thread of it, returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+A renderable event creates one message with exactly one embed, authored under the fixed name `Libredesk` with the webhook's own avatar. Sessions that can read the channel receive [Message Create](/gateway/events/#message-create).
+
+Mention parsing is disabled for the created message. Fluxer also escapes every `\`, `<`, `@`, `[`, and `]` in Libredesk text it places in the embed title, description, or a field value, so no mention, timestamp, or masked link from a ticket renders. Inside a URL that starts with `http://` or `https://`, it percent-encodes those characters instead, so the link keeps its target. The embed author name and footer are plain text. Fluxer removes bidirectional control characters from all of them.
+
+An event that renders nothing creates nothing and emits no Dispatch.
+
+### Rate limit
+
+200 requests per minute for each caller identity and webhook ID, on the `webhook:libredesk::webhook_id` bucket, which is exempt from the global limit.
