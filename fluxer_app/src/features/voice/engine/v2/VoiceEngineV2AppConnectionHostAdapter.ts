@@ -29,7 +29,10 @@ import {
 	releaseE2EEWorker,
 } from '@app/features/voice/engine/VoiceE2EEKeyProvider';
 import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import {selectLocalMediaPublicationsForConnectionRepublish} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
+import {
+	releaseCaptureWithRepublishedTrack,
+	selectLocalMediaPublicationsForConnectionRepublish,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {
 	assertDisconnectReason,
 	assertNonEmptyString,
@@ -819,6 +822,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					name: publication.trackName,
 				};
 				const republished = await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				releaseCaptureWithRepublishedTrack(newParticipant, republished, track);
 				const violation = publishOptions.videoCodec
 					? findVideoPublishCodecPolicyViolation(publishOptions.videoCodec, republished.options?.videoCodec)
 					: null;
@@ -1096,12 +1100,10 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	private disconnectPreviousRoom(previousRoom: Room | null, stopTracks = true): void {
 		if (!previousRoom) return;
 		try {
-			if (previousRoom.state === 'connected') {
-				const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
-				previousRoom.disconnect(stopTracks);
-				this.stopPreviousRoomTracks(tracksToStop);
-				logger.debug('Previous room disconnected', {stopTracks});
-			}
+			const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
+			previousRoom.disconnect(stopTracks);
+			this.stopPreviousRoomTracks(tracksToStop);
+			logger.debug('Previous room disconnected', {stopTracks});
 		} catch (error) {
 			logger.warn('Failed to disconnect previous room', error);
 		}
