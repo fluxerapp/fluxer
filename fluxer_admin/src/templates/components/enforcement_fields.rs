@@ -98,11 +98,23 @@ pub fn field_label(for_id: &str, text: &str) -> Markup {
     }
 }
 
+pub fn required_mark() -> Markup {
+    html! {
+        span class="text-red-500 ml-0.5" { "*" }
+    }
+}
+
+fn required_label(for_id: &str, text: &str) -> Markup {
+    html! {
+        label for=(for_id) class=(FIELD_LABEL_CLASS) { (text) (required_mark()) }
+    }
+}
+
 pub fn internal_note_field(id_prefix: &str, help: &str) -> Markup {
     let id = format!("{id_prefix}-internal-note");
     html! {
         div class="space-y-1" {
-            (field_label(&id, "Internal note"))
+            (required_label(&id, "Internal note"))
             input type="text" id=(id) name="internal_note" required
                 maxlength=(INTERNAL_NOTE_MAX_CHARS) class=(FIELD_INPUT_CLASS);
             p class=(FIELD_HELP_CLASS) { (help) }
@@ -147,14 +159,25 @@ pub fn statement_field(id_prefix: &str, help: &str) -> Markup {
 }
 
 pub fn radio_group(legend: &str, name: &str, id_prefix: &str, options: &[(&str, &str)]) -> Markup {
+    checked_radio_group(legend, name, id_prefix, options, None)
+}
+
+fn checked_radio_group(
+    legend: &str,
+    name: &str,
+    id_prefix: &str,
+    options: &[(&str, &str)],
+    checked: Option<&str>,
+) -> Markup {
     html! {
         fieldset class="space-y-1" {
-            legend class=(FIELD_LABEL_CLASS) { (legend) }
+            legend class=(FIELD_LABEL_CLASS) { (legend) (required_mark()) }
             div class="flex flex-wrap gap-x-4 gap-y-1" {
                 @for (value, label) in options {
                     @let id = format!("{id_prefix}-{name}-{value}");
                     div class="flex items-center gap-2" {
                         input type="radio" id=(id) name=(name) value=(value) required
+                            checked[checked == Some(*value)]
                             class="h-4 w-4 accent-neutral-900";
                         label for=(id) class="text-sm text-neutral-900" { (label) }
                     }
@@ -181,7 +204,7 @@ pub fn reason_select(
     let id = format!("{id_prefix}-reason");
     html! {
         div class="space-y-1" {
-            (field_label(&id, "Reason"))
+            (required_label(&id, "Reason"))
             select id=(id) name="reason_code" required class=(FIELD_INPUT_CLASS) {
                 option value="" disabled selected { "Choose a reason" }
                 @for (handling, group) in HANDLING_GROUPS
@@ -226,13 +249,14 @@ pub fn enforcement_fields(fields: &DecisionFields<'_>) -> Markup {
     let reports_id = format!("{prefix}-report-ids");
     let messages_id = format!("{prefix}-evidence");
     let rights_holder_id = format!("{prefix}-rights-holder");
+    let from_report = !fields.report_ids.is_empty();
     html! {
         div class="space-y-4" data-enforcement-fields="" {
             (reason_select(prefix, fields.kind, fields.allow_restricted))
-            (radio_group("How did we find this?", "source", prefix, &[
+            (checked_radio_group("How did we find this?", "source", prefix, &[
                 ("report", "A report"),
                 ("own_review", "Our own review"),
-            ]))
+            ], from_report.then_some("report")))
             div class="space-y-1" {
                 (radio_group("Automated tools", "automation", prefix, &[
                     ("none", "Not involved"),
@@ -243,7 +267,10 @@ pub fn enforcement_fields(fields: &DecisionFields<'_>) -> Markup {
                 }
             }
             div class="space-y-1" {
-                (field_label(&reports_id, "Reports"))
+                label for=(reports_id) class=(FIELD_LABEL_CLASS) {
+                    "Reports"
+                    span data-show-for-source="report" hidden[!from_report] { (required_mark()) }
+                }
                 textarea id=(reports_id) name="report_ids" rows="2"
                     placeholder="One report ID per line" class=(FIELD_INPUT_CLASS) {
                     (fields.report_ids.join("\n"))
@@ -257,13 +284,19 @@ pub fn enforcement_fields(fields: &DecisionFields<'_>) -> Markup {
                         class=(FIELD_INPUT_CLASS) {
                         (messages.join("\n"))
                     }
+                    p class=(FIELD_HELP_CLASS) data-hide-for-codes=(restricted_codes) {
+                        "Messages this user sent in a linked report are included automatically. Without any messages, add a note to the user."
+                    }
+                    p class=(FIELD_HELP_CLASS) data-show-for-codes=(restricted_codes) hidden {
+                        "Messages this user sent in a linked report are included automatically. At least one message is required."
+                    }
                 }
             }
             div data-hide-for-codes=(restricted_codes) {
                 (statement_field(prefix, "Shown to the user. Never name or describe other people. Not sent for child safety or violent extremism decisions."))
             }
             div class="space-y-1" data-show-for-codes=(COPYRIGHT_REASON_CODE) hidden {
-                (field_label(&rights_holder_id, "Rights holder or right concerned"))
+                (required_label(&rights_holder_id, "Rights holder or right concerned"))
                 input type="text" id=(rights_holder_id) name="rights_holder" required disabled
                     maxlength=(RIGHTS_HOLDER_MAX_CHARS) class=(FIELD_INPUT_CLASS);
                 p class=(FIELD_HELP_CLASS) {
@@ -626,7 +659,43 @@ mod tests {
             assert!(html.contains(marker), "missing {marker}\n{html}");
         }
         assert!(!html.contains(r#"name="automation" value="automated""#));
-        assert!(!html.contains(r#"checked"#));
+        assert_eq!(html.matches("checked").count(), 1);
+        assert!(html.contains(r#"name="source" value="report" required checked"#));
+        assert!(html.contains(r#"<span data-show-for-source="report"><span"#));
+    }
+
+    #[test]
+    fn fieldset_without_a_report_leaves_the_source_open() {
+        let html = enforcement_fields(&DecisionFields {
+            id_prefix: "limit",
+            kind: EnforcementKindType::FeatureLimit,
+            report_ids: &[],
+            messages: Some(&[]),
+            user_flags: None,
+            allow_restricted: true,
+        })
+        .into_string();
+        assert!(!html.contains("checked"));
+        assert!(html.contains(r#"<span data-show-for-source="report" hidden><span"#));
+    }
+
+    #[test]
+    fn required_fields_carry_a_mark() {
+        let html = render(EnforcementKindType::FeatureLimit, 0);
+        let mark = r#"<span class="text-red-500 ml-0.5">*</span>"#;
+        for label in [
+            "Reason",
+            "How did we find this?",
+            "Automated tools",
+            "Internal note",
+            "Rights holder or right concerned",
+        ] {
+            assert!(html.contains(&format!("{label}{mark}")), "unmarked {label}");
+        }
+        for label in ["Messages<", "Note to the user<"] {
+            assert!(html.contains(label), "marked {label}");
+        }
+        assert_eq!(html.matches(mark).count(), 6);
     }
 
     #[test]

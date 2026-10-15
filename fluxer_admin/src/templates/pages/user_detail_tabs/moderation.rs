@@ -18,7 +18,7 @@ use crate::{
             enforcement_fields::{
                 BasisFields, DecisionFields, FIELD_HELP_CLASS, FIELD_INPUT_CLASS,
                 FIELD_LABEL_CLASS, basis_fields, deletion_days_field, enforcement_fields,
-                field_label, internal_note_field, network_block_fields,
+                field_label, internal_note_field, network_block_fields, required_mark,
             },
             form::{checkbox, csrf_input, danger_button, form_actions, submit_button},
             page_container::card_with_header,
@@ -550,7 +550,7 @@ fn limit_card(base: &str, user: &AdminUser, csrf_token: &str, prefill: &Decision
                         allow_restricted: true,
                     }))
                     fieldset class="space-y-1" {
-                        legend class=(FIELD_LABEL_CLASS) { "Limit" }
+                        legend class=(FIELD_LABEL_CLASS) { "Limit" (required_mark()) }
                         div class="flex flex-wrap gap-x-4 gap-y-1" {
                             @for limit in ENFORCEMENT_LIMITS {
                                 @let id = format!("limit-{}", limit.value);

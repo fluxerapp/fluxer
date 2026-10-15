@@ -663,7 +663,7 @@ pub const ENFORCEMENT_FIELDS_SCRIPT: &str = r#"
 			syncReason(form, control.value);
 		} else if (control instanceof HTMLSelectElement && (control.name === 'resolution' || control.name === 'duration_hours')) {
 			syncChoice(form, control.name, control.value);
-		} else if (control instanceof HTMLInputElement && control.type === 'radio' && (control.name === 'basis' || control.name === 'limit')) {
+		} else if (control instanceof HTMLInputElement && control.type === 'radio' && (control.name === 'basis' || control.name === 'limit' || control.name === 'source')) {
 			syncChoice(form, control.name, control.value);
 		}
 	});

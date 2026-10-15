@@ -466,6 +466,16 @@ async fn moderation_tab_without_a_restriction_offers_suspend_and_warn_with_prefi
     assert!(suspend.contains(&format!(">{REPORT_ID}</textarea>")));
     assert!(suspend.contains(&format!(">{CHANNEL_ID}/{MESSAGE_ID}</textarea>")));
     assert!(section(&html, "?action=warn").contains("Send warning"));
+    let limit = between(&html, "?action=limit_features", "?action=warn");
+    for expected in [
+        format!(">{REPORT_ID}</textarea>"),
+        format!(">{CHANNEL_ID}/{MESSAGE_ID}</textarea>"),
+        r#"name="source" value="report" required checked"#.to_owned(),
+        r#"Limit<span class="text-red-500 ml-0.5">*</span></legend>"#.to_owned(),
+        r#"Internal note<span class="text-red-500 ml-0.5">*</span></label>"#.to_owned(),
+    ] {
+        assert!(limit.contains(&expected), "missing {expected}\n{limit}");
+    }
 }
 
 fn between<'a>(html: &'a str, start: &str, end: &str) -> &'a str {
@@ -509,6 +519,7 @@ async fn moderation_tab_offers_close_and_limit_features() {
         assert!(limit.contains(expected), "missing {expected}\n{limit}");
     }
     assert!(!limit.contains(r#"<option value="11""#));
+    assert!(!limit.contains("checked"));
 }
 
 #[tokio::test]
