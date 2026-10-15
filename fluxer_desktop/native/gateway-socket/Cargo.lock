@@ -149,6 +149,7 @@ dependencies = [
  "napi-derive",
  "rustls",
  "rustls-native-certs",
+ "schannel",
  "tokio",
  "tokio-tungstenite",
  "url",

@@ -58,5 +58,9 @@ try {
 module.exports = {
 	connect: binding ? binding.connect : null,
 	warmup: binding && typeof binding.warmup === 'function' ? binding.warmup : null,
+	windowsIntermediateStoreRoots:
+		binding && typeof binding.windowsIntermediateStoreRoots === 'function'
+			? binding.windowsIntermediateStoreRoots
+			: null,
 	loadError,
 };

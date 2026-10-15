@@ -27,6 +27,7 @@ export interface GatewaySocketBoundary {
 type GatewaySocketNativeModule = {
 	connect: GatewaySocketConnectBinding | null;
 	warmup?: (() => void) | null;
+	windowsIntermediateStoreRoots?: (() => Array<Buffer>) | null;
 	loadError: Error | null;
 };
 
@@ -34,6 +35,7 @@ const requireModule = createRequire(import.meta.url);
 
 let bindingCache: GatewaySocketConnectBinding | null | undefined;
 let warmupCache: (() => void) | null = null;
+let windowsIntermediateStoreRootsCache: (() => Array<Buffer>) | null = null;
 
 export function loadGatewaySocketBinding(): GatewaySocketConnectBinding | null {
 	if (bindingCache !== undefined) return bindingCache;
@@ -47,6 +49,8 @@ export function loadGatewaySocketBinding(): GatewaySocketConnectBinding | null {
 		const nativeModule = requireModule(GATEWAY_SOCKET_ADDON_PACKAGE) as GatewaySocketNativeModule;
 		bindingCache = nativeModule.connect ?? null;
 		warmupCache = bindingCache === null ? null : (nativeModule.warmup ?? null);
+		windowsIntermediateStoreRootsCache =
+			bindingCache === null ? null : (nativeModule.windowsIntermediateStoreRoots ?? null);
 	} catch (error) {
 		log.warn('[NativeGateway] The native gateway addon is unavailable, using the browser transport', error);
 		bindingCache = null;
@@ -60,6 +64,16 @@ export function warmGatewaySocketTransport(): void {
 		warmupCache();
 	} catch (error) {
 		log.warn('[NativeGateway] Failed to warm the native gateway transport', error);
+	}
+}
+
+export function readWindowsIntermediateStoreRoots(): ReadonlyArray<Buffer> {
+	if (loadGatewaySocketBinding() === null || windowsIntermediateStoreRootsCache === null) return [];
+	try {
+		return windowsIntermediateStoreRootsCache();
+	} catch (error) {
+		log.warn('[NativeGateway] Failed to read the Windows intermediate certificate store', error);
+		return [];
 	}
 }
 

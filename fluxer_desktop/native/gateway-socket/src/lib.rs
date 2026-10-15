@@ -639,19 +639,130 @@ fn ensure_rustls_crypto_provider() {
 fn build_tls_client_config() -> std::result::Result<Arc<rustls::ClientConfig>, String> {
     ensure_rustls_crypto_provider();
     let native = rustls_native_certs::load_native_certs();
-    if native.certs.is_empty() {
+    let roots = trust_roots(native.certs, &intermediate_store_roots());
+    if roots.is_empty() {
         return Err(format!(
-            "no native root CA certificates found (errors: {:?})",
+            "no root CA certificates found (errors: {:?})",
             native.errors
         ));
     }
-    let mut roots = rustls::RootCertStore::empty();
-    roots.add_parsable_certificates(native.certs);
     Ok(Arc::new(
         rustls::ClientConfig::builder()
             .with_root_certificates(roots)
             .with_no_client_auth(),
     ))
+}
+
+fn trust_roots(
+    native: Vec<rustls::pki_types::CertificateDer<'static>>,
+    extra: &[rustls::pki_types::CertificateDer<'static>],
+) -> rustls::RootCertStore {
+    let mut roots = rustls::RootCertStore::empty();
+    roots.add_parsable_certificates(native);
+    roots.add_parsable_certificates(extra.iter().cloned());
+    roots
+}
+
+#[cfg(any(windows, test))]
+fn der_element(input: &[u8]) -> Option<(u8, &[u8], &[u8])> {
+    let (&tag, rest) = input.split_first()?;
+    let (&first, rest) = rest.split_first()?;
+    let (length, rest) = if first & 0x80 == 0 {
+        (usize::from(first), rest)
+    } else {
+        let size = usize::from(first & 0x7f);
+        if size == 0 || size > 4 || rest.len() < size {
+            return None;
+        }
+        let (bytes, rest) = rest.split_at(size);
+        (
+            bytes
+                .iter()
+                .fold(0usize, |length, &byte| (length << 8) | usize::from(byte)),
+            rest,
+        )
+    };
+    if rest.len() < length {
+        return None;
+    }
+    let (content, rest) = rest.split_at(length);
+    Some((tag, content, rest))
+}
+
+#[cfg(any(windows, test))]
+fn is_self_issued(certificate: &[u8]) -> bool {
+    let Some((0x30, certificate, [])) = der_element(certificate) else {
+        return false;
+    };
+    let Some((0x30, tbs, _)) = der_element(certificate) else {
+        return false;
+    };
+    let mut fields = std::iter::successors(der_element(tbs), |&(_, _, rest)| der_element(rest))
+        .map(|(tag, content, _)| (tag, content));
+    let mut serial = fields.next();
+    if matches!(serial, Some((0xa0, _))) {
+        serial = fields.next();
+    }
+    let (
+        Some((0x02, _)),
+        Some((0x30, _)),
+        Some((0x30, issuer)),
+        Some((0x30, _)),
+        Some((0x30, subject)),
+    ) = (
+        serial,
+        fields.next(),
+        fields.next(),
+        fields.next(),
+        fields.next(),
+    )
+    else {
+        return false;
+    };
+    issuer == subject
+}
+
+#[cfg(windows)]
+fn intermediate_store_roots() -> Vec<rustls::pki_types::CertificateDer<'static>> {
+    use schannel::{cert_context::ValidUses, cert_store::CertStore};
+    use std::collections::BTreeSet;
+
+    const SERVER_AUTH: &str = "1.3.6.1.5.5.7.3.1";
+    const ANY_EXTENDED_KEY_USAGE: &str = "2.5.29.37.0";
+    let store_certificates = |name: &str| {
+        [
+            CertStore::open_current_user(name),
+            CertStore::open_local_machine(name),
+        ]
+        .into_iter()
+        .flatten()
+        .flat_map(|store| store.certs().collect::<Vec<_>>())
+    };
+    let disallowed: BTreeSet<Vec<u8>> = store_certificates("Disallowed")
+        .map(|certificate| certificate.to_der().to_vec())
+        .collect();
+    store_certificates("CA")
+        .filter(|certificate| {
+            certificate.is_time_valid().unwrap_or(false)
+                && match certificate.valid_uses() {
+                    Ok(ValidUses::All) => true,
+                    Ok(ValidUses::Oids(oids)) => oids
+                        .iter()
+                        .any(|oid| oid == SERVER_AUTH || oid == ANY_EXTENDED_KEY_USAGE),
+                    Err(_) => false,
+                }
+        })
+        .map(|certificate| certificate.to_der().to_vec())
+        .filter(|der| is_self_issued(der) && !disallowed.contains(der))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(rustls::pki_types::CertificateDer::from)
+        .collect()
+}
+
+#[cfg(not(windows))]
+fn intermediate_store_roots() -> Vec<rustls::pki_types::CertificateDer<'static>> {
+    Vec::new()
 }
 
 fn tls_client_config() -> std::result::Result<Arc<rustls::ClientConfig>, String> {
@@ -1045,6 +1156,14 @@ impl EventDelivery for NapiEventDelivery {
     }
 }
 
+#[napi(js_name = "windowsIntermediateStoreRoots")]
+pub fn windows_intermediate_store_roots() -> Vec<Buffer> {
+    intermediate_store_roots()
+        .into_iter()
+        .map(|certificate| Buffer::from(certificate.to_vec()))
+        .collect()
+}
+
 #[napi]
 pub fn warmup() -> Result<()> {
     let runtime = transport_runtime()?;
@@ -1223,6 +1342,122 @@ mod tests {
     fn expect_open(events: &mut mpsc::UnboundedReceiver<TransportEvent>) {
         let event = next_event(events);
         assert_eq!(event.kind, EVENT_KIND_OPEN, "{:?}", event.message);
+    }
+
+    const TLS_FIXTURE_HOST: &str = "ca.example";
+    const TLS_FIXTURE_LEAF: &[u8] =
+        include_bytes!("../../../src/main/fixtures/desktop-tls/leaf.pem");
+    const TLS_FIXTURE_LEAF_KEY: &[u8] =
+        include_bytes!("../../../src/main/fixtures/desktop-tls/leaf.key");
+    const TLS_FIXTURE_TRUSTED_CA: &[u8] =
+        include_bytes!("../../../src/main/fixtures/desktop-tls/trusted-ca.pem");
+    const TLS_FIXTURE_UNTRUSTED_CA: &[u8] =
+        include_bytes!("../../../src/main/fixtures/desktop-tls/untrusted-ca.pem");
+
+    fn fixture_certificate(pem: &[u8]) -> rustls::pki_types::CertificateDer<'static> {
+        use rustls::pki_types::pem::PemObject;
+        rustls::pki_types::CertificateDer::from_pem_slice(pem).expect("fixture certificate")
+    }
+
+    fn fixture_server_config() -> Arc<rustls::ServerConfig> {
+        use rustls::pki_types::pem::PemObject;
+        ensure_rustls_crypto_provider();
+        Arc::new(
+            rustls::ServerConfig::builder()
+                .with_no_client_auth()
+                .with_single_cert(
+                    vec![fixture_certificate(TLS_FIXTURE_LEAF)],
+                    rustls::pki_types::PrivateKeyDer::from_pem_slice(TLS_FIXTURE_LEAF_KEY)
+                        .expect("fixture key"),
+                )
+                .expect("fixture server config"),
+        )
+    }
+
+    fn pump(
+        from: &mut rustls::Connection,
+        to: &mut rustls::Connection,
+    ) -> std::result::Result<(), rustls::Error> {
+        let mut bytes = Vec::new();
+        while from.wants_write() {
+            from.write_tls(&mut bytes).expect("write tls");
+        }
+        let mut cursor = bytes.as_slice();
+        while !cursor.is_empty() {
+            to.read_tls(&mut cursor).expect("read tls");
+            to.process_new_packets()?;
+        }
+        Ok(())
+    }
+
+    fn handshake(roots: rustls::RootCertStore) -> std::result::Result<(), rustls::Error> {
+        ensure_rustls_crypto_provider();
+        let client_config = rustls::ClientConfig::builder()
+            .with_root_certificates(roots)
+            .with_no_client_auth();
+        let mut client = rustls::Connection::Client(
+            rustls::ClientConnection::new(
+                Arc::new(client_config),
+                rustls::pki_types::ServerName::try_from(TLS_FIXTURE_HOST).expect("server name"),
+            )
+            .expect("client connection"),
+        );
+        let mut server = rustls::Connection::Server(
+            rustls::ServerConnection::new(fixture_server_config()).expect("server connection"),
+        );
+        while client.is_handshaking() || server.is_handshaking() {
+            pump(&mut client, &mut server).expect("server accepts the client flight");
+            pump(&mut server, &mut client)?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn trust_roots_add_extra_anchors_to_the_native_store() {
+        let unknown_issuer = Err(rustls::Error::InvalidCertificate(
+            rustls::CertificateError::UnknownIssuer,
+        ));
+        assert_eq!(handshake(trust_roots(Vec::new(), &[])), unknown_issuer);
+        assert_eq!(
+            handshake(trust_roots(
+                vec![fixture_certificate(TLS_FIXTURE_UNTRUSTED_CA)],
+                &[]
+            )),
+            unknown_issuer
+        );
+        assert_eq!(
+            handshake(trust_roots(
+                vec![fixture_certificate(TLS_FIXTURE_UNTRUSTED_CA)],
+                &[fixture_certificate(TLS_FIXTURE_TRUSTED_CA)]
+            )),
+            Ok(())
+        );
+        assert_eq!(
+            handshake(trust_roots(
+                vec![fixture_certificate(TLS_FIXTURE_TRUSTED_CA)],
+                &[]
+            )),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn only_self_issued_certificates_count_as_intermediate_store_roots() {
+        assert!(is_self_issued(&fixture_certificate(TLS_FIXTURE_TRUSTED_CA)));
+        assert!(is_self_issued(&fixture_certificate(
+            TLS_FIXTURE_UNTRUSTED_CA
+        )));
+        let leaf = fixture_certificate(TLS_FIXTURE_LEAF);
+        assert!(!is_self_issued(&leaf));
+        let root = fixture_certificate(TLS_FIXTURE_TRUSTED_CA);
+        assert!(!is_self_issued(&root[..root.len() - 1]));
+        let mut trailing = root.to_vec();
+        trailing.push(0);
+        assert!(!is_self_issued(&trailing));
+        assert!(!is_self_issued(&[]));
+        assert!(!is_self_issued(&[0x30, 0x84, 0xff, 0xff, 0xff, 0xff]));
+        #[cfg(not(windows))]
+        assert!(windows_intermediate_store_roots().is_empty());
     }
 
     #[test]

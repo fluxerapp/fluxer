@@ -23,3 +23,6 @@ url = "2.5.8"
 
 [build-dependencies]
 napi-build = "2.4.3"
+
+[target.'cfg(windows)'.dependencies]
+schannel = "0.1.29"

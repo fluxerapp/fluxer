@@ -66,6 +66,17 @@ describe('desktop system trust verifier', () => {
 		assert.equal(buildDesktopTrustAnchors([read('kz_root')]).size, 0);
 	});
 
+	test('anchors on DER roots read from the Windows intermediate store', () => {
+		const der = (name) => new X509Certificate(read(name)).raw;
+		const store = buildDesktopTrustAnchors([der('root')]);
+		const request = {hostname: 'host.example', certificate: chain(['leaf', 'int']), errorCode: AUTHORITY_INVALID};
+		assert.equal(
+			verifyAgainstDesktopSystemTrust(request, () => store),
+			ACCEPT,
+		);
+		assert.equal(buildDesktopTrustAnchors([der('kz_root'), Buffer.from('not a certificate')]).size, 0);
+	});
+
 	test('anchors only on admin added CAs that the distro bundle still trusts', () => {
 		const root = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-trust-'));
 		const write = (file, content) => {

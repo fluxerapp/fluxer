@@ -33,4 +33,5 @@ export declare const connect:
 	  ) => NativeGatewayConnection)
 	| null;
 export declare const warmup: (() => void) | null;
+export declare const windowsIntermediateStoreRoots: (() => Array<Buffer>) | null;
 export declare const loadError: Error | null;
