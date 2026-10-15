@@ -114,12 +114,14 @@ import {
 } from '@app/features/input/state/KeybindResolution';
 import {
 	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
-	getKeyboardShortcutsOverlayComboForCurrentLayout,
+	DEFAULT_START_DM_CALL_COMBO,
+	getKeyboardLayoutDefaultCombosForCurrentLayout,
 	keyCombosEqual,
 	SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
 } from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {isApplePlatform} from '@app/features/platform/utils/PlatformHelpers';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -222,6 +224,7 @@ const createBuiltinDisableMarker = (
 const getDefaultKeybinds = (
 	i18n: KeybindLabelI18n,
 	keyboardShortcutsOverlayCombo: KeyCombo = DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
+	startDmCallCombo: KeyCombo = DEFAULT_START_DM_CALL_COMBO,
 ): ReadonlyArray<KeybindConfig> =>
 	[
 		{
@@ -360,7 +363,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_history_back',
 			label: i18n._(MOVE_BACK_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR),
-			combo: {key: '[', ctrlOrMeta: true},
+			combo: isApplePlatform() ? {key: '[', ctrlOrMeta: true} : {key: 'ArrowLeft', alt: true},
 			ignoreWhileTyping: true,
 			editableFocusBehavior: 'allow',
 			section: 'navigation',
@@ -368,7 +371,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_history_forward',
 			label: i18n._(MOVE_FORWARD_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR),
-			combo: {key: ']', ctrlOrMeta: true},
+			combo: isApplePlatform() ? {key: ']', ctrlOrMeta: true} : {key: 'ArrowRight', alt: true},
 			ignoreWhileTyping: true,
 			editableFocusBehavior: 'allow',
 			section: 'navigation',
@@ -412,13 +415,13 @@ const getDefaultKeybinds = (
 		{
 			action: 'nav_guild_tab_prev',
 			label: i18n._(SWITCH_TO_PREVIOUS_COMMUNITY_OR_DMS_DESCRIPTOR),
-			combo: {key: 'Tab', ctrlOrMeta: true, shift: true},
+			combo: {key: 'Tab', ctrl: true, shift: true},
 			section: 'navigation',
 		},
 		{
 			action: 'nav_guild_tab_next',
 			label: i18n._(SWITCH_TO_NEXT_COMMUNITY_OR_DMS_DESCRIPTOR),
-			combo: {key: 'Tab', ctrlOrMeta: true},
+			combo: {key: 'Tab', ctrl: true},
 			section: 'navigation',
 		},
 		{
@@ -666,7 +669,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'voice_start_dm_call',
 			label: i18n._(START_A_CALL_IN_A_DM_OR_GROUP_DESCRIPTOR),
-			combo: {key: '`', code: 'Backquote', ctrl: true},
+			combo: {...startDmCallCombo},
 			section: 'voice_and_video',
 		},
 		{
@@ -899,6 +902,7 @@ class Keybind {
 	private i18n: I18n | null = null;
 	private initialized = false;
 	private keyboardShortcutsOverlayCombo: KeyCombo = {...DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO};
+	private startDmCallCombo: KeyCombo = {...DEFAULT_START_DM_CALL_COMBO};
 	private holdSources = new HoldSources(() => this.pushToTalkReleaseDelay);
 
 	constructor() {
@@ -1011,9 +1015,10 @@ class Keybind {
 
 	async refreshKeyboardShortcutLayout(): Promise<void> {
 		try {
-			const combo = await getKeyboardShortcutsOverlayComboForCurrentLayout();
-			if (!combo) return;
-			this.setKeyboardShortcutsOverlayCombo(combo);
+			const combos = await getKeyboardLayoutDefaultCombosForCurrentLayout();
+			if (!combos) return;
+			this.setKeyboardShortcutsOverlayCombo(combos.keyboardShortcutsOverlay);
+			this.setStartDmCallCombo(combos.startDmCall);
 		} catch {}
 	}
 
@@ -1028,8 +1033,15 @@ class Keybind {
 		});
 	}
 
+	private setStartDmCallCombo(combo: KeyCombo): void {
+		if (keyCombosEqual(this.startDmCallCombo, combo)) return;
+		runInAction(() => {
+			this.startDmCallCombo = {...combo};
+		});
+	}
+
 	private get defaultKeybinds(): ReadonlyArray<KeybindConfig> {
-		return getDefaultKeybinds(this.getLabelI18n(), this.keyboardShortcutsOverlayCombo);
+		return getDefaultKeybinds(this.getLabelI18n(), this.keyboardShortcutsOverlayCombo, this.startDmCallCombo);
 	}
 
 	private get runtimeDispatchDefaults(): ReadonlyArray<KeybindConfig> {

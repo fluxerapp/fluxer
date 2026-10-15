@@ -211,6 +211,7 @@ export function formatPrimaryKeySymbol(i18n: I18n, rawKey: string): string {
 	if (rawKey === 'Enter' || rawKey === 'Return') return isMacPlatform() ? '⏎' : i18n._(ENTER_DESCRIPTOR);
 	if (rawKey === 'Tab') return i18n._(TAB_DESCRIPTOR);
 	if (rawKey === 'Backquote' || rawKey === '`') return '`';
+	if (rawKey === 'Quote') return "'";
 	if (rawKey === '[' || rawKey === ']') return rawKey;
 	if (/^Key[A-Z]$/.test(rawKey)) return rawKey.slice(3);
 	if (/^Digit[0-9]$/.test(rawKey)) return rawKey.slice(5);
