@@ -334,7 +334,6 @@ export interface MasterConfig {
 	inactivity_deletion_threshold_days: number;
 	report_retention: {
 		days: number;
-		resolved_days: number | null;
 		dry_run: boolean;
 	};
 }

@@ -2,23 +2,36 @@
 
 import type {ReportID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
 import {Logger} from '@app/api/Logger';
 import {
+	clearCopiedContextWithEvidence,
 	deleteReportWithEvidence,
 	forEachStoredReport,
 	isReportUnderLegalHold,
 	type ReportDeletionDeps,
+	type ReportEvidenceLedger,
 	referencedObjectKeys,
 } from '@app/api/report/ReportDeletion';
 import {type IARSubmission, ReportStatus} from '@app/api/report/ReportModels';
 import {getReportSearchService} from '@app/api/SearchFactory';
+import {EnforcementDecisionEvidence} from '@app/api/Tables';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 
+export const REPORT_COMPLAINT_WINDOW_DAYS = 184;
+export const CHILD_SAFETY_REPORT_RETENTION_DAYS = 365;
+const CHILD_SAFETY_CATEGORY = 'child_safety';
+const DECISION_EVIDENCE_RETENTION_MS = EnforcementDecisionEvidence.defaultTtlSeconds! * 1000;
+const DEFAULT_SCAN_PAGE_SIZE = 500;
+
 export interface ReportRetentionPolicy {
 	retentionDays: number;
-	resolvedRetentionDays: number | null;
+}
+
+export interface ReportRetentionDeps extends ReportDeletionDeps {
+	decisionRepository: Pick<EnforcementDecisionRepository, 'listReportLinks'>;
 }
 
 export interface ReportRetentionOptions {
@@ -31,65 +44,136 @@ export interface ReportRetentionOptions {
 export interface ReportRetentionSummary {
 	dryRun: boolean;
 	scanned: number;
+	pending: number;
 	expired: number;
+	contextExpired: number;
 	held: number;
 	deleted: number;
+	contextCleared: number;
 	objectsDeleted: number;
 	sharedObjectsKept: number;
 	failed: number;
 }
 
-type ReportRetentionState = 'expired' | 'held' | 'retained';
-
-function reportExpiresAt(report: IARSubmission, policy: ReportRetentionPolicy): number {
-	const reportedAt = report.reportedAt instanceof Date ? report.reportedAt.getTime() : Number.NaN;
-	const byAge = reportedAt + policy.retentionDays * ms('1 day');
-	if (policy.resolvedRetentionDays === null || report.status !== ReportStatus.RESOLVED) {
-		return byAge;
-	}
-	const resolvedAt = report.resolvedAt instanceof Date ? report.resolvedAt.getTime() : Number.NaN;
-	if (Number.isNaN(resolvedAt)) {
-		return byAge;
-	}
-	return Math.min(byAge, resolvedAt + policy.resolvedRetentionDays * ms('1 day'));
+export interface ReportRetentionDates {
+	deleteAt: number | null;
+	contextExpiresAt: number | null;
 }
 
-function reportRetentionState(report: IARSubmission, now: Date, policy: ReportRetentionPolicy): ReportRetentionState {
-	const expiresAt = reportExpiresAt(report, policy);
-	if (Number.isNaN(expiresAt) || expiresAt > now.getTime()) {
+type ReportRetentionState = 'expired' | 'context_expired' | 'held' | 'retained';
+
+const KEEP_UNTIL_RESOLVED: ReportRetentionDates = {deleteAt: null, contextExpiresAt: null};
+
+export function reportRetentionDates(
+	report: IARSubmission,
+	policy: ReportRetentionPolicy,
+	decidedAt: Date | null,
+): ReportRetentionDates {
+	if (report.status !== ReportStatus.RESOLVED) {
+		return KEEP_UNTIL_RESOLVED;
+	}
+	const resolvedAt = (report.resolvedAt ?? report.reportedAt).getTime();
+	if (Number.isNaN(resolvedAt)) {
+		return KEEP_UNTIL_RESOLVED;
+	}
+	const childSafety = report.category === CHILD_SAFETY_CATEGORY;
+	const ends = [resolvedAt + policy.retentionDays * ms('1 day')];
+	if (childSafety) {
+		ends.push(resolvedAt + CHILD_SAFETY_REPORT_RETENTION_DAYS * ms('1 day'));
+	}
+	if (decidedAt) {
+		ends.push(decidedAt.getTime() + DECISION_EVIDENCE_RETENTION_MS);
+	}
+	const dropsContextEarly = report.reporterOutcome === 'no_violation' && !childSafety && !decidedAt;
+	return {
+		deleteAt: Math.max(...ends),
+		contextExpiresAt: dropsContextEarly ? resolvedAt + REPORT_COMPLAINT_WINDOW_DAYS * ms('1 day') : null,
+	};
+}
+
+function hasCopiedContext(report: IARSubmission): boolean {
+	return (
+		(report.messageContext?.length ?? 0) > 0 ||
+		report.reportedProfileSnapshot !== null ||
+		report.additionalInfo !== null
+	);
+}
+
+function reportRetentionState(
+	report: IARSubmission,
+	now: Date,
+	policy: ReportRetentionPolicy,
+	decidedAt: Date | null,
+): ReportRetentionState {
+	const {deleteAt, contextExpiresAt} = reportRetentionDates(report, policy, decidedAt);
+	const due =
+		deleteAt !== null && deleteAt <= now.getTime()
+			? 'expired'
+			: contextExpiresAt !== null && contextExpiresAt <= now.getTime() && hasCopiedContext(report)
+				? 'context_expired'
+				: null;
+	if (due === null) {
 		return 'retained';
 	}
-	if (isReportUnderLegalHold(report, now)) {
-		return 'held';
+	return isReportUnderLegalHold(report, now) ? 'held' : due;
+}
+
+async function latestDecisionByReport(
+	decisionRepository: ReportRetentionDeps['decisionRepository'],
+	pageSize: number,
+): Promise<Map<bigint, Date>> {
+	const decidedAt = new Map<bigint, Date>();
+	let cursor: bigint | undefined;
+	while (true) {
+		const page = await decisionRepository.listReportLinks(pageSize, cursor);
+		for (const decision of page) {
+			for (const reportId of decision.report_ids ?? []) {
+				const known = decidedAt.get(reportId);
+				if (!known || known.getTime() < decision.created_at.getTime()) {
+					decidedAt.set(reportId, decision.created_at);
+				}
+			}
+		}
+		if (page.length < pageSize) return decidedAt;
+		cursor = page[page.length - 1]!.decision_id;
 	}
-	return 'expired';
 }
 
 export async function processReportRetention(
-	deps: ReportDeletionDeps,
+	deps: ReportRetentionDeps,
 	options: ReportRetentionOptions,
 ): Promise<ReportRetentionSummary> {
 	const {reportRepository} = deps;
 	const {now, dryRun, policy} = options;
+	const pageSize = options.pageSize ?? DEFAULT_SCAN_PAGE_SIZE;
 	const summary: ReportRetentionSummary = {
 		dryRun,
 		scanned: 0,
+		pending: 0,
 		expired: 0,
+		contextExpired: 0,
 		held: 0,
 		deleted: 0,
+		contextCleared: 0,
 		objectsDeleted: 0,
 		sharedObjectsKept: 0,
 		failed: 0,
 	};
+	const decidedAt = await latestDecisionByReport(deps.decisionRepository, pageSize);
+	const stateOf = (report: IARSubmission) =>
+		reportRetentionState(report, now, policy, decidedAt.get(report.reportId) ?? null);
 	const retainedKeys = new Set<string>();
-	const expiredIds: Array<ReportID> = [];
+	const due: Array<{reportId: ReportID; state: 'expired' | 'context_expired'}> = [];
 	await forEachStoredReport(
 		reportRepository,
 		(report) => {
 			summary.scanned++;
-			const state = reportRetentionState(report, now, policy);
-			if (state === 'expired') {
-				expiredIds.push(report.reportId);
+			if (report.status !== ReportStatus.RESOLVED) {
+				summary.pending++;
+			}
+			const state = stateOf(report);
+			if (state === 'expired' || state === 'context_expired') {
+				due.push({reportId: report.reportId, state});
 				return;
 			}
 			if (state === 'held') {
@@ -99,35 +183,37 @@ export async function processReportRetention(
 				retainedKeys.add(key);
 			}
 		},
-		options.pageSize,
+		pageSize,
 	);
-	summary.expired = expiredIds.length;
-	const ledger = {retainedKeys, deletedKeys: new Set<string>()};
-	for (const reportId of expiredIds) {
+	summary.expired = due.filter((entry) => entry.state === 'expired').length;
+	summary.contextExpired = due.length - summary.expired;
+	const ledger: ReportEvidenceLedger = {retainedKeys, deletedKeys: new Set<string>()};
+	for (const {reportId, state} of due) {
 		try {
 			const report = await reportRepository.getReport(reportId);
 			if (!report) continue;
-			if (reportRetentionState(report, now, policy) !== 'expired') {
+			if (stateOf(report) !== state) {
 				for (const key of referencedObjectKeys(report)) {
 					retainedKeys.add(key);
 				}
 				continue;
 			}
-			const result = await deleteReportWithEvidence(deps, report, ledger, {now, dryRun});
+			const apply = state === 'expired' ? deleteReportWithEvidence : clearCopiedContextWithEvidence;
+			const result = await apply(deps, report, ledger, {now, dryRun});
 			summary.objectsDeleted += result.objectsDeleted;
 			summary.sharedObjectsKept += result.sharedObjectsKept;
-			summary.deleted++;
+			if (state === 'expired') {
+				summary.deleted++;
+			} else {
+				summary.contextCleared++;
+			}
 		} catch (error) {
 			summary.failed++;
-			Logger.error({error, reportId: reportId.toString()}, 'Failed to delete an expired report');
+			Logger.error({error, reportId: reportId.toString(), state}, 'Failed to apply report retention');
 		}
 	}
 	Logger.info(
-		{
-			...summary,
-			retentionDays: policy.retentionDays,
-			resolvedRetentionDays: policy.resolvedRetentionDays,
-		},
+		{...summary, retentionDays: policy.retentionDays, complaintWindowDays: REPORT_COMPLAINT_WINDOW_DAYS},
 		'Processed report retention',
 	);
 	return summary;
@@ -135,10 +221,15 @@ export async function processReportRetention(
 
 const expireReportSnapshots: WorkerTaskHandler = async () => {
 	const {reportRepository, storageService} = getWorkerDependencies();
-	const {days, resolvedDays, dryRun} = Config.reportRetention;
+	const {days, dryRun} = Config.reportRetention;
 	await processReportRetention(
-		{reportRepository, storageService, reportSearchService: getReportSearchService()},
-		{now: new Date(), dryRun, policy: {retentionDays: days, resolvedRetentionDays: resolvedDays}},
+		{
+			reportRepository,
+			storageService,
+			reportSearchService: getReportSearchService(),
+			decisionRepository: new EnforcementDecisionRepository(),
+		},
+		{now: new Date(), dryRun, policy: {retentionDays: days}},
 	);
 };
 

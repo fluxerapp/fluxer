@@ -449,7 +449,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		inactivityDeletionThresholdDays: master.inactivity_deletion_threshold_days,
 		reportRetention: {
 			days: master.report_retention.days,
-			resolvedDays: master.report_retention.resolved_days,
 			dryRun: master.report_retention.dry_run,
 		},
 		push: {

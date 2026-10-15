@@ -186,6 +186,20 @@ export class ReportRepository {
 		return {...report, legalHoldUntil, legalHoldReason};
 	}
 
+	async clearCopiedContext(reportId: ReportID, reportType: number): Promise<boolean> {
+		return executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: reportId},
+				{
+					message_context: Db.set(null),
+					reported_profile_snapshot: Db.set(null),
+					additional_info: Db.set(null),
+				},
+				{report_type: reportType},
+			),
+		);
+	}
+
 	async clearReporterEmail(reportId: ReportID, reporterId: UserID): Promise<boolean> {
 		return executeConditional(
 			IARSubmissions.conditionalPatchByPk(

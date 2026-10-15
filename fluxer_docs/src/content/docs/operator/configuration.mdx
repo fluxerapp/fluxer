@@ -1063,15 +1063,11 @@ With feeds off, Fluxer checks none of this data. The first worker start with fee
 
 #### `FLUXER_REPORT_RETENTION_DAYS`
 
-Default `365`. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes each report this many days after it was filed, pending or resolved, with its evidence copies and search entry, unless a legal hold is in place. Integer 1 to 36500, checked at startup.
-
-#### `FLUXER_RESOLVED_REPORT_RETENTION_DAYS`
-
-Default unset, which leaves resolved reports to `FLUXER_REPORT_RETENTION_DAYS`. Read by `worker`. When set, a resolved report is deleted this many days after it was resolved, if that comes before the end of its retention period. Pending reports are not affected, and a legal hold still keeps a report. Integer 1 to 36500, checked at startup.
+Default `365`. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes each resolved report this many days after it was resolved, with its evidence copies and search entry. Pending reports are kept until they are resolved. A legal hold, a `child_safety` category or a linked enforcement decision can keep a report longer. Integer 1 to 36500, checked at startup.
 
 #### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
-Default `false`. Read by `worker`. With `true`, each run only counts what it would delete and deletes nothing. `true` or `false`, checked at startup. Deleted evidence cannot be restored. Check the counts in the `Processed report retention` log line before the first real run.
+Default `false`. Read by `worker`. With `true`, each run only counts what it would delete or clear and changes nothing. `true` or `false`, checked at startup. Deleted evidence cannot be restored. Check the counts in the `Processed report retention` log line before the first real run.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 

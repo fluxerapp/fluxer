@@ -521,14 +521,22 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 
 ## Report retention
 
-Fluxer deletes a report when its retention period ends, whether it is pending or resolved, together with its stored evidence: the attachment copies, the profile snapshot images, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
+A pending report is kept until it is resolved. Once a report is resolved, Fluxer deletes it when its retention period ends, together with its stored evidence: the captured message context, the profile snapshot and its images, the attachment copies, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
 
-The retention period is 365 days from when the report was filed, or the number of days in `FLUXER_REPORT_RETENTION_DAYS`. With `FLUXER_RESOLVED_REPORT_RETENTION_DAYS` set, a resolved report is deleted that many days after `resolved_at` when that comes first. A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends. An evidence copy that a retained report also uses is kept for that report.
+The retention period ends 365 days after `resolved_at`, or the number of days in `FLUXER_REPORT_RETENTION_DAYS`. Some reports are kept longer, whatever that setting says:
 
-The deletion runs once a day in `worker`. Each run logs one `Processed report retention` line with the counts it found and deleted and the two periods it used. A report that fails to delete keeps its record and is retried on the next run. [Delete report](#delete-report) deletes one report straight away by the same rules.
+- A report in the `child_safety` category is kept for at least 365 days after it was resolved.
+- A report listed in the `report_ids` of an [enforcement decision](/admin-api/enforcement/#enforcement-decision-object) is kept for at least 365 days after the newest such decision was recorded, as long as the decision's evidence.
+- A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends.
+
+A report resolved with the outcome `no_violation` loses its copied context 184 days after it was resolved, which covers the six months the Digital Services Act gives a reporter to contest the outcome. Fluxer then removes the captured message context, the profile snapshot, the reporter's additional information, and the stored evidence copies, and keeps the rest of the record and its search index entry until the end of the retention period. This does not apply to a `child_safety` report, to a report linked to an enforcement decision, or while a legal hold has not ended.
+
+An evidence copy that a retained report also uses is kept for that report.
+
+The job runs once a day in `worker`. Each run logs one `Processed report retention` line with the counts it found, deleted and cleared and the periods it used. A report that fails to delete or clear keeps its record and is retried on the next run. [Delete report](#delete-report) deletes one report straight away.
 
 :::caution[Deleted evidence cannot be restored]
-Retention deletes for real unless `FLUXER_REPORT_RETENTION_DRY_RUN` is `true` on `worker`. In a dry run each run only counts what it would delete and deletes nothing. The [operator configuration](/operator/configuration/#moderation-and-abuse) describes the three settings.
+Retention deletes for real unless `FLUXER_REPORT_RETENTION_DRY_RUN` is `true` on `worker`. In a dry run each run only counts what it would delete or clear and changes nothing. The [operator configuration](/operator/configuration/#moderation-and-abuse) describes the two settings.
 :::
 
 ## List reports
@@ -768,7 +776,7 @@ Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) wit
 
 Deletes one report straight away. Requires `report:delete`, which `report:resolve` does not include.
 
-This is the deletion [report retention](#report-retention) runs, without waiting for the retention period. It removes the report record with its captured message context and profile snapshot, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
+This is the deletion [report retention](#report-retention) runs at the end of the retention period, without waiting for it. It removes the report record with its captured message context and profile snapshot, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
 
 :::caution[Deletion is permanent]
 Deleted evidence cannot be restored. A report with a legal hold that has not ended is refused. Clear the hold first when the report should go.

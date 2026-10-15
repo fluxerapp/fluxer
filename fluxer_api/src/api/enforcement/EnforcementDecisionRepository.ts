@@ -40,6 +40,16 @@ const LIST_NOTES_QUERY = EnforcementDecisionNotes.select({
 	orderBy: {col: 'note_id', direction: 'ASC'},
 });
 
+type DecisionReportLink = Pick<EnforcementDecisionRow, 'decision_id' | 'report_ids' | 'created_at'>;
+
+function listReportLinksQuery(limit: number, paged: boolean) {
+	return EnforcementDecisions.select({
+		columns: ['decision_id', 'report_ids', 'created_at'],
+		...(paged ? {where: EnforcementDecisions.where.tokenGt('decision_id', 'after')} : {}),
+		limit,
+	});
+}
+
 const REVIEW_QUEUE_BUCKET = 0;
 const LIST_REVIEW_QUEUE_QUERY = EnforcementReviewQueue.select({
 	columns: ['decision_id'],
@@ -160,6 +170,12 @@ export class EnforcementDecisionRepository {
 			}),
 		);
 		return this.getMany(keys.map((key) => key.decision_id));
+	}
+
+	async listReportLinks(limit: number, after?: bigint): Promise<Array<DecisionReportLink>> {
+		return fetchMany<DecisionReportLink>(
+			listReportLinksQuery(limit, after !== undefined).bind(after !== undefined ? {after} : {}),
+		);
 	}
 
 	async end(decisionId: bigint, end: EnforcementDecisionEnd): Promise<void> {

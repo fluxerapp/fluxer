@@ -280,7 +280,6 @@ function defaultConfig(): MasterConfig {
 		inactivity_deletion_threshold_days: 365,
 		report_retention: {
 			days: 365,
-			resolved_days: null,
 			dry_run: false,
 		},
 	};
@@ -451,14 +450,6 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 function validateReportRetentionConfig(config: MasterConfig): void {
 	const retention = config.report_retention;
 	assertIntegerInRange(retention.days, 'FLUXER_REPORT_RETENTION_DAYS', 1, MAX_REPORT_RETENTION_DAYS);
-	if (retention.resolved_days !== null) {
-		assertIntegerInRange(
-			retention.resolved_days,
-			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS',
-			1,
-			MAX_REPORT_RETENTION_DAYS,
-		);
-	}
 	assertBoolean(retention.dry_run, 'FLUXER_REPORT_RETENTION_DRY_RUN');
 }
 

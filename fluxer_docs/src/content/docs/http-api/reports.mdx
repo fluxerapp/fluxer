@@ -20,7 +20,7 @@ A safety report tells moderators that a message or a user profile broke the rule
 Fluxer discards a body member that no schema here defines, so a misspelt member is dropped without an error. A body that is not parseable JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
 
 :::caution[A submitted report is durable evidence]
-Fluxer copies the reported content when the report is submitted. A message report also copies the surrounding conversation and the bytes of every attachment in it, and every report copies the reported profile with its images. Deleting the message, editing the profile, or leaving the guild afterwards does not remove that snapshot. The snapshot is kept until the report reaches the end of its [retention period](/admin-api/reports/#report-retention).
+Fluxer copies the reported content when the report is submitted. A message report also copies the surrounding conversation and the bytes of every attachment in it, and every report copies the reported profile with its images. Deleting the message, editing the profile, or leaving the guild afterwards does not remove that snapshot. The snapshot is kept until [report retention](/admin-api/reports/#report-retention) removes it, which happens no sooner than 184 days after the report is resolved.
 :::
 
 ## Access rules
