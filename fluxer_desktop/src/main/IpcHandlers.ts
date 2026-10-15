@@ -97,7 +97,7 @@ import {
 	showWindow,
 	THEME_STUDIO_POPOUT_KEY,
 } from '@electron/main/Window';
-import {setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
+import {refreshWindowsBadgeOverlay, setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
 import {
 	DESKTOP_MODULE_CHANNELS,
 	DESKTOP_UPDATE_CHANNELS,
@@ -125,6 +125,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	}
 	if (typeof value.coloredTrayIcon === 'boolean') {
 		update.coloredTrayIcon = value.coloredTrayIcon;
+	}
+	if (typeof value.darkTaskbarBadge === 'boolean') {
+		update.darkTaskbarBadge = value.darkTaskbarBadge;
 	}
 	if (typeof value.minimizeToTray === 'boolean') {
 		update.minimizeToTray = value.minimizeToTray;
@@ -317,6 +320,7 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('desktop-window-behavior-set', (_event, settings: unknown): DesktopWindowBehaviorSettings => {
 		const nextSettings = setDesktopWindowBehaviorSettings(normalizeDesktopWindowBehaviorUpdate(settings));
 		applyDesktopWindowBehaviorSettings();
+		refreshWindowsBadgeOverlay(getMainWindow());
 		if (!nextSettings.showTrayIcon) {
 			const mainWindow = getMainWindow();
 			if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {

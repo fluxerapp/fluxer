@@ -13253,6 +13253,11 @@ msgstr "Trage pentru a repoziționa pictograma grupului și folosește rotița d
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "Trage pentru a repoziționa fundalul invitației și folosește rotița de derulare sau gestul de ciupire pentru a mări. Dimensiunea minimă recomandată este de {minimumWidth}×{minimumHeight} pixeli (16:9)."
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "Afișează insigna cu mesaje necitite pe butonul din bara de activități {productName} în gri închis, în loc de roșu."
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "Folosește emojiuri și stickere personalizate în orice comunitate"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "Folosește o imagine personalizată"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "Folosește insigna întunecată pentru bara de activități"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

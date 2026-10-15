@@ -20,7 +20,13 @@ import {
 	relaunchDesktopApp,
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {getNativePlatformSync, isDesktop, isNativeLinux, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+import {
+	getNativePlatformSync,
+	isDesktop,
+	isNativeLinux,
+	isNativeMacOS,
+	isNativeWindows,
+} from '@app/features/ui/utils/NativeUtils';
 import {
 	LATER_DESCRIPTOR,
 	LAUNCH_AT_LOGIN_DESCRIPTOR as LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR,
@@ -51,6 +57,17 @@ const USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Desktop setting description under the colored tray icon toggle on Windows and Linux.',
 });
 
+const USE_DARK_TASKBAR_BADGE_DESCRIPTOR = msg({
+	message: 'Use dark taskbar badge',
+	comment:
+		'Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.',
+});
+
+const USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Draw the unread badge on the {productName} taskbar button in dark gray instead of red.',
+	comment: 'Desktop setting description under the dark taskbar badge toggle on Windows.',
+});
+
 const DesktopSettingsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const cachedAutostart = getCachedAutostartStatus();
@@ -65,6 +82,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 	const platform = getNativePlatformSync();
 	const isMac = isNativeMacOS(platform);
 	const isLinux = isNativeLinux(platform);
+	const isWindows = isNativeWindows(platform);
 	useLayoutEffect(() => {
 		let mounted = true;
 		const initDesktopSettings = async () => {
@@ -209,6 +227,18 @@ const DesktopSettingsTab: React.FC = observer(() => {
 								disabled={desktopWindowBehaviorBusy || !desktopWindowBehavior.showTrayIcon}
 								onChange={(value) => handleDesktopWindowBehaviorChange({coloredTrayIcon: value})}
 								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
+							/>
+						)}
+						{isWindows && desktopWindowBehavior.darkTaskbarBadge !== undefined && (
+							<Switch
+								label={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTOR)}
+								description={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.darkTaskbarBadge}
+								disabled={desktopWindowBehaviorBusy}
+								onChange={(value) => handleDesktopWindowBehaviorChange({darkTaskbarBadge: value})}
+								data-flx="user.desktop-settings-tab.switch.dark-taskbar-badge-change"
 							/>
 						)}
 						<Switch

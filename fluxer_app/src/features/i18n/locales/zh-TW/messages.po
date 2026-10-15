@@ -13253,6 +13253,11 @@ msgstr "拖曳以重新調整群組圖示的位置，並使用滾輪或雙指縮
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "拖曳以重新調整邀請背景位置，並使用滾輪或雙指縮放。建議的最小尺寸為 {minimumWidth}×{minimumHeight} 像素 (16:9)。"
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "在 Windows 上，將 {productName} 工作列按鈕上的未讀徽章繪製成深灰色，而非紅色。"
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "在任何社群中使用自訂表情符號和貼圖"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "使用自訂圖片"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "使用深色工作列徽章"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

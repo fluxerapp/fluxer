@@ -10,6 +10,7 @@
 	"main": "dist/main/index.js",
 	"scripts": {
 		"build": "node scripts/build.mjs",
+		"generate:windows-badges": "electron scripts/generate-windows-badges.mjs",
 		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
 		"test": "pnpm test:main",
 		"test:main": "pnpm set-channel && node --test 'src/main/*.test.mjs' 'src/preload/*.test.mjs' 'src/common/*.test.mjs'",

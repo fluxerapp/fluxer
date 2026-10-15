@@ -13253,6 +13253,11 @@ msgstr "अपने ग्रुप आइकॉन की जगह बदल�
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "अपने इनवाइट बैकग्राउंड की जगह बदलने के लिए खींचें और ज़ूम करने के लिए स्क्रॉल व्हील या पिंच का इस्तेमाल करें। सुझाया गया न्यूनतम साइज़ {minimumWidth}×{minimumHeight} पिक्सल (16:9) है।"
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "{productName} टास्कबार बटन पर लाल रंग के बजाय गहरे ग्रे रंग में अनरीड बैज दिखाएँ।"
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "किसी भी समुदाय में कस्टम इम�
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "कस्टम इमेज का इस्तेमाल करें"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "डार्क टास्कबार बैज का उपयोग करें"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

@@ -55,7 +55,8 @@
 				"src/preload/LegacyHarvestPreload.ts",
 				"src/main/**/*.test.{ts,mjs}",
 				"native/*/index.{js,d.ts}",
-				"native/*/loader-diagnostics.cjs"
+				"native/*/loader-diagnostics.cjs",
+				"scripts/generate-windows-badges.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
 			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],

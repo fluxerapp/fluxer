@@ -13253,6 +13253,11 @@ msgstr "Перетягніть, щоб змінити положення зна�
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "Перетягніть, щоб змінити положення фону запрошення, і скористайтеся коліщатком прокрутки або жестом зведення/розведення пальців для масштабування. Рекомендований мінімальний розмір: {minimumWidth}×{minimumHeight} пікселів (16:9)."
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "Відображати значок непрочитаних повідомлень на кнопці панелі завдань {productName} темно-сірим замість червоного."
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "Використовуйте власні емоджі та стікер
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "Використати власне зображення"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "Використовувати темну позначку на панелі завдань"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

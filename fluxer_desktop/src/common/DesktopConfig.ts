@@ -58,6 +58,7 @@ export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unk
 interface PersistedDesktopWindowBehaviorSettings {
 	showTrayIcon?: boolean;
 	coloredTrayIcon?: boolean;
+	darkTaskbarBadge?: boolean;
 	useNativeTitleBar?: boolean;
 	minimizeToTrayV2?: boolean;
 	closeToTrayV2?: boolean;
@@ -91,6 +92,7 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 	return {
 		showTrayIcon: true,
 		coloredTrayIcon: false,
+		darkTaskbarBadge: false,
 		minimizeToTray: false,
 		closeToTray: true,
 		startMinimized: false,
@@ -118,6 +120,9 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	}
 	if (typeof value.coloredTrayIcon === 'boolean') {
 		settings.coloredTrayIcon = value.coloredTrayIcon;
+	}
+	if (typeof value.darkTaskbarBadge === 'boolean') {
+		settings.darkTaskbarBadge = value.darkTaskbarBadge;
 	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		settings.useNativeTitleBar = value.useNativeTitleBar;
@@ -335,6 +340,10 @@ function normalizeDesktopWindowBehaviorSettings(
 			typeof normalizedSettings?.coloredTrayIcon === 'boolean'
 				? normalizedSettings.coloredTrayIcon
 				: defaults.coloredTrayIcon,
+		darkTaskbarBadge:
+			typeof normalizedSettings?.darkTaskbarBadge === 'boolean'
+				? normalizedSettings.darkTaskbarBadge
+				: defaults.darkTaskbarBadge,
 		minimizeToTray:
 			typeof normalizedSettings?.minimizeToTray === 'boolean'
 				? normalizedSettings.minimizeToTray
@@ -410,6 +419,7 @@ function serializeDesktopWindowBehaviorSettings(
 	return {
 		showTrayIcon: settings.showTrayIcon,
 		coloredTrayIcon: settings.coloredTrayIcon,
+		darkTaskbarBadge: settings.darkTaskbarBadge,
 		useNativeTitleBar: settings.useNativeTitleBar,
 		rememberWindowState: settings.rememberWindowState,
 		allowTransparency: settings.allowTransparency,

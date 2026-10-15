@@ -13253,6 +13253,11 @@ msgstr "그룹 아이콘을 드래그하여 위치를 조정하고 스크롤 휠
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "초대 배경을 드래그하여 위치를 조정하고 스크롤 휠 또는 핀치로 확대/축소하세요. 권장 최소 크기는 {minimumWidth}×{minimumHeight}픽셀(16:9)입니다."
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "Windows의 {productName} 작업 표시줄 버튼에 읽지 않은 배지를 빨간색 대신 어두운 회색으로 표시합니다."
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "커뮤니티에서 나만의 이모티콘과 스티커를 사용하세�
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "맞춤 이미지 사용"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "다크 작업 표시줄 배지 사용"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

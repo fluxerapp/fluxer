@@ -13253,6 +13253,11 @@ msgstr "Arrastra para cambiar la posición del icono de tu grupo y usa la rueda 
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "Arrastra para cambiar la posición de tu fondo de invitación y usa la rueda de desplazamiento o pellizca para hacer zoom. El tamaño mínimo recomendado es de {minimumWidth}×{minimumHeight} píxeles (16:9)."
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "Dibuja la insignia de no leídos en el botón de la barra de tareas de {productName} en gris oscuro en lugar de rojo."
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "Usa emojis y pegatinas personalizados en cualquier comunidad"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "Usar imagen personalizada"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "Usar insignia oscura en la barra de tareas"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

@@ -13253,6 +13253,11 @@ msgstr "Přetažením změňte polohu ikony skupiny. Kolečkem myši nebo gestem
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "Přetažením změňte polohu pozadí pozvánky. Kolečkem myši nebo gestem dvěma prsty upravte přiblížení. Doporučené minimální rozměry jsou {minimumWidth} × {minimumHeight} pixelů (16:9)."
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "Zobrazit odznak nepřečtených zpráv na tlačítku {productName} na hlavním panelu tmavě šedě místo červeně."
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "Používejte vlastní emotikony a nálepky v jakékoli komunitě"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "Použít vlastní obrázek"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "Použít tmavý odznak na hlavním panelu"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx

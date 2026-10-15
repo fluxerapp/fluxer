@@ -92,6 +92,7 @@ export interface DesktopInfo {
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	coloredTrayIcon: boolean;
+	darkTaskbarBadge: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
 	startMinimized: boolean;

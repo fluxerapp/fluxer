@@ -13253,6 +13253,11 @@ msgstr "ลากเพื่อปรับตำแหน่งไอคอน
 msgid "Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9)."
 msgstr "ลากเพื่อปรับตำแหน่งพื้นหลังคำเชิญของคุณ และใช้ล้อเลื่อนเมาส์หรือบีบนิ้วเพื่อซูม ขนาดขั้นต่ำที่แนะนำคือ {minimumWidth}×{minimumHeight} พิกเซล (16:9)"
 
+#. Desktop setting description under the dark taskbar badge toggle on Windows.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Draw the unread badge on the {productName} taskbar button in dark gray instead of red."
+msgstr "แสดงป้ายกำกับข้อความที่ยังไม่ได้อ่านบนปุ่มแถบงานของ {productName} เป็นสีเทาเข้มแทนสีแดง"
+
 #. Description text in the theme studio assets section.
 #: src/features/theme_studio/sections/AssetsSection.tsx
 msgid "Drop images, fonts, or other files here to use them inside your custom CSS."
@@ -37181,6 +37186,11 @@ msgstr "ใช้ อิโมจิและสติกเกอร์แบ�
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use custom image"
 msgstr "ใช้รูปภาพที่กำหนดเอง"
+
+#. Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Use dark taskbar badge"
+msgstr "ใช้ไอคอนแจ้งเตือนแถบงานสีเข้ม"
 
 #. Short label in the theme tab content. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx
