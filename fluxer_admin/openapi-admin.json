@@ -11027,14 +11027,15 @@
 					},
 					"outcome": {
 						"description": "What happened to the reported content or account. Required for actioned, where no_violation is refused. Optional for no_violation, where it can only be no_violation. Refused for duplicate. The reporter is told it",
-						"x-enumNames": ["removed", "restricted", "action_taken", "no_violation"],
+						"x-enumNames": ["removed", "warned", "restricted", "action_taken", "no_violation"],
 						"x-enumDescriptions": [
 							"The reported content, profile field or community was removed",
+							"The account responsible for the reported item was warned",
 							"The reported account was restricted and the content was left up",
 							"Action was taken under the rules, and the reporter is not told which",
 							"The reported content or account does not break the rules and was left as it is"
 						],
-						"enum": ["removed", "restricted", "action_taken", "no_violation"],
+						"enum": ["removed", "warned", "restricted", "action_taken", "no_violation"],
 						"type": "string"
 					},
 					"duplicate_of": {

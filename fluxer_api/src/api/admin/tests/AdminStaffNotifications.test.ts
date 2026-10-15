@@ -333,7 +333,7 @@ describe('Admin staff notifications', () => {
 			expect(dm?.content).toContain('We found that what you reported broke our rules, and we took action.');
 			expect(dm?.content).not.toMatch(/warn|restricted|suspend/i);
 			const metadata = await auditMetadata('resolve_report', reportId);
-			expect(metadata?.get('outcome')).toBe('action_taken');
+			expect(metadata?.get('outcome')).toBe('warned');
 			expect(metadata?.get('reporter_dm_sent')).toBe('true');
 		});
 
@@ -345,6 +345,18 @@ describe('Admin staff notifications', () => {
 			expect(sent.map((entry) => [entry.type, entry.metadata.outcome])).toEqual([
 				['dsa_report_resolved', 'action_taken'],
 			]);
+		});
+
+		test('a DSA notice resolved with a warning emails other action taken', async () => {
+			const {email, reportId} = await fileDsaGuildNotice();
+			await clearTestEmails(harness);
+			await resolve(reportId, {outcome: 'warned'});
+			const sent = await listTestEmails(harness, {recipient: email});
+			expect(sent.map((entry) => [entry.type, entry.metadata.outcome])).toEqual([
+				['dsa_report_resolved', 'action_taken'],
+			]);
+			const metadata = await auditMetadata('resolve_report', reportId);
+			expect(metadata?.get('outcome')).toBe('warned');
 		});
 
 		test('a DSA notice resolved with notify_reporter false gets the decision email without the comment', async () => {

@@ -33,6 +33,8 @@ interface ReporterNoticeResult {
 	skipped: ReporterNoticeSkipReason | null;
 }
 
+type ReporterToldOutcome = Exclude<ReportItemOutcome, 'warned'>;
+
 function skippedNotice(reason: ReporterNoticeSkipReason): ReporterNoticeResult {
 	return {dmSent: false, emailSent: false, dsaEmailSent: false, skipped: reason};
 }
@@ -59,17 +61,18 @@ export class ReporterResolutionNotifier {
 		outcome: ReportItemOutcome,
 	): Promise<ReporterNoticeResult> {
 		const comment = publicComment ?? '';
+		const told = outcome === 'warned' ? 'action_taken' : outcome;
 		if (report.reporterId) {
-			return this.notifyAccountReporter(report, report.reporterId, comment, outcome);
+			return this.notifyAccountReporter(report, report.reporterId, comment, told);
 		}
-		return this.notifyDsaReporter(report, comment, outcome);
+		return this.notifyDsaReporter(report, comment, told);
 	}
 
 	private async notifyAccountReporter(
 		report: IARSubmission,
 		reporterId: UserID,
 		comment: string,
-		outcome: ReportItemOutcome,
+		outcome: ReporterToldOutcome,
 	): Promise<ReporterNoticeResult> {
 		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
 		const reportId = report.reportId.toString();
@@ -115,7 +118,7 @@ export class ReporterResolutionNotifier {
 	private async notifyDsaReporter(
 		report: IARSubmission,
 		comment: string,
-		outcome: ReportItemOutcome,
+		outcome: ReporterToldOutcome,
 	): Promise<ReporterNoticeResult> {
 		const email = report.reporterEmail;
 		if (!email) {
@@ -134,7 +137,7 @@ export class ReporterResolutionNotifier {
 		reporter: User,
 		reportId: string,
 		comment: string,
-		outcome: ReportItemOutcome,
+		outcome: ReporterToldOutcome,
 	): Promise<boolean> {
 		const systemDm = this.deps.systemDm;
 		if (!systemDm) {

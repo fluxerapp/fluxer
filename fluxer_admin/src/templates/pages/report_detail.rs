@@ -601,13 +601,14 @@ fn resolve_report_form(base: &str, report_id: &str, csrf_token: &str) -> Markup 
                         class={(FORM_CONTROL_CLASS) " h-8 appearance-none px-3 py-1.5 pr-10"} {
                         option value="" selected disabled { "Choose one" }
                         option value="removed" { "Content removed" }
+                        option value="warned" { "Warning given" }
                         option value="restricted" { "Account restricted" }
                         option value="action_taken" { "Other action taken" }
                     }
                     (select_chevron())
                 }
                 p class="text-neutral-500 text-xs" {
-                    "What happened to the reported content or account. The reporter is told it. Other action taken, such as a warning, tells them we acted but not how."
+                    "What happened to the reported content or account. The reporter is told it. Warning given and other action taken tell them we acted but not how."
                 }
             }
             fieldset class="flex flex-col gap-3" data-show-for-resolution="duplicate" hidden disabled {

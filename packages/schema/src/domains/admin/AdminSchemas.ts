@@ -249,6 +249,7 @@ const ReportResolutionEnum = createNamedStringLiteralUnion(
 const ReportItemOutcomeEnum = createNamedStringLiteralUnion(
 	[
 		['removed', 'removed', 'The reported content, profile field or community was removed'],
+		['warned', 'warned', 'The account responsible for the reported item was warned'],
 		['restricted', 'restricted', 'The reported account was restricted and the content was left up'],
 		['action_taken', 'action_taken', 'Action was taken under the rules, and the reporter is not told which'],
 		['no_violation', 'no_violation', 'The reported content or account does not break the rules and was left as it is'],

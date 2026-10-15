@@ -186,6 +186,8 @@ async fn report_resolve_sends_notify_reporter_from_the_checkbox() {
     assert_eq!(duplicate.body["notify_reporter"], json!(true));
     assert!(duplicate.body.get("outcome").is_none());
     assert_eq!(duplicate.body["duplicate_of"], json!("1400000000000000001"));
+    let warned = submit(&uri, "resolution=actioned&outcome=warned").await;
+    assert_eq!(warned.body["outcome"], json!("warned"));
     let other_action = submit(&uri, "resolution=actioned&outcome=action_taken").await;
     assert_eq!(other_action.body["outcome"], json!("action_taken"));
 }

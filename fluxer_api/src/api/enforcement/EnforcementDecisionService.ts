@@ -239,7 +239,7 @@ function reportOutcome(
 			(removeEvidence && evidence.some((message) => message.message_id === messageId));
 		if (removed) return 'removed';
 	}
-	if (kind === 'warning') return 'action_taken';
+	if (kind === 'warning') return 'warned';
 	return RESTRICTING_KINDS.has(kind) ? 'restricted' : null;
 }
 

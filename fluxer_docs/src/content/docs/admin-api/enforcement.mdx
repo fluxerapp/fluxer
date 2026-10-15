@@ -93,7 +93,7 @@ Removed content cannot be restored, so these decisions end only as `reversed`.
 
 ### Reporter outcomes
 
-A decision that resolves linked reports tells each reporter what happened to the item. `removed` covers a reported message the decision removed, a profile report met by a profile reset, and a community removal. `restricted` covers a suspension, closure or feature limit. `action_taken` covers a warning and tells the reporter that Fluxer acted on what they reported, without naming the action or saying the account was restricted. A content removal or profile reset that leaves the reported item in place leaves the report pending. A manual resolution through [Update report](/admin-api/reports/#update-report) names the outcome itself, and a duplicate takes the outcome stored on the report it repeats.
+A decision that resolves linked reports tells each reporter what happened to the item. `removed` covers a reported message the decision removed, a profile report met by a profile reset, and a community removal. `restricted` covers a suspension, closure or feature limit. `warned` covers a warning and is stored as such, but the reporter is told the same as for `action_taken`: that Fluxer acted on what they reported, without naming the action or saying the account was restricted. A content removal or profile reset that leaves the reported item in place leaves the report pending. A manual resolution through [Update report](/admin-api/reports/#update-report) names the outcome itself, and a duplicate takes the outcome stored on the report it repeats.
 
 ### Network blocks
 
