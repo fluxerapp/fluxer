@@ -13,7 +13,7 @@ import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
 import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
-import {buildFitInsideMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import Permission from '@app/features/permissions/state/Permission';
@@ -154,6 +154,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	);
 	const thumbnail = media
 		? buildFitInsideMediaProxyURL(media.src, {
+				format: resolvePreferredImageFormat(),
 				width: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 				height: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 			})
